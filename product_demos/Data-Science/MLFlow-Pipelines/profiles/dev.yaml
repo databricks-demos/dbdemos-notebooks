@@ -1,0 +1,17 @@
+# [Recommended] Uncomment fields below to set an MLflow experiment to track the pipeline execution.
+# If unset, a default experiment based on runtime context will be created.
+# experiment:
+  # name: "/Shared/sklearn_regression_experiment"
+  
+  # Use a section of the TLC Trip Record Dataset for model development
+# (https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+INGEST_DATA_LOCATION: dbfs:/mnt/field-demos/retail/products
+# Specify the format of the dataset
+INGEST_DATA_FORMAT: spark_sql
+
+INGEST_TABLE: "insurance_charge"
+INGEST_TABLE_SAMPLE_PERCENT: 90
+
+# Override the default train / validation / test dataset split ratios
+SPLIT_RATIOS: [0.75, 0.125, 0.125]
+

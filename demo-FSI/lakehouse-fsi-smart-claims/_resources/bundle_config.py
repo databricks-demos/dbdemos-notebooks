@@ -2,7 +2,6 @@
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC
 # MAGIC %md 
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
@@ -11,7 +10,7 @@
 
 {
   "name": "lakehouse-fsi-smart-claims",
-  "category": "fsi",
+  "category": "lakehouse",
   "custom_schema_supported": True,
   "default_schema": "fsi_smart_claims",
   "default_catalog": "main",

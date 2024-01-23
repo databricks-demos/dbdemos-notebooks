@@ -124,8 +124,7 @@
   "cluster": {
     "num_workers": 0,
     "spark_conf": {
-        "spark.master": "local[*, 4]",
-        "spark.databricks.cluster.profile": "singleNode"
+        "spark.master": "local[*, 4]"
     },
     "spark_version": "13.3.x-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",

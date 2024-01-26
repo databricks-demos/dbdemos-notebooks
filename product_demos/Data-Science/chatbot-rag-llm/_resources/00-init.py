@@ -248,7 +248,7 @@ def download_databricks_documentation_articles(max_documents=None):
     final_df = df_with_html.withColumn("text", download_web_page_udf("html_content"))
 
     # Select and filter non-null results
-    final_df = final_df.select("url", "text").filter("text IS NOT NULL")
+    final_df = final_df.select("url", "text").filter("text IS NOT NULL").cache()
     if final_df.isEmpty():
       raise Exception("Dataframe is empty, couldn't download Databricks documentation, please check sitemap status.")
 

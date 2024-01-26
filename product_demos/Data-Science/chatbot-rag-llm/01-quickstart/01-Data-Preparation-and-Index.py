@@ -276,7 +276,7 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the Self-managed vector search using our endpoint
+# DBTITLE 1,Create the managed vector search using our endpoint
 from databricks.sdk import WorkspaceClient
 import databricks.sdk.service.catalog as c
 

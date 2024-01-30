@@ -221,7 +221,7 @@ automl_run = automl.classify(
     experiment_dir = xp_path,
     dataset = fs.read_table(f'{catalog}.{db}.churn_user_features'),
     target_col = "churn",
-    timeout_minutes = 5
+    timeout_minutes = 10
 )
 #Make sure all users can access dbdemos shared experiment
 DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")

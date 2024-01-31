@@ -25,6 +25,24 @@
 
 -- COMMAND ----------
 
+-- MAGIC %md 
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC # First things first...
+-- MAGIC
+-- MAGIC > ## Confirm you have the correct `group membership` so you see the desired results in this demo.
+-- MAGIC
+-- MAGIC This notebook assumes the user is a member of `ANALYST_USA`& `region_admin_SPAIN` 
+-- MAGIC > but is *NOT* a `bu_admin` member nor a `fr_analysts` member.
+-- MAGIC
+-- MAGIC > If you are not a member of `region_admin_SPAIN` you should be able to add yourself via workspace admin console:
+-- MAGIC >>> Workspace settings / Identity and access / Groups
+-- MAGIC <br>
+-- MAGIC > ## (more on how to confirm proper group membership, below)
+-- MAGIC <br>
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## I. Prepare the demo
@@ -34,7 +52,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ### I.1 Cluster setup for UC
 -- MAGIC
--- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_shared.png?raw=true" width="500px" style="float: right"/>
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_shared.png?raw=true" width="1000px" style="float: right"/>
 -- MAGIC
 -- MAGIC To be able to run this demo, make sure you create a cluster with the shared security mode enabled.
 -- MAGIC
@@ -60,8 +78,22 @@ USE SCHEMA uc_acl;
 
 -- COMMAND ----------
 
--- DBTITLE 1,Note that all rows are visible (all countries)
-select * from customers
+-- DBTITLE 1,Since other users may have run this demo and left row-filters or masks in place...
+-- for demo purposes, making sure no row filters are in place, and any mask on the 'address' column is first removed:
+ALTER TABLE customers DROP ROW FILTER;
+ALTER TABLE customers ALTER COLUMN address DROP MASK;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Note that all rows are visible (all countries) and the 'address' column has no masking:
+select * from customers;
+
+-- COMMAND ----------
+
+-- Confirming that we can see all countries (FR, USA, SPAIN) prior to setting up row-filters:
+
+SELECT country FROM customers
+GROUP BY country;
 
 -- COMMAND ----------
 
@@ -92,8 +124,18 @@ SELECT current_user();
 -- COMMAND ----------
 
 -- DBTITLE 1,Am I member of the groups defined at the account level?
--- Note: The account should have been setup by adding all users to the ANALYST_USA group
-SELECT is_account_group_member('account users'), is_account_group_member('bu_admin'), is_account_group_member('fr_analysts');
+-- Note: The Account should have been setup by adding all users to the ANALYST_USA group
+SELECT is_account_group_member('account users'), is_account_group_member('ANALYST_USA'), is_account_group_member('region_admin_SPAIN'), is_account_group_member('bu_admin'), is_account_group_member('fr_analysts');
+
+-- COMMAND ----------
+
+-- MAGIC %md 
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC # To see the intended demo results, the above query should return:  `true, true, true, false, false`
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC <br>
 
 -- COMMAND ----------
 
@@ -114,11 +156,11 @@ SELECT is_account_group_member('account users'), is_account_group_member('bu_adm
 
 -- COMMAND ----------
 
--- DBTITLE 1,Create the SQL function
+-- DBTITLE 1,Create a SQL function for a simple row-filter:
 CREATE OR REPLACE FUNCTION region_filter(region_param STRING) 
 RETURN 
-  is_account_group_member('bu_admin') or -- admin can access all regions
-  region_param like "%US%" or region_param = "CANADA";  -- everybody can access regions containing US or CANADA
+  is_account_group_member('bu_admin') or -- bu_admin can access all regions
+  region_param like "%US%" or region_param = "CANADA";  -- everybody can access regions containing US or CANADA (no CANADA in our table, but you get the idea)
 
 ALTER FUNCTION region_filter OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
@@ -134,18 +176,36 @@ ALTER FUNCTION region_filter OWNER TO `account users`; -- grant access to all us
 
 -- COMMAND ----------
 
--- country will be the column send as parameter to our SQL function (country_param)
+-- country will be the column sent as parameter to our SQL function (region_param)
 ALTER TABLE customers SET ROW FILTER region_filter ON (country);
 
 -- COMMAND ----------
 
 -- DBTITLE 1,🥷 Checking... Rows have been hidden. Only customers in US/Canada are visible!
-select * from customers
+select * from customers;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,We should see only USA here, unless the user is a member of bu_admin:
+SELECT country FROM customers
+GROUP BY country;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Now let's drop the current filter, and demonstrate more dynamic versions:
+ALTER TABLE customers DROP ROW FILTER;
+
+-- Confirming that we can once again see all countries:
+
+SELECT country FROM customers
+GROUP BY country;
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC More advanced filter can be done. As example, we can imagine we have a few regional admin user groups defined as : `regional_admin_USA`, `regional_admin_FR` and we want to use them to filter on a country value. 
+-- MAGIC ## More advanced filters can be done. 
+-- MAGIC > ### As example, we can imagine we have a few regional admin user groups defined as : `region_admin_USA`, `region_admin_SPAIN`, etc...
+-- MAGIC > ### and we want to use them to filter on a country value. 
 -- MAGIC
 -- MAGIC This can easily be done by checking the group based on the region value :
 
@@ -153,10 +213,10 @@ select * from customers
 
 CREATE OR REPLACE FUNCTION region_filter_dynamic(country_param STRING) 
 RETURN 
-  is_account_group_member('bu_admin') or -- admin can access all regions
-  is_account_group_member(CONCAT('regional_admin_', country_param)); --regional admin can also access if the region matches the regional admin group.
+  is_account_group_member('bu_admin') or -- bu_admin can access all regions
+  is_account_group_member(CONCAT('region_admin_', country_param)); --regional admins can access only if the region (country column) matches the regional admin group.
   
-ALTER FUNCTION region_filter_dynamic OWNER TO `account users`; -- grant access to all user to the function for the demo
+-- ALTER FUNCTION region_filter_dynamic OWNER TO `account users`; -- instead of making full owners of our function, we can use GRANT EXECUTE below instead
 
 -- COMMAND ----------
 
@@ -169,6 +229,23 @@ ALTER FUNCTION region_filter_dynamic OWNER TO `account users`; -- grant access t
 -- COMMAND ----------
 
 GRANT EXECUTE ON FUNCTION region_filter_dynamic TO `account users`;
+
+-- COMMAND ----------
+
+ALTER TABLE customers SET ROW FILTER region_filter_dynamic ON (country);
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Since our current user is a member of region_admin_SPAIN, now they see only SPAIN from our query:
+SELECT country FROM customers
+GROUP BY country;
+
+-- COMMAND ----------
+
+-- MAGIC %md ## For the above dynamic row filter:
+-- MAGIC > ### If we have various groups of the form `region_admin_{country}`...
+-- MAGIC > ### we could add and remove users from those groups, and their row access would change dynamically...
+-- MAGIC > ### without needing to modify the function that creates the dynamic row filter.
 
 -- COMMAND ----------
 
@@ -208,13 +285,12 @@ ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user
 
 -- COMMAND ----------
 
--- DBTITLE 1,We can apply rules during the creation of the table too!
--- MAGIC %sql
--- MAGIC CREATE TABLE IF NOT EXISTS patient_ssn (
--- MAGIC   `name` STRING,
--- MAGIC    ssn STRING MASK simple_mask);
--- MAGIC    
--- MAGIC ALTER TABLE patient_ssn OWNER TO `account users`; -- for the demo only
+-- DBTITLE 1,Just as we can ALTER a table with new access controls, we can also apply rules during the table CREATE:
+CREATE OR REPLACE TABLE patient_ssn (
+  `name` STRING,
+   ssn STRING MASK simple_mask);
+   
+ALTER TABLE patient_ssn OWNER TO `account users`; -- for the demo only
 
 -- COMMAND ----------
 
@@ -226,7 +302,7 @@ INSERT INTO patient_ssn values
 -- COMMAND ----------
 
 -- DBTITLE 1,🥷 Checking... SSN has been anonymised for me!
-select * from patient_ssn
+select * from patient_ssn;
 
 -- COMMAND ----------
 
@@ -237,7 +313,7 @@ select * from patient_ssn
 -- MAGIC
 -- MAGIC Let's go back to our customer table on which we've already applied the row-level access control, and alter it to add another layer of security by applying the column-level access rule we've created in the previous step.
 -- MAGIC
--- MAGIC As we apply it, let's make it target address column!
+-- MAGIC As we apply it, let's make it's target the 'address' column!
 
 -- COMMAND ----------
 
@@ -270,8 +346,18 @@ ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC ## Notice: we do not need to ALTER the table with the updated function for it to take effect.
+
+-- COMMAND ----------
+
 -- DBTITLE 1,🥷 Checking... masking method has changed!
 select * from customers
+
+-- COMMAND ----------
+
+-- DBTITLE 1,...and the masking method has also changed for the patient_ssn table:
+select * from patient_ssn;
 
 -- COMMAND ----------
 
@@ -292,16 +378,26 @@ select * from customers
 -- MAGIC
 -- MAGIC In an organization where we have a user group for each supported language, we went ahead and mapped in this table each of these groups to their corresponding countries.
 -- MAGIC
--- MAGIC The members of the `en_analysts` are thus mapped to data of the `USA` or `CANADA`, the members of the `sp_analysts` are mapped to data for `SPAIN`, `MEXICO` or `ARGENTINA`, and so on.
+-- MAGIC - The members of the `ANALYST_USA` are thus mapped to data of the `USA` or `CANADA`, 
+-- MAGIC - the members of the `region_admin_SPAIN` are mapped to data for `SPAIN`, `MEXICO` or `ARGENTINA`,
+-- MAGIC - etc
 -- MAGIC
--- MAGIC In our case, we belong to neither so we'll fall back on the all users condition (`account users`)
+-- MAGIC In our case, our user belongs to `ANALYST_USA` and `region_admin_SPAIN`...as well as (`account users`).
 -- MAGIC
--- MAGIC Note : You can easily create and your user to one of these groups using the account console if you have the permissions to do so.
+-- MAGIC Note : You can easily create and assign your user to one of these groups using the account console if you have the permissions to do so.
 -- MAGIC
 
 -- COMMAND ----------
 
--- DBTITLE 1,Create the table containing the mapping between groups and countries
+-- DBTITLE 1,Let's first remind ourselves what the current row-filter function (applied to our table) allows us to see:
+-- Confirming that we can only see SPAIN, based on the current 'region_filter_dynamic' function:
+
+SELECT country FROM customers
+GROUP BY country;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Creating a table containing the mapping between groups and countries
 CREATE TABLE IF NOT EXISTS map_country_group (
   identity_group STRING,
   countries ARRAY<STRING>
@@ -310,17 +406,25 @@ ALTER TABLE map_country_group OWNER TO `account users`; -- for the demo only, al
 
 INSERT OVERWRITE map_country_group (identity_group, countries) VALUES
   ('fr_analysts', Array("FR", "BELGIUM","CANADA","SWITZERLAND")),
-  ('sp_anlysts',  Array("SPAIN","MEXICO","ARGENTINA")),
-  ('us_analysts', Array("USA","CANADA"));
+  ('region_admin_SPAIN',  Array("SPAIN","MEXICO","ARGENTINA")),
+  ('ANALYST_USA', Array("USA","CANADA"));
 
 SELECT * FROM map_country_group;
 
 -- COMMAND ----------
 
--- DBTITLE 1,Testing our table against our user and a FR country
--- This should returns only fr_analyst as this is the only group our current user is assign to.
+-- DBTITLE 1,Qyerying our map_country_group table to see how current user is mapped:
+-- This should return the ANALYST_USA and region_admin_SPAIN since our user is assigned to those groups:
+
 SELECT * FROM map_country_group 
-  WHERE is_account_group_member(identity_group) AND array_contains(countries, 'FR')
+  WHERE is_account_group_member(identity_group) ; 
+
+-- COMMAND ----------
+
+-- MAGIC %md ## Previously...
+-- MAGIC > ## we manually specified country values in the filter function definition, and then...
+-- MAGIC > ## we dynamically matched the country based on membership to a region_admin_{country} membership, and now...
+-- MAGIC > ## we will use a table lookup approach in our filter function definition.
 
 -- COMMAND ----------
 
@@ -332,11 +436,11 @@ SELECT * FROM map_country_group
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC Let's go ahead now and update our row filter function to call this new table and follow the mapping indicated in it :
+-- MAGIC Let's now update our dynamic row filter function to call this new table-lookup approach:
 
 -- COMMAND ----------
 
-CREATE OR REPLACE FUNCTION region_filter(region_param STRING)
+CREATE OR REPLACE FUNCTION region_filter_dynamic(region_param STRING)
  RETURN 
  is_account_group_member('bu_admin') or -- the current user is super admin, we can see everything
  exists (
@@ -347,9 +451,18 @@ CREATE OR REPLACE FUNCTION region_filter(region_param STRING)
 
 -- COMMAND ----------
 
--- DBTITLE 1,Checking... all are French-speaking customers!
--- the current user is french and only see countries in the fr_analyst group: ["FR", "BELGIUM", "CANADA", "SWITZERLAND"]
+-- DBTITLE 1,Checking the table look-up to determine what countries our user can view...
+-- the current user is can see countries mapped to the ANALYST_USA group: ["USA", "CANADA"]
+-- but is also a regional admin for SPAIN, which our table lookup results in visibility to ["SPAIN", "MEXICO", "ARGENTINA"]
+
 select * from customers
+
+-- COMMAND ----------
+
+-- Confirming that we can now see both USA & SPAIN, based on the updates to our 'region_filter_dynamic' function:
+
+SELECT country FROM customers
+GROUP BY country;
 
 -- COMMAND ----------
 
@@ -396,7 +509,17 @@ ALTER TABLE customers DROP ROW FILTER;
 -- COMMAND ----------
 
 -- DBTITLE 1,Checking... all countries are visible again!
-select * from customers
+SELECT country FROM customers
+GROUP BY country;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Doing a bit of clean-up...removing the mask the patient_ssn table:
+ALTER TABLE patient_ssn ALTER COLUMN ssn DROP MASK;
+
+-- COMMAND ----------
+
+SELECT * FROM patient_ssn;
 
 -- COMMAND ----------
 
@@ -412,3 +535,10 @@ select * from customers
 -- MAGIC
 -- MAGIC ... so you feel ready to take full control of managing your data security policies! 💪
 -- MAGIC
+
+-- COMMAND ----------
+
+-- Note:  
+-- Delta Sharing does not work with SQL-function-based row-level security or column masks (i.e. the methods above).
+-- To create row and column level security within a Delta share, you'd need to use dynamic views:
+--       https://docs.databricks.com/en/data-sharing/create-share.html#add-dynamic-views-to-a-share-to-filter-rows-and-columns

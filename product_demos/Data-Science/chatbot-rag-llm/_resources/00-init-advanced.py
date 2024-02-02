@@ -71,7 +71,7 @@ def install_ocr_on_nodes():
     # from pyspark.sql import SparkSession
     import subprocess
     num_workers = max(1,int(spark.conf.get("spark.databricks.clusterUsageTags.clusterWorkers")))
-    command = "sudo rm -r /var/cache/apt/archives/* /var/lib/apt/lists/* && sudo apt-get clean && sudo apt-get update && sudo apt-get install poppler-utils tesseract-ocr -y" 
+    command = "sudo rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && sudo apt-get clean && sudo apt-get update && sudo apt-get install poppler-utils tesseract-ocr -y" 
     subprocess.check_output(command, shell=True)
 
     def run_command(iterator):

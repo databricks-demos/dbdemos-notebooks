@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install mlflow==2.9.0 langchain==0.0.344 databricks-vectorsearch==0.22 databricks-sdk==0.12.0 mlflow[databricks]
+# MAGIC %pip install mlflow==2.10.1 langchain==0.1.5 databricks-vectorsearch==0.22 databricks-sdk==0.18.0 mlflow[databricks]
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -99,8 +99,8 @@ os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("dbdemos", "rag_sp_token")
 # COMMAND ----------
 
 from databricks.vector_search.client import VectorSearchClient
-from langchain.vectorstores import DatabricksVectorSearch
-from langchain.embeddings import DatabricksEmbeddings
+from langchain_community.vectorstores import DatabricksVectorSearch
+from langchain_community.embeddings import DatabricksEmbeddings
 
 # Test embedding Langchain model
 #NOTE: your question embedding model must match the one used in the chunk in the previous model 
@@ -148,7 +148,7 @@ print(f"Relevant documents: {similar_documents[0]}")
 # COMMAND ----------
 
 # Test Databricks Foundation LLM model
-from langchain.chat_models import ChatDatabricks
+from langchain_community.chat_models import ChatDatabricks
 chat_model = ChatDatabricks(endpoint="databricks-llama-2-70b-chat", max_tokens = 200)
 print(f"Test chat model: {chat_model.predict('What is Apache Spark')}")
 
@@ -174,7 +174,7 @@ print(f"Test chat model: {chat_model.predict('What is Apache Spark')}")
 
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatDatabricks
+from langchain_community.chat_models import ChatDatabricks
 
 TEMPLATE = """You are an assistant for Databricks users. You are answering python, coding, SQL, data engineering, spark, data science, DW and platform, API or infrastructure administration question related to Databricks. If the question is not related to one of these topics, kindly decline to answer. If you don't know the answer, just say that you don't know, don't try to make up an answer. Keep the answer as concise as possible.
 Use the following pieces of context to answer the question at the end:
@@ -251,7 +251,7 @@ with mlflow.start_run(run_name="dbdemos_chatbot_rag") as run:
 
 # Create or update serving endpoint
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedModelInput
+from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedModelInput, ServedModelInputWorkloadSize
 
 serving_endpoint_name = f"dbdemos_endpoint_{catalog}_{db}"[:63]
 latest_model_version = get_latest_model_version(model_name)
@@ -263,7 +263,7 @@ endpoint_config = EndpointCoreConfigInput(
         ServedModelInput(
             model_name=model_name,
             model_version=latest_model_version,
-            workload_size="Small",
+            workload_size=ServedModelInputWorkloadSize.SMALL,
             scale_to_zero_enabled=True,
             environment_vars={
                 "DATABRICKS_TOKEN": "{{secrets/dbdemos/rag_sp_token}}",  # <scope>/<secret> that contains an access token

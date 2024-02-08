@@ -20,8 +20,8 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.9.0 lxml==4.9.3 langchain==0.0.344 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.12.0 cloudpickle==2.2.1 pydantic==2.5.2
-# MAGIC %pip install pip mlflow[databricks]==2.9.0
+# MAGIC %pip install mlflow==2.10.1 lxml==4.9.3 langchain==0.1.5 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.18.0 cloudpickle==2.2.1 pydantic==2.5.2
+# MAGIC %pip install pip mlflow[databricks]==2.10.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -38,7 +38,7 @@
 # COMMAND ----------
 
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatDatabricks
+from langchain_community.chat_models import ChatDatabricks
 from langchain.schema.output_parser import StrOutputParser
 
 prompt = PromptTemplate(
@@ -208,8 +208,8 @@ test_demo_permissions(host, secret_scope="dbdemos", secret_key="rag_sp_token", v
 # COMMAND ----------
 
 from databricks.vector_search.client import VectorSearchClient
-from langchain.vectorstores import DatabricksVectorSearch
-from langchain.embeddings import DatabricksEmbeddings
+from langchain_community.vectorstores import DatabricksVectorSearch
+from langchain_community.embeddings import DatabricksEmbeddings
 from langchain.chains import RetrievalQA
 
 os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("dbdemos", "rag_sp_token")
@@ -439,9 +439,8 @@ model_name = f"{catalog}.{db}.dbdemos_advanced_chatbot_model"
 
 with mlflow.start_run(run_name="dbdemos_chatbot_rag") as run:
     #Get our model signature from input/output
-    input_df = pd.DataFrame({"messages": [dialog]})
     output = full_chain.invoke(dialog)
-    signature = infer_signature(input_df, output)
+    signature = infer_signature(dialog, output)
 
     model_info = mlflow.langchain.log_model(
         full_chain,
@@ -455,8 +454,9 @@ with mlflow.start_run(run_name="dbdemos_chatbot_rag") as run:
             "pydantic==2.5.2 --no-binary pydantic",
             "cloudpickle=="+ cloudpickle.__version__
         ],
-        input_example=input_df,
-        signature=signature
+        input_example=dialog,
+        signature=signature,
+        example_no_conversion=True,
     )
 
 # COMMAND ----------

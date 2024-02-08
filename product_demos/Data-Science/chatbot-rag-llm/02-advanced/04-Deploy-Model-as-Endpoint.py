@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.12.0 mlflow==2.9.0
+# MAGIC %pip install databricks-sdk==0.18.0 mlflow==2.10.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -42,17 +42,12 @@ import urllib
 import json
 import mlflow
 
-# Create or update serving endpoint
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedModelInput
-
 mlflow.set_registry_uri('databricks-uc')
 client = MlflowClient()
 model_name = f"{catalog}.{db}.dbdemos_advanced_chatbot_model"
 serving_endpoint_name = f"dbdemos_endpoint_advanced_{catalog}_{db}"[:63]
 latest_model = client.get_model_version_by_alias(model_name, "prod")
 
-w = WorkspaceClient()
 #TODO: use the sdk once model serving is available.
 serving_client = EndpointApiClient()
 # Start the endpoint using the REST API (you can do it using the UI directly)
@@ -71,16 +66,19 @@ displayHTML(f'Your Model Endpoint Serving is now available. Open the <a href="/m
 # COMMAND ----------
 
 # DBTITLE 1,Let's try to send a query to our chatbot
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import DataframeSplitInput
-
-df_split = DataframeSplitInput(columns=["messages"],
-                               data=[[ {"messages": [{"role": "user", "content": "What is Apache Spark?"}, 
-                                                     {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, 
-                                                     {"role": "user", "content": "Does it support streaming?"}
-                                                    ]}]])
-w = WorkspaceClient()
-w.serving_endpoints.query(serving_endpoint_name, dataframe_split=df_split)
+serving_client.query_inference_endpoint(
+    serving_endpoint_name,
+    {
+        "messages": [
+            {"role": "user", "content": "What is Apache Spark?"},
+            {
+                "role": "assistant",
+                "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics.",
+            },
+            {"role": "user", "content": "Does it support streaming?"},
+        ]
+    },
+)
 
 # COMMAND ----------
 

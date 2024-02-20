@@ -4,11 +4,6 @@
 
 # COMMAND ----------
 
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
-
-# COMMAND ----------
-
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TABLE main__build.dbdemos_iot_turbine.turbine_training_dataset_ml AS SELECT * FROM main__build.dbdemos_iot_turbine.turbine_training_dataset;
 # MAGIC

@@ -45,7 +45,7 @@
     },
     {
       "path": "_resources/01-load-data", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": False, 
       "add_cluster_setup_cell": False,
       "title":  "Load raw data", 

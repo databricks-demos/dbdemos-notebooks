@@ -122,7 +122,7 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 # DBTITLE 1,We'll store the raw data in a USER_BRONZE DELTA table, supporting schema evolution and incorrect data
 # MAGIC %sql
 # MAGIC -- Note: tables are automatically created during  .writeStream.table("sensor_bronze") operation, but we can also use plain SQL to create them:
-# MAGIC CREATE TABLE IF NOT EXISTS sensor_bronze (
+# MAGIC CREATE TABLE IF NOT EXISTS spark_sensor_bronze (
 # MAGIC   energy   DOUBLE,
 # MAGIC   sensor_A DOUBLE,
 # MAGIC   sensor_B DOUBLE,

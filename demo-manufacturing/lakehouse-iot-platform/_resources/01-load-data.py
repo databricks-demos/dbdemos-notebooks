@@ -61,12 +61,13 @@ import random
 import mlflow
 from  mlflow.models.signature import ModelSignature
 
-# define a custom model
+# define a custom model randomly flagging 10% of sensor for the demo init (it'll be replace with proper model on the training part.)
 class MaintenanceEmptyModel(mlflow.pyfunc.PythonModel):
     def predict(self, context, model_input):
         import random
-        return model_input['avg_energy'].apply(lambda x: 'ok')
-
+        sensors = ['sensor_F', 'sensor_D', 'sensor_B']  # List of sensors
+        return model_input['avg_energy'].apply(lambda x: 'ok' if random.random() < 0.9 else random.choice(sensors))
+ 
 #Enable Unity Catalog with mlflow registry
 mlflow.set_registry_uri('databricks-uc')
 model_name = "dbdemos_turbine_maintenance"

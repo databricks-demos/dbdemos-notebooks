@@ -164,4 +164,4 @@ def score_model(dataset):
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC
-# MAGIC <a href='/sql/dashboards/90b2c9c7-e5c7-46d8-b7fe-5b98ed84d5d1'>Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
+# MAGIC <a href='/sql/dashboards/d966eb63-6d37-4762-b90f-d3a2b51b9ba8'>Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)

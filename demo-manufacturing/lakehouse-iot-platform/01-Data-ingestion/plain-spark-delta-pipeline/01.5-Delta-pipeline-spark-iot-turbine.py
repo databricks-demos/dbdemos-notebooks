@@ -322,8 +322,7 @@ spark.sql("DELETE FROM spark_sensor_bronze where turbine_id='"+first_turbine+"'"
 # MAGIC ## Our finale tables are now ready to be used to build SQL Dashboards and ML models for predictive maintenance!
 # MAGIC <img style="float: right" width="400" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-1.png"/>
 # MAGIC
-# MAGIC
-# MAGIC Switch to Databricks SQL to see how this data can easily be requested with the [Turbine DBSQL Dashboard](/sql/dashboards/03051bc8-6bba-4f40-a198-e385930cd337) to start reviewing our Wind Turbine stats or the [DBSQL Predictive maintenance Dashboard](/sql/dashboards/90b2c9c7-e5c7-46d8-b7fe-5b98ed84d5d1).
+# MAGIC Switch to Databricks SQL to see how this data can easily be requested with the [Turbine DBSQL Dashboard](/sql/dashboards/a6bb11d9-1024-47df-918d-f47edc92d5f4) to start reviewing our Wind Turbine stats or the [DBSQL Predictive maintenance Dashboard](/sql/dashboards/d966eb63-6d37-4762-b90f-d3a2b51b9ba8).
 # MAGIC
 # MAGIC Creating a single flow was simple.  However, handling many data pipeline at scale can become a real challenge:
 # MAGIC * Hard to build and maintain table dependencies 

@@ -146,7 +146,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the [Datawarehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing-iot-turbine) to start running your BI queries or access or directly open the <a href="/sql/dashboards/03051bc8-6bba-4f40-a198-e385930cd337" target="_blank">Wind turbine sensor dashboard</a>
+-- MAGIC Open the [Datawarehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing-iot-turbine) to start running your BI queries or access or directly open the <a href="/sql/dashboards/a6bb11d9-1024-47df-918d-f47edc92d5f4" target="_blank">Wind turbine sensor dashboard</a>
 
 -- COMMAND ----------
 
@@ -189,7 +189,7 @@
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC Open the <a href='/sql/dashboards/90b2c9c7-e5c7-46d8-b7fe-5b98ed84d5d1' target="_blank">DBSQL Predictive maintenance Dashboard</a> to have a complete view of your wind turbine farm, including potential faulty turbines and action to remedy that.
+-- MAGIC Open the <a href='/sql/dashboards/d966eb63-6d37-4762-b90f-d3a2b51b9ba8' target="_blank">DBSQL Predictive maintenance Dashboard</a> to have a complete view of your wind turbine farm, including potential faulty turbines and action to remedy that.
 
 -- COMMAND ----------
 

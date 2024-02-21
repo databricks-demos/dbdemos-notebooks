@@ -219,7 +219,6 @@ class EndpointApiClient:
 
     def _process(self, r, allow_error = False):
       if r.status_code == 500 or r.status_code == 403 or not allow_error:
-        print(r.text)
         r.raise_for_status()
       return r.json()
 
@@ -228,13 +227,11 @@ class EndpointApiClient:
 def send_requests_to_endpoint_and_wait_for_payload_to_be_available(endpoint_name, question_df, limit=50):
   print(f'Sending {limit} requests to the endpoint {endpoint_name}, this will takes a few seconds...')
   #send some requests
-  from databricks.sdk import WorkspaceClient
-  w = WorkspaceClient()
+  serving_client = EndpointApiClient()
   def answer_question(question):
-    df_split = DataframeSplitInput(columns=["messages"],
-                                   data=[[ {"messages": [{"role": "user", "content": question}]} ]])
-    answer = w.serving_endpoints.query(endpoint_name, dataframe_split=df_split)
-    return answer.predictions[0]
+    data = {"messages": [{"role": "user", "content": question}]}
+    answer = serving_client.query_inference_endpoint(endpoint_name, data)
+    return answer[0]
 
   df_questions = question_df.limit(limit).toPandas()['question']
   with ThreadPoolExecutor(max_workers=5) as executor:

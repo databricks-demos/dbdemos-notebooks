@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.9.0 lxml==4.9.3 transformers==4.30.2 langchain==0.0.344 databricks-vectorsearch==0.22
+# MAGIC %pip install mlflow==2.10.1 lxml==4.9.3 transformers==4.30.2 langchain==0.1.5 databricks-vectorsearch==0.22
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -373,10 +373,10 @@ def test_demo_permissions(host, secret_scope, secret_key, vs_endpoint_name, inde
     vs_index = vsc.get_index(endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name)
     if embedding_endpoint_name:
       if managed_embeddings:
-        from langchain.embeddings import DatabricksEmbeddings
+        from langchain_community.embeddings import DatabricksEmbeddings
         results = vs_index.similarity_search(query_text='What is Apache Spark?', columns=["content"], num_results=1)
       else:
-        from langchain.embeddings import DatabricksEmbeddings
+        from langchain_community.embeddings import DatabricksEmbeddings
         embedding_model = DatabricksEmbeddings(endpoint=embedding_endpoint_name)
         embeddings = embedding_model.embed_query('What is Apache Spark?')
         results = vs_index.similarity_search(query_vector=embeddings, columns=["content"], num_results=1)

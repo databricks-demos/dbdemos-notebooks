@@ -250,7 +250,7 @@ print(embeddings)
 from databricks.vector_search.client import VectorSearchClient
 vsc = VectorSearchClient()
 
-if VECTOR_SEARCH_ENDPOINT_NAME not in [e['name'] for e in vsc.list_endpoints().get('endpoints', [])]:
+if not endpoint_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME):
     vsc.create_endpoint(name=VECTOR_SEARCH_ENDPOINT_NAME, endpoint_type="STANDARD")
 
 wait_for_vs_endpoint_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME)

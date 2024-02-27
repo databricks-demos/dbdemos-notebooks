@@ -1,15 +1,28 @@
 # Databricks notebook source
 # MAGIC %md 
-# MAGIC 
+# MAGIC ### A cluster has been created for this demo
+# MAGIC To run this demo, just select the cluster `dbdemos-feature-store-jeanne_choo` from the dropdown menu ([open cluster configuration](https://e2-dogfood-brickstore-mt-bug-bash.staging.cloud.databricks.com/#setting/clusters/1206-010120-r87nuk1p/configuration)). <br />
+# MAGIC *Note: If the cluster was deleted after 30 days, you can re-create it with `dbdemos.create_cluster('feature-store')` or re-install the demo: `dbdemos.install('feature-store')`*
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC
 # MAGIC # Feature store Travel Agency recommendation - Advanced
-# MAGIC 
+# MAGIC
 # MAGIC For this demo, we'll go deeper in the Feature Store capabilities, adding multiple Feature Store table and introducing point in time lookup.
-# MAGIC 
+# MAGIC
 # MAGIC We'll use the same dataset as before and implement the same use-case: recommender model for a Travel agency, pushing personalized offer based on what our customers are the most likely to buy.
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init-basic $catalog="hive_metastore"
+# MAGIC %run ./_resources/00-init-basic $catalog="feat_eng"
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE CATALOG feat_eng;
+# MAGIC USE SCHEMA dbdemos_fs_travel_shared
 
 # COMMAND ----------
 
@@ -19,45 +32,45 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC 
+# MAGIC
 # MAGIC ## 1: Create our Feature Tables
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/feature_store_creation_2.png" width="800px" style="float: right">
-# MAGIC 
+# MAGIC
 # MAGIC In this second example, we'll introduce more tables and new features calculated with window functions.
-# MAGIC 
+# MAGIC
 # MAGIC To simplify updates & refresh, we'll split them in 2 tables:
-# MAGIC 
+# MAGIC
 # MAGIC * **User features**: contains all the features for a given user in a given point in time (location, previous purchases if any etc)
-# MAGIC 
+# MAGIC
 # MAGIC * **Destination features**: data on the travel destination for a given point in time (interest tracked by the number of clicks & impression)
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC ### Point-in-time support for feature tables
-# MAGIC 
+# MAGIC
 # MAGIC Databricks Feature Store supports use cases that require point-in-time correctness.
-# MAGIC 
+# MAGIC
 # MAGIC The data used to train a model often has time dependencies built into it. 
-# MAGIC 
+# MAGIC
 # MAGIC Because we are adding rolling-window features, our Feature Table will contain data on all the dataset timeframe. 
-# MAGIC 
+# MAGIC
 # MAGIC When we build our model, we must consider only feature values up until the time of the observed target value. If you do not explicitly take into account the timestamp of each observation, you might inadvertently use feature values measured after the timestamp of the target value for training. This is called “data leakage” and can negatively affect the model’s performance.
-# MAGIC 
+# MAGIC
 # MAGIC Time series feature tables include a timestamp key column that ensures that each row in the training dataset represents the latest known feature values as of the row’s timestamp. 
-# MAGIC 
+# MAGIC
 # MAGIC In our case, this timestamp key will be the `ts` field, present in our 2 feature tables.
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC ### Calculating the features
-# MAGIC 
+# MAGIC
 # MAGIC Let's calculate the aggregated features from the vacation purchase logs for destinations and users. 
-# MAGIC 
+# MAGIC
 # MAGIC The user features capture the user profile information such as past purchased price. Because the booking data does not change very often, it can be computed once per day in batch.
-# MAGIC 
+# MAGIC
 # MAGIC The destination features include popularity features such as impressions and clicks, as well as pricing features such as price at the time of booking.
 
 # COMMAND ----------
@@ -117,24 +130,26 @@ display(destination_features_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ### Creating the Feature Table
-# MAGIC 
+# MAGIC
 # MAGIC Let's use the FeatureStore client to save our 2 tables. Note the `timestamp_keys='ts'` parameters that we're adding during the table creation.
-# MAGIC 
+# MAGIC
 # MAGIC Databricks Feature Store will use this information to automatically filter features and prevent from potential leakage.
 
 # COMMAND ----------
 
 # DBTITLE 1,user_features
-fs = feature_store.FeatureStoreClient()
-# help(fs.create_table)
+from databricks.feature_engineering import FeatureEngineeringClient
+
+fe = FeatureEngineeringClient()
+# help(fe.create_table)
 
 # first create a table with User Features calculated above 
-fs_table_name_users = f"{database_name}.user_features_advanced"
-fs.create_table(
-    name=fs_table_name_users, # unique table name (in case you re-run the notebook multiple times)
-    primary_keys=["user_id"],
+fe_table_name_users = f"{database_name}.user_features_advanced"
+fe.create_table(
+    name=fe_table_name_users, # unique table name (in case you re-run the notebook multiple times)
+    primary_keys=["user_id", "ts"],
     timestamp_keys="ts",
     df=user_features_df,
     description="User Features",
@@ -144,42 +159,42 @@ fs.create_table(
 # COMMAND ----------
 
 # DBTITLE 1,destination_features
-fs_table_name_destinations = f"{database_name}.destination_features_advanced"
+fe_table_name_destinations = f"{database_name}.destination_features_advanced"
 # second create another Feature Table from popular Destinations
 # for the second table, we show how to create and write as two separate operations
-fs.create_table(
-    name=fs_table_name_destinations, # unique table name (in case you re-run the notebook multiple times)
-    primary_keys=["destination_id"],
+fe.create_table(
+    name=fe_table_name_destinations, # unique table name (in case you re-run the notebook multiple times)
+    primary_keys=["destination_id", "ts"],
     timestamp_keys="ts", 
     schema=destination_features_df.schema,
     description="Destination Popularity Features",
     tags={"team":"analytics"} # if you have multiple team creating tables, maybe worse of adding a tag 
 )
-fs.write_table(name=fs_table_name_destinations, df=destination_features_df, mode="overwrite")
+fe.write_table(name=fe_table_name_destinations, df=destination_features_df)
 
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC 
+# MAGIC
 # MAGIC As in our previous example, the 2 feature store tables were created. 
-# MAGIC 
+# MAGIC
 # MAGIC You can explore them using the Feature Store UI under the Machine Learning section in your left menu. You'll find all the feature created, including a reference to this notebook and the version used during the feature table creation.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## 2: Train a model with FS and timestamp lookup
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Create the training dataset
-# MAGIC 
+# MAGIC
 # MAGIC The next step is to build a training dataset. 
-# MAGIC 
+# MAGIC
 # MAGIC Because we have 2 feature tables, we'll add 2 `FeatureLookup` entries, specifying the key so that the feature store engine can join using this field.
-# MAGIC 
+# MAGIC
 # MAGIC We will also add the `timestamp_lookup_key` property to `ts` so that the engine filter the features based on this key.
 
 # COMMAND ----------
@@ -194,28 +209,28 @@ display(test_labels_df)
 
 # COMMAND ----------
 
-from databricks import feature_store
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from databricks.feature_store import feature_table, FeatureLookup
 
-fs = feature_store.FeatureStoreClient()
+fe = FeatureEngineeringClient()
 
 model_feature_lookups = [
       FeatureLookup(
-          table_name=fs_table_name_destinations,
+          table_name=fe_table_name_destinations,
           lookup_key="destination_id",
           timestamp_lookup_key="ts"
       ),
       FeatureLookup(
-          table_name=fs_table_name_users,
+          table_name=fe_table_name_users,
           lookup_key="user_id",
-          feature_names=["mean_price_7d", "last_6m_purchases", "day_of_week_sin", "day_of_week_cos", "day_of_month_sin", "day_of_month_cos", "hour_sin", "hour_cos"], # if you dont specify here the FS will take all your feature apart from primary_keys 
+          feature_names=["mean_price_7d", "last_6m_purchases", "day_of_week_sin", "day_of_week_cos", "day_of_month_sin", "day_of_month_cos", "hour_sin", "hour_cos"], # if you dont specify here the FeatureEngineeringClient will take all your feature apart from primary_keys 
           timestamp_lookup_key="ts"
       )
 ]
 
-# fs.create_training_set will look up features in model_feature_lookups with matched key from training_labels_df
-training_set = fs.create_training_set(
-    training_labels_df, # joining the original Dataset, with our FeatureLookupTable
+# fe.create_training_set will look up features in model_feature_lookups with matched key from training_labels_df
+training_set = fe.create_training_set(
+    df=training_labels_df, # joining the original Dataset, with our FeatureLookupTable
     feature_lookups=model_feature_lookups,
     exclude_columns=["ts", "destination_id", "user_id"], # exclude id columns as we don't want them as feature
     label='purchased',
@@ -228,14 +243,14 @@ display(training_pd)
 
 # MAGIC %md 
 # MAGIC ### Creating the model using Databricks AutoML 
-# MAGIC 
+# MAGIC
 # MAGIC Instead of creating a basic model like previously, we will use <a href="https://docs.databricks.com/machine-learning/automl/index.html#classification" target="_blank">Databricks AutoML</a> to train our model, using best practices out of the box.
-# MAGIC 
+# MAGIC
 # MAGIC While you can do that using the UI directly (+New => AutoML), we'll be using the `databricks.automl` API to have a reproductible flow.
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC After running the previous cell, you will notice two notebooks and an MLflow experiment:
-# MAGIC 
+# MAGIC
 # MAGIC * **Data exploration notebook**: we can see a Profiling Report which organizes the input columns and discusses values, frequency and other information
 # MAGIC * **Best trial notebook**: shows the source code for reproducing the best trial conducted by AutoML
 # MAGIC * **MLflow experiment**: contains high level information, such as the root artifact location, experiment ID, and experiment tags. The list of trials contains detailed summaries of each trial, such as the notebook and model location, training parameters, and overall metrics.
@@ -245,31 +260,31 @@ display(training_pd)
 # DBTITLE 1,Start an AutoML run
 import databricks.automl as db_automl
   
-summary_cl = db_automl.classify(training_pd, target_col="purchased", primary_metric="log_loss", timeout_minutes=5, experiment_dir = "/dbdemos/experiments/feature_store")
+summary_cl = db_automl.classify(training_pd, target_col="purchased", primary_metric="log_loss", timeout_minutes=10, experiment_dir = "/dbdemos/experiments/feature_store")
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC 
+# MAGIC
 # MAGIC #### Get best run from automl MLFlow experiment
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/automl_experm.png" alt="step12" width="700" style="float: right; margin-left: 10px" />
-# MAGIC 
+# MAGIC
 # MAGIC Open the **MLflow experiment** from the link above and explore your best run.
-# MAGIC 
+# MAGIC
 # MAGIC In a real deployment, we would review the notebook generated and potentially improve it using our domain knowledge before deploying it in production.
-# MAGIC 
+# MAGIC
 # MAGIC For this Feature Store demo, we'll simply get the best model and deploy it in the registry.
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC ### Saving our best model to MLflow registry
-# MAGIC 
+# MAGIC
 # MAGIC Next, we'll get Automl best model and add it to our registry. Because we the feature store to keep track of our model & features, we'll log the best model as a new run using the `FeatureStoreClient.log_model()` function.
-# MAGIC 
+# MAGIC
 # MAGIC **summary_cl** provides the automl information required to automate the deployment process. We'll use it to select our best run and deploy as Production production.
-# MAGIC 
+# MAGIC
 # MAGIC *Note that another way to find the best run would be to use search_runs function from mlflow API, sorting by our accuracy metric.*
 
 # COMMAND ----------
@@ -290,7 +305,7 @@ with open(mlflow.artifacts.download_artifacts("runs:/"+summary_cl.best_trial.mlf
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model", experiment_id=summary_cl.experiment.experiment_id) as run:
   #Use the feature store client to log our best model
-  fs.log_model(
+  fe.log_model(
               model=best_model, # object of your model
               artifact_path="model", #name of the Artifact under MlFlow
               flavor=mlflow.sklearn, # flavour of the model (our LightGBM model has a SkLearn Flavour)
@@ -308,32 +323,36 @@ model_registered = mlflow.register_model(f"runs:/{run.info.run_id}/model", model
 #Move the model in production
 client = mlflow.tracking.MlflowClient()
 print("registering model version "+model_registered.version+" as production model")
-client.transition_model_version_stage(model_name_advanced, model_registered.version, stage = "Production", archive_existing_versions=True)
+
+destination_alias = "Production"
+client.set_registered_model_alias(model_name_advanced, destination_alias, version=model_registered.version)
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC 
+# MAGIC
 # MAGIC ## 3: Running inference
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/feature_store_inference_advanced.png" style="float: right" width="850px" />
-# MAGIC 
+# MAGIC
 # MAGIC As previously, we can easily leverage the feature store to get our predictions.
-# MAGIC 
+# MAGIC
 # MAGIC No need to fetch or recompute the feature, we just need the lookup ids and the feature store will automatically fetch them from the feature store table. 
 
 # COMMAND ----------
 
 ## For sake of simplicity, we will just predict on the same inference_data_df
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
 batch_scoring = test_labels_df.select('user_id', 'destination_id', 'ts', 'purchased')
-scored_df = fs.score_batch(f"models:/{model_name_advanced}/Production", batch_scoring, result_type="boolean")
+scored_df = fe.score_batch(model_uri=f"models:/{model_name_advanced}@Production", df=batch_scoring, result_type="boolean")
 display(scored_df)
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC ### Prediction accuracy 
-# MAGIC 
+# MAGIC
 # MAGIC Let's compute our test prediction accuracy with SparkML
 
 # COMMAND ----------
@@ -351,20 +370,99 @@ print("Accuracy: ", accuracy)
 
 # COMMAND ----------
 
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC ## 4: Making our inference table available to third-parties outside Databricks
+# MAGIC
+# MAGIC Sometimes, we need to make data in the Databricks platform available to models or applications deployed outside of Databricks. [Feature & Function Serving endpoints](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/feature-function-serving) are an autoscaling, high-availability, low-latency service for serving data, whether as features, inferences or functions, to third parties. 
+# MAGIC
+# MAGIC With [Databricks Feature & Function Serving](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/feature-function-serving), you can serve structured data for retrieval augmented generation (RAG) applications, as well as features that are required for other applications, such as models served outside of Databricks or any other application that requires features based on data in Unity Catalog.
+
+# COMMAND ----------
+
+# DBTITLE 1,Save our inference table into Unity Catalog
+inference_table_name = f"{catalog}.{database_name}.{model_name_advanced}_inferences"
+fe.create_table(name=inference_table_name, primary_keys=["user_id", "ts"], df=scored_df)
+
+# COMMAND ----------
+
 # MAGIC %md 
-# MAGIC 
+# MAGIC #### Publish inference table as a Databricks-managed online table
+# MAGIC
+# MAGIC An [online table](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html) is a read-only copy of a Delta Table that is stored in row-oriented format optimized for low-latency, high-throughput access. Our data needs to be saved into an online table in order to expose the data as a Feature and Function Serving endpoint. 
+# MAGIC
+# MAGIC After saving our inferences into a Delta table, creating an online table is a one-step process. Just select the Delta Table from the Catalog Explorer and select Create online table.
+# MAGIC
+# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/02_advanced_create_online_store.png" style="float: right" width="850px" />
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC We can see that our online table has been successfully created. 
+# MAGIC
+# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/02_advanced_created_online_store.png" style="float: right" width="850px" />
+
+# COMMAND ----------
+
+# DBTITLE 1,Create a user-defined set of features using a FeatureSpec
+features = [
+  # Lookup column `average_yearly_spend` and `country` from a table in UC by the input `user_id`.
+  FeatureLookup(
+    table_name=inference_table_name,
+    lookup_key=["user_id", "ts"],
+  ),]
+
+# Create a `FeatureSpec` with the features defined above.
+# The `FeatureSpec` can be accessed in Unity Catalog as a function.
+fe.create_feature_spec(
+  name=inference_table_name,
+  features=features,
+)
+
+# COMMAND ----------
+
+# DBTITLE 1,Use the FeatureSpec to define an Feature and Function Serving endpoint
+from databricks.feature_engineering.entities.feature_serving_endpoint import (
+  ServedEntity,
+  EndpointCoreConfig,
+)
+
+fe.create_feature_serving_endpoint(
+  name='dbdemos_travel_advanced_shared_model_inferences_endpoint',
+    config=EndpointCoreConfig(
+    served_entities=ServedEntity(
+      feature_spec_name=inference_table_name,
+             workload_size="Small",
+             scale_to_zero_enabled=True,
+             instance_profile_arn=None,
+    )
+  )
+)
+
+# COMMAND ----------
+
+endpoint = fe.get_feature_serving_endpoint(name="dbdemos_travel_advanced_shared_model_inferences_endpoint")
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC
 # MAGIC ## Summary 
-# MAGIC 
+# MAGIC
 # MAGIC We've seen how the feature store can handle multiple table, leverage a more advanced model with Databricks AutoML and use point-in-time lookup when your dataset contains temporal information and you don't want the future information to leak.
-# MAGIC 
+# MAGIC
 # MAGIC Databricks Feature store brings you a full traceability, knowing which model is using which feature in which notebook/job.
-# MAGIC 
+# MAGIC
 # MAGIC It also simplify inferences by always making sure the same features will be used for model training and inference, always querying the same feature table based on your lookup keys.
-# MAGIC 
+# MAGIC
 # MAGIC ## Next Steps 
-# MAGIC 
+# MAGIC
 # MAGIC Open the [03_Feature_store_expert notebook]($./03_Feature_store_expert) to explore more Feature Store benefits & capabilities:
-# MAGIC 
+# MAGIC
 # MAGIC - Multiple lookup tables
 # MAGIC - Streaming datasets
 # MAGIC - On-demand feature computation wrapped with the model

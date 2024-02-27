@@ -131,7 +131,7 @@ import time
 
 def endpoint_exists(vsc, vs_endpoint_name):
   try:
-    return vs_endpoint_name not in [e['name'] for e in vsc.list_endpoints().get('endpoints', [])]:
+    return vs_endpoint_name not in [e['name'] for e in vsc.list_endpoints().get('endpoints', [])]
   except Exception as e:
     #Temp fix for potential REQUEST_LIMIT_EXCEEDED issue
     if "REQUEST_LIMIT_EXCEEDED" in str(e):

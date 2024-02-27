@@ -1,20 +1,19 @@
 # Databricks notebook source
 # MAGIC %md 
 # MAGIC # init notebook setting up the backend. 
-# MAGIC 
+# MAGIC
 # MAGIC Do not edit the notebook, it contains import and helpers for the demo
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "hive_metastore", "Catalog")
+dbutils.widgets.text("catalog", "feat_eng", "Catalog")
 catalog = dbutils.widgets.get("catalog")
-assert catalog == "hive_metastore", "Only Hive Metastore is supported for now"
 main_naming = "dbdemos_fs_travel"
 database_name = f"{main_naming}_shared"
 
 # COMMAND ----------
 
-# MAGIC %run ../../../../_resources/00-global-setup $reset_all_data=false $catalog=hive_metastore $db=dbdemos_fs_travel_shared
+# MAGIC %run ../../../../_resources/00-global-setup $reset_all_data=false $catalog=feat_eng $db=dbdemos_fs_travel_shared
 
 # COMMAND ----------
 

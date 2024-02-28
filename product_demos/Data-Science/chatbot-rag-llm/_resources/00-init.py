@@ -116,7 +116,7 @@ spark.sql(f"""USE `{catalog}`.`{dbName}`""")
 
 # Helper function
 def get_latest_model_version(model_name):
-    mlflow_client = MlflowClient()
+    mlflow_client = MlflowClient(registry_uri="databricks-uc")
     latest_version = 1
     for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
         version_int = int(mv.version)

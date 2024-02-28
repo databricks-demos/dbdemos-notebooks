@@ -4,13 +4,9 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "main", "Catalog")
-catalog = dbutils.widgets.get("catalog")
-database = "uc_acl"
-import pandas as pd
-from glob import glob
-
-df = pd.read_parquet("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/retail/c360/users_parquet/users.parquet.snappy")
+catalog = "main"
+schema = "uc_acl"
+database = schema
 
 # COMMAND ----------
 
@@ -62,6 +58,9 @@ spark.sql(f"USE SCHEMA {database}")
 # COMMAND ----------
 
 from pyspark.sql.functions import col
+import pandas as pd
+df = pd.read_parquet("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/retail/c360/users_parquet/users.parquet.snappy")
+
 spark.createDataFrame(df).withColumn('age_group', col("age_group").cast("double")) \
                          .withColumn('gender', col("gender").cast("double")) \
                          .write.mode('overwrite').option('mergeSchema', 'true').saveAsTable("customers")

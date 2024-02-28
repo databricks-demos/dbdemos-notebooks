@@ -38,13 +38,8 @@
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC dbutils.widgets.text("catalog", "main", "Catalog")
-
--- COMMAND ----------
-
 -- DBTITLE 1,Initialize the demo dataset
--- MAGIC %run ./_resources/00-setup $catalog=$catalog
+-- MAGIC %run ./_resources/00-setup
 
 -- COMMAND ----------
 
@@ -70,9 +65,9 @@
 -- COMMAND ----------
 
 -- The demo will create and use the catalog defined:
-CREATE CATALOG IF NOT EXISTS ${catalog};
+CREATE CATALOG IF NOT EXISTS main;
 -- Make it default for future usage (we won't have to specify it)
-USE CATALOG ${catalog};
+USE CATALOG main;
 
 -- COMMAND ----------
 
@@ -93,12 +88,7 @@ SELECT CURRENT_CATALOG();
 -- COMMAND ----------
 
 CREATE SCHEMA IF NOT EXISTS uc_acl;
-USE uc_acl;
-
--- COMMAND ----------
-
--- DBTITLE 1,Let's make sure that all users can use the uc_acl schema for our demo:
-GRANT CREATE, USAGE ON SCHEMA uc_acl TO `account users`;
+USE SCHEMA uc_acl;
 
 -- COMMAND ----------
 
@@ -116,7 +106,7 @@ GRANT CREATE, USAGE ON SCHEMA uc_acl TO `account users`;
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS uc_acl.customers (
+CREATE TABLE IF NOT EXISTS customers (
   id STRING,
   creation_date STRING,
   firstname STRING,
@@ -126,7 +116,7 @@ CREATE TABLE IF NOT EXISTS uc_acl.customers (
   address STRING,
   gender DOUBLE,
   age_group DOUBLE); ; 
--- GRANT SELECT, MODIFY on TABLE uc_acl.customers TO `account users`;  -- for the demo only, allow all users to edit the table - don't do that in production!
+GRANT SELECT, MODIFY on TABLE customers TO `account users`;  -- for the demo only, allow all users to edit the table - don't do that in production!
 
 -- COMMAND ----------
 
@@ -137,7 +127,7 @@ CREATE TABLE IF NOT EXISTS uc_acl.customers (
 
 -- COMMAND ----------
 
-SELECT * FROM  uc_acl.customers
+SELECT * FROM  customers
 
 -- COMMAND ----------
 
@@ -156,15 +146,15 @@ SELECT * FROM  uc_acl.customers
 -- COMMAND ----------
 
 -- Let's grant all users a SELECT
-GRANT SELECT ON TABLE uc_acl.customers TO `account users`;
+GRANT SELECT ON TABLE customers TO `account users`;
 
 -- We'll grant an extra MODIFY to our Data Engineer
 -- Note: make sure you created the dataengineers group first as an account admin!
-GRANT SELECT, MODIFY ON TABLE uc_acl.customers TO `dataengineers`;
+GRANT SELECT, MODIFY ON TABLE customers TO `dataengineers`;
 
 -- COMMAND ----------
 
-SHOW GRANTS ON TABLE uc_acl.customers
+SHOW GRANTS ON TABLE customers
 
 -- COMMAND ----------
 

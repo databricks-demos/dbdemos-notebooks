@@ -8,6 +8,9 @@
 {
   "name": "uc-01-acl",
   "category": "governance",
+  "custom_schema_supported": True,
+  "default_schema": "uc_acl",
+  "default_catalog": "main",
   "title": "Table ACL & Row + Column Level security with UC",
   "description": "Discover how to GRANT permission on your table with Unity Catalog and implement fined grained control such as data masking at column level or filter rows based on each user.",
   "fullDescription": "Unity Catalog is a unified governance solution for all data and AI assets including files, tables, machine learning models and dashboards in your lakehouse on any cloud.<br/>In this demo, we’ll show how Unity Catalog can be used to secure your table and grant ACL on tables. We’ll also see how Unity Catalog can provide dynamic data masking on columns leveraging SQL functions, and filter rows based on the current user. This will allow you to hide or anonymize  data based on each user permissions, from a simple condition based on GROUP or more advanced control.",

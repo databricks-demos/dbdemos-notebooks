@@ -45,15 +45,11 @@
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC dbutils.widgets.text("catalog", "main", "Catalog")
-
--- COMMAND ----------
-
 -- The demo will create and use the catalog defined:
-CREATE CATALOG IF NOT EXISTS ${catalog};
--- Make it default for future usage
-USE CATALOG ${catalog};
+CREATE CATALOG IF NOT EXISTS main;
+CREATE SCHEMA IF NOT EXISTS uc_acl;
+-- Make it default for future usage (we won't have to specify it)
+USE CATALOG main;
 USE SCHEMA uc_acl;
 
 -- COMMAND ----------

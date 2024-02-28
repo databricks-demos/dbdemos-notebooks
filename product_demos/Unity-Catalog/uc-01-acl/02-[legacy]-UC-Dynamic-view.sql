@@ -36,12 +36,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC dbutils.widgets.text("catalog", "dbdemos", "Catalog")
-
--- COMMAND ----------
-
--- MAGIC %run ./_resources/00-setup $catalog=$catalog
+-- MAGIC %run ./_resources/00-setup
 
 -- COMMAND ----------
 
@@ -50,6 +45,15 @@
 -- MAGIC Databricks has 2 functions: `current_user()` and `is_account_group_member()`.
 -- MAGIC
 -- MAGIC Theses functions can be used to dynamically get the user running the query and knowing if the user is member of a give group.
+
+-- COMMAND ----------
+
+-- The demo will create and use the catalog defined:
+CREATE CATALOG IF NOT EXISTS main;
+CREATE SCHEMA IF NOT EXISTS uc_acl;
+-- Make it default for future usage (we won't have to specify it)
+USE CATALOG main;
+USE SCHEMA uc_acl;
 
 -- COMMAND ----------
 
@@ -73,7 +77,7 @@ SELECT is_account_group_member('account users'), is_account_group_member('ANALYS
 
 -- COMMAND ----------
 
-SELECT * FROM uc_acl.customers
+SELECT * FROM customers
 
 -- COMMAND ----------
 
@@ -100,7 +104,7 @@ SELECT * FROM uc_acl.customers
 
 -- as ANALYST from the USA (ANALYST_USA group), each USA row are now at "true"
 SELECT is_account_group_member(group_name), * FROM (
-  SELECT CONCAT("ANALYST_", country) AS group_name, country, id, firstname FROM uc_acl.customers)
+  SELECT CONCAT("ANALYST_", country) AS group_name, country, id, firstname FROM customers)
 
 -- COMMAND ----------
 
@@ -110,11 +114,11 @@ SELECT is_account_group_member(group_name), * FROM (
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW uc_acl.customer_dynamic_view  AS (
-  SELECT * FROM uc_acl.customers as customers WHERE is_account_group_member(CONCAT("ANALYST_", country))
+CREATE OR REPLACE VIEW customer_dynamic_view  AS (
+  SELECT * FROM customers as customers WHERE is_account_group_member(CONCAT("ANALYST_", country))
 );
 -- Then grant select access on the view only
-GRANT SELECT ON VIEW uc_acl.customer_dynamic_view TO `account users`;
+GRANT SELECT ON VIEW customer_dynamic_view TO `account users`;
 
 -- COMMAND ----------
 
@@ -126,7 +130,7 @@ GRANT SELECT ON VIEW uc_acl.customer_dynamic_view TO `account users`;
 -- COMMAND ----------
 
 -- We should be part of the ANALYST_USA group. As result, we now have a row-level filter applied in our secured view and we only see the USA country:
-select * from uc_acl.customer_dynamic_view
+select * from customer_dynamic_view
 
 -- COMMAND ----------
 
@@ -151,12 +155,12 @@ select * from uc_acl.customer_dynamic_view
 
 -- COMMAND ----------
 
-select * from uc_acl.analyst_permissions where analyst_email = current_user()
+select * from analyst_permissions where analyst_email = current_user()
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's create the secure view to filter PII information and country based on the analyst permission
-CREATE OR REPLACE VIEW uc_acl.customer_dynamic_view_gdpr AS (
+CREATE OR REPLACE VIEW customer_dynamic_view_gdpr AS (
   SELECT 
   id ,
   creation_date,
@@ -167,13 +171,13 @@ CREATE OR REPLACE VIEW uc_acl.customer_dynamic_view_gdpr AS (
   CASE WHEN country.gdpr_filter=1 THEN sha1(lastname)  ELSE lastname  END AS lastname,
   CASE WHEN country.gdpr_filter=1 THEN sha1(email)     ELSE email     END AS email
   FROM 
-    uc_acl.customers as customers INNER JOIN 
-    uc_acl.analyst_permissions country  ON country_filter=country
+    customers as customers INNER JOIN 
+    analyst_permissions country  ON country_filter=country
   WHERE 
     country.analyst_email=current_user() 
 );
 -- Then grant select access on the view only
-GRANT SELECT ON VIEW uc_acl.customer_dynamic_view_gdpr TO `account users`;
+GRANT SELECT ON VIEW customer_dynamic_view_gdpr TO `account users`;
 
 
 -- COMMAND ----------
@@ -184,7 +188,7 @@ GRANT SELECT ON VIEW uc_acl.customer_dynamic_view_gdpr TO `account users`;
 
 -- COMMAND ----------
 
--- MAGIC %sql select * from uc_acl.customer_dynamic_view_gdpr 
+-- MAGIC %sql select * from customer_dynamic_view_gdpr 
 
 -- COMMAND ----------
 
@@ -195,9 +199,9 @@ GRANT SELECT ON VIEW uc_acl.customer_dynamic_view_gdpr TO `account users`;
 
 -- COMMAND ----------
 
-UPDATE uc_acl.analyst_permissions SET country_filter='USA', gdpr_filter=1 where analyst_email=current_user();
+UPDATE analyst_permissions SET country_filter='USA', gdpr_filter=1 where analyst_email=current_user();
 
-select * from uc_acl.customer_dynamic_view_gdpr ;
+select * from customer_dynamic_view_gdpr ;
 
 -- COMMAND ----------
 

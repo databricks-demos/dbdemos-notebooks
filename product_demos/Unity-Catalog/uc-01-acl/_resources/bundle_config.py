@@ -55,7 +55,7 @@
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
-      "title":  "Row-level & Data masking ACL", 
+      "title":  "Legacy Dynamic views", 
       "description": "Create dynamic views with UC for finer access control (legacy).",
       "parameters": {"catalog": "dbdemos"}
     }

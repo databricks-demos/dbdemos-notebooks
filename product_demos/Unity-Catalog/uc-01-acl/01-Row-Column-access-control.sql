@@ -27,12 +27,12 @@
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC ## I. Prepare the demo
+-- MAGIC ## 1. Prepare the demo
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### I.1 Cluster setup for UC
+-- MAGIC ### 1.1 Cluster setup for UC
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_shared.png?raw=true" width="500px" style="float: right"/>
 -- MAGIC
@@ -55,7 +55,7 @@ USE SCHEMA uc_acl;
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC ### I.2 This demo uses groups to showcase fine grained access control.
+-- MAGIC ### 1.2 This demo uses groups to showcase fine grained access control.
 -- MAGIC
 -- MAGIC To see the desired results for this demo, this notebook assumes that the user 
 -- MAGIC -  __is__ a member of groups `ANALYST_USA` and `region_admin_SPAIN`
@@ -80,7 +80,7 @@ ALTER TABLE customers ALTER COLUMN address DROP MASK;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### I.3 Review our 'customers' table
+-- MAGIC ### 1.3 Review our 'customers' table
 -- MAGIC We created the table in the previous notebook (make sure you run it before this one).
 -- MAGIC
 -- MAGIC The table was created without restriction, all users can access all the rows
@@ -100,7 +100,7 @@ SELECT DISTINCT(country) FROM customers;
 
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC ## II. Row-level access control
+-- MAGIC ##  2. Row-level access control
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/acls/table_uc_rls.png?raw=true" width="200" style="float: right; margin-left: 20; margin-right: 20" alt="databricks-demos"/>
 -- MAGIC
@@ -122,7 +122,7 @@ SELECT current_user(), is_account_group_member('account users');
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### II.1. Define the access rule
+-- MAGIC ### 2.1. Define the access rule
 -- MAGIC
 -- MAGIC To declare an access control rule, you will need to create a SQL function that returns a **boolean**.
 -- MAGIC Unity Catalog will then hide the row if the function returns `False`.
@@ -153,7 +153,7 @@ SELECT region_filter('USA'), region_filter('SPAIN')
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### II.2. Apply the access rule
+-- MAGIC ### 2.2. Apply the access rule
 -- MAGIC
 -- MAGIC With our rule function declared, all that's left to do is apply it on a table and see it in action!
 -- MAGIC A simple `SET ROW FILTER` followed by a call to the function is all it takes.
@@ -195,7 +195,7 @@ SELECT DISTINCT(country) FROM customers;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### II.3 More advanced dynamic filters. 
+-- MAGIC ### 2.3 More advanced dynamic filters. 
 -- MAGIC Let's imagine we have a few regional user groups defined as : `ANALYST_USA`, `ANALYST_SPAIN`, etc... and we want to use these groups to *dynamically* filter on a country value. 
 -- MAGIC
 -- MAGIC This can easily be done by checking the group based on the region value.
@@ -224,12 +224,12 @@ SELECT DISTINCT(country) FROM customers;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## IV. Column-level access control
+-- MAGIC ## 3. Column-level access control
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### IV.1. Define the access rule (masking PII data)
+-- MAGIC ### 3.1. Define the access rule (masking PII data)
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/acls/table_uc_cls.png?raw=true" width="200" style="float: right; margin-top: 20; margin-left: 20; margin-right: 20" alt="databricks-demos"/>
 -- MAGIC
@@ -253,7 +253,7 @@ GRANT ALL PRIVILEGES ON FUNCTION simple_mask TO `account users`; --only for demo
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### IV.2. Apply the access rule
+-- MAGIC ### 3.2. Apply the access rule
 -- MAGIC
 -- MAGIC To change things a bit, instead of applying a rule on an existing table, we'll demonstrte here how we can apply a rule upon the creation of a new table.
 -- MAGIC
@@ -289,7 +289,7 @@ SELECT * FROM patient_ssn;
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## V. Combine RL and CL access control
+-- MAGIC ## 3. Combine RL and CL access control
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/acls/table_uc_rlscls.png?raw=true" width="200" style="float: right; margin-top: 20; margin-left: 20; margin-right: 20" alt="databricks-demos"/>
 -- MAGIC
@@ -317,7 +317,7 @@ FROM customers;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## VI. Change the definition of the access control rules
+-- MAGIC ## 4. Change the definition of the access control rules
 -- MAGIC If the business ever decides to change a rule's conditions or the way they want the data to be returned in response to these conditions, it is easy to adapt with Unity Catalog.
 -- MAGIC
 -- MAGIC Since the function is the central element, all you need to do is update it and the effects will automatically be reflected on all the tables that it has been attached to.
@@ -355,7 +355,7 @@ SELECT * FROM patient_ssn;
 
 -- MAGIC
 -- MAGIC %md
--- MAGIC ## VII. Dynamic access rules with lookup data
+-- MAGIC ## 5. Dynamic access rules with lookup data
 -- MAGIC
 -- MAGIC So we've seen how through functions, Unity Catalog give us the flexibility to overwrite the definition of an access rule but also combine multiple rules on a single table to ultimately implement complex multi-dimensional access control on our data.
 -- MAGIC
@@ -364,7 +364,7 @@ SELECT * FROM patient_ssn;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### VII.1. Create the mapping data
+-- MAGIC ### 5.1. Create the mapping data
 -- MAGIC First, let's create a mapping table. This is just a simple example, you can implement more advanced table based on your requirements
 -- MAGIC
 -- MAGIC In an organization where we have a user group for each supported language, we went ahead and mapped in this table each of these groups to their corresponding countries.
@@ -408,7 +408,7 @@ SELECT * FROM map_country_group
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### VII.3. Define the access rule with lookup data
+-- MAGIC ### 5.3. Define the access rule with lookup data
 -- MAGIC
 -- MAGIC Let's now update our dynamic row filter function to call this new table-lookup approach.
 -- MAGIC
@@ -450,7 +450,7 @@ SELECT id, creation_date, country, address, firstname, lastname, email, gender, 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## VIII. Dissociate a rule from a table
+-- MAGIC ## 6. Dissociate a rule from a table
 -- MAGIC This dissociation of the rule from the objects you apply it to, also allows you to stop applying it on the table of your choice at any time, all without :
 -- MAGIC - impacting the other tables this rule is attached to
 -- MAGIC - discontinuing the other rules that are also applied to your table
@@ -486,7 +486,7 @@ ALTER TABLE patient_ssn ALTER COLUMN ssn DROP MASK;
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## IX. Conclusion
+-- MAGIC ## 7. Conclusion
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/acls/table_uc_rlscls_intro.png?raw=true" width="200" style="float: right; margin-top: 20; margin-left: 20; margin-right: 20" alt="databricks-demos"/>
 -- MAGIC

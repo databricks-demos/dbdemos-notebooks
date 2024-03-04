@@ -12,7 +12,7 @@
 # MAGIC
 # MAGIC This table will then be used to train a ML Classification model to learn to detect anomalies in our images in real time!
 # MAGIC
-# MAGIC *Note that this demo leverage the standard spark API. You could also implement this same pipeline in pure SQL leveraging Delta Live Tables. For more details on DLT, install `dbdemos.install('dlt-loans)`*
+# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Delta Live Tables. For more details on DLT, install `dbdemos.install('dlt-loans)`*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcomputer-vision-dl%2Fetl&dt=ML">
@@ -67,18 +67,18 @@ display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Anomaly/000.JPG")
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-flow-1.png?raw=true" width="700px" style="float: right"/>
 # MAGIC
-# MAGIC The first step is to load the individual JPG images. This can be quite challenging at scale, especially for incremental load (consume only the new one).
+# MAGIC The first step is to load the individual JPG images. This can be quite challenging at scale, especially for incremental load (consume only the new ones).
 # MAGIC
 # MAGIC Databricks Autoloader can easily handle all type of format and make it very easy to ingest new datasets.
 # MAGIC
-# MAGIC Autoloader will garantee that only new files are being processed while scaling with millions of individual images. 
+# MAGIC Autoloader will guarantee that only new files are being processed while scaling with millions of individual images. 
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Load binary files with Auto Loader
 # MAGIC
-# MAGIC We can now use the Auto Loader to load images, and spark function to create the label column. Autoloader will automatically create the table and tune it accordingly, disabling compression for binary among other.
+# MAGIC We can now use the Auto Loader to load images, and a spark function to create the label column. Autoloader will automatically create the table and tune it accordingly, disabling compression for binary among other.
 # MAGIC
 # MAGIC We can also very easily display the content of the images and the labels as a table.
 
@@ -159,7 +159,7 @@ display(spark.table("pcb_labels"))
 # MAGIC
 # MAGIC In this example, we will do the following:
 # MAGIC - crop the image in the center to make them square (the model we use for fine-tuning take square images)
-# MAGIC - resize our image to smaller a resolution (256x256) as our models won't take use image in high resolution. 
+# MAGIC - resize our image to smaller a resolution (256x256) as our models won't use images with high resolution. 
 # MAGIC
 # MAGIC We will also augment our dataset to add more "damaged" items as we have here something fairly imbalanced (only 1 on 10 item has an anomaly). <br/>
 # MAGIC It looks like our system takes pcb pictures upside/down without preference and that's how our inferences will be. Let's then flip all the damaged images horizontally and add them back in our dataset.
@@ -229,7 +229,7 @@ def flip_image_horizontal_udf(content_series):
 
 # COMMAND ----------
 
-# DBTITLE 1,Final dataset has now 20% damaged images
+# DBTITLE 1,Final dataset now has 20% damaged images
 # MAGIC %sql select label, count(*) from training_dataset_augmented group by label
 
 # COMMAND ----------

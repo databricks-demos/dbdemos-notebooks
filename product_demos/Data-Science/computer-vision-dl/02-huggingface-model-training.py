@@ -9,16 +9,16 @@
 # MAGIC
 # MAGIC We'll re-use the gold table built in our previous data pipeline as training dataset.
 # MAGIC
-# MAGIC Building such a model is greatly simplified by the use of <a href="https://huggingface.co/docs/transformers/index">huggingface transformer library</a>.
+# MAGIC Building such a model is greatly simplified by using the <a href="https://huggingface.co/docs/transformers/index">huggingface transformer library</a>.
 # MAGIC  
 # MAGIC
 # MAGIC ## MLOps steps
 # MAGIC
-# MAGIC While building an image segmentation model can be easily done, deploying such model in production is much harder.
+# MAGIC While building an image segmentation model can be easily done, deploying such a model in production is much harder.
 # MAGIC
-# MAGIC Databricks simplify this process and accelerate DS journey with the help of MLFlow by providing
+# MAGIC Databricks simplifies this process and accelerates the Data Science journey with the help of MLFlow providing
 # MAGIC
-# MAGIC * Auto experimentation tracking to keep track of progress
+# MAGIC * Auto experimentation & tracking
 # MAGIC * Simple, distributed hyperparameter tuning with hyperopt to get the best model
 # MAGIC * Model packaging in MLFlow, abstracting our ML framework
 # MAGIC * Model registry for governance
@@ -46,7 +46,7 @@ display(df.limit(10))
 # MAGIC %md
 # MAGIC ## Create our Dataset from the delta table
 # MAGIC
-# MAGIC Hugging face makes this step very easily. All it takes is calling the `Dataset.from_spark` function. 
+# MAGIC Hugging face makes this step very easy. All it takes is calling the `Dataset.from_spark` function. 
 # MAGIC
 # MAGIC Read the <a href="https://www.databricks.com/blog/contributing-spark-loader-for-hugging-face-datasets">blogbost</a> for more detail on the new Delta Loader.
 
@@ -66,7 +66,7 @@ val_ds = splits['test']
 # MAGIC %md 
 # MAGIC ## Transfer learning with Hugging Face
 # MAGIC
-# MAGIC Transfer learning is the process of taking an existing model trained for another task on thousands of images, and transfering its knowledge to our domain. Hugging Face provides helper class to make transfer learning very easy to implement.
+# MAGIC Transfer learning is the process of taking an existing model trained for another task on thousands of images, and transfering its knowledge to our domain. Hugging Face provides a helper class to make transfer learning very easy to implement.
 # MAGIC
 # MAGIC
 # MAGIC The classic process is to re-train the model or part of the model (typically the last layer) using our custom dataset.
@@ -89,12 +89,12 @@ if not torch.cuda.is_available(): # is gpu
 
 # COMMAND ----------
 
-# DBTITLE 1,Define image transformations for train & validation
+# DBTITLE 1,Define image transformations for training & validation
 from PIL import Image
 import io
 from torchvision.transforms import CenterCrop, Compose, Normalize, RandomResizedCrop, Resize, ToTensor, Lambda
 
-#Extract the model feature (contains info on pre-process step required to transform our data, such as resizing & normalization)
+#Extract the model features (contains info on the pre-process step required to transform our data, such as resizing & normalization)
 #Using the model parameters makes it easy to switch to another model without any change, even if the input size is different.
 model_def = AutoFeatureExtractor.from_pretrained(model_checkpoint)
 
@@ -114,7 +114,7 @@ val_transforms = Compose([byte_to_pil,
                           normalize
                          ])
 
-# Add some random resiz & transformation to our training dataset
+# Add some random resizing & transformation to our training dataset
 def preprocess_train(batch):
     """Apply train_transforms across a batch."""
     batch["image"] = [train_transforms(image) for image in batch["image"]]
@@ -155,7 +155,7 @@ model = AutoModelForImageClassification.from_pretrained(
 # MAGIC
 # MAGIC Our dataset and model is ready. We can now start the training step to fine-tune the model.
 # MAGIC
-# MAGIC *Note that for production-grade use-case, we would typically to do some [hyperparameter](https://huggingface.co/docs/transformers/hpo_train) tuning here. We'll keep it simple for this first example and run it with fixed settings.*
+# MAGIC *Note that for production-grade use cases, we would typically to do some [hyperparameter](https://huggingface.co/docs/transformers/hpo_train) tuning here. We'll keep it simple for this first example and run it with fixed settings.*
 # MAGIC
 
 # COMMAND ----------
@@ -183,7 +183,7 @@ args = TrainingArguments(
 
 # COMMAND ----------
 
-# DBTITLE 1,define our evaluation metric
+# DBTITLE 1,Define our evaluation metric
 import numpy as np
 import evaluate
 # the compute_metrics function takes a Named Tuple as input:

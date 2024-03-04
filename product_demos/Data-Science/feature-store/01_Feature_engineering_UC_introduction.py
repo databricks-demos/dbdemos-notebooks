@@ -50,18 +50,18 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-feature-engineering
-# MAGIC
+# MAGIC %pip install databricks-feature-engineering==0.2.0 databricks-sdk==0.20.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init-basic $catalog="feat_eng"
+# MAGIC %run ./_resources/00-init-basic $reset_all_data=false
 
 # COMMAND ----------
 
 # DBTITLE 1,Let's review our silver table we'll use to create our features
-# MAGIC %sql SELECT * FROM travel_purchase
+# MAGIC %sql 
+# MAGIC SELECT * FROM travel_purchase
 
 # COMMAND ----------
 
@@ -162,7 +162,7 @@ display(df)
 
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 
-fe = FeatureEngineeringClient()
+fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 
 fe_table_name = f"travel_recommender_basic"
 fe.create_table(
@@ -304,6 +304,8 @@ x_train, x_val,  y_train, y_val = train_test_split(X_train, Y_train, test_size=0
 
 # DBTITLE 1,Train a model using the training dataset & log it using the Feature Engineering client
 mlflow.sklearn.autolog(log_input_examples=True,silent=True)
+model_name = "dbdemos_fs_travel_model"
+model_full_name = f"{catalog}.{db}.{model_name}"
 
 with mlflow.start_run(run_name="lightGBM") as run:
   #Define our LGBM model
@@ -328,29 +330,35 @@ with mlflow.start_run(run_name="lightGBM") as run:
               artifact_path="model", #name of the Artifact under MlFlow
               flavor=mlflow.sklearn, # flavour of the model (our LightGBM model has a SkLearn Flavour)
               training_set=training_set, # training set you used to train your model with AutoML
-              registered_model_name=model_registry_name, # register your best model
+              registered_model_name=model_full_name, # register your best model
           )
 
 # COMMAND ----------
 
-# MAGIC %md
+# MAGIC %md-sandbox
 # MAGIC  
-# MAGIC #### Our model is now saved in MLFlow. 
+# MAGIC #### Our model is now saved in Unity Catalog. 
+# MAGIC
+# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_model_catalog.png" width="400px" style="float: right"/>
 # MAGIC
 # MAGIC You can open the right menu to see the newly created "lightGBM" experiment, containing the model.
 # MAGIC
-# MAGIC In addition, the model also appears in Catalog Explorer, under the `feat_eng` catalog we created earlier. This way, our tables and models are logically grouped together under the same catalog, making it easy to see all assets, whether data or models, associated with a catalog.
+# MAGIC In addition, the model also appears in Catalog Explorer, under the catalog we created earlier. This way, our tables and models are logically grouped together under the same catalog, making it easy to see all assets, whether data or models, associated with a catalog.
 # MAGIC
 # MAGIC <br>
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_model_catalog.png" width="500px"/>
+# MAGIC
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md-sandbox
+# MAGIC
 # MAGIC #### Model metadata
+# MAGIC
+# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_model_version.png" width="700px" style="float: right"/>
+# MAGIC
 # MAGIC From the Catalog Explorer, we can also view more detailed model information, such as its version, its metrics and whether it has been aliased as production-ready.
 # MAGIC <br>
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_model_version.png" width="1000px"/>
+# MAGIC
 
 # COMMAND ----------
 
@@ -366,15 +374,10 @@ with mlflow.start_run(run_name="lightGBM") as run:
 
 # COMMAND ----------
 
-# TODO: Define this somewhere else 
-model_registry_name = "feat_eng.dbdemos_fs_travel_shared.dbdemos_fs_travel_shared_model"
-
-# COMMAND ----------
-
 # DBTITLE 1,Move the last version in production
 mlflow_client = MlflowClient()
 # Use the MlflowClient to get a list of all versions for the registered model in Unity Catalog
-all_versions = mlflow_client.search_model_versions(f"name='{model_registry_name}'")
+all_versions = mlflow_client.search_model_versions(f"name='{model_full_name}'")
 # Sort the list of versions by version number and get the latest version
 latest_version = max([int(v.version) for v in all_versions])
 # Use the MlflowClient to get the latest version of the registered model in Unity Catalog
@@ -382,12 +385,11 @@ latest_model = mlflow_client.get_model_version(model_registry_name, str(latest_v
 
 # COMMAND ----------
 
-#TODO: abstract away model name
-if latest_model.current_stage != 'Production':
-  model_name = "dbdemos_fs_travel_shared_model"
-  destination_alias = "Production"
+#Move it in Production
+destination_alias = "production"
+if len(latest_model.aliases) == 0 or latest_model.aliases[0] != production_alias:
   print(f"updating model {latest_model.version} to Production")
-  mlflow_client.set_registered_model_alias(model_name, destination_alias, version=latest_version)
+  mlflow_client.set_registered_model_alias(model_full_name, destination_alias, version=latest_version)
 
 # COMMAND ----------
 
@@ -411,7 +413,7 @@ if latest_model.current_stage != 'Production':
 ## For sake of simplicity, we will just predict using the same ids as during training, but this could be a different pipeline
 id_to_forecast = spark.table('travel_purchase').select("id")
 
-scored_df = fe.score_batch(model_uri=f"models:/{model_name}@Production", df=id_to_forecast, result_type="boolean")
+scored_df = fe.score_batch(model_uri=f"models:/{model_full_name}@Production", df=id_to_forecast, result_type="boolean")
 display(scored_df)
 
 # COMMAND ----------

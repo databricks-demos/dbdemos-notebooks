@@ -1,12 +1,5 @@
 # Databricks notebook source
 # MAGIC %md 
-# MAGIC ### A cluster has been created for this demo
-# MAGIC To run this demo, just select the cluster `dbdemos-feature-store-jeanne_choo` from the dropdown menu ([open cluster configuration](https://e2-dogfood-brickstore-mt-bug-bash.staging.cloud.databricks.com/#setting/clusters/1206-010120-r87nuk1p/configuration)). <br />
-# MAGIC *Note: If the cluster was deleted after 30 days, you can re-create it with `dbdemos.create_cluster('feature-store')` or re-install the demo: `dbdemos.install('feature-store')`*
-
-# COMMAND ----------
-
-# MAGIC %md 
 # MAGIC
 # MAGIC # Feature store Travel Agency recommendation - Advanced
 # MAGIC
@@ -16,13 +9,12 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init-basic $catalog="feat_eng"
+# MAGIC %pip install databricks-feature-engineering==0.2.0 databricks-sdk==0.20.0
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC USE CATALOG feat_eng;
-# MAGIC USE SCHEMA dbdemos_fs_travel_shared
+# MAGIC %run ./_resources/00-init-basic
 
 # COMMAND ----------
 
@@ -142,11 +134,11 @@ display(destination_features_df)
 # DBTITLE 1,user_features
 from databricks.feature_engineering import FeatureEngineeringClient
 
-fe = FeatureEngineeringClient()
+fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 # help(fe.create_table)
 
 # first create a table with User Features calculated above 
-fe_table_name_users = f"{database_name}.user_features_advanced"
+fe_table_name_users = f"{catalog}.{db}.user_features_advanced"
 fe.create_table(
     name=fe_table_name_users, # unique table name (in case you re-run the notebook multiple times)
     primary_keys=["user_id", "ts"],
@@ -159,7 +151,7 @@ fe.create_table(
 # COMMAND ----------
 
 # DBTITLE 1,destination_features
-fe_table_name_destinations = f"{database_name}.destination_features_advanced"
+fe_table_name_destinations = f"{catalog}.{db}.destination_features_advanced"
 # second create another Feature Table from popular Destinations
 # for the second table, we show how to create and write as two separate operations
 fe.create_table(
@@ -258,9 +250,20 @@ display(training_pd)
 # COMMAND ----------
 
 # DBTITLE 1,Start an AutoML run
-import databricks.automl as db_automl
-  
-summary_cl = db_automl.classify(training_pd, target_col="purchased", primary_metric="log_loss", timeout_minutes=10, experiment_dir = "/dbdemos/experiments/feature_store")
+from datetime import datetime
+from databricks import automl
+xp_path = "/Shared/dbdemos/experiments/feature-store"
+xp_name = f"automl_purchase_advanced_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+summary_cl = automl.classify(
+    experiment_name = xp_name,
+    experiment_dir = xp_path,
+    dataset = training_pd,
+    target_col = "purchased",
+    primary_metric="log_loss",
+    timeout_minutes = 10
+)
+#Make sure all users can access dbdemos shared experiment
+DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 
@@ -290,6 +293,10 @@ summary_cl = db_automl.classify(training_pd, target_col="purchased", primary_met
 # COMMAND ----------
 
 # DBTITLE 1,Save best model in the registry & flag it as Production ready
+model_name = "dbdemos_fs_travel_model_advanced"
+model_full_name = f"{catalog}.{db}.{model_name}"
+
+mlflow.set_registry_uri('databricks-uc')
 # creating sample input to be logged
 df_sample = training_pd.limit(10).toPandas()
 x_sample = df_sample.drop(columns=["purchased"])
@@ -303,7 +310,7 @@ with open(mlflow.artifacts.download_artifacts("runs:/"+summary_cl.best_trial.mlf
     env['dependencies'][-1]['pip'] = f.read().split('\n')
 
 #Create a new run in the same experiment as our automl run.
-with mlflow.start_run(run_name="best_fs_model", experiment_id=summary_cl.experiment.experiment_id) as run:
+with mlflow.start_run(run_name="best_fs_model_advanced", experiment_id=summary_cl.experiment.experiment_id) as run:
   #Use the feature store client to log our best model
   fe.log_model(
               model=best_model, # object of your model
@@ -312,20 +319,22 @@ with mlflow.start_run(run_name="best_fs_model", experiment_id=summary_cl.experim
               training_set=training_set, # training set you used to train your model with AutoML
               input_example=x_sample, # example of the dataset, should be Pandas
               signature=infer_signature(x_sample, y_sample), # schema of the dataset, not necessary with FS, but nice to have 
+              registered_model_name=model_full_name, # register your best model
               conda_env = env
           )
   mlflow.log_metrics(summary_cl.best_trial.metrics)
   mlflow.log_params(summary_cl.best_trial.params)
   mlflow.set_tag(key='feature_store', value='advanced_demo')
-  
-model_registered = mlflow.register_model(f"runs:/{run.info.run_id}/model", model_name_advanced)
 
-#Move the model in production
-client = mlflow.tracking.MlflowClient()
-print("registering model version "+model_registered.version+" as production model")
+# COMMAND ----------
 
-destination_alias = "Production"
-client.set_registered_model_alias(model_name_advanced, destination_alias, version=model_registered.version)
+latest_model = get_last_model_version(model_full_name)
+#Move it in Production
+production_alias = "production"
+if len(latest_model.aliases) == 0 or latest_model.aliases[0] != production_alias:
+  print(f"updating model {latest_model.version} to Production")
+  mlflow_client = MlflowClient(registry_uri="databricks-uc")
+  mlflow_client.set_registered_model_alias(model_full_name, production_alias, version=latest_model.version)
 
 # COMMAND ----------
 
@@ -343,9 +352,9 @@ client.set_registered_model_alias(model_name_advanced, destination_alias, versio
 
 ## For sake of simplicity, we will just predict on the same inference_data_df
 from databricks.feature_engineering import FeatureEngineeringClient
-fe = FeatureEngineeringClient()
+fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 batch_scoring = test_labels_df.select('user_id', 'destination_id', 'ts', 'purchased')
-scored_df = fe.score_batch(model_uri=f"models:/{model_name_advanced}@Production", df=batch_scoring, result_type="boolean")
+scored_df = fe.score_batch(model_uri=f"models:/{model_full_name}@{production_alias}", df=batch_scoring, result_type="boolean")
 display(scored_df)
 
 # COMMAND ----------
@@ -372,16 +381,20 @@ print("Accuracy: ", accuracy)
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## 4: Making our inference table available to third-parties outside Databricks
+# MAGIC ## 4: Feature Spec: combine features and function within Unity Catalog to share your inference table and dataset with other teams
 # MAGIC
-# MAGIC Sometimes, we need to make data in the Databricks platform available to models or applications deployed outside of Databricks. [Feature & Function Serving endpoints](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/feature-function-serving) are an autoscaling, high-availability, low-latency service for serving data, whether as features, inferences or functions, to third parties. 
+# MAGIC We now have our feature tables and model, but they are not really linked together, and only us know how to use these tables together.
 # MAGIC
-# MAGIC With [Databricks Feature & Function Serving](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/feature-function-serving), you can serve structured data for retrieval augmented generation (RAG) applications, as well as features that are required for other applications, such as models served outside of Databricks or any other application that requires features based on data in Unity Catalog.
+# MAGIC What if we want to share this information to other teams? What if we want to add a function to with a custom feature transformation (think about computing a distance based on the user long/lat for example.)
+# MAGIC
+# MAGIC Databricks Feature Spec bundles [feature & functions](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/feature-function-serving) together in Unity Catalog to make this possible. 
+# MAGIC
+# MAGIC In this first example, we will define a basic FeatureSpec from the dataset (open the expert demo to see how to add functions to your feature spec to compute the distance in realtime)
 
 # COMMAND ----------
 
 # DBTITLE 1,Save our inference table into Unity Catalog
-inference_table_name = f"{catalog}.{database_name}.{model_name_advanced}_inferences"
+inference_table_name = f"{catalog}.{db}.{model_name}_inferences"
 fe.create_table(name=inference_table_name, primary_keys=["user_id", "ts"], df=scored_df)
 
 # COMMAND ----------
@@ -410,25 +423,29 @@ features = [
   FeatureLookup(
     table_name=inference_table_name,
     lookup_key=["user_id", "ts"],
-  ),]
+  )]
 
+feature_spec_name = f"{catalog}.{db}.{model_name}_feature_spec"
 # Create a `FeatureSpec` with the features defined above.
 # The `FeatureSpec` can be accessed in Unity Catalog as a function.
+try:
+    fe.delete_feature_spec(name=feature_spec_name)
+except Exception as e:
+    if "RESOURCE_DOES_NOT_EXIST" not in str(e): raise e
+
 fe.create_feature_spec(
-  name=inference_table_name,
+  name=feature_spec_name,
   features=features,
 )
 
 # COMMAND ----------
 
 # DBTITLE 1,Use the FeatureSpec to define an Feature and Function Serving endpoint
-from databricks.feature_engineering.entities.feature_serving_endpoint import (
-  ServedEntity,
-  EndpointCoreConfig,
-)
+from databricks.feature_engineering.entities.feature_serving_endpoint import (ServedEntity, EndpointCoreConfig)
 
+endpoint_name = f"{model_name}_{catalog}_{db}"
 fe.create_feature_serving_endpoint(
-  name='dbdemos_travel_advanced_shared_model_inferences_endpoint',
+  name=endpoint_name,
     config=EndpointCoreConfig(
     served_entities=ServedEntity(
       feature_spec_name=inference_table_name,
@@ -441,11 +458,7 @@ fe.create_feature_serving_endpoint(
 
 # COMMAND ----------
 
-endpoint = fe.get_feature_serving_endpoint(name="dbdemos_travel_advanced_shared_model_inferences_endpoint")
-
-# COMMAND ----------
-
-
+endpoint = fe.get_feature_serving_endpoint(name=endpoint_name)
 
 # COMMAND ----------
 

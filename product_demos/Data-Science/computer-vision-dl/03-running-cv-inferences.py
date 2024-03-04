@@ -129,7 +129,7 @@ display(df.select('filename', 'content').withColumn("prediction", detect_damaged
 # MAGIC
 # MAGIC To do that, we'll have to encode our image byte as base64 and send them over the REST API.
 # MAGIC
-# MAGIC This imply that our model should decode the base64 back as PIL image. To make this easy, we can create a custom model wrapper having the transformers pipeline and a simple method transforming the base64 before calling our pipeline.
+# MAGIC This implies that our model should decode the base64 back as PIL image. To make this easy, we can create a custom model wrapper having the transformers pipeline and a simple method transforming the base64 before calling our pipeline.
 # MAGIC
 # MAGIC This is done as usual extending the `mlflow.pyfunc.PythonModel` class:
 
@@ -217,7 +217,7 @@ serving_client.create_endpoint_if_not_exists("dbdemos_pcb_classification_endpoin
 # MAGIC You can access and configure your endpoint using the [Model Serving UI](/#mlflow/endpoints/dbdemos_pcb_classification_endpoint) or the API. The Model Endpoint is serverless, stopping and starting almost instantly. In our case, we chose to scale it down to zero when not used (ideal for test/dev environements). 
 # MAGIC
 # MAGIC
-# MAGIC *Note that Databricks mMdel Serving let you host multiple model versions, simplifying A/B testing and new model deployment.*
+# MAGIC *Note that Databricks Model Serving lets you host multiple model versions, simplifying A/B testing and new model deployment.*
 
 # COMMAND ----------
 

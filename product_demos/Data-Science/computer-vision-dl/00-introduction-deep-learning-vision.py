@@ -13,7 +13,7 @@
 # MAGIC
 # MAGIC Computer vision is a field of study that has been advancing rapidly in recent years, thanks to the availability of large amounts of data, powerful GPUs, pre-trained deep learning models, transfer learning and higher level frameworks. However, training and serving a computer vision model can be very hard because of different challenges:
 # MAGIC - Data ingestion and preprocessing at scale
-# MAGIC - Data volumes that require multiple GPUs fir traububg
+# MAGIC - Data volumes that require multiple GPUs for training
 # MAGIC - Governance and production-readiness requirement MLOps pipelines for the the end-to-end model lifecycle.
 # MAGIC - Demanding SLAs for streaming or real-time inferences
 # MAGIC
@@ -47,9 +47,9 @@
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-1.png?raw=true" width="500px" style="float: right" />
 # MAGIC
-# MAGIC Our first step is to ingest or images. We will leverage Databricks Autoloader to ingest our images and the labels (as csv file).
+# MAGIC Our first step is to ingest the images. We will leverage Databricks Autoloader to ingest the images and the labels (as csv file).
 # MAGIC
-# MAGIC Our data will be saved as Delta Table, allowing easy ACL with Databricks Unity Catalog.
+# MAGIC Our data will be saved as a Delta Table, allowing easy governance with Databricks Unity Catalog.
 # MAGIC
 # MAGIC We'll also apply initial transformations to reduce the image size and prepare our dataset for model training.
 

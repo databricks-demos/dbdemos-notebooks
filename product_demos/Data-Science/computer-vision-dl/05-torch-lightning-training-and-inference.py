@@ -35,7 +35,7 @@ display(df.limit(10))
 # MAGIC
 # MAGIC In this example, we will be using Deltatorch to load our dataset. Deltatorch reads directly from Delta Lake tables using native reader. 
 # MAGIC
-# MAGIC Deltatorch split the dataframe in multiple chuncks to spread it across multiple nodes in an efficient way. This makes distributed training on multi node easy. 
+# MAGIC Deltatorch splits the dataframe in multiple chuncks to spread it across multiple nodes in an efficient way. This makes distributed training on multi node easy. 
 # MAGIC
 # MAGIC To be able to do this split in the most efficient way, deltatorch needs a unique, incremental ID without gaps. We can add it to our existing dataset with a rank and directly split our test/training datasets:
 

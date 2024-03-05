@@ -313,6 +313,12 @@ def pin_pandas_version(pandas_ver: str = model_serving_pandas_ver):
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### [TODO] Create custom pyfunc wrapper function to expose `predict_proba` method _(nice-to-have)_
+# MAGIC To get AUC/ROC metrics in monitoring metrics
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Define the objective function
 # MAGIC The objective function used to find optimal hyperparameters. By default, this notebook only runs
 # MAGIC this function once (`max_evals=1` in the `hyperopt.fmin` invocation) with fixed hyperparameters, but

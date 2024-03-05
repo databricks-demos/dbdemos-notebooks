@@ -207,14 +207,13 @@ run_id = request_transition(
 # MAGIC %md
 # MAGIC ## Next: MLOps model testing and validation
 # MAGIC
-# MAGIC Because we defined our webhooks earlier, a job will automatically start, testing the new model being deployed and validating the request.
-# MAGIC
-# MAGIC Remember our webhook setup ? That's the orange part in the diagram.
-# MAGIC
-# MAGIC <img style="float: right" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-mlflow-webhook-1.png" width=600 >
+# MAGIC A validation job will start, testing the new model being deployed and validating the request.
 # MAGIC
 # MAGIC If the model passes all the tests, it'll be accepted and moved into Challenger. Otherwise it'll be rejected, and a slack notification will be sent.
 # MAGIC
 # MAGIC Next:
 # MAGIC  * Find out how the model is being tested befored labbeled as `Challenger` [using the model validation test notebook]($./04_job_challenger_validation)
 # MAGIC  * Or discover how to [run Batch and Real-time inference from our Challenger model]($./05_batch_inference)
+# MAGIC
+# MAGIC ### TODOs: _(TBC)_
+# MAGIC  * Promote model from `dev` to `staging` catalog ? (according to recommended catalog-based promotion in [UC](https://docs.gcp.databricks.com/en/machine-learning/manage-model-lifecycle/upgrade-workflows.html#im-used-to-model-version-stage-transitions-how-do-i-promote-a-model-across-environments))

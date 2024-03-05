@@ -154,26 +154,6 @@ SELECT FROM_JSON(
 
 -- COMMAND ----------
 
--- SELECT
---   explode(reviews)
--- FROM
---   (
---     SELECT
---       GENERATE_FAKE_REVIEWS(10) as reviews
---   )
-
--- COMMAND ----------
-
--- SELECT explode(reviews) FROM (
---                                   SELECT GENERATE_FAKE_REVIEWS(10) as reviews)
-
--- COMMAND ----------
-
--- SELECT explode(reviews) as review FROM (
---                                   SELECT GENERATE_FAKE_REVIEWS(10) as reviews)
-
--- COMMAND ----------
-
 -- DBTITLE 1,Explode the json result as a table
 SELECT
   review.*

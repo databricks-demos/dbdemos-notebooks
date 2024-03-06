@@ -362,12 +362,12 @@ if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
     embedding_dimension=1024, #Match your model embedding size (bge)
     embedding_vector_column="embedding"
   )
+  #Let's wait for the index to be ready and all our embeddings to be created and indexed
+  wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 else:
   #Trigger a sync to update our vs content with the new data saved in the table
+  wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
   vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).sync()
-
-#Let's wait for the index to be ready and all our embeddings to be created and indexed
-wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 
 # COMMAND ----------
 

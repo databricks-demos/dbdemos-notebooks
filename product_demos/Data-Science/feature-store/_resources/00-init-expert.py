@@ -4,11 +4,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "hive_metastore", "Catalog")
-
-# COMMAND ----------
-
-# MAGIC %run ./00-init-basic $catalog=$catalog
+# MAGIC %run ./00-init-basic
 
 # COMMAND ----------
 
@@ -59,6 +55,7 @@ def destination_features_fn(travel_purchase_df):
 
 #Required for pandas_on_spark assign to work properly
 import pyspark.pandas as ps
+import timeit
 ps.set_option('compute.ops_on_diff_frames', True)
 
 #Compute distance between 2 points. Could use geopy instead
@@ -207,6 +204,25 @@ def cleanup(query, query2):
 destination_location_df = spark.read.option("inferSchema", "true").load("/databricks-datasets/travel_recommendations_realtime/raw_travel_data/fs-demo_destination-locations/",  format="csv", header="true")
 destination_location_df
 destination_location_df.write.mode('overwrite').saveAsTable('destination_location')
+
+# COMMAND ----------
+
+def wait_for_feature_endpoint_to_start(fe, endpoint_name: str):
+    for i in range (100):
+        ep = fe.get_feature_serving_endpoint(name=endpoint_name)
+        if ep.state == 'IN_PROGRESS':
+            if i % 10 == 0:
+                print(f"deployment in progress, please wait for your feature serving endpoint to be deployed {ep}")
+            time.sleep(5)
+        else:
+            if ep.state != 'READY':
+                raise Exception(f"Endpoint is in abnormal state: {ep}")
+            print(f"Endpoint {endpoint_name} ready - {ep}")
+            return ep
+        
+def get_headers():
+    token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+    return {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
 
 # COMMAND ----------
 

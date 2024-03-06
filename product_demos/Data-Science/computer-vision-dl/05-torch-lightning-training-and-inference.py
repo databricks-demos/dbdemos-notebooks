@@ -16,6 +16,7 @@
 
 # DBTITLE 1,Setup - Install deltatorch  & lightning
 # MAGIC %pip install pytorch-lightning git+https://github.com/delta-incubator/deltatorch.git
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 

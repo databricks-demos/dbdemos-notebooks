@@ -6,14 +6,22 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "feat_eng", "Catalog")
-catalog = dbutils.widgets.get("catalog")
-main_naming = "dbdemos_fs_travel"
-database_name = f"{main_naming}_shared"
+dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
+reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
-# MAGIC %run ../../../../_resources/00-global-setup $reset_all_data=false $catalog=feat_eng $db=dbdemos_fs_travel_shared
+catalog = "main__build"
+main_naming = "dbdemos_fs_travel"
+schema = dbName = db = "dbdemos_fs_travel"
+
+# COMMAND ----------
+
+# MAGIC %run ../../../../_resources/00-global-setup-v2
+
+# COMMAND ----------
+
+DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # COMMAND ----------
 
@@ -84,12 +92,6 @@ def get_instance() -> str:
 
 # COMMAND ----------
 
-model_registry_name = f"{main_naming}_shared_model"
-model_name_advanced = f"{main_naming}_advanced_shared_model"
-model_name_expert = f"{main_naming}_expert_shared_model"
-
-# COMMAND ----------
-
 def delete_fs(fs_table_name):
   print("Deleting Feature Table", fs_table_name)
   try:
@@ -99,9 +101,18 @@ def delete_fs(fs_table_name):
   except Exception as e:
     print("Can't delete table, likely not existing: "+str(e))  
 
-def delete_fss(catalog, tables):
+def delete_fss(catalog, db, tables):
   for table in tables:
-    delete_fs(catalog+"."+table)
+    delete_fs(f"{catalog}.{db}.{table}")
+
+def get_last_model_version(model_full_name):
+    mlflow_client = MlflowClient(registry_uri="databricks-uc")
+    # Use the MlflowClient to get a list of all versions for the registered model in Unity Catalog
+    all_versions = mlflow_client.search_model_versions(f"name='{model_full_name}'")
+    # Sort the list of versions by version number and get the latest version
+    latest_version = max([int(v.version) for v in all_versions])
+    # Use the MlflowClient to get the latest version of the registered model in Unity Catalog
+    return mlflow_client.get_model_version(model_full_name, str(latest_version))
 
 
 # COMMAND ----------
@@ -154,42 +165,19 @@ with warnings.catch_warnings():
 
 # COMMAND ----------
 
-#Once the automl experiment is created, we assign CAN MANAGE to all users as it's shared in the workspace
-def set_experiment_permission(experiment_id, experiment_path):
-  url = get_current_url()
-  import requests
-  pat_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-  headers =  {"Authorization": "Bearer " + pat_token, 'Content-type': 'application/json'}
-  status = requests.get(url+"/api/2.0/workspace/get-status", params = {"path": experiment_path}, headers=headers).json()
-  #Set can manage to all users to the experiment we created as it's shared among all
-  params = {"access_control_list": [{"group_name": "users","permission_level": "CAN_MANAGE"}]}
-  permissions = requests.patch(f"{url}/api/2.0/permissions/experiments/{status['object_id']}", json = params, headers=headers)
-  if permissions.status_code != 200:
-    print("ERROR: couldn't set permission to all users to the autoML experiment")
-  path = experiment_path
-  path = path[:path.rfind('/')]
-  path = path[:path.rfind('/')]
-  #List to get the folder with the notebooks from the experiment
-  folders = requests.get(url+"/api/2.0/workspace/list", params = {"path": path}, headers=headers).json()
-  for f in folders['objects']:
-    if f['object_type'] == 'DIRECTORY' and path == f['path']:
-        #Set the permission of the experiment notebooks to all
-        permissions = requests.patch(f"{url}/api/2.0/permissions/directories/{f['object_id']}", json = params, headers=headers)
-        if permissions.status_code != 200:
-          print("ERROR: couldn't set permission to all users to the autoML experiment notebooks")
-          
-import mlflow          
+#dbdemos__delete_this_cell
+#force the experiment to the field demos one. Required to launch as a batch
 def init_experiment_for_batch(demo_name, experiment_name):
-  #You can programatically get a PAT token with the following
-  pat_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-  url = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
-  #current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-  import requests
-  xp_root_path = f"/dbdemos/experiments/{demo_name}"
-  requests.post(f"{get_current_url()}/api/2.0/workspace/mkdirs", headers = get_request_headers(), json={ "path": xp_root_path})
-  xp_path = f"{xp_root_path}/{experiment_name}"
-  mlflow.set_experiment(xp_path)
-  xp = mlflow.get_experiment_by_name(xp_path)
-  set_experiment_permission(xp.experiment_id, xp.name)
-
+  from databricks.sdk import WorkspaceClient
+  w = WorkspaceClient()
+  xp_root_path = f"/Shared/dbdemos/experiments/{demo_name}"
+  try:
+    r = w.workspace.mkdirs(path=xp_root_path)
+  except Exception as e:
+    print(f"ERROR: couldn't create a folder for the experiment under {xp_root_path} - please create the folder manually or  skip this init (used for job only: {e})")
+    raise e
+  xp = f"{xp_root_path}/{experiment_name}"
+  print(f"Using common experiment under {xp}")
+  mlflow.set_experiment(xp)
+  
 init_experiment_for_batch("feature_store", "introduction")

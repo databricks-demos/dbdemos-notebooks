@@ -16,7 +16,8 @@
 # MAGIC
 # MAGIC In addition, we'll see how we can perform realtime inference:
 # MAGIC
-# MAGIC * Create online backed for the feature store table (dynamoDB / cosmosDB)
+# MAGIC * Create online backed for the feature store table
+# MAGIC * Create online functions to add additional, realtime feature (distance and date)
 # MAGIC * Deploy the model using realtime serverless Model Serving fetching features in the online store
 # MAGIC * Send realtime REST queries for live inference.
 # MAGIC
@@ -24,7 +25,12 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init-expert $catalog="feat_eng"
+# MAGIC %pip install databricks-feature-engineering==0.2.0 databricks-sdk==0.20.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ./_resources/00-init-expert
 
 # COMMAND ----------
 
@@ -66,7 +72,7 @@
 
 # DBTITLE 1,Compute features & create our 3 Feature Table
 #Delete potential existing tables to reset all the demo
-# delete_fss(database_name, ["user_features", "destination_features", "destination_location_features", "availability_features"])
+delete_fss(catalog, db, ["user_features", "destination_features", "destination_location_features", "availability_features"])
 
 from databricks.feature_engineering import FeatureEngineeringClient
 fe = FeatureEngineeringClient()
@@ -74,14 +80,14 @@ fe = FeatureEngineeringClient()
 # Reuse the same features as the previous example 02_Feature_store_advanced
 # For more details these functions are available under ./_resources/00-init-expert
 user_features_df = create_user_features(spark.table('travel_purchase'))
-fe.create_table(name=f"{database_name}.user_features",
+fe.create_table(name=f"{catalog}.{db}.user_features",
                 primary_keys=["user_id", "ts"], 
                 timestamp_keys="ts", 
                 df=user_features_df, 
                 description="User Features")
 
 destination_features_df = destination_features_fn(spark.table('travel_purchase'))
-fe.create_table(name=f"{database_name}.destination_features", 
+fe.create_table(name=f"{catalog}.{db}.destination_features", 
                 primary_keys=["destination_id", "ts"], 
                 timestamp_keys="ts", 
                 df=destination_features_df, 
@@ -90,7 +96,7 @@ fe.create_table(name=f"{database_name}.destination_features",
 
 #Add the destination location dataset
 destination_location = spark.table("destination_location")
-fe.create_table(name=f"{database_name}.destination_location_features", 
+fe.create_table(name=f"{catalog}.{db}.destination_location_features", 
                 primary_keys="destination_id", 
                 df=destination_location, 
                 description="Destination location features.")
@@ -108,6 +114,7 @@ fe.create_table(name=f"{database_name}.destination_location_features",
 
 # COMMAND ----------
 
+spark.sql('CREATE VOLUME IF NOT EXISTS feature_store_volume')
 destination_availability_stream = (
   spark.readStream
   .format("cloudFiles")
@@ -115,9 +122,8 @@ destination_availability_stream = (
   .option("cloudFiles.inferSchema", "true")
   .option("cloudFiles.inferColumnTypes", "true")
   .option("cloudFiles.schemaHints", "event_ts timestamp, booking_date date, destination_id int")
-  .option("cloudFiles.schemaLocation", current_user_location+"/availability_schema")
+  .option("cloudFiles.schemaLocation", f"/Volumes/{catalog}/{db}/feature_store_volume/stream/availability_schema")
   .option("cloudFiles.maxFilesPerTrigger", 100) #Simulate streaming
-  .option("cloudFiles.schemaEvolutionMode", "none")
   .load("/databricks-datasets/travel_recommendations_realtime/raw_travel_data/fs-demo_destination-availability_logs/json")
   .drop("_rescued_data")
   .withColumnRenamed("event_ts", "ts")
@@ -128,7 +134,7 @@ display(destination_availability_stream)
 # COMMAND ----------
 
 fe.create_table(
-    name=f"{database_name}.availability_features", 
+    name=f"{catalog}.{db}.availability_features", 
     primary_keys=["destination_id", "booking_date", "ts"],
     timestamp_keys=["ts"],
     schema=destination_availability_stream.schema,
@@ -137,11 +143,11 @@ fe.create_table(
 
 # Now write the data to the feature table in "merge" mode using a stream
 fe.write_table(
-    name=f"{database_name}.availability_features", 
+    name=f"{catalog}.{db}.availability_features", 
     df=destination_availability_stream,
     mode="merge",
-    checkpoint_location=current_user_location+"/availability_checkpoint",
-    trigger={'processingTime': '1 minute'} #Refresh the feature store table with availability every minute
+    checkpoint_location= f"/Volumes/{catalog}/{db}/feature_store_volume/stream/availability_checkpoint",
+    trigger={'once': True} #Refresh the feature store table once, or {'processingTime': '1 minute'} for every minute-
 )
 
 # COMMAND ----------
@@ -149,6 +155,8 @@ fe.write_table(
 # MAGIC %md 
 # MAGIC
 # MAGIC ## Compute on-demand live features
+# MAGIC
+# MAGIC TODO REVOIR WORDING
 # MAGIC
 # MAGIC User location is a context feature that is captured at the time of the query. This data is not known in advance, hence the derived feature. 
 # MAGIC
@@ -160,123 +168,26 @@ fe.write_table(
 
 # COMMAND ----------
 
+# DBTITLE 1,Compute distance 
 # MAGIC %sql
-# MAGIC CREATE FUNCTION IF NOT EXISTS feat_eng.dbdemos_fs_travel_shared.extract_week_udf(datetime TIMESTAMP)
-# MAGIC RETURNS INT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Extracts week number from datetime'
-# MAGIC AS $$
-# MAGIC from datetime import datetime as dt
-# MAGIC
-# MAGIC def extract_week(datetime):
-# MAGIC     return datetime.isocalendar()[1] if datetime else None
-# MAGIC
-# MAGIC return extract_week(datetime)
-# MAGIC $$
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE FUNCTION IF NOT EXISTS feat_eng.dbdemos_fs_travel_shared.extract_month_udf(datetime TIMESTAMP)
-# MAGIC RETURNS INT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Extracts month from datetime'
-# MAGIC AS $$
-# MAGIC from datetime import datetime as dt
-# MAGIC
-# MAGIC def extract_month(datetime):
-# MAGIC     return datetime.month if datetime else None
-# MAGIC
-# MAGIC return extract_month(datetime)
-# MAGIC $$
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE FUNCTION IF NOT EXISTS feat_eng.dbdemos_fs_travel_shared.extract_month_udf2(datetime TIMESTAMP)
-# MAGIC RETURNS INT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Extracts month from datetime'
-# MAGIC AS $$
-# MAGIC from datetime import datetime as dt
-# MAGIC
-# MAGIC def extract_month(datetime):
-# MAGIC     return datetime.month if datetime else None
-# MAGIC
-# MAGIC return extract_month(datetime)
-# MAGIC $$
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE FUNCTION IF NOT EXISTS feat_eng.dbdemos_fs_travel_shared.extract_month_udf3(datetime TIMESTAMP)
-# MAGIC RETURNS INT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Extracts month from datetime'
-# MAGIC AS $$
-# MAGIC from datetime import datetime as dt
-# MAGIC
-# MAGIC def extract_month(datetime):
-# MAGIC     return datetime.month if datetime else None
-# MAGIC
-# MAGIC return extract_month(datetime)
-# MAGIC $$
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE FUNCTION IF NOT EXISTS feat_eng.dbdemos_fs_travel_shared.extract_month_udf4(datetime TIMESTAMP)
-# MAGIC RETURNS INT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Extracts month from datetime'
-# MAGIC AS $$
-# MAGIC from datetime import datetime as dt
-# MAGIC
-# MAGIC def extract_month(datetime):
-# MAGIC     return datetime.month if datetime else None
-# MAGIC
-# MAGIC return extract_month(datetime)
-# MAGIC $$
-
-# COMMAND ----------
-
-# MAGIC %sql 
-# MAGIC SELECT ts, feat_eng.dbdemos_fs_travel_shared.extract_week_udf(ts) AS week, feat_eng.dbdemos_fs_travel_shared.extract_month_udf(ts) AS month FROM feat_eng.dbdemos_fs_travel_shared.destination_features
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR REPLACE FUNCTION feat_eng.dbdemos_fs_travel_shared.distance_udf(lat1 FLOAT, lon1 FLOAT, lat2 FLOAT, lon2 FLOAT)
-# MAGIC RETURNS FLOAT
+# MAGIC CREATE OR REPLACE FUNCTION distance_udf(lat1 DOUBLE, lon1 DOUBLE, lat2 DOUBLE, lon2 DOUBLE)
+# MAGIC RETURNS DOUBLE
 # MAGIC LANGUAGE PYTHON
 # MAGIC COMMENT 'Calculate hearth distance from latitude and longitude'
 # MAGIC AS $$
-# MAGIC import numpy as np
-# MAGIC
-# MAGIC def compute_hearth_distance(lat1, lon1, lat2, lon2):
+# MAGIC   import numpy as np
 # MAGIC   dlat, dlon = np.radians(lat2 - lat1), np.radians(lon2 - lon1)
 # MAGIC   a = np.sin(dlat/2)**2 + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon/2)**2
 # MAGIC   return 2 * 6371 * np.arcsin(np.sqrt(a))
-# MAGIC
-# MAGIC return compute_hearth_distance(lat1, lon1, lat2, lon2)
 # MAGIC $$
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT *, feat_eng.dbdemos_fs_travel_shared.distance_udf(user_latitude, user_longitude, latitude, longitude) AS hearth_distance
-# MAGIC FROM feat_eng.dbdemos_fs_travel_shared.destination_location_features
-# MAGIC JOIN feat_eng.dbdemos_fs_travel_shared.destination_features
-# MAGIC ON destination_location_features.destination_id = destination_features.destination_id
-# MAGIC JOIN feat_eng.dbdemos_fs_travel_shared.user_features
-# MAGIC ON user_features.ts = destination_features.ts
-# MAGIC
+# MAGIC SELECT distance_udf(user_latitude, user_longitude, latitude, longitude) AS hearth_distance, *
+# MAGIC     FROM destination_location_features
+# MAGIC         JOIN destination_features USING (destination_id)
+# MAGIC         JOIN user_features USING (ts)
 
 # COMMAND ----------
 
@@ -294,10 +205,9 @@ fe.write_table(
 # COMMAND ----------
 
 # Random split to define a training and inference set
-training_keys = spark.table('feat_eng.dbdemos_fs_travel_shared.travel_purchase').select('ts', 'purchased', 'destination_id', 'user_id', 'user_latitude', 'user_longitude', 'booking_date')
+training_keys = spark.table('travel_purchase').select('ts', 'purchased', 'destination_id', 'user_id', 'user_latitude', 'user_longitude', 'booking_date')
 training_df = training_keys.where("ts < '2022-11-23'")
-
-test_df = training_keys.where("ts >= '2022-11-23'")
+test_df = training_keys.where("ts >= '2022-11-23'").cache()
 
 display(training_df.limit(5))
 
@@ -339,21 +249,11 @@ feature_lookups = [ # Grab all useful features from different feature store tabl
       timestamp_lookup_key="ts",
       feature_names=["availability"]
   ),
-#   FeatureFunction(
-#       udf_name="distance_udf",
-#       input_bindings={"lat1": "user_latitude", "lon1": "user_longitude", "lat2": "latitude", "lon2": "longitude"},
-#       output_name="distance_udf_output"
-#   ),
   FeatureFunction(
-      udf_name="extract_week_udf",
-      input_bindings={"datetime": "ts"},
-      output_name="extract_week_udf_output"
-  ),
-  FeatureFunction(
-      udf_name="extract_month_udf",
-      input_bindings={"datetime": "ts"},
-      output_name="extract_month_udf_output"
-  ),]
+      udf_name="distance_udf",
+      input_bindings={"lat1": "user_latitude", "lon1": "user_longitude", "lat2": "latitude", "lon2": "longitude"},
+      output_name="distance"
+  )]
 
 training_set = fe.create_training_set(
     df=training_df,
@@ -366,9 +266,6 @@ training_set = fe.create_training_set(
 
 
 training_set_df = training_set.load_df()
-#Add our live features. Transformations are written using Pandas API and will use spark backend for the training steps.
-#This will allow us to use the exact same code for real time inferences!
-# training_features_df = OnDemandCovmputationModelWrapper.add_live_features(training_set_df)
 #Let's cache the training dataset for automl (to avoid recomputing it everytime)
 training_features_df = training_set_df.cache()
 
@@ -381,9 +278,21 @@ display(training_features_df)
 
 # COMMAND ----------
 
-import databricks.automl as db_automl
+from datetime import datetime
+from databricks import automl
+xp_path = "/Shared/dbdemos/experiments/feature-store"
+xp_name = f"automl_purchase_expert_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+summary_cl = automl.classify(
+    experiment_name = xp_name,
+    experiment_dir = xp_path,
+    dataset = training_features_df,
+    target_col = "purchased",
+    primary_metric="log_loss",
+    timeout_minutes = 15
+)
+#Make sure all users can access dbdemos shared experiment
+DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
-summary_cl = db_automl.classify(training_features_df, target_col="purchased", primary_metric="log_loss", timeout_minutes=10, experiment_dir = "/dbdemos/experiments/feature_store", time_col='ts')
 print(f"Best run id: {summary_cl.best_trial.mlflow_run_id}")
 
 # COMMAND ----------
@@ -399,16 +308,16 @@ print(f"Best run id: {summary_cl.best_trial.mlflow_run_id}")
 
 # COMMAND ----------
 
-import mlflow
-import os 
+model_name = "dbdemos_fs_travel_model_expert"
+model_full_name = f"{catalog}.{db}.{model_name}"
 
+mlflow.set_registry_uri('databricks-uc')
 # creating sample input to be logged (do not include the live features in the schema as they'll be computed within the model)
 df_sample = training_set_df.limit(10).toPandas()
 x_sample = df_sample.drop(columns=["purchased"])
 
 # getting the model created by AutoML 
 best_model = summary_cl.best_trial.load_model()
-# model = OnDemandComputationModelWrapper(best_model)
 
 #Get the conda env from automl run
 artifacts_path = mlflow.artifacts.download_artifacts(run_id=summary_cl.best_trial.mlflow_run_id)
@@ -417,15 +326,15 @@ with open(artifacts_path+"model/requirements.txt", 'r') as f:
     env['dependencies'][-1]['pip'] = f.read().split('\n')
 
 #Create a new run in the same experiment as our automl run.
-with mlflow.start_run(run_name="best_fs_model", experiment_id=summary_cl.experiment.experiment_id) as run:
+with mlflow.start_run(run_name="best_fs_model_expert", experiment_id=summary_cl.experiment.experiment_id) as run:
   #Use the feature store client to log our best model
-  #TODO: need to add the conda env from the automl run
   fe.log_model(
               model=best_model, # object of your model
               artifact_path="model", #name of the Artifact under MlFlow
               flavor=mlflow.sklearn, # flavour of the model (our LightGBM model has a SkLearn Flavour)
               training_set=training_set, # training set you used to train your model with AutoML
               input_example=x_sample, # Dataset example (Pandas dataframe)
+              registered_model_name=model_full_name, # register your best model
               conda_env=env)
 
   #Copy automl images & params to our FS run
@@ -439,24 +348,19 @@ with mlflow.start_run(run_name="best_fs_model", experiment_id=summary_cl.experim
 
 # COMMAND ----------
 
-import mlflow
-model_name_expert = "dbdemos_fs_travel_shared_expert_model"
-model_registered = mlflow.register_model(f"runs:/{run.info.run_id}/model", model_name_expert)
-
-# COMMAND ----------
-
 # DBTITLE 1,Save best model in the registry & flag it as Production ready
-#Move the model in production by setting the "Production" alias
-client = mlflow.tracking.MlflowClient()
-print("registering model version "+model_registered.version+" as production model")
-
-destination_alias = "Production"
-client.set_registered_model_alias(model_name_expert, destination_alias, version=model_registered.version)
+latest_model = get_last_model_version(model_full_name)
+#Move it in Production
+production_alias = "production"
+if len(latest_model.aliases) == 0 or latest_model.aliases[0] != production_alias:
+  print(f"updating model {latest_model.version} to Production")
+  mlflow_client = MlflowClient(registry_uri="databricks-uc")
+  mlflow_client.set_registered_model_alias(model_full_name, production_alias, version=latest_model.version)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Our model is ready! you can open [the dbdemos_fs_travel_shared_model](/#mlflow/models/dbdemos_fs_travel_shared_model) to review it.
+# MAGIC Our model is ready! you can open the Unity Catalog Explorer to review it.
 
 # COMMAND ----------
 
@@ -468,8 +372,7 @@ client.set_registered_model_alias(model_name_expert, destination_alias, version=
 
 # COMMAND ----------
 
-# scored_df = fe.score_batch(model_uri=f"models:/{model_name_expert}@production", df=test_df, result_type="boolean")
-scored_df = fe.score_batch(model_uri=f"models:/dbdemos_fs_travel_shared_expert_model@production", df=test_df, result_type="boolean")
+scored_df = fe.score_batch(model_uri=f"models:/{model_full_name}@{production_alias}", df=test_df, result_type="boolean")
 display(scored_df)
 
 # COMMAND ----------
@@ -521,6 +424,75 @@ print("Accuracy: ", accuracy_score(pd_scoring["purchased"], pd_scoring["predicti
 
 # COMMAND ----------
 
+from databricks.sdk import WorkspaceClient
+w = WorkspaceClient()
+def create_online_table(source_table_full_name, pks, timeseries_key=None):
+    try:
+        from databricks.sdk.service import catalog as c
+        spark.sql(f'ALTER TABLE {source_table_full_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
+        #w.online_tables.delete(name=source_table_full_name+"_online")
+        spec = c.OnlineTableSpec(source_table_full_name=source_table_full_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
+        w.online_tables.create(name=source_table_full_name+"_online", spec=spec)
+        print(f"Online table for {source_table_full_name} created")
+    except Exception as e:
+        if 'already exists' in str(e):
+            print(f"Online table for {source_table_full_name} already exists")
+        else:
+            raise e
+
+create_online_table(f"{catalog}.{db}.user_features",                 ["user_id"], "ts")
+create_online_table(f"{catalog}.{db}.destination_features",          ["destination_id"], "ts")
+create_online_table(f"{catalog}.{db}.destination_location_features", ["destination_id"])
+create_online_table(f"{catalog}.{db}.availability_features",         ["destination_id", "booking_date"], "ts")
+
+# COMMAND ----------
+
+# MAGIC %md ## Deploy our Feature Spec to compute transformations in realtime
+# MAGIC
+# MAGIC We're now ready to deploy our model using Databricks Model Serving endpoints. This will provide a REST API to serve our model in realtime.
+
+# COMMAND ----------
+
+feature_spec_name = f"{catalog}.{db}.travel_feature_spec"
+try:
+    #fe.delete_feature_spec(name=feature_spec_name)
+    fe.create_feature_spec(name=feature_spec_name, features=feature_lookups, exclude_columns=['user_id', 'destination_id', 'booking_date', 'clicked', 'price'])
+except Exception as e:
+    if "RESOURCE_ALREADY_EXISTS" not in str(e): raise e
+
+# COMMAND ----------
+
+from databricks.feature_engineering.entities.feature_serving_endpoint import AutoCaptureConfig, EndpointCoreConfig, ServedEntity
+
+# Create endpoint
+feature_endpoint_name = "dbdemos-fse-travel-spec"
+try: 
+    #fe.delete_feature_serving_endpoint(name=feature_endpoint_name)
+    status = fe.create_feature_serving_endpoint(name=feature_endpoint_name, 
+                                                config=EndpointCoreConfig(served_entities=ServedEntity(scale_to_zero_enabled= True, feature_spec_name=feature_spec_name)))
+except Exception as e:
+    if "already exists" not in str(e): raise e
+
+ep = wait_for_feature_endpoint_to_start(fe, feature_endpoint_name)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Let's try our new feature endpoints
+
+# COMMAND ----------
+
+lookup_keys = test_df.limit(2).toPandas()
+lookup_keys["ts"] = lookup_keys["ts"].astype(str)
+lookup_keys["booking_date"] = lookup_keys["booking_date"].astype(str)
+
+def query_endpoint(url, lookup_keys):
+    response = requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys.to_dict(orient="records")})
+    return response.json()
+query_endpoint(ep.url+"/invocations", lookup_keys)
+
+# COMMAND ----------
+
 # MAGIC %md ## Deploy Serverless Model serving Endpoint
 # MAGIC
 # MAGIC We're now ready to deploy our model using Databricks Model Serving endpoints. This will provide a REST API to serve our model in realtime.
@@ -546,174 +518,31 @@ print("Accuracy: ", accuracy_score(pd_scoring["purchased"], pd_scoring["predicti
 
 # COMMAND ----------
 
-import time
-import requests
+from databricks.sdk.service.serving import (
+    EndpointCoreConfigInput,
+    ServedModelInput,
+    ServedModelInputWorkloadSize,
+    ServingEndpointDetailed,
+)
 
-class EndpointApiClient:
-    def __init__(self):
-        self.base_url =dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
-        self.token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-        self.headers = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
+endpoint_name = "dbdemos_feature_store_endpoint_expert"
+served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
+try:
+    print(f'Creating endpoint {endpoint_name} with latest version...')
+    w.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
+except Exception as e:
+    if 'already exists' in str(e):
+        print(f'Endpoint exists, updating with latest model version...')
+        w.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+    else: 
+        raise e
 
-    def create_inference_endpoint(self, endpoint_name, served_models):
-        data = {"name": endpoint_name, "config": {"served_models": served_models}}
-        return self._post("api/2.0/serving-endpoints", data)
-
-    def get_inference_endpoint(self, endpoint_name):
-        return self._get(f"api/2.0/serving-endpoints/{endpoint_name}", allow_error=True)
-      
-      
-    def inference_endpoint_exists(self, endpoint_name):
-      ep = self.get_inference_endpoint(endpoint_name)
-      if 'error_code' in ep and ep['error_code'] == 'RESOURCE_DOES_NOT_EXIST':
-          return False
-      if 'error_code' in ep and ep['error_code'] != 'RESOURCE_DOES_NOT_EXIST':
-          raise Exception(f"enpoint exists ? {ep}")
-      return True
-
-    def create_endpoint_if_not_exists(self, endpoint_name, model_name, model_version, workload_size, scale_to_zero_enabled=True, wait_start=True):
-      models = [{
-            "model_name": model_name,
-            "model_version": model_version,
-            "workload_size": workload_size,
-            "scale_to_zero_enabled": scale_to_zero_enabled,
-      }]
-      if not self.inference_endpoint_exists(endpoint_name):
-        r = self.create_inference_endpoint(endpoint_name, models)
-      #Make sure we have the proper version deployed
-      else:
-        ep = self.get_inference_endpoint(endpoint_name)
-        if 'pending_config' in ep:
-            self.wait_endpoint_start(endpoint_name)
-            ep = self.get_inference_endpoint(endpoint_name)
-        if 'pending_config' in ep:
-            model_deployed = ep['pending_config']['served_models'][0]
-            print(f"Error with the model deployed: {model_deployed} - state {ep['state']}")
-        else:
-            model_deployed = ep['config']['served_models'][0]
-        if model_deployed['model_version'] != model_version:
-          print(f"Current model is version {model_deployed['model_version']}. Updating to {model_version}...")
-          u = self.update_model_endpoint(endpoint_name, {"served_models": models})
-      if wait_start:
-        self.wait_endpoint_start(endpoint_name)
-      
-      
-    def list_inference_endpoints(self):
-        return self._get("api/2.0/serving-endpoints")
-
-    def update_model_endpoint(self, endpoint_name, conf):
-        return self._put(f"api/2.0/serving-endpoints/{endpoint_name}/config", conf)
-
-    def delete_inference_endpoint(self, endpoint_name):
-        return self._delete(f"api/2.0/serving-endpoints/{endpoint_name}")
-
-    def wait_endpoint_start(self, endpoint_name):
-      i = 0
-      while self.get_inference_endpoint(endpoint_name)['state']['config_update'] == "IN_PROGRESS" and i < 500:
-        print("waiting for endpoint to build model image and start")
-        time.sleep(30)
-        i += 1
-      
-    # Making predictions
-
-    def query_inference_endpoint(self, endpoint_name, data):
-        return self._post(f"realtime-inference/{endpoint_name}/invocations", data)
-
-    # Debugging
-
-    def get_served_model_build_logs(self, endpoint_name, served_model_name):
-        return self._get(
-            f"api/2.0/serving-endpoints/{endpoint_name}/served-models/{served_model_name}/build-logs"
-        )
-
-    def get_served_model_server_logs(self, endpoint_name, served_model_name):
-        return self._get(
-            f"api/2.0/serving-endpoints/{endpoint_name}/served-models/{served_model_name}/logs"
-        )
-
-    def get_inference_endpoint_events(self, endpoint_name):
-        return self._get(f"api/2.0/serving-endpoints/{endpoint_name}/events")
-
-    def _get(self, uri, data = {}, allow_error = False):
-        r = requests.get(f"{self.base_url}/{uri}", params=data, headers=self.headers)
-        return self._process(r, allow_error)
-
-    def _post(self, uri, data = {}, allow_error = False):
-        return self._process(requests.post(f"{self.base_url}/{uri}", json=data, headers=self.headers), allow_error)
-
-    def _put(self, uri, data = {}, allow_error = False):
-        return self._process(requests.put(f"{self.base_url}/{uri}", json=data, headers=self.headers), allow_error)
-
-    def _delete(self, uri, data = {}, allow_error = False):
-        return self._process(requests.delete(f"{self.base_url}/{uri}", json=data, headers=self.headers), allow_error)
-
-    def _process(self, r, allow_error = False):
-      if r.status_code == 500 or r.status_code == 403 or not allow_error:
-        print(r.text)
-        r.raise_for_status()
-      return r.json()
 
 # COMMAND ----------
 
-catalog_name = "feat_eng"
-
-# COMMAND ----------
-
-# Use the MlflowClient to get a list of all versions for the registered model in Unity Catalog
-
-all_versions = client.search_model_versions(f"name='{catalog_name}.{database_name}.{model_name_expert}'")
-# # Sort the list of versions by version number and get the latest version
-latest_version = max([int(v.version) for v in all_versions])
-# # Use the MlflowClient to get the latest version of the registered model in Unity Catalog
-latest_model = client.get_model_version(f"{catalog_name}.{database_name}.{model_name_expert}", str(latest_version))
-
-#See the 00-init-expert notebook for the endpoint API details
-serving_client = EndpointApiClient()
-
-#Start the endpoint using the REST API (you can do it using the UI directly)
-serving_client.create_endpoint_if_not_exists("dbdemos_feature_store_endpoint", model_name="feat_eng.dbdemos_fs_travel_shared.dbdemos_fs_travel_shared_expert_model", model_version = latest_model.version, workload_size="Small", scale_to_zero_enabled=True, wait_start = True)
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC
-# MAGIC Your endpoint was created. Open the [Endpoint UI](/#mlflow/endpoints/dbdemos_feature_store_endpoint) to see the creation logs.
-# MAGIC
-# MAGIC
-# MAGIC ### Send payloads via REST call
-# MAGIC
-# MAGIC With Databricks's Serverless Model Serving, the endpoint takes a different score format.
-# MAGIC You can see that users in New York can see high scores for Florida, whereas users in California can see high scores for Hawaii.
-# MAGIC
-# MAGIC ```
-# MAGIC {
-# MAGIC   "dataframe_records": [
-# MAGIC     {"user_id": 4, "ts": "2022-11-23 00:28:40.053000", "booking_date": "2022-11-23", "destination_id": 16, "user_latitude": 40.71277, "user_longitude": -74.005974}, 
-# MAGIC     {"user_id": 39, "ts": "2022-11-23 00:30:29.345000", "booking_date": "2022-11-23", "destination_id": 1, "user_latitude": 37.77493, "user_longitude": -122.41942}
-# MAGIC   ]
-# MAGIC }
-# MAGIC ```
-
-# COMMAND ----------
-
-import timeit
-import requests
-
-dataset = {
-  "dataframe_records": [
-    {"user_id": 4, "ts": "2022-11-23 00:28:40.053000", "booking_date": "2022-11-23", "destination_id": 16, "user_latitude": 40.71277, "user_longitude": -74.005974}, 
-    {"user_id": 39, "ts": "2022-11-23 00:30:29.345000", "booking_date": "2022-11-23", "destination_id": 1, "user_latitude": 37.77493, "user_longitude": -122.41942}
-  ]
-}
-
-# endpoint_url = f"{serving_client.base_url}/serving-endpoints/dbdemos_fs_travel_shared_expert_model/invocations"
-
-endpoint_url = "https://e2-dogfood-brickstore-mt-bug-bash.staging.cloud.databricks.com/serving-endpoints/dbdemos_fs_travel_shared_expert_model/invocations"
-
-print(f"Sending requests to {endpoint_url}")
 for i in range(3):
     starting_time = timeit.default_timer()
-    inferences = requests.post(endpoint_url, json=dataset, headers=serving_client.headers).json()
+    inferences = w.serving_endpoints.query(endpoint_name, inputs=lookup_keys.to_dict(orient="records"))
     print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
     print(inferences)
 

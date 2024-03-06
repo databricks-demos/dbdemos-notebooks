@@ -296,12 +296,13 @@ if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
     embedding_source_column='content', #The column containing our text
     embedding_model_endpoint_name='databricks-bge-large-en' #The embedding endpoint used to create the embeddings
   )
+  #Let's wait for the index to be ready and all our embeddings to be created and indexed
+  wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 else:
   #Trigger a sync to update our vs content with the new data saved in the table
+  wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
   vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).sync()
 
-#Let's wait for the index to be ready and all our embeddings to be created and indexed
-wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 print(f"index {vs_index_fullname} on table {source_table_fullname} is ready")
 
 # COMMAND ----------

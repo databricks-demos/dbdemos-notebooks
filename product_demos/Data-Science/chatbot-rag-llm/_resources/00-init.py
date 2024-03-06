@@ -167,8 +167,8 @@ def wait_for_vs_endpoint_to_be_ready(vsc, vs_endpoint_name):
 # DBTITLE 1,index
 def index_exists(vsc, endpoint_name, index_full_name):
     try:
-        dict_vsindex = vsc.get_index(endpoint_name, index_full_name).describe()
-        return dict_vsindex.get('status').get('ready', False)
+        vsc.get_index(endpoint_name, index_full_name).describe()
+        return True
     except Exception as e:
         if 'RESOURCE_DOES_NOT_EXIST' not in str(e):
             print(f'Unexpected error describing the index. This could be a permission issue.')

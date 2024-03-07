@@ -11,7 +11,7 @@
 
 VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"
 
-DATABRICKS_SITEMAP_URL = "https://docs.databricks.com/en/doc-sitemap-en.xml"
+DATABRICKS_SITEMAP_URL = "https://docs.databricks.com/en/doc-sitemap.xml"
 
 catalog = "main__build"
 

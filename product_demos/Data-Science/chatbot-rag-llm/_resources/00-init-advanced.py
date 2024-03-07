@@ -72,12 +72,17 @@ def install_ocr_on_nodes():
     import subprocess
     num_workers = max(1,int(spark.conf.get("spark.databricks.clusterUsageTags.clusterWorkers")))
     command = "sudo rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && sudo apt-get clean && sudo apt-get update && sudo apt-get install poppler-utils tesseract-ocr -y" 
-    subprocess.check_output(command, shell=True)
-
+    def run_subprocess(command):
+        try:
+            output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            return output.decode()
+        except subprocess.CalledProcessError as e:
+            raise Exception("An error occurred installing OCR libs:"+ e.output.decode())
+    #install on the driver
+    run_subprocess(command)
     def run_command(iterator):
         for x in iterator:
-            yield subprocess.check_output(command, shell=True)
-
+            yield run_subprocess(command)
     # spark = SparkSession.builder.getOrCreate()
     data = spark.sparkContext.parallelize(range(num_workers), num_workers) 
     # Use mapPartitions to run command in each partition (worker)

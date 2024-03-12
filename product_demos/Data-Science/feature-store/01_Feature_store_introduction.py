@@ -25,12 +25,13 @@
 # MAGIC ### Advanced version ([open the notebook]($./02_Feature_store_advanced))
 # MAGIC
 # MAGIC  - Join multiple Feature Store tables
-# MAGIC  - Point in time lookup.
+# MAGIC  - Point in time lookup
+# MAGIC  - Online tables
 # MAGIC
 # MAGIC ### Expert version ([open the notebook]($./03_Feature_store_expert))
-# MAGIC  - Online tables 
+# MAGIC  - Streaming Feature Store tables 
 # MAGIC  - Feature spec (with functions) saved in UC 
-# MAGIC  - Feature endpoint to compute inference features in realtime (like distance)
+# MAGIC  - Feature spec endpoint to compute inference features in realtime (like distance)
 # MAGIC
 # MAGIC  
 # MAGIC *For more detail on the Feature Engineering in Unity Catalog, open <a href="https://api-docs.databricks.com/python/feature-engineering/latest" target="_blank">the documentation</a>.*
@@ -441,3 +442,4 @@ display(scored_df)
 # MAGIC - Multiple lookup tables
 # MAGIC - Leveraging Databricks Automl to get a more advanced model
 # MAGIC - Using point in time lookups
+# MAGIC - Deploy online tabels for realtime model serving

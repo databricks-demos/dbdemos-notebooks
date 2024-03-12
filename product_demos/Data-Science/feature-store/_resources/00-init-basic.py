@@ -25,6 +25,15 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # COMMAND ----------
 
+from databricks.sdk.service.serving import (
+    EndpointCoreConfigInput,
+    ServedModelInput,
+    ServedModelInputWorkloadSize,
+    ServingEndpointDetailed,
+)
+
+# COMMAND ----------
+
 # *****
 # Loading Modules
 # *****
@@ -92,6 +101,16 @@ def get_instance() -> str:
 
 # COMMAND ----------
 
+def online_table_exists(table_name):
+    w = WorkspaceClient()
+    try:
+        w.online_tables.get(name=table_name)
+        return True
+    except Exception as e:
+        print(str(e))
+        return 'already exists' in str(e)
+    return False
+  
 def delete_fs(fs_table_name):
   print("Deleting Feature Table", fs_table_name)
   try:

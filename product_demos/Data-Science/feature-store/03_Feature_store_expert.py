@@ -50,7 +50,7 @@
 # MAGIC
 # MAGIC In addition, we'll compute the "on-demande" feature (distance between the user and a destination, booking time) using the pandas API during training, this will allow us to use the same code for realtime inferences.
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/feature_store_expert_training.png" width="1200px"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-expert-flow-training.png?raw=true" width="1200px"/>
 
 # COMMAND ----------
 
@@ -129,6 +129,7 @@ destination_availability_stream = (
   .withColumnRenamed("event_ts", "ts")
 )
 
+DBDemos.stop_all_streams_asynch(sleep_time=30)
 display(destination_availability_stream)
 
 # COMMAND ----------
@@ -156,19 +157,21 @@ fe.write_table(
 # MAGIC
 # MAGIC ## Compute on-demand live features
 # MAGIC
-# MAGIC TODO REVOIR WORDING
+# MAGIC User location is a context feature that is captured at the time of the query. This data is not known in advance. 
 # MAGIC
-# MAGIC User location is a context feature that is captured at the time of the query. This data is not known in advance, hence the derived feature. 
+# MAGIC Derivated features can be computed from this location. For example, user distance from destination can only be computed in realtime at the prediction time.
 # MAGIC
-# MAGIC For example, user distance from destination can only be computed in realtime at the prediction time. We'll use a custom MLflow model `PythonModel` to ship this transformation as part of the model we save.
+# MAGIC This introduce a new challenge, we now have to link some function to transform the data and make sure the same is being used for training and inference (batch or realtime). 
 # MAGIC
-# MAGIC For training we'll leverage the spark Pandas API to compute these feature at scale on the entire dataset before training our model.
+# MAGIC To solve this, Databricks introduced Feature Spec. With Feature Spec, you can create custom function (SQL/PYTHON) to transform your data into new features, and link them to your model and feature store.
 # MAGIC
-# MAGIC Because it's shipped within the model, the same code will be used at inference time, offering a garantee that we compute the feature the same way, and adding flexibility while increasing model version.
+# MAGIC Because it's shipped as part of your FeatureLookup definition, the same code will be used at inference time, offering a garantee that we compute the feature the same way, and adding flexibility while increasing model version.
+# MAGIC
+# MAGIC Note that this function will be available as `catalog.schema.distance_udf` in the browser.
 
 # COMMAND ----------
 
-# DBTITLE 1,Compute distance 
+# DBTITLE 1,Define a function to compute distance 
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE FUNCTION distance_udf(lat1 DOUBLE, lon1 DOUBLE, lat2 DOUBLE, lon2 DOUBLE)
 # MAGIC RETURNS DOUBLE
@@ -183,6 +186,7 @@ fe.write_table(
 
 # COMMAND ----------
 
+# DBTITLE 1,Try the function to compute the distance between a user and a destination
 # MAGIC %sql
 # MAGIC SELECT distance_udf(user_latitude, user_longitude, latitude, longitude) AS hearth_distance, *
 # MAGIC     FROM destination_location_features
@@ -195,7 +199,9 @@ fe.write_table(
 # MAGIC
 # MAGIC # 2: Train a custom model with batch, on-demand and streaming features
 # MAGIC
-# MAGIC The following uses all the features created above to train a ranking model.
+# MAGIC That's all we have to do. We're now ready to train our model with this new feature.
+# MAGIC
+# MAGIC *Note: In a typical deployment, you would add more functions such as timestamp features (cos/sin for the hour/day of the week) etc.*
 
 # COMMAND ----------
 
@@ -204,7 +210,7 @@ fe.write_table(
 
 # COMMAND ----------
 
-# Random split to define a training and inference set
+# Split to define a training and inference set
 training_keys = spark.table('travel_purchase').select('ts', 'purchased', 'destination_id', 'user_id', 'user_latitude', 'user_longitude', 'booking_date')
 training_df = training_keys.where("ts < '2022-11-23'")
 test_df = training_keys.where("ts >= '2022-11-23'").cache()
@@ -216,6 +222,8 @@ display(training_df.limit(5))
 # MAGIC %md 
 # MAGIC
 # MAGIC ## Create the training set
+# MAGIC
+# MAGIC Note the use of `FeatureFunction`, pointing to the new distance_udf function that we saved in Unity Catalog.
 
 # COMMAND ----------
 
@@ -249,12 +257,14 @@ feature_lookups = [ # Grab all useful features from different feature store tabl
       timestamp_lookup_key="ts",
       feature_names=["availability"]
   ),
+  # Add our function to compute the distance between the user and the destination 
   FeatureFunction(
       udf_name="distance_udf",
       input_bindings={"lat1": "user_latitude", "lon1": "user_longitude", "lat2": "latitude", "lon2": "longitude"},
       output_name="distance"
   )]
 
+#Create the training set
 training_set = fe.create_training_set(
     df=training_df,
     feature_lookups=feature_lookups,
@@ -397,11 +407,11 @@ print("Accuracy: ", accuracy_score(pd_scoring["purchased"], pd_scoring["predicti
 # MAGIC
 # MAGIC To provide inference with ms response time, we need to be able to lookup the features for a single user or destination with low latencies.
 # MAGIC
-# MAGIC To do that, we'll deploy online store (K/V store like Mysql, dynamoDB, CosmoDB...) and Databricks Feature Store will automatically synchronize them with the Feature Store table.
+# MAGIC To do that, we'll deploy online stores. These are fully serverless and managed by Databricks. You can think of them as a  (K/V store, such as Mysql, dynamoDB, CosmoDB...).
 # MAGIC
-# MAGIC During inference, the engine will automatically use the same primary keys to do the timestamp.
+# MAGIC Databricks will automatically synchronize the Delta Live Table content with the online store (you can chose to trigger the update yourself or do it on a schedule).
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/feature_store_expert_inference.png" width="1200px" />
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-expert-flow.png?raw=true" width="1200px" />
 
 # COMMAND ----------
 
@@ -425,20 +435,16 @@ print("Accuracy: ", accuracy_score(pd_scoring["purchased"], pd_scoring["predicti
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
-w = WorkspaceClient()
-def create_online_table(source_table_full_name, pks, timeseries_key=None):
-    try:
+
+def create_online_table(table_name, pks, timeseries_key=None):
+    w = WorkspaceClient()
+    online_table_name = table_name+"_online"
+    if not online_table_exists(online_table_name):
         from databricks.sdk.service import catalog as c
-        spark.sql(f'ALTER TABLE {source_table_full_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
-        #w.online_tables.delete(name=source_table_full_name+"_online")
-        spec = c.OnlineTableSpec(source_table_full_name=source_table_full_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
-        w.online_tables.create(name=source_table_full_name+"_online", spec=spec)
-        print(f"Online table for {source_table_full_name} created")
-    except Exception as e:
-        if 'already exists' in str(e):
-            print(f"Online table for {source_table_full_name} already exists")
-        else:
-            raise e
+        print(f"Creating online table for {online_table_name}...")
+        spark.sql(f'ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
+        spec = c.OnlineTableSpec(online_table_name=table_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
+        w.online_tables.create(name=online_table_name, spec=spec)
 
 create_online_table(f"{catalog}.{db}.user_features",                 ["user_id"], "ts")
 create_online_table(f"{catalog}.{db}.destination_features",          ["destination_id"], "ts")
@@ -447,12 +453,85 @@ create_online_table(f"{catalog}.{db}.availability_features",         ["destinati
 
 # COMMAND ----------
 
-# MAGIC %md ## Deploy our Feature Spec to compute transformations in realtime
+# MAGIC %md-sandbox
 # MAGIC
-# MAGIC We're now ready to deploy our model using Databricks Model Serving endpoints. This will provide a REST API to serve our model in realtime.
+# MAGIC ## Deploy Serverless Model serving Endpoint
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-expert-model-serving.png?raw=true" style="float: right" width="500px">
+# MAGIC
+# MAGIC Once our Model, Function and Online feature store are in Unity Catalog, we can deploy the model as using Databricks Model Serving.
+# MAGIC
+# MAGIC This will provide a REST API to serve our model in realtime.
+# MAGIC
+# MAGIC ### Enable model inference via the UI
+# MAGIC
+# MAGIC After calling `log_model`, a new version of the model is saved. To provision a serving endpoint, follow the steps below.
+# MAGIC
+# MAGIC 1. Within the Machine Learning menu, click [Serving menu](ml/endpoints) in the left sidebar. 
+# MAGIC 2. Create a new endpoint, select the most recent model version from Unity Catalog and start the serverless model serving
+# MAGIC
+# MAGIC You can use the UI, in this demo We will use the API to programatically start the endpoint:
 
 # COMMAND ----------
 
+endpoint_name = "dbdemos_feature_store_endpoint_expert"
+served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
+try:
+    print(f'Creating endpoint {endpoint_name} with latest version...')
+    w.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
+except Exception as e:
+    if 'already exists' in str(e):
+        print(f'Endpoint exists, updating with latest model version...')
+        w.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+    else: 
+        raise e
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-expert-model-serving-inference.png?raw=true" style="float: right" width="700"/>
+# MAGIC
+# MAGIC Once our model deployed, you can easily test your model using the Model Serving endpoint UI.
+# MAGIC
+# MAGIC Let's call it using the REST API directly.
+# MAGIC
+# MAGIC The endpoint will answer in millisec, what will happen under the hood is the following:
+# MAGIC
+# MAGIC * The endpoint receive the REST api call
+# MAGIC * It calls our 4 online table to get the features
+# MAGIC * Call the `distance_udf` function to compute the distance
+# MAGIC * Call the ML model
+# MAGIC * Returns the final answer
+
+# COMMAND ----------
+
+
+from databricks.sdk import WorkspaceClient
+lookup_keys = test_df.drop('purchased').limit(2).toPandas().astype({'ts': 'str', 'booking_date': 'str'}).to_dict(orient="records")
+print(f'Compute the propensity score for these customers: {lookup_keys}')
+#Query the endpoint
+for i in range(3):
+    starting_time = timeit.default_timer()
+    inferences = WorkspaceClient().serving_endpoints.query(endpoint_name, inputs=lookup_keys)
+    print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
+    print(inferences)
+
+# COMMAND ----------
+
+# MAGIC %md # Optional: Deploy our Function as Feature Spec to compute transformations in realtime
+# MAGIC
+# MAGIC Our function can be saved as a Feature Spec and deployed standalone Model Serving Endpoint to serve any transformation.
+# MAGIC
+# MAGIC Here is an example on how you can create a feature spec to compute the distance between 2 points.
+# MAGIC
+# MAGIC This feature spec will do the lookup for you and call the `distance_df` function (as define in the `feature_lookups`).
+# MAGIC
+# MAGIC Once the feature spec deployed, you can use the [Serving Endpoint menu](ml/endpoints) to create a new endpoint.
+
+# COMMAND ----------
+
+# DBTITLE 1,Save the feature spec within Unity Catalog
 feature_spec_name = f"{catalog}.{db}.travel_feature_spec"
 try:
     #fe.delete_feature_spec(name=feature_spec_name)
@@ -462,6 +541,7 @@ except Exception as e:
 
 # COMMAND ----------
 
+# DBTITLE 1,Create the endpoint using the API
 from databricks.feature_engineering.entities.feature_serving_endpoint import AutoCaptureConfig, EndpointCoreConfig, ServedEntity
 
 # Create endpoint
@@ -478,84 +558,17 @@ ep = wait_for_feature_endpoint_to_start(fe, feature_endpoint_name)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Let's try our new feature endpoints
+# MAGIC Let's try our new feature spec endpoints. We can send send our queries using the UI or via REST API directly:
 
 # COMMAND ----------
 
-lookup_keys = test_df.limit(2).toPandas()
-lookup_keys["ts"] = lookup_keys["ts"].astype(str)
-lookup_keys["booking_date"] = lookup_keys["booking_date"].astype(str)
+#lookup_keys = test_df.limit(2).toPandas().astype({'ts': 'str', 'booking_date': 'str'})
+print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):
-    response = requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys.to_dict(orient="records")})
+    response = requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys})
     return response.json()
 query_endpoint(ep.url+"/invocations", lookup_keys)
-
-# COMMAND ----------
-
-# MAGIC %md ## Deploy Serverless Model serving Endpoint
-# MAGIC
-# MAGIC We're now ready to deploy our model using Databricks Model Serving endpoints. This will provide a REST API to serve our model in realtime.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Enable model inference via the UI
-# MAGIC
-# MAGIC After calling `log_model`, a new version of the model is saved. To provision a serving endpoint, follow the steps below.
-# MAGIC
-# MAGIC 1. Within the Machine Learning menu, click **Serving** in the left sidebar. 
-# MAGIC 2. Create a new endpoint, select the most recent model version and start the serverless model serving
-# MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/notebook4_ff_model_serving_screenshot2_1.png" alt="step12" width="1500"/>
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Set up & start a Serverless model serving endpoint using the API:
-# MAGIC
-# MAGIC We will use the API to programatically start the endpoint:
-
-# COMMAND ----------
-
-from databricks.sdk.service.serving import (
-    EndpointCoreConfigInput,
-    ServedModelInput,
-    ServedModelInputWorkloadSize,
-    ServingEndpointDetailed,
-)
-
-endpoint_name = "dbdemos_feature_store_endpoint_expert"
-served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
-try:
-    print(f'Creating endpoint {endpoint_name} with latest version...')
-    w.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
-except Exception as e:
-    if 'already exists' in str(e):
-        print(f'Endpoint exists, updating with latest model version...')
-        w.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
-    else: 
-        raise e
-
-
-# COMMAND ----------
-
-for i in range(3):
-    starting_time = timeit.default_timer()
-    inferences = w.serving_endpoints.query(endpoint_name, inputs=lookup_keys.to_dict(orient="records"))
-    print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
-    print(inferences)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ### Sending inference using the UI
-# MAGIC
-# MAGIC Once your serving endpoint is ready, your previous cell's `score_model` code should give you the model inference result. 
-# MAGIC
-# MAGIC You can also directly use the model serving UI to try your realtime inference. Click on "Query endpoint" (upper right corner) to test your model. 
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/notebook4_ff_model_serving_screenshot2_3.png" alt="step12" width="1500"/>
 
 # COMMAND ----------
 
@@ -576,13 +589,3 @@ for i in range(3):
 # MAGIC - Use spark structured streaming to stream the computation to offline store and online store
 # MAGIC - Use on-demand computation with MLflow pyfunc
 # MAGIC - Use Databricks Serverless realtime inference to perform low-latency predictions on your model
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC
-# MAGIC ## Make sure we stop all existing streams
-
-# COMMAND ----------
-
-stop_all_streams()

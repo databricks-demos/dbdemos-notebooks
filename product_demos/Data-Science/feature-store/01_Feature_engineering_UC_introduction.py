@@ -12,18 +12,28 @@
 # MAGIC
 # MAGIC ## Demo content
 # MAGIC
-# MAGIC Multiple version of this demo are available, each version introducing a new concept and capabilities. We recommend following them 1 by 1 as.
+# MAGIC Multiple version of this demo are available, each version introducing a new concept and capabilities. We recommend following them 1 by 1.
 # MAGIC
-# MAGIC In this first version, we'll cover the basics:
+# MAGIC ### Introduction (this notebook)
 # MAGIC
 # MAGIC  - Ingest our data and save them as a feature table within Unity Catalog
 # MAGIC  - Create a Feature Lookup with multiple tables
 # MAGIC  - Train your model using the Feature Engineering Client
 # MAGIC  - Register your best model and promote it into Production
 # MAGIC  - Perform batch scoring
+# MAGIC
+# MAGIC ### Advanced version ([open the notebook]($./02_Feature_store_advanced))
+# MAGIC
+# MAGIC  - Join multiple Feature Store tables
+# MAGIC  - Point in time lookup.
+# MAGIC
+# MAGIC ### Expert version ([open the notebook]($./03_Feature_store_expert))
+# MAGIC  - Online tables 
+# MAGIC  - Feature spec (with functions) saved in UC 
+# MAGIC  - Feature endpoint to compute inference features in realtime (like distance)
+# MAGIC
 # MAGIC  
-# MAGIC  
-# MAGIC For more detail on the Feature Engineering in Unity Catalog, open <a href="https://api-docs.databricks.com/python/feature-engineering/latest" target="_blank">the documentation</a>.
+# MAGIC *For more detail on the Feature Engineering in Unity Catalog, open <a href="https://api-docs.databricks.com/python/feature-engineering/latest" target="_blank">the documentation</a>.*
 
 # COMMAND ----------
 
@@ -39,14 +49,12 @@
 # MAGIC
 # MAGIC For this first version, we'll use a single data source: **Travel Purchased by users**
 # MAGIC
-# MAGIC
-# MAGIC We're going to make a basic single Feature Table that contains all existing features (**`clicked`** or **`price`**) and a few generated one(derivated from the timestamp). 
+# MAGIC We're going to make a basic single Feature Table that contains all existing features (**`clicked`** or **`price`**) and a few generated one (derivated from the timestamp). 
 # MAGIC
 # MAGIC We'll then use these features to train our baseline model, and to predict whether a user is likely to purchased a travel on our Website.
 # MAGIC
-# MAGIC The goal of this first use case is to understand what feature tables are and how they work. 
+# MAGIC *Note that the goal is to understand what feature tables are and how they work, we won't focus on the model itself*
 # MAGIC
-# MAGIC With the following demos we will increase the complexity of the use case.
 
 # COMMAND ----------
 
@@ -146,7 +154,7 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Create the Feature Engineering Table
+# MAGIC ### Save the Feature Engineering Table
 # MAGIC
 # MAGIC Next, we will save our feature as a Feature Engineering Table using the **`create_table`** method.
 # MAGIC
@@ -164,9 +172,8 @@ from databricks.feature_engineering import FeatureEngineeringClient, FeatureLook
 
 fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 
-fe_table_name = f"travel_recommender_basic"
 fe.create_table(
-    name=fe_table_name, # unique table name (in case you re-run the notebook multiple times)
+    name="destination_location_fs",
     primary_keys=["id"],
     df=df.to_spark(),
     description="Travel purchases dataset with purchase timestamp",
@@ -183,14 +190,14 @@ fe.create_table(
 # MAGIC
 # MAGIC ```
 # MAGIC fe.create_table(
-# MAGIC     name=fe_table_name,
+# MAGIC     name="destination_location_fs",
 # MAGIC     primary_keys=["destination_id"],
 # MAGIC     schema=destination_features_df.schema,
 # MAGIC     description="Destination Popularity Features",
 # MAGIC )
 # MAGIC
 # MAGIC fe.write_table(
-# MAGIC     name=fe_table_name,
+# MAGIC     name="destination_location_fs",
 # MAGIC     df=destination_features_df,
 # MAGIC     mode="overwrite"
 # MAGIC )
@@ -200,13 +207,13 @@ fe.create_table(
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_feat_table.png" style="float: right" width="700px">
+# MAGIC ### Our table is now ready!
 # MAGIC
-# MAGIC #### Our table is now ready!
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-basic-fs-table.png?raw=true" width="700px" style="float: right">
 # MAGIC
 # MAGIC We can explore the created feature engineering table using the Unity Catalog Explorer. 
 # MAGIC
-# MAGIC From within the Explorer, select the catalog `feat_eng` and browse the tables in the dropdown.
+# MAGIC From within the Explorer, select your catalog and browse the tables in the dropdown.
 # MAGIC
 # MAGIC We can view some sample data from the `travel_recommender_basic` table that was just created.
 # MAGIC
@@ -214,23 +221,9 @@ fe.create_table(
 
 # COMMAND ----------
 
-fe_get_table = fe.get_table(name=fe_table_name)
-print(f"Feature Table in UC= {fe_table_name}. Description: {fe_get_table.description}")
+fe_get_table = fe.get_table(name="destination_location_fs")
+print(f"Feature Table in UC=destination_location_fs. Description: {fe_get_table.description}")
 print("The table contains those features: ", fe_get_table.features)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC #### Table lineage
-# MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_feat_table_lineage.png" style="float: right" width="700px">
-# MAGIC
-# MAGIC Note also the section **`Lineage`**. This section indicates the upstream producers and downstream consumers of this table. This is one of the benefits of Feature Engineering in Unity Catalog (UC). When feature tables are also UC tables, we can use the UC lineage graph to audit our feature engineering pipelines and the models produced by these pipelines. 
-# MAGIC
-# MAGIC Consumers include which notebook produced the feature table.
-# MAGIC
-# MAGIC For now, there are no models that are consuming this table. Let's create our first model.
 
 # COMMAND ----------
 
@@ -258,22 +251,22 @@ print("The table contains those features: ", fe_get_table.features)
 # COMMAND ----------
 
 # DBTITLE 1,Get our list of id & labels
-training_dataset_key = spark.table('travel_purchase').select("id", "purchased")
-display(training_dataset_key)
+id_and_label = spark.table('travel_purchase').select("id", "purchased")
+display(id_and_label)
 
 # COMMAND ----------
 
 # DBTITLE 1,Retrieve the features from the feature table
 model_feature_lookups = [
       FeatureLookup(
-          table_name=fe_table_name,
+          table_name="destination_location_fs",
           lookup_key=["id"],
-          #feature_names=["price"], # if you dont specify here the FS will take all your features apart from primary_keys 
+          #feature_names=["..."], # if you dont specify here the FS will take all your features apart from primary_keys 
       )
 ]
 # fe.create_training_set will look up features in model_feature_lookups with matched key from training_labels_df
 training_set = fe.create_training_set(
-    df=training_dataset_key, # joining the original Dataset, with our FeatureLookupTable
+    df=id_and_label, # joining the original Dataset, with our FeatureLookupTable
     feature_lookups=model_feature_lookups,
     exclude_columns=["user_id", "id", "booking_date"], # exclude features we won't use in our model
     label='purchased',
@@ -339,7 +332,7 @@ with mlflow.start_run(run_name="lightGBM") as run:
 # MAGIC  
 # MAGIC #### Our model is now saved in Unity Catalog. 
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_model_catalog.png" width="400px" style="float: right"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-basic-model-uc.png?raw=true" width="700px" style="float: right"/>
 # MAGIC
 # MAGIC You can open the right menu to see the newly created "lightGBM" experiment, containing the model.
 # MAGIC
@@ -352,12 +345,16 @@ with mlflow.start_run(run_name="lightGBM") as run:
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC #### Model metadata
+# MAGIC #### Table lineage
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/01_basic_model_version.png" width="700px" style="float: right"/>
+# MAGIC Lineage is automatically captured and visible within Unity Catalog. It tracks all tables up to the model created.
 # MAGIC
-# MAGIC From the Catalog Explorer, we can also view more detailed model information, such as its version, its metrics and whether it has been aliased as production-ready.
-# MAGIC <br>
+# MAGIC This makes it easy to track all your data usage, and downstream impact. If some PII information got leaked, or some incorrect data is loaded and detected by the Lakehouse Monitoring, it's then easy to track the potential impact.
+# MAGIC
+# MAGIC Note that this not only includes table and model, but also Notebooks, Dashboard, Jobs triggering the run etc.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-basic-fs-table-lineage.png?raw=true" width="700px">
+# MAGIC
 # MAGIC
 
 # COMMAND ----------
@@ -381,15 +378,15 @@ all_versions = mlflow_client.search_model_versions(f"name='{model_full_name}'")
 # Sort the list of versions by version number and get the latest version
 latest_version = max([int(v.version) for v in all_versions])
 # Use the MlflowClient to get the latest version of the registered model in Unity Catalog
-latest_model = mlflow_client.get_model_version(model_registry_name, str(latest_version))
+latest_model = mlflow_client.get_model_version(model_full_name, str(latest_version))
 
 # COMMAND ----------
 
 #Move it in Production
-destination_alias = "production"
+production_alias = "production"
 if len(latest_model.aliases) == 0 or latest_model.aliases[0] != production_alias:
   print(f"updating model {latest_model.version} to Production")
-  mlflow_client.set_registered_model_alias(model_full_name, destination_alias, version=latest_version)
+  mlflow_client.set_registered_model_alias(model_full_name, production_alias, version=latest_version)
 
 # COMMAND ----------
 
@@ -413,7 +410,7 @@ if len(latest_model.aliases) == 0 or latest_model.aliases[0] != production_alias
 ## For sake of simplicity, we will just predict using the same ids as during training, but this could be a different pipeline
 id_to_forecast = spark.table('travel_purchase').select("id")
 
-scored_df = fe.score_batch(model_uri=f"models:/{model_full_name}@Production", df=id_to_forecast, result_type="boolean")
+scored_df = fe.score_batch(model_uri=f"models:/{model_full_name}@{production_alias}", df=id_to_forecast, result_type="boolean")
 display(scored_df)
 
 # COMMAND ----------
@@ -438,12 +435,6 @@ display(scored_df)
 # MAGIC ## Next Steps 
 # MAGIC
 # MAGIC We'll go more in details and introduce more feature engineering capabilities in the next demos:
-# MAGIC
-# MAGIC - Use multiple Feature Tables
-# MAGIC - Create a Feature Table from a Streaming table 
-# MAGIC - Calculate new features based on the destination coordinates and user's on the fly 
-# MAGIC - Publish your Feature Tables Online with a Key/Value feature store (Redis, DynamoDB, CosmoDB...), allowing realtime feature lookup  
-# MAGIC - Serve your model in Streaming and using Online Feature Stores Tables 
 # MAGIC
 # MAGIC
 # MAGIC Open the [02_Feature_store_advanced notebook]($./02_Feature_store_advanced) to explore more Feature Engineering in Unity Catalog benefits & capabilities:

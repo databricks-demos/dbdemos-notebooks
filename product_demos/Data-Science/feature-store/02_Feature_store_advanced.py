@@ -430,14 +430,15 @@ create_online_table(fe_table_name_users,        ["user_id"], "ts")
 # COMMAND ----------
 
 endpoint_name = "dbdemos_feature_store_endpoint_advanced"
+wc = WorkspaceClient()
 served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
 try:
     print(f'Creating endpoint {endpoint_name} with latest version...')
-    w.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
+    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
 except Exception as e:
     if 'already exists' in str(e):
         print(f'Endpoint exists, updating with latest model version...')
-        w.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
     else: 
         raise e
 
@@ -457,7 +458,7 @@ print('Data sent to the model:')
 print(data)
 
 starting_time = timeit.default_timer()
-inferences = w.serving_endpoints.query(endpoint_name, inputs=lookup_keys.to_dict(orient="records"))
+inferences = wc.serving_endpoints.query(endpoint_name, inputs=lookup_keys.to_dict(orient="records"))
 print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
 print(inferences.predictions)
 

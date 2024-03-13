@@ -475,14 +475,15 @@ create_online_table(f"{catalog}.{db}.availability_features",         ["destinati
 # COMMAND ----------
 
 endpoint_name = "dbdemos_feature_store_endpoint_expert"
+wc = WorkspaceClient()
 served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
 try:
     print(f'Creating endpoint {endpoint_name} with latest version...')
-    w.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
+    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
 except Exception as e:
     if 'already exists' in str(e):
         print(f'Endpoint exists, updating with latest model version...')
-        w.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
     else: 
         raise e
 
@@ -507,13 +508,12 @@ except Exception as e:
 # COMMAND ----------
 
 
-from databricks.sdk import WorkspaceClient
 lookup_keys = test_df.drop('purchased').limit(2).toPandas().astype({'ts': 'str', 'booking_date': 'str'}).to_dict(orient="records")
 print(f'Compute the propensity score for these customers: {lookup_keys}')
 #Query the endpoint
 for i in range(3):
     starting_time = timeit.default_timer()
-    inferences = WorkspaceClient().serving_endpoints.query(endpoint_name, inputs=lookup_keys)
+    inferences = wc.serving_endpoints.query(endpoint_name, inputs=lookup_keys)
     print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
     print(inferences)
 
@@ -534,7 +534,6 @@ for i in range(3):
 # DBTITLE 1,Save the feature spec within Unity Catalog
 feature_spec_name = f"{catalog}.{db}.travel_feature_spec"
 try:
-    #fe.delete_feature_spec(name=feature_spec_name)
     fe.create_feature_spec(name=feature_spec_name, features=feature_lookups, exclude_columns=['user_id', 'destination_id', 'booking_date', 'clicked', 'price'])
 except Exception as e:
     if "RESOURCE_ALREADY_EXISTS" not in str(e): raise e
@@ -547,7 +546,6 @@ from databricks.feature_engineering.entities.feature_serving_endpoint import Aut
 # Create endpoint
 feature_endpoint_name = "dbdemos-fse-travel-spec"
 try: 
-    #fe.delete_feature_serving_endpoint(name=feature_endpoint_name)
     status = fe.create_feature_serving_endpoint(name=feature_endpoint_name, 
                                                 config=EndpointCoreConfig(served_entities=ServedEntity(scale_to_zero_enabled= True, feature_spec_name=feature_spec_name)))
 except Exception as e:
@@ -566,8 +564,7 @@ ep = wait_for_feature_endpoint_to_start(fe, feature_endpoint_name)
 print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):
-    response = requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys})
-    return response.json()
+    return requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys}).json()
 query_endpoint(ep.url+"/invocations", lookup_keys)
 
 # COMMAND ----------

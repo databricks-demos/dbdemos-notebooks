@@ -139,6 +139,33 @@ class DBDemos():
 
 
   @staticmethod
+  def get_active_streams(start_with = ""):
+    return [s for s in spark.streams.active if len(start_with) == 0 or (s.name is not None and s.name.startswith(start_with))]
+
+  @staticmethod
+  def stop_all_streams_asynch(start_with = "", sleep_time=0):
+    import threading
+    def stop_streams():
+        DBDemos.stop_all_streams(start_with=start_with, sleep_time=sleep_time)
+
+    thread = threading.Thread(target=stop_streams)
+    thread.start()
+
+  @staticmethod
+  def stop_all_streams(start_with = "", sleep_time=0):
+    import time
+    time.sleep(sleep_time)
+    streams = DBDemos.get_active_streams(start_with)
+    if len(streams) > 0:
+      print(f"Stopping {len(streams)} streams")
+      for s in streams:
+          try:
+              s.stop()
+          except:
+              pass
+      print(f"All stream stopped {'' if len(start_with) == 0 else f'(starting with: {start_with}.)'}")
+
+  @staticmethod
   def get_last_experiment(demo_name, experiment_path = "/Shared/dbdemos/experiments/"):
     import requests
     import re

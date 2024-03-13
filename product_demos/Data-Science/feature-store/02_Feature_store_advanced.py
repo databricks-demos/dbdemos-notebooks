@@ -6,6 +6,12 @@
 # MAGIC For this demo, we'll go deeper in the Feature Store capabilities, adding multiple Feature Store table and introducing point in time lookup.
 # MAGIC
 # MAGIC We'll use the same dataset as before and implement the same use-case: recommender model for a Travel agency, pushing personalized offer based on what our customers are the most likely to buy.
+# MAGIC
+# MAGIC **What you will learn:**
+# MAGIC - Build more advanced features with multiple tables
+# MAGIC - Introduce timestamp key, to simplify temporal feature management
+# MAGIC - Use AutoML to create the best model for us
+# MAGIC - Online table, synchronizing Databricks Delta Table with a real time, low latency table automatically used by your model to lookup features.
 
 # COMMAND ----------
 
@@ -27,26 +33,21 @@
 # MAGIC
 # MAGIC ## 1: Create our Feature Tables
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/feature_store_creation_2.png" width="800px" style="float: right">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-advanced-flow.png?raw=true" width="800px" style="float: right">
 # MAGIC
 # MAGIC In this second example, we'll introduce more tables and new features calculated with window functions.
 # MAGIC
 # MAGIC To simplify updates & refresh, we'll split them in 2 tables:
 # MAGIC
 # MAGIC * **User features**: contains all the features for a given user in a given point in time (location, previous purchases if any etc)
-# MAGIC
 # MAGIC * **Destination features**: data on the travel destination for a given point in time (interest tracked by the number of clicks & impression)
-
-# COMMAND ----------
-
+# MAGIC
 # MAGIC %md 
 # MAGIC ### Point-in-time support for feature tables
 # MAGIC
 # MAGIC Databricks Feature Store supports use cases that require point-in-time correctness.
 # MAGIC
-# MAGIC The data used to train a model often has time dependencies built into it. 
-# MAGIC
-# MAGIC Because we are adding rolling-window features, our Feature Table will contain data on all the dataset timeframe. 
+# MAGIC The data used to train a model often has time dependencies built into it. In our case, because we are adding rolling-window features, our Feature Table will contain data on all the dataset timeframe. 
 # MAGIC
 # MAGIC When we build our model, we must consider only feature values up until the time of the observed target value. If you do not explicitly take into account the timestamp of each observation, you might inadvertently use feature values measured after the timestamp of the target value for training. This is called “data leakage” and can negatively affect the model’s performance.
 # MAGIC
@@ -88,7 +89,7 @@ def create_user_features(travel_purchase_df):
         .withColumn("tickets_purchased", F.col("purchased").cast('int'))
         # how many purchases for the past 6m
         .withColumn("last_6m_purchases", 
-            F.sum("tickets_purchased").over(w.Window.partitionBy("user_id").orderBy(F.col("ts_l")).rangeBetween(start=-(6 * 30 * 86400), end=0))
+            F.sum("tickets_purchased").over(w.Window.partitionBy("user_id").orderBy(F.col("ts_l")).rangeBetween(start=-(6 * 30 * 86400), end=0)).cast('double')
         )
         .select("user_id", "ts", "mean_price_7d", "last_6m_purchases", "user_longitude", "user_latitude")
     )
@@ -139,6 +140,7 @@ fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 
 # first create a table with User Features calculated above 
 fe_table_name_users = f"{catalog}.{db}.user_features_advanced"
+#fe.drop_table(name=fe_table_name_users)
 fe.create_table(
     name=fe_table_name_users, # unique table name (in case you re-run the notebook multiple times)
     primary_keys=["user_id", "ts"],
@@ -154,6 +156,7 @@ fe.create_table(
 fe_table_name_destinations = f"{catalog}.{db}.destination_features_advanced"
 # second create another Feature Table from popular Destinations
 # for the second table, we show how to create and write as two separate operations
+# fe.drop_table(name=fe_table_name_destinations)
 fe.create_table(
     name=fe_table_name_destinations, # unique table name (in case you re-run the notebook multiple times)
     primary_keys=["destination_id", "ts"],
@@ -166,21 +169,24 @@ fe.write_table(name=fe_table_name_destinations, df=destination_features_df)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md-sandbox
 # MAGIC
-# MAGIC As in our previous example, the 2 feature store tables were created. 
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-advanced-tables.png?raw=true" style="float: right; margin-left: 10px" width="550px">
 # MAGIC
-# MAGIC You can explore them using the Feature Store UI under the Machine Learning section in your left menu. You'll find all the feature created, including a reference to this notebook and the version used during the feature table creation.
+# MAGIC As in our previous example, the 2 feature store tables were created and are available within Unity Catalog. 
+# MAGIC
+# MAGIC You can explore Catalog Explorer. You'll find all the features created, including a reference to this notebook and the version used during the feature table creation.
+# MAGIC
+# MAGIC Note that the id ts are automatically defined as PK and TS PK columns.
+# MAGIC
+# MAGIC Now that our features are ready, we can start creating the training dataset and train a model using AutoML!
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
 # MAGIC ## 2: Train a model with FS and timestamp lookup
-
-# COMMAND ----------
-
-# MAGIC %md
+# MAGIC
 # MAGIC ### Create the training dataset
 # MAGIC
 # MAGIC The next step is to build a training dataset. 
@@ -201,6 +207,7 @@ display(test_labels_df)
 
 # COMMAND ----------
 
+# DBTITLE 1,Create the feature lookup with the lookup keys
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from databricks.feature_store import feature_table, FeatureLookup
 
@@ -239,7 +246,6 @@ display(training_pd)
 # MAGIC Instead of creating a basic model like previously, we will use <a href="https://docs.databricks.com/machine-learning/automl/index.html#classification" target="_blank">Databricks AutoML</a> to train our model, using best practices out of the box.
 # MAGIC
 # MAGIC While you can do that using the UI directly (+New => AutoML), we'll be using the `databricks.automl` API to have a reproductible flow.
-# MAGIC
 # MAGIC
 # MAGIC After running the previous cell, you will notice two notebooks and an MLflow experiment:
 # MAGIC
@@ -340,7 +346,7 @@ if len(latest_model.aliases) == 0 or latest_model.aliases[0] != production_alias
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## 3: Running inference
+# MAGIC ## 3: Running batch inference
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/feature_store/feature_store_inference_advanced.png" style="float: right" width="850px" />
 # MAGIC
@@ -359,106 +365,102 @@ display(scored_df)
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ### Prediction accuracy 
+# MAGIC %md-sandbox
 # MAGIC
-# MAGIC Let's compute our test prediction accuracy with SparkML
+# MAGIC ## 4: Running realtime inferences: introducing Online Tables
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-advanced-online.png?raw=true" style="float: right" width="850px" />
+# MAGIC
+# MAGIC Databricks now has built-in **online table**, providing realtime Key-Value lookup for your inferences.
+# MAGIC
+# MAGIC Online tables are fully managed and serverless. 
+# MAGIC
+# MAGIC This let you deploy realtime endpoints using these tables to lookup features and compute your prediction in milliseconds.
+# MAGIC
+# MAGIC Simply pick a source Detla Table to create your first online table. 
+# MAGIC
+# MAGIC Databricks will manage the synchronisation between your Delta Live Table and the Online Table for you in the background.
 
 # COMMAND ----------
 
-# DBTITLE 1,SparkML
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-scored_df = (scored_df
-                .withColumn("prediction", F.col("prediction").cast('double'))
-                .withColumn("purchased", F.col("purchased").cast('double')))
+# MAGIC %md 
+# MAGIC ### Creating the online tables
+# MAGIC Creating the table is straight forward
 
-# Select (prediction, true label) and compute test error
-evaluator = MulticlassClassificationEvaluator(labelCol="purchased", predictionCol="prediction", metricName="accuracy")
-accuracy = evaluator.evaluate(scored_df)
-print("Accuracy: ", accuracy)
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+
+def create_online_table(table_name, pks, timeseries_key=None):
+    w = WorkspaceClient()
+    online_table_name = table_name+"_online"
+    if not online_table_exists(online_table_name):
+        from databricks.sdk.service import catalog as c
+        print(f"Creating online table for {online_table_name}...")
+        spark.sql(f'ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
+        spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
+        w.online_tables.create(name=online_table_name, spec=spec)
+        
+#Note that the timeseries key 'ts' is optional. When defined, the online store will return the most recent entry.
+create_online_table(fe_table_name_destinations, ["destination_id"], "ts") 
+create_online_table(fe_table_name_users,        ["user_id"], "ts")
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
+# MAGIC ### Our online realtime tables are available in the Unity Catalog Explorer, like any other tables!
 # MAGIC
-# MAGIC ## 4: Feature Spec: combine features and function within Unity Catalog to share your inference table and dataset with other teams
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-advanced-online-tables.png?raw=true" style="float: right" width="850px" />
 # MAGIC
-# MAGIC We now have our feature tables and model, but they are not really linked together, and only us know how to use these tables together.
+# MAGIC We can see that our online table has been successfully created. 
 # MAGIC
-# MAGIC What if we want to share this information to other teams? What if we want to add a function to with a custom feature transformation (think about computing a distance based on the user long/lat for example.)
+# MAGIC Like any other table, it's available within the Unity Catalog explorer, in your catalog -> schema. 
 # MAGIC
-# MAGIC Databricks Feature Spec bundles [feature & functions](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/feature-function-serving) together in Unity Catalog to make this possible. 
-# MAGIC
-# MAGIC In this first example, we will define a basic FeatureSpec from the dataset (open the expert demo to see how to add functions to your feature spec to compute the distance in realtime)
-
-# COMMAND ----------
-
-# DBTITLE 1,Save our inference table into Unity Catalog
-inference_table_name = f"{catalog}.{db}.{model_name}_inferences"
-fe.create_table(name=inference_table_name, primary_keys=["user_id", "ts"], df=scored_df)
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC #### Publish inference table as a Databricks-managed online table
-# MAGIC
-# MAGIC An [online table](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html) is a read-only copy of a Delta Table that is stored in row-oriented format optimized for low-latency, high-throughput access. Our data needs to be saved into an online table in order to expose the data as a Feature and Function Serving endpoint. 
-# MAGIC
-# MAGIC After saving our inferences into a Delta table, creating an online table is a one-step process. Just select the Delta Table from the Catalog Explorer and select Create online table.
-# MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/02_advanced_create_online_store.png" style="float: right" width="850px" />
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We can see that our online table has been successfully created. 
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/jeannefukumaru/feat_eng_demo_images/main/02_advanced_created_online_store.png" style="float: right" width="850px" />
+# MAGIC ## Let's deploy our realtime model using the online table.
+# MAGIC
+# MAGIC Because you used the Feature Store to save the features and the model, Databricks knows that your model has to leverage the online tables once deployed.
+# MAGIC
+# MAGIC All we have to do is simply deploy the Model as a Serving Endpoint, and the Online Tables will automatically be leveraged to lookup features in realtime, all managed by Databricks.
 
 # COMMAND ----------
 
-# DBTITLE 1,Create a user-defined set of features using a FeatureSpec
-features = [
-  # Lookup column `average_yearly_spend` and `country` from a table in UC by the input `user_id`.
-  FeatureLookup(
-    table_name=inference_table_name,
-    lookup_key=["user_id", "ts"],
-  )]
-
-feature_spec_name = f"{catalog}.{db}.{model_name}_feature_spec"
-# Create a `FeatureSpec` with the features defined above.
-# The `FeatureSpec` can be accessed in Unity Catalog as a function.
+endpoint_name = "dbdemos_feature_store_endpoint_advanced"
+wc = WorkspaceClient()
+served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
 try:
-    fe.delete_feature_spec(name=feature_spec_name)
+    print(f'Creating endpoint {endpoint_name} with latest version...')
+    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
 except Exception as e:
-    if "RESOURCE_DOES_NOT_EXIST" not in str(e): raise e
-
-fe.create_feature_spec(
-  name=feature_spec_name,
-  features=features,
-)
-
-# COMMAND ----------
-
-# DBTITLE 1,Use the FeatureSpec to define an Feature and Function Serving endpoint
-from databricks.feature_engineering.entities.feature_serving_endpoint import (ServedEntity, EndpointCoreConfig)
-
-endpoint_name = f"{model_name}_{catalog}_{db}"
-fe.create_feature_serving_endpoint(
-  name=endpoint_name,
-    config=EndpointCoreConfig(
-    served_entities=ServedEntity(
-      feature_spec_name=inference_table_name,
-             workload_size="Small",
-             scale_to_zero_enabled=True,
-             instance_profile_arn=None,
-    )
-  )
-)
+    if 'already exists' in str(e):
+        print(f'Endpoint exists, updating with latest model version...')
+        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+    else: 
+        raise e
 
 # COMMAND ----------
 
-endpoint = fe.get_feature_serving_endpoint(name=endpoint_name)
+# MAGIC %md 
+# MAGIC ### Querying the online tables
+# MAGIC
+# MAGIC Let's query the model. Under the hood, the following will happen:
+# MAGIC
+
+# COMMAND ----------
+
+lookup_keys = test_labels_df.drop('purchased', "ts").limit(2).toPandas()
+data = lookup_keys.to_dict(orient="records")
+print('Data sent to the model:')
+print(data)
+
+starting_time = timeit.default_timer()
+inferences = wc.serving_endpoints.query(endpoint_name, inputs=lookup_keys.to_dict(orient="records"))
+print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
+print(inferences.predictions)
 
 # COMMAND ----------
 
@@ -466,7 +468,9 @@ endpoint = fe.get_feature_serving_endpoint(name=endpoint_name)
 # MAGIC
 # MAGIC ## Summary 
 # MAGIC
-# MAGIC We've seen how the feature store can handle multiple table, leverage a more advanced model with Databricks AutoML and use point-in-time lookup when your dataset contains temporal information and you don't want the future information to leak.
+# MAGIC We've seen how the feature store can handle multiple tables, leverage a more advanced model with Databricks AutoML and use point-in-time lookup when your dataset contains temporal information and you don't want the future information to leak.
+# MAGIC
+# MAGIC On top of that, we saw how Databricks Online table can provide realtime capabilities for K/V queries, automatically backed 
 # MAGIC
 # MAGIC Databricks Feature store brings you a full traceability, knowing which model is using which feature in which notebook/job.
 # MAGIC
@@ -478,6 +482,6 @@ endpoint = fe.get_feature_serving_endpoint(name=endpoint_name)
 # MAGIC
 # MAGIC - Multiple lookup tables
 # MAGIC - Streaming datasets
-# MAGIC - On-demand feature computation wrapped with the model
+# MAGIC - On-demand feature computation wrapped with the model with Feature Spec
 # MAGIC - Online feature store
 # MAGIC - Real time model serving with Rest Endpoints

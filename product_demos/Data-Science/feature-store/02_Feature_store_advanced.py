@@ -398,7 +398,7 @@ def create_online_table(table_name, pks, timeseries_key=None):
         from databricks.sdk.service import catalog as c
         print(f"Creating online table for {online_table_name}...")
         spark.sql(f'ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
-        spec = c.OnlineTableSpec(online_table_name=table_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
+        spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
         w.online_tables.create(name=online_table_name, spec=spec)
         
 #Note that the timeseries key 'ts' is optional. When defined, the online store will return the most recent entry.

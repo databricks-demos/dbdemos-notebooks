@@ -126,7 +126,7 @@
     "spark_conf": {
         "spark.master": "local[*, 4]"
     },
-    "spark_version": "13.3.x-scala2.12",
+    "spark_version": "14.3.x-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER"
   }  

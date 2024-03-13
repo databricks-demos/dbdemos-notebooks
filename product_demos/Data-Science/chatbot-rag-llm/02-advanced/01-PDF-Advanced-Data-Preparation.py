@@ -169,6 +169,7 @@ with requests.get('https://github.com/databricks-demos/dbdemos-dataset/blob/main
 from llama_index.langchain_helpers.text_splitter import SentenceSplitter
 from llama_index import Document, set_global_tokenizer
 from transformers import AutoTokenizer
+from typing import Iterator
 
 # Reduce the arrow batch size as our PDF can be big in memory
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 10)

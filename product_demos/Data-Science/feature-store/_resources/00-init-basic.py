@@ -40,7 +40,7 @@ from databricks.sdk.service.serving import (
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 import pyspark.sql.window as w
-
+import timeit
 from databricks import feature_store
 from databricks.feature_store import feature_table, FeatureLookup
 

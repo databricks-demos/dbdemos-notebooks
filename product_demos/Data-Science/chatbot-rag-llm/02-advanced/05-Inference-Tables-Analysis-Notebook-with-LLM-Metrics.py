@@ -131,8 +131,8 @@ display(payloads)
 # KEEP_LAST_QUESTION_ONLY = False
 
 # Example for format: {"dataframe_split": {"columns": ["messages"], "data": [[{"messages": [{"role": "user", "content": "What is Apache Spark?"}, {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, {"role": "user", "content": "Does it support streaming?"}]}]]}}
-INPUT_REQUEST_JSON_PATH = "dataframe_split.data[0][*][*].messages[*].content"
-INPUT_JSON_PATH_TYPE = "array<array<string>>"
+INPUT_REQUEST_JSON_PATH = "messages[*].content"
+INPUT_JSON_PATH_TYPE = "array<string>"
 # As we send in history, we only want to evaluate the last history input which is the new question.
 KEEP_LAST_QUESTION_ONLY = True
 
@@ -142,7 +142,7 @@ KEEP_LAST_QUESTION_ONLY = True
 #OUPUT_JSON_PATH_TYPE = "array<string>"
 
 # Answer format: {"predictions": [{"sources": ["https://docs"], "result": "  Yes."}]}
-OUTPUT_REQUEST_JSON_PATH = "predictions[*].result"
+OUTPUT_REQUEST_JSON_PATH = "[*].result"
 # Matches the schema returned by the JSON selector (predictions is an array of string)
 OUPUT_JSON_PATH_TYPE = "array<string>"
 
@@ -182,7 +182,7 @@ def unpack_requests(requests_raw: DataFrame,
         .withColumn("response", F.from_json(F.expr(f"response:{output_request_json_path}"), output_json_path_type)))
     
     if keep_last_question_only:
-        requests_unpacked = requests_unpacked.withColumn("request", transform(col("request"), lambda x: element_at(x, size(x))))
+        requests_unpacked = requests_unpacked.withColumn("request", F.array(F.element_at(F.col("request"), -1)))
 
     # Explode batched requests into individual rows.
     requests_exploded = (requests_unpacked

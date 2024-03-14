@@ -131,6 +131,7 @@ destination_availability_stream = (
 
 DBDemos.stop_all_streams_asynch(sleep_time=30)
 display(destination_availability_stream)
+DBDemos.wait_for_all_stream()
 
 # COMMAND ----------
 

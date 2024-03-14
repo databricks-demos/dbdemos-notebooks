@@ -121,6 +121,7 @@ destination_availability_stream = (
   .option("cloudFiles.format", "json") #Could be "kafka" to consume from a message queue
   .option("cloudFiles.inferSchema", "true")
   .option("cloudFiles.inferColumnTypes", "true")
+  .option("cloudFiles.schemaEvolutionMode", "rescue")
   .option("cloudFiles.schemaHints", "event_ts timestamp, booking_date date, destination_id int")
   .option("cloudFiles.schemaLocation", f"/Volumes/{catalog}/{db}/feature_store_volume/stream/availability_schema")
   .option("cloudFiles.maxFilesPerTrigger", 100) #Simulate streaming
@@ -131,7 +132,6 @@ destination_availability_stream = (
 
 DBDemos.stop_all_streams_asynch(sleep_time=30)
 display(destination_availability_stream)
-DBDemos.wait_for_all_stream()
 
 # COMMAND ----------
 

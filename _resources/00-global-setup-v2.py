@@ -166,6 +166,18 @@ class DBDemos():
       print(f"All stream stopped {'' if len(start_with) == 0 else f'(starting with: {start_with}.)'}")
 
   @staticmethod
+  def wait_for_all_stream(start = ""):
+    import time
+    actives = DBDemos.get_active_streams(start)
+    if len(actives) > 0:
+      print(f"{len(actives)} streams still active, waiting... ({[s.name for s in actives]})")
+    while len(actives) > 0:
+      spark.streams.awaitAnyTermination()
+      time.sleep(1)
+      actives = DBDemos.get_active_streams(start)
+    print("All streams completed.")
+
+  @staticmethod
   def get_last_experiment(demo_name, experiment_path = "/Shared/dbdemos/experiments/"):
     import requests
     import re

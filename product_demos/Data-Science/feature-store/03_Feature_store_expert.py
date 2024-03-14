@@ -561,12 +561,11 @@ ep = wait_for_feature_endpoint_to_start(fe, feature_endpoint_name)
 
 # COMMAND ----------
 
-#lookup_keys = test_df.limit(2).toPandas().astype({'ts': 'str', 'booking_date': 'str'})
 print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):
     return requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys}).json()
-query_endpoint(ep.url+"/invocations", lookup_keys)
+#query_endpoint(ep.url+"/invocations", lookup_keys)
 
 # COMMAND ----------
 

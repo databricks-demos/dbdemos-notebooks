@@ -65,5 +65,5 @@
       "description": "Build a pipeline to ingest customer reviews, detect the negative one and generate answers."
     }
   ],
-  "start_cluster": False
+  "create_cluster": False
 }

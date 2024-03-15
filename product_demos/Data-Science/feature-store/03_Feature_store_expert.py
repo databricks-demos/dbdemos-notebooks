@@ -452,6 +452,9 @@ create_online_table(f"{catalog}.{db}.destination_features",          ["destinati
 create_online_table(f"{catalog}.{db}.destination_location_features", ["destination_id"])
 create_online_table(f"{catalog}.{db}.availability_features",         ["destination_id", "booking_date"], "ts")
 
+#wait for all the tables to be online
+wait_for_online_tables(catalog, db, ["user_features_online", "destination_features_online", "destination_location_features_online", "availability_features_online"])
+
 # COMMAND ----------
 
 # MAGIC %md-sandbox
@@ -561,7 +564,6 @@ ep = wait_for_feature_endpoint_to_start(fe, feature_endpoint_name)
 
 # COMMAND ----------
 
-#lookup_keys = test_df.limit(2).toPandas().astype({'ts': 'str', 'booking_date': 'str'})
 print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):

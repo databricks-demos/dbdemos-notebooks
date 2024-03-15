@@ -79,28 +79,6 @@ def add_time_features(df):
 
 # COMMAND ----------
 
-# Below are initialization related functions
-def get_cloud_name():
-    return spark.conf.get("spark.databricks.clusterUsageTags.cloudProvider").lower()
-
-def get_current_url():
-  return dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
-
-def get_username() -> str:  # Get the user's username
-    return dbutils().notebook.entry_point.getDbutils().notebook().getContext().tags().apply("user").lower().split("@")[0].replace(".", "_")
-cleaned_username = get_username()
-
-
-def get_request_headers() -> str:
-    return {
-        "Authorization": f"""Bearer {dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()}"""
-    }
-
-def get_instance() -> str:
-    return dbutils().notebook.entry_point.getDbutils().notebook().getContext().tags().apply("browserHostName")
-
-# COMMAND ----------
-
 def online_table_exists(table_name):
     w = WorkspaceClient()
     try:
@@ -111,6 +89,19 @@ def online_table_exists(table_name):
         return 'already exists' in str(e)
     return False
   
+def wait_for_online_tables(catalog, schema, tables, waiting_time = 300):
+    sleep_time = 10
+    import time
+    from databricks.sdk import WorkspaceClient
+    w = WorkspaceClient()
+    for table in tables:
+        for i in range(int(waiting_time/sleep_time)):
+            state = w.online_tables.get(name=f"{catalog}.{db}.{table}").status.detailed_state.value
+            if state.startswith('ONLINE'):
+                print(f'Table {table} online: {state}')
+                break
+            time.sleep(sleep_time)
+            
 def delete_fs(fs_table_name):
   print("Deleting Feature Table", fs_table_name)
   try:

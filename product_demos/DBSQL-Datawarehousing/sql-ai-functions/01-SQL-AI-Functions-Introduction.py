@@ -1,12 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Actioning Customer Reviews at Scale with Databricks SQL AI Functions
+# MAGIC # Actioning Customer Reviews at Scale with Databricks SQL AI Functions (*CHANGE THIS IMAGE)
 # MAGIC
 # MAGIC AI Functions are built-in Databricks SQL functions, allowing you to access Large Language Models (LLMs) directly from SQL.
 # MAGIC
-# MAGIC Popular LLMs such as the one provided by OpenAI APIs let you apply all sort of transformations on top of text, from classification, information extraction to automatic answers.
+# MAGIC Popular open sources LLMs models let you apply all sort of transformations on top of text, from classification, information extraction to automatic answers.
 # MAGIC
-# MAGIC Leveraging Databricks SQL AI functions `AI_GENERATE_TEXT()`, you can now apply these transformations and experiment with LLMs on your data from within a familiar SQL interface. 
+# MAGIC Leveraging Databricks New Foundation Model Capabilities and SQL AI functions `ai_query()`, you can now apply these transformations and experiment with foudations LLMs on your data from within a familiar SQL interface. 
 # MAGIC
 # MAGIC Once you have developed the correct LLM prompt, you can quickly turn that into a production pipeline using existing Databricks tools such as Delta Live Tables or scheduled Jobs. This greatly simplifies both the development and productionization workflow for LLMs.
 # MAGIC
@@ -14,7 +14,7 @@
 # MAGIC
 # MAGIC ## Increasing customer satisfaction and churn reduction with automatic reviews analysis
 # MAGIC
-# MAGIC In this demo, we'll build a data pipeline that takes customer reviews, in the form of freeform text, and enrich them with meaning derived by asking natural language questions of Azure OpenAI's GPT-3.5 Turbo model. We'll even provide recommendations for next best actions to our customer service team - i.e. whether a customer requires follow-up, and a sample message to follow-up with
+# MAGIC In this demo, we'll build a data pipeline that takes customer reviews, in the form of freeform text, and enrich them with meaning derived by asking natural language questions of Databricks Mixtral model. We'll even provide recommendations for next best actions to our customer service team - i.e. whether a customer requires follow-up, and a sample message to follow-up with
 # MAGIC
 # MAGIC For each review, we:
 # MAGIC - Determine sentiment and whether a response is required back to the customer
@@ -29,45 +29,34 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 1/ Setup: get your Open AI configuration and save key as Databricks secret
+# MAGIC ## 1/ `AI_QUERY` introduction: Generating fake data for our demo with our foundation model
 # MAGIC
-# MAGIC ### Prerequisites
+# MAGIC To start our demo, we will leverage `ai_query()` to generate fake reviews to use in our data pipeline. 
 # MAGIC
-# MAGIC In order to run this demo in your own environment you will need to satisfy these prerequisites:
+# MAGIC The sample data mimics customer reviews for grocery products submitted to an e-commerce website, and we will craft a prompt for our foundation model to generate this data for us.
 # MAGIC
-# MAGIC - Enrolled in the Public Preview. Request enrolment [here](https://docs.google.com/forms/d/e/1FAIpQLSdHOk5Wmk38zGqGhi27Q3ZiTpV7aIHipSa1Al9C0vfX0wYHfQ/viewform)
-# MAGIC - Access to a Databricks SQL Pro or Serverless [warehouse](https://docs.databricks.com/sql/admin/create-sql-warehouse.html#what-is-a-sql-warehouse)
-# MAGIC - An [Azure OpenAI key](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/overview#how-do-i-get-access-to-azure-openai)
-# MAGIC - Store the API key in Databricks Secrets (documentation: [AWS](https://docs.databricks.com/security/secrets/index.html), [Azure](https://learn.microsoft.com/en-gb/azure/databricks/security/secrets/), [GCP](https://docs.gcp.databricks.com/security/secrets/index.html)).
+# MAGIC In this demo, we use one of our [Foundation models](https://docs.databricks.com/en/machine-learning/foundation-models/index.html), [Databricks-MPT-30B](https://www.databricks.com/blog/mpt-30b) as our LLM that will be used by AI_QUERY() to generate fake reviews. 
 # MAGIC
-# MAGIC ### Setting up Open AI
+# MAGIC To use this notebook and the following notebooks, connect to a SQL warehouse using the steps described in the following image.  
 # MAGIC
-# MAGIC In order for `AI_GENERATE_TEXT()` to call your Azure OpenAI model, you need to provide the key to your Azure OpenAI resource endpoint. We'll explore how we retrieve this information and store it secure in Databricks secrets.
-# MAGIC
-# MAGIC Open the [02-Create-OpenAI-model-and-store-secrets]($./02-Create-OpenAI-model-and-store-secrets) to see how to setup your Open AI service and retrieve its configuration.
+# MAGIC Open the next Notebook to generate some sample data for our demo: [02-Generate-fake-data-with-AI-functions-Foundation-Model]($./02-Generate-fake-data-with-AI-functions-Foundation-Model)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2/ `AI_GENERATE_TEXT` introduction: Generating fake data for our demo with Open AI
-# MAGIC
-# MAGIC To start our demo, we will leverage `AI_GENERATE_TEXT()` to generate fake reviews to use in our data pipeline. 
-# MAGIC
-# MAGIC The sample data mimics customer reviews for grocery products submitted to an e-commerce website, and we will craft a prompt for Open AI to generate this data for us.
-# MAGIC
-# MAGIC Open the [03-Generate-fake-data-with-AI-functions]($./03-Generate-fake-data-with-AI-functions) to start with your first SQL AI Function!
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## 4/ Building our SQL pipeline with Open AI to extract review sentiments
+# MAGIC ## 2/ Building our SQL pipeline with our LLM to extract review sentiments
 # MAGIC
 # MAGIC We are now ready to use create our full data pipeline:
 # MAGIC
 # MAGIC &nbsp;
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-flow.png" width="1000">
 # MAGIC
-# MAGIC Open the [04-automated-product-review-and-answer]($./04-automated-product-review-and-answer) to process our text using SQL and automate our review answer!
+# MAGIC Open the [03-automated-product-review-and-answer]($./03-automated-product-review-and-answer) to process our text using SQL and automate our review answer!
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### If you cannot access a foundation model, follow the instructions in the notebook [Optional-Generate-fake-data-with-AI-functions-ExternalModel]($./Optional-Generate-fake-data-with-AI-functions-ExternalModel) to use an OpenAI model instead. 
 
 # COMMAND ----------
 
@@ -76,8 +65,7 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/llm-dolly/llm-dolly.png" style="float: right" width="200px"/>
 # MAGIC
-# MAGIC
-# MAGIC Databricks not only let you call external LLM such as Open AI. 
+# MAGIC Databricks not only let you call foundations LLMs and external model such as Open AI. 
 # MAGIC
 # MAGIC The lakehouse also provides an 2e2 ML platform so that you can build and specialize your own LLM, covering your custom dataset ingestion, model training and model serving using Serverless rest endpoints.
 # MAGIC
@@ -87,6 +75,6 @@
 
 # MAGIC %md
 # MAGIC ## Further Reading and Resources
-# MAGIC - [Documentation](https://docs.databricks.com/sql/language-manual/functions/ai_generate_text.html)
+# MAGIC - [Documentation](https://docs.databricks.com/en/large-language-models/ai-query-external-model.html)
 # MAGIC - [Introducing AI Functions: Integrating Large Language Models with Databricks SQL](https://www.databricks.com/blog/2023/04/18/introducing-ai-functions-integrating-large-language-models-databricks-sql.html)
 # MAGIC - Check out more Databricks demos at [dbdemos.ai](https://www.dbdemos.ai/index.html)

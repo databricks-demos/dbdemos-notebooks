@@ -7,6 +7,9 @@
 
 {
   "name": "sql-ai-functions",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_ai_query",
   "category": "DBSQL",
   "title": "AI Functions: query LLM with DBSQL",
   "description": "Call Azure OpenAI's model from your Lakehouse data using AI_GENERATE_TEXT()",

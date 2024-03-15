@@ -402,11 +402,11 @@ def create_online_table(table_name, pks, timeseries_key=None):
         w.online_tables.create(name=online_table_name, spec=spec)
         
 #Note that the timeseries key 'ts' is optional. When defined, the online store will return the most recent entry.
-create_online_table(fe_table_name_destinations, ["destination_id"], "ts") 
-create_online_table(fe_table_name_users,        ["user_id"], "ts")
+create_online_table("destination_features_advanced", ["destination_id"], "ts") 
+create_online_table("user_features_advanced",        ["user_id"], "ts")
 
 #wait for all the tables to be online
-wait_for_online_tables(catalog, db, [fe_table_name_destinations+"_online", fe_table_name_users+"_online"])
+wait_for_online_tables(catalog, db, ["destination_features_advanced_online", "user_features_advanced_online"])
 
 # COMMAND ----------
 

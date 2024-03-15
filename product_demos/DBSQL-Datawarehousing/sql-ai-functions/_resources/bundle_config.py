@@ -34,7 +34,7 @@
     },
     {
       "path": "00-SQL-AI-Functions-Introduction", 
-      "pre_run": True,
+      "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Introduction to AI Functions", 
@@ -45,16 +45,27 @@
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Setting up your Open AI secret", 
-      "description": "Create your Open AI model resource and save it as a Databricks secret."
+      "title":  "Discover Databricks AI function", 
+      "description": "Builtin AI functions to solve all common tasks.",
+      "warehouse_id": "9be8079d873b30a6"
+    },
+    {
+      "path": "02-Generate-fake-data-with-AI-functions", 
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "Discover AI QUERY function", 
+      "description": "Call custom Model Serving Endpoint within SQL and generate fake dataset.",
+      "warehouse_id": "9be8079d873b30a6"
     },
     {
       "path": "03-automated-product-review-and-answer", 
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Using AI Function to generate data", 
-      "description": "Use Open AI and SQL AI Functions to generate a fake dataset."
+      "title":  "Leverage AI QUERY in a complete pipeline.", 
+      "description": "Implement a flow to analyse and answer customer reviews.",
+      "warehouse_id": "9be8079d873b30a6"
     },
     {
       "path": "04-Extra-setup-external-model-OpenAI", 
@@ -62,7 +73,8 @@
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Analyze and answer customer reviews", 
-      "description": "Build a pipeline to ingest customer reviews, detect the negative one and generate answers."
+      "description": "Build a pipeline to ingest customer reviews, detect the negative one and generate answers.",
+      "warehouse_id": "9be8079d873b30a6"
     }
   ],
   "create_cluster": False

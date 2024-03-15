@@ -405,6 +405,9 @@ def create_online_table(table_name, pks, timeseries_key=None):
 create_online_table(fe_table_name_destinations, ["destination_id"], "ts") 
 create_online_table(fe_table_name_users,        ["user_id"], "ts")
 
+#wait for all the tables to be online
+wait_for_online_tables(catalog, db, [fe_table_name_destinations+"_online", fe_table_name_users+"_online"])
+
 # COMMAND ----------
 
 # MAGIC %md-sandbox

@@ -452,6 +452,9 @@ create_online_table(f"{catalog}.{db}.destination_features",          ["destinati
 create_online_table(f"{catalog}.{db}.destination_location_features", ["destination_id"])
 create_online_table(f"{catalog}.{db}.availability_features",         ["destination_id", "booking_date"], "ts")
 
+#wait for all the tables to be online
+wait_for_online_tables(catalog, db, ["user_features_online", "destination_features_online", "destination_location_features_online", "availability_features_online"])
+
 # COMMAND ----------
 
 # MAGIC %md-sandbox
@@ -565,7 +568,7 @@ print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):
     return requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys}).json()
-#query_endpoint(ep.url+"/invocations", lookup_keys)
+query_endpoint(ep.url+"/invocations", lookup_keys)
 
 # COMMAND ----------
 

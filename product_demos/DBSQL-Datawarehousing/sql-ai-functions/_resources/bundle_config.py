@@ -30,48 +30,37 @@
       "description": "Init data for demo"
     },
     {
-      "path": "01-SQL-AI-Functions-Introduction", 
-      "pre_run": False,
+      "path": "00-SQL-AI-Functions-Introduction", 
+      "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Introduction to AI Functions", 
       "description": "Introduction to SQL AI Functions, start here."
     },
     {
-      "path": "02-Create-OpenAI-model-and-store-secrets", 
-      "pre_run": False,
+      "path": "01-Builtin-SQL-AI-Functions", 
+      "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Setting up your Open AI secret", 
       "description": "Create your Open AI model resource and save it as a Databricks secret."
     },
     {
-      "path": "03-Generate-fake-data-with-AI-functions", 
-      "pre_run": False,
+      "path": "03-automated-product-review-and-answer", 
+      "pre_run": True,
       "publish_on_website": True,
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "Using AI Function to generate data", 
       "description": "Use Open AI and SQL AI Functions to generate a fake dataset."
     },
     {
-      "path": "04-automated-product-review-and-answer", 
+      "path": "04-Extra-setup-external-model-OpenAI", 
       "pre_run": False,
       "publish_on_website": True,
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "Analyze and answer customer reviews", 
       "description": "Build a pipeline to ingest customer reviews, detect the negative one and generate answers."
     }
   ],
-  "cluster": {
-      "spark_conf": {
-        "spark.master": "local[*]",
-        "spark.databricks.cluster.profile": "singleNode"
-    },
-    "custom_tags": {
-        "ResourceClass": "SingleNode"
-    },
-    "num_workers": 0,
-    "single_user_name": "{{CURRENT_USER}}",
-    "data_security_mode": "SINGLE_USER"
-  }
+  "start_cluster": False
 }

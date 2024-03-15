@@ -54,7 +54,7 @@
     },
     {
       "path": "03_Feature_store_expert", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - full", 

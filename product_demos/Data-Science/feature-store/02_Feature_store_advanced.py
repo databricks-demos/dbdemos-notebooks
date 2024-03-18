@@ -42,7 +42,6 @@
 # MAGIC * **User features**: contains all the features for a given user in a given point in time (location, previous purchases if any etc)
 # MAGIC * **Destination features**: data on the travel destination for a given point in time (interest tracked by the number of clicks & impression)
 # MAGIC
-# MAGIC %md 
 # MAGIC ### Point-in-time support for feature tables
 # MAGIC
 # MAGIC Databricks Feature Store supports use cases that require point-in-time correctness.

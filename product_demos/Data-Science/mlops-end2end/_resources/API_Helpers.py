@@ -1,148 +1,196 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## API helpers for MLOps operation
-# MAGIC 
+# MAGIC ## API helpers for ModelOps actions
+# MAGIC
 # MAGIC This notebook contains function to simplify MLOps operation during the demo, such as creating the MLOPs job if it doesn't exists, or webhook helpers
+
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+
+# w = WorkspaceClient() # databricks-sdk >= 0.9.0 or MLR > 14.0
+
+# COMMAND ----------
+
+# DBTITLE 1,If databricks-sdk version < 0.9.0/MLR<=14.0
+# Get current token and url (not required if sdk version >=0.8.0 / MLR>14.0)
+databricks_url = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().getOrElse(None)
+databricks_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().getOrElse(None)
+
+w = WorkspaceClient(host=databricks_url, token=databricks_token)
+
+# COMMAND ----------
+
+import re
+def get_current_username():
+  """
+  Helper function to get current username
+  """
+  current_user = w.current_user.me().user_name.split("@")[0]
+
+  return re.sub(r'\W+', '_', current_user)
 
 # COMMAND ----------
 
 import mlflow
 from mlflow.utils.rest_utils import http_request
 import json
+from mlflow import MlflowClient
+
+
+client = MlflowClient()
+host_creds = client._tracking_client.store.get_host_creds()
 
 # COMMAND ----------
 
-#Helper to get the MLOps Databricks job or create it if it doesn't exists
-def find_job(name, offset = 0, limit = 25):
-    r = http_request(host_creds=host_creds, endpoint="/api/2.1/jobs/list", method="GET", params={"limit": limit, "offset": offset, "name": urllib.parse.quote_plus(name)}).json()
-    if 'jobs' in r:
-        for job in r['jobs']:
-            if job["settings"]["name"] == name:
-                return job
-        if r['has_more']:
-            return find_job(name, offset+limit, limit)
-    return None
+import urllib
+from mlflow.utils.rest_utils import http_request
 
+# Helper to get the MLOps Databricks job or create it if it doesn't exists
+def find_job(name, offset = 0, limit = 25):
+  # TO-DO [later]: use databricks-sdk jops api instead
+  r = http_request(host_creds=host_creds, endpoint="/api/2.1/jobs/list", method="GET", params={"limit": limit, "offset": offset, "name": urllib.parse.quote_plus(name)}).json()
+  if 'jobs' in r:
+      for job in r['jobs']:
+          if job["settings"]["name"] == name:
+              return job
+      if r['has_more']:
+          return find_job(name, offset+limit, limit)
+  return None
+
+def trigger_job(job_id_in, job_params: dict = {}) :
+  
+  r = w.jobs.run_now(job_id=job_id_in, notebook_params=job_params)
+  
+  if r.run_id:
+    print(f"Succesfully triggered job #{job_id_in} with run #{r.run_id}")
+    return r.run_id
+
+  else:
+    print(f"Could not trigger job #{job_id_in}, check if job exists")
+    return None
+  
 def get_churn_staging_job_id():
-  job = find_job("demos_churn_model_staging_validation")
+  job_name = "dbdemos_churn_model_staging_validation_"+get_current_username()
+  job = find_job(job_name)
+
   if job is not None:
+    print(f"Job {job_name} exists grabbing job ID#{job['job_id']}")
     return job['job_id']
+
   else:
     #the job doesn't exist, we dynamically create it.
     #Note: requires DBR 10 ML to use automl model
+    print(f"Job doesn't exists, creating job with name {job_name}...")
     notebook_path = dbutils.entry_point.getDbutils().notebook().getContext().notebookPath().get()
     base_path = '/'.join(notebook_path.split('/')[:-1])
-    cloud_name = get_cloud_name()
-    if cloud_name == "aws":
-      node_type = "i3.xlarge"
-    elif cloud_name == "azure":
-      node_type = "Standard_DS3_v2"
-    elif cloud_name == "gcp":
-      node_type = "n1-standard-4"
-    else:
-      raise Exception(f"Cloud '{cloud_name}' isn't supported!")
-    job_settings = {
-                  "email_notifications": {},
-                  "name": "demos_churn_model_staging_validation",
-                  "max_concurrent_runs": 1,
-                  "tasks": [
-                      {
-                          "new_cluster": {
-                              "spark_version": "12.2.x-cpu-ml-scala2.12",
-                              "spark_conf": {
-                                  "spark.databricks.cluster.profile": "singleNode",
-                                  "spark.master": "local[*, 4]"
-                              },
-                              "num_workers": 0,
-                              "node_type_id": node_type,
-                              "driver_node_type_id": node_type,
-                              "custom_tags": {
-                                  "ResourceClass": "SingleNode"
-                              },
-                              "spark_env_vars": {
-                                  "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                              },
-                              "enable_elastic_disk": True
-                          },
-                          "notebook_task": {
-                              "notebook_path": f"{base_path}/05_job_staging_validation"
-                          },
-                          "email_notifications": {},
-                          "task_key": "test-model"
-                      }
-                  ]
-          }
-    print("Job doesn't exists, creating it...")
-    r = http_request(host_creds=host_creds, endpoint="/api/2.1/jobs/create", method="POST", json=job_settings).json()
-    return r['job_id']
+
+    # Create job using databricks sdk
+    from databricks.sdk.service.jobs import Task, NotebookTask
+    
+    # Get current cluster id to run job on [for demo/example purpose]
+    for tag in json.loads(spark.conf.get("spark.databricks.clusterUsageTags.clusterAllTags")):
+      if tag['key'] == "ClusterId":
+        this_cluster_id = tag['value']
+        break
+      else:
+        this_cluster_id = None
+        # TO-DO [OPTIONAL]: modify inputs to create job cluster using latest ml_runtime and automatic node_type
+
+    # Create job and configure to run on current demo/interactive cluster
+    job = w.jobs.create(
+      name=job_name,
+      tasks=[Task(
+        task_key='test-challenger-model',
+        notebook_task=NotebookTask(f"{base_path}/04_job_challenger_validation"),
+        existing_cluster_id=this_cluster_id)],
+    )            
+    
+    return job.job_id
 
 # COMMAND ----------
 
-# DBTITLE 1,Helpers to manage Model registry webhooks
-# Manage webhooks
-try:
-  from databricks_registry_webhooks import RegistryWebhooksClient, JobSpec, HttpUrlSpec
-  def create_job_webhook(model_name, job_id):
-    return RegistryWebhooksClient().create_webhook(
-      model_name = model_name,
-      events = ["TRANSITION_REQUEST_CREATED"],
-      job_spec = JobSpec(job_id=job_id, access_token=token),
-      description = "Trigger the ops_validation job when a model is requested to move to staging.",
-      status = "ACTIVE")
+# DBTITLE 1,Helper function to emulate a model transition request
+# Request transition
+def request_transition(model_name, version, stage="Challenger", validation_job_id=None):
+  
+  def send_transition_request_slack_notification(message: str):
+    """
+    Inner helper function to send slack notification mimic-ing mlflow models transition-requests webhooks
+    """
+    slack_webhook = dbutils.secrets.get("fieldeng", f"{current_user_no_at}_slack_webhook")
 
-  def create_notification_webhook(model_name, slack_url):
-    from databricks_registry_webhooks import RegistryWebhooksClient, JobSpec, HttpUrlSpec
-    return RegistryWebhooksClient().create_webhook(
-      model_name = model_name,
-      events = ["TRANSITION_REQUEST_CREATED"],
-      description = "Notify the MLOps team that a model is requested to move to staging.",
-      status = "ACTIVE",
-      http_url_spec = HttpUrlSpec(url=slack_url))
+    body = {'text': message}
+    response = requests.post(
+      slack_webhook, data=json.dumps(body),
+      headers={'Content-Type': 'application/json'})
+  
+  # Send slack notification [OPTIONAL to mimic transition requests webhook]
+  send_transition_request_slack_notification(f"{current_user} requested that registered UC model {model_name} version {version} transition to {stage}")
 
-  # List
-  def list_webhooks(model_name):
-    from databricks_registry_webhooks import RegistryWebhooksClient
-    return RegistryWebhooksClient().list_webhooks(model_name = model_name)
+  # Trigger model validation job
+  if validation_job_id is None:
+    validation_job_id = get_churn_staging_job_id()
 
-  # Delete
-  def delete_webhooks(webhook_id):
-    from databricks_registry_webhooks import RegistryWebhooksClient
-    return RegistryWebhooksClient().delete_webhook(id=webhook_id)
+  transition_request_params = {
+    'model_name': model_name,
+    'version': version,
+    'to_stage': stage}
 
-except:
-  def raise_exception():
-    print("You need to install databricks-registry-webhooks library to easily perform this operation (you could also use the rest API directly).")
-    print("Please run: %pip install databricks-registry-webhooks ")
-    raise RuntimeError("function not available without databricks-registry-webhooks.")
+  return trigger_job(validation_job_id, transition_request_params)
 
-  def create_job_webhook(model_name, job_id):
-    raise_exception()
-  def create_notification_webhook(model_name, slack_url):
-    raise_exception()
-  def list_webhooks(model_name):
-    raise_exception()
-  def delete_webhooks(webhook_id):
-    raise_exception()
+# COMMAND ----------
+
+# Set UC Model Registry as default
+mlflow.set_registry_uri("databricks-uc")
+
+def cleanup_registered_model(registry_model_name):
+  """
+  Utilty function to delete a registered model in MLflow model registry.
+  To delete a model in the model registry, all model versions must first be archived.
+  This function 
+  (i) first archives all versions of a model in the registry
+  (ii) then deletes the model 
+  
+  :param registry_model_name: (str) Name of model in MLflow Model Registry
+  """
+
+  filter_string = f"name='{registry_model_name}'"
+  model_versions = client.search_model_versions(filter_string)
+
+  if len(model_versions) > 0:
+    print(f"Deleting model named {registry_model_name}...")
+    client.delete_registered_model(registry_model_name)
     
-def reset_webhooks(model_name):
-  whs = list_webhooks(model_name)
-  for wh in whs:
-    delete_webhooks(wh.id)
+  else:
+    print(f"No registered model named {registry_model_name} to delete")
+
+# COMMAND ----------
+
+def get_latest_model_version(model_name):
+  client = MlflowClient()
+  model_version_infos = client.search_model_versions("name = '%s'" % model_name)
+  return max([model_version_info.version for model_version_info in model_version_infos])
 
 # COMMAND ----------
 
 # DBTITLE 1,Slack notification helper
-# Slack Notifications
-#Webhooks can be used to send emails, Slack messages, and more.  In this case we #use Slack.  We also use `dbutils.secrets` to not expose any tokens, but the URL #looks more or less like this:
-#`https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX`
-#You can read more about Slack webhooks [here](https://api.slack.com/messaging/webhooks#create_a_webhook).
-import urllib 
-import json 
+# Slack Notifications _(OPTIONAL)_
+
+# Webhooks can be used to send emails, Slack messages, and more. In this case we #use Slack along `dbutils.secrets` to not expose any tokens, but the URL #looks more or less like this: `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX`
+
+# You can read more about Slack webhooks [here](https://api.slack.com/messaging/webhooks#create_a_webhook).
+
+import urllib
+import json
 import requests, json
 
-def send_notification(message):
+def send_notification(message: str, slack_webhook: str = ""):
+
   try:
-    slack_webhook = dbutils.secrets.get("rk_webhooks", "slack")
+    if not slack_webhook.strip():
+      slack_webhook = dbutils.secrets.get("fieldeng", f"{current_user_no_at}_slack_webhook")
+
     body = {'text': message}
     response = requests.post(
       slack_webhook, data=json.dumps(body),
@@ -152,88 +200,11 @@ def send_notification(message):
           'Request to slack returned an error %s, the response is:\n%s'
           % (response.status_code, response.text)
       )
+      
   except:
-    print("slack isn't properly setup in this workspace.")
+    print("No slack notification sent.")
     pass
   displayHTML(f"""<div style="border-radius: 10px; background-color: #adeaff; padding: 10px; width: 400px; box-shadow: 2px 2px 2px #F7f7f7; margin-bottom: 3px">
         <div style="padding-bottom: 5px"><img style="width:20px; margin-bottom: -3px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/media/resources/images/bell.png"/> <strong>Churn Model update</strong></div>
         {message}
-        </div>""")    
-
-# COMMAND ----------
-
-# DBTITLE 1,Transition model stage & write model comment helper
-client = mlflow.tracking.client.MlflowClient()
-
-host_creds = client._tracking_client.store.get_host_creds()
-host = host_creds.host
-token = host_creds.token
-
-def mlflow_call_endpoint(endpoint, method, body='{}'):
-  if method == 'GET':
-      response = http_request(
-          host_creds=host_creds, endpoint="/api/2.0/mlflow/{}".format(endpoint), method=method, params=json.loads(body))
-  else:
-      response = http_request(
-          host_creds=host_creds, endpoint="/api/2.0/mlflow/{}".format(endpoint), method=method, json=json.loads(body))
-  return response.json()
-
-
-# Request transition to staging
-def request_transition(model_name, version, stage):
-  
-  staging_request = {'name': model_name,
-                     'version': version,
-                     'stage': stage,
-                     'archive_existing_versions': 'true'}
-  response = mlflow_call_endpoint('transition-requests/create', 'POST', json.dumps(staging_request))
-  return(response)
-  
-  
-# Comment on model
-def model_comment(model_name, version, comment):
-  
-  comment_body = {'name': model_name,
-                  'version': version, 
-                  'comment': comment}
-  response = mlflow_call_endpoint('comments/create', 'POST', json.dumps(comment_body))
-  return(response)
-
-# Accept or reject transition request
-def accept_transition(model_name, version, stage, comment):
-  approve_request_body = {'name': model_details.name,
-                          'version': model_details.version,
-                          'stage': stage,
-                          'archive_existing_versions': 'true',
-                          'comment': comment}
-  
-  mlflow_call_endpoint('transition-requests/approve', 'POST', json.dumps(approve_request_body))
-
-def reject_transition(model_name, version, stage, comment):
-  
-  reject_request_body = {'name': model_details.name, 
-                         'version': model_details.version, 
-                         'stage': stage, 
-                         'comment': comment}
-  
-  mlflow_call_endpoint('transition-requests/reject', 'POST', json.dumps(reject_request_body))
-
-# COMMAND ----------
-
-# After receiving payload from webhooks, use MLflow client to retrieve model details and lineage
-def fetch_webhook_data(): 
-  try:
-    registry_event = json.loads(dbutils.widgets.get('event_message'))
-    model_name = registry_event['model_name']
-    model_version = registry_event['version']
-    if 'to_stage' in registry_event and registry_event['to_stage'] != 'Staging':
-      dbutils.notebook.exit()
-  except:
-    #If it's not in a job but interactive demo, we get the last version from the registry
-    model_name = 'dbdemos_mlops_churn'
-    model_version = client.get_latest_versions(model_name, ['None'])[0].version
-  return(model_name, model_version)
-
-# COMMAND ----------
-
-
+        </div>""")

@@ -53,5 +53,20 @@
       "title":  "Delta Lake Performance & operation", 
       "description": "Programatically ingest multiple CDC flows to synch all your database."
     }
-  ]
+  ],
+  "cluster": {
+      "spark_version": "14.3.x-scala2.12",
+    "spark_conf": {
+        "spark.master": "local[*, 4]",
+        "spark.databricks.cluster.profile": "singleNode"
+    },
+    "custom_tags": {
+        "ResourceClass": "SingleNode"
+    },
+    "num_workers": 0,
+    "single_user_name": "{{CURRENT_USER}}",
+    "data_security_mode": "SINGLE_USER",
+    "node_type_id": "m5.large",
+    "driver_node_type_id": "m5.large",
+  }
 }

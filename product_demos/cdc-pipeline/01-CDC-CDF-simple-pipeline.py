@@ -84,7 +84,7 @@ bronzeDF = (spark.readStream
 (bronzeDF.withColumn("file_name", input_file_name()).writeStream
         .option("checkpointLocation", cloud_storage_path+"/checkpoint_cdc_raw")
         .trigger(processingTime='10 seconds')
-        .table("clients_cdc"))
+        .table(f"{catalog}.{db}.clients_cdc"))
 
 time.sleep(20)
 
@@ -109,11 +109,17 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,We can now create our client table using standard SQL command
+# DBTITLE 1,We can now create our client table using a standard SQL command
 # MAGIC %sql 
 # MAGIC -- we can add NOT NULL in our ID field (or even more advanced constraint)
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (id BIGINT NOT NULL, name STRING, address STRING, email STRING, operation STRING) 
-# MAGIC   TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (
+# MAGIC   id BIGINT NOT NULL,    
+# MAGIC   name STRING,
+# MAGIC   address STRING,
+# MAGIC   email STRING,
+# MAGIC   operation STRING,
+# MAGIC   CONSTRAINT id_pk PRIMARY KEY(id))
+# MAGIC TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
 
 # COMMAND ----------
 
@@ -135,7 +141,7 @@ def merge_stream(df, i):
                                 WHEN NOT MATCHED AND source.operation != 'DELETE' THEN INSERT *""")
   
 spark.readStream \
-       .table("clients_cdc") \
+       .table(f"{catalog}.{db}.clients_cdc") \
      .writeStream \
        .foreachBatch(merge_stream) \
        .option("checkpointLocation", cloud_storage_path+"/checkpoint_clients_cdc") \
@@ -153,11 +159,11 @@ time.sleep(20)
 
 # MAGIC %md
 # MAGIC ### Testing the first CDC layer
-# MAGIC Let's send a new CDC entry to simulate an update and a DELETE for the ID 1 and 2
+# MAGIC Let's send a new CDC entry to simulate an update and a DELETE for the ID 1000 and 2000
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's UPDATE id=1 and DELETE the row with id=2
+# DBTITLE 1,Let's UPDATE id=1000 and DELETE the row with id=2000
 # MAGIC %sql 
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
 # MAGIC             (1000, "Quentin", "Paris 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
@@ -231,7 +237,7 @@ print(f"our Delta table last version is {last_version}, let's select the last ch
 changes = spark.read.format("delta") \
                     .option("readChangeData", "true") \
                     .option("startingVersion", int(last_version) -1) \
-                    .table("retail_client_silver")
+                    .table(f"{catalog}.{db}.retail_client_silver")
 display(changes)
 
 # COMMAND ----------
@@ -280,7 +286,7 @@ def upsertToDelta(data, batchId):
 (spark.readStream
        .option("readChangeData", "true")
        .option("startingVersion", 1)
-       .table("retail_client_silver")
+       .table(f"{catalog}.{db}.retail_client_silver")
        .withColumn("gold_data", lit("Delta CDF is Awesome"))
       .writeStream
         .foreachBatch(upsertToDelta)

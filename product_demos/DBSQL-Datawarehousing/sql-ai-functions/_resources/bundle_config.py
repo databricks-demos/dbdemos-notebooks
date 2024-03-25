@@ -25,14 +25,6 @@
   "tags": [{"dbsql": "BI/DW/DBSQL"}, {"ds": "Data Science"}],
   "notebooks": [
     {
-      "path": "_resources/00-init",
-      "pre_run": False,
-      "publish_on_website": False,
-      "add_cluster_setup_cell": False,
-      "title":  "Setup",
-      "description": "Init data for demo"
-    },
-    {
       "path": "00-SQL-AI-Functions-Introduction", 
       "pre_run": False,
       "publish_on_website": True,

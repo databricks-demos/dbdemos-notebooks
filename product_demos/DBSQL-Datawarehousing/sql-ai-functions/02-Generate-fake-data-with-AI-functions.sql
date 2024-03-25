@@ -21,6 +21,9 @@
 -- MAGIC *If you're looking at quickly generating data, we recommend you to just go with the built-in.*
 -- MAGIC
 -- MAGIC *This notebook will use the foundation MPT-30B model for inference*
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=02-Generate-fake-data-with-AI-functions&demo_name=sql-ai-functions&event=VIEW">
 
 -- COMMAND ----------
 

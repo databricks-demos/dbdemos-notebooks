@@ -7,6 +7,9 @@
 # MAGIC Discover how to leverage functions such as  `ai_analyze_sentiment`,  `ai_classify` or `ai_gen` with Databricks SQL.
 # MAGIC
 # MAGIC Open the [01-Builtin-SQL-AI-Functions]($./01-Builtin-SQL-AI-Functions) to get started with Databricks SQL AI builtin functions.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=00-SQL-AI-Functions-Introduction&demo_name=sql-ai-functions&event=VIEW">
 
 # COMMAND ----------
 

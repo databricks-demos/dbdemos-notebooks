@@ -24,6 +24,9 @@
 # MAGIC     - **Resource name** which is represented in the endpoint URL (of the form `https://<resource-name>.openai.azure.com/`)
 # MAGIC - Click on `Model deployments`
 # MAGIC   - Note down your **model deployment name**
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=04-Extra-setup-external-model-OpenAI&demo_name=sql-ai-functions&event=VIEW">
 
 # COMMAND ----------
 

@@ -8,6 +8,9 @@
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-query-function-flow.png" width="1000">
 -- MAGIC
 -- MAGIC **Don't forget about built-in SQL AI functions!** *In this notebook, we show you how to create your own custom functions. However, many text-related tasks (translation, classification etc.) are available as [builtin SQL functions]($./01-Builtin-SQL-AI-Functions). If you can, prefere these as they're easy to use and performant!*
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=03-automated-product-review-and-answer&demo_name=sql-ai-functions&event=VIEW">
 
 -- COMMAND ----------
 

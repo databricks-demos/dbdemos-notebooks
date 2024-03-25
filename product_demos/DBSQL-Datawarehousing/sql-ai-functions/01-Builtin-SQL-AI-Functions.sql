@@ -22,6 +22,8 @@
 -- MAGIC
 -- MAGIC Let's give it a try.
 -- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=01-Builtin-SQL-AI-Functions&demo_name=sql-ai-functions&event=VIEW">
 
 -- COMMAND ----------
 

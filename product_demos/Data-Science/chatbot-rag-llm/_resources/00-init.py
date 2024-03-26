@@ -406,7 +406,7 @@ def test_demo_permissions(host, secret_scope, secret_key, vs_endpoint_name, inde
     Here is how you can fix it:<br/><br/>
     <strong>Make sure your Service Principal has USE privileve on the schema</strong>:
     <div class="code dbdemos_block">
-    spark.sql('GRANT USAGE ON CATALOG `{catalog}` TO `{secret_principal}>`');<br/>
+    spark.sql('GRANT USAGE ON CATALOG `{catalog}` TO `{secret_principal}`');<br/>
     spark.sql('GRANT USAGE ON DATABASE `{catalog}`.`{db}` TO `{secret_principal}`');<br/>
     </div>
     <br/>

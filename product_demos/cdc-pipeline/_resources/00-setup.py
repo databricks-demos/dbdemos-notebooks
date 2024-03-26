@@ -16,9 +16,11 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 raw_data_location = cloud_storage_path+"/delta_cdf"
 
 if reset_all_data or is_folder_empty(raw_data_location+"/user_csv"):
-  spark.sql(f"USE {catalog}.{db}")
+  print(f"USING `{catalog}`.`{dbName}` to drop all tables")
+  spark.sql(f"USE `{catalog}`.`{dbName}`")
   spark.sql("""DROP TABLE if exists clients_cdc""")
   spark.sql("""DROP TABLE if exists retail_client_silver""")
+  spark.sql("""DROP TABLE if exists retail_client_gold""")
   #data generation on another notebook to avoid installing libraries (takes a few seconds to setup pip env)
   print(f"Generating data under {raw_data_location} , please wait a few sec...")
   path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()

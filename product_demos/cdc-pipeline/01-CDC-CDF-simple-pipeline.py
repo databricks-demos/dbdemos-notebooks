@@ -73,20 +73,18 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 
 # DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
 bronzeDF = (spark.readStream
-                .format("cloudFiles")
-                .option("cloudFiles.format", "csv")
-                #.option("cloudFiles.maxFilesPerTrigger", "1") #Simulate streaming, remove in production
-                .option("cloudFiles.inferColumnTypes", "true")
-                .option("cloudFiles.schemaLocation",  cloud_storage_path+"/schema_cdc_raw")
-                .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
-                .load(raw_data_location+'/user_csv'))
+        .format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("cloudFiles.inferColumnTypes", "true")
+        .option("cloudFiles.schemaLocation",  cloud_storage_path+"/schema_cdc_raw")
+        .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
+        .load(raw_data_location+'/user_csv'))
 
 (bronzeDF.withColumn("file_name", input_file_name()).writeStream
         .option("checkpointLocation", cloud_storage_path+"/checkpoint_cdc_raw")
-        .trigger(processingTime='10 seconds')
-        .table(f"{catalog}.{db}.clients_cdc"))
-
-time.sleep(20)
+        .trigger(availableNow=True)
+        .table(f"`{catalog}`.`{dbName}`.clients_cdc")
+        .awaitTermination())
 
 # COMMAND ----------
 
@@ -124,11 +122,26 @@ time.sleep(20)
 # COMMAND ----------
 
 # DBTITLE 1,And run our MERGE statement the upsert the CDC information in our final table
-#for each batch / incremental update from the raw cdc table, we'll run a MERGE on the silver table
-def merge_stream(df, i):
+def merge_stream(df: DataFrame, i):
+  """
+    Processes a microbatch of CDC (Change Data Capture) data to merge it into the 'retail_client_silver' table. 
+    This method performs deduplication and upserts or deletes records based on the operation specified in each row.
+
+    Args:
+    df (DataFrame): The DataFrame representing the microbatch of CDC data.
+    i (int): The batch ID, not directly used in this process.
+    
+    The method performs these steps:
+    1. Temporarily registers the DataFrame as 'clients_cdc_microbatch' to allow SQL operations.
+    2. Deduplicates the incoming data by 'id', keeping the latest operation for each 'id'.
+    3. Executes a MERGE SQL operation on 'retail_client_silver':
+       - Deletes records if the latest operation for an 'id' is 'DELETE'.
+       - Updates records for an 'id' if the latest operation is not 'DELETE'.
+       - Inserts new records if an 'id' does not exist in 'retail_client_silver' and the operation is not 'DELETE'.
+  """
+  
   df.createOrReplaceTempView("clients_cdc_microbatch")
-  #First we need to dedup the incoming data based on ID (we can have multiple update of the same row in our incoming data)
-  #Then we run the merge (upsert or delete). We could do it with a window and filter on rank() == 1 too
+
   df._jdf.sparkSession().sql("""MERGE INTO retail_client_silver target
                                 USING
                                 (select id, name, address, email, operation from 
@@ -140,15 +153,20 @@ def merge_stream(df, i):
                                 WHEN MATCHED AND source.operation != 'DELETE' THEN UPDATE SET *
                                 WHEN NOT MATCHED AND source.operation != 'DELETE' THEN INSERT *""")
   
-spark.readStream \
-       .table(f"{catalog}.{db}.clients_cdc") \
-     .writeStream \
-       .foreachBatch(merge_stream) \
-       .option("checkpointLocation", cloud_storage_path+"/checkpoint_clients_cdc") \
-       .trigger(processingTime='10 seconds') \
-     .start()
+def trigger_silver_stream():
+  """
+    Initiates a structured streaming process that reads change data capture (CDC) records from a specified table and processes them in batches using a custom merge function. The process is designed to handle streaming updates efficiently, applying changes to a 'silver' table based on the incoming stream.
+  """
+  (spark.readStream
+        .table(f"`{catalog}`.`{dbName}`.clients_cdc")
+      .writeStream
+        .foreachBatch(merge_stream)
+        .option("checkpointLocation", cloud_storage_path+"/checkpoint_clients_cdc")
+        .trigger(availableNow=True)
+      .start()
+      .awaitTermination())
 
-time.sleep(20)
+trigger_silver_stream()
 
 # COMMAND ----------
 
@@ -166,18 +184,18 @@ time.sleep(20)
 # DBTITLE 1,Let's UPDATE id=1000 and DELETE the row with id=2000
 # MAGIC %sql 
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
-# MAGIC             (1000, "Quentin", "Paris 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
-# MAGIC             (2000, null, null, null, now(), "DELETE", null, null);
+# MAGIC     (1000, "Quentin", "123 Paper Street, VA 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
+# MAGIC     (2000, null, null, null, now(), "DELETE", null, null);
+# MAGIC     
 # MAGIC select * from clients_cdc where id in (1000, 2000);
 
 # COMMAND ----------
 
-#wait for the stream to get the new data
-time.sleep(20)
+# explicitly trigger the stream in our example; It's equally easy to just have the stream run 24/7
+trigger_silver_stream()
 
 # COMMAND ----------
 
-# DBTITLE 1,Wait a few seconds for the stream to catch the new entry in the CDC table and check the results in the main table
 # MAGIC %sql 
 # MAGIC select * from retail_client_silver where id in (1000, 2000);
 # MAGIC -- Note that ID 1000 has been updated, and ID 2000 is deleted
@@ -209,7 +227,7 @@ time.sleep(20)
 # MAGIC ALTER TABLE retail_client_silver SET TBLPROPERTIES (delta.enableChangeDataFeed = true);
 # MAGIC
 # MAGIC -- Delta Lake CDF works using table_changes function:
-# MAGIC SELECT * FROM table_changes('retail_client_silver', 1)  order by id
+# MAGIC SELECT * FROM table_changes('retail_client_silver', 1) order by id
 
 # COMMAND ----------
 
@@ -237,16 +255,14 @@ print(f"our Delta table last version is {last_version}, let's select the last ch
 changes = spark.read.format("delta") \
                     .option("readChangeData", "true") \
                     .option("startingVersion", int(last_version) -1) \
-                    .table(f"{catalog}.{db}.retail_client_silver")
+                    .table(f"`{catalog}`.`{dbName}`.retail_client_silver")
 display(changes)
 
 # COMMAND ----------
 
 # MAGIC %md ### Synchronizing our downstream GOLD table based from the Silver changes
 # MAGIC
-# MAGIC Let's now say that we want to perform another table enhancement and propagate these changes downstream.
-# MAGIC
-# MAGIC To keep this example simple, we'll just add a column name `gold_data` with random data, but in real world this could be an aggregation, a join with another datasource, an ML model etc.
+# MAGIC Let's now say that we want to know how many people there currently are by state. 
 # MAGIC
 # MAGIC The same logic as the Silver layer must be implemented. Since we now consume the CDF data, we also need to perform a deduplication stage. Let's do it using the python APIs this time for the example.
 # MAGIC
@@ -256,47 +272,142 @@ display(changes)
 
 # DBTITLE 1,Let's create or final GOLD table: retail_client_gold
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (state STRING, count LONG);
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC Now we can create our initial Gold table using the latest version of our Siler table. Keep in mind that we are **not** looking at the Change Data Feed (CDF) here. We are utilizing the latest version of our siler table that is synced with our external table.
+
+# COMMAND ----------
+
+from pyspark.sql.functions import regexp_extract
+
+state_pattern = "([A-Z]{2}) [0-9]{5}"
+
+(spark.read
+  .table(f"`{catalog}`.`{dbName}`.retail_client_silver")
+  .withColumn("state", regexp_extract("address", state_pattern, 1))
+  .groupBy("state")
+  .count()
+  .orderBy("state")
+  .write
+  .mode("overwrite")
+  .saveAsTable(f"`{catalog}`.`{dbName}`.retail_client_gold"))
+
+spark.sql("SELECT * FROM retail_client_gold ORDER BY state").display()
+
+
+# COMMAND ----------
+
+# DBTITLE 1,Define the MERGE behavior
 from pyspark.sql.window import Window
-from pyspark.sql.functions import dense_rank, regexp_replace, lit
+from pyspark.sql.functions import dense_rank, regexp_replace, lit, sum as psum, expr
 
-#Function to upsert `microBatchOutputDF` into Delta table using MERGE
-def upsertToDelta(data, batchId):
-  #First we need to deduplicate based on the id and take the most recent update
+def updateGoldCounts(data: DataFrame, batchId):
+  """
+    Updates gold counts for a dataset based on changes captured in a Change Data Feed (CDF).
+    It deduplicates records, extracts states from addresses, and calculates the net change in counts by state
+    before merging these changes into a gold table.
+
+    Args:
+    data (DataFrame): The input DataFrame containing the CDF records.
+    batchId (str): The batch ID for the current update. Not directly used in the process
+
+    The method follows these steps:
+    1. Deduplicates the data based on the 'id' field, keeping only the most recent update for each id.
+    2. Extracts the 'state' from the 'address' field using a regular expression.
+    3. Calculates a 'value' for each record to represent the net change in counts (1 for inserts and post-updates,
+       -1 for deletes and pre-updates, and a large negative number for unrecognized change types as an error state).
+    4. Aggregates these values by 'state' to get the net change in counts per state.
+    5. Merges these aggregated changes into the 'retail_client_gold' DeltaTable, updating the 'count' for each state
+       based on the calculated net change.
+  """
+
   windowSpec = Window.partitionBy("id").orderBy(col("_commit_version").desc())
-  #Select only the first value 
-  #getting the latest change is still needed if the cdc contains multiple time the same id. We can rank over the id and get the most recent _commit_version
-  data_deduplicated = data.withColumn("rank", dense_rank().over(windowSpec)).where("rank = 1 and _change_type!='update_preimage'").drop("_commit_version", "rank")
+  data_deduplicated = data.withColumn("rank", dense_rank().over(windowSpec)).where("rank = 1").drop("_commit_version", "rank")
 
-  #Add some data cleaning for the gold layer to remove quotes from the address
-  data_deduplicated = data_deduplicated.withColumn("address", regexp_replace(col("address"), "\"", ""))
+  deduped_with_state = data_deduplicated.withColumn("state", regexp_extract("address", state_pattern, 1))
+                       
+  date_pre_aggregation = (deduped_with_state.withColumn("value", expr("""
+            CASE 
+                  WHEN _change_type = 'insert' THEN 1
+                  WHEN _change_type = 'delete' THEN -1
+                  WHEN _change_type = 'update_preimage' THEN -1
+                  WHEN _change_type = 'update_postimage' THEN 1
+                  ELSE -9999 
+            END
+      """)))
   
-  #run the merge in the gold table directly
+  aggregated_by_state = (date_pre_aggregation.groupBy("state")
+      .agg(psum("value").alias("offset")))
+  
   (DeltaTable.forName(spark, "retail_client_gold").alias("target")
-      .merge(data_deduplicated.alias("source"), "source.id = target.id")
-      .whenMatchedDelete("source._change_type = 'delete'")
-      .whenMatchedUpdateAll("source._change_type != 'delete'")
-      .whenNotMatchedInsertAll("source._change_type != 'delete'")
+      .merge(aggregated_by_state.alias("source"), "source.state = target.state")
+      .whenMatchedUpdate(set={
+            "count": expr("target.count + source.offset")
+      })
       .execute())
 
 
+# COMMAND ----------
+
+# DBTITLE 1,Start the gold stream
+last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).head()["version"])
+
 (spark.readStream
        .option("readChangeData", "true")
-       .option("startingVersion", 1)
-       .table(f"{catalog}.{db}.retail_client_silver")
-       .withColumn("gold_data", lit("Delta CDF is Awesome"))
+       .option("startingVersion", last_version)
+       .table(f"`{catalog}`.`{dbName}`.retail_client_silver")
       .writeStream
-        .foreachBatch(upsertToDelta)
+        .trigger(processingTime="5 seconds")
+        .foreachBatch(updateGoldCounts)
       .start())
-
-time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %sql SELECT * FROM retail_client_gold
+# MAGIC %sql
+# MAGIC
+# MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
+# MAGIC             (77777, "Alexander", "0311 Donovan MewsHammondmouth, NJ 51685", "alexander@databricks.com", now(), "APPEND", null, null),
+# MAGIC             (88888, "Faith", "48764 Howard Forge Apt. 421Vanessaside, NJ 79393", "faith@databricks.com", now(), "APPEND", null, null),
+# MAGIC             (1000, null, null, null, now(), "DELETE", null, null);
+
+# COMMAND ----------
+
+# pull the CDC changes from bronze through silver
+trigger_silver_stream()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Let's make sure the new records made it into silver and the deleted record is gone.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC select * from retail_client_silver where id in (77777, 88888, 1000);
+
+# COMMAND ----------
+
+# wait for the gold stream to trigger
+time.sleep(10) 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC If everything is working properly, we expect to see the NJ count increase by 2. We also deleted a person who lived in VA, so we should see that decrease by 1.
+# MAGIC
+# MAGIC Please feel free to experiment with other scenarios by inserting change reecords. For example, what should happen when someone from NJ updates their record but is still in NJ? What about when someone moves from one state to another?
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC SELECT * 
+# MAGIC FROM retail_client_gold 
+# MAGIC WHERE state in ('NJ', 'VA')
 
 # COMMAND ----------
 

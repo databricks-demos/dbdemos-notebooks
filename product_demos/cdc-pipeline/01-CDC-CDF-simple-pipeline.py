@@ -184,7 +184,7 @@ trigger_silver_stream()
 # DBTITLE 1,Let's UPDATE id=1000 and DELETE the row with id=2000
 # MAGIC %sql 
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
-# MAGIC     (1000, "Quentin", "123 Paper Street, VA 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
+# MAGIC     (1000, "Quentin", "123 Paper Street, UT 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
 # MAGIC     (2000, null, null, null, now(), "DELETE", null, null);
 # MAGIC     
 # MAGIC select * from clients_cdc where id in (1000, 2000);
@@ -278,7 +278,7 @@ display(changes)
 
 # MAGIC %md
 # MAGIC
-# MAGIC Now we can create our initial Gold table using the latest version of our Siler table. Keep in mind that we are **not** looking at the Change Data Feed (CDF) here. We are utilizing the latest version of our siler table that is synced with our external table.
+# MAGIC Now we can create our initial Gold table using the latest version of our Silver table. Keep in mind that we are **not** looking at the Change Data Feed (CDF) here. We are utilizing the latest version of our siler table that is synced with our external table. Also note that some of these states are not real, and only for demonstration.
 
 # COMMAND ----------
 
@@ -296,7 +296,7 @@ state_pattern = "([A-Z]{2}) [0-9]{5}"
   .mode("overwrite")
   .saveAsTable(f"`{catalog}`.`{dbName}`.retail_client_gold"))
 
-spark.sql("SELECT * FROM retail_client_gold ORDER BY state").display()
+spark.sql("SELECT * FROM retail_client_gold ORDER BY count DESC LIMIT 10").display()
 
 
 # COMMAND ----------
@@ -370,8 +370,8 @@ last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).
 # MAGIC %sql
 # MAGIC
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
-# MAGIC             (77777, "Alexander", "0311 Donovan MewsHammondmouth, NJ 51685", "alexander@databricks.com", now(), "APPEND", null, null),
-# MAGIC             (88888, "Faith", "48764 Howard Forge Apt. 421Vanessaside, NJ 79393", "faith@databricks.com", now(), "APPEND", null, null),
+# MAGIC             (77777, "Alexander", "0311 Donovan MewsHammondmouth, MT 51685", "alexander@databricks.com", now(), "APPEND", null, null),
+# MAGIC             (88888, "Faith", "48764 Howard Forge Apt. 421Vanessaside, MT 79393", "faith@databricks.com", now(), "APPEND", null, null),
 # MAGIC             (1000, null, null, null, now(), "DELETE", null, null);
 
 # COMMAND ----------
@@ -398,16 +398,13 @@ time.sleep(10)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC If everything is working properly, we expect to see the NJ count increase by 2. We also deleted a person who lived in VA, so we should see that decrease by 1.
+# MAGIC If everything is working properly, we expect to see the MO count increase by 2. We also deleted a person who lived in UT, so we should see that decrease by 1. 
 # MAGIC
-# MAGIC Please feel free to experiment with other scenarios by inserting change reecords. For example, what should happen when someone from NJ updates their record but is still in NJ? What about when someone moves from one state to another?
+# MAGIC Please feel free to experiment with other scenarios by inserting change reecords. For example, what should happen when someone from MO updates their record but is still in MO? What about when someone moves from one state to another?
 
 # COMMAND ----------
 
-# MAGIC %sql 
-# MAGIC SELECT * 
-# MAGIC FROM retail_client_gold 
-# MAGIC WHERE state in ('NJ', 'VA')
+# MAGIC %sql SELECT * FROM retail_client_gold ORDER BY count DESC LIMIT 10
 
 # COMMAND ----------
 

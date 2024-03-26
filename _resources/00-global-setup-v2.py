@@ -16,9 +16,24 @@ dbutils.widgets.text("min_dbr_version", "12.2", "Min required DBR version")
 import requests
 import collections
 import os
+import re
 
 
 class DBDemos():
+  @staticmethod
+  def get_current_user(remove_symbols: False) -> str:
+    current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
+
+    if not remove_symbols:
+      return current_user
+
+    if current_user.rfind('@') > 0:
+      current_user_no_at = current_user[:current_user.rfind('@')]
+    else:
+      current_user_no_at = current_user
+
+    return re.sub(r'\W+', '_', current_user_no_at)
+
   @staticmethod
   def setup_schema(catalog, db, reset_all_data, volume_name = None):
 

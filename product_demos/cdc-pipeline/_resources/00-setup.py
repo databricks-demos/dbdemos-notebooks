@@ -3,24 +3,26 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %run ../../../_resources/00-global-setup $reset_all_data=$reset_all_data $db_prefix=retail
+# MAGIC %run ../../../_resources/00-global-setup-v2 $reset_all_data=$reset_all_data
 
 # COMMAND ----------
 
-import json
-import time
-from pyspark.sql.window import Window
-from pyspark.sql.functions import row_number
-
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
+
+current_user = DBDemos.get_current_user()
+catalog = "dbdemos"
+database = DBDemos.get_current_user(remove_symbols=True)
+cloud_storage_path = f"/Users/{current_user}/demos/{catalog}_{database}"
 raw_data_location = cloud_storage_path+"/delta_cdf"
 
-if reset_all_data or is_folder_empty(raw_data_location+"/user_csv"):
-  print(f"USING `{catalog}`.`{dbName}` to drop all tables")
-  spark.sql(f"USE `{catalog}`.`{dbName}`")
+if reset_all_data or DBDemos.is_folder_empty(raw_data_location+"/user_csv"):
+  DBDemos.setup_schema(catalog=catalog, db=database, reset_all_data=reset_all_data)
+
+  spark.sql(f"USE {catalog}.{database}")
   spark.sql("""DROP TABLE if exists clients_cdc""")
   spark.sql("""DROP TABLE if exists retail_client_silver""")
   spark.sql("""DROP TABLE if exists retail_client_gold""")
+
   #data generation on another notebook to avoid installing libraries (takes a few seconds to setup pip env)
   print(f"Generating data under {raw_data_location} , please wait a few sec...")
   path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()

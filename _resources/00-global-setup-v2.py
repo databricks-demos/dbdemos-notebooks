@@ -41,24 +41,24 @@ class DBDemos():
         spark.sql(f"CREATE CATALOG IF NOT EXISTS `{catalog}`")
         if catalog == 'dbdemos':
           spark.sql(f"ALTER CATALOG `{catalog}` OWNER TO `account users`")
-    use_and_create_db(catalog, dbName)
+    use_and_create_db(catalog, db)
 
     if catalog == 'dbdemos':
       try:
-        spark.sql(f"GRANT CREATE, USAGE on DATABASE `{catalog}`.`{dbName}` TO `account users`")
-        spark.sql(f"ALTER SCHEMA `{catalog}`.`{dbName}` OWNER TO `account users`")
-        for t in spark.sql(f'SHOW TABLES in {catalog}.{dbName}').collect():
+        spark.sql(f"GRANT CREATE, USAGE on DATABASE `{catalog}`.`{db}` TO `account users`")
+        spark.sql(f"ALTER SCHEMA `{catalog}`.`{db}` OWNER TO `account users`")
+        for t in spark.sql(f'SHOW TABLES in {catalog}.{db}').collect():
           try:
-            spark.sql(f'GRANT ALL PRIVILEGES ON TABLE {catalog}.{dbName}.{t["tableName"]} TO `account users`')
-            spark.sql(f'ALTER TABLE {catalog}.{dbName}.{t["tableName"]} OWNER TO `account users`')
+            spark.sql(f'GRANT ALL PRIVILEGES ON TABLE {catalog}.{db}.{t["tableName"]} TO `account users`')
+            spark.sql(f'ALTER TABLE {catalog}.{db}.{t["tableName"]} OWNER TO `account users`')
           except Exception as e:
             if "NOT_IMPLEMENTED.TRANSFER_MATERIALIZED_VIEW_OWNERSHIP" not in str(e) and "STREAMING_TABLE_OPERATION_NOT_ALLOWED.UNSUPPORTED_OPERATION" not in str(e) :
-              print(f'WARN: Couldn t set table {catalog}.{dbName}.{t["tableName"]} owner to account users, error: {e}')
+              print(f'WARN: Couldn t set table {catalog}.{db}.{t["tableName"]} owner to account users, error: {e}')
       except Exception as e:
         print("Couldn't grant access to the schema to all users:"+str(e))    
 
-    print(f"using catalog.database `{catalog}`.`{dbName}`")
-    spark.sql(f"""USE `{catalog}`.`{dbName}`""")    
+    print(f"using catalog.database `{catalog}`.`{db}`")
+    spark.sql(f"""USE `{catalog}`.`{db}`""")    
 
     if volume_name:
       spark.sql(f'CREATE VOLUME IF NOT EXISTS {volume_name};')

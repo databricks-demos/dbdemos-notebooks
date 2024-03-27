@@ -185,7 +185,7 @@ fe.create_table(
 
 # MAGIC %md 
 # MAGIC
-# MAGIC Alternatively, you can first **`create_table`** with a schema only, and populate data to the feature table with **`fs.write_table`**. **`fs.write_table`** supports both **`overwrite`** and **`merge`** modes (based on the primary key).
+# MAGIC Alternatively, you can first **`create_table`** with a schema only, and populate data to the feature table with **`fs.write_table`**. To add data you can simply use **`fs.write_table`** again. **`fs.write_table`** supports a **`merge`** mode to update features based on the primary key. To overwrite a feature table you can simply `DELETE` the existing records directly from the feature table before writing new data to it, again with **`fs.write_table`**.
 # MAGIC
 # MAGIC Example:
 # MAGIC
@@ -199,8 +199,14 @@ fe.create_table(
 # MAGIC
 # MAGIC fe.write_table(
 # MAGIC     name="destination_location_fs",
-# MAGIC     df=destination_features_df,
-# MAGIC     mode="overwrite"
+# MAGIC     df=destination_features_df
+# MAGIC )
+# MAGIC
+# MAGIC # And then later/in the next run...
+# MAGIC fe.write_table(
+# MAGIC     name="destination_location_fs",
+# MAGIC     df=updated_destination_features_df,
+# MAGIC     mode="merge"
 # MAGIC )
 # MAGIC ```
 

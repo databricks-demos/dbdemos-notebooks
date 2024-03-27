@@ -5,10 +5,12 @@
 -- MAGIC
 -- MAGIC In this demo, we will explore the SQL AI function `ai_query` to create a pipeline extracting product review information.
 -- MAGIC
--- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-flow.png" width="1000">
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-query-function-flow.png" width="1000">
 -- MAGIC
--- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fsql_ai_functions%2Freviews&dt=DBSQL">
+-- MAGIC **Don't forget about built-in SQL AI functions!** *In this notebook, we show you how to create your own custom functions. However, many text-related tasks (translation, classification etc.) are available as [builtin SQL functions]($./01-Builtin-SQL-AI-Functions). If you can, prefere these as they're easy to use and performant!*
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=03-automated-product-review-and-answer&demo_name=sql-ai-functions&event=VIEW">
 
 -- COMMAND ----------
 
@@ -17,9 +19,8 @@
 
 -- COMMAND ----------
 
-SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE')
-
--- COMMAND ----------
+-- as previously, make sure you run this notebook using a SQL Warehouse (not a cluster)
+SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE');
 
 USE CATALOG main;
 USE SCHEMA dbdemos_ai_query;
@@ -32,14 +33,11 @@ USE SCHEMA dbdemos_ai_query;
 -- MAGIC
 -- MAGIC As reminder, `ai_query` signature is the following:
 -- MAGIC
--- MAGIC ```, request
--- MAGIC SELECT ai_query(<Endpoint Name>,
--- MAGIC                 <prompt>)
+-- MAGIC ```
+-- MAGIC SELECT ai_query(<Endpoint Name>, <prompt>)
 -- MAGIC ```
 -- MAGIC
 -- MAGIC In the [previous notebook]($./02-Generate-fake-data-with-AI-functions-Foundation-Model), we created a wrapper `ASK_LLM_MODEL` function to simplify our SQL operation and hide the configuration details to end-users. We will re-use this function for this pipeline.
--- MAGIC
--- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-review-wrapper.png" width="1200px">
 -- MAGIC
 -- MAGIC In order to simplify the user-experience for our analysts, we will build prescriptive SQL functions that ask natural language questions of our data and return the responses as structured data.
 
@@ -103,7 +101,8 @@ CREATE OR REPLACE FUNCTION ANNOTATE_REVIEW(review STRING)
         
         Review:', review)),
       "STRUCT<product_name: STRING, entity_sentiment: STRING, followup: STRING, followup_reason: STRING>")
-    
+
+-- ALTER FUNCTION ANNOTATE_REVIEW OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
 
 -- COMMAND ----------
 
@@ -127,7 +126,8 @@ CREATE OR REPLACE FUNCTION GENERATE_RESPONSE(firstname STRING, lastname STRING, 
     "specifically due to ", reason, ". Provide an empathetic message I can send to my customer 
     including the offer to have a call with the relevant product manager to leave feedback. I want to win back their 
     favour and I do not want the customer to churn")
-  )
+  );
+-- ALTER FUNCTION GENERATE_RESPONSE OWNER TO `account users`; -- for the demo only, make sure other users can access your function
 
 -- COMMAND ----------
 
@@ -152,7 +152,7 @@ SELECT * FROM reviews_answer
 -- MAGIC
 -- MAGIC Our pipeline is ready. Keep in mind that this is a fairly basic pipeline for our demo.
 -- MAGIC
--- MAGIC For more advanced pipeline, we recommend using Delta Live Table. DLT simplify data ingetsion and transformation tasks with incremental load, materialized view and more advanced features suck as MERGE operation or CDC and SCDT2. For more details, run `dbdemos.install_demo('dlt-loans')`
+-- MAGIC For more advanced pipeline, we recommend using Delta Live Table. DLT simplify data ingetsion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('dlt-loans')`
 
 -- COMMAND ----------
 
@@ -170,34 +170,26 @@ SELECT review_id,
       CONCAT("Does this review discuss beverages? Answer boolean: 'true' or 'false' only, lowercase, no explanations or notes nor final dot. Review: ", review)
     )) AS is_beverage_review,
     review
-  FROM dbdemos.openai_demo.fake_reviews LIMIT 10
-
--- COMMAND ----------
-
-SELECT review_id,
-    ai_query(
-    "databricks-mpt-30b-instruct",
-      CONCAT("Does this review discuss beverages? Answer boolean: 'true' or 'false' only, lowercase, no explanations or notes nor final dot. Review: ", review)
-    ) AS is_beverage_review,
-    review
-  FROM dbdemos.openai_demo.fake_reviews LIMIT 10
-
--- COMMAND ----------
-
-SELECT review_id,
-    review,
-    ai_query(
-    "databricks-mpt-30b-instruct",
-      CONCAT("Does this review discuss beverages? Answer boolean: 'true' or 'false' only, lowercase, no explanations or notes nor final dot. Review: ", review)
-    ) AS is_beverage_review
-  FROM dbdemos.openai_demo.fake_reviews LIMIT 10
+  FROM fake_reviews LIMIT 10
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC ## You're now ready to process your text using external LLM models!
 -- MAGIC
--- MAGIC We've seen that the lakehouse provide advanced AI capabilities, not only you can leverage external LLM APIs, but you can also build your own LLM with dolly!
--- MAGIC For more details on creating your chatbot with the Lakehouse, run: `dbdemos.install('llm-dolly-chatbot')`
+-- MAGIC We've seen that the lakehouse provide advanced AI capabilities, not only you can leverage external LLM APIs, but you can also build your own LLM with Databricks GenAI applications!
+-- MAGIC For more details on creating your chatbot with the Lakehouse, run: `dbdemos.install('llm-rag-chatbot')`
 -- MAGIC
 -- MAGIC Go back to [the introduction]($./01-SQL-AI-Functions-Introduction)
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Extra: configure an External Model Endpoint to leverage external providers (OpenAI, Anthropic...) 
+-- MAGIC
+-- MAGIC This demo was using one Databricks Foundation Model (pricing token-based).
+-- MAGIC
+-- MAGIC Your model endpoint can also be setup to use an external model such as OpenAI. Open [04-Extra-setup-external-model-OpenAI]($./04-Extra-setup-external-model-OpenAI) for more details.
+-- MAGIC
+-- MAGIC
+-- MAGIC Go back to [the introduction]($./00-SQL-AI-Functions-Introduction)

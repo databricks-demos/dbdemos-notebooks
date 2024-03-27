@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # 2/ Advanced chatbot with message history and filter using Langchain
+# MAGIC # 2/ Advanced chatbot with message history and filter using Langchain and DBRX Instruct
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-self-managed-flow-2.png?raw=true" style="float: right; margin-left: 10px"  width="900px;">
 # MAGIC
@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC We will improve our langchain model with the following:
 # MAGIC
-# MAGIC - Build a complete chain supporting a chat history, using llama 2 input style
+# MAGIC - Build a complete chain supporting a chat history, using Databricks DBRX Instruct input style
 # MAGIC - Add a filter to only answer Databricks-related questions
 # MAGIC - Compute the embeddings with Databricks BGE models within our chain to query the self-managed Vector Search Index
 # MAGIC
@@ -37,6 +37,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Spark Chat Model Prompt
 from langchain.prompts import PromptTemplate
 from langchain_community.chat_models import ChatDatabricks
 from langchain.schema.output_parser import StrOutputParser
@@ -45,7 +46,7 @@ prompt = PromptTemplate(
   input_variables = ["question"],
   template = "You are an assistant. Give a short answer to this question: {question}"
 )
-chat_model = ChatDatabricks(endpoint="databricks-llama-2-70b-chat", max_tokens = 500)
+chat_model = ChatDatabricks(endpoint="databricks-dbrx-instruct", max_tokens = 500)
 
 chain = (
   prompt
@@ -90,6 +91,7 @@ prompt_with_history = PromptTemplate(
 
 # COMMAND ----------
 
+# DBTITLE 1,Chat History Extractor Chain
 from langchain.schema.runnable import RunnableLambda
 from operator import itemgetter
 
@@ -130,7 +132,8 @@ print(chain_with_history.invoke({
 
 # COMMAND ----------
 
-chat_model = ChatDatabricks(endpoint="databricks-llama-2-70b-chat", max_tokens = 200)
+# DBTITLE 1,Databricks Inquiry Classifier
+chat_model = ChatDatabricks(endpoint="databricks-dbrx-instruct", max_tokens = 200)
 
 is_question_about_databricks_str = """
 You are classifying documents to know if this question is related with Databricks in AWS, Azure and GCP, Workspaces, Databricks account and cloud infrastructure setup, Data Science, Data Engineering, Big Data, Datawarehousing, SQL, Python and Scala or something from a very different field. Also answer no if the last part is inappropriate. 
@@ -251,6 +254,7 @@ print(retrieve_document_chain.invoke({"messages": [{"role": "user", "content": "
 
 # COMMAND ----------
 
+# DBTITLE 1,Contextual Query Generation Chain
 from langchain.schema.runnable import RunnableBranch
 
 generate_query_to_retrieve_context_template = """

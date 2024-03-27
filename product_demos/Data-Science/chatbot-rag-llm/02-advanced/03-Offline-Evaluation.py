@@ -15,7 +15,7 @@
 # MAGIC
 # MAGIC Faster and cheaper than human evaluation, LLM-as-a-Judge leverages an external agent who judges the generative model predictions given what is expected from it.
 # MAGIC
-# MAGIC Superior models are typically used for such evaluation (e.g. `llama2-70B` judges `llama2-7B`, or `GPT4` judges `llama2-70B`)
+# MAGIC Superior models are typically used for such evaluation (e.g. `GPT4` judges `databricks-dbrx-instruct`, or `llama2-70B` judges `llama2-7B`)
 # MAGIC
 # MAGIC We'll explore the new LLMs-as-a-judges evaluation methods introduced in MLflow 2.9, with its powerful `mlflow.evaluate()`API.+
 # MAGIC
@@ -41,7 +41,7 @@
 # MAGIC Databricks Serving Endpoint can be of 3 types:
 # MAGIC
 # MAGIC - Your own models, deployed as an endpoint (a chatbot model, your custom fine tuned LLM)
-# MAGIC - Fully managed, serverless Foundation Models (e.g. llama2, MPT...)
+# MAGIC - Fully managed, serverless Foundation Models (e.g. DBRX Instruct, llama2, MPT...)
 # MAGIC - An external Foundation Model (e.g. Azure OpenAI)
 # MAGIC
 # MAGIC Let's create a external model endpoint using Azure Open AI.

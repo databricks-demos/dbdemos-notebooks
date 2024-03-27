@@ -217,7 +217,7 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 # MAGIC Foundation Models are provided by Databricks, and can be used out-of-the-box.
 # MAGIC
 # MAGIC Databricks supports several endpoint types to compute embeddings or evaluate a model:
-# MAGIC - A **foundation model endpoint**, provided by databricks (ex: llama2-70B, MPT...)
+# MAGIC - DBRX Instruct, a **foundation model endpoint**, or another model served by databricks (ex: llama2-70B, MPT...)
 # MAGIC - An **external endpoint**, acting as a gateway to an external model (ex: Azure OpenAI)
 # MAGIC - A **custom**, fined-tuned model hosted on Databricks model service
 # MAGIC

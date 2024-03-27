@@ -1,8 +1,18 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Optional/ Retrieve your Azure OpenAI details
+# MAGIC # Optional: Setup an external Model Serving Endpoint
 # MAGIC
-# MAGIC To be able to call our AI function, we'll need a key to query the API. In this demo, we'll be using Azure OpenAI. Here are the steps to retrieve your key:
+# MAGIC The Model Serving Endpoints used by your AI function can be of any type.
+# MAGIC
+# MAGIC You can setup an endpoint to hit an external Foundation Model, such as Azure OpenAI.
+# MAGIC
+# MAGIC This let you define your secret and connection setup once, and allow other users to access your external model, ensuring security, cost control and traceability.
+# MAGIC
+# MAGIC These can be of different flavor: Azure OpenAI, Anthropic, OpenAI...
+# MAGIC
+# MAGIC ## Setting up Azure OpenAI
+# MAGIC
+# MAGIC To be able to call our AI function, we'll need a key to query the Azure OpenAI API. Here are the steps to retrieve your key:
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-setup-1.png" width="1250px">
 # MAGIC
@@ -15,12 +25,8 @@
 # MAGIC - Click on `Model deployments`
 # MAGIC   - Note down your **model deployment name**
 # MAGIC
-# MAGIC When you use `AI_GENERATE_TEXT()` these values will map to the `deploymentName` and `resourceName` parameters. Here is the function signature:
-# MAGIC &nbsp;
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-setup-2.png" width="1000px">
-# MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fsql_ai_functions%2Fsetup_key&dt=DBSQL">
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=04-Extra-setup-external-model-OpenAI&demo_name=sql-ai-functions&event=VIEW">
 
 # COMMAND ----------
 
@@ -43,33 +49,13 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Prerequisites
-# MAGIC
-# MAGIC In order to run this demo in your own environment you will need to satisfy these prerequisites:
-# MAGIC
-# MAGIC - Enrolled in the Public Preview. Request enrolment [here](https://docs.google.com/forms/d/e/1FAIpQLSdHOk5Wmk38zGqGhi27Q3ZiTpV7aIHipSa1Al9C0vfX0wYHfQ/viewform)
-# MAGIC - Access to a Databricks SQL Pro or Serverless [warehouse](https://docs.databricks.com/sql/admin/create-sql-warehouse.html#what-is-a-sql-warehouse)
-# MAGIC - An [Azure OpenAI key](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/overview#how-do-i-get-access-to-azure-openai)
-# MAGIC - Store the API key in Databricks Secrets (documentation: [AWS](https://docs.databricks.com/security/secrets/index.html), [Azure](https://learn.microsoft.com/en-gb/azure/databricks/security/secrets/), [GCP](https://docs.gcp.databricks.com/security/secrets/index.html)).
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ### Create an external model endpoint
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC To run the following code, connect this notebook to a <b> Standard interactive cluster </b>.
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.18.0
-# MAGIC %pip install mlflow==2.9.0
-
-# COMMAND ----------
-
-dbutils.library.restartPython()
+# MAGIC %pip install databricks-sdk==0.18.0 mlflow==2.9.0
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -86,13 +72,13 @@ try:
                     "name": endpoint_name,
                     "external_model": {
                         "name": "gpt-35-turbo",
-                        "provider": "openai",
+                        "provider": "openai", #can support openAI or other external models. see https://docs.databricks.com/en/generative-ai/external-models/index.html
                         "task": "llm/v1/chat",
                         "openai_config": {
                             "openai_api_type": "azure",
                             "openai_api_key": "{{secrets/dbdemos/azure-openai}}", #Replace with your own azure open ai key
-                            "openai_deployment_name": "dbdemo-gpt35",
-                            "openai_api_base": "https://dbdemos-open-ai.openai.azure.com/",
+                            "openai_deployment_name": "dbdemo-gpt35", #your deployment name
+                            "openai_api_base": "https://dbdemos-open-ai.openai.azure.com/", #your api base
                             "openai_api_version": "2023-05-15"
                         }
                     }
@@ -110,20 +96,12 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Next Step: generate our demo dataset leveraging AI functions
+# MAGIC ## Your external model is now ready!
 # MAGIC
-# MAGIC To create the demo dataset using this external model we just created, follow these steps: 
+# MAGIC You can use it in your SQL AI function:
 # MAGIC
-# MAGIC 1. Head to the notebook [02-Generate-fake-data-with-AI-functions-Foundation-Model]($./02-Generate-fake-data-with-AI-functions-Foundation-Model). 
+# MAGIC `SELECT AI_QUERY('dbdemos-azure-openai', 'This will be sent to azure openai!')``
 # MAGIC
-# MAGIC 2. Change the model name from 'databricks-mpt-30b-instruct' to 'dbdemos-azure-openai' in all relevant cells in this notebook.
+# MAGIC Congrats! You're now ready to use any model within your SQL queries!
 # MAGIC
-# MAGIC 3. Similarly, head to the notebook [03-automated-product-review-and-answer]($./03-automated-product-review-and-answer). 
-# MAGIC
-# MAGIC 4. Change the model name from 'databricks-mpt-30b-instruct' to 'dbdemos-azure-openai' in all relevant cells in this notebook.
-# MAGIC
-# MAGIC Go back to [the introduction]($./01-SQL-AI-Functions-Introduction)
-
-# COMMAND ----------
-
-
+# MAGIC Go back to [the introduction]($./00-SQL-AI-Functions-Introduction)

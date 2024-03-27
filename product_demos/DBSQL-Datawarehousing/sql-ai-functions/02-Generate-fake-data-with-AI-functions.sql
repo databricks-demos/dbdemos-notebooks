@@ -1,10 +1,8 @@
 -- Databricks notebook source
 -- MAGIC %md
--- MAGIC # 2/ Introduction to SQL AI Function: generating fake data with Foudation Model apis
+-- MAGIC # 2/ Introduction to SQL AI Function: generating fake data with custom Model Serving Endpoint
 -- MAGIC
 -- MAGIC For this demo, we'll start by generating fake data using `AI_QUERY()`. 
--- MAGIC
--- MAGIC To run this notebook, connect to a <b> SQL warehouse endpoint </b>. The AI_QUERY function is available on Databricks SQL Pro and Serverless.
 -- MAGIC
 -- MAGIC The sample data will mimics customer reviews for grocery products submitted to an e-commerce website.
 -- MAGIC
@@ -16,43 +14,30 @@
 -- MAGIC SELECT ai_query(endpointName, request) for external models and foundation models. 
 -- MAGIC SELECT ai_query(endpointName, request, returnType) for custom model serving endpoint. 
 -- MAGIC ```
--- MAGIC This notebook will use the foundation MPT-30B model for inference. 
 -- MAGIC
 -- MAGIC `AI_QUERY` will send the prompt to the remote model configured and retrive the result as SQL.
 -- MAGIC
--- MAGIC Let's see how to use it.
+-- MAGIC *Note: this will reproduce the behavior or the built-in `gen_ai` function, but leveraging one of the Model Serving Endpoint of your choice.*<br/>
+-- MAGIC *If you're looking at quickly generating data, we recommend you to just go with the built-in.*
 -- MAGIC
--- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fsql_ai_functions%2Ffake_data&dt=DBSQL">
+-- MAGIC *This notebook will use the foundation MPT-30B model for inference*
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=02-Generate-fake-data-with-AI-functions&demo_name=sql-ai-functions&event=VIEW">
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Set up (*ADD IMAGE)
--- MAGIC To use this notebook and the following notebooks, connect to a SQL warehouse using the steps described in the following image.  
--- MAGIC
+-- MAGIC To run this notebook, connect to <b> SQL endpoint </b>. The AI_QUERY function is available on Databricks SQL Pro and Serverless.
 
 -- COMMAND ----------
 
-SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE')
-
--- COMMAND ----------
+-- as previously, make sure you run this notebook using a SQL Warehouse (not a cluster)
+SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE');
 
 USE CATALOG main;
 CREATE SCHEMA IF NOT EXISTS dbdemos_ai_query;
 USE SCHEMA dbdemos_ai_query;
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC ## Our first SQL AI function
--- MAGIC
--- MAGIC Let's try a simple SQL AI function. We'll ask our foundation model to generate a text for a retail product review.
--- MAGIC
--- MAGIC *Note that for now SQL AI functions will only work on a **Databricks SQL Pro or Serverless warehouse**, and **not** in a Notebook using interactive cluster.*
--- MAGIC
--- MAGIC If interactive cluster is used, use Databricks [SQL Statement API](https://docs.databricks.com/api-explorer/workspace/statementexecution/executestatement) to send our SQL queries to a SQL PRO endpoint.
 
 -- COMMAND ----------
 
@@ -65,21 +50,23 @@ SELECT
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### Adding a wrapper function to simplify the call (*CHANGE THE IMAGE)
+-- MAGIC ### Introduction to SQL Function: adding a wrapper function to simplify the call
 -- MAGIC
--- MAGIC Having to specify all our parameters can be hard to use, especially for Data Analyst who should focus on crafting proper prompt and not secret management. 
+-- MAGIC While it's easy to call this function, having to our model endpoint name as parameter can be harder to use, especially for Data Analyst who should focus on crafting proper prompt. 
 -- MAGIC
 -- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` with a string as input parameter (the question to ask) and wrap all the model configuration.
 -- MAGIC
--- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-review-wrapper.png" width="1200px">
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-query-function-review-wrapper.png" width="1200px">
 
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL admin setup wrapper function
 CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING) 
-                                RETURNS STRING
-                                RETURN 
-                                  AI_QUERY("databricks-mpt-30b-instruct", prompt)
+  RETURNS STRING
+  RETURN 
+    AI_QUERY("databricks-mpt-30b-instruct", prompt);
+
+-- ALTER FUNCTION ASK_LLM_MODEL OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
 
 -- COMMAND ----------
 
@@ -137,20 +124,22 @@ SELECT ASK_LLM_MODEL(
 -- COMMAND ----------
 
 CREATE OR REPLACE FUNCTION GENERATE_FAKE_REVIEWS(num_reviews INT DEFAULT 5)
-RETURNS array<struct<review_date:date, review_id:long, customer_id:long, review:string>>
-RETURN 
-SELECT FROM_JSON(
-    ASK_LLM_MODEL(
-      CONCAT('Generate a sample dataset of ', num_reviews, ' rows that contains the following columns: "date" (random dates in 2022), 
-      "review_id" (random long), "customer_id" (random long from 1 to 100) and "review". 
-      Reviews should mimic useful product reviews from popular grocery brands product left on an e-commerce marketplace website. The review must include the product name.
+  RETURNS array<struct<review_date:date, review_id:long, customer_id:long, review:string>>
+  RETURN 
+  SELECT FROM_JSON(
+      ASK_LLM_MODEL(
+        CONCAT('Generate a sample dataset of ', num_reviews, ' rows that contains the following columns: "date" (random dates in 2022), 
+        "review_id" (random long), "customer_id" (random long from 1 to 100) and "review". 
+        Reviews should mimic useful product reviews from popular grocery brands product left on an e-commerce marketplace website. The review must include the product name.
 
-      The reviews should vary in length (shortest: 5 sentence, longest: 10 sentences).
-      Provide a mix of positive, negative, and neutral reviews but mostly negative.
+        The reviews should vary in length (shortest: 5 sentence, longest: 10 sentences).
+        Provide a mix of positive, negative, and neutral reviews but mostly negative.
 
-      Give me JSON only. No text outside JSON. No explanations or notes
-      [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]')), 
-      "array<struct<review_date:date, review_id:long, customer_id:long, review:string>>")
+        Give me JSON only. No text outside JSON. No explanations or notes
+        [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]')), 
+        "array<struct<review_date:date, review_id:long, customer_id:long, review:string>>")
+
+-- ALTER FUNCTION GENERATE_FAKE_REVIEWS OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
 
 -- COMMAND ----------
 
@@ -198,33 +187,35 @@ FROM
 
 -- DBTITLE 1,In addition, let's generate some users using the same idea:
 CREATE OR REPLACE FUNCTION GENERATE_FAKE_CUSTOMERS(num_reviews INT DEFAULT 10)
-RETURNS array<struct<customer_id:long, firstname:string, lastname:string, order_count:int>>
-RETURN 
-SELECT FROM_JSON(
-    ASK_LLM_MODEL(
-      CONCAT('Generate a sample dataset of ', num_reviews, ' customers containing the following columns: 
-      "customer_id" (long from 1 to ', num_reviews, '), "firstname", "lastname" and order_count (random positive number, smaller than 200)
+  RETURNS array<struct<customer_id:long, firstname:string, lastname:string, order_count:int>>
+  RETURN 
+  SELECT FROM_JSON(
+      ASK_LLM_MODEL(
+        CONCAT('Generate a sample dataset of ', num_reviews, ' customers containing the following columns: 
+        "customer_id" (long from 1 to ', num_reviews, '), "firstname", "lastname" and order_count (random positive number, smaller than 200)
 
-      Give me JSON only. No text outside JSON. No explanations or notes
-      [{"customer_id":<long>, "firstname":<string>, "lastname":<string>, "order_count":<int>}]')), 
-      "array<struct<customer_id:long, firstname:string, lastname:string, order_count:int>>")
+        Give me JSON only. No text outside JSON. No explanations or notes
+        [{"customer_id":<long>, "firstname":<string>, "lastname":<string>, "order_count":<int>}]')), 
+        "array<struct<customer_id:long, firstname:string, lastname:string, order_count:int>>")
+        
+-- ALTER FUNCTION GENERATE_FAKE_CUSTOMERS OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
 
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE fake_customers
-COMMENT "Raw customers"
-AS
-SELECT customer.* FROM (
-  SELECT explode(customers) as customer FROM (
-    SELECT GENERATE_FAKE_CUSTOMERS(10) as customers))
+  COMMENT "Raw customers"
+  AS
+  SELECT customer.* FROM (
+    SELECT explode(customers) as customer FROM (
+      SELECT GENERATE_FAKE_CUSTOMERS(10) as customers))
 
 -- COMMAND ----------
 
-SELECT * FROM main.dbdemos_ai_query.fake_reviews
+SELECT * FROM fake_reviews
 
 -- COMMAND ----------
 
-SELECT * FROM main.dbdemos_ai_query.fake_customers
+SELECT * FROM fake_customers
 
 -- COMMAND ----------
 
@@ -233,4 +224,4 @@ SELECT * FROM main.dbdemos_ai_query.fake_customers
 -- MAGIC We're now ready to implement our pipeline to extract information from our reviews! Open [03-automated-product-review-and-answer]($./03-automated-product-review-and-answer) to continue.
 -- MAGIC
 -- MAGIC
--- MAGIC Go back to [the introduction]($./01-SQL-AI-Functions-Introduction)
+-- MAGIC Go back to [the introduction]($./00-SQL-AI-Functions-Introduction)

@@ -67,10 +67,6 @@ def compute_hearth_distance(lat1, lon1, lat2, lon2):
 
 # COMMAND ----------
 
-current_user_location = f"/dbdemos/product/feature_store/{cleaned_username}/"
-
-# COMMAND ----------
-
 # Below are cleanup related functions   
 import boto3
    
@@ -202,7 +198,6 @@ def cleanup(query, query2):
 # COMMAND ----------
 
 destination_location_df = spark.read.option("inferSchema", "true").load("/databricks-datasets/travel_recommendations_realtime/raw_travel_data/fs-demo_destination-locations/",  format="csv", header="true")
-destination_location_df
 destination_location_df.write.mode('overwrite').saveAsTable('destination_location')
 
 # COMMAND ----------

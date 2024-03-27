@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # 2/ Creating the chatbot with Retrieval Augmented Generation (RAG)
+# MAGIC # 2/ Creating the chatbot with Retrieval Augmented Generation (RAG) and DBRX Instruct
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-managed-flow-2.png?raw=true" style="float: right; margin-left: 10px"  width="900px;">
 # MAGIC
@@ -14,7 +14,7 @@
 # MAGIC - The question is sent to our serverless Chatbot RAG endpoint
 # MAGIC - The endpoint compute the embeddings and searches for docs similar to the question, leveraging the Vector Search Index
 # MAGIC - The endpoint creates a prompt enriched with the doc
-# MAGIC - The prompt is sent to the Foundation Model Serving Endpoint
+# MAGIC - The prompt is sent to the DBRX Instruct Foundation Model Serving Endpoint
 # MAGIC - We display the output to our users!
 # MAGIC
 # MAGIC
@@ -98,6 +98,7 @@ os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("dbdemos", "rag_sp_token")
 
 # COMMAND ----------
 
+# DBTITLE 1,Databricks Embedding Retriever
 from databricks.vector_search.client import VectorSearchClient
 from langchain_community.vectorstores import DatabricksVectorSearch
 from langchain_community.embeddings import DatabricksEmbeddings
@@ -131,15 +132,15 @@ print(f"Relevant documents: {similar_documents[0]}")
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Building Databricks Chat Model to query llama-2-70b-chat foundation model
+# MAGIC ### Building Databricks Chat Model to query Databricks DBRX Instruct foundation model
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-managed-model-3.png?raw=true" style="float: right" width="500px">
 # MAGIC
-# MAGIC Our chatbot will be using llama2 foundation model to provide answer. 
+# MAGIC Our chatbot will be using Databricks DBRX Instruct foundation model to provide answer.  DBRX Instruct is a general-purpose LLM, built to develop enterprise grade GenAI applications, unlocking your use-cases with capabilities that were previously limited to closed model APIs.
 # MAGIC
-# MAGIC While the model is available using the built-in [Foundation endpoint](/ml/endpoints) (using the `/serving-endpoints/databricks-llama-2-70b-chat/invocations` API), we can use Databricks Langchain Chat Model wrapper to easily build our chain.  
+# MAGIC According to our measurements, DBRX surpasses GPT-3.5, and it is competitive with Gemini 1.0 Pro. It is an especially capable code model, rivaling specialized models like CodeLLaMA-70B on programming in addition to its strength as a general-purpose LLM.
 # MAGIC
-# MAGIC Note: multipe type of endpoint or langchain models can be used:
+# MAGIC *Note: multipe type of endpoint or langchain models can be used:*
 # MAGIC
 # MAGIC - Databricks Foundation models **(what we'll use)**
 # MAGIC - Your fined-tune model
@@ -149,7 +150,7 @@ print(f"Relevant documents: {similar_documents[0]}")
 
 # Test Databricks Foundation LLM model
 from langchain_community.chat_models import ChatDatabricks
-chat_model = ChatDatabricks(endpoint="databricks-llama-2-70b-chat", max_tokens = 200)
+chat_model = ChatDatabricks(endpoint="databricks-dbrx-instruct", max_tokens = 200)
 print(f"Test chat model: {chat_model.predict('What is Apache Spark')}")
 
 # COMMAND ----------
@@ -172,6 +173,7 @@ print(f"Test chat model: {chat_model.predict('What is Apache Spark')}")
 
 # COMMAND ----------
 
+# DBTITLE 1,Databricks Assistance Chain
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain_community.chat_models import ChatDatabricks
@@ -325,7 +327,7 @@ display_gradio_app("databricks-demos-chatbot")
 # MAGIC
 # MAGIC - Simplify Data Ingestion and preparation with Databricks Engineering Capabilities
 # MAGIC - Accelerate Vector Search  deployment with fully managed indexes
-# MAGIC - Leverage Databricks LLama 2 foundation model endpoint
+# MAGIC - Leverage Databricks DBRX Instruct foundation model endpoint
 # MAGIC - Deploy realtime model endpoint to perform RAG and provide Q&A capabilities
 # MAGIC
 # MAGIC Lakehouse AI is uniquely positioned to accelerate your GenAI deployment.

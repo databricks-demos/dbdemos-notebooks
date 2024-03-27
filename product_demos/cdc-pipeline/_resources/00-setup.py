@@ -12,6 +12,11 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 current_user = DBDemos.get_current_user()
 catalog = "dbdemos"
 database = DBDemos.get_current_user(remove_symbols=True)
+
+# WE NEED THIS BECAUSE OF AN ENCAPSULATION ISSUE (BUG?) linked below. 
+# https://github.com/databricks-demos/dbdemos-notebooks/blob/main/_resources/00-global-setup-v2.py#L44
+dbName = database
+
 cloud_storage_path = f"/Users/{current_user}/demos/{catalog}_{database}"
 raw_data_location = cloud_storage_path+"/delta_cdf"
 

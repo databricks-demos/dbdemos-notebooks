@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # Scaling your business with a GenAI-Powered Assistant
+# MAGIC # Scaling your business with a GenAI-Powered Assistant and DBRX Instruct
 # MAGIC
 # MAGIC LLMs are disrupting the way we interact with information, from internal knowledge bases to external, customer-facing documentation or support.
 # MAGIC  
@@ -35,7 +35,7 @@
 # MAGIC
 # MAGIC Deploying GenAI can be done in multiple ways:
 # MAGIC
-# MAGIC - **Prompt engineering on public APIs (e.g. LLama 2, openAI)**: answer from public information, retail (think ChatGPT)
+# MAGIC - **Prompt engineering on public APIs (e.g. Databricks DBRX Instruct, LLama 2, openAI)**: answer from public information, retail (think ChatGPT)
 # MAGIC - **Retrieval Augmented Generation (RAG)**: specialize your model with additional content. *This is what we'll focus on in this demo*
 # MAGIC - **OSS model Fine tuning**: when you have a large corpus of custom data and need specific model behavior (execute a task)
 # MAGIC - **Train your own LLM**: for full control on the underlying data sources of the model (biomedical, Code, Finance...)
@@ -119,13 +119,13 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## 2/ Deploying a RAG chatbot endpoint with databricks-llama-2-70b-chat Foundation Endpoint
+# MAGIC ## 2/ Deploying a RAG chatbot endpoint with Databricks DBRX Instruct Foundation Endpoint
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-managed-model-0.png?raw=true" style="float: right; width: 500px; margin-left: 10px">
 # MAGIC
 # MAGIC Our data is ready and our Vector Search Index can answer similarity queries, finding documentation related to our user question.
 # MAGIC
-# MAGIC We can now create a langchain model with an augmented prompt, accessing the LLama2 70B model to answer advanced Databricks questions.
+# MAGIC We can now create a langchain model with an augmented prompt, accessing the Databricks DBRX Instruct model to answer advanced Databricks questions.
 # MAGIC
 # MAGIC **What you will learn:**
 # MAGIC - Search documents with Databricks Langchain retriever
@@ -147,7 +147,7 @@
 # MAGIC - Simplify Data Ingestion and preparation with Databricks Data Engineering capabilities
 # MAGIC - Accelerate Vector Search Index deployment with fully managed indexes
 # MAGIC - Leverages Open models, easy to fine-tune for custom requirements
-# MAGIC - Access a Databricks AI LLama2-70B endpoint
+# MAGIC - Access a Databricks AI Databricks DBRX Instruct endpoint
 # MAGIC - Deploy real-time model endpoints to generate answers which leverage your custom data
 # MAGIC
 # MAGIC Interested in deploying your own models? Reach out to your account team!

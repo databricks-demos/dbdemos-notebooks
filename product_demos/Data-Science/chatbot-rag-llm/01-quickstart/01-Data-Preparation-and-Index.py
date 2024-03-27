@@ -53,7 +53,6 @@
 
 # COMMAND ----------
 
-
 if not table_exists("raw_documentation") or spark.table("raw_documentation").isEmpty():
     # Download Databricks documentation to a DataFrame (see _resources/00-init for more details)
     doc_articles = download_databricks_documentation_articles()
@@ -99,7 +98,7 @@ display(spark.table("raw_documentation").limit(2))
 # MAGIC
 # MAGIC The same sentence might return different tokens for different models. LLMs are shipped with a `Tokenizer` that you can use to count tokens for a given sentence (usually more than the number of words) (see [Hugging Face documentation](https://huggingface.co/docs/transformers/main/tokenizer_summary) or [OpenAI](https://github.com/openai/tiktoken))
 # MAGIC
-# MAGIC Make sure the tokenizer you'll be using here matches your model. We'll be using the `transformers` library to count llama2 tokens with its tokenizer. This will also keep our document token size below our embedding max size (1024).
+# MAGIC Make sure the tokenizer you'll be using here matches your model. Databricks DBRX Instruct uses the same tokenizer as GPT4. We'll be using the `transformers` library to count DBRX Instruct tokens with its tokenizer. This will also keep our document token size below our embedding max size (1024).
 # MAGIC
 # MAGIC <br/>
 # MAGIC <br style="clear: both">
@@ -113,11 +112,11 @@ display(spark.table("raw_documentation").limit(2))
 
 # DBTITLE 1,Splitting our html pages in smaller chunks
 from langchain.text_splitter import HTMLHeaderTextSplitter, RecursiveCharacterTextSplitter
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, OpenAIGPTTokenizer
 
 max_chunk_size = 500
 
-tokenizer = AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer")
+tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, chunk_size=max_chunk_size, chunk_overlap=50)
 html_splitter = HTMLHeaderTextSplitter(headers_to_split_on=[("h2", "header2")])
 
@@ -335,7 +334,7 @@ docs
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Next step: Deploy our chatbot model with RAG
+# MAGIC ## Next step: Deploy our chatbot model with RAG using DBRX
 # MAGIC
 # MAGIC We've seen how Databricks Lakehouse AI makes it easy to ingest and prepare your documents, and deploy a Vector Search index on top of it with just a few lines of code and configuration.
 # MAGIC

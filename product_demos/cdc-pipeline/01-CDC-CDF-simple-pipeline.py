@@ -60,8 +60,14 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
+from pyspark.sql.functions import input_file_name, col
+from pyspark.sql import DataFrame
+import time
+
+# COMMAND ----------
+
 # DBTITLE 1,Let's explore our incoming data. We receive CSV files with client information
-cdc_raw_data = spark.read.option('header', "true").csv(raw_data_location+'/user_csv')
+cdc_raw_data = spark.read.option('header', "true").csv(volume_folder+'/user_csv')
 display(cdc_raw_data)
 
 # COMMAND ----------
@@ -76,14 +82,14 @@ bronzeDF = (spark.readStream
         .format("cloudFiles")
         .option("cloudFiles.format", "csv")
         .option("cloudFiles.inferColumnTypes", "true")
-        .option("cloudFiles.schemaLocation",  cloud_storage_path+"/schema_cdc_raw")
+        .option("cloudFiles.schemaLocation",  volume_folder+"/schema_cdc_raw")
         .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
-        .load(raw_data_location+'/user_csv'))
+        .load(volume_folder+'/user_csv'))
 
 (bronzeDF.withColumn("file_name", input_file_name()).writeStream
-        .option("checkpointLocation", cloud_storage_path+"/checkpoint_cdc_raw")
+        .option("checkpointLocation", volume_folder+"/checkpoint_cdc_raw")
         .trigger(availableNow=True)
-        .table(f"`{catalog}`.`{dbName}`.clients_cdc")
+        .table(f"`{catalog}`.`{db}`.clients_cdc")
         .awaitTermination())
 
 # COMMAND ----------
@@ -158,10 +164,10 @@ def trigger_silver_stream():
     Initiates a structured streaming process that reads change data capture (CDC) records from a specified table and processes them in batches using a custom merge function. The process is designed to handle streaming updates efficiently, applying changes to a 'silver' table based on the incoming stream.
   """
   (spark.readStream
-        .table(f"`{catalog}`.`{dbName}`.clients_cdc")
+        .table(f"`{catalog}`.`{db}`.clients_cdc")
       .writeStream
         .foreachBatch(merge_stream)
-        .option("checkpointLocation", cloud_storage_path+"/checkpoint_clients_cdc")
+        .option("checkpointLocation", volume_folder+"/checkpoint_clients_cdc")
         .trigger(availableNow=True)
       .start()
       .awaitTermination())
@@ -255,7 +261,7 @@ print(f"our Delta table last version is {last_version}, let's select the last ch
 changes = spark.read.format("delta") \
                     .option("readChangeData", "true") \
                     .option("startingVersion", int(last_version) -1) \
-                    .table(f"`{catalog}`.`{dbName}`.retail_client_silver")
+                    .table(f"`{catalog}`.`{db}`.retail_client_silver")
 display(changes)
 
 # COMMAND ----------
@@ -287,14 +293,14 @@ from pyspark.sql.functions import regexp_extract
 state_pattern = "([A-Z]{2}) [0-9]{5}"
 
 (spark.read
-  .table(f"`{catalog}`.`{dbName}`.retail_client_silver")
+  .table(f"`{catalog}`.`{db}`.retail_client_silver")
   .withColumn("state", regexp_extract("address", state_pattern, 1))
   .groupBy("state")
   .count()
   .orderBy("state")
   .write
   .mode("overwrite")
-  .saveAsTable(f"`{catalog}`.`{dbName}`.retail_client_gold"))
+  .saveAsTable(f"`{catalog}`.`{db}`.retail_client_gold"))
 
 spark.sql("SELECT * FROM retail_client_gold ORDER BY count DESC LIMIT 10").display()
 
@@ -359,7 +365,7 @@ last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).
 (spark.readStream
        .option("readChangeData", "true")
        .option("startingVersion", last_version)
-       .table(f"`{catalog}`.`{dbName}`.retail_client_silver")
+       .table(f"`{catalog}`.`{db}`.retail_client_silver")
       .writeStream
         .trigger(processingTime="5 seconds")
         .foreachBatch(updateGoldCounts)
@@ -439,4 +445,4 @@ time.sleep(10)
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we stop all actives streams
-stop_all_streams()
+DBDemos.stop_all_streams()

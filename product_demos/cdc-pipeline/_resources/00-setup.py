@@ -3,28 +3,34 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %run ../../../_resources/00-global-setup-v2 $reset_all_data=$reset_all_data
+# MAGIC %run ../../../_resources/00-global-setup-v2
 
 # COMMAND ----------
 
-# Note: We do not recommend to change the catalog here as it won't impact all the demo resources such as DLT pipeline and Dashboards. Instead, please re-install the demo with a specific catalog and schema using 
-# dbdemos.install("lakehouse-retail-c360", catalog="..", schema="...")
+# Note: End users should not modify this code. 
+# Instead, use dbdemos.install("cdc-pipeline", catalog="..", schema="...")
 
 catalog = "dbdemos"
 db = "cdc_pipeline"
-volume_name = "data"
+volume_name = "cdc_pipeline"
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
-
 
 DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
 volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
-if reset_all_data or DBDemos.is_folder_empty(volume_folder+"/user_csv"):
-  DBDemos.setup_schema(catalog=catalog, db=database, reset_all_data=reset_all_data)
+total_databases = spark.sql(f"show databases in {catalog} like '{db}'").count()
+assert (total_databases == 1), f"There should be exactly one database [{db}] within catalog [{catalog}]"
 
-  spark.sql(f"USE {catalog}.{database}")
+total_volumes = spark.sql(f"show volumes in `{catalog}`.`{db}`").count()
+assert (total_volumes == 1), f"There should be exactly one volume [{volume_name}] within {catalog}.{db}"
+
+# COMMAND ----------
+
+if reset_all_data or DBDemos.is_folder_empty(volume_folder+"/user_csv"):
+  # delete all data
+  spark.sql(f"USE `{catalog}`.`{db}`")
   spark.sql("""DROP TABLE if exists clients_cdc""")
   spark.sql("""DROP TABLE if exists retail_client_silver""")
   spark.sql("""DROP TABLE if exists retail_client_gold""")

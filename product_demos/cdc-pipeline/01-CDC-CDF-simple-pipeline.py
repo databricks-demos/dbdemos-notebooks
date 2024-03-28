@@ -148,7 +148,7 @@ def merge_stream(df: DataFrame, i):
   
   df.createOrReplaceTempView("clients_cdc_microbatch")
 
-  df._jdf.sparkSession().sql("""MERGE INTO retail_client_silver target
+  df.sparkSession.sql("""MERGE INTO retail_client_silver target
                                 USING
                                 (select id, name, address, email, operation from 
                                   (SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY operation_date DESC) as rank from clients_cdc_microbatch) 

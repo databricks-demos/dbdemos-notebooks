@@ -57,8 +57,16 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
+from concurrent.futures import ThreadPoolExecutor
+from collections import deque
+from delta.tables import *
+from pyspark.sql.functions import input_file_name, col, row_number
+from pyspark.sql.window import Window
+
+# COMMAND ----------
+
 # DBTITLE 1,Let's explore our raw cdc data. We have 2 tables we want to sync (transactions and users)
-base_folder = f"{raw_data_location}/cdc"
+base_folder = f"{volume_folder}/cdc"
 display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
@@ -67,7 +75,7 @@ display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
 
-dbutils.fs.rm(f"{cloud_storage_path}/cdc_full", True)
+dbutils.fs.rm(f"{volume_folder}/cdc_full", True)
 
 # COMMAND ----------
 
@@ -78,13 +86,13 @@ def update_bronze_layer(path, bronze_table):
   (spark.readStream
           .format("cloudFiles")
           .option("cloudFiles.format", "csv")
-          .option("cloudFiles.schemaLocation", f"{cloud_storage_path}/cdc_full/schemas/{bronze_table}")
+          .option("cloudFiles.schemaLocation", f"{volume_folder}/cdc_full/schemas/{bronze_table}")
           .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
           .option("cloudFiles.inferColumnTypes", "true")
           .load(path)
        .withColumn("file_name", input_file_name())
        .writeStream
-          .option("checkpointLocation", f"{cloud_storage_path}/cdc_full/checkpoints/{bronze_table}")
+          .option("checkpointLocation", f"{volume_folder}/cdc_full/checkpoints/{bronze_table}")
           .option("mergeSchema", "true")
           .trigger(once=True)
           .table(bronze_table).awaitTermination())
@@ -121,7 +129,7 @@ def update_silver_layer(bronze_table, silver_table):
          .table(bronze_table)
        .writeStream
          .foreachBatch(merge_stream)
-         .option("checkpointLocation", f"{cloud_storage_path}/cdc_full/checkpoints/{silver_table}")
+         .option("checkpointLocation", f"{volume_folder}/cdc_full/checkpoints/{silver_table}")
          .trigger(once=True)
        .start().awaitTermination())
 
@@ -133,10 +141,6 @@ def update_silver_layer(bronze_table, silver_table):
 
 # COMMAND ----------
 
-from concurrent.futures import ThreadPoolExecutor
-from collections import deque
-from delta.tables import *
- 
 def refresh_cdc_table(table):
   try:
     #update the bronze table
@@ -189,4 +193,4 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we stop all actives streams
-stop_all_streams()
+DBDemos.stop_all_streams()

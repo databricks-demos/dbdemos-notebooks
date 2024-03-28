@@ -20,30 +20,6 @@ import re
 
 class DBDemos():
   @staticmethod
-  def get_current_user(remove_symbols: bool = False) -> str:
-    """
-    Retrieves the current Databricks notebook user's email address, with an option to remove symbols and replace them with underscores.
-
-    Args:
-    remove_symbols (bool): If True, removes all non-word characters from the email address, replacing them with underscores. Defaults to False.
-
-    Returns:
-    str: The current user's email address. If `remove_symbols` is True, returns the email with symbols replaced by underscores.
-    """
-    
-    current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-
-    if not remove_symbols:
-      return current_user
-
-    if current_user.rfind('@') > 0:
-      current_user_no_at = current_user[:current_user.rfind('@')]
-    else:
-      current_user_no_at = current_user
-
-    return re.sub(r'\W+', '_', current_user_no_at)
-
-  @staticmethod
   def setup_schema(catalog, db, reset_all_data, volume_name = None):
 
     if reset_all_data:

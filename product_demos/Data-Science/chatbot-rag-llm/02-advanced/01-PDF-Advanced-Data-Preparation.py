@@ -58,7 +58,7 @@
 # DBTITLE 1,Our pdf or docx files are available in our Volume (or DBFS)
 # List our raw PDF docs
 volume_folder =  f"/Volumes/{catalog}/{db}/volume_databricks_documentation"
-# Let's upload some pdf files to our volume as example
+# Let's upload some pdf files to our volume as example. Change this with your own PDFs / docs.
 upload_pdfs_to_volume(volume_folder+"/databricks-pdf")
 
 display(dbutils.fs.ls(volume_folder+"/databricks-pdf"))
@@ -295,7 +295,7 @@ def get_embedding(contents: pd.Series) -> pd.Series:
 
 #Let's also add our documentation web page from the simple demo (make sure you run the quickstart demo first)
 if table_exists(f'{catalog}.{db}.databricks_documentation'):
-  (spark.readStream.table('databricks_documentation')
+  (spark.readStream.option("skipChangeCommits", "true").table('databricks_documentation') #skip changes for more stable demo
       .withColumn('embedding', get_embedding("content"))
       .select('url', 'content', 'embedding')
   .writeStream

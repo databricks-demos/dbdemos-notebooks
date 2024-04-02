@@ -8,6 +8,9 @@
 {
   "name": "pandas-on-spark",
   "category": "data-science",
+  "custom_schema_supported": True,
+  "default_schema": "dbdemos_pandas_on_spark",
+  "default_catalog": "main",
   "title": "Pandas API with spark backend (Koalas)",
   "description": "Let you Data Science team scale to TB of data while working with Pandas API, without having to learn & move to another framework.",
   "fullDescription": "Despite being one of the most popular framework for data analysis, Pandas isn't distributed and can't process TB of data. Databricks solves this issues by allowing users to leverage pandas API while processing the data with spark distributed engine. This demo show you how to process big data using Pandas API (previously known as Koalas).",

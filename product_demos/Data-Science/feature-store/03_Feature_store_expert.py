@@ -21,7 +21,7 @@
 # MAGIC * Deploy the model using realtime serverless Model Serving fetching features in the online store
 # MAGIC * Send realtime REST queries for live inference.
 # MAGIC
-# MAGIC *Note: For more detail on this notebook, you can read the [Databricks blog post](https://www.databricks.com/blog/2023/02/16/best-practices-realtime-feature-computation-databricks.html) .*
+# MAGIC *Note: For more detail on this notebook, you can read the [Databricks blog post](https://www.databricks.com/blog/best-practices-realtime-feature-computation-databricks) .*
 
 # COMMAND ----------
 

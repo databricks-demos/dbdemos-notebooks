@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC # Save the data for DBSQL dashboards
 # MAGIC
 # MAGIC This reuse the files from the lakehouse demo. Please see bundle for more details.

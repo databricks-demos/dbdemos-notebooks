@@ -98,11 +98,15 @@ class DBDemos():
     files = requests.get(f'https://api.github.com/repos/{owner}/{repo}/contents{path}').json()
     files = [f['download_url'] for f in files if 'NOTICE' not in f['name']]
     def download_to_dest(url):
-      download_file(url, dest)
+      try:
+        #Temporary fix to avoid hitting github limits - Swap github to our S3 bucket to download files
+        s3url = url.replace("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/", "https://notebooks.databricks.com/demos/dbdemos-dataset/")
+        download_file(s3url, dest)
+      except:
+        download_file(url, dest)
     with ThreadPoolExecutor(max_workers=10) as executor:
       collections.deque(executor.map(download_to_dest, files))
-
-          
+         
 
   #force the experiment to the field demos one. Required to launch as a batch
   @staticmethod

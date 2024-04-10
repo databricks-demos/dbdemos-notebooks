@@ -30,17 +30,19 @@ assert (total_volumes == 1), f"There should be exactly one volume [{volume_name}
 
 if reset_all_data or DBDemos.is_folder_empty(volume_folder+"/user_csv"):
   # delete all data
+  print("Dropping table...", end='')
   spark.sql(f"USE `{catalog}`.`{db}`")
   spark.sql("""DROP TABLE if exists clients_cdc""")
   spark.sql("""DROP TABLE if exists retail_client_silver""")
   spark.sql("""DROP TABLE if exists retail_client_gold""")
+  print(" Done")
 
   #data generation on another notebook to avoid installing libraries (takes a few seconds to setup pip env)
-  print(f"Generating data under {volume_folder} , please wait a few sec...")
+  print(f"Generating data under {volume_folder}. This may take several minutes...")
   path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
   parent_count = path[path.rfind("Delta-Lake-CDC-CDF"):].count('/') - 1
   prefix = "./" if parent_count == 0 else parent_count*"../"
   prefix = f'{prefix}_resources/'
-  dbutils.notebook.run(prefix+"01-load-data", 120, {"raw_data_location": volume_folder})
+  dbutils.notebook.run(path=prefix+"01-load-data", timeout_seconds=300, arguments={"raw_data_location": volume_folder})
 else:
   print("data already existing. Run with reset_all_data=true to force a data cleanup for your local demo.")

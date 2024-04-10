@@ -86,7 +86,7 @@ bronzeDF = (spark.readStream
         .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
         .load(volume_folder+'/user_csv'))
 
-(bronzeDF.withColumn("file_name", input_file_name()).writeStream
+(bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
         .option("checkpointLocation", volume_folder+"/checkpoint_cdc_raw")
         .trigger(availableNow=True)
         .table(f"`{catalog}`.`{db}`.clients_cdc")
@@ -123,7 +123,11 @@ bronzeDF = (spark.readStream
 # MAGIC   email STRING,
 # MAGIC   operation STRING,
 # MAGIC   CONSTRAINT id_pk PRIMARY KEY(id))
-# MAGIC TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC TBLPROPERTIES (
+# MAGIC   delta.enableChangeDataFeed = true, 
+# MAGIC   delta.autoOptimize.optimizeWrite = true, 
+# MAGIC   delta.autoOptimize.autoCompact = true
+# MAGIC );
 
 # COMMAND ----------
 
@@ -268,7 +272,9 @@ display(changes)
 
 # MAGIC %md ### Synchronizing our downstream GOLD table based from the Silver changes
 # MAGIC
-# MAGIC Let's now say that we want to know how many people there currently are by state. 
+# MAGIC Let's now say that we want to perform another table enhancement and propagate these changes downstream.
+# MAGIC
+# MAGIC To keep this example simple, we'll just add a column name `gold_data` with random data, but in real world this could be an aggregation, a join with another datasource, an ML model etc.
 # MAGIC
 # MAGIC The same logic as the Silver layer must be implemented. Since we now consume the CDF data, we also need to perform a deduplication stage. Let's do it using the python APIs this time for the example.
 # MAGIC
@@ -278,7 +284,13 @@ display(changes)
 
 # DBTITLE 1,Let's create or final GOLD table: retail_client_gold
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (state STRING, count LONG);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (
+# MAGIC   id BIGINT NOT NULL, 
+# MAGIC   name STRING, 
+# MAGIC   address STRING, 
+# MAGIC   email STRING, 
+# MAGIC   gold_data STRING,
+# MAGIC   CONSTRAINT gold_id_pk PRIMARY KEY(id));
 
 # COMMAND ----------
 
@@ -288,129 +300,44 @@ display(changes)
 
 # COMMAND ----------
 
-from pyspark.sql.functions import regexp_extract
-
-state_pattern = "([A-Z]{2}) [0-9]{5}"
-
-(spark.read
-  .table(f"`{catalog}`.`{db}`.retail_client_silver")
-  .withColumn("state", regexp_extract("address", state_pattern, 1))
-  .groupBy("state")
-  .count()
-  .orderBy("state")
-  .write
-  .mode("overwrite")
-  .saveAsTable(f"`{catalog}`.`{db}`.retail_client_gold"))
-
-spark.sql("SELECT * FROM retail_client_gold ORDER BY count DESC LIMIT 10").display()
-
-
-# COMMAND ----------
-
-# DBTITLE 1,Define the MERGE behavior
 from pyspark.sql.window import Window
-from pyspark.sql.functions import dense_rank, regexp_replace, lit, sum as psum, expr
+from pyspark.sql.functions import dense_rank, regexp_replace, lit
 
-def updateGoldCounts(data: DataFrame, batchId):
-  """
-    Updates gold counts for a dataset based on changes captured in a Change Data Feed (CDF).
-    It deduplicates records, extracts states from addresses, and calculates the net change in counts by state
-    before merging these changes into a gold table.
-
-    Args:
-    data (DataFrame): The input DataFrame containing the CDF records.
-    batchId (str): The batch ID for the current update. Not directly used in the process
-
-    The method follows these steps:
-    1. Deduplicates the data based on the 'id' field, keeping only the most recent update for each id.
-    2. Extracts the 'state' from the 'address' field using a regular expression.
-    3. Calculates a 'value' for each record to represent the net change in counts (1 for inserts and post-updates,
-       -1 for deletes and pre-updates, and a large negative number for unrecognized change types as an error state).
-    4. Aggregates these values by 'state' to get the net change in counts per state.
-    5. Merges these aggregated changes into the 'retail_client_gold' DeltaTable, updating the 'count' for each state
-       based on the calculated net change.
-  """
-
+#Function to upsert `microBatchOutputDF` into Delta table using MERGE
+def upsertToDelta(data, batchId):
+  #First we need to deduplicate based on the id and take the most recent update
   windowSpec = Window.partitionBy("id").orderBy(col("_commit_version").desc())
-  data_deduplicated = data.withColumn("rank", dense_rank().over(windowSpec)).where("rank = 1").drop("_commit_version", "rank")
+  #Select only the first value 
+  #getting the latest change is still needed if the cdc contains multiple time the same id. We can rank over the id and get the most recent _commit_version
+  data_deduplicated = data.withColumn("rank", dense_rank().over(windowSpec)).where("rank = 1 and _change_type!='update_preimage'").drop("_commit_version", "rank")
 
-  deduped_with_state = data_deduplicated.withColumn("state", regexp_extract("address", state_pattern, 1))
-                       
-  date_pre_aggregation = (deduped_with_state.withColumn("value", expr("""
-            CASE 
-                  WHEN _change_type = 'insert' THEN 1
-                  WHEN _change_type = 'delete' THEN -1
-                  WHEN _change_type = 'update_preimage' THEN -1
-                  WHEN _change_type = 'update_postimage' THEN 1
-                  ELSE -9999 
-            END
-      """)))
+  #Add some data cleaning for the gold layer to remove quotes from the address
+  data_deduplicated = data_deduplicated.withColumn("address", regexp_replace(col("address"), "\"", ""))
   
-  aggregated_by_state = (date_pre_aggregation.groupBy("state")
-      .agg(psum("value").alias("offset")))
-  
-  (DeltaTable.forName(spark, "retail_client_gold").alias("target")
-      .merge(aggregated_by_state.alias("source"), "source.state = target.state")
-      .whenMatchedUpdate(set={
-            "count": expr("target.count + source.offset")
-      })
+  #run the merge in the gold table directly
+  (DeltaTable.forName(data.sparkSession, "retail_client_gold").alias("target")
+      .merge(data_deduplicated.alias("source"), "source.id = target.id")
+      .whenMatchedDelete("source._change_type = 'delete'")
+      .whenMatchedUpdateAll("source._change_type != 'delete'")
+      .whenNotMatchedInsertAll("source._change_type != 'delete'")
       .execute())
 
+
+(spark.readStream
+       .option("readChangeData", "true")
+       .option("startingVersion", 1)
+       .table("retail_client_silver")
+       .withColumn("gold_data", lit("Delta CDF is Awesome"))
+      .writeStream
+        .foreachBatch(upsertToDelta)
+      .start())
+
+time.sleep(20)
 
 # COMMAND ----------
 
 # DBTITLE 1,Start the gold stream
-last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).head()["version"])
-
-(spark.readStream
-       .option("readChangeData", "true")
-       .option("startingVersion", last_version)
-       .table(f"`{catalog}`.`{db}`.retail_client_silver")
-      .writeStream
-        .trigger(processingTime="5 seconds")
-        .foreachBatch(updateGoldCounts)
-      .start())
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
-# MAGIC             (77777, "Alexander", "0311 Donovan MewsHammondmouth, MT 51685", "alexander@databricks.com", now(), "APPEND", null, null),
-# MAGIC             (88888, "Faith", "48764 Howard Forge Apt. 421Vanessaside, MT 79393", "faith@databricks.com", now(), "APPEND", null, null),
-# MAGIC             (1000, null, null, null, now(), "DELETE", null, null);
-
-# COMMAND ----------
-
-# pull the CDC changes from bronze through silver
-trigger_silver_stream()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Let's make sure the new records made it into silver and the deleted record is gone.
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC select * from retail_client_silver where id in (77777, 88888, 1000);
-
-# COMMAND ----------
-
-# wait for the gold stream to trigger
-time.sleep(10) 
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC If everything is working properly, we expect to see the MO count increase by 2. We also deleted a person who lived in UT, so we should see that decrease by 1. 
-# MAGIC
-# MAGIC Please feel free to experiment with other scenarios by inserting change reecords. For example, what should happen when someone from MO updates their record but is still in MO? What about when someone moves from one state to another?
-
-# COMMAND ----------
-
-# MAGIC %sql SELECT * FROM retail_client_gold ORDER BY count DESC LIMIT 10
+# MAGIC %sql SELECT * FROM retail_client_gold
 
 # COMMAND ----------
 

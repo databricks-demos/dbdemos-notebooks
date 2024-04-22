@@ -37,14 +37,14 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup
 
 # COMMAND ----------
 
 # DBTITLE 1,Create job parameters input widgets
-dbutils.widgets.text("model_name",model_name,"Model Name")
-dbutils.widgets.text("version",get_latest_model_version(model_name),"Model Version")
-dbutils.widgets.dropdown("to_stage","Challenger",["Challenger", "Champion", "Baseline", "Archived"])
+def get_latest_model_version(model_name):
+  model_version_infos = MlflowClient().search_model_versions("name = '%s'" % model_name)
+  return max([model_version_info.version for model_version_info in model_version_infos])
 
 # COMMAND ----------
 
@@ -54,9 +54,10 @@ dbutils.widgets.dropdown("to_stage","Challenger",["Challenger", "Champion", "Bas
 # COMMAND ----------
 
 # Get the model in transition, its name and version from the metadata received by the webhook
-model_name = dbutils.widgets.get("model_name")
-model_version = dbutils.widgets.get("version")
-model_stage = dbutils.widgets.get("to_stage")
+model_name = f"{catalog}.{db}.mlops_churn"
+model_version = get_latest_model_version(model_name)
+model_stage = "Challenger" #,["Challenger", "Champion", "Baseline", "Archived"])
+
 print(f"Validating {model_stage} request for model {model_name} version {model_version}")
 
 # COMMAND ----------
@@ -75,22 +76,29 @@ run_info = client.get_run(run_id=model_details.run_id)
 
 # COMMAND ----------
 
+feature_df = spark.read.table(run_info.data.tags['feature_table'])
+label_df = spark.read.table(run_info.data.tags['labels_table'])
+label_df.schema[label_col].dataType
+
+loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}/{model_version}", result_type=label_df.schema[label_col].dataType)
+
+# COMMAND ----------
+
 from databricks.feature_engineering import FeatureEngineeringClient
 import pandas as pd
 
 
-fe = FeatureEngineeringClient()
-
-# Load model as a Spark UDF
-model_uri = f"models:/{model_name}/{model_version}"
-
 # Predict on a Spark DataFrame
 try:
   # Read labels and IDs
-  labelsDF = spark.read.table(run_info.data.tags['labels_table'])
+  feature_df = spark.read.table(run_info.data.tags['feature_table'])
+  label_df = spark.read.table(run_info.data.tags['labels_table'])
+
+  # Load model as a Spark UDF
+  model_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}/{model_version}")
 
   # Batch score
-  features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)
+  features_w_preds = feature_df.withColumn(label_col, model_udf(*feature_df.columns))
   display(features_w_preds)
   client.set_model_version_tag(name=model_name, version=model_version, key="predicts", value=True)
 
@@ -104,21 +112,10 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### Signature check
 # MAGIC
-# MAGIC When working with ML models you often need to know some basic functional properties of the model at hand, such as “What inputs does it expect?” and “What output does it produce?”.  The model **signature** defines the schema of a model’s inputs and outputs. Model inputs and outputs can be either column-based or tensor-based.
+# MAGIC #### Making sure our model behaves as the previous one
 # MAGIC
-# MAGIC See [here](https://mlflow.org/docs/latest/models.html#signature-enforcement) for more details.
-
-# COMMAND ----------
-
-TODO: a voir si la signature est obligatoire 
-loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=model_uri)
-if not loaded_model.metadata.signature:
-  print("This model version is missing a signature.  Please push a new version with a signature!  See https://mlflow.org/docs/latest/models.html#model-metadata for more details.")
-  client.set_model_version_tag(name=model_name, version=model_version, key="has_signature", value=False)
-else:
-  client.set_model_version_tag(name=model_name, version=model_version, key="has_signature", value=True)
+# MAGIC How does the model perform across various slices of the customer base?
 
 # COMMAND ----------
 

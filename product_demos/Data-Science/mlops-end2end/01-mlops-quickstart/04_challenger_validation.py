@@ -119,40 +119,7 @@ except Exception as e:
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC
-# MAGIC #### Demographic accuracy
-# MAGIC
-# MAGIC How does the model perform across various slices of the customer base?
-
-# COMMAND ----------
-
-import numpy as np
-
-try:
-  # Cast to Pandas given small size
-  features_w_preds_pdf = features_w_preds.toPandas()
-
-  # Calculate error
-  features_w_preds_pdf['accurate'] = np.where(features_w_preds_pdf.churn == features_w_preds_pdf.prediction, 1, 0)
-
-  # Check run tags for demographic columns and accuracy in each segment
-  demographics = run_info.data.tags['demographic_vars'].split(",")
-  slices = features_w_preds_pdf.groupby(demographics).accurate.agg(acc = 'sum', obs = lambda x:len(x), pct_acc = lambda x:sum(x)/len(x))
-
-  # Threshold for passing on demographics is 55%
-  demo_test = True if slices['pct_acc'].any() > 0.55 else False
-
-  # Set tags in registry
-  client.set_model_version_tag(name=model_name, version=model_version, key="demographics_test", value=demo_test)
-
-  print(slices)
-
-except Exception as e:
-  print(e)
-  print("KeyError: No demographics_vars tagged with this model version.")
-  client.set_model_version_tag(name=model_name, version=model_version, key="demographics_test", value=False)
-  pass
+TODO
 
 # COMMAND ----------
 
@@ -172,34 +139,6 @@ elif not len(model_details.description) > 20:
   print("Please add detailed model description (40 char min).")
 else:
   client.set_model_version_tag(name=model_name, version=model_version, key="has_description", value=True)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC #### Artifact check
-# MAGIC Has the data scientist logged supplemental artifacts along with the original model?
-
-# COMMAND ----------
-
-import os
-
-# Create local directory
-local_dir = "/tmp/model_artifacts"
-if not os.path.exists(local_dir):
-    os.mkdir(local_dir)
-
-# Download artifacts from tracking server - no need to specify DBFS path here
-local_path = mlflow.artifacts.download_artifacts(run_id=run_info.info.run_id,dst_path=local_dir)
-
-# Tag model version as possessing artifacts or not
-if not os.listdir(local_path):
-  client.set_model_version_tag(name=model_name, version=model_version, key="has_artifacts", value=False)
-  print("There are no artifacts associated with this model.  Please include some data visualization or data profiling.  MLflow supports HTML, .png, and more.")
-
-else:
-  client.set_model_version_tag(name=model_name, version=model_version, key = "has_artifacts", value = True)
-  print("Artifacts downloaded in: {}".format(local_path))
-  print("Artifacts: {}".format(os.listdir(local_path)))
 
 # COMMAND ----------
 
@@ -248,50 +187,6 @@ client.set_registered_model_alias(
   alias=alias,
   version=model_version
 )
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Slack webhook notification
-# MAGIC OPTIONAL
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Slack webhook setup (OPTIONAL pre-requisite)
-# MAGIC
-# MAGIC 1. Create a [new Slack Workspace](https://slack.com/get-started#/create) (call it MLOps-Env for example)
-# MAGIC 2. Create a Slack App in this new workspace **(NOT Databricks workspace)**, activate webhooks and **copy the URL** - more info [here](https://api.slack.com/messaging/webhooks#getting_started).
-# MAGIC 3. In order NOT TO expose it, store it in a secret using the [Secrets API](https://docs.databricks.com/dev-tools/api/latest/secrets.html#secretsecretservicecreatescope) while [authenticating with a PAT](https://docs.databricks.com/dev-tools/api/latest/authentication.html#generate-a-personal-access-token)
-# MAGIC
-# MAGIC ```
-# MAGIC curl --netrc --request POST \
-# MAGIC https://<databricks-instance>/api/2.0/secrets/scopes/create \
-# MAGIC --data '{
-# MAGIC   "scope": "fieldeng", #This scope already exists on AWS/E2 and Azure Field-Eng shards so no need to do it
-# MAGIC   "initial_manage_principal": "users"
-# MAGIC }'
-# MAGIC ```
-# MAGIC then
-# MAGIC ```
-# MAGIC curl --netrc --request POST \
-# MAGIC https://<databricks-instance>/api/2.0/secrets/put \
-# MAGIC --data '{
-# MAGIC "scope": "fieldeng",
-# MAGIC "key": "username_slack_webhook", # username == {current_user_no_at}
-# MAGIC "string_value": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
-# MAGIC }'
-# MAGIC ```
-# MAGIC 4. Alternatively you can use the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/index.html)
-# MAGIC ```
-# MAGIC databricks secrets put --scope fieldeng --key username_slack_webhook --profile <databricks-instance>
-# MAGIC ```
-
-# COMMAND ----------
-
-if slack_webhook.strip():
-  slack_message = f"Model <b>{model_name}</b> version <b>{model_version}</b> test results: {results.tags}"
-  send_notification(slack_message+f"- Staging transition <b>{validation_status}</b>", slack_webhook)
 
 # COMMAND ----------
 

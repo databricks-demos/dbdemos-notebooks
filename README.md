@@ -29,4 +29,3 @@ Note that this repository contribution might be limited to Databricks users only
 - optional based on your knowledge: try to package your code with dbdemos (we'll work to automate this step in the future)
 - send the Pull Request
 
-

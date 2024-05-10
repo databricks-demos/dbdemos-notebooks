@@ -2,6 +2,9 @@
 # MAGIC %md
 # MAGIC # Model validation JOB
 # MAGIC
+# MAGIC TODO:
+# MAGIC Change description
+# MAGIC
 # MAGIC This notebook execution is automatically triggered using MLFLow webhook. It's defined as a **job** and will programatically validate the model before labelling/alias it to `Challenger`.
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-5.png" width="1200">
@@ -54,8 +57,7 @@ def get_latest_model_version(model_name):
 # COMMAND ----------
 
 # Get the model in transition, its name and version from the metadata received by the webhook
-model_name = f"{catalog}.{db}.mlops_churn"
-model_version = get_latest_model_version(model_name)
+model_version = get_latest_model_version(model_name)  # {model_name} is defined in the setup script
 model_stage = "Challenger" #,["Challenger", "Champion", "Baseline", "Archived"])
 
 print(f"Validating {model_stage} request for model {model_name} version {model_version}")
@@ -113,13 +115,39 @@ except Exception as e:
 
 # MAGIC %md
 # MAGIC
-# MAGIC #### Making sure our model behaves as the previous one
+# MAGIC #### Demographic accuracy
 # MAGIC
 # MAGIC How does the model perform across various slices of the customer base?
+# MAGIC
+# MAGIC We check the model's accuracy across different demographic groups - Senior Citizens and Gender. Accuracy has to be at least 55% to pass this test.
 
 # COMMAND ----------
 
-TODO
+import numpy as np
+
+features = (
+  feature_df.withColumn('predictions', model_udf(*feature_df.columns))
+            .join(label_df, on='customer_id').toPandas()
+)
+
+features['accurate'] = np.where(features.churn == features.predictions, 1, 0)
+
+# Check run tags for demographic columns and accuracy in each segment
+try:
+  demographics = run_info.data.tags['demographic_vars'].split(",")
+  slices = features.groupby(demographics).accurate.agg(acc = 'sum', obs = lambda x:len(x), pct_acc = lambda x:sum(x)/len(x))
+  
+  # Threshold for passing on demographics is 55%
+  demo_test = "pass" if slices['pct_acc'].any() > 0.55 else "fail"
+  
+  # Set tags in registry
+  client.set_model_version_tag(name=model_name, version=model_version, key="demo_test", value=demo_test)
+
+  print(slices)
+except KeyError:
+  print("KeyError: No demographics_vars tagged with this model version.")
+  client.set_model_version_tag(name=model_name, version=model_version, key="demo_test", value="none")
+  pass
 
 # COMMAND ----------
 
@@ -150,6 +178,7 @@ else:
 # COMMAND ----------
 
 results = client.get_model_version(model_name, model_version)
+results.tags
 
 # COMMAND ----------
 
@@ -161,7 +190,7 @@ results = client.get_model_version(model_name, model_version)
 # COMMAND ----------
 
 # If any checks failed, reject/set 'validation_status' tag to 'FAILED' and remove an alias
-if False in results.tags.values():
+if ('False' in results.tags.values()) | ('fail' in results.tags.values()):
   print("Rejecting transition...")
   validation_status = "FAILED"
   alias = "ARCHIVED"

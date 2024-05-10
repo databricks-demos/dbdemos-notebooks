@@ -41,23 +41,16 @@ dbutils.widgets.dropdown("mode","False",["True", "False"], "Overwrite inference 
 # COMMAND ----------
 
 model_version = client.get_model_version_by_alias(name=model_name, alias="Challenger").version # Get challenger version
-print(f"Challenger model version for {model_name}: {model_version}")
+print(f"Running Inference using {model_name} version: {model_version}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Batch inference on the Challenger model
-# MAGIC
-# MAGIC We are ready to run inference on the Challenger model. We will load the model as a Spark UDF and generate predictions for our customer records.
-# MAGIC
-# MAGIC For simplicity, we assume that features have been extracted for the new customer records and these are already stored in the feature table. These are typically done by separate feature engineering pipelines.
-# MAGIC
-# MAGIC Since we are deploying version 1 of the model, there is no Champion model that is already deployed for this Challenger model to challenge. We can assume that this Challenger model will be promoted to Champion to be used in production pipelines. This is done by setting its alias to `@Champion`. Production pipelines will be loading the model using the new alias.
+# MAGIC ### Pyspark
 
 # COMMAND ----------
 
 # DBTITLE 1,In a python notebook
-# Load customer features to be scored
 feature_df = spark.read.table(f"{catalog}.{db}.mlops_churn_features")
 
 # Load challenger model as a Spark UDF
@@ -71,39 +64,6 @@ display(challenger_pred_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC That's it! Our data can now be saved as a table and re-used by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # Champion-Challenger testing
-# MAGIC
-# MAGIC When deploying new models, organizations can adopt different strategies to mitigate risks related to models not being fully tested against real-world data.
-# MAGIC
-# MAGIC We will illustrate one of such strategies through Champion-Challenger testing.
-# MAGIC
-# MAGIC Along with the predictions, we will register information about the model that is used. In particular, is this the Champion or the Challenger model. This will allow us to capture business metrics associated with the models, and promote a model from Champion to Challenger only if it produces acceptable business metrics.
-# MAGIC
-# MAGIC One example of such a metric could be the customer retention cost. A Challenger model may predict an exceedingly high number of customers who will churn. This may result in prohibitive customer retention costs. Furthermore, when a new model predicts a vastly different churn rate than its predecessor, or than what it predicts during development and testing, these are signs that further investigation has to be done before promoting the model to Champion.
-
-# COMMAND ----------
-
-import pyspark.sql.functions as F
-
-# Record prediction time and model information
-predictions_df = (
-  challenger_pred_df.withColumn('prediction_date', F.current_timestamp())
-                    .withColumn('model', F.lit(model_name))
-                    .withColumn('model_version', F.lit(model_version))
-                    .withColumn('model_alias', F.lit("Challenger"))
-)
-
-display(predictions_df)
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ## Materialize/Write Inference table to Delta Lake for ad-hoc consumption and monitoring
 # MAGIC That's it! Our data can now be saved as a table and re-used by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
 
@@ -113,6 +73,18 @@ if dbutils.widgets.get("mode") == "True":
   mode="overwrite"
 else:
   mode="append"
+
+# COMMAND ----------
+
+import pyspark.sql.functions as F
+
+predictions_df = (
+  challenger_pred_df.withColumn('model', F.lit(model_name))
+                    .withColumn('model_version', F.lit(model_version))
+                    .withColumn('model_alias', F.lit("Challenger"))
+)
+
+display(predictions_df)
 
 # COMMAND ----------
 

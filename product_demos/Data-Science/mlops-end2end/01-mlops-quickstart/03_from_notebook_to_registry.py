@@ -88,7 +88,8 @@ client.set_tag(run_id, key='demographic_vars', value="senior_citizen,gender")
 
 # COMMAND ----------
 
-model_name = f"{catalog}.{dbName}.mlops_churn"
+print(f"Registering model to {model_name}")  # {model_name} is defined in the setup script
+
 # Register best model from experiments run to MLflow model registry
 model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_name)
 #model_version_details = client.get_model_version(name=model_name, version=model_details.version)

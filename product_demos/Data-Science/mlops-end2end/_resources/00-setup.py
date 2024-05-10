@@ -9,6 +9,12 @@ schema = dbName = db = "dbdemos_mlops"
 volume_name = "my_volume"
 volume_path = f"/Volumes/{catalog}/{schema}/{volume_name}"
 
+# TODO: Remove before committing
+catalog = "dbdemos"
+schema = dbName = db = "dbdemos_mlops_cyl"
+volume_name = "mlops_volume"
+volume_path = f"/Volumes/{catalog}/{schema}/{volume_name}"
+
 # COMMAND ----------
 
 # MAGIC %run ../../../../_resources/00-global-setup-v2

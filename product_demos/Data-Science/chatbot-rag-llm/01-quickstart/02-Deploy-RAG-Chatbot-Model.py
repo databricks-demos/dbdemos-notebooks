@@ -119,7 +119,8 @@ def get_retriever(persist_dir: str = None):
 
     # Create the retriever
     vectorstore = DatabricksVectorSearch(
-        vs_index, text_column="content", embedding=embedding_model
+        vs_index, 
+        text_column="content"
     )
     return vectorstore.as_retriever()
 

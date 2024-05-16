@@ -103,11 +103,6 @@ from databricks.vector_search.client import VectorSearchClient
 from langchain_community.vectorstores import DatabricksVectorSearch
 from langchain_community.embeddings import DatabricksEmbeddings
 
-# Test embedding Langchain model
-#NOTE: your question embedding model must match the one used in the chunk in the previous model 
-embedding_model = DatabricksEmbeddings(endpoint="databricks-bge-large-en")
-print(f"Test embeddings: {embedding_model.embed_query('What is Apache Spark?')[:20]}...")
-
 def get_retriever(persist_dir: str = None):
     os.environ["DATABRICKS_HOST"] = host
     #Get the vector search index

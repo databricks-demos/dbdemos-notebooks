@@ -14,6 +14,12 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
+# MAGIC %pip install "mlflow-skinny[databricks]>=2.11"
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup
 
 # COMMAND ----------
@@ -83,15 +89,23 @@ display(challenger_pred_df)
 # MAGIC
 # MAGIC We will illustrate one of such strategies through Champion-Challenger testing.
 # MAGIC
-# MAGIC Along with the predictions, we will register information about the model that is used. In particular, is this the Champion or the Challenger model. This will allow us to capture business metrics associated with the models, and promote a model from Champion to Challenger only if it produces acceptable business metrics.
+# MAGIC Along with the predictions, we will register information about the model that is used. In particular, whether the model used is the Champion or the Challenger model. This will allow us to capture business metrics associated with the models, and promote a model from Champion to Challenger only if it produces acceptable business metrics.
 # MAGIC
 # MAGIC One example of such a metric could be the customer retention cost. A Challenger model may predict an exceedingly high number of customers who will churn. This may result in prohibitive customer retention costs. Furthermore, when a new model predicts a vastly different churn rate than its predecessor, or than what it predicts during development and testing, these are signs that further investigation has to be done before promoting the model to Champion.
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC We will use the feature table retreived above to perform the Champion-Challenger evaluation. In practice, this could come from customer records that are recently collected, or a baseline/"golden" dataset.
+# MAGIC
+# MAGIC We score the records using both the Champion and Challenger models, and compare the business metrics.
+
+# COMMAND ----------
+
 import pyspark.sql.functions as F
 
-# Record prediction time and model information
+# We have already found the predictions for the Challenger model
+# Add columns to record prediction time and model information
 predictions_df = (
   challenger_pred_df.withColumn('prediction_date', F.current_timestamp())
                     .withColumn('model', F.lit(model_name))
@@ -104,102 +118,124 @@ display(predictions_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Materialize/Write Inference table to Delta Lake for ad-hoc consumption and monitoring
-# MAGIC That's it! Our data can now be saved as a table and re-used by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
+# MAGIC Next, we get the predictions using the Champion model. In practice, this information could have already been saved to a table at the time the inference was made.
 
 # COMMAND ----------
 
-if dbutils.widgets.get("mode") == "True":
-  mode="overwrite"
-else:
-  mode="append"
+# Get model version of Champion model
+model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version
+print(f"Champion model version for {model_name}: {model_version}")
+
+# Load champion model as a Spark UDF
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@Champion")
+
+# Batch score
+champion_pred_df = feature_df.withColumn('prediction', champion_model(*feature_df.columns))
+
+display(champion_pred_df)
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ### OPTIONAL
-# MAGIC **For Demo purposes:** 
-# MAGIC * Simulate first batch with baseline model/version 1
-# MAGIC * Simulate second batch with champion model/version 2
-
-# COMMAND ----------
-
-from datetime import datetime, timedelta
-
-# COMMAND ----------
-
-# Simulate first batch with baseline model/version "1"
-this_timestamp = (datetime.now() + timedelta(days=-2)).timestamp()
-
-predictions.sample(fraction=np.random.random()) \
-           .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-           .withColumn("Model_Version", F.lit("1")) \
-           .write.format("delta").mode(mode).option("overwriteSchema", True) \
-           .option("delta.enableChangeDataFeed", True) \
-           .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
-
-# COMMAND ----------
-
-# Simulate second batch with champion model/version "2"
-this_timestamp = (datetime.now() + timedelta(days=-1)).timestamp()
-
-predictions.sample(fraction=np.random.random()) \
-           .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-           .withColumn("Model_Version", F.lit("2")) \
-           .write.format("delta").mode(mode).option("overwriteSchema", True) \
-           .option("delta.enableChangeDataFeed", True) \
-           .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Run current batch inference with latest model version
-
-# COMMAND ----------
-
-# DBTITLE 1,Write random sample to a delta inference table
-this_timestamp = (datetime.now()).timestamp()
-
-predictions.sample(fraction=np.random.random()) \
-           .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-           .withColumn("Model_Version", F.lit(model_version)) \
-           .write.format("delta").mode(mode).option("overwriteSchema", True) \
-           .option("delta.enableChangeDataFeed", True) \
-           .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Run inference on baseline/test table 
-# MAGIC _Usually should be done once after model (re)training but put here for demo purposes_
-
-# COMMAND ----------
-
-# DBTITLE 1,Read baseline table
-# Read baseline table without prediction and model version columns and select distinct to avoid dupes
-baseline_df = spark.table(baseline_table_name).drop("prediction", "Model_Version").distinct()
-
-# COMMAND ----------
-
-# DBTITLE 1,Batch score using provided feature values from baseline table
-# Features included in baseline_df will be used rather than those stored in feature tables
-baseline_predictions_df = fe.score_batch(
-  df=baseline_df.withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")), # Add dummy timestamp
-  model_uri=model_uri,
-  result_type=baseline_df.schema[label_col].dataType
+# Add columns to record prediction time and model information for the Champion model
+# Combine the information with the Challenger model for analysis
+predictions_all_df = predictions_df.union(
+    champion_pred_df.withColumn("prediction_date", F.current_timestamp())
+                    .withColumn("model", F.lit(model_name))
+                    .withColumn("model_version", F.lit(model_version))
+                    .withColumn("model_alias", F.lit("Champion"))
 )
 
-# COMMAND ----------
-
-# DBTITLE 1,Append/Materialize to baseline table
-baseline_predictions_df.drop(timestamp_col).withColumn("Model_Version", F.lit(model_version)) \
-                        .write.format("delta").mode("append").option("overwriteSchema", True) \
-                        .saveAsTable(baseline_table_name)
+display(predictions_all_df)
 
 # COMMAND ----------
 
-TODO: instead add AB testing, saving 2 models outcome ? And then add explanation that after 1 cell we have the loop and know which customer has churn
-based on that we get $ metrics to run our AB testing between 2 version (we can say that 1 churn is $1000 as example)
+from pyspark.sql import Window
+
+window = Window.partitionBy("model_alias")
+
+summary_df = (
+    predictions_all_df.groupBy("model_alias", "prediction").agg(
+        F.countDistinct("customer_id").alias("nb_customers"),
+        F.sum("total_charges").alias("revenue_impacted")
+    ).orderBy("model_alias", "prediction")
+    .withColumn("total_customers", F.sum("nb_customers").over(window))
+    .withColumn("pct_customers", F.col("nb_customers") / F.col("total_customers") * 100)
+    .withColumn("total_revenue", F.sum("revenue_impacted").over(window))
+    .withColumn("pct_revenue", F.col("revenue_impacted") / F.col("total_revenue") * 100)
+    .drop("total_customers", "total_revenue")
+)
+
+display(summary_df)
+
+# COMMAND ----------
+
+# Convert to pandas for easier transformation and plotting
+
+summary_pdf = summary_df.toPandas()
+
+summary_val_pdf = pd.melt(
+    summary_pdf,
+    id_vars=["model_alias", "prediction"],
+    value_vars=["nb_customers", "revenue_impacted"],
+    var_name="metric",
+)
+
+summary_pct_pdf = pd.melt(
+    summary_pdf,
+    id_vars=["model_alias", "prediction"],
+    value_vars=["pct_customers", "pct_revenue"],
+    var_name="metric",
+)
+
+summary_tall_pdf = summary_val_pdf.merge(
+    summary_pct_pdf, left_index=True, right_index=True, suffixes=["", "_pct"]
+)
+
+summary_tall_pdf.drop(
+    columns=["model_alias_pct", "prediction_pct", "metric_pct"], inplace=True
+)
+summary_tall_pdf
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC The results you get on your plot may differ from the percentages stated here due to randomness in the data generated for the demo.
+# MAGIC
+# MAGIC The churn rate predicted by our Challenger model on the reference dataset is not drastically different from that predicted by the Champion model currently in use (churn rates are around 21% and 22%). This suggests that there is a low risk that retention costs can become prohibitive, and the two models are not giving drastically different results.
+# MAGIC
+# MAGIC The percentage of churn revenue predicted by the Challenger model differs by only a few percentage points, indicating that the model does not behave drastically different from the Champion.
+# MAGIC
+# MAGIC Based on these findings, we can proceed to promote the Challenger model to replace the current Champion!
+# MAGIC
+# MAGIC Note that in practice, the business KPI and decision criteria can vary. We may consider collecting ground truth data to compare the models' ability to predict real churners. In many cases, ground truths are either not available, or take a long time to become available. If you are lucky to have them, you can save them as Delta tables to be ready for KPI comparison.
+
+# COMMAND ----------
+
+# Plot to compare customer churn rate and revenue impacted
+# predicted by the models
+
+import plotly.express as px
+
+fig = px.bar(
+    summary_tall_pdf,
+    x="model_alias",
+    y="value",
+    facet_col="metric",
+    facet_col_wrap=1,
+    facet_row_spacing=0.05,
+    color="prediction",
+    text="value_pct",
+    color_discrete_sequence=px.colors.qualitative.D3,
+    title="Champion-Challenger analysis",
+    height=800,
+)
+fig.update_traces(texttemplate='%{text:.3s}%', textposition='inside')
+fig.update_yaxes(matches=None)
+fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+fig.update_layout(
+    margin=dict(l=20, r=20, t=50, b=50),
+)
+fig
 
 # COMMAND ----------
 

@@ -35,7 +35,71 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
+# MAGIC %pip install "mlflow-skinny[databricks]>=2.11"
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup
+
+# COMMAND ----------
+
+# DBTITLE 1,Technical setup
+# We will assume that there is already a "Champion" model deployed
+# We simulate that here by finding a model with a low F1 score
+
+def get_latest_model_version(model_name):
+  model_version_infos = MlflowClient().search_model_versions("name = '%s'" % model_name)
+  return max([int(model_version_info.version) for model_version_info in model_version_infos])
+
+print(f"Finding runs from {churn_experiment_name}_* for deployment to {model_name}")
+
+model_stage = "Champion"
+
+xp_path = "/Shared/dbdemos/experiments/mlops"
+filter_string=f"name LIKE '{xp_path}%'"
+experiment_id = mlflow.search_experiments(filter_string=filter_string, order_by=["last_update_time DESC"])[0].experiment_id
+print(experiment_id)
+
+champion_model = mlflow.search_runs(
+  experiment_ids=experiment_id,
+  order_by=["metrics.test_f1_score"],
+  max_results=1,
+  filter_string="status = 'FINISHED' and run_name='mlops_champion_run'" #filter on mlops_champion_run to always use the notebook 02 to have a more predictable demo
+)
+
+run_id = champion_model.iloc[0]['run_id']
+
+print(f"Registering model from {run_id} to {model_name}")  # {model_name} is defined in the setup script
+
+# Register the model from experiments run to MLflow model registry
+model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_name)
+
+# The main model description, typically done once.
+client.update_registered_model(
+  name=model_details.name,
+  description="This model predicts whether a customer will churn using the churn features feature table. It is used to power the Telco Churn Dashboard in DB SQL.",
+)
+
+model_version = get_latest_model_version(model_name)  # {model_name} is defined in the setup script
+
+# Gives more details on this specific model version
+best_score = champion_model['metrics.test_f1_score'].values[0]
+run_name = champion_model['tags.mlflow.runName'].values[0]
+version_desc = f"This model version has an accuracy/F1 validation metric of {round(best_score,2)*100}%"
+
+client.update_model_version(
+  name=model_details.name,
+  version=model_details.version,
+  description=version_desc
+)
+
+client.set_registered_model_alias(
+  name=model_name,
+  alias=model_stage,
+  version=model_version
+)
 
 # COMMAND ----------
 

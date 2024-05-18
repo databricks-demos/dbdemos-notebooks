@@ -18,8 +18,8 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install new feature engineering client for UC [for MLR < 13.2]
-# MAGIC %pip install databricks-feature-engineering
+# DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
+# MAGIC %pip install "mlflow-skinny[databricks]>=2.11"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -57,9 +57,34 @@ target_col = "churn"
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Load Data
-# MAGIC Load data directly from feature store
+# MAGIC ## Data lineage
+# MAGIC Capturing upstream data lineage to a model allows data science teams to perform root cause analysis when issues are obeserved in the models' predictions. The lineage graph can be examined through Unity Catalog, and queried from System Tables.
 # MAGIC
+# MAGIC MLflow provides APIs to capture this lineage. Lineage capture entails the following steps:
+# MAGIC
+# MAGIC - Load the object representing the training dataset from Unity Catalog
+# MAGIC
+# MAGIC   `src_dataset = mlflow.data.load_delta(table_name=f'{catalog}.{db}.mlops_churn_training', version=latest)`
+# MAGIC
+# MAGIC - Log the dataset object as part of the training run
+# MAGIC
+# MAGIC   <br>
+# MAGIC
+# MAGIC   ```
+# MAGIC    mlflow.start_run():
+# MAGIC      ...
+# MAGIC      mlflow.log_input(src_dataset, context="training-input")
+# MAGIC   ```
+
+# COMMAND ----------
+
+# Load the dataset object from Unity Catalog
+
+latest_table_version = max(
+    spark.sql(f"describe history {catalog}.{db}.mlops_churn_training").toPandas()["version"]
+)
+
+src_dataset = mlflow.data.load_delta(table_name=f"{catalog}.{db}.mlops_churn_training", version=str(latest_table_version))
 
 # COMMAND ----------
 
@@ -262,7 +287,8 @@ from sklearn.pipeline import Pipeline
 from hyperopt import hp, tpe, fmin, STATUS_OK, Trials
 
 def objective(params):
-  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="mlops_best_run") as mlflow_run:
+  with mlflow.start_run(experiment_id=run['experiment_id'], run_name=params["run_name"]) as mlflow_run:
+  #with mlflow.start_run(experiment_id=run['experiment_id'], run_name="mlops_best_run") as mlflow_run:
     lgbmc_classifier = LGBMClassifier(**params)
 
     model = Pipeline([
@@ -277,6 +303,9 @@ def objective(params):
     model.fit(X_train, y_train)
     signature = infer_signature(X_train, y_train)
     mlflow.sklearn.log_model(model, "sklearn_model", input_example=X_train.iloc[0].to_dict(), signature=signature)
+
+    # Log training dataset object to capture upstream data lineage
+    mlflow.log_input(src_dataset, context="training-input")
 
     # Log metrics for the training set
     mlflow_model = Model()
@@ -351,6 +380,7 @@ def objective(params):
 # COMMAND ----------
 
 space = {
+  "run_name": "mlops_best_run",
   "colsample_bytree": 0.4120544919020157, 
   "lambda_l1": 2.6616074270114995,
   "lambda_l2": 514.9224373768443,
@@ -400,6 +430,33 @@ display(
 
 set_config(display="diagram")
 model
+
+# COMMAND ----------
+
+# For demo purpose, we log a second run with a different set of hyperparameter
+# This run has a slightly worse f1 score. We will use it as the Champion model later on in the demo.
+space = {
+  "run_name": "mlops_champion_run",
+  "colsample_bytree": 0.5, 
+  "lambda_l1": 1,
+  "lambda_l2": 10,
+  "learning_rate": 0.075,
+  "max_bin": 100,
+  "max_depth": 8,
+  "min_child_samples": 50,
+  "n_estimators": 250,
+  "num_leaves": 100,
+  "path_smooth": 60,
+  "subsample": 0.6,
+  "random_state": 42,
+}
+
+trials = Trials()
+fmin(objective,
+     space=space,
+     algo=tpe.suggest,
+     max_evals=1,  # Increase this when widening the hyperparameter search space.
+     trials=trials)
 
 # COMMAND ----------
 

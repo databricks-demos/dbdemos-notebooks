@@ -109,13 +109,17 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Compute & Write feature tables
+# MAGIC ## Compute & Write to Feature Store
 # MAGIC
-# MAGIC Once our features are ready, we'll save them as a Delta Lake table. This can then be retrieved later for model training.
+# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-feature-store.png" style="float:right" width="500" />
 # MAGIC
-# MAGIC Databricks has a Feature Store capability that is tightly integrated into the platform. Any Delta Lake table with a primary key can be used as a Feature Store table for model training, as well as batch and online serving.
+# MAGIC Once our features are ready, we'll save them in Databricks Feature Store. Under the hood, features store are backed by a Delta Lake table.
 # MAGIC
-# MAGIC We will see an example of how to use the Feature Store in a more advanced demo. In this Quickstart demo, we will proceed without the Feature Store and look at how we train a model using Delta Lake tables and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
+# MAGIC This will allow discoverability and reusability of our feature accross our organization, increasing team efficiency.
+# MAGIC
+# MAGIC Feature store will bring traceability and governance in our deployment, knowing which model is dependent of which set of features.
+# MAGIC
+# MAGIC Make sure you're using the "Machine Learning" menu to have access to your feature store using the UI.
 
 # COMMAND ----------
 
@@ -141,39 +145,30 @@ churn_features = churn_features.drop("churn")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Write feature table
+# MAGIC ### Create Feature Table and write to offline-store
+# MAGIC One-time setup
 
 # COMMAND ----------
 
-# Write feature table
-(churn_features.write.mode("overwrite")
-               .option("overwriteSchema", "true")
-               .saveAsTable(f"{catalog}.{db}.mlops_churn_features"))
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
+# delete a feature store stable if it exists
+delete_feature_store_table(catalog, db, "mlops_churn_features")
 
-# Set primary key
-# Any Delta table with a primary key can be used as a Feature Store table
-spark.sql(
-    f"""
-  ALTER TABLE {catalog}.{db}.mlops_churn_features ALTER COLUMN customer_id SET NOT NULL;
-  """
-)
-spark.sql(
-    f"""
-  ALTER TABLE {catalog}.{db}.mlops_churn_features ADD CONSTRAINT customer_id_pk PRIMARY KEY(customer_id);
-  """
-)
-
-# Add comment to the table
-spark.sql(
-    f"""
-  COMMENT ON TABLE {catalog}.{db}.mlops_churn_features IS \'These features are derived from the {catalog}.{db}.mlops_churn_bronze_customers table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table does not store the ground-truth and now can be used with the Feature Store integration in AutoML\'
-  """
+fe.create_table(
+  name="mlops_churn_features",
+  primary_keys=["customer_id"],
+  schema=churn_features.schema,
+  description=f"These features are derived from the {catalog}.{db}.mlops_churn_bronze_customers table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground-truth and now can be used with AutoML's Feature Store integration"
 )
 
 # COMMAND ----------
 
-training_dataset = spark.read.table(f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
-training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
+# DBTITLE 1,Write feature values to Feature Store
+fe.write_table(
+  name=f"{catalog}.{db}.mlops_churn_features",
+  df=churn_features # can be a streaming dataframe as well
+)
 
 # COMMAND ----------
 
@@ -204,9 +199,6 @@ training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
 # MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
 # MAGIC
 # MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API]()
-# MAGIC
-# MAGIC ___TODO: Check how feature store works in the UI with Delta Tables with PK.___
-# MAGIC
 # MAGIC * Select the table containing the ground-truth labels (i.e. `dbdemos.schema.mlops_churn_labels`)
 # MAGIC * Join remaining features from the feature table (i.e. `dbdemos.schema.mlops_churn_features`)
 
@@ -218,9 +210,7 @@ from datetime import datetime
 
 xp_path = "/Shared/dbdemos/experiments/mlops"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-training_dataset = spark.read.table(f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
-training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
-
+training_dataset = fe.read_table(name=f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,

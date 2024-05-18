@@ -47,7 +47,7 @@
 # DBTITLE 1,Create job parameters input widgets
 def get_latest_model_version(model_name):
   model_version_infos = MlflowClient().search_model_versions("name = '%s'" % model_name)
-  return max([model_version_info.version for model_version_info in model_version_infos])
+  return max([int(model_version_info.version) for model_version_info in model_version_infos])
 
 # COMMAND ----------
 

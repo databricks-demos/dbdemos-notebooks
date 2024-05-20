@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Managing the model lifecycle with UC Model Registry
+# MAGIC # Managing the model lifecycle with the Unity Catalog Model Registry
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-4.png" width="1200">
 # MAGIC
@@ -15,6 +15,8 @@
 # MAGIC * **Document** models throughout their lifecycle
 # MAGIC * **Secure** access and permission for model registrations, transitions or modifications
 # MAGIC
+# MAGIC We will look at how we test and promote a new __Challenger__ model as a candidate to replace an existing __Champion__ model.
+# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F04_deploy_to_registry&dt=MLOPS">
 # MAGIC <!-- [metadata={"description":"MLOps end2end workflow: Move model to registry and request transition to STAGING.",
@@ -26,7 +28,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## How to Use the Model Registry
+# MAGIC ## How to Use the Unity Catalog Model Registry
 # MAGIC Typically, data scientists who use MLflow will conduct many experiments, each with a number of runs that track and log metrics and parameters. During the course of this development cycle, they will select the best run within an experiment and register its model in the registry.  Think of this as **committing** the model to the registry, much as you would commit code to a version control system.
 # MAGIC
 # MAGIC The registry proposes free-text model alias i.e. `Baseline`, `Challenger`, `Champion` along with tagging.
@@ -45,9 +47,15 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Technical setup
-# We will assume that there is already a "Champion" model deployed
-# We simulate that here by finding a model with a low F1 score
+# DBTITLE 1,Technical setup - Hide this cell
+##### This cell registers a Champion model to the UC model registry.
+##### Run this cell and go on to the next cell for the demo.
+
+##### Since we will not have any registered model when the demo is
+##### run for the first time, we will register a Champion model first.
+##### This would have been the model that is already in use.
+##### We use the model from the training run `mlops_champion_run` that
+##### was logged in the previous notebook (02_automl_champion)
 
 def get_latest_model_version(model_name):
   model_version_infos = MlflowClient().search_model_versions("name = '%s'" % model_name)
@@ -106,7 +114,7 @@ client.set_registered_model_alias(
 # MAGIC %md
 # MAGIC ## Programmatically find best run and push model to the registry for validation
 # MAGIC
-# MAGIC We'll programatically select the best model from our last ML experiment and deploy it in the registry. We can easily do that using MLFlow `search_runs` API:
+# MAGIC We have completed the training runs to find a candidate Champion model. We'll programatically select the best model from our last ML experiment and deploy it in the registry. We can easily do that using MLFlow `search_runs` API:
 
 # COMMAND ----------
 
@@ -198,19 +206,12 @@ client.update_model_version(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Next: MLOps model testing and validation
+# MAGIC ## Next: MLOps testing and validation of the candidate Challenger model
 # MAGIC
-# MAGIC A validation job will start, testing the new model being deployed and validating the request.
+# MAGIC At this point, with the candidate Challenger model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
 # MAGIC
-# MAGIC If the model passes all the tests, it'll be accepted and moved into Challenger. Otherwise it'll be rejected, and a slack notification will be sent.
+# MAGIC If the model passes all the tests, it'll be accepted and moved into Challenger. Otherwise it'll be rejected.
 # MAGIC
 # MAGIC Next:
-# MAGIC  * Find out how the model is being tested befored labbeled as `Challenger` [using the model validation test notebook]($./04_job_challenger_validation)
-# MAGIC  * Or discover how to [run Batch and Real-time inference from our Challenger model]($./05_batch_inference)
-# MAGIC
-# MAGIC ### TODOs: _(TBC)_
-# MAGIC  * Promote model from `dev` to `staging` catalog ? (according to recommended catalog-based promotion in [UC](https://docs.gcp.databricks.com/en/machine-learning/manage-model-lifecycle/upgrade-workflows.html#im-used-to-model-version-stage-transitions-how-do-i-promote-a-model-across-environments))
-
-# COMMAND ----------
-
-
+# MAGIC  * Find out how the model is being tested befored being promoted as `Challenger` [using the model validation test notebook]($./04_job_challenger_validation)
+# MAGIC  * Or discover how to [run Batch inference from our Challenger model]($./05_batch_inference)

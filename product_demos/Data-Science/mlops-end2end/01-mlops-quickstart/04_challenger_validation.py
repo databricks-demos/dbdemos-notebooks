@@ -1,11 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Model validation JOB
+# MAGIC # Model validation
 # MAGIC
-# MAGIC TODO:
-# MAGIC Change description
+# MAGIC This notebook performs validation tasks on the candidate Challenger model.
 # MAGIC
-# MAGIC This notebook execution is automatically triggered using MLFLow webhook. It's defined as a **job** and will programatically validate the model before labelling/alias it to `Challenger`.
+# MAGIC It can be automated as a **Databricks Workflow job** and will programatically validate the model before labelling it (by setting its alias) to `Challenger`. The benefits of automation is to ensure that these validation checks are systematically performed before new models are integrated into inference pipelines or deployed for realtime serving.
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-5.png" width="1200">
 # MAGIC
@@ -56,7 +55,7 @@ def get_latest_model_version(model_name):
 
 # COMMAND ----------
 
-# Get the model in transition, its name and version from the metadata received by the webhook
+# Get the model in transition, its name and version
 model_version = get_latest_model_version(model_name)  # {model_name} is defined in the setup script
 model_stage = "Challenger" #,["Challenger", "Champion", "Baseline", "Archived"])
 
@@ -74,7 +73,7 @@ run_info = client.get_run(run_id=model_details.run_id)
 # MAGIC
 # MAGIC #### Validate prediction
 # MAGIC
-# MAGIC We want to test to see that the model can predict on production data.  So, we will load the model and the latest from the feature store and test making some predictions.
+# MAGIC We want to test to see that the model can predict on production data.  So, we will load the model and the data from the feature table and test making some predictions.
 
 # COMMAND ----------
 
@@ -85,10 +84,6 @@ label_df.schema[label_col].dataType
 loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}/{model_version}", result_type=label_df.schema[label_col].dataType)
 
 # COMMAND ----------
-
-from databricks.feature_engineering import FeatureEngineeringClient
-import pandas as pd
-
 
 # Predict on a Spark DataFrame
 try:
@@ -123,6 +118,7 @@ except Exception as e:
 
 # COMMAND ----------
 
+import pandas as pd
 import numpy as np
 
 features = (
@@ -183,7 +179,7 @@ results.tags
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Move to new stage or archive version
+# MAGIC ## Move to next phase in model lifecycle or archive version
 # MAGIC
 # MAGIC The next phase of this models' lifecycle will be to `Challenger` or `Archived`, depending on how it fared in testing.
 
@@ -220,9 +216,9 @@ client.set_registered_model_alias(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Congratulation, our model is now automatically tested and will be transitioned accordingly
+# MAGIC ### Congratulation, our model is now tested and transitioned accordingly
 # MAGIC
-# MAGIC We now have the certainty that our model is ready to be used as it matches our quality standard.
+# MAGIC We now have the certainty that our model is ready to be used in inference pipelines and in realtime serving endpoints, as it matches our validation standards.
 # MAGIC
 # MAGIC
 # MAGIC Next: [Run batch inference from our Challenger model]($./05_batch_inference)

@@ -2,6 +2,14 @@
 # MAGIC %md
 # MAGIC # Churn Prediction Model Inference
 # MAGIC
+# MAGIC ## Inference with the Champion model
+# MAGIC
+# MAGIC With models registered in the Unity Catalog Model Registry, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies, or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
+# MAGIC
+# MAGIC ## Champion-Challenger testing
+# MAGIC
+# MAGIC In earlier steps, we have registered a __Challenger__ model. Later on in this notebook, we will look at the concept of Champion-Challenger testing, which ensures that the __Challenger__ model would not cause adverse business impact before letting it replace the Champion model.
+# MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-6.png" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -29,15 +37,11 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 20px" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn_batch_inference.gif" />
 # MAGIC
-# MAGIC Now that our model is available in the Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
+# MAGIC Now that our model is available in the Unity Catalog Model Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
 # MAGIC
 # MAGIC We will use MLFlow function to load a pyspark UDF and distribute our inference in the entire cluster. If the data is small, we can also load the model with plain python and use a pandas Dataframe.
 # MAGIC
 # MAGIC If you don't know how to start, Databricks can generate a batch inference notebook in just one click from the model registry !
-
-# COMMAND ----------
-
-dbutils.widgets.dropdown("mode","False",["True", "False"], "Overwrite inference table (for monitoring)")
 
 # COMMAND ----------
 
@@ -46,19 +50,17 @@ dbutils.widgets.dropdown("mode","False",["True", "False"], "Overwrite inference 
 
 # COMMAND ----------
 
-model_version = client.get_model_version_by_alias(name=model_name, alias="Challenger").version # Get challenger version
-print(f"Challenger model version for {model_name}: {model_version}")
+model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
+print(f"Champion model version for {model_name}: {model_version}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Batch inference on the Challenger model
+# MAGIC ### Batch inference on the Champion model
 # MAGIC
-# MAGIC We are ready to run inference on the Challenger model. We will load the model as a Spark UDF and generate predictions for our customer records.
+# MAGIC We are ready to run inference on the Champion model. We will load the model as a Spark UDF and generate predictions for our customer records.
 # MAGIC
 # MAGIC For simplicity, we assume that features have been extracted for the new customer records and these are already stored in the feature table. These are typically done by separate feature engineering pipelines.
-# MAGIC
-# MAGIC Since we are deploying version 1 of the model, there is no Champion model that is already deployed for this Challenger model to challenge. We can assume that this Challenger model will be promoted to Champion to be used in production pipelines. This is done by setting its alias to `@Champion`. Production pipelines will be loading the model using the new alias.
 
 # COMMAND ----------
 
@@ -66,13 +68,13 @@ print(f"Challenger model version for {model_name}: {model_version}")
 # Load customer features to be scored
 feature_df = spark.read.table(f"{catalog}.{db}.mlops_churn_features")
 
-# Load challenger model as a Spark UDF
-challenger_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@Challenger")
+# Load champion model as a Spark UDF
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@Champion")
 
 # Batch score
-challenger_pred_df = feature_df.withColumn('prediction', challenger_model(*feature_df.columns))
+champion_pred_df = feature_df.withColumn('prediction', champion_model(*feature_df.columns))
 
-display(challenger_pred_df)
+display(champion_pred_df)
 
 # COMMAND ----------
 
@@ -96,6 +98,10 @@ display(challenger_pred_df)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Capture metadata for the model used for inference
+# MAGIC
+# MAGIC To keep a record on which model is used to generate the predictions, so that we can make comparisons of the Challenger against the Champion later, we capture a number of information on the model used. This includes the date the precition was made, the model name, the model version and its alias (`Champion` or `Challenger`)
+# MAGIC
 # MAGIC We will use the feature table retreived above to perform the Champion-Challenger evaluation. In practice, this could come from customer records that are recently collected, or a baseline/"golden" dataset.
 # MAGIC
 # MAGIC We score the records using both the Champion and Challenger models, and compare the business metrics.
@@ -104,13 +110,13 @@ display(challenger_pred_df)
 
 import pyspark.sql.functions as F
 
-# We have already found the predictions for the Challenger model
+# We have already found the predictions for the Champion model
 # Add columns to record prediction time and model information
 predictions_df = (
-  challenger_pred_df.withColumn('prediction_date', F.current_timestamp())
-                    .withColumn('model', F.lit(model_name))
-                    .withColumn('model_version', F.lit(model_version))
-                    .withColumn('model_alias', F.lit("Challenger"))
+  champion_pred_df.withColumn('prediction_date', F.current_timestamp())
+                  .withColumn('model', F.lit(model_name))
+                  .withColumn('model_version', F.lit(model_version))
+                  .withColumn('model_alias', F.lit("Champion"))
 )
 
 display(predictions_df)
@@ -118,34 +124,52 @@ display(predictions_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Next, we get the predictions using the Champion model. In practice, this information could have already been saved to a table at the time the inference was made.
+# MAGIC ## Inference on the Challenger model
+# MAGIC
+# MAGIC Next, we get the predictions using the Challenger model.
 
 # COMMAND ----------
 
-# Get model version of Champion model
-model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version
-print(f"Champion model version for {model_name}: {model_version}")
+# Get model version of Challenger model
+model_version = client.get_model_version_by_alias(name=model_name, alias="Challenger").version
+print(f"Challenger model version for {model_name}: {model_version}")
 
-# Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@Champion")
+# Load challenger model as a Spark UDF
+challenger_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@Challenger")
 
 # Batch score
-champion_pred_df = feature_df.withColumn('prediction', champion_model(*feature_df.columns))
+challenger_pred_df = feature_df.withColumn('prediction', challenger_model(*feature_df.columns))
 
-display(champion_pred_df)
+display(challenger_pred_df)
 
 # COMMAND ----------
 
-# Add columns to record prediction time and model information for the Champion model
-# Combine the information with the Challenger model for analysis
+# MAGIC %md
+# MAGIC ### Capture metadata for the Challenger model
+# MAGIC
+# MAGIC Like we did with the Champion model, we capture information on the model used to produce these predictions.
+# MAGIC
+# MAGIC In practice, the resulting table with the predictions and model metadata can be saved as a table for ongoing analyses. We will skip writing the table in this demo for simplicity.
+
+# COMMAND ----------
+
+# Add columns to record prediction time and model information for the Challenger model
+# Combine the information with the Champion model for analysis
 predictions_all_df = predictions_df.union(
-    champion_pred_df.withColumn("prediction_date", F.current_timestamp())
-                    .withColumn("model", F.lit(model_name))
-                    .withColumn("model_version", F.lit(model_version))
-                    .withColumn("model_alias", F.lit("Champion"))
+    challenger_pred_df.withColumn("prediction_date", F.current_timestamp())
+                      .withColumn("model", F.lit(model_name))
+                      .withColumn("model_version", F.lit(model_version))
+                      .withColumn("model_alias", F.lit("Challenger"))
 )
 
 display(predictions_all_df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Analyze Champion and Challenger business metrics
+# MAGIC
+# MAGIC Now that we have the necessary predictions and information on the models used, we can use this data to perform our Champion-Challenger analysis agsint our business KPIs.
 
 # COMMAND ----------
 
@@ -199,15 +223,22 @@ summary_tall_pdf
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Visualize results
+# MAGIC
+# MAGIC Run the next cell to visualize the results. We are analyzing:
+# MAGIC
+# MAGIC - Churn rate / Number of churns predicted (top)
+# MAGIC - Revenue impacted by predicted churners (bottom)
+# MAGIC
 # MAGIC The results you get on your plot may differ from the percentages stated here due to randomness in the data generated for the demo.
 # MAGIC
 # MAGIC The churn rate predicted by our Challenger model on the reference dataset is not drastically different from that predicted by the Champion model currently in use (churn rates are around 21% and 22%). This suggests that there is a low risk that retention costs can become prohibitive, and the two models are not giving drastically different results.
 # MAGIC
-# MAGIC The percentage of churn revenue predicted by the Challenger model differs by only a few percentage points, indicating that the model does not behave drastically different from the Champion.
+# MAGIC The percentage of churn revenue predicted by the Challenger model differs by only a few percentage points, indicating that the model does not behave drastically differently from the Champion.
 # MAGIC
 # MAGIC Based on these findings, we can proceed to promote the Challenger model to replace the current Champion!
 # MAGIC
-# MAGIC Note that in practice, the business KPI and decision criteria can vary. We may consider collecting ground truth data to compare the models' ability to predict real churners. In many cases, ground truths are either not available, or take a long time to become available. If you are lucky to have them, you can save them as Delta tables to be ready for KPI comparison.
+# MAGIC Note that in practice, the business KPI and decision criteria can vary. We may consider collecting ground truth data to compare the models' ability to predict real churners, or its coverage of the real revenue affected by churn. In many cases, ground truths are either not available, or take a long time to become available. In some cases, businesses find it feasible to keep a reference dataset (or a "golden dataset") to perform such evaluation. If you have either available, you can save them as Delta tables and use them for KPI comparison.
 
 # COMMAND ----------
 
@@ -227,7 +258,8 @@ fig = px.bar(
     text="value_pct",
     color_discrete_sequence=px.colors.qualitative.D3,
     title="Champion-Challenger analysis",
-    height=800,
+    height=600,
+    width=600,
 )
 fig.update_traces(texttemplate='%{text:.3s}%', textposition='inside')
 fig.update_yaxes(matches=None)
@@ -240,11 +272,40 @@ fig
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Next: Serve model as REST API endpoint [OPTIONAL]
+# MAGIC ## Promoting the Challenger to Champion
 # MAGIC
-# MAGIC With new data coming in and features being refreshs, we can use the autoML API to automate model retraining and pushing through the staging validation process.
+# MAGIC When we are satisfied with the results of the __Challenger__ model, we can then promote it to Champion. This is done by setting its alias to `@Champion`. Production pipelines that load the model using the `Champion` alias will then be loading this new model. The alias on the older Champion model will be automatically unset.
 # MAGIC
-# MAGIC Next steps:
-# MAGIC * [Deploy and Serve model as REST API]($./06_serve_model)
-# MAGIC * [Create monitor for model performance]($./07_model_monitoring)
-# MAGIC * [Automate model re-training]($./08_retrain_churn_automl)
+# MAGIC <br>
+# MAGIC
+# MAGIC ```
+# MAGIC model_version = client.get_model_version_by_alias(name=model_name, alias="Challenger").version
+# MAGIC
+# MAGIC client.set_registered_model_alias(
+# MAGIC   name=model_name,
+# MAGIC   alias="Champion",
+# MAGIC   version=model_version
+# MAGIC )
+# MAGIC ```
+# MAGIC
+# MAGIC <br>
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Conclusion
+# MAGIC
+# MAGIC This is all for the quickstart demo! We have looked at basic concepts of MLOps and how Databricks helps you achieve them. They include:
+# MAGIC
+# MAGIC - Feature engineering and storing feature tables in Databricks
+# MAGIC - AutoML, model training and experiement tracking in MLflow
+# MAGIC - Register models in the Unity Catalog Model Registry for use by runtime systems
+# MAGIC - Model validation and promotion
+# MAGIC - Batch inference
+# MAGIC - Champion-Challenger testing
+# MAGIC
+# MAGIC We hope you've enjoyed this demo. As the next step, look out for our Advanced End-to-end MLOps demo, which will include more in-depth walkthroughs on the following aspects of MLOps:
+# MAGIC
+# MAGIC - Feature serving and Feature Store
+# MAGIC - Data and model monitoring
+# MAGIC - Deployment for real-time inference

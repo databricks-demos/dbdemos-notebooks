@@ -34,8 +34,10 @@
 # MAGIC ## MLOps pipeline we'll implement
 # MAGIC
 # MAGIC In this demo, we'll implement a full MLOps pipeline step by step, in order to power a [dashboard for downstream business stakeholders](https://e2-demo-field-eng.cloud.databricks.com/sql/dashboards/18b301e3-ea4c-4e93-b7c6-df3f53ececd9?o=1444828305810485) which is:
-# MAGIC * invoking a trained ML model as a SQL UDF
-# MAGIC * slice & dicing feature from the Feature Store
+# MAGIC * preparing features
+# MAGIC * training a model for deployment
+# MAGIC * invoking a trained ML model as a pySpark UDF
+# MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-0.png" width="1200">
 # MAGIC
@@ -60,7 +62,7 @@
 # MAGIC
 # MAGIC Our marketing team asked us to create a Dashboard tracking Churn risk evolution. In addition, we need to provide our renewal team with a daily list of customers at Churn risk to increase our final revenue.
 # MAGIC
-# MAGIC Our Data Engineer team provided us a dataset collecting informations on our customer base, including churn information. That's where our implementation starts.
+# MAGIC Our Data Engineer team provided us a dataset collecting information on our customer base, including churn information. That's where our implementation starts.
 # MAGIC
 # MAGIC Let's see how we can implement such a model, but also provide our marketing and renewal team with Dashboards to track and analyze our Churn prediction.
 # MAGIC

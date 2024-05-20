@@ -38,7 +38,7 @@
 
 # COMMAND ----------
 
-telco_df = spark.read.table("mlops_churn_bronze_customers").to_pandas_on_spark()
+telco_df = spark.read.table("mlops_churn_bronze_customers").pandas_api()
 telco_df["internet_service"].value_counts().plot.pie()
 
 # COMMAND ----------
@@ -65,7 +65,7 @@ display(telcoDF)
 # MAGIC
 # MAGIC Because our Data Scientist team is familiar with Pandas, we'll use the [pandas on spark API](https://spark.apache.org/docs/latest/api/python/reference/pyspark.pandas/index.html) to scale `pandas` code. The Pandas instructions will be converted in the spark engine under the hood and distributed at scale.
 # MAGIC
-# MAGIC *Note: Starting from `spark 3.2`, koalas is builtin and we can get an Pandas Dataframe using `pandas_api()`.*
+# MAGIC *Note: Pandas API on Spark used to be called Koalas. Starting from `spark 3.2`, Koalas is builtin and we can get an Pandas Dataframe using `pandas_api()` [Details](https://spark.apache.org/docs/latest/api/python/migration_guide/koalas_to_pyspark.html).*
 
 # COMMAND ----------
 
@@ -115,7 +115,9 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 # MAGIC
 # MAGIC Databricks has a Feature Store capability that is tightly integrated into the platform. Any Delta Lake table with a primary key can be used as a Feature Store table for model training, as well as batch and online serving.
 # MAGIC
-# MAGIC We will see an example of how to use the Feature Store in a more advanced demo. In this Quickstart demo, we will proceed without the Feature Store and look at how we train a model using Delta Lake tables and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
+# MAGIC We will look at an example of how to use the Feature Store to perform feature lookups in a more advanced demo.
+# MAGIC
+# MAGIC In this Quickstart demo, we will save the feature table as a Delta Lake table with a primary key. We will then look at how we train a model using the feature table and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
 
 # COMMAND ----------
 
@@ -172,8 +174,9 @@ spark.sql(
 
 # COMMAND ----------
 
-training_dataset = spark.read.table(f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
-training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
+# MAGIC %md
+# MAGIC
+# MAGIC That's it! The feature table is now ready to be used.
 
 # COMMAND ----------
 
@@ -195,20 +198,33 @@ training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
 # MAGIC
 # MAGIC ### Using Databricks Auto ML with our Churn dataset
 # MAGIC
-# MAGIC Auto ML is available in the "Machine Learning" space. All we have to do is start a new Auto-ML experimentation and select the feature table we just created (`dbdemos.retail_username.mlops_churn_features`)
+# MAGIC Auto ML is available in the "Machine Learning" space. All we have to do is start a new Auto-ML experimentation and select the table with the ground truth labels we just created (`dbdemos.schema.mlops_churn_labels`) and join it with the feature table we just created (`dbdemos.schema.mlops_churn_features`).
 # MAGIC
 # MAGIC Our prediction target is the `churn` column.
 # MAGIC
 # MAGIC Click on Start, and Databricks will do the rest.
 # MAGIC
-# MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
+# MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
 # MAGIC
-# MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API]()
+# MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
 # MAGIC
-# MAGIC ___TODO: Check how feature store works in the UI with Delta Tables with PK.___
 # MAGIC
 # MAGIC * Select the table containing the ground-truth labels (i.e. `dbdemos.schema.mlops_churn_labels`)
 # MAGIC * Join remaining features from the feature table (i.e. `dbdemos.schema.mlops_churn_features`)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Using Auto ML with labeled datasets
+# MAGIC
+# MAGIC [Auto ML](https://docs.databricks.com/en/machine-learning/automl/how-automl-works.html) also works on an input table with prepared features and the corresponding labels. For this quicktstart demo, this is what we will be doing. We will create a labelled dataset and save it as a Delta Lake table `dbdemos.schema.mlops_churn_training`. We run AutoML on this table and capture the table lineage at training time.
+# MAGIC
+
+# COMMAND ----------
+
+# Create the training dataset and write it as a Delta Table
+training_dataset = spark.read.table(f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
+training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
 
 # COMMAND ----------
 
@@ -218,8 +234,6 @@ from datetime import datetime
 
 xp_path = "/Shared/dbdemos/experiments/mlops"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-training_dataset = spark.read.table(f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
-training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
 
 automl_run = automl.classify(
     experiment_name = xp_name,

@@ -62,7 +62,7 @@ endpoint_config = EndpointCoreConfigInput(
     ],
     auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog,
                                                  schema_name=db, enabled=True,
-                                                 table_name_prefix="fine_tuned_llm_inference" )
+                                                 table_name_prefix=serving_endpoint_name )
 )
 
 existing_endpoint = next(

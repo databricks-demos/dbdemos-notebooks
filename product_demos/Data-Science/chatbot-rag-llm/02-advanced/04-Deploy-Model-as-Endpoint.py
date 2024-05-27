@@ -40,6 +40,7 @@
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
+import mlflow
 
 mlflow.set_registry_uri('databricks-uc')
 client = MlflowClient()
@@ -53,7 +54,7 @@ endpoint_config = EndpointCoreConfigInput(
     served_entities=[
         ServedEntityInput(
             entity_name=model_name,
-            entity_version=latest_model,
+            entity_version=latest_model.version,
             min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
             max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
             scale_to_zero_enabled=True

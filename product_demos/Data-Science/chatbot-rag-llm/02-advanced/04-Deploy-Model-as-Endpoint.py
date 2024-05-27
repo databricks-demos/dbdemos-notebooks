@@ -38,9 +38,8 @@
 
 # COMMAND ----------
 
-import urllib
-import json
-import mlflow
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
 mlflow.set_registry_uri('databricks-uc')
 client = MlflowClient()
@@ -48,16 +47,31 @@ model_name = f"{catalog}.{db}.dbdemos_advanced_chatbot_model"
 serving_endpoint_name = f"dbdemos_endpoint_advanced_{catalog}_{db}"[:63]
 latest_model = client.get_model_version_by_alias(model_name, "prod")
 
-#TODO: use the sdk once model serving is available.
-serving_client = EndpointApiClient()
-# Start the endpoint using the REST API (you can do it using the UI directly)
-auto_capture_config = {
-    "catalog_name": catalog,
-    "schema_name": db,
-    "table_name_prefix": serving_endpoint_name
-    }
-environment_vars={"DATABRICKS_TOKEN": "{{secrets/dbdemos/rag_sp_token}}"}
-serving_client.create_endpoint_if_not_exists(serving_endpoint_name, model_name=model_name, model_version = latest_model.version, workload_size="Small", scale_to_zero_enabled=True, wait_start = True, auto_capture_config=auto_capture_config, environment_vars=environment_vars)
+w = WorkspaceClient()
+endpoint_config = EndpointCoreConfigInput(
+    name=serving_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=model_name,
+            entity_version=latest_model,
+            min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
+            max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
+            scale_to_zero_enabled=True
+        )
+    ],
+    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog,
+                                                 schema_name=db, enabled=True,
+                                                 table_name_prefix="fine_tuned_llm_inference" )
+)
+
+existing_endpoint = next(
+    (e for e in w.serving_endpoints.list() if e.name == serving_endpoint_name), None
+)
+if existing_endpoint == None:
+    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
+else:
+  print(f"endpoint {serving_endpoint_name} already exist")
 
 # COMMAND ----------
 

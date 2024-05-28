@@ -101,8 +101,9 @@ def extract_entities(df, endpoint_name):
   llm = ChatDatabricks(endpoint=endpoint_name, temperature=0.1)
   chain = build_chain(llm)
   predictions = chain.with_retry(stop_after_attempt=2) \
-                                      .batch(df_test_small[["sentence"]].to_dict(orient="records"), config={"max_concurrency": 4})
+                                      .batch(df[["sentence"]].to_dict(orient="records"), config={"max_concurrency": 4})
   # Extract the array from the text. See the ../resource notebook for more details.
+  
   cleaned_predictions = [extract_json_array(p) for p in predictions]
   return predictions, cleaned_predictions 
 
@@ -201,7 +202,7 @@ df_train
 
 # COMMAND ----------
 
-from pyspark.sql.functions import pandas_udf
+from pyspark.sql.functions import pandas_udf, to_json
 import pandas as pd
 
 @pandas_udf("array<struct<role:string, content:string>>")
@@ -212,23 +213,23 @@ def create_conversation(sentence: pd.Series, entities: pd.Series) -> pd.Series:
             # Mistral-specific behavior without system prompt
             return [
                 {"role": "user", "content": f"{system_prompt} \n {s}"},
-                {"role": "assistant", "content": str(e)}]
+                {"role": "assistant", "content": e}]
         else:
             # Default behavior with system prompt
             return [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": str(s)},
-                {"role": "assistant", "content": str(e)}]
+                {"role": "assistant", "content": e}]
                 
     # Apply build_message to each pair of sentence and entity
     return pd.Series([build_message(s, e) for s, e in zip(sentence, entities)])
 
 # Assuming df_train is defined and correctly formatted as a Spark DataFrame with columns 'sentence' and 'entities'
-training_dataset = spark.createDataFrame(df_train)
+training_dataset = spark.createDataFrame(df_train).withColumn("human_annotated_entities", to_json("human_annotated_entities"))
 
 # Apply UDF, write to a table, and display it
-training_dataset.select(create_conversation("sentence", "human_annotated_entities").alias('messages')).write.mode('overwrite').saveAsTable(f"{catalog}.{db}.ner_chat_completion_training_dataset")
-display(spark.table(f"{catalog}.{db}.ner_chat_completion_training_dataset"))
+training_dataset.select(create_conversation("sentence", "human_annotated_entities").alias('messages')).write.mode('overwrite').saveAsTable("ner_chat_completion_training_dataset")
+display(spark.table("ner_chat_completion_training_dataset"))
 
 # COMMAND ----------
 
@@ -238,11 +239,11 @@ display(spark.table(f"{catalog}.{db}.ner_chat_completion_training_dataset"))
 
 # COMMAND ----------
 
-eval_dataset = spark.createDataFrame(df_validation)
+eval_dataset = spark.createDataFrame(df_validation).withColumn("human_annotated_entities", to_json("human_annotated_entities"))
 
 # Apply UDF, write to a table, and display it
-eval_dataset.select(create_conversation("sentence", "human_annotated_entities").alias('messages')).write.mode('overwrite').saveAsTable(f"{catalog}.{db}.ner_chat_completion_eval_dataset")
-display(spark.table(f"{catalog}.{db}.ner_chat_completion_eval_dataset"))
+eval_dataset.select(create_conversation("sentence", "human_annotated_entities").alias('messages')).write.mode('overwrite').saveAsTable("ner_chat_completion_eval_dataset")
+display(spark.table("ner_chat_completion_eval_dataset"))
 
 # COMMAND ----------
 
@@ -264,7 +265,7 @@ run = fm.create(
   eval_data_path=f"{catalog}.{db}.ner_chat_completion_eval_dataset",
   task_type = "CHAT_COMPLETION",
   register_to=registered_model_name,
-  training_duration='50ep' # Duration of the finetuning run, 50 epochs only to make it fast for the demo. Check the training run metrics to know when to stop it (when it reaches a plateau)
+  training_duration='50ep' # Duration of the finetuning run, 10 epochs only to make it fast for the demo. Check the training run metrics to know when to stop it (when it reaches a plateau)
 )
 print(run)
 
@@ -297,7 +298,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
 # Change back to dbdemos_llm_drug_extraction_fine_tuned after testing
-serving_endpoint_name = "dbdemos_llm_drug_extraction_fine_tuned_debu"
+serving_endpoint_name = "dbdemos_llm_drug_extraction_fine_tuned"
 w = WorkspaceClient()
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,
@@ -339,11 +340,6 @@ else:
 
 # COMMAND ----------
 
-df_test_small[['baseline_precision', 'baseline_recall']] = df_test_small.apply(precision_recall_series, axis=1)
-df_test_small[['baseline_precision', 'baseline_recall']].describe()
-
-# COMMAND ----------
-
 # Run the predictions against the new finetuned endpoint
 predictions, cleaned_predictions = extract_entities(df_test_small, serving_endpoint_name)
 df_test_small['fine_tuned_predictions'] = predictions
@@ -354,7 +350,7 @@ display(df_test_small[["sentence", "human_annotated_entities", "baseline_predict
 
 # Compute precision & recall with the new model
 def precision_recall_series(row):
-  precision, recall = compute_precision_recall(row['fine_tuned_predictions_cleaned'], row['entities'])
+  precision, recall = compute_precision_recall(row['fine_tuned_predictions_cleaned'], row['human_annotated_entities'])
   return pd.Series([precision, recall], index=['precision', 'recall'])
 
 df_test_small[['fine_tuned_precision', 'fine_tuned_recall']] = df_test_small.apply(precision_recall_series, axis=1)
@@ -393,6 +389,11 @@ df_test_small[['baseline_predictions_len', 'fine_tuned_predictions_len']].descri
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC
+# MAGIC License:
+# MAGIC This datasets leverage the following Drug Dataset:
+# MAGIC
+# MAGIC
 # MAGIC
 # MAGIC ```
 # MAGIC @inproceedings{Tiktinsky2022ADF,

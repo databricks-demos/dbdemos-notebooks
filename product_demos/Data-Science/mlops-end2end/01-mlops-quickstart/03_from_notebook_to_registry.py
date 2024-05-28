@@ -47,70 +47,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Technical setup - Hide this cell
-##### This cell registers a Champion model to the UC model registry.
-##### Run this cell and go on to the next cell for the demo.
-
-##### Since we will not have any registered model when the demo is
-##### run for the first time, we will register a Champion model first.
-##### This would have been the model that is already in use.
-##### We use the model from the training run `mlops_champion_run` that
-##### was logged in the previous notebook (02_automl_champion)
-
-def get_latest_model_version(model_name):
-  model_version_infos = MlflowClient().search_model_versions("name = '%s'" % model_name)
-  return max([int(model_version_info.version) for model_version_info in model_version_infos])
-
-print(f"Finding runs from {churn_experiment_name}_* for deployment to {model_name}")
-
-model_stage = "Champion"
-
-xp_path = "/Shared/dbdemos/experiments/mlops"
-filter_string=f"name LIKE '{xp_path}%'"
-experiment_id = mlflow.search_experiments(filter_string=filter_string, order_by=["last_update_time DESC"])[0].experiment_id
-print(experiment_id)
-
-champion_model = mlflow.search_runs(
-  experiment_ids=experiment_id,
-  order_by=["metrics.test_f1_score"],
-  max_results=1,
-  filter_string="status = 'FINISHED' and run_name='mlops_champion_run'" #filter on mlops_champion_run to always use the notebook 02 to have a more predictable demo
-)
-
-run_id = champion_model.iloc[0]['run_id']
-
-print(f"Registering model from {run_id} to {model_name}")  # {model_name} is defined in the setup script
-
-# Register the model from experiments run to MLflow model registry
-model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_name)
-
-# The main model description, typically done once.
-client.update_registered_model(
-  name=model_details.name,
-  description="This model predicts whether a customer will churn using the churn features feature table. It is used to power the Telco Churn Dashboard in DB SQL.",
-)
-
-model_version = get_latest_model_version(model_name)  # {model_name} is defined in the setup script
-
-# Gives more details on this specific model version
-best_score = champion_model['metrics.test_f1_score'].values[0]
-run_name = champion_model['tags.mlflow.runName'].values[0]
-version_desc = f"This model version has an accuracy/F1 validation metric of {round(best_score,2)*100}%"
-
-client.update_model_version(
-  name=model_details.name,
-  version=model_details.version,
-  description=version_desc
-)
-
-client.set_registered_model_alias(
-  name=model_name,
-  alias=model_stage,
-  version=model_version
-)
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Programmatically find best run and push model to the registry for validation
 # MAGIC
@@ -121,6 +57,8 @@ client.set_registered_model_alias(
 print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
 
 # COMMAND ----------
+
+import mlflow
 
 xp_path = "/Shared/dbdemos/experiments/mlops"
 filter_string=f"name LIKE '{xp_path}%'"
@@ -146,43 +84,40 @@ best_model
 
 # COMMAND ----------
 
-# MAGIC %md Once we have our best model, we can now deploy it in production using it's run ID
-
-# COMMAND ----------
-
-run_id = best_model.iloc[0]['run_id']
-
-client = MlflowClient()
-# Set tags to run in order to facilitate validation job
-client.set_tag(run_id, key='labels_table', value=f"{catalog}.{db}.mlops_churn_labels") # Note: we could also get this from lineage info
-client.set_tag(run_id, key='feature_table', value=f"{catalog}.{db}.mlops_churn_features") # Note: we could also get this from lineage info
-client.set_tag(run_id, key='demographic_vars', value="senior_citizen,gender")
+# MAGIC %md Once we have our best model, we can now register it to the Unity Catalog Model Registry using it's run ID
 
 # COMMAND ----------
 
 print(f"Registering model to {model_name}")  # {model_name} is defined in the setup script
 
+# Get the run id from the best model
+run_id = best_model.iloc[0]['run_id']
+
 # Register best model from experiments run to MLflow model registry
 model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_name)
-#model_version_details = client.get_model_version(name=model_name, version=model_details.version)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC At this point the model will have no aliases and meta-data/info.  Let's update the description before triggering a validation job to label/alias as `Challenger`
+# MAGIC At this point the model does no yet have any aliases that indicates its lifecycle and meta-data/info.  Let's update this information.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Set/Update Model Description
+# MAGIC ## Give the registered model a description
+# MAGIC
 # MAGIC We'll do this for the registered model overall.
 
 # COMMAND ----------
 
+from mlflow import MlflowClient
+
+client = MlflowClient()
+
 # The main model description, typically done once.
 client.update_registered_model(
   name=model_details.name,
-  description="This model predicts whether a customer will churn using the churn features feature table. It is used to power the Telco Churn Dashboard in DB SQL.",
+  description="This model predicts whether a customer will churn using the features in the mlops_churn_training table. It is used to power the Telco Churn Dashboard in DB SQL.",
 )
 
 # COMMAND ----------
@@ -192,10 +127,10 @@ client.update_registered_model(
 
 # COMMAND ----------
 
-# Gives more details on this specific model version
+# Provide more details on this specific model version
 best_score = best_model['metrics.test_f1_score'].values[0]
 run_name = best_model['tags.mlflow.runName'].values[0]
-version_desc = f"This model version has an accuracy/F1 validation metric of {round(best_score,2)*100}%"
+version_desc = f"This model version has an accuracy/F1 validation metric of {round(best_score,2)*100}%. Follow the link to its training run for more details."
 
 client.update_model_version(
   name=model_details.name,
@@ -206,12 +141,36 @@ client.update_model_version(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Next: MLOps testing and validation of the candidate Challenger model
+# MAGIC ## Set the latest model version as the Challenger model
 # MAGIC
-# MAGIC At this point, with the candidate Challenger model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC We will set this newly registered model version as the `Challenger` model. Challenger models are candidate models to replace the Champion model, which is the model currently in use.
 # MAGIC
-# MAGIC If the model passes all the tests, it'll be accepted and moved into Challenger. Otherwise it'll be rejected.
+# MAGIC We will use the model's alias to indicate the stage it is at in its lifecycle.
+
+# COMMAND ----------
+
+# Set this version as the Challenger model, using its model alias
+client.set_registered_model_alias(
+  name=model_name,
+  alias="Challenger",
+  version=model_details.version
+)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC Now, visually inspect the model verions in Unity Catalog Explorer. You should see the version description and `Challenger` alias applied to the version.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next: MLOps testing and validation of the Challenger model
+# MAGIC
+# MAGIC At this point, with the Challenger model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC
+# MAGIC If the model passes all the tests, it'll be promoted to `Champion`. Otherwise it'll be rejected.
 # MAGIC
 # MAGIC Next:
-# MAGIC  * Find out how the model is being tested befored being promoted as `Challenger` [using the model validation test notebook]($./04_job_challenger_validation)
-# MAGIC  * Or discover how to [run Batch inference from our Challenger model]($./05_batch_inference)
+# MAGIC  * Find out how the model is being tested befored being promoted as `Champion` [using the model validation test notebook]($./04_job_challenger_validation)
+# MAGIC  * Or discover how to [run Batch inference from our Champion model]($./05_batch_inference)

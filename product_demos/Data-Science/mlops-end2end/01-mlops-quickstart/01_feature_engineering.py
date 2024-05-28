@@ -98,26 +98,32 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 
   data_psdf["num_optional_services"] = sum_optional_services(data_psdf)
 
+  # Move the label column "churn" to the end of the column list
+  col_names = data_psdf.columns.to_list()
+  col_names.remove("churn")
+  col_names.append("churn")
+
   # Add/Force semantic data types for specific colums (to facilitate autoML)
   data_cleanDF = data_psdf.to_spark()
   data_cleanDF = data_cleanDF.withMetadata(primary_key, {"spark.contentAnnotation.semanticType":"native"})
   data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
-  return data_cleanDF
+  # Return the cleaned Spark dataframe, with columns in the right order
+  return data_cleanDF.select(col_names)
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Compute & Write feature tables
+# MAGIC ## Compute features & write table with features and labels
 # MAGIC
-# MAGIC Once our features are ready, we'll save them as a Delta Lake table. This can then be retrieved later for model training.
+# MAGIC Once our features are ready, we'll save them along with the labels as a Delta Lake table. This can then be retrieved later for model training.
 # MAGIC
-# MAGIC Databricks has a Feature Store capability that is tightly integrated into the platform. Any Delta Lake table with a primary key can be used as a Feature Store table for model training, as well as batch and online serving.
+# MAGIC In this Quickstart demo, we will save the features and labels as a Delta Lake table. We will then look at how we train a model using this labeled dataset and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
 # MAGIC
-# MAGIC We will look at an example of how to use the Feature Store to perform feature lookups in a more advanced demo.
+# MAGIC Databricks has a Feature Store capability that is tightly integrated into the platform. Any Delta Lake table with a primary key can be used as a Feature Store table for model training, as well as batch and online serving. We will look at an example of how to use the Feature Store to perform feature lookups in a more advanced demo.
 # MAGIC
-# MAGIC In this Quickstart demo, we will save the feature table as a Delta Lake table with a primary key. We will then look at how we train a model using the feature table and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
+# MAGIC
 
 # COMMAND ----------
 
@@ -128,47 +134,21 @@ display(churn_features)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
+# MAGIC ### Write table for training
+# MAGIC
+# MAGIC Write the labeled data that has the prepared features and labels as a Delta Table. We will later use this table to train the model to predict churn.
 
 # COMMAND ----------
 
-# DBTITLE 1,Extract ground-truth labels in a separate table and drop from Feature table
-# Extract labels in separate table before pushing to Feature Store to avoid label leakage
-(churn_features.select("customer_id", "churn")
-                .write.mode("overwrite").option("overwriteSchema", "true")
-                .saveAsTable("mlops_churn_labels"))
-
-churn_features = churn_features.drop("churn")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Write feature table
-
-# COMMAND ----------
-
-# Write feature table
+# Write table for training
 (churn_features.write.mode("overwrite")
                .option("overwriteSchema", "true")
-               .saveAsTable(f"{catalog}.{db}.mlops_churn_features"))
-
-# Set primary key
-# Any Delta table with a primary key can be used as a Feature Store table
-spark.sql(
-    f"""
-  ALTER TABLE {catalog}.{db}.mlops_churn_features ALTER COLUMN customer_id SET NOT NULL;
-  """
-)
-spark.sql(
-    f"""
-  ALTER TABLE {catalog}.{db}.mlops_churn_features ADD CONSTRAINT customer_id_pk PRIMARY KEY(customer_id);
-  """
-)
+               .saveAsTable(f"{catalog}.{db}.mlops_churn_training"))
 
 # Add comment to the table
 spark.sql(
     f"""
-  COMMENT ON TABLE {catalog}.{db}.mlops_churn_features IS \'These features are derived from the {catalog}.{db}.mlops_churn_bronze_customers table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table does not store the ground-truth and now can be used with the Feature Store integration in AutoML\'
+  COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The features in this table are derived from the {catalog}.{db}.mlops_churn_bronze_customers table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed.'
   """
 )
 
@@ -176,7 +156,7 @@ spark.sql(
 
 # MAGIC %md
 # MAGIC
-# MAGIC That's it! The feature table is now ready to be used.
+# MAGIC That's it! The labeled features are now ready to be used for training.
 
 # COMMAND ----------
 
@@ -222,12 +202,6 @@ spark.sql(
 
 # COMMAND ----------
 
-# Create the training dataset and write it as a Delta Table
-training_dataset = spark.read.table(f'{catalog}.{db}.mlops_churn_features').join(spark.table('mlops_churn_labels'), ["customer_id"])
-training_dataset.write.saveAsTable(f"{catalog}.{db}.mlops_churn_training")
-
-# COMMAND ----------
-
 # DBTITLE 1,Run 'baseline' autoML experiment in the back-ground
 from databricks import automl
 from datetime import datetime
@@ -238,7 +212,7 @@ xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
-    dataset = training_dataset,
+    dataset = churn_features,
     target_col = "churn",
     timeout_minutes = 5
 )

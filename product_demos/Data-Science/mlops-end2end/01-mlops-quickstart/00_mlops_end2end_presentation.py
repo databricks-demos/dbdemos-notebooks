@@ -78,7 +78,7 @@ display(telcoDF)
 
 # MAGIC %md
 # MAGIC ## Feature Engineering
-# MAGIC Our first job is to analyze the data, and prepare a set of features we'll be able to re-use in multiple projects.
+# MAGIC Our first job is to analyze the data, and prepare a set of features.
 # MAGIC
 # MAGIC
 # MAGIC Next: [Analyze the data and prepare features]($./01_feature_engineering)

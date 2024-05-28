@@ -433,33 +433,6 @@ model
 
 # COMMAND ----------
 
-# For demo purpose, we log a second run with a different set of hyperparameter
-# This run has a slightly worse f1 score. We will use it as the Champion model later on in the demo.
-space = {
-  "run_name": "mlops_champion_run",
-  "colsample_bytree": 0.5, 
-  "lambda_l1": 1,
-  "lambda_l2": 10,
-  "learning_rate": 0.075,
-  "max_bin": 100,
-  "max_depth": 8,
-  "min_child_samples": 50,
-  "n_estimators": 250,
-  "num_leaves": 100,
-  "path_smooth": 60,
-  "subsample": 0.6,
-  "random_state": 42,
-}
-
-trials = Trials()
-fmin(objective,
-     space=space,
-     algo=tpe.suggest,
-     max_evals=1,  # Increase this when widening the hyperparameter search space.
-     trials=trials)
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Feature importance
 # MAGIC

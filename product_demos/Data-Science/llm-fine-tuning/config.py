@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC If you wish to install the demo using another schema and database, it's best to do it with dbdemos:
 # MAGIC
-# MAGIC `dbdemos.instal('xxx', catalog='xx', schema='xx')`
+# MAGIC `dbdemos.install('xxx', catalog='xx', schema='xx')`
 
 # COMMAND ----------
 

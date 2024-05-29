@@ -3,23 +3,23 @@
 # MAGIC # Fine-tuning your LLM on Databricks
 # MAGIC
 # MAGIC Fine Tuning LLMs is the action of specializing an existing model to your own requirements.
-# MAGIC Technically speaking, you start from the weights of an existing foundation model (such as DBRX or LLAMA), and add another training round on existing dataset.
+# MAGIC Technically speaking, you start from the weights of an existing foundation model (such as DBRX or LLAMA), and add another training round based on your own dataset.
 # MAGIC
 # MAGIC
 # MAGIC ## Why Fine Tuning?
-# MAGIC Databricks provides an easy way to specialize existing foundation model, making sure you own and control your model with better performance, cost, security and privacy.
+# MAGIC Databricks provides an easy way to specialize existing foundation models, making sure you own and control your model while also getting better performance, lower cost, and tighter security and privacy.
 # MAGIC
 # MAGIC The typical fine-tuning use cases are:
-# MAGIC * Train the model on very specific, internal knowledge
-# MAGIC * Custom model behavior, like specialized entity extraction
-# MAGIC * Reduce model size (and inference cost) while improving answer quality
+# MAGIC * Train a model on specific, internal knowledge
+# MAGIC * Customize model behavior, ex: specialized entity extraction
+# MAGIC * Reduce model size and inference cost, while improving answer quality
 # MAGIC
-# MAGIC ## Continued training vs instruction Fine Tuning?
+# MAGIC ## Continued Pre-Training vs Instruction Fine Tuning?
 # MAGIC
-# MAGIC Databricks Fine Tuning API let you train your model, typically for:
+# MAGIC Databricks Fine Tuning API enables you to adapt your model in several different ways:
 # MAGIC * **Supervised fine-tuning**: Train your model on structured prompt-response data. Use this to adapt your model to a new task, change its response style, or add instruction-following capabilities, such as NER (see [instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning]($./instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning)).
-# MAGIC * **Continued pre-training**: Train your model with additional text data. Use this to add new knowledge to a model or focus a model on a specific domain. Requires several millions of token to be relevant.
-# MAGIC * **Chat completion**: Train your model on chat logs between a user and an AI assistant. This format can be used both for actual chat logs, and as a standard format for question answering and conversational text. The text is automatically formatted into the appropriate chat format for the specific model (what this demo will focus on).
+# MAGIC * **Continued pre-training**: Train your model with additional unlabeled text data. Use this to add new knowledge to a model or focus a model on a specific domain. Requires several millions of token to be relevant.
+# MAGIC * **Chat completion**: Train your model on chat logs between a user and an AI assistant. This format can be used both for actual chat logs, and as a standard format for question answering and conversational text. The text is automatically formatted into the appropriate chat format for the specific model, and is what this demo will focus on.
 # MAGIC
 # MAGIC ## Fine Tuning or RAG?
 # MAGIC RAG and Instruction fine-tuning work together! If you have a relevant RAG use-case, you can start with RAG leveraging a foundational model, and then specialize your model if your corpus is specific to your business (ex: not part of the foundation model training) or need specific behavior (ex: answer to a specific task such as entity extraction)
@@ -30,13 +30,13 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Fine tuning for a Databricks Chatbot Documentation 
+# MAGIC ## Fine Tuning a Chatbot on Databricks Documentation 
 # MAGIC
-# MAGIC In this demo, we'll fine tune Mistral (or llama) on Databricks Documentation for a RAG chatbot helping a customer to answer Databricks-related questions. 
+# MAGIC In this demo, we will fine tune Mistral (or llama) on Databricks Documentation for a RAG chatbot to help a customer answer Databricks-related questions. 
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-0.png?raw=true" width="1200px">
 # MAGIC
-# MAGIC Databricks provides simple, built-in API to fine tune the model and evaluate its performance. Let's get started!
+# MAGIC Databricks provides a simple, built-in API to fine tune the model and evaluate its performance. Let's get started!
 # MAGIC
 # MAGIC Documentation for Fine Tuning on Databricks:
 # MAGIC - Overview page: [Databricks Fine-tuning APIs](https://pr-14641-aws.dev-docs.dev.databricks.com/large-language-models/fine-tuning-api/index.html)
@@ -58,16 +58,16 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Fine tuning dataset
+# MAGIC ## Fine Tuning Dataset
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-1.png?raw=true" width="700px" style="float: right">
 # MAGIC
-# MAGIC Building a high quality fine tuning dataset is key for final your model performance. 
+# MAGIC Building a high quality fine tuning dataset is key for improving your model's performance. 
 # MAGIC
-# MAGIC The training dataset needs to match what you will be sending to your final model. <br/>
-# MAGIC If you have a RAG application, you need to fine tune with the full RAG instruction so that your model can learn how to extract the proper information from the context and answer the way you want.
+# MAGIC The training dataset needs to match the data you will be sending to your final model. <br/>
+# MAGIC If you have a RAG application, you need to fine tune with the full RAG instruction pipeline so that your model can learn how to extract the proper information from the context and answer the way you want.
 # MAGIC
-# MAGIC The demo loaded a fine tuning dataset for you containing the following:
+# MAGIC For this demo, we have loaded a fine tuning dataset for you containing the following:
 # MAGIC
 # MAGIC * A Databricks user question (ex: how do I start a Warehouse?)
 # MAGIC * A page or chunk from Databricks documentation relevant to this question
@@ -85,13 +85,14 @@ display(training_dataset)
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Preparing the dataset for Chat Completion
+# MAGIC ## Preparing the Dataset for Chat Completion
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-2.png?raw=true" width="700px" style="float: right">
 # MAGIC
-# MAGIC Because we're fine tuning on a chatbot, we need to prepare our dataset for **Chat completion**.
+# MAGIC Because we're fine tuning a chatbot, we need to prepare our dataset for **Chat completion**.
 # MAGIC
-# MAGIC Chat completion requires a list of role prompt, following the openai standard. It has the benefit of transforming it to a prompt following your llm instruction pattern (each foundation model might be trained with different instruction type, and it's best to use the same for fine tuning).<br/>
+# MAGIC Chat completion requires a list of **role** and **prompt**, following the OpenAI standard. This standard has the benefit of transforming our input into a prompt following our LLM instruction pattern. <br/>
+# MAGIC Note that each foundation model might be trained with a different instruction type, so it's best to use the same type when fine tuning.<br/>
 # MAGIC *We recommend using Chat Completion whenever possible.*
 # MAGIC
 # MAGIC ```
@@ -104,10 +105,12 @@ display(training_dataset)
 # MAGIC
 # MAGIC *Remember that your Fine Tuning dataset should be the same format as the one you're using for your RAG application.<br/>*
 # MAGIC
-# MAGIC Databricks supports all kind of dataset format (Volume files, Delta tables, and public Hugging Face datasets), but we recommend preparing the dataset as Delta tables within your catalog within a proper data pipeline.
+# MAGIC #### Training Data Type
+# MAGIC
+# MAGIC Databricks supports a large variety of dataset formats (Volume files, Delta tables, and public Hugging Face datasets in .jsonl format), but we recommend preparing the dataset as Delta tables within your Catalog as part of a proper data pipeline to ensure production quality.
 # MAGIC *Remember, this step is critical and you need to make sure your training dataset is of high quality.*
 # MAGIC
-# MAGIC Let's create a small pandas UDF and create our final chat completion dataset.<br/>
+# MAGIC Let's create a small pandas UDF to help create our final chat completion dataset.<br/>
 
 # COMMAND ----------
 
@@ -135,20 +138,21 @@ def create_conversation(content: pd.Series, question: pd.Series, answer: pd.Seri
                 {"role": "assistant", "content": a}]
     return pd.Series([build_message(c,q,a) for c, q, a in zip(content, question, answer)])
 
-training_dataset.select(create_conversation("content", "question", "answer").alias('messages')).write.mode('overwrite').saveAsTable("chat_completion_training_dataset")
+
+training_data, eval_data = training_dataset.randomSplit([0.8, 0.2], seed=42)
+
+training_data.select(create_conversation("content", "question", "answer").alias('messages')).write.mode('overwrite').saveAsTable("chat_completion_training_dataset")
+eval_data.write.mode('overwrite').saveAsTable("chat_completion_evaluation_dataset")
+
 display(spark.table('chat_completion_training_dataset'))
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Starting a finetuning run
+# MAGIC ## Starting a Fine Tuning Run
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-3.png?raw=true" width="700px" style="float: right">
-# MAGIC
-# MAGIC #### Training data type
-# MAGIC
-# MAGIC Databricks supports all kind of dataset (Volume files, Delta tables, and public Hugging Face datasets). We recommend preparing the dataset as Delta tables within your catalog within a proper data pipeline. Remember, this step is critical and you need to make sure your training dataset is of high quality.
 # MAGIC
 # MAGIC Once the training is done, your model will automatically be saved within Unity Catalog and available for you to serve!
 
@@ -156,11 +160,11 @@ display(spark.table('chat_completion_training_dataset'))
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC #### 1.1) Instruction finetune our baseline model.
+# MAGIC #### 1.1) Instruction Fine Tune our Baseline Model
 # MAGIC
 # MAGIC <img src="https://docs.databricks.com/en/_images/finetuning-expt.png" style="float: right" width="500px">
 # MAGIC
-# MAGIC In this demo, we'll be using the API on the table we just created to programatically finetune our LLM.
+# MAGIC In this demo, we'll be using the API on the table we just created to programatically fine tune our LLM.
 # MAGIC
 # MAGIC However, you can also create a new Fine Tuning experiment from the UI!
 
@@ -192,8 +196,12 @@ print(run)
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Tracking model fine tuning through your MLFlow experiment
-# MAGIC Your can open the MLFlow Experiment run to track your fine tuning experiment. This is useful for you to know how to tune the training run (ex: add more epoch if you see your model still improves at the end of your run).
+# MAGIC #### 1.2) Tracking Fine Tuning Runs via the MLFlow Experiment
+# MAGIC
+# MAGIC To monitor the progress of an ongoing or past fine tuning run, you can open the run from the MLFlow Experiment. Here you will find valuable information on how you may wish to tweak future runs to get better results. For example:
+# MAGIC * Adding more epochs if you see your model still improving at the end of your run
+# MAGIC * Increasing learning rate if loss is decreasing, but very slowly
+# MAGIC * Decreasing learning rate if loss is fluctuating widely
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-experiment.png?raw=true" width="1200px">
 
@@ -209,14 +217,13 @@ wait_for_run_to_finish(run)
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC #### 1.3) Deploy Fine-Tuned model to serving endpoint
+# MAGIC #### 1.3) Deploy Fine Tuned Model to a Serving Endpoint
 # MAGIC
 # MAGIC <img src="https://docs.databricks.com/en/_images/create-provisioned-throughput-ui.png" width="600px" style="float: right">
 # MAGIC
 # MAGIC Once ready, the model will be available in Unity Catalog.
 # MAGIC
-# MAGIC You can use the UI to deploy your model. We'll do it using the API directyl:
-# MAGIC
+# MAGIC From here, you can use the UI to deploy your model, or you can use the API. For reproducibility, we'll be using the API below:
 # MAGIC
 
 # COMMAND ----------
@@ -256,13 +263,13 @@ else:
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC #### 1.4) Trying our model endpoint
+# MAGIC #### 1.4) Testing the Model Endpoint
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-4.png?raw=true" width="600px" style="float: right">
 # MAGIC
-# MAGIC That's it, we're ready to serve our Fine Tune model and start asking questions!
+# MAGIC That's it! We're now ready to serve our Fine Tuned model and start asking questions!
 # MAGIC
-# MAGIC The reponses will be improved and specialized with Databricks documentation and our RAG expected output!
+# MAGIC The reponses will now be improved and specialized from the Databricks documentation and our RAG chatbot formatted output!
 
 # COMMAND ----------
 
@@ -280,10 +287,14 @@ client.predict(endpoint=serving_endpoint_name, inputs={"messages": messages, "ma
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Next step: evaluating our fine tuned model
+# MAGIC ## Next Step: Evaluating our Fine Tuned Model
 # MAGIC
-# MAGIC This is looking good! Fine tuning our model was just a simple API call. But how can we measure the improvement compared to the plain model?
+# MAGIC This is looking good! Fine tuning our model was just a simple API call. But how can we measure the improvement compared to the baseline model?
 # MAGIC
-# MAGIC Databricks makes it easy! Let's leverage MLFlow Evaluate capabilities to compare the fine tune model against the baseline Foundation Model.
+# MAGIC Databricks makes this easy too! In the next section, we'll leverage MLFlow Evaluate capabilities to compare the fine tune model against the baseline Foundation Model to see how successful our tuning run was.
 # MAGIC
 # MAGIC Open the [02-llm-evaluation]($./02-llm-evaluation) notebook to benchmark our new custom LLM!
+
+# COMMAND ----------
+
+

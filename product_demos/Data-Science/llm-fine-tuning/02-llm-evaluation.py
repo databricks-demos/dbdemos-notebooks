@@ -101,17 +101,12 @@ display_answer(fine_tuned_answer)
 # MAGIC We'll be using [mlflow.evaluate](https://mlflow.org/docs/latest/llms/llm-evaluate/notebooks/huggingface-evaluation.html?highlight=mlflow%20evaluate%20llm) to see how our model is performing, using what an external LLM as a judge.
 # MAGIC
 # MAGIC The idea is to send our questions + context to the LLM, and then compare its answer with the expected one leveraging an external model (usually stronger). In our case, we'll ask the built-in, serverless DBRX model endpoint to judge the Mistral LLMs answer compared to the ground truth.
-# MAGIC
 
 # COMMAND ----------
 
 # DBTITLE 1,Build an eval dataset
-eval_dataset = spark.sql("""
-  SELECT q.id as question_id, q.question, a.answer, d.url, d.content as context FROM training_dataset_question q
-      INNER JOIN databricks_documentation d on q.doc_id = d.id
-      INNER JOIN training_dataset_answer   a on a.question_id = q.id 
-    WHERE answer IS NOT NULL""").limit(1).toPandas()
-eval_dataset
+eval_dataset = spark.table("chat_completion_evaluation_dataset").withColumnRenamed("content", "context").toPandas()
+display(eval_dataset)
 
 # COMMAND ----------
 
@@ -133,12 +128,11 @@ user_input = "Here is a documentation page that could be relevant: {context}. Ba
 def build_chain(llm):
     #mistral doesn't support the system role
     if "mistral" in base_model_name:
-        messages = [("user", f"{system_prompt} \n{input_sentence}")]
+        messages = [("user", f"{system_prompt} \n{user_input}")]
     else:
         messages = [("system", system_prompt),
-                    ("user", input_sentence)])
+                    ("user", user_input)]
     return ChatPromptTemplate.from_messages(messages) | llm | StrOutputParser()
-
 # --------------------------------------------------------------------------------------------------- #
 
 def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-dbrx-instruct", run_name="dbdemos_fine_tuning_rag"):
@@ -164,7 +158,6 @@ def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-dbrx-instru
         )
         return results
     
-
 #Evaluate the base foundation model
 baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-dbrx-instruct", run_name="dbdemos_fine_tuning_rag")
 #Evaluate the fine tuned model

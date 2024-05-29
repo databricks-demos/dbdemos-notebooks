@@ -60,6 +60,7 @@ import re
 import pandas as pd
 
 # Disable a few less-than-useful UserWarnings from setuptools and pydantic
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 

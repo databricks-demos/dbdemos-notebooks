@@ -139,7 +139,7 @@ def create_conversation(content: pd.Series, question: pd.Series, answer: pd.Seri
     return pd.Series([build_message(c,q,a) for c, q, a in zip(content, question, answer)])
 
 
-training_data, eval_data = training_dataset.randomSplit([0.8, 0.2], seed=42)
+training_data, eval_data = training_dataset.randomSplit([0.9, 0.1], seed=42)
 
 training_data.select(create_conversation("content", "question", "answer").alias('messages')).write.mode('overwrite').saveAsTable("chat_completion_training_dataset")
 eval_data.write.mode('overwrite').saveAsTable("chat_completion_evaluation_dataset")

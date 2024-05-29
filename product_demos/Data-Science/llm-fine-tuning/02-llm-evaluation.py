@@ -189,7 +189,7 @@ fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge 
 
 # COMMAND ----------
 
-fine_tuned_results
+fine_tuned_results.metrics
 
 # COMMAND ----------
 

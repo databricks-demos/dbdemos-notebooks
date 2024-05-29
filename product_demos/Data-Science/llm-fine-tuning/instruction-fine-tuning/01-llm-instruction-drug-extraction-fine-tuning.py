@@ -140,7 +140,6 @@ display(df_test_small[["sentence", "baseline_predictions_cleaned", "human_annota
 from sklearn.metrics import precision_score, recall_score
 
 def compute_precision_recall(prediction, ground_truth):
-   
     prediction_set = set([str(drug).lower() for drug in prediction])
     ground_truth_set = set([str(drug).lower() for drug in ground_truth])
     all_elements = prediction_set.union(ground_truth_set)
@@ -297,7 +296,6 @@ wait_for_run_to_finish(run)
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-# Change back to dbdemos_llm_drug_extraction_fine_tuned after testing
 serving_endpoint_name = "dbdemos_llm_drug_extraction_fine_tuned"
 w = WorkspaceClient()
 endpoint_config = EndpointCoreConfigInput(
@@ -311,8 +309,7 @@ endpoint_config = EndpointCoreConfigInput(
             scale_to_zero_enabled=True
         )
     ],
-    # Change table name to fine_tuned_drug_extraction_llm_inference after testing 
-    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fine_tuned_drug_extraction_llm_inference_debu")
+    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fine_tuned_drug_extraction_llm_inference")
 )
 
 force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
@@ -373,7 +370,7 @@ df_test_small[['baseline_predictions_len', 'fine_tuned_predictions_len']].descri
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC We also cut the output down from an average of 45 to 21 tokens per sample - over 50% fewer output tokens (hence price) and better accuracy!
+# MAGIC We also slightlyt cut the output down, removing extra text (hence price) on top of improving accuracy!
 
 # COMMAND ----------
 

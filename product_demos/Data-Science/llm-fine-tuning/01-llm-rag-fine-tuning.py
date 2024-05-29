@@ -274,7 +274,7 @@ test_dataset = spark.table('chat_completion_training_dataset').selectExpr("slice
 messages = test_dataset.toPandas().iloc[0].to_dict()['messages'].tolist()
 
 client = mlflow.deployments.get_deploy_client("databricks")
-client.predict(endpoint="dbdemos_fine_tuned", inputs={"messages": messages, "max_tokens": 100})
+client.predict(endpoint=serving_endpoint_name, inputs={"messages": messages, "max_tokens": 100})
 
 # COMMAND ----------
 

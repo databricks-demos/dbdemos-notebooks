@@ -113,6 +113,7 @@ from sklearn.model_selection import train_test_split
 df_validation, df_test_small = train_test_split(df_test, test_size=0.2, random_state=42)
 
 # This endpoint is created in the ../02-llm-evaluation notebook. It's the baseline mistral 7b model, not fine tuned.
+# Make sure you run the notebook before to deploy the baseline model first.
 serving_endpoint_baseline_name = "dbdemos_llm_not_fine_tuned"
 
 predictions, cleaned_predictions = extract_entities(df_test_small, serving_endpoint_baseline_name)
@@ -370,7 +371,7 @@ df_test_small[['baseline_predictions_len', 'fine_tuned_predictions_len']].descri
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC We also slightlyt cut the output down, removing extra text (hence price) on top of improving accuracy!
+# MAGIC We also slightly cut the output down, removing extra text (hence price) on top of improving accuracy!
 
 # COMMAND ----------
 

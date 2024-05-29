@@ -89,7 +89,7 @@ display_answer(not_fine_tuned_answer)
 
 # COMMAND ----------
 
-serving_endpoint_ft_name = "dbdemos_fine_tuned"
+serving_endpoint_ft_name = "dbdemos_llm_fine_tuned"
 fine_tuned_answer = client.predict(endpoint=serving_endpoint_ft_name, inputs={"messages": [{"role": "user", "content": question}]})
 display_answer(fine_tuned_answer)
 

@@ -11,8 +11,8 @@
   "custom_schema_supported": True,
   "default_schema": "dbdemos_llm_fine_tuning",
   "default_catalog": "main",
-  "title": "Fine Tune and evaluate your LLM with Databricks API",
-  "description": "Databricks makes it easy to Fine Tune existing OSS model. In this demo, we explore how to build and release your own fine-tuned model as real-time endpoint, but also how to evaluate them with MLFlow.",
+  "title": "Fine Tune and evaluate your LLMs with Databricks API",
+  "description": "In this demo, we explore how to build and release your own fine-tuned model as real-time endpoint, but also how to evaluate them with MLFlow.",
   "fullDescription": "Databricks makes it easy to Fine Tune existing OSS model. In this demo, we explore how to build and release your own fine-tuned model as real-time endpoint, but also how to evaluate them with MLFlow.",
   "usecase": "Data Science & AI",
   "products": ["LLM", "Vector Search", "AI"],
@@ -25,7 +25,7 @@
   "tags": [{"ds": "Data Science"}],
   "notebooks": [
     {
-      "path": "_resources/00-init",
+      "path": "_resources/00-setup",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,

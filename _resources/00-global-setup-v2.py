@@ -16,7 +16,7 @@ dbutils.widgets.text("min_dbr_version", "12.2", "Min required DBR version")
 import requests
 import collections
 import os
-
+import re
 
 class DBDemos():
   @staticmethod

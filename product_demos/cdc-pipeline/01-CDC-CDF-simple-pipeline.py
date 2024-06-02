@@ -60,8 +60,14 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
+from pyspark.sql.functions import input_file_name, col
+from pyspark.sql import DataFrame
+import time
+
+# COMMAND ----------
+
 # DBTITLE 1,Let's explore our incoming data. We receive CSV files with client information
-cdc_raw_data = spark.read.option('header', "true").csv(raw_data_location+'/user_csv')
+cdc_raw_data = spark.read.option('header', "true").csv(volume_folder+'/user_csv')
 display(cdc_raw_data)
 
 # COMMAND ----------
@@ -73,20 +79,18 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 
 # DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
 bronzeDF = (spark.readStream
-                .format("cloudFiles")
-                .option("cloudFiles.format", "csv")
-                #.option("cloudFiles.maxFilesPerTrigger", "1") #Simulate streaming, remove in production
-                .option("cloudFiles.inferColumnTypes", "true")
-                .option("cloudFiles.schemaLocation",  cloud_storage_path+"/schema_cdc_raw")
-                .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
-                .load(raw_data_location+'/user_csv'))
+        .format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("cloudFiles.inferColumnTypes", "true")
+        .option("cloudFiles.schemaLocation",  volume_folder+"/schema_cdc_raw")
+        .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
+        .load(volume_folder+'/user_csv'))
 
-(bronzeDF.withColumn("file_name", input_file_name()).writeStream
-        .option("checkpointLocation", cloud_storage_path+"/checkpoint_cdc_raw")
-        .trigger(processingTime='10 seconds')
-        .table("clients_cdc"))
-
-time.sleep(20)
+(bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
+        .option("checkpointLocation", volume_folder+"/checkpoint_cdc_raw")
+        .trigger(availableNow=True)
+        .table(f"`{catalog}`.`{db}`.clients_cdc")
+        .awaitTermination())
 
 # COMMAND ----------
 
@@ -109,21 +113,46 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,We can now create our client table using standard SQL command
+# DBTITLE 1,We can now create our client table using a standard SQL command
 # MAGIC %sql 
 # MAGIC -- we can add NOT NULL in our ID field (or even more advanced constraint)
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (id BIGINT NOT NULL, name STRING, address STRING, email STRING, operation STRING) 
-# MAGIC   TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (
+# MAGIC   id BIGINT NOT NULL,    
+# MAGIC   name STRING,
+# MAGIC   address STRING,
+# MAGIC   email STRING,
+# MAGIC   operation STRING,
+# MAGIC   CONSTRAINT id_pk PRIMARY KEY(id))
+# MAGIC TBLPROPERTIES (
+# MAGIC   delta.enableChangeDataFeed = true, 
+# MAGIC   delta.autoOptimize.optimizeWrite = true, 
+# MAGIC   delta.autoOptimize.autoCompact = true
+# MAGIC );
 
 # COMMAND ----------
 
 # DBTITLE 1,And run our MERGE statement the upsert the CDC information in our final table
-#for each batch / incremental update from the raw cdc table, we'll run a MERGE on the silver table
-def merge_stream(df, i):
+def merge_stream(df: DataFrame, i):
+  """
+    Processes a microbatch of CDC (Change Data Capture) data to merge it into the 'retail_client_silver' table. 
+    This method performs deduplication and upserts or deletes records based on the operation specified in each row.
+
+    Args:
+    df (DataFrame): The DataFrame representing the microbatch of CDC data.
+    i (int): The batch ID, not directly used in this process.
+    
+    The method performs these steps:
+    1. Temporarily registers the DataFrame as 'clients_cdc_microbatch' to allow SQL operations.
+    2. Deduplicates the incoming data by 'id', keeping the latest operation for each 'id'.
+    3. Executes a MERGE SQL operation on 'retail_client_silver':
+       - Deletes records if the latest operation for an 'id' is 'DELETE'.
+       - Updates records for an 'id' if the latest operation is not 'DELETE'.
+       - Inserts new records if an 'id' does not exist in 'retail_client_silver' and the operation is not 'DELETE'.
+  """
+  
   df.createOrReplaceTempView("clients_cdc_microbatch")
-  #First we need to dedup the incoming data based on ID (we can have multiple update of the same row in our incoming data)
-  #Then we run the merge (upsert or delete). We could do it with a window and filter on rank() == 1 too
-  df._jdf.sparkSession().sql("""MERGE INTO retail_client_silver target
+
+  df.sparkSession.sql("""MERGE INTO retail_client_silver target
                                 USING
                                 (select id, name, address, email, operation from 
                                   (SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY operation_date DESC) as rank from clients_cdc_microbatch) 
@@ -134,15 +163,20 @@ def merge_stream(df, i):
                                 WHEN MATCHED AND source.operation != 'DELETE' THEN UPDATE SET *
                                 WHEN NOT MATCHED AND source.operation != 'DELETE' THEN INSERT *""")
   
-spark.readStream \
-       .table("clients_cdc") \
-     .writeStream \
-       .foreachBatch(merge_stream) \
-       .option("checkpointLocation", cloud_storage_path+"/checkpoint_clients_cdc") \
-       .trigger(processingTime='10 seconds') \
-     .start()
+def trigger_silver_stream():
+  """
+    Initiates a structured streaming process that reads change data capture (CDC) records from a specified table and processes them in batches using a custom merge function. The process is designed to handle streaming updates efficiently, applying changes to a 'silver' table based on the incoming stream.
+  """
+  (spark.readStream
+        .table(f"`{catalog}`.`{db}`.clients_cdc")
+      .writeStream
+        .foreachBatch(merge_stream)
+        .option("checkpointLocation", volume_folder+"/checkpoint_clients_cdc")
+        .trigger(availableNow=True)
+      .start()
+      .awaitTermination())
 
-time.sleep(20)
+trigger_silver_stream()
 
 # COMMAND ----------
 
@@ -153,25 +187,25 @@ time.sleep(20)
 
 # MAGIC %md
 # MAGIC ### Testing the first CDC layer
-# MAGIC Let's send a new CDC entry to simulate an update and a DELETE for the ID 1 and 2
+# MAGIC Let's send a new CDC entry to simulate an update and a DELETE for the ID 1000 and 2000
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's UPDATE id=1 and DELETE the row with id=2
+# DBTITLE 1,Let's UPDATE id=1000 and DELETE the row with id=2000
 # MAGIC %sql 
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
-# MAGIC             (1000, "Quentin", "Paris 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
-# MAGIC             (2000, null, null, null, now(), "DELETE", null, null);
+# MAGIC     (1000, "Quentin", "123 Paper Street, UT 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
+# MAGIC     (2000, null, null, null, now(), "DELETE", null, null);
+# MAGIC     
 # MAGIC select * from clients_cdc where id in (1000, 2000);
 
 # COMMAND ----------
 
-#wait for the stream to get the new data
-time.sleep(20)
+# explicitly trigger the stream in our example; It's equally easy to just have the stream run 24/7
+trigger_silver_stream()
 
 # COMMAND ----------
 
-# DBTITLE 1,Wait a few seconds for the stream to catch the new entry in the CDC table and check the results in the main table
 # MAGIC %sql 
 # MAGIC select * from retail_client_silver where id in (1000, 2000);
 # MAGIC -- Note that ID 1000 has been updated, and ID 2000 is deleted
@@ -203,7 +237,7 @@ time.sleep(20)
 # MAGIC ALTER TABLE retail_client_silver SET TBLPROPERTIES (delta.enableChangeDataFeed = true);
 # MAGIC
 # MAGIC -- Delta Lake CDF works using table_changes function:
-# MAGIC SELECT * FROM table_changes('retail_client_silver', 1)  order by id
+# MAGIC SELECT * FROM table_changes('retail_client_silver', 1) order by id
 
 # COMMAND ----------
 
@@ -231,7 +265,7 @@ print(f"our Delta table last version is {last_version}, let's select the last ch
 changes = spark.read.format("delta") \
                     .option("readChangeData", "true") \
                     .option("startingVersion", int(last_version) -1) \
-                    .table("retail_client_silver")
+                    .table(f"`{catalog}`.`{db}`.retail_client_silver")
 display(changes)
 
 # COMMAND ----------
@@ -250,7 +284,19 @@ display(changes)
 
 # DBTITLE 1,Let's create or final GOLD table: retail_client_gold
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (
+# MAGIC   id BIGINT NOT NULL, 
+# MAGIC   name STRING, 
+# MAGIC   address STRING, 
+# MAGIC   email STRING, 
+# MAGIC   gold_data STRING,
+# MAGIC   CONSTRAINT gold_id_pk PRIMARY KEY(id));
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC Now we can create our initial Gold table using the latest version of our Silver table. Keep in mind that we are **not** looking at the Change Data Feed (CDF) here. We are utilizing the latest version of our siler table that is synced with our external table. Also note that some of these states are not real, and only for demonstration.
 
 # COMMAND ----------
 
@@ -269,7 +315,7 @@ def upsertToDelta(data, batchId):
   data_deduplicated = data_deduplicated.withColumn("address", regexp_replace(col("address"), "\"", ""))
   
   #run the merge in the gold table directly
-  (DeltaTable.forName(spark, "retail_client_gold").alias("target")
+  (DeltaTable.forName(data.sparkSession, "retail_client_gold").alias("target")
       .merge(data_deduplicated.alias("source"), "source.id = target.id")
       .whenMatchedDelete("source._change_type = 'delete'")
       .whenMatchedUpdateAll("source._change_type != 'delete'")
@@ -290,6 +336,7 @@ time.sleep(20)
 
 # COMMAND ----------
 
+# DBTITLE 1,Start the gold stream
 # MAGIC %sql SELECT * FROM retail_client_gold
 
 # COMMAND ----------
@@ -325,4 +372,4 @@ time.sleep(20)
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we stop all actives streams
-stop_all_streams()
+DBDemos.stop_all_streams()

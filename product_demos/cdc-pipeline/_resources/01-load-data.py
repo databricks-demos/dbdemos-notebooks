@@ -36,6 +36,9 @@ def create_dataset(df):
   df = df.withColumn("email", fake_email())
   df = df.withColumn("address", fake_address())
   return df
+
+print("Generating Data... ", end='')
+
 #APPEND
 Faker.seed(0)
 df = spark.range(0, 10000)
@@ -77,8 +80,11 @@ df = df.withColumn("item_count", (F.rand(10)*3).cast('int')+1)
 df = df.withColumn("amount", (F.rand(10)*1000).cast('int')+10)
 df = df.withColumn("operation", F.lit('UPDATE'))
 df.repartition(1).write.mode("append").option("header", "true").format("csv").save(raw_data_location+"/cdc/transactions")
+print("Done")
 
+print("Cleaning up files... ", end='')
 cleanup_folder(raw_data_location+"/user_csv")  
 cleanup_folder(raw_data_location+"/cdc/users")  
-cleanup_folder(raw_data_location+"/cdc/transactions")  
+cleanup_folder(raw_data_location+"/cdc/transactions")
+print("Done")  
 

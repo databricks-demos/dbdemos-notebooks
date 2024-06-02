@@ -1,19 +1,20 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Managing the model lifecycle with the Unity Catalog Model Registry
+# MAGIC # Managing the model lifecycle in Unity Catalog
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-4.png" width="1200">
 # MAGIC
 # MAGIC One of the primary challenges among data scientists and ML engineers is the absence of a central repository for models, their versions, and the means to manage them throughout their lifecycle.
 # MAGIC
-# MAGIC [The Unity-Catalog Model Registry](https://docs.databricks.com/en/mlflow/models-in-uc.html) addresses this challenge and enables members of the data team to:
-# MAGIC <br><br>
+# MAGIC [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) addresses this challenge and enables members of the data team to:
+# MAGIC <br>
 # MAGIC * **Discover** registered models, current aliases in model development, experiment runs, and associated code with a registered model
-# MAGIC * **Tag** models to different stages of their lifecycle
-# MAGIC * **Deploy** different versions of a registered model in different stages, offering MLOps engineers ability to deploy and conduct testing of different model versions
+# MAGIC * **Promote** models to different phases of their lifecycle with the use of model aliases
+# MAGIC * **Tag** models to capture metadata specific to your MLOps process
+# MAGIC * **Deploy** different versions of a registered model, offering MLOps engineers ability to deploy and conduct testing of different model versions
 # MAGIC * **Test** models in an automated fashion
 # MAGIC * **Document** models throughout their lifecycle
-# MAGIC * **Secure** access and permission for model registrations, transitions or modifications
+# MAGIC * **Secure** access and permission for model registrations, execution or modifications
 # MAGIC
 # MAGIC We will look at how we test and promote a new __Challenger__ model as a candidate to replace an existing __Champion__ model.
 # MAGIC
@@ -28,10 +29,10 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## How to Use the Unity Catalog Model Registry
-# MAGIC Typically, data scientists who use MLflow will conduct many experiments, each with a number of runs that track and log metrics and parameters. During the course of this development cycle, they will select the best run within an experiment and register its model in the registry.  Think of this as **committing** the model to the registry, much as you would commit code to a version control system.
+# MAGIC ## How to use Models in Unity Catalog
+# MAGIC Typically, data scientists who use MLflow will conduct many experiments, each with a number of runs that track and log metrics and parameters. During the course of this development cycle, they will select the best run within an experiment and register its model to Unity Catalog.  Think of this as **committing** the model to the Unity Catalog, much as you would commit code to a version control system.
 # MAGIC
-# MAGIC The registry proposes free-text model alias i.e. `Baseline`, `Challenger`, `Champion` along with tagging.
+# MAGIC Unity Catalog proposes free-text model alias i.e. `Baseline`, `Challenger`, `Champion` along with tagging.
 # MAGIC
 # MAGIC Users with appropriate permissions can create models, modify aliases and tags, use models etc.
 
@@ -48,9 +49,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Programmatically find best run and push model to the registry for validation
+# MAGIC ## Programmatically find best run and push model to the Unity Catalog for validation
 # MAGIC
-# MAGIC We have completed the training runs to find a candidate Champion model. We'll programatically select the best model from our last ML experiment and deploy it in the registry. We can easily do that using MLFlow `search_runs` API:
+# MAGIC We have completed the training runs to find a candidate __Challenger__ model. We'll programatically select the best model from our last ML experiment and register it to Unity Catalog. We can easily do that using MLFlow `search_runs` API:
 
 # COMMAND ----------
 
@@ -99,7 +100,7 @@ model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_nam
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC At this point the model does no yet have any aliases that indicates its lifecycle and meta-data/info.  Let's update this information.
+# MAGIC At this point the model does not yet have any aliases or description that indicates its lifecycle and meta-data/info.  Let's update this information.
 
 # COMMAND ----------
 
@@ -143,7 +144,7 @@ client.update_model_version(
 # MAGIC %md
 # MAGIC ## Set the latest model version as the Challenger model
 # MAGIC
-# MAGIC We will set this newly registered model version as the `Challenger` model. Challenger models are candidate models to replace the Champion model, which is the model currently in use.
+# MAGIC We will set this newly registered model version as the __Challenger__ model. Challenger models are candidate models to replace the Champion model, which is the model currently in use.
 # MAGIC
 # MAGIC We will use the model's alias to indicate the stage it is at in its lifecycle.
 
@@ -165,12 +166,10 @@ client.set_registered_model_alias(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Next: MLOps testing and validation of the Challenger model
+# MAGIC ## Next: Validation of the Challenger model
 # MAGIC
-# MAGIC At this point, with the Challenger model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
 # MAGIC
-# MAGIC If the model passes all the tests, it'll be promoted to `Champion`. Otherwise it'll be rejected.
+# MAGIC If the model passes all the tests, it'll be promoted to `Champion`.
 # MAGIC
-# MAGIC Next:
-# MAGIC  * Find out how the model is being tested befored being promoted as `Champion` [using the model validation test notebook]($./04_job_challenger_validation)
-# MAGIC  * Or discover how to [run Batch inference from our Champion model]($./05_batch_inference)
+# MAGIC Next: Find out how the model is being tested befored being promoted as `Champion` [using the model validation notebook]($./04_challenger_validation)

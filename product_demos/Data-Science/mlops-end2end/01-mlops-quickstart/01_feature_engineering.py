@@ -29,6 +29,7 @@
 # MAGIC ## Exploratory Data Anaylsis
 # MAGIC To get a feel of the data, what needs cleaning, pre-processing etc.
 # MAGIC - **Use Databricks's native visualization tools**
+# MAGIC   - After running a SQL query in a notebook cell, use the `+` tab to add charts to visualize the results.
 # MAGIC - Bring your own visualization library of choice (i.e. seaborn, plotly)
 
 # COMMAND ----------
@@ -51,10 +52,13 @@ display(telcoDF)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Define Featurization Logic(s) for BATCH feature computation
+# MAGIC ## Define data cleaning and featurization Logic for BATCH feature computation
 # MAGIC
-# MAGIC 1. Compute number of active services
-# MAGIC 2. Clean-up names and manual mapping
+# MAGIC We will define a function to clean the data and implement featurization logic. We will:
+# MAGIC
+# MAGIC 1. Compute number of optional services
+# MAGIC 2. Provide meaningful labels
+# MAGIC 3. Impute null values
 # MAGIC
 # MAGIC _This can also work for streaming based features_
 
@@ -119,7 +123,7 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 # MAGIC
 # MAGIC Once our features are ready, we'll save them along with the labels as a Delta Lake table. This can then be retrieved later for model training.
 # MAGIC
-# MAGIC In this Quickstart demo, we will save the features and labels as a Delta Lake table. We will then look at how we train a model using this labeled dataset and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
+# MAGIC In this Quickstart demo, we will look at how we train a model using this labeled dataset saved as a Delta Lake table and capture the table-model lineage. Model lineage brings traceability and governance in our deployment, letting us know which model is dependent of which set of feature tables.
 # MAGIC
 # MAGIC Databricks has a Feature Store capability that is tightly integrated into the platform. Any Delta Lake table with a primary key can be used as a Feature Store table for model training, as well as batch and online serving. We will look at an example of how to use the Feature Store to perform feature lookups in a more advanced demo.
 # MAGIC
@@ -162,12 +166,12 @@ spark.sql(
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Accelerating Churn model creation using Databricks Auto-ML
+# MAGIC ## Accelerating Churn model creation using Databricks AutoML
 # MAGIC ### A glass-box solution that empowers data teams without taking away control
 # MAGIC
 # MAGIC Databricks simplify model creation and MLOps. However, bootstraping new ML projects can still be long and inefficient.
 # MAGIC
-# MAGIC Instead of creating the same boilerplate for each new project, Databricks Auto-ML can automatically generate state of the art models for Classifications, regression, and forecast.
+# MAGIC Instead of creating the same boilerplate for each new project, Databricks AutoML can automatically generate state of the art models for Classifications, regression, and forecast.
 # MAGIC
 # MAGIC
 # MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
@@ -176,29 +180,30 @@ spark.sql(
 # MAGIC
 # MAGIC Models can be directly deployed, or instead leverage generated notebooks to boostrap projects with best-practices, saving you weeks of efforts.
 # MAGIC
-# MAGIC ### Using Databricks Auto ML with our Churn dataset
+# MAGIC ### Using Databricks AutoML with our Churn dataset
 # MAGIC
-# MAGIC Auto ML is available in the "Machine Learning" space. All we have to do is start a new Auto-ML experimentation and select the table with the ground truth labels we just created (`dbdemos.schema.mlops_churn_labels`) and join it with the feature table we just created (`dbdemos.schema.mlops_churn_features`).
+# MAGIC AutoML is available in the "Machine Learning" space. All we have to do is start a new AutoML experiment and select the table we just created (`dbdemos.schema.mlops_churn_training`).
 # MAGIC
 # MAGIC Our prediction target is the `churn` column.
 # MAGIC
 # MAGIC Click on Start, and Databricks will do the rest.
 # MAGIC
 # MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
-# MAGIC
-# MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
-# MAGIC
-# MAGIC
-# MAGIC * Select the table containing the ground-truth labels (i.e. `dbdemos.schema.mlops_churn_labels`)
-# MAGIC * Join remaining features from the feature table (i.e. `dbdemos.schema.mlops_churn_features`)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### Using Auto ML with labeled datasets
+# MAGIC #### Using AutoML with labelled feature tables
 # MAGIC
-# MAGIC [Auto ML](https://docs.databricks.com/en/machine-learning/automl/how-automl-works.html) also works on an input table with prepared features and the corresponding labels. For this quicktstart demo, this is what we will be doing. We will create a labelled dataset and save it as a Delta Lake table `dbdemos.schema.mlops_churn_training`. We run AutoML on this table and capture the table lineage at training time.
+# MAGIC [AutoML](https://docs.databricks.com/en/machine-learning/automl/how-automl-works.html) works on an input table with prepared features and the corresponding labels. For this quicktstart demo, this is what we will be doing. We run AutoML on the table `dbdemos.schema.mlops_churn_training` and capture the table lineage at training time.
 # MAGIC
+# MAGIC #### Using AutoML with tables in the Feature Store
+# MAGIC
+# MAGIC AutoML also works with tables containing only the ground-truth labels, and joining it with feature tables in the Feature Store. This will be illustrated in a more advanced demo.
+# MAGIC
+# MAGIC You can join/use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html#automl-experiment-with-feature-store-example-notebook)
+# MAGIC * Select the table containing the ground-truth labels
+# MAGIC * Join remaining features from the feature table
 
 # COMMAND ----------
 
@@ -227,4 +232,4 @@ DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 # MAGIC Next step: [Explore the generated Auto-ML notebook]($./02_automl_champion)
 # MAGIC
 # MAGIC **Note:**
-# MAGIC For demo purposes, run the above notebook OR create and register a new version of the model from your autoML experiment and label/alias the model as "Champion"
+# MAGIC For demo purposes, run the above notebook to create and register a new version of the model from your autoML experiment and label/alias the model as "Champion"

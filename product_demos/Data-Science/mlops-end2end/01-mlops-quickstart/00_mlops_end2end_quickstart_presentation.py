@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # End-to-End MLOps demo with MLFlow and Auto ML
+# MAGIC # End-to-End MLOps demo with MLFlow, Auto ML and Models in Unity Catalog
 # MAGIC
 # MAGIC ## Challenges moving ML project into production
 # MAGIC
@@ -31,11 +31,13 @@
 # MAGIC
 # MAGIC Databricks is uniquely positioned to solve this challenge with the Lakehouse pattern. Not only we bring Data Engineers, Data Scientists and ML Engineers together in a unique platform, but we also provide tools to orchestrate ML project and accelerate the go to production.
 # MAGIC
-# MAGIC ## MLOps pipeline we'll implement
+# MAGIC ## MLOps process walkthrough
 # MAGIC
-# MAGIC In this demo, we'll implement a full MLOps pipeline step by step, in order to power a [dashboard for downstream business stakeholders](https://e2-demo-field-eng.cloud.databricks.com/sql/dashboards/18b301e3-ea4c-4e93-b7c6-df3f53ececd9?o=1444828305810485) which is:
+# MAGIC In this quickstart demo, we'll walkthrough a few common steps in the MLOps process. The end result of this process is a model used to power a [dashboard for downstream business stakeholders](https://e2-demo-field-eng.cloud.databricks.com/sql/dashboards/18b301e3-ea4c-4e93-b7c6-df3f53ececd9?o=1444828305810485) which is:
 # MAGIC * preparing features
 # MAGIC * training a model for deployment
+# MAGIC * registering the model for its use to be goverened
+# MAGIC * validating the model in a champion-challenger analysis
 # MAGIC * invoking a trained ML model as a pySpark UDF
 # MAGIC
 # MAGIC
@@ -51,7 +53,11 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data='false'
+dbutils.widgets.dropdown("reset_all_data", "true", ["true", "false"], "Reset all data")
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data
 
 # COMMAND ----------
 
@@ -73,6 +79,27 @@
 # DBTITLE 1,Exploring our customer dataset
 telcoDF = spark.table(bronze_table_name)
 display(telcoDF)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Create empty model in the Unity Catalog registry
+# MAGIC
+# MAGIC For demo purposes primarily, but in reality the ML Engineer may have already created the model placeholder with appropriate ACLs for managing its lifecycle.
+# MAGIC
+# MAGIC Registered models are managed in Databricks under Unity Catalog. Unity Catalog is the goverance solution in Databricks for governing both Data and AI assets.
+
+# COMMAND ----------
+
+try:
+  client.create_registered_model(
+    name=model_name,
+    description="Churn model placeholder"
+  )
+  print(f"Created empty placeholder for model {model_name} in the MLflow registry")
+
+except mlflow.exceptions.MlflowException as E:
+  print(E)
 
 # COMMAND ----------
 

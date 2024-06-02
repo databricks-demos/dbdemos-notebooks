@@ -11,12 +11,6 @@ schema = dbName = db = "dbdemos_mlops"
 volume_name = "my_volume"
 volume_path = f"/Volumes/{catalog}/{schema}/{volume_name}"
 
-# TODO: Remove before committing
-catalog = "dbdemos"
-schema = dbName = db = "dbdemos_mlops_cyl"
-volume_name = "mlops_volume"
-volume_path = f"/Volumes/{catalog}/{schema}/{volume_name}"
-
 # COMMAND ----------
 
 # MAGIC %run ../../../../_resources/00-global-setup-v2
@@ -96,7 +90,7 @@ if (training_table_exists):
     # Drop the label column for inference
     spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
 else:
-  print("Training table doesn't exist, please run the notebook '01_feature_engineering' first")
+  print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 

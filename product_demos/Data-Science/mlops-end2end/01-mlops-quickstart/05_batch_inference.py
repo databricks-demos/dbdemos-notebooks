@@ -2,13 +2,9 @@
 # MAGIC %md
 # MAGIC # Churn Prediction Model Inference
 # MAGIC
-# MAGIC ## Inference with the Challenger model
+# MAGIC ## Inference with the Champion model
 # MAGIC
-# MAGIC With models registered in the Unity Catalog Model Registry, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies, or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
-# MAGIC
-# MAGIC ## TODO: REMOVE - Champion-Challenger testing
-# MAGIC
-# MAGIC In earlier steps, we have registered a __Challenger__ model. Later on in this notebook, we will look at the concept of Champion-Challenger testing, which ensures that the __Challenger__ model would not cause adverse business impact before letting it replace the Champion model.
+# MAGIC With Models in Unity Catalog, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies, or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-6.png" width="1200">
 # MAGIC
@@ -35,13 +31,13 @@
 # MAGIC %md-sandbox
 # MAGIC ##Deploying the model for batch inferences
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 20px" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn_batch_inference.gif" />
+# MAGIC <!--img style="float: right; margin-left: 20px" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn_batch_inference.gif" /-->
 # MAGIC
 # MAGIC Now that our model is available in the Unity Catalog Model Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
 # MAGIC
 # MAGIC We will use MLFlow function to load a pyspark UDF and distribute our inference in the entire cluster. If the data is small, we can also load the model with plain python and use a pandas Dataframe.
 # MAGIC
-# MAGIC If you don't know how to start, Databricks can generate a batch inference notebook in just one click from the model registry !
+# MAGIC If you don't know how to start, you can get sample code from the __"Artifacts"__ page of the model's experiment run.
 
 # COMMAND ----------
 
@@ -50,7 +46,10 @@
 
 # COMMAND ----------
 
-model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
+# We are using the Champion model for inference
+model_alias = "Champion"
+
+model_version = client.get_model_version_by_alias(name=model_name, alias=model_alias).version # Get champion version
 print(f"Champion model version for {model_name}: {model_version}")
 
 # COMMAND ----------
@@ -69,7 +68,7 @@ print(f"Champion model version for {model_name}: {model_version}")
 inference_df = spark.read.table(f"{catalog}.{db}.mlops_churn_inference")
 
 # Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@Champion")
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@{model_alias}")
 
 # Batch score
 preds_df = inference_df.withColumn('predictions', champion_model(*inference_df.columns))
@@ -89,12 +88,11 @@ display(preds_df)
 # MAGIC
 # MAGIC This is all for the quickstart demo! We have looked at basic concepts of MLOps and how Databricks helps you achieve them. They include:
 # MAGIC
-# MAGIC - Feature engineering and storing feature tables in Databricks
-# MAGIC - AutoML, model training and experiement tracking in MLflow
-# MAGIC - Register models in the Unity Catalog Model Registry for use by runtime systems
-# MAGIC - Model validation and promotion
-# MAGIC - Batch inference
-# MAGIC - Champion-Challenger testing
+# MAGIC - Feature engineering and storing feature tables with labels in Databricks
+# MAGIC - AutoML, model training and experiment tracking in MLflow
+# MAGIC - Registering models as Models in Unity Catalog for governed usage
+# MAGIC - Model validation, Champion-Challenger testing, and model promotion
+# MAGIC - Batch inference by loading the model as a pySpark UDF
 # MAGIC
 # MAGIC We hope you've enjoyed this demo. As the next step, look out for our Advanced End-to-end MLOps demo, which will include more in-depth walkthroughs on the following aspects of MLOps:
 # MAGIC

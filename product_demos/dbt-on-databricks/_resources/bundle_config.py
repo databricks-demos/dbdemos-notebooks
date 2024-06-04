@@ -71,7 +71,7 @@
                     "dbt_task": {
                         "project_directory": "",
                         "commands": [
-                            "dbt run --vars '{\"catalog\": \"dbdemos\", \"schema\":\"dbt-retail\"}'",
+                            "dbt run --vars '{\"catalog\": \"{{CATALOG}}\", \"schema\":\"{{SCHEMA}}\"}'",
                             "dbt test --store-failures"
                         ],
                         "schema": "dbdemos",

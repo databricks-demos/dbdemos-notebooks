@@ -71,11 +71,12 @@
                     "dbt_task": {
                         "project_directory": "",
                         "commands": [
-                            "dbt run",
+                            "dbt run --vars '{\"catalog\": \"dbdemos\", \"schema\":\"dbt-retail\"}'",
                             "dbt test --store-failures"
                         ],
                         "schema": "dbdemos",
-                        "warehouse_id": "{{SHARED_WAREHOUSE_ID}}"
+                        "warehouse_id": "{{SHARED_WAREHOUSE_ID}}",
+                        "catalog": "dbdemos"
                     },
                     "libraries": [
                         {

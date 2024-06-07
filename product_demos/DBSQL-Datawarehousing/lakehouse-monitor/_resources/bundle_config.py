@@ -1,6 +1,5 @@
 # Databricks notebook source
 # MAGIC
-# MAGIC
 # MAGIC %md 
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
@@ -9,7 +8,7 @@
 
 {
   "name": "lakehouse-monitoring",
-  "category": "lakehouse",
+  "category": "DBSQL",
   "custom_schema_supported": True,
   "default_schema": "main",
   "default_catalog": "dbdemos_lhm",

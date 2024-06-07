@@ -65,7 +65,7 @@ print(f"Champion model version for {model_name}: {model_version}")
 
 # DBTITLE 1,In a python notebook
 # Load customer features to be scored
-inference_df = spark.read.table(f"{catalog}.{db}.mlops_churn_inference")
+inference_df = spark.read.table(f"mlops_churn_inference")
 
 # Load champion model as a Spark UDF
 champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@{model_alias}")

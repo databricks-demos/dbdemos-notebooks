@@ -214,11 +214,26 @@ from datetime import datetime
 xp_path = "/Shared/dbdemos/experiments/mlops"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 
+# Specify train-val-test split
+train_ratio, val_ratio, test_ratio = 0.6, 0.2, 0.2
+
+churn_features_w_split = (
+    churn_features.withColumn("random", F.rand(seed=42))
+                  .withColumn("split",
+                              F.when(F.col("random") < train_ratio, "train")
+                               .when(F.col("random") < train_ratio + val_ratio, "validate")
+                               .otherwise("test"))
+                  .drop("random")
+)
+
+display(churn_features_w_split)
+
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
-    dataset = churn_features,
+    dataset = churn_features_w_split,
     target_col = "churn",
+    split_col = "split",
     timeout_minutes = 5
 )
 #Make sure all users can access dbdemos shared experiment

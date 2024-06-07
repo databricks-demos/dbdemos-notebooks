@@ -73,18 +73,13 @@ def delete_feature_store_table(catalog, db, feature_table_name):
 # COMMAND ----------
 
 training_table_name = "mlops_churn_training"
-validation_table_name = "mlops_churn_validation"
 infrerence_table_name = "mlops_churn_inference"
 training_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}")
-validation_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{validation_table_name}")
 inference_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}")
 
 # Check that the training table exists first, as we'll be creating a copy of it
 if (training_table_exists):
   # This should only be called from the quickstart challenger validation or batch inference notebooks
-  if setup_inference_data and not validation_table_exists:
-    print("Creating table for validation...")
-    spark.read.table(training_table_name).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(validation_table_name)
   if setup_inference_data and not inference_table_exists:
     print("Creating table for inference...")
     # Drop the label column for inference

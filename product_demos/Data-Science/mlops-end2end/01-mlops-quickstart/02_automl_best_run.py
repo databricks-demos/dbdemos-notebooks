@@ -33,7 +33,7 @@
 # MAGIC %md
 # MAGIC # LightGBM Classifier training
 # MAGIC - This is an auto-generated notebook.
-# MAGIC - To reproduce these results, attach this notebook to a cluster with runtime version **14.3.x-cpu-ml-scala2.12**, and rerun it.
+# MAGIC - To reproduce these results, attach this notebook to a cluster with runtime version **15.3.x-cpu-ml-scala2.12**, and rerun it.
 # MAGIC - Compare trials in the [MLflow experiment](#mlflow/experiments/xxx).
 # MAGIC - Clone this notebook into your project folder by selecting **File > Clone** in the notebook toolbar.
 
@@ -229,21 +229,19 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 
 # COMMAND ----------
 
-automl_split_col = list(filter(lambda x: "_automl_split_col_" in x, df_loaded.columns))[0]
+# AutoML completed train - validation - test split internally and used split to specify the set
+split_train_df = df_loaded.loc[df_loaded.split == "train"]
+split_val_df = df_loaded.loc[df_loaded.split == "validate"]
+split_test_df = df_loaded.loc[df_loaded.split == "test"]
 
-# AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-split_train_df = df_loaded.loc[df_loaded[automl_split_col] == "train"]
-split_val_df = df_loaded.loc[df_loaded[automl_split_col] == "val"]
-split_test_df = df_loaded.loc[df_loaded[automl_split_col] == "test"]
-
-# Separate target column from features and drop _automl_split_col_xxxx
-X_train = split_train_df.drop([target_col, automl_split_col], axis=1)
+# Separate target co# Separate target column from features and drop split
+X_train = split_train_df.drop([target_col, "split"], axis=1)
 y_train = split_train_df[target_col]
 
-X_val = split_val_df.drop([target_col, automl_split_col], axis=1)
+X_val = split_val_df.drop([target_col, "split"], axis=1)
 y_val = split_val_df[target_col]
 
-X_test = split_test_df.drop([target_col, automl_split_col], axis=1)
+X_test = split_test_df.drop([target_col, "split"], axis=1)
 y_test = split_test_df[target_col]
 
 # COMMAND ----------

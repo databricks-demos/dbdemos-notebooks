@@ -131,12 +131,20 @@ client.update_registered_model(
 # Provide more details on this specific model version
 best_score = best_model['metrics.test_f1_score'].values[0]
 run_name = best_model['tags.mlflow.runName'].values[0]
-version_desc = f"This model version has an accuracy/F1 validation metric of {round(best_score,2)*100}%. Follow the link to its training run for more details."
+version_desc = f"This model version has an F1 validation metric of {round(best_score,4)*100}%. Follow the link to its training run for more details."
 
 client.update_model_version(
   name=model_details.name,
   version=model_details.version,
   description=version_desc
+)
+
+# We can also tag the model version with the F1 score for visibility
+client.set_model_version_tag(
+  name=model_details.name,
+  version=model_details.version,
+  key="f1_score",
+  value=f"{round(best_score,4)}"
 )
 
 # COMMAND ----------

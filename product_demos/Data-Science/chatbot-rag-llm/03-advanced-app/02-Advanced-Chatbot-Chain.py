@@ -330,7 +330,7 @@ print(f"Share this URL with your stakeholders: https://{browser_url}/ml/rag-stud
 # MAGIC
 # MAGIC Your new prompt might work well for what you tried to fixed, but could also have impact on other questions.
 # MAGIC
-# MAGIC ## Next: Introducing offline model evaluation with MLflow
+# MAGIC ## Next: Introducing offline model evaluation with Mosaic AI Quality Labs
 # MAGIC
 # MAGIC To solve these issue, we need a repeatable way of testing our model answer as part of our LLMOps deployment!
 # MAGIC

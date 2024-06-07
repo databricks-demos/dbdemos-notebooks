@@ -20,10 +20,8 @@
 
 # COMMAND ----------
 
-#%pip install databricks-sdk==0.12.0 mlflow==2.10.1 textstat==0.7.3 tiktoken==0.5.1 evaluate==0.4.1 langchain==0.1.5 databricks-vectorsearch==0.22 transformers==4.30.2 torch==2.0.1 cloudpickle==2.2.1 pydantic==2.5.2
-#dbutils.library.restartPython()
-%pip install -U databricks-rag-studio mlflow mlflow-skinny databricks-sdk
-dbutils.library.restartPython()
+# MAGIC %pip install -U databricks-rag-studio mlflow mlflow-skinny databricks-sdk
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -87,10 +85,10 @@ request_table = f"{inference_table_catalog}.{inference_table_schema}.`{inference
 print(f"Request logs: {request_table}")
 requests_df = spark.table(request_table)
 print(f"Assessment logs: {assessment_table}")
+#Temporary helper to extract the table - see _resources/00-init-advanced 
 assessment_df = deduplicate_assessments_table(assessment_table)
 
 # COMMAND ----------
-
 
 requests_with_feedback_df = requests_df.join(assessment_df, requests_df.databricks_request_id == assessment_df.request_id, "left")
 display(requests_with_feedback_df.select("request_raw", "trace", "source", "text_assessment", "retrieval_assessments"))
@@ -168,19 +166,7 @@ display(eval_dataset)
 
 # COMMAND ----------
 
-# Helper function
-def get_latest_model(model_name):
-    from mlflow.tracking import MlflowClient
-    mlflow_client = MlflowClient(registry_uri="databricks-uc")
-    latest_version = None
-    for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
-        version_int = int(mv.version)
-        if not latest_version or version_int > int(latest_version.version):
-            latest_version = mv
-    return latest_version
-  
-model = get_latest_model(MODEL_NAME_FQN)
-model.run_id
+
 
 # COMMAND ----------
 
@@ -190,7 +176,9 @@ model.run_id
 
 # COMMAND ----------
 
-pip_requirements = mlflow.pyfunc.get_model_dependencies(f"runs:/{poc_run.info.run_id}/chain")
+#Retrieve the model we want to eval
+model = get_latest_model(MODEL_NAME_FQN)
+pip_requirements = mlflow.pyfunc.get_model_dependencies(f"runs:/{model.run_id}/chain")
 
 # COMMAND ----------
 
@@ -214,6 +202,12 @@ with mlflow.start_run(run_name="eval_dataset_advanced"):
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC You can open MLFlow and review the eval metrics, and also compare it to previous eval runs!
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-mlflow-eval.png?raw=true" width="1200px"> 
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### This is looking good, let's tag our model as production ready
 # MAGIC
 # MAGIC After reviewing the model correctness and potentially comparing its behavior to your other previous version, we can flag our model as ready to be deployed.
@@ -230,12 +224,8 @@ client.set_registered_model_alias(name=MODEL_NAME_FQN, alias="prod", version=mod
 # MAGIC %md
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Databricks AI makes it easy to evaluate your LLM Models, leveraging custom metrics.
+# MAGIC Mosaic AI Quality Labs makes it easy to evaluate your LLM Models, leveraging custom metrics.
 # MAGIC
 # MAGIC Evaluating your chatbot is key to measure your future version impact, and your Data Intelligence Platform makes it easy leveraging automated Workflow for your MLOps pipelines.
 # MAGIC
 # MAGIC For a production-grade GenAI application, this step should be automated and part as a job, executed everytime the model is changed and benchmarked against previous run to make sure you don't have performance regression.
-# MAGIC
-# MAGIC ### Next: Deploy our model as Model Serving Endpoint with Inference Tables and deploy LLM metric monitoring (live monitoring)
-# MAGIC
-# MAGIC Open the [04-Deploy-Model-as-Endpoint]($./04-Deploy-Model-as-Endpoint) to deploy your model and track your endpoint payload as a Delta Table.

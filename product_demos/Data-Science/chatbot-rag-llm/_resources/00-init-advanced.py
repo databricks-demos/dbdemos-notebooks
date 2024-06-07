@@ -83,3 +83,16 @@ def deduplicate_assessments_table(assessment_table):
     )
 
     return merged_deduplicated_assessments_df
+
+# COMMAND ----------
+
+# Helper function
+def get_latest_model(model_name):
+    from mlflow.tracking import MlflowClient
+    mlflow_client = MlflowClient(registry_uri="databricks-uc")
+    latest_version = None
+    for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
+        version_int = int(mv.version)
+        if not latest_version or version_int > int(latest_version.version):
+            latest_version = mv
+    return latest_version

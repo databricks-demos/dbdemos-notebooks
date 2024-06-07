@@ -37,6 +37,13 @@ mlflow.set_registry_uri('databricks-uc')
 import warnings
 warnings.filterwarnings("ignore")
 
+# Workaround for a bug fix that is in progress
+mlflow.spark.autolog(disable=True)
+
+# Disable MLflow warnings
+import logging
+logging.getLogger('mlflow').setLevel(logging.ERROR)
+
 # COMMAND ----------
 
 #dbdemos__delete_this_cell

@@ -49,15 +49,23 @@
       "description": "Introduction notebook."
     },
     {
-      "path": "01-quickstart/00-RAG-chatbot-Introduction", 
+      "path": "01-first-step/01-First-Step-RAG-On-Databricks", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False, 
+      "title":  "First Steps: RAG on Databricks", 
+      "description": "Quickstart: deploy your RAG in 10 min. Start here!"
+    },
+    {
+      "path": "01-first-step/chain", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
-      "title":  "RAG chatbot Intro with DBRX Instruct", 
-      "description": "Quickstart: Introduction to Databricks AI and GenAI"
+      "title":  "Langchain chain", 
+      "description": "Your full chain used to build your chatbot."
     },
     {
-      "path": "01-quickstart/01-Data-Preparation-and-Index", 
+      "path": "02-simple-app/01-Data-Preparation-and-Index", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -65,7 +73,7 @@
       "description": "Prepare doc chunks and build your Vector Search Index"
     },
     {
-      "path": "01-quickstart/02-Deploy-RAG-Chatbot-Model", 
+      "path": "02-simple-app/02-Deploy-RAG-Chatbot-Model", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -73,7 +81,7 @@
       "description": "Leverage Foundation Model to perform RAG and answer customer questions."
     },
     {
-      "path": "02-advanced/01-PDF-Advanced-Data-Preparation", 
+      "path": "03-advanced-app/01-PDF-Advanced-Data-Preparation", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -81,7 +89,7 @@
       "description": "Ingestion unstructured data and create a self-managed vector search index"
     },
     {
-      "path": "02-advanced/02-Advanced-Chatbot-Chain", 
+      "path": "03-advanced-app/02-Advanced-Chatbot-Chain", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -89,7 +97,7 @@
       "description": "Advanced langchain chain, working with chat history."
     },
     {
-      "path": "02-advanced/03-Offline-Evaluation", 
+      "path": "03-advanced-app/03-Offline-Evaluation", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -97,20 +105,12 @@
       "description": "Evaluate your chatbot with an offline dataset."
     },
     {
-      "path": "02-advanced/04-Deploy-Model-as-Endpoint", 
+      "path": "03-advanced-app/04-Online-Evaluation", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Deploy your endpoint with Inference tables", 
       "description": "Log your endpoint payload as a Delta table."
-    },
-    {
-      "path": "02-advanced/05-Inference-Tables-Analysis-Notebook-with-LLM-Metrics", 
-      "pre_run": True, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
-      "title":  "Online inference analysis", 
-      "description": "Measure your model behavior and compute llm metrics online."
     },
     {
       "path": "config", 

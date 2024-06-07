@@ -290,7 +290,7 @@ if active_deployment:
 # MAGIC %md
 # MAGIC ## Next: ready to take it to a next level?
 # MAGIC
-# MAGIC Open the [02-advanced/01-PDF-Advanced-Data-Preparation]($../02-advanced/01-PDF-Advanced-Data-Preparation) notebook series to learn more about unstructured data, advanced chain, model evaluation and monitoring.
+# MAGIC Open the [03-advanced-app/01-PDF-Advanced-Data-Preparation]($../03-advanced-app/01-PDF-Advanced-Data-Preparation) notebook series to learn more about unstructured data, advanced chain, model evaluation and monitoring.
 
 # COMMAND ----------
 

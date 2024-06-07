@@ -78,7 +78,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## 00-First Step: Deploy and test your first RAG application in 10minutes
+# MAGIC ## 01-First Step: Deploy and test your first RAG application in 10minutes
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic.png?raw=true" style="float: right"  width="700px;">
 # MAGIC New to RAG and Mosaic AI Quality Labs? Start here if this is your first time implementing a GenAI application leveraging Databricks DBRX.
@@ -93,12 +93,12 @@
 
 # MAGIC %md 
 # MAGIC
-# MAGIC Get started: open the [00-first-step/01-First-Step-RAG-On-Databricks]($./00-first-step/01-First-Step-RAG-On-Databricks).
+# MAGIC Get started: open the [01-first-step/01-First-Step-RAG-On-Databricks]($./01-first-step/01-First-Step-RAG-On-Databricks).
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## 01-standard: Build a production-grade RAG application
+# MAGIC ## 02-Simple Rag App: Build a production-grade RAG application
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-managed-flow-0.png?raw=true" style="float: right"  width="700px;">
 # MAGIC Start here if this is your first time implementing a GenAI application leveraging Databricks DBRX, our State Of the Art LLM, open and Available as a model serving endpoint.
@@ -115,12 +115,12 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC Get started: open the [01-standard-rag/01-Data-Preparation-and-Index notebook]($./01-standard-rag/01-Data-Preparation-and-Index).
+# MAGIC Get started: open the [02-simple-app/01-Data-Preparation-and-Index notebook]($./02-simple-app/01-Data-Preparation-and-Index).
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Advanced: Going further, build and manage your Evaluation Dataset with Mosaic AI Quality Labs
+# MAGIC ## 03-Advanced: Going further, build and manage your Evaluation Dataset with Mosaic AI Quality Labs
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab-flow-eval.png?raw=true" style="float: right"  width="800px;">
 # MAGIC Explore this content to discover how to leverage all the Databricks Data Intelligence Platform capabilities for your GenAI Apps.
@@ -138,7 +138,7 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC Learn more adavanced GenAI concepts: [open the 02-advanced/01-PDF-Advanced-Data-Preparation]($./02-advanced/01-PDF-Advanced-Data-Preparation).
+# MAGIC Learn more adavanced GenAI concepts: [open the 03-advanced-app/01-PDF-Advanced-Data-Preparation]($./03-advanced-app/01-PDF-Advanced-Data-Preparation).
 
 # COMMAND ----------
 

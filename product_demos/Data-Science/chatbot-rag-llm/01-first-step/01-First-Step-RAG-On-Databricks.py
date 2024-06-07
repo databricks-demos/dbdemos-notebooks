@@ -21,7 +21,7 @@
 # COMMAND ----------
 
 # MAGIC %pip uninstall -y mlflow-skinny mlflow mlflow[gateway]
-# MAGIC %pip install -U -qqqq databricks-sdk==0.28.0 databricks-rag-studio mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37
+# MAGIC %pip install -U -qqqq databricks-sdk==0.28.0 databricks-rag-studio mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -151,16 +151,13 @@ docs
 
 # COMMAND ----------
 
-#For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
+# For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
 chain_config = {
-  "llm_model_serving_endpoint_name": "databricks-dbrx-instruct", #the foundation model we want to use
-  "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME, #the endoint we want to use for vector search
-  "vector_search_index": f"{catalog}.{db}.databricks_documentation_vs_index"
+    "llm_model_serving_endpoint_name": "databricks-dbrx-instruct",  # the foundation model we want to use
+    "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,  # the endoint we want to use for vector search
+    "vector_search_index": f"{catalog}.{db}.databricks_documentation_vs_index",
+    "llm_prompt_template": """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.\n\nContext: {context}""",
 }
-
-with open('rag_chain_config.yaml', 'w') as f:
-  yaml.dump(chain_config, f)
-model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.yaml')
 
 # COMMAND ----------
 
@@ -188,30 +185,25 @@ from langchain_core.output_parsers import StrOutputParser
 ## Enable MLflow Tracing
 mlflow.langchain.autolog()
 
+## Load the chain's configuration
 model_config = mlflow.models.ModelConfig(development_config=chain_config)
 
-def get_retriever(persist_dir: str = None):
-    # Connect to the Vector Search Index
-    vs_index = VectorSearchClient(disable_notice=True).get_index(
-        endpoint_name=model_config.get("vector_search_endpoint_name"),
-        index_name=model_config.get("vector_search_index"),
-    )
-
-    # Turn the Vector Search index into a LangChain retriever
-    return DatabricksVectorSearch(
-        vs_index,
-        text_column="content",
+## Turn the Vector Search index into a LangChain retriever
+vs_client = VectorSearchClient(disable_notice=True)
+vs_index = vs_client.get_index(
+    endpoint_name=model_config.get("vector_search_endpoint_name"),
+    index_name=model_config.get("vector_search_index"),
+)
+vector_search_as_retriever = DatabricksVectorSearch(
+    vs_index,
+    text_column="content",
         columns=["id", "content", "url"],
-    ).as_retriever(search_kwargs={"k": 3}) # Number of search results that the retriever returns
-    # Enable the RAG Studio Review App and MLFlow to properly display track and display retrieved chunks for evaluation
-    mlflow.models.set_retriever_schema(primary_key="id", text_column="content", doc_uri="url")
+).as_retriever(search_kwargs={"k": 3})
 
 # Method to format the docs returned by the retriever into the prompt (keep only the text from chunks)
 def format_context(docs):
     chunk_contents = [f"Passage: {d.page_content}\n" for d in docs]
     return "".join(chunk_contents)
-
-vector_search_as_retriever = get_retriever()
 
 #Let's try our retriever chain:
 relevant_docs = (vector_search_as_retriever | RunnableLambda(format_context)| StrOutputParser()).invoke('How to start a Databricks cluster?')
@@ -245,15 +237,9 @@ from langchain_community.chat_models import ChatDatabricks
 from operator import itemgetter
 
 prompt = ChatPromptTemplate.from_messages(
-    [
-        (  # System prompt contains the instructions
-            "system",
-            """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.
-
-Context: {context}""",
-        ),
-        # User's question
-        ("user", "{question}"),
+    [  
+        ("system", model_config.get("llm_prompt_template")), # Contains the instructions from the configuration
+        ("user", "{question}") #user's questions
     ]
 )
 
@@ -306,9 +292,6 @@ chain = (
     | StrOutputParser()
 )
 
-# Tell MLflow logging where to find your chain.
-mlflow.models.set_model(model=chain)
-
 # COMMAND ----------
 
 # Let's give it a try:
@@ -319,11 +302,13 @@ print(answer)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2.5/ Deploy a RAG Chain
+# MAGIC ## 2.5/ Deploy a RAG Chain to a web-based UI for stakeholder feedback
 # MAGIC
-# MAGIC Our chain is now ready! Let's use MLFlow to deploy it with our configuration.
+# MAGIC Our chain is now ready! 
 # MAGIC
-# MAGIC We'll then deploy it to Unity Catalog and deploy the model serving endpoint using databricks RAG Studio.
+# MAGIC We first register the MLflow model to Unity Catalog, and then use Agent Framework to deploy to the Quality Lab stakeholder review application which is backed by a scalable, production-ready Model Serving endpoint.
+# MAGIC
+# MAGIC <br/><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab.png?raw=true" width="1000px">
 
 # COMMAND ----------
 
@@ -333,32 +318,50 @@ init_experiment_for_batch("chatbot-rag-llm-first-step", "simple")
 
 # COMMAND ----------
 
-import databricks.rag_studio
+# DBTITLE 1,Deploy the chain in Unity Catalog
+from databricks import rag_studio
 # Log the model to MLflow
 with mlflow.start_run(run_name="basic_rag_bot"):
   logged_chain_info = mlflow.langchain.log_model(
           #loader_fn=get_retriever,
           #lc_model=chain,
-          #Note: to avoid serialization issue, we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
+          #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
           lc_model=os.path.join(os.getcwd(), 'chain'),  # Chain code file e.g., /path/to/the/chain.py 
           model_config=chain_config, # Chain configuration 
-          artifact_path="chain",
+          artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
           input_example=input_example
       )
 
-MODEL_NAME = "basic_rag_demo"
+MODEL_NAME = "basic_rag_demo_2"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
 # Register to UC
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
 
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Let's now deploy the Mosaic AI **Quality Lab review application** using the model we just created!
+
+# COMMAND ----------
+
 # Deploy to enable the Review APP and create an API endpoint
 # TODO: change endpoint name
 # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
-deployment_info = databricks.rag_studio.deploy_model(MODEL_NAME_FQN, uc_registered_model_info.version, scale_to_zero=True)
+deployment_info = rag_studio.deploy_model(MODEL_NAME_FQN, uc_registered_model_info.version, scale_to_zero=True)
+
+instructions_to_reviewer = f"""## Instructions for Testing the Databricks Documentation Assistant chatbot
+
+Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
+
+# Add the user-facing instructions to the Review App
+rag_studio.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+
 browser_url =mlflow.utils.databricks_utils.get_browser_hostname()
 
 print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 wait_for_model_serving_endpoint_to_be_ready(f"rag_studio_{catalog}-{db}-{MODEL_NAME}")
+
+print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag_app_url}")
 
 # COMMAND ----------
 
@@ -369,38 +372,45 @@ wait_for_model_serving_endpoint_to_be_ready(f"rag_studio_{catalog}-{db}-{MODEL_N
 # MAGIC
 # MAGIC Our Chat Bot is now live. Databricks provides a built-in chatbot application that you can use to test the chatbot and give feedbacks on its answer.
 # MAGIC
-# MAGIC You can easily give access to external domain experts and have them test and review the bot.
+# MAGIC You can easily give access to external domain experts and have them test and review the bot.  **Your domain experts do NOT need to have Databricks Workspace access** - you can assign permissions to any user in your SSO if you have enabled [SCIM](https://docs.databricks.com/en/admin/users-groups/scim/index.html)
+# MAGIC
 # MAGIC This is a critical step to build or improve your evaluation dataset: have users ask questions to your bot, and provide the bot with output answer when they don't answer properly.
 # MAGIC
-# MAGIC Your Chatbot is also automatically capturing all your model endpoint question and answer. On top of that, Databricks makes it easy to track feedback from your end user: if the chatbot doesn't give a good answer and the user gives a thumbdown, you can ask your expert to review it and improve your evaluation dataset and you knowledge database. 
+# MAGIC Your Chatbot is automatically capturing all stakeholder questions and bot responses, including an MLflow trace for each, into Delta Tables in your Lakehouse. On top of that, Databricks makes it easy to track feedback from your end user: if the chatbot doesn't give a good answer and the user gives a thumbdown, their feedback is included in the Delta Tables.
 # MAGIC
 # MAGIC Once your eval dataset is ready, you'll then be able to leverage it for offline evaluation to measure your new chatbot performance, and also potentially to Fine Tune your model.
-# MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab.png?raw=true" width="1000px">
 # MAGIC
 
 # COMMAND ----------
 
-print(f"Review App: https://{browser_url}/ml/review/{MODEL_NAME_FQN}/{uc_registered_model_info.version}/chat")
+print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag_app_url}")
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## 3.2/ Evaluate your bot's quality with Mosaic AI Quality Lab specialized models
+# MAGIC ## 3.2/ Evaluate your bot's quality with Mosaic AI Quality Lab specialized LLM judge models
 # MAGIC
 # MAGIC Our bot is now Live. 
 # MAGIC
-# MAGIC Evaluation is a key part of deploying a RAG application. Databricks simplify this tasks with specialize functions and LLM to evaluate your Chat bot answer compared to your ground truth.
+# MAGIC Evaluation is a key part of deploying a RAG application. Databricks simplify this tasks with specialized LLM models tuned to evaluate your bot's quality/cost/latency, even if ground truth is not available.
 # MAGIC
-# MAGIC In this example, we'll consider that our experts already used the internal Chatbot interface to build a proper Eval Dataset that we saved as a Delta Table.
+# MAGIC Quality Lab evaluates:
+# MAGIC 1. Answer correctness - requires ground truth
+# MAGIC 2. Hallucination / groundness - no ground truth required
+# MAGIC 3. Answer relevance - no ground truth required
+# MAGIC 4. Retrieval precision - no ground truth required
+# MAGIC 5. (Lack of) Toxicity - no ground truth required
 # MAGIC
-# MAGIC To see how to collect the dataset from the Eval App, see the [02-advanced/03-Offline-Evaluation]($../02-advanced/03-Offline-Evaluation) notebook.
+# MAGIC In this example, we'll use an evaluation set that we curated based on our internal experts using the Quality Lab review app interface.  This proper Eval Dataset is saved as a Delta Table.
+# MAGIC
+# MAGIC To see how to collect the dataset from the Eval App, see the [03-advanced-app/03-Offline-Evaluation]($../03-advanced-app/03-Offline-Evaluation) notebook.
 
 # COMMAND ----------
 
-eval_dataset = spark.table("eval_set_databricks_documentation").limit(10)
+eval_dataset = spark.table("eval_set_databricks_documentation").limit(10).toPandas()
 display(eval_dataset)
 
 # COMMAND ----------
@@ -412,11 +422,11 @@ display(eval_dataset)
 
 # COMMAND ----------
 
-with mlflow.start_run(run_name="eval_dataset"):
+with mlflow.start_run(run_id=logged_chain_info.run_id):
     # Evaluate the logged model
     eval_results = mlflow.evaluate(
         data=eval_dataset,
-        model='runs:/7dd6b36603e84288a950bd045776c2d2/chain',
+        model=logged_chain_info.model_uri,
         model_type="databricks-rag",
     )
 
@@ -435,4 +445,5 @@ with mlflow.start_run(run_name="eval_dataset"):
 # MAGIC
 # MAGIC This example was a simple demo. In the next set of notebooks, we'll go into more details and review how to prepare and split your documents, while working with more production-grade chain
 # MAGIC
+# MAGIC Open the [../02-simple-app/01-Data-Preparation-and-Index](../02-simple-app/01-Data-Preparation-and-Index) Notebook!
 # MAGIC

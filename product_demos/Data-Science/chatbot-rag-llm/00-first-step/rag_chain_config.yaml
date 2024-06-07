@@ -1,0 +1,3 @@
+llm_model_serving_endpoint_name: databricks-dbrx-instruct
+vector_search_endpoint_name: dbdemos_vs_endpoint
+vector_search_index: main.dbdemos_rag_chatbot.databricks_documentation_vs_index

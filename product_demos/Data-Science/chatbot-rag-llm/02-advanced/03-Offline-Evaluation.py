@@ -1,54 +1,47 @@
 # Databricks notebook source
+# MAGIC %md # Turn the Review App logs into an Evaluation Set
+# MAGIC
+# MAGIC The Review application captures your user feedbacks.
+# MAGIC
+# MAGIC This feedback is saved under 2 tables within your schema.
+# MAGIC
+# MAGIC In this notebook, we will show you how to extract the logs from the Review App into an Evaluation Set.  It is important to review each row and ensure the data quality is high e.g., the question is logical and the response makes sense.
+# MAGIC
+# MAGIC 1. Requests with a 👍 :
+# MAGIC     - `request`: As entered by the user
+# MAGIC     - `expected_response`: If the user edited the response, that is used, otherwise, the model's generated response.
+# MAGIC 2. Requests with a 👎 :
+# MAGIC     - `request`: As entered by the user
+# MAGIC     - `expected_response`: If the user edited the response, that is used, otherwise, null.
+# MAGIC 3. Requests without any feedback
+# MAGIC     - `request`: As entered by the user
+# MAGIC
+# MAGIC Across all types of requests, if the user 👍 a chunk from the `retrieved_context`, the `doc_uri` of that chunk is included in `expected_retrieved_context` for the question.
+
+# COMMAND ----------
+
+#%pip install databricks-sdk==0.12.0 mlflow==2.10.1 textstat==0.7.3 tiktoken==0.5.1 evaluate==0.4.1 langchain==0.1.5 databricks-vectorsearch==0.22 transformers==4.30.2 torch==2.0.1 cloudpickle==2.2.1 pydantic==2.5.2
+#dbutils.library.restartPython()
+%pip install -U databricks-rag-studio mlflow mlflow-skinny databricks-sdk
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # 3/ Evaluating the RAG Chat Bot with LLMs-as-a-Judge for automated evaluation
+# MAGIC ## 1.1/ Extracting the logs 
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-llm-as-a-judge.png?raw=true" style="float: right" width="900px">
 # MAGIC
-# MAGIC Now that our RAG model is deployed, we aim to evaluate its predictions correctness.
+# MAGIC *Note: for now, this part requires a few SQL queries that we provide in this notebook to properly format the review app into training dataset.*
 # MAGIC
-# MAGIC Evaluating LLMs can be challenging as existing benchmarks and metrics can not measure them comprehensively. Humans are often involved in these tasks (see [RLHF](https://en.wikipedia.org/wiki/Reinforcement_learning_from_human_feedback), but it doesn't scale well: humans are slow and expensive!
-# MAGIC
-# MAGIC ## Introducing LLM-as-a-Judge
-# MAGIC
-# MAGIC In this notebook, we'll automate the evaluation process with a trending approach in the LLM community: **LLMs-as-a-judge**.
-# MAGIC
-# MAGIC Faster and cheaper than human evaluation, LLM-as-a-Judge leverages an external agent who judges the generative model predictions given what is expected from it.
-# MAGIC
-# MAGIC Superior models are typically used for such evaluation (e.g. `GPT4` judges `databricks-dbrx-instruct`, or `llama2-70B` judges `llama2-7B`)
-# MAGIC
-# MAGIC We'll explore the new LLMs-as-a-judges evaluation methods introduced in MLflow 2.9, with its powerful `mlflow.evaluate()`API.+
+# MAGIC *We'll update this notebook soon with an simpler version - stay tuned!*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=advanced/02-Evaluate-RAG-Chatbot-Model&demo_name=chatbot-rag-llm&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.12.0 mlflow==2.10.1 textstat==0.7.3 tiktoken==0.5.1 evaluate==0.4.1 langchain==0.1.5 databricks-vectorsearch==0.22 transformers==4.30.2 torch==2.0.1 cloudpickle==2.2.1 pydantic==2.5.2
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %run ../_resources/00-init-advanced $reset_all_data=false
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ### Creating an external model endpoint with Azure Open AI as a judge
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/create-external-endpoint.png?raw=true" style="float:right" width="500px" />
-# MAGIC
-# MAGIC Databricks Serving Endpoint can be of 3 types:
-# MAGIC
-# MAGIC - Your own models, deployed as an endpoint (a chatbot model, your custom fine tuned LLM)
-# MAGIC - Fully managed, serverless Foundation Models (e.g. DBRX Instruct, llama2, MPT...)
-# MAGIC - An external Foundation Model (e.g. Azure OpenAI)
-# MAGIC
-# MAGIC Let's create a external model endpoint using Azure Open AI.
-# MAGIC
-# MAGIC Note that you'll need to change the values with your own Azure Open AI configuration. Alternatively, you can setup a connection to another provider like OpenAI.
-# MAGIC
-# MAGIC *Note: If you don't have an Azure OpenAI deployment, this demo will fallback to a Databricks managed llama 2 model. Evaluation won't be as good.* 
 
 # COMMAND ----------
 
@@ -58,231 +51,204 @@ init_experiment_for_batch("chatbot-rag-llm-advanced", "simple")
 
 # COMMAND ----------
 
-from mlflow.deployments import get_deploy_client
-deploy_client = get_deploy_client("databricks")
+import databricks.rag_studio
+MODEL_NAME = "rag_demo_advanced"
+MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
+browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
-try:
-    endpoint_name  = "dbdemos-azure-openai"
-    deploy_client.create_endpoint(
-        name=endpoint_name,
-        config={
-            "served_entities": [
-                {
-                    "name": endpoint_name,
-                    "external_model": {
-                        "name": "gpt-35-turbo",
-                        "provider": "openai",
-                        "task": "llm/v1/chat",
-                        "openai_config": {
-                            "openai_api_type": "azure",
-                            "openai_api_key": "{{secrets/dbdemos/azure-openai}}", #Replace with your own azure open ai key
-                            "openai_deployment_name": "dbdemo-gpt35",
-                            "openai_api_base": "https://dbdemos-open-ai.openai.azure.com/",
-                            "openai_api_version": "2023-05-15"
-                        }
-                    }
-                }
-            ]
-        }
-    )
-except Exception as e:
-    if 'RESOURCE_ALREADY_EXISTS' in str(e):
-        print('Endpoint already exists')
-    else:
-        print(f"Couldn't create the external endpoint with Azure OpenAI: {e}. Will fallback to llama2-70-B as judge. Consider using a stronger model as a judge.")
-        endpoint_name = "databricks-llama-2-70b-chat"
-
-#Let's query our external model endpoint
-answer_test = deploy_client.predict(endpoint=endpoint_name, inputs={"messages": [{"role": "user", "content": "What is Apache Spark?"}]})
-answer_test['choices'][0]['message']['content']
+# # Get the name of the Inference Tables where logs are stored
+active_deployments = databricks.rag_studio.list_deployments()
+active_deployment = next((item for item in active_deployments if item.model_name == MODEL_NAME_FQN), None)
 
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Offline LLM evaluation
-# MAGIC
-# MAGIC We will start with offline evaluation, scoring our model before its deployment. This requires a set of questions we want to ask to our model.
-# MAGIC
-# MAGIC In our case, we are fortunate enough to have a labeled training set (questions+answers)  with state-of-the-art technical answers from our Databricks support team. Let's leverage it so we can compare our RAG predictions and ground-truth answers in MLflow.
-# MAGIC
-# MAGIC **Note**: This is optional! We can benefit from the LLMs-as-a-Judge approach without ground-truth labels. This is typically the case if you want to evaluate "live" models answering any customer questions
 
 # COMMAND ----------
 
-volume_folder =  f"/Volumes/{catalog}/{db}/volume_databricks_documentation/evaluation_dataset"
-#Load the eval dataset from the repository to our volume
-upload_dataset_to_volume(volume_folder)
+def deduplicate_assessments_table(assessment_table):
+    # De-dup response assessments
+    assessments_request_deduplicated_df = spark.sql(f"""select * except(row_number)
+                                        from ( select *, row_number() over (
+                                                partition by request_id
+                                                order by
+                                                timestamp desc
+                                            ) as row_number from {assessment_table} where text_assessment is not NULL
+                                        ) where row_number = 1""")
+    # De-dup the retrieval assessments
+    assessments_retrieval_deduplicated_df = spark.sql(f"""select * except( retrieval_assessment, source, timestamp, text_assessment),
+        any_value(timestamp) as timestamp,
+        any_value(source) as source,
+        collect_list(retrieval_assessment) as retrieval_assessments
+      from {assessment_table} where retrieval_assessment is not NULL group by request_id, source.id, step_id"""    )
 
-# COMMAND ----------
+    # Merge together
+    assessments_request_deduplicated_df = assessments_request_deduplicated_df.drop("retrieval_assessment", "step_id")
+    assessments_retrieval_deduplicated_df = assessments_retrieval_deduplicated_df.withColumnRenamed("request_id", "request_id2").withColumnRenamed("source", "source2").drop("step_id", "timestamp")
 
-# DBTITLE 1,Preparing our evaluation dataset
-spark.sql(f'''
-CREATE OR REPLACE TABLE evaluation_dataset AS
-  SELECT q.id, q.question, a.answer FROM parquet.`{volume_folder}/training_dataset_question.parquet` AS q
-    LEFT JOIN parquet.`{volume_folder}/training_dataset_answer.parquet` AS a
-      ON q.id = a.question_id ;''')
-
-display(spark.table('evaluation_dataset'))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Automated Evaluation of our chatbot model registered in Unity Catalog
-# MAGIC
-# MAGIC Let's retrieve the chatbot model we registered in Unity Catalog and predict answers for each questions in the evaluation set.
-
-# COMMAND ----------
-
-import mlflow
-os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("dbdemos", "rag_sp_token")
-model_name = f"{catalog}.{db}.dbdemos_advanced_chatbot_model"
-model_version_to_evaluate = get_latest_model_version(model_name)
-mlflow.set_registry_uri("databricks-uc")
-rag_model = mlflow.langchain.load_model(f"models:/{model_name}/{model_version_to_evaluate}")
-
-@pandas_udf("string")
-def predict_answer(questions):
-    def answer_question(question):
-        dialog = {"messages": [{"role": "user", "content": question}]}
-        return rag_model.invoke(dialog)['result']
-    return questions.apply(answer_question)
-
-# COMMAND ----------
-
-df_qa = (spark.read.table('evaluation_dataset')
-                  .selectExpr('question as inputs', 'answer as targets')
-                  .where("targets is not null")
-                  .sample(fraction=0.005, seed=40)) #small sample for interactive demo
-
-df_qa_with_preds = df_qa.withColumn('preds', predict_answer(col('inputs'))).cache()
-
-display(df_qa_with_preds)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ##LLMs-as-a-judge: automated LLM evaluation with out of the box and custom GenAI metrics
-# MAGIC
-# MAGIC MLflow 2.8 provides out of the box GenAI metrics and enables us to make our own GenAI metrics:
-# MAGIC - Mlflow will automatically compute relevant task-related metrics. In our case, `model_type='question-answering'` will add the `toxicity` and `token_count` metrics.
-# MAGIC - Then, we can import out of the box metrics provided by MLflow 2.8. Let's benefit from our ground-truth labels by computing the `answer_correctness` metric. 
-# MAGIC - Finally, we can define customer metrics. Here, creativity is the only limit. In our demo, we will evaluate the `professionalism` of our Q&A chatbot.
-# MAGIC
-
-# COMMAND ----------
-
-# DBTITLE 1,Custom correctness answer
-from mlflow.metrics.genai.metric_definitions import answer_correctness
-from mlflow.metrics.genai import make_genai_metric, EvaluationExample
-
-# Because we have our labels (answers) within the evaluation dataset, we can evaluate the answer correctness as part of our metric. Again, this is optional.
-answer_correctness_metrics = answer_correctness(model=f"endpoints:/{endpoint_name}")
-print(answer_correctness_metrics)
-
-# COMMAND ----------
-
-# DBTITLE 1,Adding custom professionalism metric
-professionalism_example = EvaluationExample(
-    input="What is MLflow?",
-    output=(
-        "MLflow is like your friendly neighborhood toolkit for managing your machine learning projects. It helps "
-        "you track experiments, package your code and models, and collaborate with your team, making the whole ML "
-        "workflow smoother. It's like your Swiss Army knife for machine learning!"
-    ),
-    score=2,
-    justification=(
-        "The response is written in a casual tone. It uses contractions, filler words such as 'like', and "
-        "exclamation points, which make it sound less professional. "
+    merged_deduplicated_assessments_df = assessments_request_deduplicated_df.join(
+        assessments_retrieval_deduplicated_df,
+        (assessments_request_deduplicated_df.request_id == assessments_retrieval_deduplicated_df.request_id2) &
+        (assessments_request_deduplicated_df.source.id == assessments_retrieval_deduplicated_df.source2.id),
+        "full"
+    ).select(
+        [str(col) for col in assessments_request_deduplicated_df.columns] +
+        [assessments_retrieval_deduplicated_df.retrieval_assessments]
     )
-)
 
-professionalism = make_genai_metric(
-    name="professionalism",
-    definition=(
-        "Professionalism refers to the use of a formal, respectful, and appropriate style of communication that is "
-        "tailored to the context and audience. It often involves avoiding overly casual language, slang, or "
-        "colloquialisms, and instead using clear, concise, and respectful language."
-    ),
-    grading_prompt=(
-        "Professionalism: If the answer is written using a professional tone, below are the details for different scores: "
-        "- Score 1: Language is extremely casual, informal, and may include slang or colloquialisms. Not suitable for "
-        "professional contexts."
-        "- Score 2: Language is casual but generally respectful and avoids strong informality or slang. Acceptable in "
-        "some informal professional settings."
-        "- Score 3: Language is overall formal but still have casual words/phrases. Borderline for professional contexts."
-        "- Score 4: Language is balanced and avoids extreme informality or formality. Suitable for most professional contexts. "
-        "- Score 5: Language is noticeably formal, respectful, and avoids casual elements. Appropriate for formal "
-        "business or academic settings. "
-    ),
-    model=f"endpoints:/{endpoint_name}",
-    parameters={"temperature": 0.0},
-    aggregations=["mean", "variance"],
-    examples=[professionalism_example],
-    greater_is_better=True
-)
-
-print(professionalism)
+    return merged_deduplicated_assessments_df
 
 # COMMAND ----------
 
-# DBTITLE 1,Start the evaluation run
-from mlflow.deployments import set_deployments_target
+from databricks.sdk import WorkspaceClient
+w = WorkspaceClient()
+print(active_deployment)
+endpoint = w.serving_endpoints.get(active_deployment.endpoint_name)
 
-set_deployments_target("databricks")
+try:
+    endpoint_config = endpoint.config.auto_capture_config
+except AttributeError as e:
+    endpoint_config = endpoint.pending_config.auto_capture_config
 
-#This will automatically log all
-with mlflow.start_run(run_name="chatbot_rag") as run:
-    eval_results = mlflow.evaluate(data = df_qa_with_preds.toPandas(), # evaluation data,
-                                   model_type="question-answering", # toxicity and token_count will be evaluated   
-                                   predictions="preds", # prediction column_name from eval_df
-                                   targets = "targets",
-                                   extra_metrics=[answer_correctness_metrics, professionalism])
-    
-eval_results.metrics
+inference_table_name = endpoint_config.state.payload_table.name
+inference_table_catalog = endpoint_config.catalog_name
+inference_table_schema = endpoint_config.schema_name
+
+# Cleanly formatted tables
+assessment_table = f"{inference_table_catalog}.{inference_table_schema}.`{inference_table_name}_assessment_logs`"
+request_table = f"{inference_table_catalog}.{inference_table_schema}.`{inference_table_name}_request_logs`"
+
+print(f"Request logs: {request_table}")
+requests_df = spark.table(request_table)
+print(f"Assessment logs: {assessment_table}")
+assessment_df = deduplicate_assessments_table(assessment_table)
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Visualization of our GenAI metrics produced by our GPT4 judge
+
+requests_with_feedback_df = requests_df.join(assessment_df, requests_df.databricks_request_id == assessment_df.request_id, "left")
+display(requests_with_feedback_df.select("request_raw", "trace", "source", "text_assessment", "retrieval_assessments"))
+
+# COMMAND ----------
+
+
+requests_with_feedback_df.createOrReplaceTempView('latest_assessments')
+eval_dataset = spark.sql(f"""
+-- Thumbs up.  Use the model's generated response as the expected_response
+select
+  a.request_id,
+  r.request,
+  r.response as expected_response,
+  'thumbs_up' as type,
+  a.source.id as user_id
+from
+  latest_assessments as a
+  join {request_table} as r on a.request_id = r.databricks_request_id
+where
+  a.text_assessment.ratings ["answer_correct"].value == "positive"
+union all
+  --Thumbs down.  If edited, use that as the expected_response.
+select
+  a.request_id,
+  r.request,
+  IF(
+    a.text_assessment.suggested_output != "",
+    a.text_assessment.suggested_output,
+    NULL
+  ) as expected_response,
+  'thumbs_down' as type,
+  a.source.id as user_id
+from
+  latest_assessments as a
+  join {request_table} as r on a.request_id = r.databricks_request_id
+where
+  a.text_assessment.ratings ["answer_correct"].value = "negative"
+union all
+  -- No feedback.  Include the request, but no expected_response
+select
+  a.request_id,
+  r.request,
+  IF(
+    a.text_assessment.suggested_output != "",
+    a.text_assessment.suggested_output,
+    NULL
+  ) as expected_response,
+  'no_feedback_provided' as type,
+  a.source.id as user_id
+from
+  latest_assessments as a
+  join {request_table} as r on a.request_id = r.databricks_request_id
+where
+  a.text_assessment.ratings ["answer_correct"].value != "negative"
+  and a.text_assessment.ratings ["answer_correct"].value != "positive"
+  """)
+display(eval_dataset)
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC # 1.2/ Our eval dataset is now ready! 
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-llm-as-a-judge-mlflow.png?raw=true" style="float: right; margin-left:10px" width="800px">
+# MAGIC The review app makes it easy to build & create your evaluation dataset. 
 # MAGIC
-# MAGIC You can open your MLFlow experiment runs from the Experiments menu on the right. 
+# MAGIC *Note: the eval app logs may take some time to be available to you. If the dataset is empty, wait a bit.*
 # MAGIC
-# MAGIC From here, you can compare multiple model versions, and filter by correctness to spot where your model doesn't answer well. 
-# MAGIC
-# MAGIC Based on that and depending on the issue, you can either fine tune your prompt, your model fine tuning instruction with RLHF, or improve your documentation.
-# MAGIC <br style="clear: both"/>
-# MAGIC
-# MAGIC ### Custom visualizations
-# MAGIC You can equaly plot the evaluation metrics directly from the run, or pulling the data from MLFlow:
+# MAGIC To simplify the demo and make sure you don't have to craft your own eval dataset, we saved a ready-to-use eval dataset already pre-generated for you. We'll use this one for the demo instead.
 
 # COMMAND ----------
 
-df_genai_metrics = eval_results.tables["eval_results_table"]
-display(df_genai_metrics)
+eval_dataset = spark.table("eval_set_databricks_documentation").limit(10)
+display(eval_dataset)
 
 # COMMAND ----------
 
-import plotly.express as px
-px.histogram(df_genai_metrics, x="token_count", labels={"token_count": "Token Count"}, title="Distribution of Token Counts in Model Responses")
-
-# COMMAND ----------
-
-# Counting the occurrences of each answer correctness score
-px.bar(df_genai_metrics['answer_correctness/v1/score'].value_counts(), title='Answer Correctness Score Distribution')
-
-# COMMAND ----------
-
-df_genai_metrics['toxicity'] = df_genai_metrics['toxicity/v1/score'] * 100
-fig = px.scatter(df_genai_metrics, x='toxicity', y='answer_correctness/v1/score', title='Toxicity vs Correctness', size=[10]*len(df_genai_metrics))
-fig.update_xaxes(tickformat=".2f")
+# Helper function
+def get_latest_model(model_name):
+    from mlflow.tracking import MlflowClient
+    mlflow_client = MlflowClient(registry_uri="databricks-uc")
+    latest_version = None
+    for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
+        version_int = int(mv.version)
+        if not latest_version or version_int > int(latest_version.version):
+            latest_version = mv
+    return latest_version
+  
+model = get_latest_model(MODEL_NAME_FQN)
+model.run_id
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## This is looking good, let's tag our model as production ready
+# MAGIC ## Load the correct Python environment for the model
+# MAGIC
+
+# COMMAND ----------
+
+pip_requirements = mlflow.pyfunc.get_model_dependencies(f"runs:/{poc_run.info.run_id}/chain")
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $pip_requirements
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Run our evaluation from the dataset!
+
+# COMMAND ----------
+
+with mlflow.start_run(run_name="eval_dataset_advanced"):
+    # Evaluate the logged model
+    eval_results = mlflow.evaluate(
+        data=eval_dataset,
+        model=f'runs:/{model.run_id}/chain',
+        model_type="databricks-rag",
+    )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### This is looking good, let's tag our model as production ready
 # MAGIC
 # MAGIC After reviewing the model correctness and potentially comparing its behavior to your other previous version, we can flag our model as ready to be deployed.
 # MAGIC
@@ -291,7 +257,7 @@ fig.update_xaxes(tickformat=".2f")
 # COMMAND ----------
 
 client = MlflowClient()
-client.set_registered_model_alias(name=model_name, alias="prod", version=model_version_to_evaluate)
+client.set_registered_model_alias(name=MODEL_NAME_FQN, alias="prod", version=model.version)
 
 # COMMAND ----------
 

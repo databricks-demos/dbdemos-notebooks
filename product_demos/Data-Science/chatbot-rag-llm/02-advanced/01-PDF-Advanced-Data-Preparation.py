@@ -29,7 +29,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries 
-# MAGIC %pip install transformers==4.30.2 "unstructured[pdf,docx]==0.10.30" langchain==0.1.5 llama-index==0.9.3 databricks-vectorsearch==0.22 pydantic==1.10.9 mlflow==2.10.1
+# MAGIC %pip install transformers==4.41.1 pypdf==4.1.0 langchain-text-splitters==0.2.0 databricks-vectorsearch mlflow tiktoken==0.7.0 torch==2.3.0 llama-index==0.10.43
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -125,8 +125,18 @@ df = (spark.readStream
 # COMMAND ----------
 
 # DBTITLE 1,To extract our PDF,  we'll need to setup libraries in our nodes
-# For production use-case, install the libraries at your cluster level with an init script instead. 
-install_ocr_on_nodes()
+import warnings
+from pypdf import PdfReader
+
+def parse_bytes_pypdf(raw_doc_contents_bytes: bytes):
+    try:
+        pdf = io.BytesIO(raw_doc_contents_bytes)
+        reader = PdfReader(pdf)
+        parsed_content = [page_content.extract_text() for page_content in reader.pages]
+        return "\n".join(parsed_content)
+    except Exception as e:
+        warnings.warn(f"Exception {e} has been thrown during parsing")
+        return None
 
 # COMMAND ----------
 
@@ -135,26 +145,11 @@ install_ocr_on_nodes()
 
 # COMMAND ----------
 
-# DBTITLE 1,Transform pdf as text
-from unstructured.partition.auto import partition
-import re
-
-def extract_doc_text(x : bytes) -> str:
-  # Read files and extract the values with unstructured
-  sections = partition(file=io.BytesIO(x))
-  def clean_section(txt):
-    txt = re.sub(r'\n', '', txt)
-    return re.sub(r' ?\.', '.', txt)
-  # Default split is by section of document, concatenate them all together because we want to split by sentence instead.
-  return "\n".join([clean_section(s.text) for s in sections]) 
-
-# COMMAND ----------
-
 # DBTITLE 1,Trying our text extraction function with a single pdf file
 import io
 import re
 with requests.get('https://github.com/databricks-demos/dbdemos-dataset/blob/main/llm/databricks-pdf-documentation/Databricks-Customer-360-ebook-Final.pdf?raw=true') as pdf:
-  doc = extract_doc_text(pdf.content)  
+  doc = parse_bytes_pypdf(pdf.content)  
   print(doc)
 
 # COMMAND ----------
@@ -166,8 +161,8 @@ with requests.get('https://github.com/databricks-demos/dbdemos-dataset/blob/main
 
 # COMMAND ----------
 
-from llama_index.langchain_helpers.text_splitter import SentenceSplitter
-from llama_index import Document, set_global_tokenizer
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core import Document, set_global_tokenizer
 from transformers import AutoTokenizer
 from typing import Iterator
 
@@ -181,9 +176,11 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
       AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer")
     )
     #Sentence splitter from llama_index to split on sentences
-    splitter = SentenceSplitter(chunk_size=500, chunk_overlap=50)
+    splitter = SentenceSplitter(chunk_size=500, chunk_overlap=10)
     def extract_and_split(b):
-      txt = extract_doc_text(b)
+      txt = parse_bytes_pypdf(b)
+      if txt is None:
+        return []
       nodes = splitter.get_nodes_from_documents([Document(text=txt)])
       return [n.text for n in nodes]
 

@@ -1,31 +1,48 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # 2/ Advanced chatbot with message history and filter using Langchain and DBRX Instruct
+# MAGIC # 2/ Creating the chatbot with Retrieval Augmented Generation (RAG) and DBRX Instruct
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-self-managed-flow-2.png?raw=true" style="float: right; margin-left: 10px"  width="900px;">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-managed-flow-2.png?raw=true" style="float: right; margin-left: 10px"  width="900px;">
 # MAGIC
 # MAGIC Our Vector Search Index is now ready!
 # MAGIC
-# MAGIC Let's now create a more advanced langchain model to perform RAG.
+# MAGIC Let's now create and deploy a new Model Serving Endpoint to perform RAG.
 # MAGIC
-# MAGIC We will improve our langchain model with the following:
+# MAGIC The flow will be the following:
 # MAGIC
-# MAGIC - Build a complete chain supporting a chat history, using Databricks DBRX Instruct input style
-# MAGIC - Add a filter to only answer Databricks-related questions
-# MAGIC - Compute the embeddings with Databricks BGE models within our chain to query the self-managed Vector Search Index
+# MAGIC - A user asks a question
+# MAGIC - The question is sent to our serverless Chatbot RAG endpoint
+# MAGIC - The endpoint compute the embeddings and searches for docs similar to the question, leveraging the Vector Search Index
+# MAGIC - The endpoint creates a prompt enriched with the doc
+# MAGIC - The prompt is sent to the DBRX Instruct Foundation Model Serving Endpoint
+# MAGIC - We display the output to our users!
+# MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=02-Deploy-RAG-Chatbot-Model&demo_name=chatbot-rag-llm&event=VIEW">
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC *Note: RAG performs document searches using Databricks Vector Search. In this notebook, we assume that the search index is ready for use. Make sure you run the previous [01-Data-Preparation-and-Index]($./01-Data-Preparation-and-Index [DO NOT EDIT]) notebook.*
 # MAGIC
 
 # COMMAND ----------
 
+# DBTITLE 1,Install the required libraries
 # MAGIC %pip install databricks-rag-studio mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37 databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-init-advanced $reset_all_data=false
+# MAGIC %run ../_resources/00-init $reset_all_data=false
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC ### Building our Chain
+# MAGIC
+# MAGIC In this example, we'll assume you already have a basic understanding of langchain. Check our [previous notebook](../00-first-step/01-First-Step-RAG-On-Databricks) to take it one step at a time!
 
 # COMMAND ----------
 
@@ -35,11 +52,7 @@ rag_chain_config = {
         "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,
     },
     "input_example": {
-        "messages": [
-            {"role": "user", "content": "What is Apache Spark"},
-            {"role": "assistant", "content": "Apache spark is a distributed, OSS in-memory computation engine."},
-            {"role": "user", "content": "Does it support streaming?"}
-        ]
+        "messages": [{"content": "Sample user question", "role": "user"}]
     },
     "llm_config": {
         "llm_parameters": {"max_tokens": 1500, "temperature": 0.01},
@@ -47,63 +60,31 @@ rag_chain_config = {
         "llm_prompt_template_variables": ["context", "question"],
     },
     "retriever_config": {
-        "embedding_model": "databricks-bge-large-en",
         "chunk_template": "Passage: {chunk_text}\n",
         "data_pipeline_tag": "poc",
-        "parameters": {"k": 3, "query_type": "ann"},
+        "parameters": {"k": 5, "query_type": "ann"},
         "schema": {"chunk_text": "content", "document_uri": "url", "primary_key": "id"},
-        "vector_search_index": f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index",
+        "vector_search_index": f"{catalog}.{db}.databricks_documentation_vs_index",
     },
 }
-import yaml
 with open('rag_chain_config.yaml', 'w') as f:
   yaml.dump(rag_chain_config, f)
 model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.yaml')
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Exploring Langchain capabilities
-# MAGIC
-# MAGIC Let's start with the basics and send a query to a Databricks Foundation Model using LangChain.
-
-# COMMAND ----------
-
-# MAGIC %md When invoking our chain, we'll pass history as a list, specifying whether each message was sent by a user or the assistant. For example:
-# MAGIC
-# MAGIC ```
-# MAGIC [
-# MAGIC   {"role": "user", "content": "What is Apache Spark?"}, 
-# MAGIC   {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, 
-# MAGIC   {"role": "user", "content": "Does it support streaming?"}
-# MAGIC ]
-# MAGIC ```
-# MAGIC
-# MAGIC Let's create chain components to transform this input into the inputs passed to `prompt_with_history`.
-
-# COMMAND ----------
-
-# DBTITLE 1,Chat History Extractor Chain
+# DBTITLE 1,Write the chain to a companion file to avoid serialization issues
 # MAGIC %%writefile chain.py
-# MAGIC from langchain_community.embeddings import DatabricksEmbeddings
-# MAGIC from operator import itemgetter
-# MAGIC import mlflow
 # MAGIC import os
-# MAGIC
+# MAGIC import mlflow
+# MAGIC from operator import itemgetter
 # MAGIC from databricks.vector_search.client import VectorSearchClient
-# MAGIC
 # MAGIC from langchain_community.chat_models import ChatDatabricks
 # MAGIC from langchain_community.vectorstores import DatabricksVectorSearch
-# MAGIC
 # MAGIC from langchain_core.runnables import RunnableLambda
 # MAGIC from langchain_core.output_parsers import StrOutputParser
-# MAGIC from langchain_core.prompts import (
-# MAGIC     PromptTemplate,
-# MAGIC     ChatPromptTemplate,
-# MAGIC     MessagesPlaceholder,
-# MAGIC )
-# MAGIC from langchain_core.runnables import RunnablePassthrough, RunnableBranch
-# MAGIC from langchain_core.messages import HumanMessage, AIMessage
+# MAGIC from langchain_core.prompts import PromptTemplate
+# MAGIC from langchain_core.runnables import RunnablePassthrough
 # MAGIC
 # MAGIC ## Enable MLflow Tracing
 # MAGIC mlflow.langchain.autolog()
@@ -112,12 +93,8 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC def extract_user_query_string(chat_messages_array):
 # MAGIC     return chat_messages_array[-1]["content"]
 # MAGIC
-# MAGIC # Return the chat history, which is is everything before the last question
-# MAGIC def extract_chat_history(chat_messages_array):
-# MAGIC     return chat_messages_array[:-1]
-# MAGIC
-# MAGIC # Load the chain's configuration
-# MAGIC model_config = mlflow.models.ModelConfig(development_config="rag_chain_config.yaml")
+# MAGIC #Get the conf from the local conf file
+# MAGIC model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.yaml')
 # MAGIC
 # MAGIC databricks_resources = model_config.get("databricks_resources")
 # MAGIC retriever_config = model_config.get("retriever_config")
@@ -131,13 +108,10 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC )
 # MAGIC vector_search_schema = retriever_config.get("schema")
 # MAGIC
-# MAGIC embedding_model = DatabricksEmbeddings(endpoint=retriever_config.get("embedding_model"))
-# MAGIC
 # MAGIC # Turn the Vector Search index into a LangChain retriever
 # MAGIC vector_search_as_retriever = DatabricksVectorSearch(
 # MAGIC     vs_index,
 # MAGIC     text_column=vector_search_schema.get("chunk_text"),
-# MAGIC     embedding=embedding_model, 
 # MAGIC     columns=[
 # MAGIC         vector_search_schema.get("primary_key"),
 # MAGIC         vector_search_schema.get("chunk_text"),
@@ -145,13 +119,14 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC     ],
 # MAGIC ).as_retriever(search_kwargs=retriever_config.get("parameters"))
 # MAGIC
-# MAGIC # Enable the RAG Studio Review App to properly display retrieved chunks and evaluation suite to measure the retriever
+# MAGIC # Required to:
+# MAGIC # 1. Enable the RAG Studio Review App to properly display retrieved chunks
+# MAGIC # 2. Enable evaluation suite to measure the retriever
 # MAGIC mlflow.models.set_retriever_schema(
 # MAGIC     primary_key=vector_search_schema.get("primary_key"),
 # MAGIC     text_column=vector_search_schema.get("chunk_text"),
-# MAGIC     doc_uri=vector_search_schema.get("document_uri")  # Review App uses `doc_uri` to display chunks from the same document in a single view
+# MAGIC     doc_uri=vector_search_schema.get("document_uri")
 # MAGIC )
-# MAGIC
 # MAGIC
 # MAGIC # Method to format the docs returned by the retriever into the prompt
 # MAGIC def format_context(docs):
@@ -159,50 +134,16 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC     chunk_contents = [
 # MAGIC         chunk_template.format(
 # MAGIC             chunk_text=d.page_content,
-# MAGIC             document_uri=d.metadata[vector_search_schema.get("document_uri")],
 # MAGIC         )
 # MAGIC         for d in docs
 # MAGIC     ]
 # MAGIC     return "".join(chunk_contents)
 # MAGIC
-# MAGIC
 # MAGIC # Prompt Template for generation
-# MAGIC prompt = ChatPromptTemplate.from_messages(
-# MAGIC     [
-# MAGIC         ("system", llm_config.get("llm_prompt_template")),
-# MAGIC         # Note: This chain does not compress the history, so very long converastions can overflow the context window.
-# MAGIC         MessagesPlaceholder(variable_name="formatted_chat_history"),
-# MAGIC         # User's most current question
-# MAGIC         ("user", "{question}"),
-# MAGIC     ]
+# MAGIC prompt = PromptTemplate(
+# MAGIC     template=llm_config.get("llm_prompt_template"),
+# MAGIC     input_variables=llm_config.get("llm_prompt_template_variables"),
 # MAGIC )
-# MAGIC
-# MAGIC
-# MAGIC # Format the converastion history to fit into the prompt template above.
-# MAGIC def format_chat_history_for_prompt(chat_messages_array):
-# MAGIC     history = extract_chat_history(chat_messages_array)
-# MAGIC     formatted_chat_history = []
-# MAGIC     if len(history) > 0:
-# MAGIC         for chat_message in history:
-# MAGIC             if chat_message["role"] == "user":
-# MAGIC                 formatted_chat_history.append(HumanMessage(content=chat_message["content"]))
-# MAGIC             elif chat_message["role"] == "assistant":
-# MAGIC                 formatted_chat_history.append(AIMessage(content=chat_message["content"]))
-# MAGIC     return formatted_chat_history
-# MAGIC
-# MAGIC
-# MAGIC # Prompt Template for query rewriting to allow converastion history to work - this will translate a query such as "how does it work?" after a question such as "what is spark?" to "how does spark work?".
-# MAGIC query_rewrite_template = """Based on the chat history below, we want you to generate a query for an external data source to retrieve relevant documents so that we can better answer the question. The query should be in natural language. The external data source uses similarity search to search for relevant documents in a vector space. So the query should be similar to the relevant documents semantically. Answer with only the query. Do not add explanation.
-# MAGIC
-# MAGIC Chat history: {chat_history}
-# MAGIC
-# MAGIC Question: {question}"""
-# MAGIC
-# MAGIC query_rewrite_prompt = PromptTemplate(
-# MAGIC     template=query_rewrite_template,
-# MAGIC     input_variables=["chat_history", "question"],
-# MAGIC )
-# MAGIC
 # MAGIC
 # MAGIC # FM for generation
 # MAGIC model = ChatDatabricks(
@@ -214,48 +155,38 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC chain = (
 # MAGIC     {
 # MAGIC         "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
-# MAGIC         "chat_history": itemgetter("messages") | RunnableLambda(extract_chat_history),
-# MAGIC         "formatted_chat_history": itemgetter("messages")
-# MAGIC         | RunnableLambda(format_chat_history_for_prompt),
-# MAGIC     }
-# MAGIC     | RunnablePassthrough()
-# MAGIC     | {
-# MAGIC         "context": RunnableBranch(  # Only re-write the question if there is a chat history
-# MAGIC             (
-# MAGIC                 lambda x: len(x["chat_history"]) > 0,
-# MAGIC                 query_rewrite_prompt | model | StrOutputParser(),
-# MAGIC             ),
-# MAGIC             itemgetter("question"),
-# MAGIC         )
+# MAGIC         "context": itemgetter("messages")
+# MAGIC         | RunnableLambda(extract_user_query_string)
 # MAGIC         | vector_search_as_retriever
 # MAGIC         | RunnableLambda(format_context),
-# MAGIC         "formatted_chat_history": itemgetter("formatted_chat_history"),
-# MAGIC         "question": itemgetter("question"),
 # MAGIC     }
 # MAGIC     | prompt
 # MAGIC     | model
 # MAGIC     | StrOutputParser()
 # MAGIC )
 # MAGIC
-# MAGIC ## Tell MLflow logging where to find your chain.
+# MAGIC # Tell MLflow logging where to find your chain.
 # MAGIC mlflow.models.set_model(model=chain)
+# MAGIC
+# MAGIC # COMMAND ----------
+# MAGIC
+# MAGIC # chain.invoke(model_config.get("input_example"))
 
 # COMMAND ----------
 
 #dbdemos__delete_this_cell
 #force the experiment to the field demos one. Required to launch as a batch
-init_experiment_for_batch("chatbot-rag-llm-advanced", "simple")
+init_experiment_for_batch("chatbot-rag-llm-standard", "simple")
 
 # COMMAND ----------
 
 # Log the model to MLflow
-with mlflow.start_run(run_name=f"dbdemos_rag_advanced"):
+with mlflow.start_run(run_name=f"dbdemos_rag_quickstart"):
     logged_chain_info = mlflow.langchain.log_model(
         lc_model=os.path.join(os.getcwd(), 'chain.py'),  # Chain code file e.g., /path/to/the/chain.py 
         model_config='rag_chain_config.yaml',  # Chain configuration 
         artifact_path="chain",  # Required by MLflow
         input_example=model_config.get("input_example"),  # Save the chain's input schema.  MLflow will execute the chain before logging & capture it's output schema.
-        example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
     )
 
 # Test the chain locally
@@ -264,8 +195,13 @@ chain.invoke(model_config.get("input_example"))
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Let's deploy our RAG application and open it for external expert users
+
+# COMMAND ----------
+
 import databricks.rag_studio
-MODEL_NAME = "rag_demo_advanced"
+MODEL_NAME = "dbdemos_rag_demo"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
 browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
@@ -300,6 +236,7 @@ print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_i
 
 # Add the user-facing instructions to the Review App
 databricks.rag_studio.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+
 wait_for_model_serving_endpoint_to_be_ready(f"rag_studio_{catalog}-{db}-{MODEL_NAME}")
 
 # COMMAND ----------
@@ -320,18 +257,48 @@ print(f"Share this URL with your stakeholders: https://{browser_url}/ml/rag-stud
 
 # COMMAND ----------
 
+# MAGIC %md ## Find review app name
+# MAGIC
+# MAGIC If you lose this notebook's state and need to find the URL to your Review App, you can list the chatbot deployed:
+
+# COMMAND ----------
+
+active_deployments = databricks.rag_studio.list_deployments()
+active_deployment = next((item for item in active_deployments if item.model_name == MODEL_NAME), None)
+if active_deployment:
+  print(f"Review App URL: {active_deployment.rag_app_url}")
+
+# COMMAND ----------
+
 # MAGIC %md
+# MAGIC ## Congratulations! You have deployed your first GenAI RAG model!
 # MAGIC
-# MAGIC ## Conclusion
+# MAGIC You're now ready to deploy the same logic for your internal knowledge base leveraging Lakehouse AI.
 # MAGIC
-# MAGIC We've seen how we can improve our chatbot, adding more advanced capabilities to handle a chat history.
+# MAGIC We've seen how the Lakehouse AI is uniquely positioned to help you solve your GenAI challenge:
 # MAGIC
-# MAGIC As you add capabilities to your model and tune the prompt, it will get harder to evaluate your model performance in a repeatable way.
+# MAGIC - Simplify Data Ingestion and preparation with Databricks Engineering Capabilities
+# MAGIC - Accelerate Vector Search  deployment with fully managed indexes
+# MAGIC - Leverage Databricks DBRX Instruct foundation model endpoint
+# MAGIC - Deploy realtime model endpoint to perform RAG and provide Q&A capabilities
 # MAGIC
-# MAGIC Your new prompt might work well for what you tried to fixed, but could also have impact on other questions.
+# MAGIC Lakehouse AI is uniquely positioned to accelerate your GenAI deployment.
 # MAGIC
-# MAGIC ## Next: Introducing offline model evaluation with MLflow
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next: ready to take it to a next level?
 # MAGIC
-# MAGIC To solve these issue, we need a repeatable way of testing our model answer as part of our LLMOps deployment!
+# MAGIC Open the [02-advanced/01-PDF-Advanced-Data-Preparation]($../02-advanced/01-PDF-Advanced-Data-Preparation) notebook series to learn more about unstructured data, advanced chain, model evaluation and monitoring.
+
+# COMMAND ----------
+
+# MAGIC %md # Cleanup
 # MAGIC
-# MAGIC Open the next [03-Offline-Evaluation]($./03-Offline-Evaluation) notebook to discover how to evaluate your model.
+# MAGIC To free up resources, please delete uncomment and run the below cell.
+
+# COMMAND ----------
+
+# /!\ THIS WILL DROP YOUR DEMO SCHEMA ENTIRELY /!\ 
+# cleanup_demo(catalog, db, serving_endpoint_name, f"{catalog}.{db}.databricks_documentation_vs_index")

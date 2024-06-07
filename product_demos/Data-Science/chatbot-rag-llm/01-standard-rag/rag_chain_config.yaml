@@ -1,0 +1,34 @@
+databricks_resources:
+  llm_endpoint_name: databricks-dbrx-instruct
+  vector_search_endpoint_name: dbdemos_vs_endpoint
+input_example:
+  messages:
+  - content: Sample user question
+    role: user
+llm_config:
+  llm_parameters:
+    max_tokens: 1500
+    temperature: 0.01
+  llm_prompt_template: 'You are a trusted assistant that helps answer questions based
+    only on the provided information. If you do not know the answer to a question,
+    you truthfully say you do not know.  Here is some context which might or might
+    not help you answer: {context}.  Answer directly, do not repeat the question,
+    do not start with something like: the answer to the question, do not add AI in
+    front of your answer, do not say: here is the answer, do not mention the context
+    or the question. Based on this context, answer this question: {question}'
+  llm_prompt_template_variables:
+  - context
+  - question
+retriever_config:
+  chunk_template: 'Passage: {chunk_text}
+
+    '
+  data_pipeline_tag: poc
+  parameters:
+    k: 5
+    query_type: ann
+  schema:
+    chunk_text: content
+    document_uri: url
+    primary_key: id
+  vector_search_index: main.dbdemos_rag_chatbot.databricks_documentation_vs_index

@@ -332,7 +332,7 @@ with mlflow.start_run(run_name="basic_rag_bot"):
           input_example=input_example
       )
 
-MODEL_NAME = "basic_rag_demo_2"
+MODEL_NAME = "basic_rag_demo"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
 # Register to UC
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)

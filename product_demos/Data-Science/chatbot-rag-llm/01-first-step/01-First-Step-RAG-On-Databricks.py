@@ -21,8 +21,7 @@
 # COMMAND ----------
 
 # MAGIC %pip uninstall -y mlflow-skinny mlflow mlflow[gateway]
-# MAGIC %pip install -U -qqqq databricks-sdk==0.28.0 databricks-rag-studio mlflow-skinny mlflow[gateway] git+https://github.com/mlflow/mlflow.git@databricks-sdk langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0
-# MAGIC  databricks-vectorsearch
+# MAGIC %pip install -U -qqqq databricks-sdk==0.28.0 databricks-rag-studio mlflow-skinny mlflow[gateway] git+https://github.com/mlflow/mlflow.git@databricks-sdk langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

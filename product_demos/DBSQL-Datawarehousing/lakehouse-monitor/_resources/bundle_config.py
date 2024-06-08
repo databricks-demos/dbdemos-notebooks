@@ -20,7 +20,7 @@
   "notebooks": [
     {
       "path": "_resources/01-DataGeneration", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Prep data", 

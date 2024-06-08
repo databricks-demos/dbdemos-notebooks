@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../../_resources/00-global-setup-v2
+# MAGIC %run ../../../../_resources/00-global-setup-v2
 
 # COMMAND ----------
 

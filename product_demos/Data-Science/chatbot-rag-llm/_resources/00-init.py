@@ -24,6 +24,20 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
+from IPython.core.magic import register_cell_magic
+
+@register_cell_magic
+def writefile(line, cell):
+    filename = line.strip()
+    try:
+      with open(filename, 'w') as f:
+          f.write(cell)
+          print('file overwritten')
+    except:
+      print(f'WARN: could not write the file {filename}, skipping the error for job test run')
+
+# COMMAND ----------
+
 from pyspark.sql.functions import pandas_udf
 import pandas as pd
 import pyspark.sql.functions as F

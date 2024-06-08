@@ -109,8 +109,14 @@ except Exception as lhm_exception:
 
 # COMMAND ----------
 
+import time
 # Display profile metrics table
 profile_table = f"{TABLE_NAME}_profile_metrics"
+
+#Creating the monitor and computing its first metrics might take a few seconds, let's wait a bit before displaying the profile metrics
+while not spark.catalog.tableExists(profile_table) or spark.table(profile_table).isEmpty():
+  time.sleep(10)
+  
 display(spark.sql(f"SELECT * FROM {profile_table}"))
 
 # Display the drift metrics table

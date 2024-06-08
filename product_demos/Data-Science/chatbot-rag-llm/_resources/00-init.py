@@ -26,6 +26,8 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 from IPython.core.magic import register_cell_magic
 
+# When running in a job, writting to the local file fails. This simply skip it as we ship the file in the repo so there is no need to write it if it's running from the repo
+# Note: we don't ship the chain file when we install it with dbdemos.instal(...).
 @register_cell_magic
 def writefile(line, cell):
     filename = line.strip()

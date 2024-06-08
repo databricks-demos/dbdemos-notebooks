@@ -27,7 +27,7 @@
       "description": "Data generation."
     },
     {
-      "path": "./01-Timeseries-monitor", 
+      "path": "01-Timeseries-monitor", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,

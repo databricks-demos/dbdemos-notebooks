@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-rag-studio mlflow databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U mlflow databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -40,10 +40,12 @@
 # COMMAND ----------
 
 MODEL_NAME = "dbdemos_rag_demo"
+endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
+
 # Our frontend application will hit the model endpoint we deployed.
 # Because dbdemos let you change your catalog and database, let's make sure we deploy the app with the proper endpoint name
 yaml_app_config = {"command": ["uvicorn", "main:app", "--workers", "4"],
-                    "env": [{"name": "MODEL_SERVING_ENDPOINT", "value": f"rag_studio_{catalog}-{db}-{MODEL_NAME}"}]
+                    "env": [{"name": "MODEL_SERVING_ENDPOINT", "value": endpoint_name}]
                   }
 try:
     with open('chatbot_app/app.yaml', 'w') as f:
@@ -145,7 +147,7 @@ helper.details("dbdemos-rag-chatbot-app")
 # MAGIC %md-sandbox
 # MAGIC ## Your Lakehouse app is ready and deployed!
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-gradio-app.png?raw=true" width="1000px" style="float: right">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-gradio-app.png?raw=true" width="900px" style="float: right; margin-left:10px">
 # MAGIC
 # MAGIC Open the UI to start requesting your chatbot.
 # MAGIC

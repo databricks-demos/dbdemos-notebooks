@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-rag-studio mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37 databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37 databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -265,7 +265,6 @@ chain.invoke(model_config.get("input_example"))
 
 # COMMAND ----------
 
-import databricks.rag_studio
 MODEL_NAME = "rag_demo_advanced"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
 browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
@@ -295,13 +294,14 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 
 
 # Deploy to enable the Review APP and create an API endpoint
-deployment_info = databricks.rag_studio.deploy_model(model_name=MODEL_NAME_FQN, version=uc_registered_model_info.version, scale_to_zero=True)
+endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
+deployment_info = agents.deploy_model(model_name=MODEL_NAME_FQN, version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
 
 print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 
 # Add the user-facing instructions to the Review App
-databricks.rag_studio.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
-wait_for_model_serving_endpoint_to_be_ready(f"rag_studio_{catalog}-{db}-{MODEL_NAME}")
+agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 # COMMAND ----------
 
@@ -315,7 +315,7 @@ wait_for_model_serving_endpoint_to_be_ready(f"rag_studio_{catalog}-{db}-{MODEL_N
 print(f"Review App: https://{browser_url}/ml/rag-studio/{MODEL_NAME_FQN}/{uc_registered_model_info.version}/instructions")
 user_list = ["quentin.ambard@databricks.com"]
 # Set the permissions.
-databricks.rag_studio.set_permissions(model_name=MODEL_NAME_FQN, users=user_list, permission_level=databricks.rag_studio.PermissionLevel.CAN_QUERY)
+agents.set_permissions(model_name=MODEL_NAME_FQN, users=user_list, permission_level=agents.PermissionLevel.CAN_QUERY)
 
 print(f"Share this URL with your stakeholders: https://{browser_url}/ml/rag-studio/{MODEL_NAME_FQN}/{uc_registered_model_info.version}/instructions")
 

@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-rag-studio mlflow mlflow-skinny databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow mlflow-skinny databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -52,13 +52,13 @@ init_experiment_for_batch("chatbot-rag-llm-advanced", "simple")
 
 # COMMAND ----------
 
-import databricks.rag_studio
+from databricks import agents
 MODEL_NAME = "rag_demo_advanced"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
 browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
 # # Get the name of the Inference Tables where logs are stored
-active_deployments = databricks.rag_studio.list_deployments()
+active_deployments = agents.list_deployments()
 active_deployment = next((item for item in active_deployments if item.model_name == MODEL_NAME_FQN), None)
 
 # COMMAND ----------

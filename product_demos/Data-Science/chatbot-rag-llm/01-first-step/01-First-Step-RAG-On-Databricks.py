@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.28.0 databricks-rag-studio mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37
+# MAGIC %pip install -U --quiet databricks-sdk==0.28.0 databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -318,7 +318,6 @@ init_experiment_for_batch("chatbot-rag-llm-first-step", "simple")
 # COMMAND ----------
 
 # DBTITLE 1,Deploy the chain in Unity Catalog
-from databricks import rag_studio
 # Log the model to MLflow
 with mlflow.start_run(run_name="basic_rag_bot"):
   logged_chain_info = mlflow.langchain.log_model(
@@ -343,22 +342,23 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 
 # COMMAND ----------
 
+from databricks import agents
 # Deploy to enable the Review APP and create an API endpoint
-# TODO: change endpoint name
 # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
-deployment_info = rag_studio.deploy_model(MODEL_NAME_FQN, uc_registered_model_info.version, scale_to_zero=True)
+endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
+deployment_info = agents.deploy(MODEL_NAME_FQN, uc_registered_model_info.version, endpoint_name=endpoint_name, scale_to_zero=True)
 
 instructions_to_reviewer = f"""## Instructions for Testing the Databricks Documentation Assistant chatbot
 
 Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
 
 # Add the user-facing instructions to the Review App
-rag_studio.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
-browser_url =mlflow.utils.databricks_utils.get_browser_hostname()
+browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
 print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
-wait_for_model_serving_endpoint_to_be_ready(f"rag_studio_{catalog}-{db}-{MODEL_NAME}")
+wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag_app_url}")
 

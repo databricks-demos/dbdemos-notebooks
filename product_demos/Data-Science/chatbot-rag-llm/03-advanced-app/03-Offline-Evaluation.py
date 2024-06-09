@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U databricks-rag-studio mlflow mlflow-skinny databricks-sdk
+# MAGIC %pip install --quiet -U databricks-rag-studio mlflow mlflow-skinny databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

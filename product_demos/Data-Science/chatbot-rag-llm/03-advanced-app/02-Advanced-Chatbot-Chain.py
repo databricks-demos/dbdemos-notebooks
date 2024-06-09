@@ -55,9 +55,11 @@ rag_chain_config = {
         "vector_search_index": f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index",
     },
 }
-import yaml
-with open('rag_chain_config.yaml', 'w') as f:
-  yaml.dump(rag_chain_config, f)
+try:
+    with open('rag_chain_config.yaml', 'w') as f:
+        yaml.dump(rag_chain_config, f)
+except:
+    print('pass to work on build job')
 model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.yaml')
 
 # COMMAND ----------

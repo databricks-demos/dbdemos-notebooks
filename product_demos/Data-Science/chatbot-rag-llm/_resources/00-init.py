@@ -9,11 +9,6 @@
 
 # COMMAND ----------
 
-#%pip install mlflow==2.13.1 lxml==4.9.3 transformers==4.30.2 langchain==0.1.5 databricks-vectorsearch==0.22
-#dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %run ../config
 
 # COMMAND ----------
@@ -50,12 +45,12 @@ import yaml
 from typing import Iterator
 from mlflow import MlflowClient
 mlflow.set_registry_uri('databricks-uc')
-import warnings
-warnings.filterwarnings("ignore")
 
 # Workaround for a bug fix that is in progress
 mlflow.spark.autolog(disable=True)
 
+import warnings
+warnings.filterwarnings("ignore")
 # Disable MLflow warnings
 import logging
 logging.getLogger('mlflow').setLevel(logging.ERROR)

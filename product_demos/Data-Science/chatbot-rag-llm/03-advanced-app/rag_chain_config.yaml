@@ -36,4 +36,4 @@ retriever_config:
     chunk_text: content
     document_uri: url
     primary_key: id
-  vector_search_index: main.dbdemos_rag_chatbot.databricks_pdf_documentation_self_managed_vs_index
+  vector_search_index: main__build.dbdemos_rag_chatbot.databricks_pdf_documentation_self_managed_vs_index

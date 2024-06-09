@@ -12,3 +12,6 @@
 # MAGIC This is also a good opportunity to either improve your documentation or adjust your prompt, and ultimately add the correct answer to your evaluation dataset!
 # MAGIC
 # MAGIC **We'll improve this demo soon to show you how you can automate this and leverage a Lakehouse Monitor on your table with alerts!**
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=04-Online-Evaluation&demo_name=chatbot-rag-llm&event=VIEW">

@@ -1,0 +1,8 @@
+command:
+- uvicorn
+- main:app
+- --workers
+- '4'
+env:
+- name: MODEL_SERVING_ENDPOINT
+  value: rag_studio_main__build-dbdemos_rag_chatbot-dbdemos_rag_demo

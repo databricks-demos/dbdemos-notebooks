@@ -68,7 +68,7 @@
       "path": "02-simple-app/01-Data-Preparation-and-Index", 
       "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
+      "add_cluster_setup_cell": False, 
       "title":  "Data preparation for chatbot", 
       "description": "Prepare doc chunks and build your Vector Search Index"
     },
@@ -76,7 +76,7 @@
       "path": "02-simple-app/02-Deploy-RAG-Chatbot-Model", 
       "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
+      "add_cluster_setup_cell": False, 
       "title":  "Build your RAG chatbot service", 
       "description": "Leverage Foundation Model to perform RAG and answer customer questions."
     },
@@ -84,7 +84,7 @@
       "path": "03-advanced-app/01-PDF-Advanced-Data-Preparation", 
       "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
+      "add_cluster_setup_cell": False, 
       "title":  "Create PDF chunks and vector search index", 
       "description": "Ingestion unstructured data and create a self-managed vector search index"
     },
@@ -92,15 +92,15 @@
       "path": "03-advanced-app/02-Advanced-Chatbot-Chain", 
       "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
+      "add_cluster_setup_cell": False, 
       "title":  "Build your langchain bot", 
       "description": "Advanced langchain chain, working with chat history."
     },
     {
       "path": "03-advanced-app/03-Offline-Evaluation", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
+      "add_cluster_setup_cell": False, 
       "title":  "Offline evaluation with LLM as a Judge", 
       "description": "Evaluate your chatbot with an offline dataset."
     },
@@ -108,7 +108,7 @@
       "path": "03-advanced-app/04-Online-Evaluation", 
       "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True, 
+      "add_cluster_setup_cell": False, 
       "title":  "Deploy your endpoint with Inference tables", 
       "description": "Log your endpoint payload as a Delta table."
     },

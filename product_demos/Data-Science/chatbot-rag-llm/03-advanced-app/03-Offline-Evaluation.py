@@ -17,6 +17,9 @@
 # MAGIC     - `request`: As entered by the user
 # MAGIC
 # MAGIC Across all types of requests, if the user 👍 a chunk from the `retrieved_context`, the `doc_uri` of that chunk is included in `expected_retrieved_context` for the question.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=03-Offline-Evaluation&demo_name=chatbot-rag-llm&event=VIEW">
 
 # COMMAND ----------
 
@@ -60,10 +63,6 @@ active_deployment = next((item for item in active_deployments if item.model_name
 
 # COMMAND ----------
 
-# MAGIC %md 
-
-# COMMAND ----------
-
 from databricks.sdk import WorkspaceClient
 w = WorkspaceClient()
 print(active_deployment)
@@ -82,6 +81,7 @@ inference_table_schema = endpoint_config.schema_name
 assessment_table = f"{inference_table_catalog}.{inference_table_schema}.`{inference_table_name}_assessment_logs`"
 request_table = f"{inference_table_catalog}.{inference_table_schema}.`{inference_table_name}_request_logs`"
 
+# Note: you might have to wait a bit for the tables to be ready
 print(f"Request logs: {request_table}")
 requests_df = spark.table(request_table)
 print(f"Assessment logs: {assessment_table}")
@@ -166,10 +166,6 @@ display(eval_dataset)
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Load the correct Python environment for the model
 # MAGIC
@@ -203,6 +199,7 @@ with mlflow.start_run(run_name="eval_dataset_advanced"):
 
 # MAGIC %md
 # MAGIC You can open MLFlow and review the eval metrics, and also compare it to previous eval runs!
+# MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-mlflow-eval.png?raw=true" width="1200px"> 
 
 # COMMAND ----------

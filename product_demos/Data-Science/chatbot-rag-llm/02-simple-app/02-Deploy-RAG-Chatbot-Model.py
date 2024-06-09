@@ -227,10 +227,8 @@ Your inputs are invaluable for the development team. By providing detailed feedb
 
 Thank you for your time and effort in testing our assistant. Your contributions are essential to delivering a high-quality product to our end users."""
 
-
 # Register the chain to UC
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
-
 
 # Deploy to enable the Review APP and create an API endpoint
 deployment_info = databricks.rag_studio.deploy_model(model_name=MODEL_NAME_FQN, version=uc_registered_model_info.version, scale_to_zero=True)
@@ -291,9 +289,11 @@ if active_deployment:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Next: ready to take it to a next level?
+# MAGIC ## Next: Deploying our GenAI Assistant application to end users with Databricks Lakehouse Application
 # MAGIC
-# MAGIC Open the [03-advanced-app/01-PDF-Advanced-Data-Preparation]($../03-advanced-app/01-PDF-Advanced-Data-Preparation) notebook series to learn more about unstructured data, advanced chain, model evaluation and monitoring.
+# MAGIC We are now ready to build a front end application so that our users can ask questions to the chatbot. 
+# MAGIC
+# MAGIC Open the [03-Deploy-Frontend-Lakehouse-App]($./03-Deploy-Frontend-Lakehouse-App) how to deploy your first Lakehouse Application.
 
 # COMMAND ----------
 

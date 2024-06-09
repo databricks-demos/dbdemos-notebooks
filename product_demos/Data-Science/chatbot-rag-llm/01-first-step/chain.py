@@ -1,4 +1,11 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC Langchain RAG chain. It's best practice to build your chain as a separate file and reference it directly to avoid serialization issues. 
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=chain&demo_name=chatbot-rag-llm&event=VIEW">
+
+# COMMAND ----------
+
 from databricks.vector_search.client import VectorSearchClient
 from langchain_community.vectorstores import DatabricksVectorSearch
 from langchain.schema.runnable import RunnableLambda

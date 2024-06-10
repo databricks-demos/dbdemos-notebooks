@@ -249,6 +249,7 @@ init_experiment_for_batch("chatbot-rag-llm-advanced", "simple")
 
 # COMMAND ----------
 
+import mlflow
 # Log the model to MLflow
 with mlflow.start_run(run_name=f"dbdemos_rag_advanced"):
     logged_chain_info = mlflow.langchain.log_model(
@@ -271,6 +272,17 @@ browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
 # COMMAND ----------
 
+from databricks import agents
+# Register the chain to UC
+uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
+
+
+# Deploy to enable the Review APP and create an API endpoint
+endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
+deployment_info = agents.deploy_model(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
+
+print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
+
 instructions_to_reviewer = f"""### Instructions for Testing the our Databricks Documentation Chatbot assistant
 
 Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement.
@@ -289,18 +301,8 @@ Your inputs are invaluable for the development team. By providing detailed feedb
 Thank you for your time and effort in testing our assistant. Your contributions are essential to delivering a high-quality product to our end users."""
 
 
-# Register the chain to UC
-uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
-
-
-# Deploy to enable the Review APP and create an API endpoint
-endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
-deployment_info = agents.deploy_model(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
-
-print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
-
 # Add the user-facing instructions to the Review App
-# agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 # COMMAND ----------

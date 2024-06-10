@@ -110,6 +110,33 @@ spark.sql(f"""USE `{catalog}`.`{dbName}`""")
 
 # COMMAND ----------
 
+def patch_agent(): 
+  from unittest.mock import patch
+  def get_hostname():
+    from databricks.sdk import WorkspaceClient
+    return WorkspaceClient().config.host[len('https://'):]
+
+  if not 'patched' in dir(agents):
+    agents.patched = True
+    unpatch_deploy = agents.deploy
+    # Define the new behavior for the function
+    def deploy_patch(*args, **kwargs):
+      with patch("mlflow.utils.databricks_utils.get_browser_hostname", get_hostname):
+        return unpatch_deploy(*args, **kwargs)
+                
+    # Monkey patch the original function
+    agents.deploy = deploy_patch
+  else:
+    print(f"unpatch_deploy")
+
+try:
+  from databricks import agents
+  patch_agent()
+except:
+  pass
+
+# COMMAND ----------
+
 if not spark.catalog.tableExists("databricks_documentation") or spark.table("databricks_documentation").isEmpty() or \
     not spark.catalog.tableExists("eval_set_databricks_documentation") or spark.table("eval_set_databricks_documentation").isEmpty():
   spark.sql('''CREATE TABLE IF NOT EXISTS databricks_documentation (

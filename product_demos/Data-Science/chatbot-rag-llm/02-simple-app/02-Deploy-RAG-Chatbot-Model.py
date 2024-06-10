@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37 databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -232,14 +232,13 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 
 # Deploy to enable the Review APP and create an API endpoint
 endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
-deployment_info = agents.deploy(model_name=MODEL_NAME_FQN, version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
+deployment_info = agents.deploy(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
 
 print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 
 # Add the user-facing instructions to the Review App
 agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
-print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag_app_url}")
 wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 # COMMAND ----------
@@ -255,7 +254,7 @@ user_list = ["quentin.ambard@databricks.com"]
 # Set the permissions.
 agents.set_permissions(model_name=MODEL_NAME_FQN, users=user_list, permission_level=agents.PermissionLevel.CAN_QUERY)
 
-print(f"Share this URL with your stakeholders: {deployment_info.rag_app_url}")
+print(f"Share this URL with your stakeholders: {deployment_info.review_app_url}")
 
 # COMMAND ----------
 
@@ -266,9 +265,9 @@ print(f"Share this URL with your stakeholders: {deployment_info.rag_app_url}")
 # COMMAND ----------
 
 active_deployments = agents.list_deployments()
-active_deployment = next((item for item in active_deployments if item.model_name == MODEL_NAME), None)
+active_deployment = next((item for item in active_deployments if item.model_name == MODEL_NAME_FQN), None)
 if active_deployment:
-  print(f"Review App URL: {active_deployment.rag_app_url}")
+  print(f"Review App URL: {active_deployment.review_app_url}")
 
 # COMMAND ----------
 

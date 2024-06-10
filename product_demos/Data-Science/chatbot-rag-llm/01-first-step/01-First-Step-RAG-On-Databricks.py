@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.28.0 databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch==0.37
+# MAGIC %pip install -U --quiet databricks-sdk==0.28.0 databricks-agents mlflow-skinny mlflow mlflow[gateway] databricks-vectorsearch langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -346,7 +346,7 @@ from databricks import agents
 # Deploy to enable the Review APP and create an API endpoint
 # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
 endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
-deployment_info = agents.deploy(MODEL_NAME_FQN, uc_registered_model_info.version, endpoint_name=endpoint_name, scale_to_zero=True)
+deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, endpoint_name=endpoint_name, scale_to_zero=True)
 
 instructions_to_reviewer = f"""## Instructions for Testing the Databricks Documentation Assistant chatbot
 
@@ -359,8 +359,6 @@ browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
 print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
-
-print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag_app_url}")
 
 # COMMAND ----------
 
@@ -384,7 +382,7 @@ print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag
 
 # COMMAND ----------
 
-print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rag_app_url}")
+print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.review_app_url}")
 
 # COMMAND ----------
 
@@ -426,7 +424,7 @@ with mlflow.start_run(run_id=logged_chain_info.run_id):
     eval_results = mlflow.evaluate(
         data=eval_dataset,
         model=logged_chain_info.model_uri,
-        model_type="databricks-rag",
+        model_type="databricks-agent",
     )
 
 # COMMAND ----------

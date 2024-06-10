@@ -192,7 +192,7 @@ with mlflow.start_run(run_name="eval_dataset_advanced"):
     eval_results = mlflow.evaluate(
         data=eval_dataset,
         model=f'runs:/{model.run_id}/chain',
-        model_type="databricks-rag",
+        model_type="databricks-agent",
     )
 
 # COMMAND ----------

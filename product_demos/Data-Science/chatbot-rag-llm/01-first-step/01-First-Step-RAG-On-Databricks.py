@@ -353,7 +353,7 @@ instructions_to_reviewer = f"""## Instructions for Testing the Databricks Docume
 Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
 
 # Add the user-facing instructions to the Review App
-agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+# agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
 browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 

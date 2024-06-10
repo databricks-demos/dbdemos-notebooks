@@ -300,7 +300,7 @@ deployment_info = agents.deploy_model(model_name=MODEL_NAME_FQN, model_version=u
 print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 
 # Add the user-facing instructions to the Review App
-agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+# agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 # COMMAND ----------

@@ -110,6 +110,7 @@ spark.sql(f"""USE `{catalog}`.`{dbName}`""")
 
 # COMMAND ----------
 
+# temp patch waiting for the databricks-agent to release a fix for the agents api to work in workflows.
 def patch_agent(): 
   from unittest.mock import patch
   def get_hostname():

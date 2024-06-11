@@ -1,9 +1,11 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # 1/ Deploying our first RAG application with Mosaic AI Quality Lab
+# MAGIC # 1/ Deploying our first RAG application with Mosaic AI Agent Framework & Agent Evaluation
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic.png?raw=true" style="float: right; width: 800px; margin-left: 10px">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic.png?raw=true" style="width: 800px; margin-left: 10px">
+# MAGIC
+# MAGIC <br/>
 # MAGIC
 # MAGIC ## From data to chatbot in 10 minutes
 # MAGIC
@@ -20,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.28.0 databricks-agents mlflow-skinny mlflow mlflow[gateway] databricks-vectorsearch langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0
+# MAGIC %pip install -U --quiet databricks-sdk==0.28.0 databricks-agents mlflow-skinny mlflow mlflow[gateway] databricks-vectorsearch langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -321,13 +323,12 @@ init_experiment_for_batch("chatbot-rag-llm-first-step", "simple")
 # Log the model to MLflow
 with mlflow.start_run(run_name="basic_rag_bot"):
   logged_chain_info = mlflow.langchain.log_model(
-          #loader_fn=get_retriever,
-          #lc_model=chain,
           #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
           lc_model=os.path.join(os.getcwd(), 'chain'),  # Chain code file e.g., /path/to/the/chain.py 
           model_config=chain_config, # Chain configuration 
           artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
-          input_example=input_example
+          input_example=input_example,
+          example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
       )
 
 MODEL_NAME = "basic_rag_demo"
@@ -355,9 +356,6 @@ Your inputs are invaluable for the development team. By providing detailed feedb
 # Add the user-facing instructions to the Review App
 agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
-browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
-
-print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 # COMMAND ----------

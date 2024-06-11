@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -206,7 +206,6 @@ chain.invoke(model_config.get("input_example"))
 from databricks import agents
 MODEL_NAME = "dbdemos_rag_demo"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
-browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
 # COMMAND ----------
 
@@ -233,8 +232,6 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 # Deploy to enable the Review APP and create an API endpoint
 endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
 deployment_info = agents.deploy(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
-
-print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 
 # Add the user-facing instructions to the Review App
 agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)

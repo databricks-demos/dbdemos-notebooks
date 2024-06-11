@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.0 langchain_community==0.2.0 langchain_core==0.2.0 databricks-vectorsearch databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -268,7 +268,6 @@ chain.invoke(model_config.get("input_example"))
 
 MODEL_NAME = "rag_demo_advanced"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
-browser_url = mlflow.utils.databricks_utils.get_browser_hostname()
 
 # COMMAND ----------
 
@@ -280,8 +279,6 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 # Deploy to enable the Review APP and create an API endpoint
 endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
 deployment_info = agents.deploy_model(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True, endpoint_name=endpoint_name)
-
-print(f"View deployment status: https://{browser_url}/ml/endpoints/{deployment_info.endpoint_name}")
 
 instructions_to_reviewer = f"""### Instructions for Testing the our Databricks Documentation Chatbot assistant
 
@@ -314,12 +311,11 @@ wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 
 # COMMAND ----------
 
-print(f"Review App: https://{browser_url}/ml/rag-studio/{MODEL_NAME_FQN}/{uc_registered_model_info.version}/instructions")
 user_list = ["quentin.ambard@databricks.com"]
 # Set the permissions.
 agents.set_permissions(model_name=MODEL_NAME_FQN, users=user_list, permission_level=agents.PermissionLevel.CAN_QUERY)
 
-print(f"Share this URL with your stakeholders: https://{browser_url}/ml/rag-studio/{MODEL_NAME_FQN}/{uc_registered_model_info.version}/instructions")
+print(f"Share this URL with your stakeholders: {deployment_info.review_app_url}")
 
 # COMMAND ----------
 

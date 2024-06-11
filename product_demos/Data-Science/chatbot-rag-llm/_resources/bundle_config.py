@@ -50,7 +50,7 @@
     },
     {
       "path": "01-first-step/01-First-Step-RAG-On-Databricks", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "First Steps: RAG on Databricks", 
@@ -66,7 +66,7 @@
     },
     {
       "path": "02-simple-app/01-Data-Preparation-and-Index", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Data preparation for chatbot", 
@@ -74,7 +74,7 @@
     },
     {
       "path": "02-simple-app/02-Deploy-RAG-Chatbot-Model", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Build your RAG chatbot service", 
@@ -82,7 +82,7 @@
     },
     {
       "path": "03-advanced-app/01-PDF-Advanced-Data-Preparation", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Create PDF chunks and vector search index", 
@@ -90,7 +90,7 @@
     },
     {
       "path": "03-advanced-app/02-Advanced-Chatbot-Chain", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Build your langchain bot", 
@@ -106,7 +106,7 @@
     },
     {
       "path": "03-advanced-app/04-Online-Evaluation", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Deploy your endpoint with Inference tables", 

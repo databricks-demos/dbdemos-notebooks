@@ -69,7 +69,7 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 # MAGIC
 # MAGIC Once the endpoint is created, all we now have to do is to as Databricks to create the index on top of the existing table. 
 # MAGIC
-# MAGIC You just need to specify the text column and our embedding foundation model (`BGE`).  Databricks will build and synchronize the index automatically for us.
+# MAGIC You just need to specify the text column and our embedding foundation model (`GTE`).  Databricks will build and synchronize the index automatically for us.
 # MAGIC
 # MAGIC This can be done using the API, or in a few clicks within the Unity Catalog Explorer menu:
 # MAGIC
@@ -95,7 +95,7 @@ if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
     pipeline_type="TRIGGERED",
     primary_key="id",
     embedding_source_column='content', #The column containing our text
-    embedding_model_endpoint_name='databricks-bge-large-en' #The embedding endpoint used to create the embeddings
+    embedding_model_endpoint_name='databricks-gte-large-en' #The embedding endpoint used to create the embeddings
   )
   #Let's wait for the index to be ready and all our embeddings to be created and indexed
   wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)

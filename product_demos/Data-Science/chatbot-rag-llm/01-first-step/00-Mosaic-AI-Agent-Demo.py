@@ -108,30 +108,6 @@ print(f"index {vs_index_fullname} on table {source_table_fullname} is ready")
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## 1.4/ Searching for relevant content
-# MAGIC
-# MAGIC That's all we have to do. Databricks will automatically capture and synchronize new entries in your table with the index.
-# MAGIC
-# MAGIC Note that depending on your dataset size and model size, index creation can take a few seconds to start and index your embeddings.
-# MAGIC
-# MAGIC Let's give it a try and search for similar content.
-# MAGIC
-# MAGIC *Note: `similarity_search` also support a filters parameter. This is useful to add a security layer to your RAG system: you can filter out some sensitive content based on who is doing the call (for example filter on a specific department based on the user preference).*
-
-# COMMAND ----------
-
-question = "How can I track billing usage on my account?"
-
-results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).similarity_search(
-  query_text=question,
-  columns=["url", "content"],
-  num_results=1)
-docs = results.get('result', {}).get('data_array', [])
-docs
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox 
 # MAGIC # 2/ Deploy our chatbot model with RAG using DBRX
 # MAGIC
@@ -160,150 +136,12 @@ chain_config = {
     "llm_prompt_template": """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.\n\nContext: {context}""",
 }
 
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ### 2.2 Building our Langchain retriever
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic-chain-2.png?raw=true" style="float: right" width="500px">
-# MAGIC
-# MAGIC Let's start by building our Langchain retriever. 
-# MAGIC
-# MAGIC It will be in charge of:
-# MAGIC
-# MAGIC * Creating the input question (our Managed Vector Search Index will compute the embeddings for us)
-# MAGIC * Calling the vector search index to find similar documents to augment the prompt with 
-# MAGIC
-# MAGIC Databricks Langchain wrapper makes it easy to do in one step, handling all the underlying logic and API call for you.
-
-# COMMAND ----------
-
-from databricks.vector_search.client import VectorSearchClient
-from langchain_community.vectorstores import DatabricksVectorSearch
-from langchain.schema.runnable import RunnableLambda
-from langchain_core.output_parsers import StrOutputParser
-
-## Enable MLflow Tracing
-mlflow.langchain.autolog()
-
-## Load the chain's configuration
-model_config = mlflow.models.ModelConfig(development_config=chain_config)
-
-## Turn the Vector Search index into a LangChain retriever
-vs_client = VectorSearchClient(disable_notice=True)
-vs_index = vs_client.get_index(
-    endpoint_name=model_config.get("vector_search_endpoint_name"),
-    index_name=model_config.get("vector_search_index"),
-)
-vector_search_as_retriever = DatabricksVectorSearch(
-    vs_index,
-    text_column="content",
-        columns=["id", "content", "url"],
-).as_retriever(search_kwargs={"k": 3})
-
-# Method to format the docs returned by the retriever into the prompt (keep only the text from chunks)
-def format_context(docs):
-    chunk_contents = [f"Passage: {d.page_content}\n" for d in docs]
-    return "".join(chunk_contents)
-
-#Let's try our retriever chain:
-relevant_docs = (vector_search_as_retriever | RunnableLambda(format_context)| StrOutputParser()).invoke('How to start a Databricks cluster?')
-
-display_txt_as_html(relevant_docs)
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC You can see in the results that Databricks automatically trace your chain details and you can debug each steps and review the documents retrieved.
-# MAGIC
-# MAGIC ## 2.3/ Building Databricks Chat Model to query Databricks DBRX Instruct foundation model
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic-chain-3.png?raw=true" style="float: right" width="500px">
-# MAGIC
-# MAGIC Our chatbot will be using Databricks DBRX Instruct foundation model to provide answer.  DBRX Instruct is a general-purpose LLM, built to develop enterprise grade GenAI applications, unlocking your use-cases with capabilities that were previously limited to closed model APIs.
-# MAGIC
-# MAGIC According to our measurements, DBRX surpasses GPT-3.5, and it is competitive with Gemini 1.0 Pro. It is an especially capable code model, rivaling specialized models like CodeLLaMA-70B on programming in addition to its strength as a general-purpose LLM.
-# MAGIC
-# MAGIC *Note: multipe type of endpoint or langchain models can be used:*
-# MAGIC
-# MAGIC - Databricks Foundation models **(what we'll use)**
-# MAGIC - Your fined-tune model
-# MAGIC - An external model provider (such as Azure OpenAI)
-# MAGIC
-
-# COMMAND ----------
-
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.chat_models import ChatDatabricks
-from operator import itemgetter
-
-prompt = ChatPromptTemplate.from_messages(
-    [  
-        ("system", model_config.get("llm_prompt_template")), # Contains the instructions from the configuration
-        ("user", "{question}") #user's questions
-    ]
-)
-
-# Our foundation model answering the final prompt
-model = ChatDatabricks(
-    endpoint=model_config.get("llm_model_serving_endpoint_name"),
-    extra_params={"temperature": 0.01, "max_tokens": 500}
-)
-
-#Let's try our prompt:
-answer = (prompt | model | StrOutputParser()).invoke({'question':'How to start a Databricks cluster?', 'context': ''})
-display_txt_as_html(answer)
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC
-# MAGIC ## 2.4/ Putting it together in a final chain, supporting the standard Chat Completion format
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic-chain-4.png?raw=true" style="float: right" width="500px">
-# MAGIC
-# MAGIC
-# MAGIC Let's now merge the retriever and the model in a single Langchain chain.
-# MAGIC
-# MAGIC We will use a custom langchain template for our assistant to give proper answer.
-# MAGIC
-# MAGIC We will make sure our chain support the standard Chat Completion API input schema : `{"messages": [{"role": "user", "content": "What is Retrieval-augmented Generation?"}]}`
-# MAGIC
-# MAGIC Make sure you take some time to try different templates and adjust your assistant tone and personality for your requirement.
-# MAGIC
-# MAGIC *Note that we won't support history in this first version, and will only take the last message as the question. See the advanced demo for a more complete example.*
-
-# COMMAND ----------
-
-# Return the string contents of the most recent messages: [{...}] from the user to be used as input question
-def extract_user_query_string(chat_messages_array):
-    return chat_messages_array[-1]["content"]
-
-# RAG Chain
-chain = (
-    {
-        "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
-        "context": itemgetter("messages")
-        | RunnableLambda(extract_user_query_string)
-        | vector_search_as_retriever
-        | RunnableLambda(format_context),
-    }
-    | prompt
-    | model
-    | StrOutputParser()
-)
-
-# COMMAND ----------
-
-# Let's give it a try:
 input_example = {"messages": [ {"role": "user", "content": "What is Retrieval-augmented Generation?"}]}
-answer = chain.invoke(input_example)
-print(answer)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2.5/ Deploy a RAG Chain to a web-based UI for stakeholder feedback
+# MAGIC ## 2.2/ Deploy a RAG Chain to a web-based UI for stakeholder feedback
 # MAGIC
 # MAGIC Our chain is now ready! 
 # MAGIC
@@ -331,7 +169,7 @@ with mlflow.start_run(run_name="basic_rag_bot"):
           example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
       )
 
-MODEL_NAME = "basic_rag_demo"
+MODEL_NAME = "basic_rag_demo_ep"
 MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
 # Register to UC
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)

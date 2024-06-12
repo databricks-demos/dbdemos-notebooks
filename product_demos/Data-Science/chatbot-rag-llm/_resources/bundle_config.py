@@ -12,7 +12,7 @@
   "default_schema": "rag_chatbot",
   "default_catalog": "main",
   "title": "LLM Chatbot With Retrieval Augmented Generation (RAG) and DBRX",
-  "description": "Deploy your Chatbot on Databricks AI with RAG, DBRX Instruct, Vector Search & Databricks Foundation Models",
+  "description": "Deploy your Chatbot on Databricks AI with RAG, DBRX, Vector Search & Mosaic AI Agent Evaluation",
   "fullDescription": "In this tutorial, you’ll discover how Databricks AI accelerates your LLM use case.<br/>We will cover how Databricks is uniquely positioned to help you build your own chatbot and deploy a real-time chatbot using Databricks serverless capabilities.<br/>Retrieval Augmented Generation (RAG) is a powerful technique where we enrich the LLM prompt with additional context specific to your domain so that the model can provide better answers. <br/>This technique provides excellent results using public models without having to deploy and fine-tune your own LLMs.<br/>You will learn how to:<br/><ul><li>Prepare clean documents to build your internal knowledge base and specialize your chatbot</li><li>Leverage Databricks Vector Search with Foundation Models to create and store document embeddings</li><li>Search similar documents from our knowledge database with Vector Search</li><li>Deploy a real-time model using RAG and providing the context to a hosted LLM through the Foundation Models</li></ul>",
   "usecase": "Data Science & AI",
   "products": ["LLM", "Vector Search", "AI"],
@@ -79,6 +79,14 @@
       "add_cluster_setup_cell": False, 
       "title":  "Build your RAG chatbot service", 
       "description": "Leverage Foundation Model to perform RAG and answer customer questions."
+    },
+    {
+      "path": "02-simple-app/03-Deploy-Frontend-Lakehouse-App", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Deploy your chatbot frontend app", 
+      "description": "Leverage Lakehouse App to deploy your front app."
     },
     {
       "path": "03-advanced-app/01-PDF-Advanced-Data-Preparation", 

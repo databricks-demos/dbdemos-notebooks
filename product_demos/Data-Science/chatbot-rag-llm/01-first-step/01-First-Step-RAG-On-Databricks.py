@@ -346,8 +346,7 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 from databricks import agents
 # Deploy to enable the Review APP and create an API endpoint
 # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
-endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
-deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, endpoint_name=endpoint_name, scale_to_zero=True)
+deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
 
 instructions_to_reviewer = f"""## Instructions for Testing the Databricks Documentation Assistant chatbot
 
@@ -356,7 +355,7 @@ Your inputs are invaluable for the development team. By providing detailed feedb
 # Add the user-facing instructions to the Review App
 agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
-wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
+wait_for_model_serving_endpoint_to_be_ready(deployment_info.endpoint_name)
 
 # COMMAND ----------
 

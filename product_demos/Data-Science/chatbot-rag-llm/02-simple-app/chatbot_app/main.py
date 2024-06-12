@@ -35,10 +35,10 @@ theme = gr.themes.Soft(
 demo = gr.ChatInterface(
     respond,
     chatbot=gr.Chatbot(show_label=False, container=False, show_copy_button=True, bubble_full_width=True),
-    textbox=gr.Textbox(placeholder="Ask me a question",
+    textbox=gr.Textbox(placeholder="What is RAG?",
                        container=False, scale=7),
     title="Databricks App RAG demo - Chat with your Databricks assistant",
-    description="This chatbot is a demo example for the dbdemos llm chatbot. <br>This content is provided as a LLM RAG educational example, without support. It is using DBRX, can hallucinate and should not be used as production content.<br>Please review our dbdemos license and terms for more details.",
+    description="This chatbot is a demo example for the dbdemos llm chatbot. <br>It answers with the help of Databricks Documentation saved in a Knowledge databse.<br/>This content is provided as a LLM RAG educational example, without support. It is using DBRX, can hallucinate and should not be used as production content.<br>Please review our dbdemos license and terms for more details.",
     examples=[["What is DBRX?"],
               ["How can I start a Databricks cluster?"],
               ["What is a Databricks Cluster Policy?"],

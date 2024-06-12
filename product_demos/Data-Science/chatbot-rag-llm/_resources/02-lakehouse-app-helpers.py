@@ -14,6 +14,7 @@ class LakehouseAppHelper:
         #self.host = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().getOrElse(None)
 
     def get_headers(self):
+      from databricks import sdk
       return sdk.config.Config().authenticate()
     
     def list(self):

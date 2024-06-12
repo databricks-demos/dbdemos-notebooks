@@ -28,6 +28,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,load lakehouse helpers
 # MAGIC %run ../_resources/02-lakehouse-app-helpers
 
 # COMMAND ----------
@@ -40,7 +41,7 @@
 # COMMAND ----------
 
 MODEL_NAME = "dbdemos_rag_demo"
-endpoint_name = f"dbdemos_rag_{catalog}-{db}-{MODEL_NAME}"[:63]
+endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:63]
 
 # Our frontend application will hit the model endpoint we deployed.
 # Because dbdemos let you change your catalog and database, let's make sure we deploy the app with the proper endpoint name

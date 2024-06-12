@@ -221,7 +221,7 @@ client.set_registered_model_alias(name=MODEL_NAME_FQN, alias="prod", version=mod
 # MAGIC %md
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Mosaic AI Quality Labs makes it easy to evaluate your LLM Models, leveraging custom metrics.
+# MAGIC Mosaic AI Agent Evaluation makes it easy to evaluate your LLM Models, leveraging custom metrics.
 # MAGIC
 # MAGIC Evaluating your chatbot is key to measure your future version impact, and your Data Intelligence Platform makes it easy leveraging automated Workflow for your MLOps pipelines.
 # MAGIC

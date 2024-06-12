@@ -3,7 +3,7 @@
 # MAGIC # 3/ Deploying our frontend App with Lakehouse Applications
 # MAGIC
 # MAGIC
-# MAGIC Mosaic AI Quality Labs review app is used for collecting stakeholder feedback during your development process.
+# MAGIC Mosaic AI Agent Evaluation review app is used for collecting stakeholder feedback during your development process.
 # MAGIC
 # MAGIC You still need to deploy your own front end application!
 # MAGIC

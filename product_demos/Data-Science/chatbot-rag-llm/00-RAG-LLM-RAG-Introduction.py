@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Deploy Your LLM Chatbots with Mosaic AI Quality Labs and Lakehouse Applications
+# MAGIC # Deploy Your LLM Chatbots with Mosaic AI Agent Evaluation and Lakehouse Applications
 # MAGIC
 # MAGIC In this tutorial, you will learn how to build your own Chatbot Assisstant to help your customers answer questions about Databricks, using Retrieval Augmented Generation (RAG), Databricks State of The Art LLM DBRX Instruct Foundation Model Vector Search.
 # MAGIC
@@ -26,7 +26,7 @@
 # MAGIC - Control over speed and cost
 # MAGIC - Deploy models on private infrastructure for security reasons
 # MAGIC
-# MAGIC ## Introducing Moasic AI Quality Labs
+# MAGIC ## Introducing Mosaic AI Agent Evaluation
 # MAGIC
 # MAGIC To solve these challenges, custom knowledge bases and models need to be deployed. However, doing so at scale isn't simple and requires:
 # MAGIC
@@ -109,7 +109,7 @@
 # MAGIC - How to prepare your document dataset, creating text chunk from documentation pages
 # MAGIC - Create your Vector Search index and send queries to find similar documents
 # MAGIC - Build a complete langchain model leveraging Databricks Foundation Model (DBRX Instruct)
-# MAGIC - Deploy and test your Chatbot with Databricks review app
+# MAGIC - Deploy and test your Chatbot with Mosaic AI Agent Evaluation review app 
 # MAGIC - Ask external expert to test and review your chatbot
 # MAGIC - Deploy a front end application using Databricks Lakehouse app
 
@@ -121,7 +121,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## 03-Advanced: Going further, build and manage your Evaluation Dataset with Mosaic AI Quality Labs
+# MAGIC ## 03-Advanced: Going further, build and manage your Evaluation Dataset with Mosaic AI Agent Evaluation
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab-flow-eval.png?raw=true" style="float: right"  width="800px;">
 # MAGIC Explore this content to discover how to leverage all the Databricks Data Intelligence Platform capabilities for your GenAI Apps.
@@ -132,7 +132,7 @@
 # MAGIC - Leverage Databricks Embedding Foundation Model to compute the chunks embeddings
 # MAGIC - Create a Self Managed Vector Search index and send queries to find similar documents
 # MAGIC - Build an advanced langchain model with chat history, leveraging Databricks Foundation Model (DBRX Instruct)
-# MAGIC - Ask external expert to test and review your chatbot
+# MAGIC - Ask external expert to test and review your chatbot with Mosaic AI Agent Evaluation review app
 # MAGIC - Run online llm evaluation and track your metrics with Databricks Monitoring
 # MAGIC - Deploy a front end application using Databricks Lakehouse app
 

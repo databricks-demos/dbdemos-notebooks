@@ -41,6 +41,14 @@
       "description": "setup for the advanced demo (pdf + ocr setup)."
     },
     {
+      "path": "_resources/02-lakehouse-app-helpers.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "Setup",
+      "description": "Setup helper functions for Lakehouse App"
+    },
+    {
       "path": "00-RAG-LLM-RAG-Introduction",
       "pre_run": False,
       "publish_on_website": True,

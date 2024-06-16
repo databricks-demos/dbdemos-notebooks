@@ -307,9 +307,7 @@ print(answer)
 # MAGIC
 # MAGIC Our chain is now ready! 
 # MAGIC
-# MAGIC We first register the MLflow model to Unity Catalog, and then use Agent Framework to deploy to the Agent Evaluation stakeholder review application which is backed by a scalable, production-ready Model Serving endpoint.
-# MAGIC
-# MAGIC <br/><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab.png?raw=true" width="1000px">
+# MAGIC Let's first register the Rag Chain model to MLFlow and Unity Catalog, and then use Agent Framework to deploy to the Agent Evaluation stakeholder review application which is backed by a scalable, production-ready Model Serving endpoint.
 
 # COMMAND ----------
 
@@ -373,6 +371,7 @@ wait_for_model_serving_endpoint_to_be_ready(deployment_info.endpoint_name)
 # MAGIC Your Chatbot is automatically capturing all stakeholder questions and bot responses, including an MLflow trace for each, into Delta Tables in your Lakehouse. On top of that, Databricks makes it easy to track feedback from your end user: if the chatbot doesn't give a good answer and the user gives a thumbdown, their feedback is included in the Delta Tables.
 # MAGIC
 # MAGIC Once your eval dataset is ready, you'll then be able to leverage it for offline evaluation to measure your new chatbot performance, and also potentially to Fine Tune your model.
+# MAGIC <br/>
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab.png?raw=true" width="1000px">
 # MAGIC

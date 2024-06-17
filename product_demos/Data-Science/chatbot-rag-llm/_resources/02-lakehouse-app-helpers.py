@@ -88,12 +88,13 @@ class LakehouseAppHelper:
         displayHTML(html)
 
     def delete(self, app_name):
+        url = self.host + f"/api/2.0/preview/apps/{app_name}"
         json = self.get_app_details(app_name)
         if 'error_code' in json:
-            print(f"app {app_name} doesn't exist {json}")
+            print(f"App {app_name} doesn't exist {json}")
             return
-        print(f'waiting for the app {app_name} to be deleted...')
+        print(f'Waiting for the app {app_name} to be deleted...')
+        _ = requests.delete(url, headers=self.get_headers()).json()
         while 'error_code' not in self.get_app_details(app_name):
             time.sleep(2)
-
-    
+        print(f'App {app_name} successfully deleted')

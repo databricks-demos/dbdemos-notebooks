@@ -276,7 +276,7 @@ from databricks import agents
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
 
 # Deploy to enable the Review APP and create an API endpoint
-deployment_info = agents.deploy_model(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
+deployment_info = agents.deploy(model_name=MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
 
 instructions_to_reviewer = f"""### Instructions for Testing the our Databricks Documentation Chatbot assistant
 

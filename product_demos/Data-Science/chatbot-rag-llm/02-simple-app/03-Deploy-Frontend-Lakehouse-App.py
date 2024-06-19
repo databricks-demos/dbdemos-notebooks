@@ -65,7 +65,6 @@ except:
 # MAGIC import itertools
 # MAGIC from fastapi import FastAPI
 # MAGIC import gradio as gr
-# MAGIC import requests
 # MAGIC import os
 # MAGIC from gradio.themes.utils import sizes
 # MAGIC from databricks.sdk import WorkspaceClient
@@ -89,7 +88,7 @@ except:
 # MAGIC             stream=False
 # MAGIC         )
 # MAGIC     except Exception as error:
-# MAGIC         response = f"ERROR status_code: {type(error).__name__}"       
+# MAGIC         return f"ERROR requesting endpoint {model_serving_endpoint_name}: {error}"       
 # MAGIC     return response.choices[0].message.content
 # MAGIC
 # MAGIC theme = gr.themes.Soft(

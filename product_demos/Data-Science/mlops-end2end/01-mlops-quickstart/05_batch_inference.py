@@ -6,20 +6,15 @@
 # MAGIC
 # MAGIC With Models in Unity Catalog, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies, or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-6.png" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-5.png?raw=true" width="1200">
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F06_staging_inference&dt=MLOPS">
-# MAGIC <!-- [metadata={"description":"MLOps end2end workflow: Load the model from MLFLow and run inferences, in batch or realtime.",
-# MAGIC  "authors":["quentin.ambard@databricks.com"],
-# MAGIC  "db_resources":{},
-# MAGIC   "search_tags":{"vertical": "retail", "step": "Model testing", "components": ["mlflow"]},
-# MAGIC                  "canonicalUrl": {"AWS": "", "Azure": "", "GCP": ""}}] -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05_batch_inference&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install "mlflow-skinny[databricks]>=2.11"
+# MAGIC %pip install --quiet mlflow==2.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -46,11 +41,18 @@
 
 # COMMAND ----------
 
-# We are using the Champion model for inference
-model_alias = "Champion"
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 
-model_version = client.get_model_version_by_alias(name=model_name, alias=model_alias).version # Get champion version
-print(f"Champion model version for {model_name}: {model_version}")
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{schema}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup
 
 # COMMAND ----------
 
@@ -64,14 +66,14 @@ print(f"Champion model version for {model_name}: {model_version}")
 # COMMAND ----------
 
 # DBTITLE 1,In a python notebook
+import mlflow
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
-
 # Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{model_name}@{model_alias}")
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{schema}.mlops_churn@Champion")
 
 # Batch score
-preds_df = inference_df.withColumn('predictions', champion_model(*inference_df.columns))
+preds_df = inference_df.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))
 
 display(preds_df)
 
@@ -80,6 +82,8 @@ display(preds_df)
 # MAGIC %md
 # MAGIC
 # MAGIC That's it! Our data can now be saved as a table and re-used by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
+# MAGIC
+# MAGIC Your data will also be available within Genie to answer any churn-related question using plain text english!
 
 # COMMAND ----------
 

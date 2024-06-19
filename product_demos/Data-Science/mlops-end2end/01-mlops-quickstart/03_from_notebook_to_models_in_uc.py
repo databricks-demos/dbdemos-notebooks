@@ -2,8 +2,6 @@
 # MAGIC %md
 # MAGIC # Managing the model lifecycle in Unity Catalog
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-4.png" width="1200">
-# MAGIC
 # MAGIC One of the primary challenges among data scientists and ML engineers is the absence of a central repository for models, their versions, and the means to manage them throughout their lifecycle.
 # MAGIC
 # MAGIC [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) addresses this challenge and enables members of the data team to:
@@ -18,13 +16,10 @@
 # MAGIC
 # MAGIC We will look at how we test and promote a new __Challenger__ model as a candidate to replace an existing __Champion__ model.
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F04_deploy_to_registry&dt=MLOPS">
-# MAGIC <!-- [metadata={"description":"MLOps end2end workflow: Move model to registry and request transition to STAGING.",
-# MAGIC  "authors":["quentin.ambard@databricks.com"],
-# MAGIC  "db_resources":{},
-# MAGIC   "search_tags":{"vertical": "retail", "step": "Data Engineering", "components": ["mlflow"]},
-# MAGIC                  "canonicalUrl": {"AWS": "", "Azure": "", "GCP": ""}}] -->
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-3.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03_from_notebook_to_models_in_uc&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
@@ -39,7 +34,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install "mlflow-skinny[databricks]>=2.11"
+# MAGIC %pip install --quiet mlflow==2.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -55,22 +50,15 @@
 
 # COMMAND ----------
 
-print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
-
-# COMMAND ----------
-
 import mlflow
 
+churn_experiment_name = "churn_auto_ml"
+model_name = f"{catalog}.{dbName}.mlops_churn"
+print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
+
 xp_path = "/Shared/dbdemos/experiments/mlops"
-filter_string=f"name LIKE '{xp_path}%'"
-experiment_id = mlflow.search_experiments(filter_string=filter_string, order_by=["last_update_time DESC"])[0].experiment_id
+experiment_id = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}%'", order_by=["last_update_time DESC"])[0].experiment_id
 print(experiment_id)
-
-# COMMAND ----------
-
-# Optional: Load MLflow Experiment and see all runs
-df = spark.read.format("mlflow-experiment").load(experiment_id)
-display(df)
 
 # COMMAND ----------
 
@@ -81,6 +69,8 @@ best_model = mlflow.search_runs(
   max_results=1,
   filter_string="status = 'FINISHED' and run_name='mlops_best_run'" #filter on mlops_best_run to always use the notebook 02 to have a more predictable demo
 )
+# Optional: Load MLflow Experiment as a spark df and see all runs
+# df = spark.read.format("mlflow-experiment").load(experiment_id)
 best_model
 
 # COMMAND ----------

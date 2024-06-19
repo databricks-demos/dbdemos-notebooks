@@ -3,25 +3,20 @@
 # MAGIC # Churn Prediction Feature Engineering
 # MAGIC Our first step is to analyze the data and build the features we'll use to train our model. Let's see how this can be done.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-1.png" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-1.png?raw=true" width="1200">
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_feature_prep&dt=MLOPS">
-# MAGIC <!-- [metadata={"description":"MLOps end2end workflow: Feature engineering",
-# MAGIC  "authors":["quentin.ambard@databricks.com"],
-# MAGIC  "db_resources":{},
-# MAGIC   "search_tags":{"vertical": "retail", "step": "Data Engineering", "components": ["feature store"]},
-# MAGIC                  "canonicalUrl": {"AWS": "", "Azure": "", "GCP": ""}}] -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01_feature_engineering&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python sdk
-# MAGIC %pip install databricks-sdk==0.23.0
+# MAGIC %pip install --quiet mlflow==2.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data='false'
+# MAGIC %run ../_resources/00-setup
 
 # COMMAND ----------
 
@@ -52,7 +47,7 @@ display(telcoDF)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Define data cleaning and featurization Logic for BATCH feature computation
+# MAGIC ## Define data cleaning and featurization Logic
 # MAGIC
 # MAGIC We will define a function to clean the data and implement featurization logic. We will:
 # MAGIC
@@ -102,18 +97,8 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 
   data_psdf["num_optional_services"] = sum_optional_services(data_psdf)
 
-  # Move the label column "churn" to the end of the column list
-  col_names = data_psdf.columns.to_list()
-  col_names.remove("churn")
-  col_names.append("churn")
-
-  # Add/Force semantic data types for specific colums (to facilitate autoML)
-  data_cleanDF = data_psdf.to_spark()
-  data_cleanDF = data_cleanDF.withMetadata(primary_key, {"spark.contentAnnotation.semanticType":"native"})
-  data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
-
-  # Return the cleaned Spark dataframe, with columns in the right order
-  return data_cleanDF.select(col_names)
+  # Return the cleaned Spark dataframe
+  return data_psdf.to_spark()
 
 # COMMAND ----------
 
@@ -132,7 +117,7 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 # COMMAND ----------
 
 # DBTITLE 1,Compute Churn Features and append a timestamp
-churn_features = clean_churn_features(telcoDF) 
+churn_features = clean_churn_features(telcoDF)
 display(churn_features)
 
 # COMMAND ----------
@@ -144,17 +129,23 @@ display(churn_features)
 
 # COMMAND ----------
 
+# Specify train-val-test split
+train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
+churn_features = (churn_features.withColumn("random", F.rand(seed=42))
+                                .withColumn("split",
+                                            F.when(F.col("random") < train_ratio, "train")
+                                            .when(F.col("random") < train_ratio + val_ratio, "validate")
+                                            .otherwise("test"))
+                                .drop("random"))
+
 # Write table for training
 (churn_features.write.mode("overwrite")
                .option("overwriteSchema", "true")
-               .saveAsTable(f"{catalog}.{db}.mlops_churn_training"))
+               .saveAsTable("mlops_churn_training"))
 
 # Add comment to the table
-spark.sql(
-    f"""
-  COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The features in this table are derived from the {catalog}.{db}.mlops_churn_bronze_customers table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed.'
-  """
-)
+spark.sql(f"""COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The features in this table are derived from the mlops_churn_bronze_customers table in the lakehouse. 
+              We created service features, cleaned up their names.  No aggregations were performed.'""")
 
 # COMMAND ----------
 
@@ -214,27 +205,17 @@ from datetime import datetime
 xp_path = "/Shared/dbdemos/experiments/mlops"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 
-# Specify train-val-test split
-train_ratio, val_ratio, test_ratio = 0.6, 0.2, 0.2
-
-churn_features_w_split = (
-    churn_features.withColumn("random", F.rand(seed=42))
-                  .withColumn("split",
-                              F.when(F.col("random") < train_ratio, "train")
-                               .when(F.col("random") < train_ratio + val_ratio, "validate")
-                               .otherwise("test"))
-                  .drop("random")
-)
-
-display(churn_features_w_split)
+# Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
+churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
-    dataset = churn_features_w_split,
+    dataset = churn_features,
     target_col = "churn",
-    split_col = "split",
-    timeout_minutes = 5
+    split_col = "split", #This required DBRML 15.3+
+    timeout_minutes = 5,
+    exclude_cols ='customer_id'
 )
 #Make sure all users can access dbdemos shared experiment
 DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
@@ -244,7 +225,7 @@ DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 # MAGIC %md
 # MAGIC ### Using the generated notebook to build our model
 # MAGIC
-# MAGIC Next step: [Explore the generated Auto-ML notebook]($./02_automl_champion)
+# MAGIC Next step: [Explore the generated Auto-ML notebook]($./02_automl_best_run)
 # MAGIC
 # MAGIC **Note:**
 # MAGIC For demo purposes, run the above notebook to create and register a new version of the model from your autoML experiment and label/alias the model as "Champion"

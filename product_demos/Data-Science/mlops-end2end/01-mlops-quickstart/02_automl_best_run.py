@@ -8,20 +8,15 @@
 # MAGIC
 # MAGIC For this quickstart demo, we have made some modifications to the code so that you can easily re-run the series of notebooks in the demo.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-2.png" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-2.png?raw=true" width="1200">
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_auto_ml&dt=MLOPS">
-# MAGIC <!-- [metadata={"description":"MLOps end2end workflow: Auto-ML notebook",
-# MAGIC  "authors":["quentin.ambard@databricks.com"],
-# MAGIC  "db_resources":{},
-# MAGIC   "search_tags":{"vertical": "retail", "step": "Data Engineering", "components": ["auto-ml"]},
-# MAGIC                  "canonicalUrl": {"AWS": "", "Azure": "", "GCP": ""}}] -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02_automl_best_run&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install "mlflow-skinny[databricks]>=2.11"
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -43,9 +38,9 @@ import mlflow
 import databricks.automl_runtime
 
 #Added for the demo purpose
-xp = DBDemos.get_last_experiment("mlops")
+xp = mlflow.search_experiments(filter_string=f"name LIKE '/Shared/dbdemos/experiments/mlops%'", order_by=["last_update_time DESC"])[0]
 # Use MLflow to track experiments
-mlflow.set_experiment(xp["path"])
+mlflow.set_experiment(experiment_id=xp.experiment_id)
 
 #Run containing the data analysis notebook to get the data from artifact
 data_run = mlflow.search_runs(filter_string="tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].to_dict()
@@ -536,4 +531,4 @@ display(Image(filename=eval_pr_curve_path))
 # MAGIC %md
 # MAGIC ### Automate model promotion validation
 # MAGIC
-# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_registry)
+# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_models_in _uc)

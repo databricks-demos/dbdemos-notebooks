@@ -20,8 +20,11 @@ volume_path = f"/Volumes/{catalog}/{schema}/{volume_name}"
 import mlflow
 import pandas as pd
 import re
-if "evaluate" not in dir(mlflow):
-    raise Exception("ERROR - YOU NEED MLFLOW 2.5 for this demo. Select DBRML 13.3LTS+")
+#remove warnings for nicer display
+import warnings
+warnings.filterwarnings("ignore")
+import logging
+logging.getLogger("mlflow").setLevel(logging.ERROR)
 
 from mlflow import MlflowClient
 
@@ -39,7 +42,7 @@ client = MlflowClient()
 
 # DBTITLE 1,Create Raw/Bronze customer data from IBM Telco public dataset and sanitize column name
 bronze_table_name = "mlops_churn_bronze_customers"
-if reset_all_data or not spark._jsparkSession.catalog().tableExists(bronze_table_name):
+if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
   import requests
   from io import StringIO
   #Dataset under apache license: https://github.com/IBM/telco-customer-churn-on-icp4d/blob/master/LICENSE
@@ -74,46 +77,23 @@ def delete_feature_store_table(catalog, db, feature_table_name):
 
 training_table_name = "mlops_churn_training"
 infrerence_table_name = "mlops_churn_inference"
-training_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}")
-inference_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}")
 
-# Check that the training table exists first, as we'll be creating a copy of it
-if (training_table_exists):
-  # This should only be called from the quickstart challenger validation or batch inference notebooks
-  if setup_inference_data and not inference_table_exists:
-    print("Creating table for inference...")
-    # Drop the label column for inference
-    spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
-else:
-  print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
-
-# COMMAND ----------
-
-# Define Feature, Labels and Inference Table specs
-feature_table_name = "mlops_churn_features"
-primary_key = "customer_id"
-timestamp_col = "scoring_timestamp"
-label_col = "churn"
-labels_table_name = "mlops_churn_labels"
-inference_table_name = "mlops_churn_inference_log"
-
-# COMMAND ----------
-
-# MAGIC %run ./API_Helpers
-
-# COMMAND ----------
-
-# DBTITLE 1,Additional AutoML/MLflow experiment helpers [Required for MLR<14.0]
-import uuid
-
-churn_experiment_name = "mlops_churn_auto_ml"
-model_name = f"{catalog}.{dbName}.mlops_churn"
+if setup_inference_data:
+  # Check that the training table exists first, as we'll be creating a copy of it
+  if spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}"):
+    # This should only be called from the quickstart challenger validation or batch inference notebooks
+    if not spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}"):
+      print("Creating table for inference...")
+      # Drop the label column for inference
+      spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
+  else:
+    print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 
 # DBTITLE 1,Get slack webhook
 # Replace this with your Slack webhook
 try:
-  slack_webhook = dbutils.secrets.get(scope="fieldeng", key=f"{get_current_username()}_slack_webhook")
+  slack_webhook = dbutils.secrets.get(scope="dbdemos", key=f"slack_webhook")
 except:
   slack_webhook = "" # https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX

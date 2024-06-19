@@ -81,6 +81,7 @@ except:
 # MAGIC     if len(message.strip()) == 0:
 # MAGIC         return "ERROR the question should not be empty"
 # MAGIC     try:
+# MAGIC         #TODO: we should send the history too - PR welcome!
 # MAGIC         response = w.serving_endpoints.query(
 # MAGIC             name=model_serving_endpoint_name,
 # MAGIC             messages=[ChatMessage(content=message, role=ChatMessageRole.USER)],
@@ -147,7 +148,7 @@ helper.details("dbdemos-rag-chatbot-app")
 # MAGIC %md-sandbox
 # MAGIC ## Your Lakehouse app is ready and deployed!
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-gradio-app.png?raw=true" width="900px" style="float: right; margin-left:10px">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-gradio-app.png?raw=true" width="750px" style="float: right; margin-left:10px">
 # MAGIC
 # MAGIC Open the UI to start requesting your chatbot.
 # MAGIC

@@ -1,7 +1,6 @@
 import itertools
 from fastapi import FastAPI
 import gradio as gr
-import requests
 import os
 from gradio.themes.utils import sizes
 from databricks.sdk import WorkspaceClient
@@ -18,6 +17,7 @@ def respond(message, history):
     if len(message.strip()) == 0:
         return "ERROR the question should not be empty"
     try:
+        #TODO: we should send the history too - PR welcome!
         response = w.serving_endpoints.query(
             name=model_serving_endpoint_name,
             messages=[ChatMessage(content=message, role=ChatMessageRole.USER)],
@@ -25,7 +25,7 @@ def respond(message, history):
             stream=False
         )
     except Exception as error:
-        response = f"ERROR status_code: {type(error).__name__}"       
+        return f"ERROR requesting endpoint {model_serving_endpoint_name}: {error}"       
     return response.choices[0].message.content
 
 theme = gr.themes.Soft(

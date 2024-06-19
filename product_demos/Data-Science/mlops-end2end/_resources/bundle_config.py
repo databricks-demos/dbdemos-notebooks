@@ -89,5 +89,18 @@
       "title":  "Advanced MLOps pipeline", 
       "description": "Complete MLOps flow - intro."
     }
-  ]
+  ],
+  "cluster": {
+      "spark_version": "15.3.x-cpu-ml-scala2.12",
+      "spark_conf": {
+        "spark.master": "local[*]",
+        "spark.databricks.cluster.profile": "singleNode"
+    },
+    "custom_tags": {
+        "ResourceClass": "SingleNode"
+    },
+    "single_user_name": "{{CURRENT_USER}}",
+    "data_security_mode": "SINGLE_USER",
+    "num_workers": 0
+  }
 }

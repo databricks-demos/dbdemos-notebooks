@@ -27,11 +27,14 @@ from IPython.core.magic import register_cell_magic
 def writefile(line, cell):
     filename = line.strip()
     try:
+      folder_path = os.path.dirname(filename)
+      if len(folder_path) > 0:
+        os.makedirs(folder_path, exist_ok=True)
       with open(filename, 'w') as f:
           f.write(cell)
           print('file overwritten')
-    except:
-      print(f'WARN: could not write the file {filename}, skipping the error for job test run')
+    except Exception as e:
+      print(f"WARN: could not write the file {filename}. If it's running as a job it's to be expected, otherwise something is off - please print the message for more details: {e}")
 
 # COMMAND ----------
 

@@ -1,6 +1,8 @@
 # Databricks notebook source
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
+dbutils.widgets.dropdown("setup_inference_data", "false", ["true", "false"], "Setup inference data")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
+setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 
 # COMMAND ----------
 
@@ -67,6 +69,23 @@ def delete_feature_store_table(catalog, db, feature_table_name):
     print(f"Dropping Feature Table {catalog}.{db}.{feature_table_name}")
   except ValueError as ve:
     print(f"Feature Table {catalog}.{db}.{feature_table_name} doesn't exist")
+
+# COMMAND ----------
+
+training_table_name = "mlops_churn_training"
+infrerence_table_name = "mlops_churn_inference"
+training_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}")
+inference_table_exists = spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}")
+
+# Check that the training table exists first, as we'll be creating a copy of it
+if (training_table_exists):
+  # This should only be called from the quickstart challenger validation or batch inference notebooks
+  if setup_inference_data and not inference_table_exists:
+    print("Creating table for inference...")
+    # Drop the label column for inference
+    spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
+else:
+  print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 

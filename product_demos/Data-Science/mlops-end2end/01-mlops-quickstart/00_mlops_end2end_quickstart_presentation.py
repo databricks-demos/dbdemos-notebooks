@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # End-to-End MLOps demo with MLFlow and Auto ML
+# MAGIC # End-to-End MLOps demo with MLFlow, Auto ML and Models in Unity Catalog
 # MAGIC
 # MAGIC ## Challenges moving ML project into production
 # MAGIC
@@ -31,11 +31,15 @@
 # MAGIC
 # MAGIC Databricks is uniquely positioned to solve this challenge with the Lakehouse pattern. Not only we bring Data Engineers, Data Scientists and ML Engineers together in a unique platform, but we also provide tools to orchestrate ML project and accelerate the go to production.
 # MAGIC
-# MAGIC ## MLOps pipeline we'll implement
+# MAGIC ## MLOps process walkthrough
 # MAGIC
-# MAGIC In this demo, we'll implement a full MLOps pipeline step by step, in order to power a [dashboard for downstream business stakeholders](https://e2-demo-field-eng.cloud.databricks.com/sql/dashboards/18b301e3-ea4c-4e93-b7c6-df3f53ececd9?o=1444828305810485) which is:
-# MAGIC * invoking a trained ML model as a SQL UDF
-# MAGIC * slice & dicing feature from the Feature Store
+# MAGIC In this quickstart demo, we'll walkthrough a few common steps in the MLOps process. The end result of this process is a model used to power a [dashboard for downstream business stakeholders](https://e2-demo-field-eng.cloud.databricks.com/sql/dashboards/18b301e3-ea4c-4e93-b7c6-df3f53ececd9?o=1444828305810485) which is:
+# MAGIC * preparing features
+# MAGIC * training a model for deployment
+# MAGIC * registering the model for its use to be goverened
+# MAGIC * validating the model in a champion-challenger analysis
+# MAGIC * invoking a trained ML model as a pySpark UDF
+# MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-0.png" width="1200">
 # MAGIC
@@ -49,7 +53,11 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data='false'
+dbutils.widgets.dropdown("reset_all_data", "true", ["true", "false"], "Reset all data")
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data
 
 # COMMAND ----------
 
@@ -60,7 +68,7 @@
 # MAGIC
 # MAGIC Our marketing team asked us to create a Dashboard tracking Churn risk evolution. In addition, we need to provide our renewal team with a daily list of customers at Churn risk to increase our final revenue.
 # MAGIC
-# MAGIC Our Data Engineer team provided us a dataset collecting informations on our customer base, including churn information. That's where our implementation starts.
+# MAGIC Our Data Engineer team provided us a dataset collecting information on our customer base, including churn information. That's where our implementation starts.
 # MAGIC
 # MAGIC Let's see how we can implement such a model, but also provide our marketing and renewal team with Dashboards to track and analyze our Churn prediction.
 # MAGIC
@@ -75,8 +83,29 @@ display(telcoDF)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Create empty model in the Unity Catalog registry
+# MAGIC
+# MAGIC For demo purposes primarily, but in reality the ML Engineer may have already created the model placeholder with appropriate ACLs for managing its lifecycle.
+# MAGIC
+# MAGIC Registered models are managed in Databricks under Unity Catalog. Unity Catalog is the goverance solution in Databricks for governing both Data and AI assets.
+
+# COMMAND ----------
+
+try:
+  client.create_registered_model(
+    name=model_name,
+    description="Churn model placeholder"
+  )
+  print(f"Created empty placeholder for model {model_name} in the MLflow registry")
+
+except mlflow.exceptions.MlflowException as E:
+  print(E)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Feature Engineering
-# MAGIC Our first job is to analyze the data, and prepare a set of features we'll be able to re-use in multiple projects.
+# MAGIC Our first job is to analyze the data, and prepare a set of features.
 # MAGIC
 # MAGIC
 # MAGIC Next: [Analyze the data and prepare features]($./01_feature_engineering)

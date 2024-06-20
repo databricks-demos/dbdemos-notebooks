@@ -7,9 +7,6 @@ setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 # COMMAND ----------
 
 catalog = "main__build"
-schema = dbName = db = "dbdemos_mlops"
-volume_name = "my_volume"
-volume_path = f"/Volumes/{catalog}/{schema}/{volume_name}"
 
 # COMMAND ----------
 
@@ -30,7 +27,7 @@ from mlflow import MlflowClient
 
 # COMMAND ----------
 
-DBDemos.setup_schema(catalog, db, reset_all_data) #volume_name
+DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # COMMAND ----------
 

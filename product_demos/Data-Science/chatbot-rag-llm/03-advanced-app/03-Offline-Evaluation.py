@@ -200,7 +200,7 @@ with mlflow.start_run(run_name="eval_dataset_advanced"):
 # MAGIC %md
 # MAGIC You can open MLFlow and review the eval metrics, and also compare it to previous eval runs!
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-mlflow-eval.png?raw=true" width="1200px"> 
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/mlflow-eval.gif?raw=true" width="1200px"> 
 
 # COMMAND ----------
 

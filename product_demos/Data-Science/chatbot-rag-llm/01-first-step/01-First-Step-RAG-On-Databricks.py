@@ -373,7 +373,7 @@ wait_for_model_serving_endpoint_to_be_ready(deployment_info.endpoint_name)
 # MAGIC Once your eval dataset is ready, you'll then be able to leverage it for offline evaluation to measure your new chatbot performance, and also potentially to Fine Tune your model.
 # MAGIC <br/>
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/quality-lab.png?raw=true" width="1000px">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/eval-framework.gif?raw=true" width="1000px">
 # MAGIC
 
 # COMMAND ----------

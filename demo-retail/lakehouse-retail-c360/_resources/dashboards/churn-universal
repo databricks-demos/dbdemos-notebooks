@@ -1,6 +1,4 @@
 {
-  "name": "[dbdemos] Retail - Customer Churn - Universal",
-  "id": "churn-universal",
   "datasets": [
     {
       "name": "5d67c78f",

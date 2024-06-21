@@ -1,6 +1,4 @@
 {
-  "name": "[dbdemos] Retail DLT - Retail Data Quality Stats",
-  "id": "dlt-quality-stat",
   "datasets": [
     {
       "name": "af93f93e",

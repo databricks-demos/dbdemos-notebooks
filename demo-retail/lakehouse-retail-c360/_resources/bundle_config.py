@@ -330,5 +330,8 @@
         "target": "{{SCHEMA}}"
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[dbdemos] Retail Churn Prediction Dashboard",       "id": "churn-prediction"},
+                 {"name": "[dbdemos] Retail - Customer Churn - Universal",     "id": "churn-universal"},
+                 {"name": "[dbdemos] Retail DLT - Retail Data Quality Stats",  "id": "dlt-quality-stat"}]
 }

@@ -1,6 +1,4 @@
 {
-  "name": "[dbdemos] Retail Churn Prediction Dashboard",
-  "id": "churn-prediction",
   "datasets": [
     {
       "name": "fbe291d8",

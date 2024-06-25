@@ -331,7 +331,7 @@ COMMENT "Customer at risk of churn"
 -- MAGIC ## Optional: Checking your data quality metrics with Delta Live Tables
 -- MAGIC Delta Live Tables tracks all of your data quality metrics. You can leverage the expectations directly as SQL tables with Databricks SQL to track your expectation metrics and send alerts as required. This lets you build the following dashboards:
 -- MAGIC
--- MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
+-- MAGIC <img width="1000" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-dlt-stat.png?raw=true">
 -- MAGIC
 -- MAGIC <a dbdemos-dashboard-id="dlt-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>
 
@@ -342,8 +342,8 @@ COMMENT "Customer at risk of churn"
 -- MAGIC
 -- MAGIC Our data is now available! We can start building dashboards to get insights from our past and current business.
 -- MAGIC
--- MAGIC <img style="float: left; margin-right: 50px;" width="500px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-dbsql-dashboard.png" />
+-- MAGIC <img style="float: left; margin-right: 50px;" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-churn-prediction.png?raw=true" />
 -- MAGIC
--- MAGIC <img width="500px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dashboard.png"/>
+-- MAGIC <img width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-churn.png?raw=true"/>
 -- MAGIC
 -- MAGIC <a dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1'  target="_blank">Open the DBSQL Dashboard</a>

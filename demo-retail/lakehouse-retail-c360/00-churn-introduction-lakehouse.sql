@@ -124,7 +124,8 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 3/ Analysing churn analysis  (BI / Data warehousing / SQL) 
 -- MAGIC
--- MAGIC <img width="300px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-dbsql-dashboard.png"  style="float: right; margin: 100px 0px 10px;"/>
+-- MAGIC <img width="300px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-churn.png?raw=true"  style="float: right; margin: 100px 0px 10px 10px;"/>
+-- MAGIC
 -- MAGIC
 -- MAGIC
 -- MAGIC <img width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-3.png"  style="float: left; margin-right: 10px"/>
@@ -175,7 +176,7 @@
 -- MAGIC ## Automate action to reduce churn based on predictions
 -- MAGIC
 -- MAGIC
--- MAGIC <img style="float: right" width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-dbsql-prediction-dashboard.png">
+-- MAGIC <img style="float: right" width="400px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-churn-prediction.png?raw=true">
 -- MAGIC
 -- MAGIC We now have an end-to-end data pipeline analizing and predicting churn. We can now easily trigger actions to reduce the churn based on our business:
 -- MAGIC

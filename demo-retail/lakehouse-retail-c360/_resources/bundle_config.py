@@ -74,7 +74,7 @@
     },
     {
       "path": "01-Data-ingestion/01.1-DLT-churn-SQL", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Ingest data with Delta Live Table", 
@@ -98,7 +98,7 @@
     },
     {
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Alternative: Ingest data with Spark+Delta", 
@@ -106,7 +106,7 @@
     },
     {
       "path": "02-Data-governance/02-UC-data-governance-security-churn", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Governance with Unity Catalog", 
@@ -114,7 +114,7 @@
     },
     {
       "path": "04-Data-Science-ML/04.1-automl-churn-prediction", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Build churn prediction model (AutoML)", 
@@ -122,7 +122,7 @@
     },
     {
       "path": "04-Data-Science-ML/04.2-automl-generated-notebook",
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Explore churn Prediction generated model", 
@@ -131,7 +131,7 @@
     },
     {
       "path": "04-Data-Science-ML/04.3-running-inference", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Infer churn on batch or realtime serverless", 
@@ -146,7 +146,7 @@
       "description": "Reduce churn with GenAI capabilities."
     },
     {
-      "path": "03.1-AI-BI-Datawarehousing", 
+      "path": "03-AI-BI-data-warehousing/03.1-AI-BI-Datawarehousing", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -154,7 +154,7 @@
       "description": "Run interactive queries on top of your data"
     },
     {
-      "path": "03.2-AI-BI-Genie", 
+      "path": "03-AI-BI-data-warehousing/03.2-AI-BI-Genie", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,

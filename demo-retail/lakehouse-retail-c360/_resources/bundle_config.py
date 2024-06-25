@@ -42,7 +42,7 @@
     },
     {
       "path": "_resources/00-setup", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": False, 
       "add_cluster_setup_cell": False,
       "title":  "Dbsql data", 
@@ -146,7 +146,15 @@
       "description": "Reduce churn with GenAI capabilities."
     },
     {
-      "path": "03-BI-data-warehousing/03-BI-Datawarehousing", 
+      "path": "03.1-AI-BI-Datawarehousing", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Datawarehousing & BI / Dashboarding", 
+      "description": "Run interactive queries on top of your data"
+    },
+    {
+      "path": "03.2-AI-BI-Genie", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,

@@ -337,7 +337,7 @@ display(predictions)
 
 # MAGIC %md-sandbox
 # MAGIC ## Our finale tables are now ready to be used to build SQL Dashboards and ML models for customer classification!
-# MAGIC <img style="float: right" width="400" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dashboard.png"/>
+# MAGIC <img style="float: right" width="400" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-churn-prediction.png?raw=true"/>
 # MAGIC
 # MAGIC
 # MAGIC Switch to Databricks SQL to see how this data can easily be requested using <a  dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Churn prediction DBSQL dashboard</a>, or an external BI tool. 

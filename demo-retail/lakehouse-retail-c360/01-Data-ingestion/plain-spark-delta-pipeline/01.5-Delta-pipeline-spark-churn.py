@@ -340,7 +340,7 @@ display(predictions)
 # MAGIC <img style="float: right" width="400" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dashboard.png"/>
 # MAGIC
 # MAGIC
-# MAGIC Switch to Databricks SQL to see how this data can easily be requested using <a href='/sql/dashboards/f25702b4-56d8-40a2-a69d-d2f0531a996f' target="_blank">Churn prediction DBSQL dashboard</a>, or an external BI tool. 
+# MAGIC Switch to Databricks SQL to see how this data can easily be requested using <a  dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Churn prediction DBSQL dashboard</a>, or an external BI tool. 
 # MAGIC
 # MAGIC Creating a single flow was simple.  However, handling many data pipeline at scale can become a real challenge:
 # MAGIC * Hard to build and maintain table dependencies 

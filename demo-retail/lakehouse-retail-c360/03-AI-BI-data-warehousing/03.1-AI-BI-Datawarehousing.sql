@@ -89,7 +89,7 @@
 -- MAGIC
 -- MAGIC The next step is now to assemble our queries and their visualization in a comprehensive SQL dashboard that our business will be able to track.
 -- MAGIC
--- MAGIC The Dashboard has been loaded for you. Open the <a dbdemos-dashboard-id="churn-universal" href="/sql/dashboards/b14e9d86-478d-4ea8-83db-8211cee8d3fc">DBSQL Churn Dashboard</a> to start reviewing our Churn stats.
+-- MAGIC The Dashboard has been loaded for you. Open the <a dbdemos-dashboard-id="churn-universal" href="/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1">DBSQL Churn Dashboard</a> to start reviewing our Churn stats.
 
 -- COMMAND ----------
 

@@ -107,4 +107,4 @@ FROM(
 -- MAGIC
 -- MAGIC ## That's it! Our data quality metrics are ready! 
 -- MAGIC
--- MAGIC Our datable is now ready be queried using DBSQL. Open the [Retail Data quality tracker dashboard ](https://e2-demo-field-eng.cloud.databricks.com/sql/dashboards/b732d677-477b-4b5e-84b6-672174440e7d?o=1444828305810485)
+-- MAGIC Our datable is now ready be queried using DBSQL. Open the <a dbdemos-dashboard-id="dlt-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>

@@ -333,7 +333,7 @@ COMMENT "Customer at risk of churn"
 -- MAGIC
 -- MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
 -- MAGIC
--- MAGIC <a href="/sql/dashboards/b732d677-477b-4b5e-84b6-672174440e7d-dlt---retail-data-quality-stats" target="_blank">Data Quality Dashboard</a>
+-- MAGIC <a dbdemos-dashboard-id="dlt-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>
 
 -- COMMAND ----------
 
@@ -346,4 +346,4 @@ COMMENT "Customer at risk of churn"
 -- MAGIC
 -- MAGIC <img width="500px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dashboard.png"/>
 -- MAGIC
--- MAGIC <a href="/sql/dashboards/f25702b4-56d8-40a2-a69d-d2f0531a996f" target="_blank">Open the DBSQL Dashboard</a>
+-- MAGIC <a dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1'  target="_blank">Open the DBSQL Dashboard</a>

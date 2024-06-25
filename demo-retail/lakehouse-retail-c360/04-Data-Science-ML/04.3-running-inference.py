@@ -139,7 +139,7 @@ def score_model(dataset):
 # MAGIC
 # MAGIC <img width="800px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-dbsql-prediction-dashboard.png">
 # MAGIC
-# MAGIC <a href='/sql/dashboards/f25702b4-56d8-40a2-a69d-d2f0531a996f'>Open the Churn prediction DBSQL dashboard</a>
+# MAGIC <a dbdemos-dashboard-id="churn-prediction" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1'>Open the Churn prediction DBSQL dashboard</a>
 # MAGIC
 # MAGIC
 # MAGIC

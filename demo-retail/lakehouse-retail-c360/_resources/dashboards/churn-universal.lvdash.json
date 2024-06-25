@@ -1,0 +1,326 @@
+{
+    "datasets": [
+        {
+            "name": "5d67c78f",
+            "displayName": "Churn - Total MRR",
+            "query": "SELECT sum(amount)/10 as MRR FROM `main__build`.`dbdemos_retail_c360`.churn_orders o WHERE month(to_timestamp(creation_date, 'MM-dd-yyyy HH:mm:ss')) = \n      (select max(month(to_timestamp(creation_date, 'MM-dd-yyyy HH:mm:ss'))) from `main__build`.`dbdemos_retail_c360`.churn_orders);"
+        },
+        {
+            "name": "fb66b9eb",
+            "displayName": "Churn - Amount sales per month - Universal",
+            "query": "SELECT sum(amount), date_format(to_timestamp(churn_users.creation_date, \"MM-dd-yyyy H:mm:ss\"), \"yyyy-MM\") m FROM `main__build`.`dbdemos_retail_c360`.churn_orders o \n\t\tINNER JOIN `main__build`.`dbdemos_retail_c360`.churn_users using (user_id)\n\t\t\tgroup by m"
+        },
+        {
+            "name": "9a1ddcce",
+            "displayName": "Churn - Customers churned - Universal",
+            "query": "SELECT count(*) as past_churn FROM `main__build`.`dbdemos_retail_c360`.churn_users WHERE churn=1;\n"
+        },
+        {
+            "name": "67924e3e",
+            "displayName": "Churn - Subscriptions based on Internet Service - Universal",
+            "query": "select platform, churn, count(*) as event_count from `main__build`.`dbdemos_retail_c360`.churn_app_events inner join `main__build`.`dbdemos_retail_c360`.churn_users using (user_id) where platform is not null\ngroup by platform, churn"
+        },
+        {
+            "name": "0679d1de",
+            "displayName": "Churn - Churn by Gender - Universal",
+            "query": "\nSELECT gender, count(gender) as total_churn FROM `main__build`.`dbdemos_retail_c360`.churn_features where churn = 1 GROUP BY gender\n\n\n"
+        },
+        {
+            "name": "856caf33",
+            "displayName": "Churn - Avg Monthly Charges by Payment Method - Universal",
+            "query": "SELECT canal, sum(amount)/100 as MRR FROM `main__build`.`dbdemos_retail_c360`.churn_orders o \n\t\tINNER JOIN `main__build`.`dbdemos_retail_c360`.churn_users using (user_id)\n    group by canal;"
+        }
+    ],
+    "pages": [
+        {
+            "name": "5a3fe26c",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "220a4628",
+                        "textbox_spec": "dbdemos dashboard - lakehouse-retail-c360.\nVisit dbdemos.ai for more details. \n![tracking_img](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&dashboard=CHURN_UNIVERSAL&demo_name=lakehouse-retail-c360&event=VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 15,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5af9e3fa",
+                        "queries": [
+                            {
+                                "name": "3df91346f88445f183a19c875efd003c",
+                                "query": {
+                                    "datasetName": "856caf33",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Avg Monthly Charges by Payment Method",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"bubble\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": true, \"placement\": \"auto\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"PaymentMethod\"}}, \"yAxis\": [{\"type\": \"linear\", \"title\": {\"text\": \"AvgMonthlyCharges\"}}, {\"type\": \"linear\", \"opposite\": true, \"title\": {\"text\": null}}], \"alignYAxesAtZero\": false, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"MRR\": {\"yAxis\": 0}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 0.003, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": false, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"canal\"}, \"y\": [{\"column\": \"MRR\"}], \"size\": {\"column\": \"MRR\"}, \"series\": {\"column\": \"canal\"}}, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "3df91346f88445f183a19c875efd003c"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "35c7dc7c",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "67924e3e",
+                                    "fields": [
+                                        {
+                                            "name": "churn",
+                                            "expression": "`churn`"
+                                        },
+                                        {
+                                            "name": "platform",
+                                            "expression": "`platform`"
+                                        },
+                                        {
+                                            "name": "sum(event_count)",
+                                            "expression": "SUM(`event_count`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "sum(event_count)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of event_count"
+                                },
+                                "y": {
+                                    "fieldName": "platform",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "platform"
+                                },
+                                "color": {
+                                    "fieldName": "churn",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": 1,
+                                                "color": "#AB506F"
+                                            },
+                                            {
+                                                "value": 0,
+                                                "color": "#87BFE0"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "churn"
+                                }
+                            },
+                            "frame": {
+                                "title": "Subscriptions based on Internet Service",
+                                "showTitle": true
+                            },
+                            "mark": {
+                                "layout": "group"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 0,
+                        "width": 3,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "35258817",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "0679d1de",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "sum(total_churn)",
+                                            "expression": "SUM(`total_churn`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "sum(total_churn)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of total_churn"
+                                },
+                                "color": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": 0,
+                                                "color": "#F6C17F"
+                                            },
+                                            {
+                                                "value": 1,
+                                                "color": "#AB506F"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "gender"
+                                }
+                            },
+                            "frame": {
+                                "title": "Churn repartition - population type",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 2,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "6b52ac51",
+                        "queries": [
+                            {
+                                "name": "05b5884114654e00b031b6d1276871aa",
+                                "query": {
+                                    "datasetName": "5d67c78f",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "MRR ($) - Churn - Total MRR",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"MRR\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"showPlotlyControls\": true, \"stringSuffix\": \"\", \"stringPrefix\": \"$\", \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "05b5884114654e00b031b6d1276871aa"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "801a8d17",
+                        "queries": [
+                            {
+                                "name": "87a3753986fc44198a398f9631f29485",
+                                "query": {
+                                    "datasetName": "9a1ddcce",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Past Churn",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"past_churn\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringSuffix\": \" customers\"}",
+                                "query_name": "87a3753986fc44198a398f9631f29485"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8704b1ee",
+                        "queries": [
+                            {
+                                "name": "3fa1e8d2f9314a1c91b22b5c48572e24",
+                                "query": {
+                                    "datasetName": "fb66b9eb",
+                                    "fields": [
+                                        {
+                                            "name": "m",
+                                            "expression": "`m`"
+                                        },
+                                        {
+                                            "name": "column_c0c32ed033612",
+                                            "expression": "SUM(`sum(amount)`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "MRR over time",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"area\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"Date\"}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"Monthly Recurrent Revenue\"}}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": false, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_c0c32ed033612\": {\"yAxis\": 0, \"type\": \"area\", \"color\": \"#87BFE0\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"m\", \"id\": \"column_c0c32ed034641\"}, \"y\": [{\"id\": \"column_c0c32ed033612\", \"column\": \"sum(amount)\", \"transform\": \"SUM\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "3fa1e8d2f9314a1c91b22b5c48572e24"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 8,
+                        "width": 3,
+                        "height": 7
+                    }
+                }
+            ]
+        }
+    ]
+}

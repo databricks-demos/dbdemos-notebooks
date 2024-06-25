@@ -1,0 +1,409 @@
+{
+    "datasets": [
+        {
+            "name": "fbe291d8",
+            "displayName": "Churn - Monthly Revenue Risk - Universal",
+            "query": "SELECT sum(amount)/100 as MRR_at_risk FROM `main__build`.`dbdemos_retail_c360`.churn_orders o WHERE month(to_timestamp(creation_date, 'MM-dd-yyyy HH:mm:ss')) = \n      (select max(month(to_timestamp(creation_date, 'MM-dd-yyyy HH:mm:ss'))) from `main__build`.`dbdemos_retail_c360`.churn_orders) and user_id in (SELECT user_id FROM `main__build`.`dbdemos_retail_c360`.churn_users WHERE churn=1);"
+        },
+        {
+            "name": "bc63aa2a",
+            "displayName": "Churn - Subscriptions based on Internet Service",
+            "query": "select platform, churn, count(*) as event_count from `main__build`.`dbdemos_retail_c360`.churn_app_events \n    inner join `main__build`.`dbdemos_retail_c360`.churn_users using (user_id) \n    where platform is not null\n    group by platform, churn"
+        },
+        {
+            "name": "f53395d2",
+            "displayName": "Churn - Predicted Churn Percent Payment Method - Universal",
+            "query": "-- select * from `main__build`.`dbdemos_retail_c360`.churn_features;\n\nSELECT p.country, p.churn, count(*) as customers\n\tFROM `main__build`.`dbdemos_retail_c360`.churn_features p\n\tGROUP BY p.country, p.churn\n\t"
+        },
+        {
+            "name": "f180b820",
+            "displayName": "Churn - At-Risk Customers - Universal",
+            "query": "SELECT count(*)/12 as at_risk FROM `main__build`.`dbdemos_retail_c360`.churn_users WHERE churn=1"
+        },
+        {
+            "name": "03978109",
+            "displayName": "Churn - Customer Breakdown - Universal",
+            "query": "SELECT canal, count(*) as users_count\n\tFROM `main__build`.`dbdemos_retail_c360`.churn_features  WHERE churn =1  and canal is not null GROUP BY canal "
+        },
+        {
+            "name": "fde8d462",
+            "displayName": "Churn - Total MRR - Universal",
+            "query": "SELECT sum(amount)/10 as MRR FROM `main__build`.`dbdemos_retail_c360`.churn_orders o WHERE month(to_timestamp(creation_date, 'MM-dd-yyyy HH:mm:ss')) = \n      (select max(month(to_timestamp(creation_date, 'MM-dd-yyyy HH:mm:ss'))) from `main__build`.`dbdemos_retail_c360`.churn_orders);"
+        },
+        {
+            "name": "362c7c84",
+            "displayName": "Churn - Predicted to Churn - Universal",
+            "query": "SELECT user_id, churn from `main__build`.`dbdemos_retail_c360`.churn_users where churn=1"
+        },
+        {
+            "name": "6be7accd",
+            "displayName": "Churn - Predictions - Universal",
+            "query": "SELECT cast(days_since_creation/30 as int) as days_since_creation, churn, count(*) as customers\n   FROM `main__build`.`dbdemos_retail_c360`.churn_features\n   GROUP BY days_since_creation, churn having days_since_creation < 1000 "
+        }
+    ],
+    "pages": [
+        {
+            "name": "aac760c2",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "fdd161c0",
+                        "textbox_spec": "Field Demo dashboard. Please do not edit\n![tracking_img](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&dashboard=CHURN_PREDICTION&demo_name=lakehouse-retail-c360&event=VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 21,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "24cddde6",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "f53395d2",
+                                    "fields": [
+                                        {
+                                            "name": "churn",
+                                            "expression": "`churn`"
+                                        },
+                                        {
+                                            "name": "country",
+                                            "expression": "`country`"
+                                        },
+                                        {
+                                            "name": "customers",
+                                            "expression": "`customers`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "churn",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "churn"
+                                },
+                                "y": {
+                                    "fieldName": "customers",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "customers"
+                                },
+                                "color": {
+                                    "fieldName": "country",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "FR",
+                                                "color": "#AB506F"
+                                            },
+                                            {
+                                                "value": "SPAIN",
+                                                "color": "#87BFE0"
+                                            },
+                                            {
+                                                "value": "USA",
+                                                "color": "#F6C17F"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "country"
+                                }
+                            },
+                            "frame": {
+                                "title": "Percent Predicted Churn - Payment Method",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 4,
+                        "width": 2,
+                        "height": 9
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "9591e537",
+                        "queries": [
+                            {
+                                "name": "d29e40db86f24b18904d89187345c819",
+                                "query": {
+                                    "datasetName": "6be7accd",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Predicted as Churn - Customer Tenure",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"column\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": true, \"placement\": \"auto\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"tenure\"}}, \"yAxis\": [{\"type\": \"linear\", \"title\": {\"text\": \"customers\"}}, {\"type\": \"linear\", \"opposite\": true, \"title\": {\"text\": null}}], \"alignYAxesAtZero\": false, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"0\": {\"color\": \"#87BFE0\"}, \"1\": {\"color\": \"#AB506F\"}, \"customers\": {\"yAxis\": 0}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": false, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"days_since_creation\"}, \"y\": [{\"column\": \"customers\"}], \"series\": {\"column\": \"churn\"}}, \"showPlotlyControls\": true, \"condensed\": true, \"withRowNumber\": true, \"isAggregationOn\": false}",
+                                "query_name": "d29e40db86f24b18904d89187345c819"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 2,
+                        "height": 9
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "86306034",
+                        "queries": [
+                            {
+                                "name": "68255adcb5004c0ba473862649de183f",
+                                "query": {
+                                    "datasetName": "f180b820",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "At-Risk Customers",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"at_risk\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"showPlotlyControls\": true, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "68255adcb5004c0ba473862649de183f"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 0,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "fdc126f9",
+                        "queries": [
+                            {
+                                "name": "e49b10c2cb724f74b84b043c0aa719fc",
+                                "query": {
+                                    "datasetName": "03978109",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "At Risk Customers - Have Device Protection",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"pie\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": true, \"placement\": \"auto\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"deviceProtection\"}}, \"yAxis\": [{\"type\": \"linear\", \"title\": {\"text\": \"Customers\"}}, {\"type\": \"linear\", \"opposite\": true, \"title\": {\"text\": null}}], \"alignYAxesAtZero\": false, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"users_count\": {\"yAxis\": 0}}, \"valuesOptions\": {\"No\": {\"color\": \"#87BFE0\"}, \"Yes\": {\"color\": \"#AB506F\"}, \"PHONE\": {\"color\": \"#F6C17F\"}, \"WEBAPP\": {\"color\": \"#AB506F\"}, \"MOBILE\": {\"color\": \"#87BFE0\"}}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": false, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": true, \"columnConfigurationMap\": {\"x\": {\"column\": \"canal\"}, \"y\": [{\"column\": \"users_count\"}]}, \"showPlotlyControls\": true, \"condensed\": true, \"withRowNumber\": true, \"isAggregationOn\": false}",
+                                "query_name": "e49b10c2cb724f74b84b043c0aa719fc"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 4,
+                        "width": 2,
+                        "height": 9
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "48fe5951",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "fbe291d8",
+                                    "fields": [
+                                        {
+                                            "name": "MRR_at_risk",
+                                            "expression": "`MRR_at_risk`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "MRR_at_risk",
+                                    "rowNumber": 1,
+                                    "displayName": "MRR_at_risk"
+                                }
+                            },
+                            "frame": {
+                                "title": "Predicted Churn - Monthly Revenue Risk ($)",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 0,
+                        "width": 3,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "6188ea9d",
+                        "queries": [
+                            {
+                                "name": "42495812495e4bca92d31a1bab72976c",
+                                "query": {
+                                    "datasetName": "fde8d462",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Total MRR ($) ",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"MRR\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"showPlotlyControls\": true, \"stringSuffix\": \"\", \"stringPrefix\": \"$\", \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "42495812495e4bca92d31a1bab72976c"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 2,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "bdb8d984",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "bc63aa2a",
+                                    "fields": [
+                                        {
+                                            "name": "churn",
+                                            "expression": "`churn`"
+                                        },
+                                        {
+                                            "name": "platform",
+                                            "expression": "`platform`"
+                                        },
+                                        {
+                                            "name": "sum(event_count)",
+                                            "expression": "SUM(`event_count`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "sum(event_count)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of event_count"
+                                },
+                                "y": {
+                                    "fieldName": "platform",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "platform"
+                                },
+                                "color": {
+                                    "fieldName": "churn",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": 0,
+                                                "color": "#87BFE0"
+                                            },
+                                            {
+                                                "value": 1,
+                                                "color": "#AB506F"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "churn"
+                                }
+                            },
+                            "frame": {
+                                "title": "Churn - Subscriptions based on Internet Service",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 13,
+                        "width": 4,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "2d273df5",
+                        "queries": [
+                            {
+                                "name": "859a7d9f1ce846c0bc3db2c069138ca9",
+                                "query": {
+                                    "datasetName": "362c7c84",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Customers Predicted to Churn",
+                                "description": "",
+                                "viz_type": "TABLE",
+                                "serialized_options": "{}",
+                                "query_name": "859a7d9f1ce846c0bc3db2c069138ca9"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 13,
+                        "width": 2,
+                        "height": 8
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,12 +1,13 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC # Your Lakehouse is the best Warehouse
+-- MAGIC # AI / BI On Databricks: Your AI-powered Lakehouse is the best Warehouse
 -- MAGIC
 -- MAGIC Traditional Data Warehouses can’t keep up with the variety of data and use cases. Business agility requires reliable, real-time data, with insight from ML models.
 -- MAGIC
 -- MAGIC Working with the lakehouse unlock traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
 -- MAGIC
+-- MAGIC With AI assistant infused in all the BI stack, Databricks makes it easy to analysts and business users to extract insight from their data.  
 -- MAGIC <br>
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/dbsql.png" width="700px" style="float: left" />
@@ -22,7 +23,7 @@
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03-BI-Datawarehousing&demo_name=lakehouse-retail-c360&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.1-AI-BI-Datawarehousing&demo_name=lakehouse-retail-c360&event=VIEW">
 
 -- COMMAND ----------
 
@@ -88,7 +89,7 @@
 -- MAGIC
 -- MAGIC The next step is now to assemble our queries and their visualization in a comprehensive SQL dashboard that our business will be able to track.
 -- MAGIC
--- MAGIC The Dashboard has been loaded for you. Open the [DBSQL Churn Dashboard](/sql/dashboards/b14e9d86-478d-4ea8-83db-8211cee8d3fc) to start reviewing our Churn stats.
+-- MAGIC The Dashboard has been loaded for you. Open the <a dbdemos-dashboard-id="churn-universal" href="/sql/dashboards/b14e9d86-478d-4ea8-83db-8211cee8d3fc">DBSQL Churn Dashboard</a> to start reviewing our Churn stats.
 
 -- COMMAND ----------
 
@@ -136,11 +137,8 @@
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC # Empower business users and let them talk to your data: AI/BI Genie
 -- MAGIC
--- MAGIC # Taking our analysis one step further: Predicting Churn
+-- MAGIC Databricks AI/BI Genie let you ask any question in plain english to your Data.
 -- MAGIC
--- MAGIC Being able to run analysis on our past data already gives us a lot of insight. We can better understand which customers are churning evaluate the churn impact.
--- MAGIC
--- MAGIC However, knowing that we have churn isn't enough. We now need to take it to the next level and build a predictive model to determine our customers at risk of churn to be able to increase our revenue.
--- MAGIC
--- MAGIC Let's see how this can be done with [Databricks Machine Learning notebook]($../04-Data-Science-ML/04.1-automl-churn-prediction) | go [Go back to the introduction]($../00-churn-introduction-lakehouse)
+-- MAGIC Let's see how this can be done with [the AI BI Genie notebook]($./03.2-AI-BI-Genie) | go [Go back to the introduction]($../00-churn-introduction-lakehouse).

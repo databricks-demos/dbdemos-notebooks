@@ -14,6 +14,13 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install dbldatagen -qU
+# MAGIC
+# MAGIC
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
 
 # COMMAND ----------
@@ -97,7 +104,7 @@ from datetime import datetime, timedelta
 # COMMAND ----------
 
 # Simulate first batch with baseline model/version "1"
-this_timestamp = (datetime.now() + timedelta(days=-2)).timestamp()
+this_timestamp = (datetime.now() + timedelta(days=-1)).timestamp()
 
 predictions.sample(fraction=np.random.random()) \
            .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
@@ -112,11 +119,11 @@ predictions.sample(fraction=np.random.random()) \
 this_timestamp = (datetime.now() + timedelta(days=-1)).timestamp()
 
 predictions.sample(fraction=np.random.random()) \
-           .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-           .withColumn("Model_Version", F.lit("2")) \
-           .write.format("delta").mode(mode).option("overwriteSchema", True) \
-           .option("delta.enableChangeDataFeed", True) \
-           .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
+          .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
+          .withColumn("Model_Version", F.lit("2")) \
+          .write.format("delta").mode(mode).option("overwriteSchema", True) \
+          .option("delta.enableChangeDataFeed", True) \
+          .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
 
 # COMMAND ----------
 
@@ -175,3 +182,81 @@ baseline_predictions_df.drop(timestamp_col).withColumn("Model_Version", F.lit(mo
 # MAGIC * [Deploy and Serve model as REST API]($./06_serve_model)
 # MAGIC * [Create monitor for model performance]($./07_model_monitoring)
 # MAGIC * [Automate model re-training]($./08_retrain_churn_automl)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Generate synthetic data _[Work-In-Progress]_
+# MAGIC **TO-DO:**
+# MAGIC - Move this to a seperate notebook under `_resources`
+# MAGIC - Tweak distribution parameters to create significant `label`, `prediction` and (custom metric) `expected_loss` drifts (i.e. high `monthly_charges` with `churn`==Yes and `prediction`==No)
+
+# COMMAND ----------
+
+import dbldatagen as dg
+
+
+dfSource = spark.read.table("dbdemos.retail_amine_elhelou.mlops_churn_inference_log")
+analyzer = dg.DataAnalyzer(sparkSession=spark, df=dfSource)
+
+display(analyzer.summarizeToDF())
+
+# COMMAND ----------
+
+# DBTITLE 1,Generates code - COPY the output
+code =  dg.DataAnalyzer.scriptDataGeneratorFromSchema(dfSource.schema)
+
+# COMMAND ----------
+
+# DBTITLE 1,Paste here and change the params
+import pyspark.sql.types
+
+
+# Column definitions are stubs only - modify to generate correct data  
+#
+generation_spec = (
+    dg.DataGenerator(sparkSession=spark, 
+                     name='synthetic_data', 
+                     rows=10000,
+                     random=True,
+                     )
+    .withColumn('customer_id', 'string', template=r'dddd-AAAA')
+    .withColumn('scoring_timestamp', 'timestamp', begin="2024-02-16 01:00:00", end="2024-04-12 23:59:00", interval="1 hour")
+    .withColumn('churn', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('gender', 'string', values=['Female', 'Male'], random=True, weights=[0.5, 0.5])
+    .withColumn('senior_citizen', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('partner', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('dependents', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('tenure', 'double', minValue=0.0, maxValue=72.0, step=1.0)
+    .withColumn('phone_service', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('multiple_lines', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('internet_service', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('online_security', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('online_backup', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('device_protection', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('tech_support', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('streaming_tv', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('streaming_movies', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('contract', 'string', values=['Month-to-month', 'One year','Two year'], random=True, weights=[0.3, 0.3, 0.4])
+    .withColumn('paperless_billing', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('payment_method', 'string', values=['Credit card (automatic)', 'Mailed check',
+'Bank transfer (automatic)', 'Electronic check'], weights=[0.25, 0.25, 0.25, 0.25])
+    .withColumn('monthly_charges', 'double', minValue=18.0, maxValue=118.0, step=0.5)
+    .withColumn('total_charges', 'double', minValue=0.0, maxValue=8684.0, step=20)
+    .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
+    .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
+    .withColumn('prediction', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('Model_Version', 'string', values=['1', '2'], random=True, weights=[0.5, 0.5])
+    )
+
+# COMMAND ----------
+
+df_synthetic_data = generation_spec.build()
+
+# COMMAND ----------
+
+display(df_synthetic_data)
+
+# COMMAND ----------
+
+df_synthetic_data.write.mode("append").saveAsTable("dbdemos.retail_amine_elhelou.mlops_churn_inference_log")

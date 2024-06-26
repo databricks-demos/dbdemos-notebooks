@@ -11,8 +11,8 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install Lakehouse Monitoring wheel
-# MAGIC %pip install "https://ml-team-public-read.s3.amazonaws.com/wheels/data-monitoring/a4050ef7-b183-47a1-a145-e614628e3146/databricks_lakehouse_monitoring-0.4.6-py3-none-any.whl"
+# DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
+# MAGIC %pip install "databricks-sdk>=0.28.0"
 # MAGIC
 # MAGIC
 # MAGIC dbutils.library.restartPython()
@@ -29,56 +29,51 @@
 
 # COMMAND ----------
 
-import databricks.lakehouse_monitoring as lm
-
-# COMMAND ----------
-
 # DBTITLE 1,Define expected loss metric
-from pyspark.sql.types import DoubleType
+from pyspark.sql.types import DoubleType, StructField
+from databricks.sdk.service.catalog import MonitorMetric, MonitorMetricType
 
 
 expected_loss_metric = [
-  lm.Metric(
-    type="aggregate",
+  MonitorMetric(
+    type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,
     name="expected_loss",
     input_columns=[":table"],
     definition="""avg(CASE
     WHEN {{prediction_col}} != {{label_col}} AND {{label_col}} = 'Yes' THEN -monthly_charges
     ELSE 0 END
     )""",
-    output_data_type= DoubleType()
+    output_data_type= StructField("output", T.DoubleType()).json()
   )
 ]
 
 # COMMAND ----------
 
 # DBTITLE 1,Create Monitor
-print(f"Creating monitor for {inference_table_name}")
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInferenceLogProblemType
 
-info = lm.create_monitor(
+
+print(f"Creating monitor for {inference_table_name}")
+w = WorkspaceClient()
+
+info = w.quality_monitors.create(
   table_name=f"{catalog}.{dbName}.{inference_table_name}",
-  profile_type=lm.InferenceLog(
-    timestamp_col=timestamp_col,
-    granularities=["1 day"], # Daily granularity
-    model_id_col="Model_Version",
-    prediction_col="prediction",
-    problem_type="classification",
-    label_col=label_col,
-    schedule=["0 0 0/12 * * ?"], # 12hours CRON synthax
+  inference_log=MonitorInferenceLog(
+        problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
+        prediction_col="prediction",
+        timestamp_col=timestamp_col,
+        granularities=["1 day"],
+        model_id_col="Model_Version",
+        label_col="label_col", # optional
   ),
+  assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{dbName}.{inference_table_name}",
+  output_schema_name=f"{catalog}.{dbName}",
   baseline_table_name=baseline_table_name,
-  slicing_exprs=["senior_citizen='Yes'"], # Slicing dimension
+  slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
   output_schema_name=f"{catalog}.{dbName}",
   custom_metrics=expected_loss_metric
 )
-
-# COMMAND ----------
-
-# DBTITLE 1,Update monitor
-# info = lm.update_monitor(
-#   table_name=f"{catalog}.{dbName}.{inference_table_name}",
-#   updated_params={"custom_metrics" : expected_loss_metric}
-# )
 
 # COMMAND ----------
 
@@ -87,14 +82,15 @@ info = lm.create_monitor(
 # COMMAND ----------
 
 import time
+from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
 
 
 # Wait for monitor to be created
-while info.status == lm.MonitorStatus.PENDING:
-  info = lm.get_monitor(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING::
+  info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
   time.sleep(10)
 
-assert info.status == lm.MonitorStatus.ACTIVE, "Error creating monitor"
+assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
 
 # COMMAND ----------
 
@@ -102,25 +98,24 @@ assert info.status == lm.MonitorStatus.ACTIVE, "Error creating monitor"
 
 # COMMAND ----------
 
-refresh_info = lm.list_refreshes(table_name=f"{catalog}.{dbName}.{inference_table_name}") # List all refreshes
-run_info = refresh_info[-1] # Get latest refresh status
-# run_info = lm.run_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}") # OR Trigger a new refresh
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{dbName}.{inference_table_name}").refreshes
+assert(len(refreshes) > 0)
 
-# Wait until monitoring job ends [OPTIONAL]
-while run_info.state in (lm.RefreshState.PENDING, lm.RefreshState.RUNNING):
-  run_info = lm.get_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}", refresh_id=run_info.refresh_id)
+run_info = refreshes[0]
+while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
-assert(run_info.state == lm.RefreshState.SUCCESS)
+assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
-lm.get_monitor(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
 
 # COMMAND ----------
 
 # DBTITLE 1,Delete existing monitor [OPTIONAL]
-# lm.delete_monitor(table_name=f"{catalog}.{dbName}.{inference_table_name}", purge_artifacts=True)
+# w.quality_monitors.delete(table_name=f"{catalog}.{dbName}.{inference_table_name}", purge_artifacts=True)
 
 # COMMAND ----------
 

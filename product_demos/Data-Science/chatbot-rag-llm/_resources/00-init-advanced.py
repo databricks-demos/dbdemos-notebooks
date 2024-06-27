@@ -62,7 +62,7 @@ def deduplicate_assessments_table(assessment_table):
                                             ) as row_number from {assessment_table} where text_assessment is not NULL
                                         ) where row_number = 1""")
     # De-dup the retrieval assessments
-    assessments_retrieval_deduplicated_df = spark.sql(f"""select * except( retrieval_assessment, source, timestamp, text_assessment),
+    assessments_retrieval_deduplicated_df = spark.sql(f"""select * except( retrieval_assessment, source, timestamp, text_assessment, schema_version),
         any_value(timestamp) as timestamp,
         any_value(source) as source,
         collect_list(retrieval_assessment) as retrieval_assessments

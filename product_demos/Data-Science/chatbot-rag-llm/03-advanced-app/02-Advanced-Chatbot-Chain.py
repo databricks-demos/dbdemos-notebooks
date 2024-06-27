@@ -46,7 +46,7 @@ rag_chain_config = {
         "llm_prompt_template_variables": ["context", "question"],
     },
     "retriever_config": {
-        "embedding_model": "databricks-bge-large-en",
+        "embedding_model": "databricks-gte-large-en",
         "chunk_template": "Passage: {chunk_text}\n",
         "data_pipeline_tag": "poc",
         "parameters": {"k": 3, "query_type": "ann"},

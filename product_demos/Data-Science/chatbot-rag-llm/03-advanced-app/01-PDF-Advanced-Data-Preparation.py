@@ -171,7 +171,7 @@ spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 10)
 
 @pandas_udf("array<string>")
 def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
-    #set llama2 as tokenizer to match our model size (will stay below BGE 1024 limit)
+    #set llama2 as tokenizer to match our model size (will stay below gte 1024 limit)
     set_global_tokenizer(
       AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer")
     )
@@ -207,7 +207,7 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Introducing Databricks BGE Embeddings Foundation Model endpoints
+# MAGIC ## Introducing Databricks GTE Embeddings Foundation Model endpoints
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-pdf-self-managed-4.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
@@ -220,20 +220,20 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 # MAGIC
 # MAGIC Open the [Model Serving Endpoint page](/ml/endpoints) to explore and try the foundation models.
 # MAGIC
-# MAGIC For this demo, we will use the foundation model `BGE` (embeddings) and `llama2-70B` (chat). <br/><br/>
+# MAGIC For this demo, we will use the foundation model `GTE` (embeddings) and `DBRX` (chat). <br/><br/>
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/databricks-foundation-models.png?raw=true" width="600px" >
 
 # COMMAND ----------
 
-# DBTITLE 1,Using Databricks Foundation model BGE as embedding endpoint
+# DBTITLE 1,Using Databricks Foundation model GTE as embedding endpoint
 from mlflow.deployments import get_deploy_client
 
-# bge-large-en Foundation models are available using the /serving-endpoints/databricks-bge-large-en/invocations api. 
+# gte-large-en Foundation models are available using the /serving-endpoints/databricks-gtegte-large-en/invocations api. 
 deploy_client = get_deploy_client("databricks")
 
 ## NOTE: if you change your embedding model here, make sure you change it in the query step too
-embeddings = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": ["What is Apache Spark?"]})
+embeddings = deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": ["What is Apache Spark?"]})
 pprint(embeddings)
 
 # COMMAND ----------
@@ -265,7 +265,7 @@ def get_embedding(contents: pd.Series) -> pd.Series:
     deploy_client = mlflow.deployments.get_deploy_client("databricks")
     def get_embeddings(batch):
         #Note: this will fail if an exception is thrown during embedding creation (add try/except if needed) 
-        response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": batch})
+        response = deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": batch})
         return [e['embedding'] for e in response.data]
 
     # Splitting the contents into batches of 150 items each, since the embedding model takes at most 150 inputs per request.
@@ -357,7 +357,7 @@ if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
     source_table_name=source_table_fullname,
     pipeline_type="TRIGGERED", #Sync needs to be manually triggered
     primary_key="id",
-    embedding_dimension=1024, #Match your model embedding size (bge)
+    embedding_dimension=1024, #Match your model embedding size (gte)
     embedding_vector_column="embedding"
   )
   #Let's wait for the index to be ready and all our embeddings to be created and indexed
@@ -384,7 +384,7 @@ else:
 
 question = "How can I track billing usage on my workspaces?"
 
-response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": [question]})
+response = deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": [question]})
 embeddings = [e['embedding'] for e in response.data]
 
 results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).similarity_search(

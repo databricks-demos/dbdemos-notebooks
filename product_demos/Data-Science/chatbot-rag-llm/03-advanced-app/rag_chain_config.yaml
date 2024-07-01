@@ -28,7 +28,7 @@ retriever_config:
 
     '
   data_pipeline_tag: poc
-  embedding_model: databricks-bge-large-en
+  embedding_model: databricks-gte-large-en
   parameters:
     k: 3
     query_type: ann

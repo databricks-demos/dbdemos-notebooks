@@ -199,20 +199,20 @@ display(spark.table("databricks_documentation"))
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Introducing Databricks BGE Embeddings Foundation Model endpoints
+# MAGIC ## Introducing Databricks GTE Embeddings Foundation Model endpoints
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-data-prep-4.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
 # MAGIC Foundation Models are provided by Databricks, and can be used out-of-the-box.
 # MAGIC
 # MAGIC Databricks supports several endpoint types to compute embeddings or evaluate a model:
-# MAGIC - A **foundation model endpoint**, provided by Databricks (ex: llama2-70B, MPT, BGE). **This is what we'll be using in this demo.**
+# MAGIC - A **foundation model endpoint**, provided by Databricks (ex: DBRX, MPT, GTE). **This is what we'll be using in this demo.**
 # MAGIC - An **external endpoint**, acting as a gateway to an external model (ex: Azure OpenAI)
 # MAGIC - A **custom**, fined-tuned model hosted on Databricks model service
 # MAGIC
 # MAGIC Open the [Model Serving Endpoint page](/ml/endpoints) to explore and try the foundation models.
 # MAGIC
-# MAGIC For this demo, we will use the foundation model `BGE` (embeddings) and `llama2-70B` (chat). <br/><br/>
+# MAGIC For this demo, we will use the foundation model `GTE` (embeddings) and `DBRX` (chat). <br/><br/>
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/databricks-foundation-models.png?raw=true" width="600px" >
 
@@ -222,15 +222,15 @@ display(spark.table("databricks_documentation"))
 import mlflow.deployments
 deploy_client = mlflow.deployments.get_deploy_client("databricks")
 
-#Embeddings endpoints convert text into a vector (array of float). Here is an example using BGE:
-response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": ["What is Apache Spark?"]})
+#Embeddings endpoints convert text into a vector (array of float). Here is an example using GTEgte:
+response = deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": ["What is Apache Spark?"]})
 embeddings = [e['embedding'] for e in response.data]
 print(embeddings)
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Creating our Vector Search Index with Managed Embeddings and BGE
+# MAGIC ### Creating our Vector Search Index with Managed Embeddings and GTE
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-data-prep-3.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
@@ -268,7 +268,7 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 # MAGIC
 # MAGIC All we now have to do is to as Databricks to create the index. 
 # MAGIC
-# MAGIC Because it's a managed embedding index, we just need to specify the text column and our embedding foundation model (`BGE`).  Databricks will compute the embeddings for us automatically.
+# MAGIC Because it's a managed embedding index, we just need to specify the text column and our embedding foundation model (`GTE`).  Databricks will compute the embeddings for us automatically.
 # MAGIC
 # MAGIC This can be done using the API, or in a few clicks within the Unity Catalog Explorer menu.
 # MAGIC
@@ -293,7 +293,7 @@ if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
     pipeline_type="TRIGGERED",
     primary_key="id",
     embedding_source_column='content', #The column containing our text
-    embedding_model_endpoint_name='databricks-bge-large-en' #The embedding endpoint used to create the embeddings
+    embedding_model_endpoint_name='databricks-gte-large-en' #The embedding endpoint used to create the embeddings
   )
   #Let's wait for the index to be ready and all our embeddings to be created and indexed
   wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)

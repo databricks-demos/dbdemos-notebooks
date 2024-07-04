@@ -14,11 +14,11 @@
 # MAGIC This saves data scientists hours of developement and allows team to quickly bootstrap and validate new projects, especally when we may not know the predictors for alternative data such as the telco payment data.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_credit_scoring%2Fml-03&dt=LAKEHOUSE_CREDIT_SCORING">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.3-Batch-Scoring-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=fsi_credit_decisioning
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -40,15 +40,18 @@
 
 # COMMAND ----------
 
+model_name = "dbdemos_fsi_credit_decisioning"
+mlflow.set_registry_uri('databricks-uc')
+
 # Load model as a Spark UDF.
-loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri="models:/dbdemos_fsi_credit_decisioning/Production", result_type='double')
+loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", result_type='double')
 
 # COMMAND ----------
 
 features = loaded_model.metadata.get_input_schema().input_names()
 
 underbanked_df = spark.table("credit_decisioning_features").fillna(0) \
-                   .withColumn("prediction", loaded_model(struct(*features))).cache()
+                   .withColumn("prediction", loaded_model(F.struct(*features))).cache()
 
 display(underbanked_df)
 

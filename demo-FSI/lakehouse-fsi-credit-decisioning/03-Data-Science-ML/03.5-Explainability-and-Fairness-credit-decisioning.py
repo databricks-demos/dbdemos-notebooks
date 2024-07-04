@@ -21,11 +21,16 @@
 # MAGIC We'll select our existing customers not having credit (We'll flag them as `defaulted = 2`) and make sure that our model is fair and behave the same among different group of the population.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_credit_scoring%2Fml-04&dt=LAKEHOUSE_CREDIT_SCORING">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.5-Explainability-and-Fairness-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=fsi_credit_decisioning
+# MAGIC %pip install --quiet shap==0.36.0
+# MAGIC dbutils.library.restartPython() 
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -36,8 +41,8 @@
 # COMMAND ----------
 
 feature_df = spark.table("credit_decisioning_features")
-credit_bureau_label = spark.table("credit_bureau_gold_features")
-customer_df = spark.table(f"customer_silver_features").select("cust_id", "gender", "first_name", "last_name", "email", "mobile_phone")
+credit_bureau_label = spark.table("credit_bureau_gold")
+customer_df = spark.table(f"customer_silver").select("cust_id", "gender", "first_name", "last_name", "email", "mobile_phone")
                    
 df = (feature_df.join(customer_df, "cust_id", how="left")
                .join(credit_bureau_label, "cust_id", how="left")
@@ -55,7 +60,10 @@ display(df)
 
 # COMMAND ----------
 
-model = mlflow.pyfunc.load_model(model_uri="models:/dbdemos_fsi_credit_decisioning/Production")
+model_name = "dbdemos_fsi_credit_decisioning"
+mlflow.set_registry_uri('databricks-uc')
+
+model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@prod")
 features = model.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
@@ -108,10 +116,11 @@ shap.summary_plot(shap_values, underbanked_sample[features])
 # COMMAND ----------
 
 # DBTITLE 1,Explain feature importance for a single customer
+#shap.initjs()
 #We'll need to add shap bundle js to display nice graph
 with open(shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js", 'r') as file:
-   shap_bundle_js = '<script type="text/javascript">'+file.read()+'</script>'
-   
+   shap_bundle_js = '<script type="text/javascript">'+file.read()+';</script>'
+
 html = shap.force_plot(explainer.expected_value, shap_values[0,:], underbanked_sample[features].iloc[0,:])
 displayHTML(shap_bundle_js + html.html())
 
@@ -151,7 +160,7 @@ shap.group_difference_plot(shap_df[['age_shap', 'tenure_months_shap']].to_numpy(
 # COMMAND ----------
 
 #Let's load the underlying model to get the proba
-skmodel = mlflow.sklearn.load_model(model_uri="models:/dbdemos_fsi_credit_decisioning/Production")
+skmodel = mlflow.sklearn.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@prod")
 underbanked_sample['default_prob'] = skmodel.predict_proba(underbanked_sample[features])[:,1]
 underbanked_sample['prediction'] = skmodel.predict(underbanked_sample[features])
 final_df = pd.concat([underbanked_sample.reset_index(), shap_df], axis=1)

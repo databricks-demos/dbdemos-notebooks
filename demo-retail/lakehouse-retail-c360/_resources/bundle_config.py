@@ -139,7 +139,7 @@
     },
     {
       "path": "04-Data-Science-ML/04.4-GenAI-for-churn", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "GenAI on Databricks", 

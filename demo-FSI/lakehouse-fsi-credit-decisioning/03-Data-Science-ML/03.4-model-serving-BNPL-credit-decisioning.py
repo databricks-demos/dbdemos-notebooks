@@ -17,6 +17,10 @@
 # MAGIC
 # MAGIC
 # MAGIC These types of decisions are typically embedded in live Point Of Sales (stores, online shop). That is why we need real-time serving capabilities.
+# MAGIC
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.4-model-serving-BNPL-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
@@ -42,38 +46,53 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=fsi_credit_decisioning
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
 # DBTITLE 1,Make sure our last model version is deployed in production in our registry
-client = mlflow.tracking.MlflowClient()
-models = client.get_latest_versions("dbdemos_fsi_credit_decisioning")
-models.sort(key=lambda m: m.version, reverse=True)
-latest_model = models[0]
-
-if latest_model.current_stage != "Production":
-    client.transition_model_version_stage(
-        "dbdemos_fsi_credit_decisioning",
-        latest_model.version,
-        stage="Production",
-        archive_existing_versions=True
-    )
+model_name = "dbdemos_fsi_credit_decisioning"
+mlflow.set_registry_uri('databricks-uc')
 
 # COMMAND ----------
 
-# DBTITLE 1,Deploy the model in our serving endpoint
-#See helper in companion notebook
-serving_client = EndpointApiClient()
+loaded_model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.{model_name}@prod")
 
-serving_client.create_endpoint_if_not_exists(
-    "dbdemos_fsi_credit_decisioning_endpoint",
-    model_name="dbdemos_fsi_credit_decisioning",
-    model_version=latest_model.version,
-    workload_size="Small",
-    scale_to_zero_enabled=True,
-    wait_start=True
+# COMMAND ----------
+
+loaded_model.metadata.
+
+# COMMAND ----------
+
+
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
+
+model_name = f"{catalog}.{db}.dbdemos_fsi_credit_decisioning"
+serving_endpoint_name = "dbdemos_fsi_credit_decisioning_endpoint"
+w = WorkspaceClient()
+endpoint_config = EndpointCoreConfigInput(
+    name=serving_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=model_name,
+            entity_version=get_latest_model_version(model_name),
+            scale_to_zero_enabled=True
+        )
+    ],
+    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="inference_table" )
 )
+
+force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+existing_endpoint = next((e for e in w.serving_endpoints.list() if e.name == serving_endpoint_name), None)
+if existing_endpoint == None:
+    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
+else:
+  print(f"endpoint {serving_endpoint_name} already exist...")
+  if force_update:
+    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+    
 
 # COMMAND ----------
 
@@ -94,19 +113,16 @@ serving_client.create_endpoint_if_not_exists(
 
 # COMMAND ----------
 
-p = ModelsArtifactRepository("models:/dbdemos_fsi_credit_decisioning/Production").download_artifacts("") 
+p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 
 # COMMAND ----------
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import mlflow
+client = mlflow.deployments.get_deploy_client("databricks")
+predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
 
-endpoint_url = f"{serving_client.base_url}/realtime-inference/dbdemos_fsi_credit_decisioning_endpoint/invocations"
-inferences = requests.post(
-    endpoint_url, json=dataset, headers=serving_client.headers
-).json()
-
-prediction_score = list(inferences["predictions"])[0]
+prediction_score = list(predictions["predictions"])[0]
 print(
     f"The transaction will be approved. Score: {prediction_score}."
     if prediction_score == 0

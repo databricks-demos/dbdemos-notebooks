@@ -10,8 +10,8 @@
   "category": "lakehouse",
   "title": "Lakehouse for Retail Banking: Credit Decisioning",
   "custom_schema_supported": True,
-  "default_schema": "fsi_credit_decisioning",
-  "default_catalog": "dbdemos",
+  "default_schema": "dbdemos_fsi_credit_decisioning",
+  "default_catalog": "main",
   "description": "Build your banking data platform and identify credit worthy customers",
   "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end credit decisioning system for underbanked customers, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both internal and partner data, and then transform them using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build a Machine Learning model with Databricks AutoML to identify credit worthy customers</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the ingested data and explain the machine learning model outputs</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "usecase": "Lakehouse Platform",
@@ -40,14 +40,6 @@
       "add_cluster_setup_cell": False,
       "title":  "Prep data", 
       "description": "Prep data for demo."
-    },
-    {
-      "path": "_resources/02-DLT-Persist-Streaming-Views", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Create tables from materialized view for persisting for ML consumption", 
-      "description": "SQL only notebook to support machine learning consumers"
     },
     {
       "path": "00-Credit-Decisioning", 
@@ -169,34 +161,6 @@
                 ]
             },
             {
-               "task_key": "featurization",
-               "depends_on": [
-                    {
-                        "task_key": "start_dlt_pipeline"
-                    }
-                ],
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/02-DLT-Persist-Streaming-Views",
-                    "source": "WORKSPACE"
-                },
-                "run_if": "ALL_SUCCESS",
-                "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "12.2.x-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
-                    "runtime_engine": "STANDARD"
-                },
-                "timeout_seconds": 0,
-                "email_notifications": {}
-            },
-            {
                 "task_key": "feature_engineering",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/03-Data-Science-ML/03.1-Feature-Engineering-credit-decisioning",
@@ -207,7 +171,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "featurization"
+                          "task_key": "start_dlt_pipeline"
                       }
                   ]
             },
@@ -483,5 +447,6 @@
         }
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[dbdemos] FSI Credit Decisioning Analysis",       "id": "credit-decisioning"}]
 }

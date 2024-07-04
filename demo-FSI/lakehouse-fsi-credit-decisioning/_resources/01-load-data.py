@@ -1,79 +1,48 @@
 # Databricks notebook source
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
+reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
-reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
+# MAGIC %run ../config
+
+# COMMAND ----------
+
+# MAGIC %run ../../../_resources/00-global-setup-v2
+
+# COMMAND ----------
+
+DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
+folder = f"/Volumes/{catalog}/{db}/{volume_name}"
+
+data_missing = DBDemos.is_any_folder_empty([folder+"/credit_bureau", folder+"/internalbanking/account", folder+"/fund_trans", folder+"/telco"])
+
+# COMMAND ----------
+
 import os
 import requests
 import timeit
 import time
-folder = "/dbdemos/fsi/credit-decisioning"
 
-#Return true if the folder is empty or does not exists
-def is_folder_empty(folder):
-  try:
-    return len(dbutils.fs.ls(folder)) == 0
-  except:
-    return True
-
-def download_file(url, destination):
-    local_filename = url.split('/')[-1]
-    # NOTE the stream=True parameter below
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        print('saving '+destination+'/'+local_filename)
-        with open(destination+'/'+local_filename, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192): 
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                #if chunk: 
-                f.write(chunk)
-    return local_filename
-  
-from concurrent.futures import ThreadPoolExecutor
-
-def download_file_from_git(dest, owner, repo, path):
-  print(f'https://api.github.com/repos/{owner}/{repo}/contents{path}')
-  files = requests.get(f'https://api.github.com/repos/{owner}/{repo}/contents{path}').json()
-  files_to_download = [f for f in files if 'NOTICE' not in f['name']]
-
-  def download_file_par(f):
-    download_file(f['download_url'], dest)
-  if not os.path.exists(dest):
-    os.makedirs(dest)
-  with ThreadPoolExecutor(max_workers=5) as executor:
-    return [n for n in executor.map(download_file_par, files_to_download)]    
-    
-
-if reset_all_data or is_folder_empty(folder+"/credit_bureau") or \
-                     is_folder_empty(folder+"/internalbanking/account") or \
-                     is_folder_empty(folder+"/internalbanking/relationship") or \
-                     is_folder_empty(folder+"/internalbanking/customer") or \
-                     is_folder_empty(folder+"/fund_trans") or \
-                     is_folder_empty(folder+"/telco"):
+if reset_all_data or data_missing:
   if reset_all_data:
-    assert len(folder) > 5
+    assert len(folder) > 15 and folder.startswith("/Volumes/")
     dbutils.fs.rm(folder, True)
-
-
-  #credit_bureau
-  download_file_from_git('/dbfs'+folder+'/credit_bureau', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/creditbureau")
-  spark.read.csv(folder+'/credit_bureau/creditbureau.csv', header=True, inferSchema=True).write.format('json').option('header', 'true').mode('overwrite').save(folder+'/credit_bureau')   
-  #account
-  download_file_from_git('/dbfs'+folder+'/account', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/internalbanking")
-  #spark.read.format('csv').load(folder+'/account').write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/account') 
-  #relationship
-  download_file_from_git('/dbfs'+folder+'/internalbanking', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/internalbanking")
-  spark.read.csv(folder+'/internalbanking/accounts.csv', header=True, inferSchema=True).write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/internalbanking/account')
-  spark.read.csv(folder+'/internalbanking/customer.csv', header=True, inferSchema=True).write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/internalbanking/customer')
-  spark.read.csv(folder+'/internalbanking/relationship.csv', header=True, inferSchema=True).write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/internalbanking/relationship')
-  #fund_trans
-  download_file_from_git('/dbfs'+folder+'/fund_trans', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/kafka/fund_trans/incoming-data-json-small")
-  #telco
-  download_file_from_git('/dbfs'+folder+'/telco', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/telcodata")
-else:
-  print("data already existing. Run with reset_all_data=true to force a data cleanup for your local demo.")
+  try:
+    #credit_bureau
+    DBDemos.download_file_from_git(folder+'/credit_bureau', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/creditbureau")
+    spark.read.csv(folder+'/credit_bureau/creditbureau.csv', header=True, inferSchema=True).write.format('json').option('header', 'true').mode('overwrite').save(folder+'/credit_bureau')   
+    #account
+    DBDemos.download_file_from_git(folder+'/internalbanking', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/internalbanking")
+    spark.read.csv(folder+'/internalbanking/accounts.csv', header=True, inferSchema=True).write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/internalbanking/account')
+    spark.read.csv(folder+'/internalbanking/customer.csv', header=True, inferSchema=True).write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/internalbanking/customer')
+    spark.read.csv(folder+'/internalbanking/relationship.csv', header=True, inferSchema=True).write.format('csv').option('header', 'true').mode('overwrite').save(folder+'/internalbanking/relationship')
+    #fund_trans
+    DBDemos.download_file_from_git(folder+'/fund_trans', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/kafka/fund_trans/incoming-data-json-small")
+    #telco
+    DBDemos.download_file_from_git(folder+'/telco', "databricks-demos", "dbdemos-dataset", "/fsi/credit-decisioning/telcodata")
+  except Exception as e: 
+    print(f"Error trying to download the file from the repo: {str(e)}.")    
 
 # COMMAND ----------
 
@@ -148,5 +117,5 @@ def save_features_def():
     df = pd.read_csv(StringIO(features), sep=",", header=0)
     spark.createDataFrame(df).write.mode('overwrite').saveAsTable('feature_definitions')
 
-if reset_all_data or not spark._jsparkSession.catalog().tableExists('feature_definitions'):
+if reset_all_data or not spark.catalog.tableExists('feature_definitions'):
     save_features_def()

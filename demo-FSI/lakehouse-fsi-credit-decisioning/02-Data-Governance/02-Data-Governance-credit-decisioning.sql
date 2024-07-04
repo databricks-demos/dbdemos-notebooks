@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- MAGIC %md-sandbox
+-- MAGIC %md
 -- MAGIC # Unify Governance and security for all users and all data
 -- MAGIC
 -- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for multiple data assets (dashboards, Models, files etc).
@@ -9,10 +9,11 @@
 -- MAGIC - Unify all data assets (Tables, Files, ML models, Features, Dashboards, Queries)
 -- MAGIC - Onboard data with multiple teams
 -- MAGIC - Share & monetize assets with external Organizations
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-Data-Governance-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 -- COMMAND ----------
 
--- MAGIC %md-sandbox
+-- MAGIC %md
 -- MAGIC # Implementing a global data governance and security with Unity Catalog
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
@@ -38,7 +39,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=fsi_credit_decisioning
+-- MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 -- COMMAND ----------
 
@@ -49,9 +50,7 @@ SELECT CURRENT_CATALOG();
 -- COMMAND ----------
 
 -- DBTITLE 1,As you can see, our tables are available under our catalog.
-CREATE SCHEMA IF NOT EXISTS fsi_credit_decisioning;
-USE fsi_credit_decisioning;
-SHOW TABLES IN fsi_credit_decisioning;
+SHOW TABLES;
 
 -- COMMAND ----------
 
@@ -65,12 +64,12 @@ SHOW TABLES IN fsi_credit_decisioning;
 
 -- Let's grant our ANALYSTS a SELECT permission:
 -- Note: make sure you created an analysts and dataengineers group first.
-GRANT SELECT ON TABLE dbdemos.fsi_credit_decisioning.credit_bureau_gold TO `analysts`;
-GRANT SELECT ON TABLE dbdemos.fsi_credit_decisioning.customer_gold TO `analysts`;
-GRANT SELECT ON TABLE dbdemos.fsi_credit_decisioning.fund_trans_gold TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_fsi_credit_decisioning.credit_bureau_gold TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_fsi_credit_decisioning.customer_gold TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_fsi_credit_decisioning.fund_trans_gold TO `analysts`;
 
 -- We'll grant an extra MODIFY to our Data Engineer
-GRANT SELECT, MODIFY ON SCHEMA dbdemos.fsi_credit_decisioning TO `dataengineers`;
+GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_fsi_credit_decisioning TO `dataengineers`;
 
 -- COMMAND ----------
 
@@ -82,7 +81,7 @@ GRANT SELECT, MODIFY ON SCHEMA dbdemos.fsi_credit_decisioning TO `dataengineers`
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW  dbdemos.fsi_credit_decisioning.customer_gold_secured AS
+CREATE OR REPLACE VIEW  customer_gold_secured AS
 SELECT
   c.* EXCEPT (first_name),
   CASE
@@ -91,7 +90,7 @@ SELECT
     ELSE c.first_name
   END AS first_name
 FROM
-  dbdemos.fsi_credit_decisioning.customer_gold_features AS c;
+  customer_gold AS c;
 
 -- COMMAND ----------
 
@@ -104,7 +103,7 @@ SELECT
 
 -- COMMAND ----------
 
-SELECT cust_id, first_name FROM dbdemos.fsi_credit_decisioning.customer_gold_secured;
+SELECT cust_id, first_name FROM customer_gold_secured;
 
 -- COMMAND ----------
 
@@ -116,7 +115,7 @@ ALTER GROUP `data_scientists` DROP USER `quentin.ambard@databricks.com`;
 
 -- COMMAND ----------
 
-SELECT cust_id, first_name FROM dbdemos.fsi_credit_decisioning.customer_gold_secured;
+SELECT cust_id, first_name FROM customer_gold_secured;
 
 -- COMMAND ----------
 

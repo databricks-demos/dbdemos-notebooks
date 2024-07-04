@@ -17,7 +17,7 @@
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_credit_scoring%2Fml-01&dt=LAKEHOUSE_CREDIT_SCORING">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.1-Feature-Engineering-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=fsi_credit_decisioning
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -62,17 +62,12 @@
 
 # DBTITLE 1,Use SQL to explore your data
 # MAGIC %sql
-# MAGIC SELECT
-# MAGIC   *
-# MAGIC FROM
-# MAGIC   dbdemos.fsi_credit_decisioning.customer_gold_features
-# MAGIC WHERE
-# MAGIC   tenure_months BETWEEN 10 AND 150
+# MAGIC SELECT * FROM customer_gold WHERE tenure_months BETWEEN 10 AND 150
 
 # COMMAND ----------
 
 # DBTITLE 1,Our any of your usual python libraries for analysis
-data = spark.table("customer_gold_features") \
+data = spark.table("customer_gold") \
               .where("tenure_months BETWEEN 10 AND 150") \
               .groupBy("tenure_months", "education").sum("income_monthly") \
               .orderBy('education').toPandas()
@@ -90,7 +85,7 @@ px.bar(data, x="tenure_months", y="sum(income_monthly)", color="education", titl
 # COMMAND ----------
 
 # DBTITLE 1,Read the customer table
-customer_gold_features = (spark.table("customer_gold_features")
+customer_gold_features = (spark.table("customer_gold")
                                .withColumn('age', int(date.today().year) - col('birth_year'))
                                .select('cust_id', 'education', 'marital_status', 'months_current_address', 'months_employment', 'is_resident',
                                        'tenure_months', 'product_cnt', 'tot_rel_bal', 'revenue_tot', 'revenue_12m', 'income_annual', 'tot_assets', 
@@ -101,7 +96,7 @@ display(customer_gold_features)
 # COMMAND ----------
 
 # DBTITLE 1,Read the telco table
-telco_gold_features = (spark.table("telco_gold_features")
+telco_gold_features = (spark.table("telco_gold")
                             .select('cust_id', 'is_pre_paid', 'number_payment_delays_last12mo', 'pct_increase_annual_number_of_delays_last_3_year', 'phone_bill_amt', \
                                     'avg_phone_bill_amt_lst12mo')).dropDuplicates(['cust_id'])
 display(telco_gold_features)
@@ -109,7 +104,7 @@ display(telco_gold_features)
 # COMMAND ----------
 
 # DBTITLE 1,Adding some additional features on transactional trends
-fund_trans_gold_features = spark.table("fund_trans_gold_features").dropDuplicates(['cust_id'])
+fund_trans_gold_features = spark.table("fund_trans_gold").dropDuplicates(['cust_id'])
 
 for c in ['12m', '6m', '3m']:
   fund_trans_gold_features = fund_trans_gold_features.withColumn('tot_txn_cnt_'+c, col('sent_txn_cnt_'+c)+col('rcvd_txn_cnt_'+c))\
@@ -162,10 +157,10 @@ display(feature_df)
 fs = feature_store.FeatureStoreClient()
 
 # Drop the fs table if it was already existing to cleanup the demo state
-drop_fs_table(f"{catalog}.{db_name}.credit_decisioning_features")
+drop_fs_table(f"{catalog}.{db}.credit_decisioning_features")
   
 fs.create_table(
-    name=f"{catalog}.{db_name}.credit_decisioning_features",
+    name=f"{catalog}.{db}.credit_decisioning_features",
     primary_keys=["cust_id"],
     df=feature_df,
     description="Features for Credit Decisioning.")

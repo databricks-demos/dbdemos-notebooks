@@ -42,7 +42,7 @@
 # MAGIC <br style="clear: both">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_credit_scoring%2Fml-02&dt=LAKEHOUSE_CREDIT_SCORING">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.2-AutoML-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
@@ -70,7 +70,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=fsi_credit_decisioning
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -94,13 +94,13 @@
 
 # DBTITLE 1,Loading the training dataset from the Databricks Feature Store
 fs = feature_store.FeatureStoreClient()
-features_set = fs.read_table(name=f"{catalog}.{db_name}.credit_decisioning_features")
+features_set = fs.read_table(name=f"{catalog}.{db}.credit_decisioning_features")
 display(features_set)
 
 # COMMAND ----------
 
 # DBTITLE 1,Creating the label: "defaulted"
-credit_bureau_label = (spark.table("credit_bureau_gold_features")
+credit_bureau_label = (spark.table("credit_bureau_gold")
                             .withColumn("defaulted", F.when(col("CREDIT_DAY_OVERDUE") > 60, 1)
                                                       .otherwise(0))
                             .select("cust_id", "defaulted"))
@@ -175,7 +175,7 @@ px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='
 # COMMAND ----------
 
 from databricks import automl
-summary = automl.classify(train_df, target_col="defaulted", primary_metric="roc_auc", timeout_minutes=5)
+summary = automl.classify(train_df, target_col="defaulted", primary_metric="roc_auc", timeout_minutes=10)
 
 # COMMAND ----------
 
@@ -189,12 +189,22 @@ summary = automl.classify(train_df, target_col="defaulted", primary_metric="roc_
 # COMMAND ----------
 
 model_name = "dbdemos_fsi_credit_decisioning"
-model_registered = mlflow.register_model(f"runs:/{summary.best_trial.mlflow_run_id}/model", model_name)
+from mlflow import MlflowClient
 
-#Move the model in production
-client = mlflow.tracking.MlflowClient()
-print("registering model version "+model_registered.version+" as production model")
-client.transition_model_version_stage(model_name, model_registered.version, stage = "Production", archive_existing_versions=True)
+#Use Databricks Unity Catalog to save our model
+mlflow.set_registry_uri('databricks-uc')
+client = MlflowClient()
+try:
+  #Get the model if it is already registered to avoid re-deploying the endpoint
+  latest_model = client.get_model_version_by_alias(f"{catalog}.{db}.{model_name}", "prod")
+  print(f"Our model is already deployed on UC: {catalog}.{db}.{model_name}")
+except:  
+  #Enable Unity Catalog with mlflow registry
+  #Add model within our catalog
+  latest_model = mlflow.register_model(f'runs:/{summary.best_trial.mlflow_run_id}/model', f"{catalog}.{db}.{model_name}")
+  # Flag it as Production ready using UC Aliases
+  client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+  DBDemos.set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
 
 # COMMAND ----------
 

@@ -21,7 +21,6 @@ import os
 class DBDemos():
   @staticmethod
   def setup_schema(catalog, db, reset_all_data, volume_name = None):
-
     if reset_all_data:
       print(f'clearing up volume named `{catalog}`.`{db}`.`{volume_name}`')
       spark.sql(f"DROP VOLUME IF EXISTS `{catalog}`.`{db}`.`{volume_name}`")
@@ -75,7 +74,29 @@ class DBDemos():
   @staticmethod
   def is_any_folder_empty(folders):
     return any([DBDemos.is_folder_empty(f) for f in folders])
+
+  @staticmethod
+  def set_model_permission(model_name, permission, principal):
+    import databricks.sdk.service.catalog as c
+    sdk_client = databricks.sdk.WorkspaceClient()
+    return sdk_client.grants.update(c.SecurableType.FUNCTION, model_name, changes=[
+                              c.PermissionsChange(add=[c.Privilege[permission]], principal=principal)])
+
+  @staticmethod
+  def set_model_endpoint_permission(endpoint_name, permission, group_name):
+    import databricks.sdk.service.serving as s
+    sdk_client = databricks.sdk.WorkspaceClient()
+    ep = sdk_client.serving_endpoints.get(endpoint_name)
+    return sdk_client.serving_endpoints.set_permissions(serving_endpoint_id=ep.id, access_control_list=[s.ServingEndpointAccessControlRequest(permission_level=s.ServingEndpointPermissionLevel[permission], group_name=group_name)])
+
+  @staticmethod
+  def set_index_permission(index_name, permission, principal):
+      import databricks.sdk.service.catalog as c
+      sdk_client = databricks.sdk.WorkspaceClient()
+      return sdk_client.grants.update(c.SecurableType.TABLE, index_name, changes=[
+                              c.PermissionsChange(add=[c.Privilege[permission]], principal=principal)])
     
+
   @staticmethod
   def download_file_from_git(dest, owner, repo, path):
     def download_file(url, destination):

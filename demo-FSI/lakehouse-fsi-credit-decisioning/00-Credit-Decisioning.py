@@ -18,7 +18,7 @@
 # MAGIC   Multicloud is one of the key strategic considerations for FS companies, 88% of single-cloud FS customers are adopting a multi-cloud architecture (<a href="https://www.fstech.co.uk/fst/88_Of_FIs_Considering_Multicloud.php">reference</a>). Multicloud architecture, however can be expensive and difficult to build. The Lakehouse provides one consistent data platform across clouds and gives companies the ability to process your data where your need.
 # MAGIC  
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_credit_scoring%2Fintro&dt=LAKEHOUSE_CREDIT_SCORING">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-Credit-Decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
@@ -197,7 +197,7 @@
 # MAGIC
 # MAGIC Open the [04-BI-Data-Warehousing-credit-decisioning]($./04-BI-Data-Warehousing/04-BI-Data-Warehousing-credit-decisioning) notebook to know more about Databricks SQL Warehouse.
 # MAGIC
-# MAGIC Directly open the final <a href="/sql/dashboards/ed90b646-44cf-4276-89c2-f8fdfc73d58f" target="_blank">dashboard</a> depicting the business outcomes of building the credit decisioning on the Databricks Lakehouse, including:
+# MAGIC Directly open the final <a dbdemos-dashboard-id="credit-decisioning" href='/sql/dashboardsv3/01ef3a3dcb7216b29bf2e778d084fa7c' target="_blank">dashboard</a> depicting the business outcomes of building the credit decisioning on the Databricks Lakehouse, including:
 # MAGIC - Upselling and serving the underbanked customers,
 # MAGIC - Reducing risk and predicting default and potential losses,
 # MAGIC - Turning the data into actionable and explainable insights.

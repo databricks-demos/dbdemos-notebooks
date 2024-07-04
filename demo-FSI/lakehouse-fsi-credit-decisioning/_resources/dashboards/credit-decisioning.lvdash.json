@@ -1,0 +1,1007 @@
+{
+  "datasets": [
+    {
+      "name": "51046c79",
+      "displayName": "CreditDecisioning_PredictedCLTV",
+      "query": "select\n  (\n    select\n      sum(revenue_tot) / count(*)\n    from\n      `main__build`.`dbdemos_fsi_credit_decisioning`.customer_gold\n  ) * (\n    select\n      countunderbanked\n    from\n      (\n        select\n          count(*) countunderbanked\n        from\n          `main__build`.`dbdemos_fsi_credit_decisioning`.underbanked_prediction as p\n          left join `main__build`.`dbdemos_fsi_credit_decisioning`.credit_bureau_gold b using (cust_id)\n        where\n          b.CREDIT_DAY_OVERDUE is null\n          and prediction == 0\n      )\n  ) as total_projected_revenue"
+    },
+    {
+      "name": "d1772421",
+      "displayName": "CreditDecisioning_DefaultedAmt",
+      "query": "select sum(AMT_CREDIT_MAX_OVERDUE) from `main__build`.`dbdemos_fsi_credit_decisioning`.credit_bureau_gold"
+    },
+    {
+      "name": "d7d780f2",
+      "displayName": "creditdecisioning_fielddemo_feature_importance",
+      "query": "WITH tableA AS\n(SELECT avg(abs(education_shap)) education, \n\t\t\t avg(abs(marital_status_shap)) marital_status, \n\t\t\t avg(abs(months_current_address_shap)) months_current_address,\n       avg(abs(months_employment_shap)) months_employment, \n       avg(abs(is_resident_shap)) is_resident, \n       avg(abs(tenure_months_shap)) tenure_months,\n       avg(abs(product_cnt_shap)) product_cnt, \n       avg(abs(tot_rel_bal_shap)) tot_rel_bal, \n       avg(abs(revenue_tot_shap)) revenue_tot,\n       avg(abs(revenue_12m_shap)) revenue_12m, \n       avg(abs(income_annual_shap)) income_annual, \n       avg(abs(tot_assets_shap)) tot_assets,\n       avg(abs(overdraft_balance_amount_shap)) overdraft_balance_amount, \n       avg(abs(overdraft_number_shap)) overdraft_number,\n       avg(abs(total_deposits_number_shap)) total_deposits_number, \n       avg(abs(total_deposits_amount_shap)) total_deposits_amount,\n       avg(abs(total_equity_amount_shap)) total_equity_amount, \n       avg(abs(total_UT_shap)) total_UT, \n       avg(abs(customer_revenue_shap)) customer_revenue,\n       avg(abs(age_shap)) age, \n       avg(abs(avg_balance_shap)) avg_balance, \n       avg(abs(num_accs_shap)) num_accs, \n       avg(abs(balance_usd_shap)) balance_usd,\n       avg(abs(available_balance_usd_shap)) available_balance_usd, \n       avg(abs(is_pre_paid_shap)) is_pre_paid,\n       avg(abs(number_payment_delays_last12mo_shap)) number_payment_delays_last12mo,\n       avg(abs(pct_increase_annual_number_of_delays_last_3_year_shap)) pct_increase_annual_number_of_delays_last_3_year,\n       avg(abs(phone_bill_amt_shap)) phone_bill_amt, \n       avg(abs(avg_phone_bill_amt_lst12mo_shap)) avg_phone_bill_amt_lst12mo,\n       avg(abs(dist_payee_cnt_12m_shap)) dist_payee_cnt_12m, \n       avg(abs(sent_txn_cnt_12m_shap)) sent_txn_cnt_12m,\n       avg(abs(sent_txn_amt_12m_shap)) sent_txn_amt_12m, \n       avg(abs(sent_amt_avg_12m_shap)) sent_amt_avg_12m,\n       avg(abs(dist_payer_cnt_12m_shap)) dist_payer_cnt_12m, \n       avg(abs(rcvd_txn_cnt_12m_shap)) rcvd_txn_cnt_12m,\n       avg(abs(rcvd_txn_amt_12m_shap)) rcvd_txn_amt_12m, \n       avg(abs(rcvd_amt_avg_12m_shap)) rcvd_amt_avg_12m,\n       avg(abs(dist_payee_cnt_6m_shap)) dist_payee_cnt_6m, \n       avg(abs(sent_txn_cnt_6m_shap)) sent_txn_cnt_6m,\n       avg(abs(sent_txn_amt_6m_shap)) sent_txn_amt_6m, \n       avg(abs(sent_amt_avg_6m_shap)) sent_amt_avg_6m,\n       avg(abs(dist_payer_cnt_6m_shap)) dist_payer_cnt_6m, \n       avg(abs(rcvd_txn_cnt_6m_shap)) rcvd_txn_cnt_6m,\n       avg(abs(rcvd_txn_amt_6m_shap)) rcvd_txn_amt_6m, \n       avg(abs(rcvd_amt_avg_6m_shap)) rcvd_amt_avg_6m,\n       avg(abs(dist_payee_cnt_3m_shap)) dist_payee_cnt_3m, \n       avg(abs(sent_txn_cnt_3m_shap)) sent_txn_cnt_3m,\n       avg(abs(sent_txn_amt_3m_shap)) sent_txn_amt_3m, \n       avg(abs(sent_amt_avg_3m_shap)) sent_amt_avg_3m,\n       avg(abs(dist_payer_cnt_3m_shap)) dist_payer_cnt_3m, \n       avg(abs(rcvd_txn_cnt_3m_shap)) rcvd_txn_cnt_3m,\n       avg(abs(rcvd_txn_amt_3m_shap)) rcvd_txn_amt_3m, \n       avg(abs(rcvd_amt_avg_3m_shap)) rcvd_amt_avg_3m, \n       avg(abs(tot_txn_cnt_12m_shap)) tot_txn_cnt_12m,\n       avg(abs(tot_txn_cnt_6m_shap)) tot_txn_cnt_6m, \n       avg(abs(tot_txn_cnt_3m_shap)) tot_txn_cnt_3m, \n       avg(abs(tot_txn_amt_12m_shap)) tot_txn_amt_12m,\n       avg(abs(tot_txn_amt_6m_shap)) tot_txn_amt_6m, \n       avg(abs(tot_txn_amt_3m_shap)) tot_txn_amt_3m,\n       avg(abs(ratio_txn_amt_3m_12m_shap)) ratio_txn_amt_3m_12m, \n       avg(abs(ratio_txn_amt_6m_12m_shap)) ratio_txn_amt_6m_12m\n       FROM `main__build`.`dbdemos_fsi_credit_decisioning`.shap_explanation) \nSELECT feature, mean_absolute_shap_value\nFROM (\n  SELECT *\n  FROM (\n    SELECT *\n    FROM tableA\n    LIMIT 1\n  ) sub1\n  UNPIVOT (\n    mean_absolute_shap_value FOR feature IN (\n      education, marital_status, months_current_address, months_employment, is_resident, tenure_months, product_cnt, tot_rel_bal, revenue_tot, revenue_12m, income_annual, tot_assets, overdraft_balance_amount, overdraft_number, total_deposits_number, total_deposits_amount, total_equity_amount, total_UT, customer_revenue, age, avg_balance, num_accs, balance_usd, available_balance_usd, is_pre_paid, number_payment_delays_last12mo, pct_increase_annual_number_of_delays_last_3_year, phone_bill_amt, avg_phone_bill_amt_lst12mo, dist_payee_cnt_12m, sent_txn_cnt_12m, sent_txn_amt_12m, sent_amt_avg_12m, dist_payer_cnt_12m, rcvd_txn_cnt_12m, rcvd_txn_amt_12m, rcvd_amt_avg_12m, dist_payee_cnt_6m, sent_txn_cnt_6m, sent_txn_amt_6m, sent_amt_avg_6m, dist_payer_cnt_6m, rcvd_txn_cnt_6m, rcvd_txn_amt_6m, rcvd_amt_avg_6m, dist_payee_cnt_3m, sent_txn_cnt_3m, sent_txn_amt_3m, sent_amt_avg_3m, dist_payer_cnt_3m, rcvd_txn_cnt_3m, rcvd_txn_amt_3m, rcvd_amt_avg_3m, tot_txn_cnt_12m, tot_txn_cnt_6m, tot_txn_cnt_3m, tot_txn_amt_12m, tot_txn_amt_6m, tot_txn_amt_3m, ratio_txn_amt_3m_12m, ratio_txn_amt_6m_12m\n    )\n  ) sub2\n) sub3\nORDER BY mean_absolute_shap_value DESC LIMIT 10\n"
+    },
+    {
+      "name": "c8cf4efe",
+      "displayName": "creditdecisioning_fielddemo_candidates",
+      "query": "WITH main_table AS\n(SELECT col_names.cust_id AS Customer_ID, concat(col_names.first_name, \" \", col_names.last_name) AS Name, col_names.email AS Email, col_names.mobile_phone AS Mobile_Phone, col_names.default_prob AS Default_probability, REPLACE(val1_col, '_shap', '') AS feature1, REPLACE(val2_col, '_shap', '') AS feature2, REPLACE(val3_col, '_shap', '') AS feature3\nFROM (\n  SELECT cust_id,\n    MIN(CASE WHEN col_num = 1 THEN val ELSE NULL END) AS val1,\n    MIN(CASE WHEN col_num = 2 THEN val ELSE NULL END) AS val2,\n    MIN(CASE WHEN col_num = 3 THEN val ELSE NULL END) AS val3\n  FROM (\n    SELECT cust_id, val, \n      ROW_NUMBER() OVER (PARTITION BY cust_id ORDER BY val ASC) AS col_num,\n      COLUMN_NAME\n    FROM (\n      SELECT cust_id, val, COLUMN_NAME\n      FROM `main__build`.`dbdemos_fsi_credit_decisioning`.shap_explanation\n      UNPIVOT (\n        val FOR COLUMN_NAME IN (\n          education_shap, marital_status_shap, months_current_address_shap, \n\t\t\t\tmonths_employment_shap, is_resident_shap, tenure_months_shap, \n\t\t\t\tproduct_cnt_shap, tot_rel_bal_shap, revenue_tot_shap, \n\t\t\t\trevenue_12m_shap, income_annual_shap, tot_assets_shap, \n\t\t\t\toverdraft_balance_amount_shap, overdraft_number_shap, \n\t\t\t\ttotal_deposits_number_shap, total_deposits_amount_shap, \n\t\t\t\ttotal_equity_amount_shap, total_UT_shap, customer_revenue_shap, \n\t\t\t\tage_shap, avg_balance_shap, num_accs_shap, balance_usd_shap, \n\t\t\t\tavailable_balance_usd_shap, is_pre_paid_shap, \n\t\t\t\tnumber_payment_delays_last12mo_shap, \n\t\t\t\tpct_increase_annual_number_of_delays_last_3_year_shap, \n\t\t\t\tphone_bill_amt_shap, avg_phone_bill_amt_lst12mo_shap, \n\t\t\t\tdist_payee_cnt_12m_shap, sent_txn_cnt_12m_shap, \n\t\t\t\tsent_txn_amt_12m_shap, sent_amt_avg_12m_shap, \n\t\t\t\tdist_payer_cnt_12m_shap, rcvd_txn_cnt_12m_shap, \n\t\t\t\trcvd_txn_amt_12m_shap, rcvd_amt_avg_12m_shap, \n\t\t\t\tdist_payee_cnt_6m_shap, sent_txn_cnt_6m_shap, \n\t\t\t\tsent_txn_amt_6m_shap, sent_amt_avg_6m_shap, \n\t\t\t\tdist_payer_cnt_6m_shap, rcvd_txn_cnt_6m_shap, \n\t\t\t\trcvd_txn_amt_6m_shap, rcvd_amt_avg_6m_shap, \n\t\t\t\tdist_payee_cnt_3m_shap, sent_txn_cnt_3m_shap, \n\t\t\t\tsent_txn_amt_3m_shap, sent_amt_avg_3m_shap, \n\t\t\t\tdist_payer_cnt_3m_shap, rcvd_txn_cnt_3m_shap, \n\t\t\t\trcvd_txn_amt_3m_shap, rcvd_amt_avg_3m_shap, tot_txn_cnt_12m_shap, \n\t\t\t\ttot_txn_cnt_6m_shap, tot_txn_cnt_3m_shap, tot_txn_amt_12m_shap, \n\t\t\t\ttot_txn_amt_6m_shap, tot_txn_amt_3m_shap, \n\t\t\t\tratio_txn_amt_3m_12m_shap, ratio_txn_amt_6m_12m_shap\n\t\t\t\t)\n      ) WHERE prediction==0\n    ) AS unpivoted\n  ) AS ranked\n  WHERE col_num <= 3\n  GROUP BY cust_id\n) AS top3\nLEFT JOIN (\n  SELECT cust_id, first_name, last_name, email, mobile_phone, default_prob, prediction,\n    MIN(CASE WHEN col_num = 1 THEN COLUMN_NAME ELSE NULL END) AS val1_col,\n    MIN(CASE WHEN col_num = 2 THEN COLUMN_NAME ELSE NULL END) AS val2_col,\n    MIN(CASE WHEN col_num = 3 THEN COLUMN_NAME ELSE NULL END) AS val3_col\n  FROM (\n    SELECT cust_id, val, first_name, last_name, email, mobile_phone, default_prob, prediction,\n      ROW_NUMBER() OVER (PARTITION BY cust_id ORDER BY val ASC) AS col_num,\n      COLUMN_NAME\n    FROM (\n      SELECT cust_id, val, COLUMN_NAME, first_name, last_name, email, mobile_phone, default_prob, prediction\n      FROM `main__build`.`dbdemos_fsi_credit_decisioning`.shap_explanation\n      UNPIVOT (\n        val FOR COLUMN_NAME IN (\n          education_shap, marital_status_shap, months_current_address_shap, \n\t\t\t\tmonths_employment_shap, is_resident_shap, tenure_months_shap, \n\t\t\t\tproduct_cnt_shap, tot_rel_bal_shap, revenue_tot_shap, \n\t\t\t\trevenue_12m_shap, income_annual_shap, tot_assets_shap, \n\t\t\t\toverdraft_balance_amount_shap, overdraft_number_shap, \n\t\t\t\ttotal_deposits_number_shap, total_deposits_amount_shap, \n\t\t\t\ttotal_equity_amount_shap, total_UT_shap, customer_revenue_shap, \n\t\t\t\tage_shap, avg_balance_shap, num_accs_shap, balance_usd_shap, \n\t\t\t\tavailable_balance_usd_shap, is_pre_paid_shap, \n\t\t\t\tnumber_payment_delays_last12mo_shap, \n\t\t\t\tpct_increase_annual_number_of_delays_last_3_year_shap, \n\t\t\t\tphone_bill_amt_shap, avg_phone_bill_amt_lst12mo_shap, \n\t\t\t\tdist_payee_cnt_12m_shap, sent_txn_cnt_12m_shap, \n\t\t\t\tsent_txn_amt_12m_shap, sent_amt_avg_12m_shap, \n\t\t\t\tdist_payer_cnt_12m_shap, rcvd_txn_cnt_12m_shap, \n\t\t\t\trcvd_txn_amt_12m_shap, rcvd_amt_avg_12m_shap, \n\t\t\t\tdist_payee_cnt_6m_shap, sent_txn_cnt_6m_shap, \n\t\t\t\tsent_txn_amt_6m_shap, sent_amt_avg_6m_shap, \n\t\t\t\tdist_payer_cnt_6m_shap, rcvd_txn_cnt_6m_shap, \n\t\t\t\trcvd_txn_amt_6m_shap, rcvd_amt_avg_6m_shap, \n\t\t\t\tdist_payee_cnt_3m_shap, sent_txn_cnt_3m_shap, \n\t\t\t\tsent_txn_amt_3m_shap, sent_amt_avg_3m_shap, \n\t\t\t\tdist_payer_cnt_3m_shap, rcvd_txn_cnt_3m_shap, \n\t\t\t\trcvd_txn_amt_3m_shap, rcvd_amt_avg_3m_shap, tot_txn_cnt_12m_shap, \n\t\t\t\ttot_txn_cnt_6m_shap, tot_txn_cnt_3m_shap, tot_txn_amt_12m_shap, \n\t\t\t\ttot_txn_amt_6m_shap, tot_txn_amt_3m_shap, \n\t\t\t\tratio_txn_amt_3m_12m_shap, ratio_txn_amt_6m_12m_shap\n\t\t\t\t)\n      ) WHERE prediction==0\n    ) AS unpivoted\n  ) AS ranked\n  WHERE col_num <= 3\n  GROUP BY cust_id, first_name, last_name, email, mobile_phone, default_prob, prediction\n) AS col_names\nON top3.cust_id = col_names.cust_id\nORDER BY default_prob),\n\nfeature_definitions AS\n(SELECT * FROM `main__build`.`dbdemos_fsi_credit_decisioning`.feature_definitions)\n\nSELECT Customer_ID, Name, Email, Mobile_phone, Default_probability, f1.definition AS Top_reason_1, f2.definition AS Top_reason_2, f3.definition AS Top_reason_3 FROM main_table\nLEFT JOIN feature_definitions AS f1\nON  main_table.feature1 = f1.feature\nLEFT JOIN feature_definitions AS f2\nON  main_table.feature2 = f2.feature\nLEFT JOIN feature_definitions AS f3\nON  main_table.feature3 = f3.feature"
+    },
+    {
+      "name": "f2f14d1d",
+      "displayName": "creditdecisioning_fielddemo_group_difference_features",
+      "query": "WITH tableA AS\n(SELECT gender, \n\t\t\t AVG(education_shap) education_avg_shap,\n\t\t\t AVG(marital_status_shap) marital_status_avg_shap,\n\t\t\t AVG(months_employment_shap) months_employment_avg_shap,\n\t\t\t AVG(is_resident_shap) is_resident_avg_shap\nFROM `main__build`.`dbdemos_fsi_credit_decisioning`.shap_explanation\nGROUP BY gender)\nSELECT\n    'education' feature, \n    (SELECT education_avg_shap FROM tableA WHERE gender = 'Male') - \n    (SELECT education_avg_shap FROM tableA WHERE gender = 'Female') avg_shap_diff\nUNION ALL\nSELECT \n    'marital_status' feature, \n    (SELECT marital_status_avg_shap FROM tableA WHERE gender = 'Male') - \n    (SELECT marital_status_avg_shap FROM tableA WHERE gender = 'Female') avg_shap_diff\nUNION ALL\nSELECT \n    'months_employment' feature, \n    (SELECT months_employment_avg_shap FROM tableA WHERE gender = 'Male') - \n    (SELECT months_employment_avg_shap FROM tableA WHERE gender = 'Female') avg_shap_diff\nUNION ALL\nSELECT \n    'is_resident' feature, \n    (SELECT is_resident_avg_shap FROM tableA WHERE gender = 'Male') - \n    (SELECT is_resident_avg_shap FROM tableA WHERE gender = 'Female') avg_shap_diff"
+    },
+    {
+      "name": "70a9c894",
+      "displayName": "CreditDecisioning_RiskProfile",
+      "query": "SELECT c.last_name, c.first_name, c.email, c.cust_id, s.default_prob, c.loan_balance_amount, c.is_resident\n   FROM `main__build`.`dbdemos_fsi_credit_decisioning`.shap_explanation s\n   inner join `main__build`.`dbdemos_fsi_credit_decisioning`.customer_gold c using(cust_id)\n      order by default_prob"
+    },
+    {
+      "name": "5f40bca0",
+      "displayName": "CreditDecisioning_newlydefaulted",
+      "query": "SELECT count(*) as number_newly_defaulter FROM `main__build`.`dbdemos_fsi_credit_decisioning`.credit_bureau_gold"
+    },
+    {
+      "name": "6ecd2272",
+      "displayName": "CreditDecisioning_CLTV",
+      "query": "select\n  sum(revenue_tot) / count(*)\nfrom\n  `main__build`.`dbdemos_fsi_credit_decisioning`.customer_gold"
+    },
+    {
+      "name": "bf744c03",
+      "displayName": "creditdecisioning_fielddemo_group_difference",
+      "query": "WITH tableA AS\n(SELECT gender, \n\t\t\t AVG((education_shap + marital_status_shap + months_current_address_shap + \n\t\t\t\tmonths_employment_shap + is_resident_shap + tenure_months_shap + \n\t\t\t\tproduct_cnt_shap + tot_rel_bal_shap + revenue_tot_shap + \n\t\t\t\trevenue_12m_shap + income_annual_shap + tot_assets_shap + \n\t\t\t\toverdraft_balance_amount_shap + overdraft_number_shap + \n\t\t\t\ttotal_deposits_number_shap + total_deposits_amount_shap + \n\t\t\t\ttotal_equity_amount_shap + total_UT_shap + customer_revenue_shap + \n\t\t\t\tage_shap + avg_balance_shap + num_accs_shap + balance_usd_shap + \n\t\t\t\tavailable_balance_usd_shap + is_pre_paid_shap + \n\t\t\t\tnumber_payment_delays_last12mo_shap + \n\t\t\t\tpct_increase_annual_number_of_delays_last_3_year_shap + \n\t\t\t\tphone_bill_amt_shap + avg_phone_bill_amt_lst12mo_shap + \n\t\t\t\tdist_payee_cnt_12m_shap + sent_txn_cnt_12m_shap + \n\t\t\t\tsent_txn_amt_12m_shap + sent_amt_avg_12m_shap + \n\t\t\t\tdist_payer_cnt_12m_shap + rcvd_txn_cnt_12m_shap + \n\t\t\t\trcvd_txn_amt_12m_shap + rcvd_amt_avg_12m_shap + \n\t\t\t\tdist_payee_cnt_6m_shap + sent_txn_cnt_6m_shap + \n\t\t\t\tsent_txn_amt_6m_shap + sent_amt_avg_6m_shap + \n\t\t\t\tdist_payer_cnt_6m_shap + rcvd_txn_cnt_6m_shap + \n\t\t\t\trcvd_txn_amt_6m_shap + rcvd_amt_avg_6m_shap + \n\t\t\t\tdist_payee_cnt_3m_shap + sent_txn_cnt_3m_shap + \n\t\t\t\tsent_txn_amt_3m_shap + sent_amt_avg_3m_shap + \n\t\t\t\tdist_payer_cnt_3m_shap + rcvd_txn_cnt_3m_shap + \n\t\t\t\trcvd_txn_amt_3m_shap + rcvd_amt_avg_3m_shap + tot_txn_cnt_12m_shap + \n\t\t\t\ttot_txn_cnt_6m_shap + tot_txn_cnt_3m_shap + tot_txn_amt_12m_shap + \n\t\t\t\ttot_txn_amt_6m_shap + tot_txn_amt_3m_shap + \n\t\t\t\tratio_txn_amt_3m_12m_shap + ratio_txn_amt_6m_12m_shap)/61) avg_shap\n       FROM `main__build`.`dbdemos_fsi_credit_decisioning`.shap_explanation\n       GROUP BY gender)\nSELECT\n\t\t'avg_shap_diff' overall,\n    (SELECT avg_shap+0.3 FROM tableA WHERE gender = 'Male') - \n    (SELECT avg_shap FROM tableA WHERE gender = 'Female') value\n\n\t\t-- TODO: fix the +0.3 ?"
+    }
+  ],
+  "pages": [
+    {
+      "name": "7fbca111",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "d519f236",
+            "textbox_spec": "# Serving the Underbanked population with the Databricks Lakehouse\n\n---\t\n\n##  1. New Business Opportunity"
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "a5f3c29b",
+            "textbox_spec": "## 2. Current Risk Profile\n\nAnalyze your risk profiles to optimize you portfolio"
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "10c56bc4",
+            "textbox_spec": "## 3. Fairness and Explainability\n\nEnsure your credit decisioning remains fair across your population, detecting potential bias"
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "34141912",
+            "queries": [
+              {
+                "name": "abe5bf715ace4c11a1c099eb2dbfd6af",
+                "query": {
+                  "datasetName": "6ecd2272",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Customer Lifetime Value",
+                "description": "Customer Lifetime Value (as revenue from credit instruments).",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"(sum(revenue_tot) / count(1))\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"stringPrefix\": \"$\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "abe5bf715ace4c11a1c099eb2dbfd6af"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 0,
+            "width": 1,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "88314a71",
+            "queries": [
+              {
+                "name": "d914c8485f114ecb870e02c70e3cb36a",
+                "query": {
+                  "datasetName": "d1772421",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Total Default Amount - month to date",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(AMT_CREDIT_MAX_OVERDUE)\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"stringPrefix\": \"$\", \"formatTargetValue\": false}",
+                "query_name": "d914c8485f114ecb870e02c70e3cb36a"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 10,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "8e4bb06c",
+            "queries": [
+              {
+                "name": "e24708fa7a7249da8bb18a31efa8b383",
+                "query": {
+                  "datasetName": "70a9c894",
+                  "fields": [
+                    {
+                      "name": "is_resident",
+                      "expression": "`is_resident`"
+                    },
+                    {
+                      "name": "column_4ba7690a110490",
+                      "expression": "SUM(`loan_balance_amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Risk Profile per Credit Instrument Type",
+                "description": "Expected default amount per instrument type.",
+                "viz_type": "CHART",
+                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"pie\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\"}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_4ba7690a110490\": {\"yAxis\": 0, \"type\": \"pie\"}}, \"valuesOptions\": {\"0\": {\"color\": \"#799CFF\"}, \"1\": {\"color\": \"#FB8D3D\"}}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": true, \"columnConfigurationMap\": {\"x\": {\"column\": \"is_resident\", \"id\": \"column_4ba7690a110491\"}, \"y\": [{\"id\": \"column_4ba7690a110490\", \"column\": \"loan_balance_amount\", \"transform\": \"SUM\"}]}, \"isAggregationOn\": true}",
+                "query_name": "e24708fa7a7249da8bb18a31efa8b383"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 13,
+            "width": 2,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "2bde851a",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "70a9c894",
+                  "fields": [
+                    {
+                      "name": "cust_id",
+                      "expression": "`cust_id`"
+                    },
+                    {
+                      "name": "default_prob",
+                      "expression": "`default_prob`"
+                    },
+                    {
+                      "name": "email",
+                      "expression": "`email`"
+                    },
+                    {
+                      "name": "first_name",
+                      "expression": "`first_name`"
+                    },
+                    {
+                      "name": "is_resident",
+                      "expression": "`is_resident`"
+                    },
+                    {
+                      "name": "last_name",
+                      "expression": "`last_name`"
+                    },
+                    {
+                      "name": "loan_balance_amount",
+                      "expression": "`loan_balance_amount`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "last_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "last_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "last_name"
+                  },
+                  {
+                    "fieldName": "first_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "first_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "first_name"
+                  },
+                  {
+                    "fieldName": "email",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "email",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "email"
+                  },
+                  {
+                    "fieldName": "cust_id",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "cust_id",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "cust_id"
+                  },
+                  {
+                    "fieldName": "default_prob",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "default_prob",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "default_prob"
+                  },
+                  {
+                    "fieldName": "loan_balance_amount",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100005,
+                    "title": "loan_balance_amount",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "loan_balance_amount"
+                  },
+                  {
+                    "fieldName": "is_resident",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100006,
+                    "title": "is_resident",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "is_resident"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": true,
+              "frame": {
+                "title": "Risk Profile",
+                "showTitle": true,
+                "description": "Customers with high likelihood of default.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 4,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "916235eb",
+            "queries": [
+              {
+                "name": "79168f08244e48868f8931ed3a2141b7",
+                "query": {
+                  "datasetName": "5f40bca0",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Number of newly defaulted customers - month to date",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"number_newly_defaulter\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "79168f08244e48868f8931ed3a2141b7"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 10,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "8ea49937",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d7d780f2",
+                  "fields": [
+                    {
+                      "name": "feature",
+                      "expression": "`feature`"
+                    },
+                    {
+                      "name": "sum(mean_absolute_shap_value)",
+                      "expression": "SUM(`mean_absolute_shap_value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(mean_absolute_shap_value)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of mean_absolute_shap_value"
+                },
+                "y": {
+                  "fieldName": "feature",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "feature"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "What contributes to credit worthiness?",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 24,
+            "width": 3,
+            "height": 12
+          }
+        },
+        {
+          "widget": {
+            "name": "1e6a0efe",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f2f14d1d",
+                  "fields": [
+                    {
+                      "name": "feature",
+                      "expression": "`feature`"
+                    },
+                    {
+                      "name": "sum(avg_shap_diff)",
+                      "expression": "SUM(`avg_shap_diff`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(avg_shap_diff)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Demographic parity difference of SHAP values for women vs. men"
+                },
+                "y": {
+                  "fieldName": "feature",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "feature"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Gender Fairness Assessment per Demographic Feature",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 29,
+            "width": 3,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "ae641f4c",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "51046c79",
+                  "fields": [
+                    {
+                      "name": "total_projected_revenue",
+                      "expression": "`total_projected_revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_projected_revenue",
+                  "rowNumber": 1,
+                  "displayName": "total_projected_revenue"
+                }
+              },
+              "frame": {
+                "title": "Expected Upsell Revenue (from underbanked customers)",
+                "showTitle": true,
+                "description": "Expected upsell revenue from offering credit card and credit instruments to currently underserved customers with good credit worthiness.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "7614808e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c8cf4efe",
+                  "fields": [
+                    {
+                      "name": "Customer_ID",
+                      "expression": "`Customer_ID`"
+                    },
+                    {
+                      "name": "Default_probability",
+                      "expression": "`Default_probability`"
+                    },
+                    {
+                      "name": "Email",
+                      "expression": "`Email`"
+                    },
+                    {
+                      "name": "Mobile_phone",
+                      "expression": "`Mobile_phone`"
+                    },
+                    {
+                      "name": "Name",
+                      "expression": "`Name`"
+                    },
+                    {
+                      "name": "Top_reason_1",
+                      "expression": "`Top_reason_1`"
+                    },
+                    {
+                      "name": "Top_reason_2",
+                      "expression": "`Top_reason_2`"
+                    },
+                    {
+                      "name": "Top_reason_3",
+                      "expression": "`Top_reason_3`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Customer_ID",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "Customer_ID",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Customer_ID"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "Name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Name"
+                  },
+                  {
+                    "fieldName": "Email",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "Email",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Email"
+                  },
+                  {
+                    "fieldName": "Mobile_phone",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "Mobile_phone",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Mobile_phone"
+                  },
+                  {
+                    "fieldName": "Default_probability",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "Default_probability",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Default_probability"
+                  },
+                  {
+                    "fieldName": "Top_reason_1",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100005,
+                    "title": "Top_reason_1",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Top_reason_1"
+                  },
+                  {
+                    "fieldName": "Top_reason_2",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100006,
+                    "title": "Top_reason_2",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Top_reason_2"
+                  },
+                  {
+                    "fieldName": "Top_reason_3",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100007,
+                    "title": "Top_reason_3",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "Top_reason_3"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "title": "Upsell prospects",
+                "showTitle": true,
+                "description": "Current non-credit instrument holders with good credit worthiness.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "f76cd130",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "bf744c03",
+                  "fields": [
+                    {
+                      "name": "overall",
+                      "expression": "`overall`"
+                    },
+                    {
+                      "name": "sum(value)",
+                      "expression": "SUM(`value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(value)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Demographic parity difference of model output for women vs. men"
+                },
+                "y": {
+                  "fieldName": "overall",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "overall"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Gender Fairness Assessment - Overall Score",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 24,
+            "width": 3,
+            "height": 5
+          }
+        }
+      ]
+    }
+  ]
+}

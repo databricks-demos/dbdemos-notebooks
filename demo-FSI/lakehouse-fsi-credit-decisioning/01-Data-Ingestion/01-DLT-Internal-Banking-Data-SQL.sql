@@ -58,7 +58,7 @@
 -- MAGIC For more details on Delta Lake, run dbdemos.install('delta-lake')
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_credit_scoring%2Fdlt-sql&dt=LAKEHOUSE_CREDIT_SCORING">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01-DLT-Internal-Banking-Data-SQL&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 -- COMMAND ----------
 
@@ -103,7 +103,7 @@
 
 CREATE OR REFRESH STREAMING LIVE TABLE credit_bureau_bronze AS
   SELECT * FROM
-    cloud_files('/dbdemos/fsi/credit-decisioning/credit_bureau', 'json',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/credit-decisioning/credit_bureau', 'json',
                  map('header', 'true', 
                      'inferSchema', 'true', 
                      'cloudFiles.inferColumnTypes', 'true'))
@@ -120,7 +120,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE credit_bureau_bronze AS
 
 CREATE OR REFRESH STREAMING LIVE TABLE customer_bronze AS
   SELECT * FROM
-    cloud_files('/dbdemos/fsi/credit-decisioning/internalbanking/customer', 'csv',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/customer', 'csv',
                  map('header', 'true', 
                      'inferSchema', 'true', 
                      'cloudFiles.inferColumnTypes', 'true',
@@ -138,7 +138,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE customer_bronze AS
 
 CREATE OR REFRESH STREAMING LIVE TABLE relationship_bronze AS
   SELECT * FROM
-    cloud_files('/dbdemos/fsi/credit-decisioning/internalbanking/relationship', 'csv',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/relationship', 'csv',
                  map('header', 'true', 
                      'inferSchema', 'true', 
                      'cloudFiles.inferColumnTypes', 'true'))
@@ -153,7 +153,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE relationship_bronze AS
 
 CREATE OR REFRESH STREAMING LIVE TABLE account_bronze AS
   SELECT * FROM
-    cloud_files('/dbdemos/fsi/credit-decisioning/internalbanking/account', 'csv',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/account', 'csv',
                  map('header', 'true', 
                      'inferSchema', 'true', 
                      'cloudFiles.inferColumnTypes', 'true'))
@@ -170,7 +170,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE account_bronze AS
 
 CREATE OR REFRESH STREAMING LIVE TABLE fund_trans_bronze AS
   SELECT * FROM
-    cloud_files('/dbdemos/fsi/credit-decisioning/fund_trans', 'json',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/fund_trans', 'json',
                 map('inferSchema', 'true', 
                     'cloudFiles.inferColumnTypes', 'true'))
 
@@ -186,7 +186,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE fund_trans_bronze AS
 
 CREATE OR REFRESH STREAMING LIVE TABLE telco_bronze AS
   SELECT * FROM
-    cloud_files('/dbdemos/fsi/credit-decisioning/telco', 'json',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/telco', 'json',
                  map('inferSchema', 'true',
                      'cloudFiles.inferColumnTypes', 'true'))
 

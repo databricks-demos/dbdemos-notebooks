@@ -75,7 +75,7 @@
 # MAGIC * Loss Given Default - Risk is only a piece of the puzzle for credit decisioning. The bank or FSI needs to understand what losses are estimated given risk profiles.
 # MAGIC * Explainability of credit decisions using all features and model explainability library SHAP
 # MAGIC
-# MAGIC <a href="/sql/dashboards/ed90b646-44cf-4276-89c2-f8fdfc73d58f" target="_blank">Open the DBSQL dashboard</a> to explore this information. <br/><br/>
+# MAGIC <a dbdemos-dashboard-id="credit-decisioning" href='/sql/dashboardsv3/01ef3a3dcb7216b29bf2e778d084fa7c' target="_blank">Open the DBSQL dashboard</a> to explore this information. <br/><br/>
 # MAGIC
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi-credit-decisioning-dashboard.png" width="800px" >

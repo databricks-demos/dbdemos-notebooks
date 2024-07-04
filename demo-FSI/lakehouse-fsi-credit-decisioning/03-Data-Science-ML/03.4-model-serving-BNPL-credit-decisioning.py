@@ -56,14 +56,6 @@ mlflow.set_registry_uri('databricks-uc')
 
 # COMMAND ----------
 
-loaded_model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.{model_name}@prod")
-
-# COMMAND ----------
-
-loaded_model.metadata.
-
-# COMMAND ----------
-
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput

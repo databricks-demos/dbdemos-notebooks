@@ -10,8 +10,8 @@
   "category": "lakehouse",
   "title": "Lakehouse for Retail Banking: Credit Decisioning",
   "custom_schema_supported": True,
-  "default_schema": "dbdemos_fsi_credit_decisioning",
   "default_catalog": "main",
+  "default_schema": "dbdemos_fsi_credit_decisioning",
   "description": "Build your banking data platform and identify credit worthy customers",
   "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end credit decisioning system for underbanked customers, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both internal and partner data, and then transform them using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build a Machine Learning model with Databricks AutoML to identify credit worthy customers</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the ingested data and explain the machine learning model outputs</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "usecase": "Lakehouse Platform",
@@ -257,7 +257,7 @@
             "min_workers": 2,
             "max_workers": 10
         },
-        "spark_version": "12.2.x-cpu-ml-scala2.12",
+        "spark_version": "15.3.x-cpu-ml-scala2.12",
         "single_user_name": "{{CURRENT_USER}}",
         "data_security_mode": "SINGLE_USER",
         "runtime_engine": "STANDARD"

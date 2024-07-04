@@ -110,8 +110,8 @@ for c in ['12m', '6m', '3m']:
   fund_trans_gold_features = fund_trans_gold_features.withColumn('tot_txn_cnt_'+c, col('sent_txn_cnt_'+c)+col('rcvd_txn_cnt_'+c))\
                                                      .withColumn('tot_txn_amt_'+c, col('sent_txn_amt_'+c)+col('rcvd_txn_amt_'+c))
 
-fund_trans_gold_features = fund_trans_gold_features.withColumn('ratio_txn_amt_3m_12m', when(col('tot_txn_amt_12m')==0, 0).otherwise(col('tot_txn_amt_3m')/col('tot_txn_amt_12m')))\
-                                                   .withColumn('ratio_txn_amt_6m_12m', when(col('tot_txn_amt_12m')==0, 0).otherwise(col('tot_txn_amt_6m')/col('tot_txn_amt_12m')))\
+fund_trans_gold_features = fund_trans_gold_features.withColumn('ratio_txn_amt_3m_12m', F.when(col('tot_txn_amt_12m')==0, 0).otherwise(col('tot_txn_amt_3m')/col('tot_txn_amt_12m')))\
+                                                   .withColumn('ratio_txn_amt_6m_12m', F.when(col('tot_txn_amt_12m')==0, 0).otherwise(col('tot_txn_amt_6m')/col('tot_txn_amt_12m')))\
                                                    .na.fill(0)
 display(fund_trans_gold_features)
 

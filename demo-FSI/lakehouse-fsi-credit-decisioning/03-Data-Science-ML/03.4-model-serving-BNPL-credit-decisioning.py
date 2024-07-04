@@ -69,7 +69,8 @@ endpoint_config = EndpointCoreConfigInput(
         ServedEntityInput(
             entity_name=model_name,
             entity_version=get_latest_model_version(model_name),
-            scale_to_zero_enabled=True
+            scale_to_zero_enabled=True,
+            workload_size="Small"
         )
     ],
     auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="inference_table" )
@@ -111,6 +112,7 @@ dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orien
 # COMMAND ----------
 
 import mlflow
+from mlflow import deployments
 client = mlflow.deployments.get_deploy_client("databricks")
 predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
 

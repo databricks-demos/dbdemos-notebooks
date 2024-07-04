@@ -175,7 +175,17 @@ px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='
 # COMMAND ----------
 
 from databricks import automl
-summary = automl.classify(train_df, target_col="defaulted", primary_metric="roc_auc", timeout_minutes=10)
+xp_path = "/Shared/dbdemos/experiments/lakehouse-fsi-credit-decisioning"
+xp_name = f"automl_credit_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+automl_run = automl.classify(
+    experiment_name = xp_name,
+    experiment_dir = xp_path,
+    dataset = train_df.sample(0.1),
+    target_col = "defaulted",
+    timeout_minutes = 10
+)
+#Make sure all users can access dbdemos shared experiment
+DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 

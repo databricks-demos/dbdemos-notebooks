@@ -34,7 +34,7 @@
 -- MAGIC
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_fsi_fraud%2Fdlt_sql&dt=LAKEHOUSE_FSI_FRAUD">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01.1-DLT-fraud-detection-SQL&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 -- COMMAND ----------
 
@@ -99,25 +99,21 @@
 
 -- COMMAND ----------
 
--- MAGIC %run ../_resources/01-load-data
-
--- COMMAND ----------
-
 -- DBTITLE 1,Let's explore our raw incoming data: transactions (json)
 -- MAGIC %python
--- MAGIC display(spark.read.json('/dbdemos/fsi/fraud-detection/transactions'))
+-- MAGIC display(spark.read.json('/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/transactions'))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Raw incoming customers (json)
 -- MAGIC %python
--- MAGIC display(spark.read.csv('/dbdemos/fsi/fraud-detection/customers', header=True, multiLine=True))
+-- MAGIC display(spark.read.csv('/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/customers', header=True, multiLine=True))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Raw incoming country
 -- MAGIC %python
--- MAGIC display(spark.read.csv('/dbdemos/fsi/fraud-detection/country_code', header=True))
+-- MAGIC display(spark.read.csv('/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/country_code', header=True))
 
 -- COMMAND ----------
 
@@ -138,7 +134,7 @@
 CREATE STREAMING LIVE TABLE bronze_transactions 
   COMMENT "Historical banking transaction to be trained on fraud detection"
 AS 
-  SELECT * FROM cloud_files("/dbdemos/fsi/fraud-detection/transactions", "json", map("cloudFiles.maxFilesPerTrigger", "1", "cloudFiles.inferColumnTypes", "true"))
+  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/transactions", "json", map("cloudFiles.maxFilesPerTrigger", "1", "cloudFiles.inferColumnTypes", "true"))
 
 -- COMMAND ----------
 
@@ -148,21 +144,21 @@ CREATE STREAMING LIVE TABLE banking_customers (
 )
 COMMENT "Customer data coming from csv files ingested in incremental with Auto Loader to support schema inference and evolution"
 AS 
-  SELECT * FROM cloud_files("/dbdemos/fsi/fraud-detection/customers", "csv", map("cloudFiles.inferColumnTypes", "true", "multiLine", "true"))
+  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/customers", "csv", map("cloudFiles.inferColumnTypes", "true", "multiLine", "true"))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Reference table
 CREATE STREAMING LIVE TABLE country_coordinates
 AS 
-  SELECT * FROM cloud_files("/dbdemos/fsi/fraud-detection/country_code", "csv")
+  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/country_code", "csv")
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Fraud report (labels for ML training)
 CREATE STREAMING LIVE TABLE fraud_reports
 AS 
-  SELECT * FROM cloud_files("/dbdemos/fsi/fraud-detection/fraud_report", "csv")
+  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/fraud_report", "csv")
 
 -- COMMAND ----------
 

@@ -9,6 +9,9 @@
   "name": "lakehouse-fsi-fraud",
   "category": "lakehouse",
   "title": "Retail Banking - Fraud Detection",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_fsi_fraud_detection",
   "description": "Build your Banking platform and detect Fraud in real-time. End 2 End demo, with Model Serving & realtime fraud inference A/B testing.",
   "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a Real-time Fraud detection system for banking transactionn, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest data from external systems (EPR/Salesforce...) and then transform it using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboards to analyze the ingested data and understand the existing Fraud</li><li>Build a Machine Learning model with Databricks AutoML to flag transactions at risk</li><li>Leverage Databricks Model Serving to deploy a REST API serving real-time inferences in milliseconds with model A/B testing.</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "usecase": "Lakehouse Platform",
@@ -30,22 +33,6 @@
       "add_cluster_setup_cell": False,
       "title":  "Prep data", 
       "description": "Helpers & setup."
-    },
-    {
-      "path": "_resources/01-load-data", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Prep data", 
-      "description": "Prep data for demo."
-    },
-    {
-      "path": "_resources/02-DLT-Persist-Streaming-Views", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Create tables from materialized view for persisting for ML consumption", 
-      "description": "SQL only notebook to support machine learning consumers"
     },
     {
       "path": "00-FSI-fraud-detection-introduction-lakehouse", 
@@ -163,34 +150,6 @@
                 ]
             },
             {
-               "task_key": "clone_streaming_view",
-               "depends_on": [
-                    {
-                        "task_key": "start_dlt_pipeline"
-                    }
-                    ],
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/02-DLT-Persist-Streaming-Views",
-                    "source": "WORKSPACE"
-                },
-                "run_if": "ALL_SUCCESS",
-                "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "12.2.x-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
-                    "runtime_engine": "STANDARD"
-                },
-                "timeout_seconds": 0,
-                "email_notifications": {}
-            },
-            {
                 "task_key": "create_feature_and_automl_run",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.1-AutoML-FSI-fraud",
@@ -201,7 +160,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "clone_streaming_view"
+                          "task_key": "start_dlt_pipeline"
                       }
                   ]
             },
@@ -242,7 +201,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    "spark_version": "15.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -271,6 +230,7 @@
     "custom_tags": {
         "ResourceClass": "SingleNode"
     },
+    "spark_version": "15.3.x-cpu-ml-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
     "num_workers": 0
@@ -307,5 +267,6 @@
         "target": "fsi_fraud_detection"
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[dbdemos] FSI Fraud Detection",       "id": "fraud-detection"}]
 }

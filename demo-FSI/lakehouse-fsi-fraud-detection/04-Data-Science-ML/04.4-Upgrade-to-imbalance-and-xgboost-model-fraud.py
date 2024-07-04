@@ -1,24 +1,24 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Let's improve and release a new model version in our repo using XGBoost
-# MAGIC 
+# MAGIC
 # MAGIC As a Data Scientist, we realized that we could better detect fraud with XGboost if we add more custom logic to deal with imbalanced class.
-# MAGIC 
+# MAGIC
 # MAGIC ## Dealing with Imbalanced class
-# MAGIC 
+# MAGIC
 # MAGIC Let's improve the generated notebook to better handle our imbalanced fraud dataset with 2 basic steps:
-# MAGIC 
+# MAGIC
 # MAGIC * Add more weight to the classes relatively to their frequence (this will penalize more the model if it doesn't classify the fraud properly)
 # MAGIC * Switch the model to XGBoost
-# MAGIC 
+# MAGIC
 # MAGIC *Note: Again, the goal of this notebook isn't to show a state of the art Fraud detection Model & imbalanced class. For more details on how to achieve that, please reach your Databricks Account team.*
-# MAGIC 
+# MAGIC
 # MAGIC ## Bootstraping our custom model using the last AutoML run
-# MAGIC 
+# MAGIC
 # MAGIC To speedup things, we'll re-use our last AutoML run containing all best practices and use it to switch to XGBoost + change our class weights.
-# MAGIC 
+# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_fsi_fraud%2Fml-upgrade&dt=LAKEHOUSE_FSI_FRAUD">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.4-Upgrade-to-imbalance-and-xgboost-model-fraud&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 # COMMAND ----------
 
@@ -28,11 +28,18 @@
 
 import mlflow
 import databricks.automl_runtime
-
 #Added for the demo purpose
-run = get_automl_fraud_run(force_refresh = False)
+xp = DBDemos.get_last_experiment("lakehouse-fsi-fraud-detection")
+
 # Use MLflow to track experiments
-mlflow.set_experiment(run["experiment_path"])
+mlflow.set_experiment(xp["path"])
+
+#Run containing the data analysis notebook to get the data from artifact
+data_run = mlflow.search_runs(filter_string="tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].to_dict()
+
+#get best run id (this notebook)
+df = mlflow.search_runs(filter_string="metrics.val_f1_score < 1")
+run = df.sort_values(by="metrics.val_f1_score", ascending=False).iloc[0].to_dict()
 
 target_col = "is_fraud"
 
@@ -55,11 +62,14 @@ os.makedirs(input_temp_dir)
 
 
 # Download the artifact and read it into a pandas DataFrame
-input_data_path = mlflow.artifacts.download_artifacts(run_id=run["data_run_id"], artifact_path="data", dst_path=input_temp_dir)
+input_data_path = mlflow.artifacts.download_artifacts(run_id=data_run["run_id"], artifact_path="data", dst_path=input_temp_dir)
 
 df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
 # Delete the temp data
 shutil.rmtree(input_temp_dir)
+
+#Fix pandas to a specific version to support all dbr version
+force_pandas_version(mlflow_run.info.run_id)
 
 # Preview data
 df_loaded.head(5)
@@ -111,7 +121,7 @@ bool_transformers = [("boolean", bool_pipeline, ["isUnauthorizedOverdraft"])]
 
 # MAGIC %md
 # MAGIC ### Numerical columns
-# MAGIC 
+# MAGIC
 # MAGIC Missing values for numerical columns are imputed with mean by default.
 
 # COMMAND ----------
@@ -176,21 +186,21 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # MAGIC - Train (60% of the dataset used to train the model)
 # MAGIC - Validation (20% of the dataset used to tune the hyperparameters of the model)
 # MAGIC - Test (20% of the dataset used to report the true performance of the model on an unseen dataset)
-# MAGIC 
+# MAGIC
 # MAGIC `_automl_split_col_624d` contains the information of which set a given row belongs to.
 # MAGIC We use this column to split the dataset into the above 3 sets. 
 # MAGIC The column should not be used for training so it is dropped after split is done.
 
 # COMMAND ----------
 
-# AutoML completed train - validation - test split internally and used _automl_split_col_624d to specify the set
+# AutoML completed train - validation - test split internally and used _automl_split_col_0000 to specify the set
 split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
 
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
-split_val_df = df_loaded.loc[df_loaded[split_col] == "val"]
+split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
 split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
-# Separate target column from features and drop _automl_split_col_xxx
+# Separate target column from features and drop _automl_split_col_0000
 X_train = split_train_df.drop([target_col, split_col], axis=1)
 y_train = split_train_df[target_col]
 
@@ -214,7 +224,7 @@ classes_weights = list(class_weight.compute_sample_weight(class_weight='balanced
 
 # MAGIC %md
 # MAGIC ## Train the new classification model: XGBoost
-# MAGIC 
+# MAGIC
 # MAGIC - Log relevant metrics to MLflow to track runs
 # MAGIC - All the runs are logged under [this MLflow experiment](#mlflow/experiments/3254325001193021)
 # MAGIC - Change the model parameters and re-run the training cell to log a different trial to the MLflow experiment
@@ -342,13 +352,13 @@ def objective(params):
 # MAGIC modified to widen the search space. For example, when training a decision tree classifier, to allow
 # MAGIC the maximum tree depth to be either 2 or 3, set the key of 'max_depth' to
 # MAGIC `hp.choice('max_depth', [2, 3])`. Be sure to also increase `max_evals` in the `fmin` call below.
-# MAGIC 
+# MAGIC
 # MAGIC See https://docs.databricks.com/applications/machine-learning/automl-hyperparam-tuning/index.html
 # MAGIC for more information on hyperparameter tuning as well as
 # MAGIC http://hyperopt.github.io/hyperopt/getting-started/search_spaces/ for documentation on supported
 # MAGIC search expressions.
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC NOTE: The above URL points to a stable version of the documentation corresponding to the last
 # MAGIC released version of the package. The documentation may differ slightly for the package version
 # MAGIC used by this notebook.
@@ -377,10 +387,10 @@ space = {
 # MAGIC from hyperopt import SparkTrials
 # MAGIC trials = SparkTrials()
 # MAGIC ```
-# MAGIC 
+# MAGIC
 # MAGIC NOTE: While `Trials` starts an MLFlow run for each set of hyperparameters, `SparkTrials` only starts
 # MAGIC one top-level run; it will start a subrun for each set of hyperparameters.
-# MAGIC 
+# MAGIC
 # MAGIC See http://hyperopt.github.io/hyperopt/scaleout/spark/ for more info.
 
 # COMMAND ----------
@@ -408,7 +418,7 @@ model
 
 # MAGIC %md
 # MAGIC ## Feature importance
-# MAGIC 
+# MAGIC
 # MAGIC SHAP is a game-theoretic approach to explain machine learning models, providing a summary plot
 # MAGIC of the relationship between features and model output. Features are ranked in descending order of
 # MAGIC importance, and impact/color describe the correlation between the feature and the target variable.
@@ -420,7 +430,7 @@ model
 # MAGIC - SHAP cannot explain models using data with nulls; if your dataset has any, both the background data and
 # MAGIC   examples to explain will be imputed using the mode (most frequent values). This affects the computed
 # MAGIC   SHAP values, as the imputed samples may not match the actual data distribution.
-# MAGIC 
+# MAGIC
 # MAGIC For more information on how to read Shapley values, see the [SHAP documentation](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html).
 
 # COMMAND ----------
@@ -452,15 +462,15 @@ if shap_enabled:
 
 # MAGIC %md
 # MAGIC ## Confusion matrix, ROC and Precision-Recall curves for validation data
-# MAGIC 
+# MAGIC
 # MAGIC We show the confusion matrix, ROC and Precision-Recall curves of the model on the validation data.
-# MAGIC 
+# MAGIC
 # MAGIC For the plots evaluated on the training and the test data, check the artifacts on the MLflow run page.
 
 # COMMAND ----------
 
 # Run & click the link to see the MLflow run page
-displayHTML(f"""<a href="#mlflow/experiments/{ run['experiment_id'] }/runs/{ mlflow_run.info.run_id }/artifactPath/model">Link to model run page</a>""")
+displayHTML(f"""<a href="#mlflow/experiments/{ run['experiment_id'] }/runs/{ run['run_id'] }/artifactPath/model">Link to model run page</a>""")
 
 # COMMAND ----------
 
@@ -472,7 +482,7 @@ eval_temp_dir = os.path.join(os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uui
 os.makedirs(eval_temp_dir, exist_ok=True)
 
 # Download the artifact
-eval_path = mlflow.artifacts.download_artifacts(run_id=mlflow_run.info.run_id, dst_path=eval_temp_dir)
+eval_path = mlflow.artifacts.download_artifacts(run_id=run['run_id'], dst_path=eval_temp_dir)
 
 # COMMAND ----------
 
@@ -481,7 +491,7 @@ eval_path = mlflow.artifacts.download_artifacts(run_id=mlflow_run.info.run_id, d
 
 # COMMAND ----------
 
-eval_confusion_matrix_path = os.path.join(eval_path, "confusion_matrix.png")
+eval_confusion_matrix_path = os.path.join(eval_path, "val_confusion_matrix.png")
 display(Image(filename=eval_confusion_matrix_path))
 
 # COMMAND ----------
@@ -491,7 +501,7 @@ display(Image(filename=eval_confusion_matrix_path))
 
 # COMMAND ----------
 
-eval_roc_curve_path = os.path.join(eval_path, "roc_curve_plot.png")
+eval_roc_curve_path = os.path.join(eval_path, "val_roc_curve_plot.png")
 display(Image(filename=eval_roc_curve_path))
 
 # COMMAND ----------
@@ -501,21 +511,40 @@ display(Image(filename=eval_roc_curve_path))
 
 # COMMAND ----------
 
-eval_pr_curve_path = os.path.join(eval_path, "precision_recall_curve_plot.png")
+eval_pr_curve_path = os.path.join(eval_path, "val_precision_recall_curve_plot.png")
 display(Image(filename=eval_pr_curve_path))
 
 # COMMAND ----------
 
+model_name = "dbdemos_fsi_fraud"
+from mlflow import MlflowClient
+
+#Use Databricks Unity Catalog to save our model
+mlflow.set_registry_uri('databricks-uc')
+client = MlflowClient()
+
+#Fix pandas to a specific version to support all dbr version
+force_pandas_version(mlflow_run.info.run_id)
+
+#Add model within our catalog
+new_model = mlflow.register_model(f'runs:/{mlflow_run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
+print(f"Updating model to version {new_model.version}")
+# Flag it as Production ready using UC Aliases
+client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="candidate", version=new_model.version)
+DBDemos.set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## Our new model is now ready !
-# MAGIC 
+# MAGIC
 # MAGIC We're ready to deploy it in Production. However, as we're handling customer transactions in real-time, we want to make sure we start with a small, non disruptive release:
-# MAGIC 
+# MAGIC
 # MAGIC * Without making any production outage
 # MAGIC * Route only a subset of the traffic to our new model
 # MAGIC * Measure model efficiency & ensure it's performing better.
-# MAGIC 
+# MAGIC
 # MAGIC This is non-trivial and typically requests a full devops team. Thanksfully, Databricks makes this simple.
-# MAGIC 
+# MAGIC
 # MAGIC Open the next notebook [04.5-AB-testing-model-serving-fraud]($./04.5-AB-testing-model-serving-fraud) to deploy our model and start routing a small subset of the requests to our new model!

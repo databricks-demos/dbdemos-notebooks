@@ -81,7 +81,7 @@
 # MAGIC *Note: Make sure you switched to the "Machine Learning" persona on the top left menu.*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_fsi_fraud%2Fml-automl&dt=LAKEHOUSE_FSI_FRAUD">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.1-AutoML-FSI-fraud&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 # COMMAND ----------
 
@@ -108,7 +108,7 @@
 # MAGIC   is_fraud,
 # MAGIC   count(1) as `Transactions`, 
 # MAGIC   sum(amount) as `Total Amount` 
-# MAGIC from dbdemos.fsi_fraud_detection.gold_transactions_ml
+# MAGIC from gold_transactions
 # MAGIC group by is_fraud
 # MAGIC
 # MAGIC --Visualization Pie chart: Keys: is_fraud, Values: [Transactions, Total Amount]
@@ -126,7 +126,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Run analysis using your usual python plot libraries
-df = spark.sql('select type, is_fraud, count(1) as count from dbdemos.fsi_fraud_detection.gold_transactions_ml group by type, is_fraud').toPandas()
+df = spark.sql('select type, is_fraud, count(1) as count from gold_transactions group by type, is_fraud').toPandas()
 
 fig = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
 fig.add_trace(go.Pie(labels=df[df['is_fraud']]['type'], values=df[df['is_fraud']]['count'], title="Fraud Transactions", hole=0.6), 1, 1)
@@ -152,7 +152,7 @@ fig.add_trace(go.Pie(labels=df[~df['is_fraud']]['type'], values=df[~df['is_fraud
 
 # DBTITLE 1,Create the final features using pandas API
 # Convert to koalas
-dataset = spark.table('dbdemos.fsi_fraud_detection.gold_transactions_ml').dropDuplicates(['id']).pandas_api()
+dataset = spark.table('gold_transactions').dropDuplicates(['id']).pandas_api()
 # Drop columns we don't want to use in our model
 # Typical DS project would include more transformations / cleanup here
 dataset = dataset.drop(columns=['address', 'email', 'firstname', 'lastname', 'creation_date', 'last_activity_date', 'customer_id'])
@@ -170,18 +170,18 @@ fs = FeatureStoreClient()
 
 try:
   #drop table if exists
-  fs.drop_table(f'dbdemos.fsi_fraud_detection.transactions_features')
+  fs.drop_table(f'{catalog}.{db}.transactions_features')
 except:
   pass
 
 fs.create_table(
-  name=f'dbdemos.fsi_fraud_detection.transactions_features',
+  name=f'{catalog}.{db}.transactions_features',
   primary_keys='id',
   schema=dataset.spark.schema(),
   description='These features are derived from the gold_transactions table in the lakehouse.  We created dummy variables for the categorical columns, cleaned up their names, and added a boolean flag for whether the transaction is a fraud or not.  No aggregations were performed.')
 
-fs.write_table(df=dataset.to_spark(), name=f'dbdemos.fsi_fraud_detection.transactions_features', mode='overwrite')
-features = fs.read_table(f'dbdemos.fsi_fraud_detection.transactions_features')
+fs.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.transactions_features', mode='overwrite')
+features = fs.read_table(f'{catalog}.{db}.transactions_features')
 display(features)
 
 # COMMAND ----------
@@ -221,8 +221,19 @@ display(features)
 # COMMAND ----------
 
 # DBTITLE 1,Starting AutoML run usingDtabricks API
-#This calls databricks.automl.classify(...) under the hood or . See companion notebook for more detail.
-display_automl_fraud_link(dataset = fs.read_table(f'dbdemos.fsi_fraud_detection.transactions_features'), model_name = "dbdemos_fsi_fraud", force_refresh = False)
+from databricks import automl
+
+xp_path = "/Shared/dbdemos/experiments/lakehouse-fsi-fraud-detection"
+xp_name = f"automl_fraud_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+automl_run = automl.classify(
+    experiment_name = xp_name,
+    experiment_dir = xp_path,
+    dataset = features.sample(0.1),
+    target_col = "is_fraud",
+    timeout_minutes = 10
+)
+#Make sure all users can access dbdemos shared experiment
+DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 

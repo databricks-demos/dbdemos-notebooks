@@ -1,0 +1,350 @@
+{
+  "datasets": [
+    {
+      "name": "e597d72c",
+      "displayName": "dbdemos - fraud_detection_30dcount",
+      "query": "select ts, count(1) nbFraudTransactions, sum(amount) sumFraudTransactions--, label \nfrom(\n    select from_unixtime(unix_timestamp(current_timestamp()) + (step * 3600)) ts, amount--, label\n    from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    join (--just getting the last 30 days\n        select max(step)-(24*30) windowStart, max(step) windowEnd \n        from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    ) on step >= windowStart and step <= windowEnd\n    where is_fraud\n) group by ts--, label\norder by ts"
+    },
+    {
+      "name": "7a31791d",
+      "displayName": "dbdemos - fraud_detection_sankey_nbpercountry",
+      "query": "SELECT \n    countryOrig, \n    countryDest, \n    type, \n    value,\n    CASE \n        WHEN countryOrig < countryDest THEN countryOrig || '-' || countryDest \n        ELSE countryDest || '-' || countryOrig \n    END AS countries_combined\nFROM (\n    SELECT \n        countryOrig, \n        countryDest, \n        type, \n        COUNT(amount) AS value \n    FROM `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    WHERE amount > 350000\n    GROUP BY countryOrig, countryDest, type\n) \nORDER BY countries_combined, value DESC\nLIMIT 20\n\n--in terms of number of transactions\n--russia making / receiving more transactions > 350000, than othr countries\n--most these transactions are transfer\n"
+    },
+    {
+      "name": "720bedbf",
+      "displayName": "dbdemos - fraud_detection_toporiginaccount",
+      "query": "select * from (\n    select nameOrig , count(1) as nbTransactions \n    from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    join (--just getting the last 30 days\n        select max(step)-(24*30) windowStart, max(step) windowEnd \n        from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    ) on step >= windowStart and step <= windowEnd\n    where is_fraud\n    group by nameOrig\n) \norder by nbTransactions desc\nlimit 1"
+    },
+    {
+      "name": "6fef3cee",
+      "displayName": "dbdemos - fraud_detection_topdestaccount",
+      "query": "select * from (\n    select nameDest , count(1) as nbTransactions \n    from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    join (--just getting the last 30 days\n        select max(step)-(24*30) windowStart, max(step) windowEnd \n        from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    ) on step >= windowStart and step <= windowEnd\n    where is_fraud\n    group by nameDest\n) \norder by nbTransactions desc\nlimit 1\n"
+    },
+    {
+      "name": "59d6afc3",
+      "displayName": "dbdemos - fraud_detection_map_sumpercountry",
+      "query": "select countryOrig , countryDest , type, value from (\n    select countryOrig , countryDest , type, sum(amount ) as value from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    where is_fraud and amount > 350000\n    group by countryOrig , countryDest ,type\n) order by value desc\nlimit 100\n"
+    },
+    {
+      "name": "ec5b3150",
+      "displayName": "dbdemos - fraud_detection_count",
+      "query": "\n    select count(1) as nbTransactions \n    from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    join (--just getting the last 30 days\n        select max(step)-(24*30) windowStart, max(step) windowEnd \n        from `main__build`.`dbdemos_fsi_fraud_detection`.gold_transactions\n    ) on step >= windowStart and step <= windowEnd\n    where is_fraud"
+    }
+  ],
+  "pages": [
+    {
+      "name": "4ce73194",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "494f99ac",
+            "textbox_spec": "### Observations\nIn terms of number of >$350k transactions :\n- Russia is initiating / receiving more transactions, than any other country\n- Most these transactions are transfers"
+          },
+          "position": {
+            "x": 5,
+            "y": 3,
+            "width": 1,
+            "height": 11
+          }
+        },
+        {
+          "widget": {
+            "name": "d7f865c4",
+            "textbox_spec": "# Fraud Analysis on the Data Intelligence Platform\n\nExisting Fraud Analysis ingested in our Data Intelligence Platform\n\nThis data is then used by our Data Scientists to build a ML model and evaluate transaction risk to provide real-time Fraud Detection capabilities.\n"
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "afa88728",
+            "textbox_spec": "### DBDemos dashboard\nThis dataset is was generated in most part using a [PaySim](https://github.com/EdgarLopezPhD/PaySim) mobile money simulator. It is thus entirely synthetic and does not represent real individuals and transactions.\n![tracking_img](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=dashboard_fraud_detection&demo_name=lakehouse-fsi-fraud-detection&event=DASHBOARD_VIEW)"
+          },
+          "position": {
+            "x": 0,
+            "y": 35,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "dfca5249",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6fef3cee",
+                  "fields": [
+                    {
+                      "name": "nbTransactions",
+                      "expression": "`nbTransactions`"
+                    },
+                    {
+                      "name": "nameDest",
+                      "expression": "`nameDest`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "nameDest",
+                  "rowNumber": 1,
+                  "displayName": "nameDest"
+                },
+                "target": {
+                  "fieldName": "nbTransactions",
+                  "rowNumber": 1,
+                  "displayName": "nbTransactions"
+                }
+              },
+              "frame": {
+                "title": "Most fraudulent account",
+                "showTitle": true,
+                "description": "Account receiving the most fraudulent transactions in the past 30 days",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 28,
+            "width": 2,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "15c55b3f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "59d6afc3",
+                  "fields": [
+                    {
+                      "name": "sum(value)",
+                      "expression": "SUM(`value`)"
+                    },
+                    {
+                      "name": "countryDest",
+                      "expression": "`countryDest`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(value)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of value"
+                },
+                "y": {
+                  "fieldName": "countryDest",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "countryDest"
+                }
+              },
+              "frame": {
+                "title": "Amount of fraudulent transactions per country",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 25,
+            "width": 4,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "aeffec3c",
+            "queries": [
+              {
+                "name": "ced96f2a75fa49638a31b203fb2babf5",
+                "query": {
+                  "datasetName": "ec5b3150",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Number of Fraudulent transactions",
+                "description": "Number of Fraudulent transactions in the past 30 days",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"nbTransactions\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "ced96f2a75fa49638a31b203fb2babf5"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 14,
+            "width": 2,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "81470cf5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7a31791d",
+                  "fields": [
+                    {
+                      "name": "type",
+                      "expression": "`type`"
+                    },
+                    {
+                      "name": "countries_combined",
+                      "expression": "`countries_combined`"
+                    },
+                    {
+                      "name": "sum(value)",
+                      "expression": "SUM(`value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "countries_combined",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "countries_combined"
+                },
+                "y": {
+                  "fieldName": "sum(value)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of value"
+                },
+                "color": {
+                  "fieldName": "type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "type"
+                }
+              },
+              "frame": {
+                "title": "Top geographical flow of transactions > $350000",
+                "showTitle": true,
+                "showDescription": false
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 5,
+            "height": 11
+          }
+        },
+        {
+          "widget": {
+            "name": "0931631e",
+            "queries": [
+              {
+                "name": "15b04977a1a04039aa3e8b6eb730ffcb",
+                "query": {
+                  "datasetName": "720bedbf",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Most fraudulent account",
+                "description": "Account issuing the most fraudulent transactions in the past 30 days",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"nameOrig\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"targetColName\": \"nbTransactions\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "15b04977a1a04039aa3e8b6eb730ffcb"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 21,
+            "width": 2,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "7fb9e61f",
+            "queries": [
+              {
+                "name": "2f5f91863f684328b11ca5c8d2e15d89",
+                "query": {
+                  "datasetName": "e597d72c",
+                  "fields": [
+                    {
+                      "name": "sumFraudTransactions",
+                      "expression": "`sumFraudTransactions`"
+                    },
+                    {
+                      "name": "ts",
+                      "expression": "`ts`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Hourly Fraud Amounts in the past 30 days",
+                "description": "Amount of fraudulant transactions through the past 30 days",
+                "viz_type": "CHART",
+                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"scatter\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"Hour (30 days)\"}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"Total amount\"}}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": false, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"nbFraudTransactions\": {\"yAxis\": 0, \"type\": \"scatter\"}, \"column_f2bd430a56028\": {\"yAxis\": 0, \"type\": \"scatter\"}, \"sumFraudTransactions\": {\"yAxis\": 0, \"type\": \"scatter\", \"name\": \"Amount\", \"color\": \"#C63FA9\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"y\": [{\"column\": \"sumFraudTransactions\", \"id\": \"column_f2bd430a65934\"}], \"x\": {\"column\": \"ts\", \"id\": \"column_f2bd430a56029\"}}, \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "2f5f91863f684328b11ca5c8d2e15d89"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 4,
+            "height": 11
+          }
+        }
+      ]
+    }
+  ]
+}

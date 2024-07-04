@@ -23,7 +23,7 @@
 -- MAGIC   One consistent data platform across clouds. Process your data where your need.
 -- MAGIC  
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_fsi_fraud%2Fintro&dt=LAKEHOUSE_FSI_FRAUD">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-FSI-fraud-detection-introduction-lakehouse&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 -- COMMAND ----------
 
@@ -135,7 +135,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the [Datawarehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing-fraud) to start running your BI queries or access or directly open the <a href="/sql/dashboards/9fc6a3bb-ff36-4e06-b5f9-912d7e77dc05" target="_blank">Banking fraud analysis dashboard</a>
+-- MAGIC Open the [Datawarehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing-fraud) to start running your BI queries or access or directly open the <a dbdemos-dashboard-id="fraud-detection" href='/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956' target="_blank">Banking fraud analysis dashboard</a>
 
 -- COMMAND ----------
 

@@ -21,22 +21,11 @@
 # MAGIC * Built-in metrics & monitoring
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_fsi_fraud%2Fml-serving&dt=LAKEHOUSE_FSI_FRAUD">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.3-Model-serving-realtime-inference-fraud&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
-# DBTITLE 1,Move the autoML model in production
-client = mlflow.tracking.MlflowClient()
-models = client.get_latest_versions("dbdemos_fsi_fraud")
-models.sort(key=lambda m: m.version, reverse=True)
-latest_model = models[0]
-
-if latest_model.current_stage != 'Production':
-  client.transition_model_version_stage("dbdemos_fsi_fraud", latest_model.version, stage = "Production", archive_existing_versions=True)
 
 # COMMAND ----------
 
@@ -58,25 +47,59 @@ if latest_model.current_stage != 'Production':
 
 # COMMAND ----------
 
+model_name = "dbdemos_fsi_fraud"
+mlflow.set_registry_uri('databricks-uc')
+
+# COMMAND ----------
+
 # DBTITLE 1,Starting the model inference REST endpoint using Databricks API
-#Start the endpoint using the REST API (you can do it using the UI directly)
-serving_client.create_endpoint_if_not_exists("dbdemos_fsi_fraud", model_name="dbdemos_fsi_fraud", model_version = latest_model.version, workload_size="Small", scale_to_zero_enabled=True, wait_start = True)
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
+from mlflow import MLFlowClient
+
+model_name = f"{catalog}.{db}.dbdemos_fsi_fraud"
+serving_endpoint_name = "dbdemos_fsi_fraud_endpoint"
+w = WorkspaceClient()
+
+mlflow_client = MlflowClient(registry_uri="databricks-uc")
+endpoint_config = EndpointCoreConfigInput(
+    name=serving_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=model_name,
+            entity_version=mlflow_client.get_model_version_by_alias(model_name, "prod"),
+            scale_to_zero_enabled=True,
+            workload_size="Small"
+        )
+    ],
+    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fraud_ep_inference_table" )
+)
+
+force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+try:
+  existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
+  print(f"endpoint {serving_endpoint_name} already exist...")
+  if force_update:
+    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+except:
+    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    spark.sql('drop table if exists fraud_ep_inference_table_payload')
+    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
 
 # COMMAND ----------
 
 # DBTITLE 1,Running HTTP REST inferences in realtime !
-#Let's get our dataset example
-p = ModelsArtifactRepository("models:/dbdemos_fsi_fraud/Production").download_artifacts("") 
+p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 
-#Let's run 30 inferences. The first run will wakeup the endpoint if it scaled to zeros.
-endpoint_url = f"{serving_client.base_url}/realtime-inference/dbdemos_fsi_fraud/invocations"
-print(f"Sending requests to {endpoint_url}")
-for i in range(3):
-    starting_time = timeit.default_timer()
-    inferences = requests.post(endpoint_url, json=dataset, headers=serving_client.headers).json()
-    print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
-    print(inferences)
+# COMMAND ----------
+
+import mlflow
+from mlflow import deployments
+client = mlflow.deployments.get_deploy_client("databricks")
+predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
+
+print(predictions)
 
 # COMMAND ----------
 

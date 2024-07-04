@@ -70,7 +70,7 @@
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffsi%2Flakehouse_fsi_fraud%2Fuc&dt=LAKEHOUSE_FSI_FRAUD">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-UC-data-governance-ACL-readmission-risk&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 -- COMMAND ----------
 
@@ -140,8 +140,6 @@
 
 -- the catalog has been created for your user and is defined as default. 
 -- make sure you run the 00-setup cell above to init the catalog to your user. 
-CREATE CATALOG IF NOT EXISTS dbdemos;
-USE CATALOG dbdemos;
 SELECT CURRENT_CATALOG();
 
 -- COMMAND ----------
@@ -168,21 +166,19 @@ SELECT CURRENT_CATALOG();
 -- COMMAND ----------
 
 -- DBTITLE 1,As you can see, our tables are available under our catalog.
-CREATE SCHEMA IF NOT EXISTS fsi_fraud_detection;
-USE fsi_fraud_detection;
-SHOW TABLES IN fsi_fraud_detection;
+SHOW TABLES;
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Granting access to Analysts & Data Engineers:
 -- Let's grant our ANALYSTS a SELECT permission:
 -- Note: make sure you created an analysts and dataengineers group first.
-GRANT SELECT ON TABLE dbdemos.fsi_fraud_detection.gold_transactions TO `analysts`;
-GRANT SELECT ON TABLE dbdemos.fsi_fraud_detection.gold_transactions TO `analysts`;
-GRANT SELECT ON TABLE dbdemos.fsi_fraud_detection.gold_transactions TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_fsi_fraud_detection.gold_transactions TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_fsi_fraud_detection.gold_transactions TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_fsi_fraud_detection.gold_transactions TO `analysts`;
 
 -- We'll grant an extra MODIFY to our Data Engineer
-GRANT SELECT, MODIFY ON SCHEMA dbdemos.fsi_fraud_detection TO `dataengineers`;
+GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_fsi_fraud_detection TO `dataengineers`;
 
 -- COMMAND ----------
 

@@ -12,7 +12,7 @@
   "default_schema": "dbdemos_llm_fine_tuning",
   "default_catalog": "main",
   "title": "Fine Tune your LLMs with Mosaic AI Model Training",
-  "description": "Discover how to Fine Tune and deploy your own LLM as real-time endpoint, but also how to evaluate them with MLFlow.",
+  "description": "Discover how to Fine Tune and deploy your own LLMs, but also how to evaluate them with MLFlow.",
   "fullDescription": "Databricks makes it easy to Fine Tune existing OSS model. In this demo, we explore how to build and release your own fine-tuned model as real-time endpoint, but also how to evaluate them with MLFlow.",
   "usecase": "Data Science & AI",
   "products": ["LLM", "Vector Search", "AI"],

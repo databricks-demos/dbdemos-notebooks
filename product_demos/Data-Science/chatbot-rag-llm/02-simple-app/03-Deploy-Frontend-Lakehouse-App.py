@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md
+# MAGIC %md-sandbox
 # MAGIC # 3/ Deploying our frontend App with Lakehouse Applications
 # MAGIC
 # MAGIC
@@ -12,7 +12,9 @@
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-frontend-app.png?raw=true" width="1200px">
 # MAGIC
 # MAGIC
-# MAGIC *Note: Lakehouse apps are in preview, reach-out your Databricks Account team for more details.*
+# MAGIC <div style="background-color: #d4e7ff; padding: 10px; border-radius: 15px;">
+# MAGIC <strong>Note:</strong> Lakehouse apps are in preview, reach-out your Databricks Account team for more details and to enable it.
+# MAGIC </div>
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=03-Deploy-Frontend-Lakehouse-App&demo_name=chatbot-rag-llm&event=VIEW">

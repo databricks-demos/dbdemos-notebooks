@@ -78,7 +78,7 @@ input_data_path = mlflow.artifacts.download_artifacts(run_id=data_run["run_id"],
 df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
 # Delete the temp data
 shutil.rmtree(input_temp_dir)
-prin
+
 # Preview data
 df_loaded.head(5)
 

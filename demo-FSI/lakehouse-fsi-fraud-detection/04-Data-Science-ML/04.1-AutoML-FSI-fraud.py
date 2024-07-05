@@ -230,7 +230,7 @@ automl_run = automl.classify(
     experiment_dir = xp_path,
     dataset = features.sample(0.05), #drastically reduce the training size to speedup the demo
     target_col = "is_fraud",
-    timeout_minutes = 10
+    timeout_minutes = 15
 )
 #Make sure all users can access dbdemos shared experiment
 DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")

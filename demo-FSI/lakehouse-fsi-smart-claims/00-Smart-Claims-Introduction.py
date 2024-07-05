@@ -165,7 +165,7 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC Open the [03-BI-Data-Warehousing-Smart-Claims]($./03-BI-Data-Warehousing/03-BI-Data-Warehousing-Smart-Claims) notebook to know more about Databricks SQL Warehouse and explore your Smart Claims dashboards:  <a href="/sql/dashboards/8731d250-a786-4fab-a832-b2479d4b8c34" target="_blank">Summary Report Dashboard</a>  | <a href="/sql/dashboards/e3cde222-ab48-4217-bf78-2243aae4ff88" target="_blank">Investigation Dashboard</a> 
+# MAGIC Open the [03-BI-Data-Warehousing-Smart-Claims]($./03-BI-Data-Warehousing/03-BI-Data-Warehousing-Smart-Claims) notebook to know more about Databricks SQL Warehouse and explore your Smart Claims dashboards:  <a dbdemos-dashboard-id="claims-report" href='/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956' target="_blank">Summary Report Dashboard</a>  | <a dbdemos-dashboard-id="claims-investigation" href='/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956' target="_blank">Investigation Dashboard</a> 
 
 # COMMAND ----------
 

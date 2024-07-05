@@ -292,7 +292,7 @@
                 }
             }
         ],
-        "name": "dbdemos-fsi-credit-decisioning_{{CATALOG}}_{{SCHEMA}}",
+        "name": "dbdemos_credit_decisioning_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
         "target": "{{SCHEMA}}"
       }

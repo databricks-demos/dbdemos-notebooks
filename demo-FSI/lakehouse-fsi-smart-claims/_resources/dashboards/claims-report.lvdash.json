@@ -1,0 +1,981 @@
+{
+  "datasets": [
+    {
+      "name": "294be7b1",
+      "displayName": "loss_ratio_liability",
+      "query": "SELECT\n  round(c.total_claims / p.total_premium, 2) AS loss_ratio\nFROM\n  (\n    SELECT\n      round(curr.total_premium, 0) as total_premium\n    FROM\n      (\n        SELECT\n          sum(premium * months_active) AS total_premium\n        FROM\n          (\n            SELECT\n              pol_eff_date,\n              pol_expiry_date,\n              premium,\n              round(months_between(pol_expiry_date, pol_eff_date), 0) AS months_active\n            FROM\n              `main__build`.`dbdemos_fsi_smart_claims`.policy\n            WHERE\n              pol_issue_date BETWEEN :start_date\n              AND :end_date\n          )\n        WHERE\n          months_active > 0\n      ) curr\n      JOIN (\n        SELECT\n          sum(premium * months_active) AS total_premium\n        FROM\n          (\n            SELECT\n              pol_eff_date,\n              pol_expiry_date,\n              premium,\n              round(months_between(pol_expiry_date, pol_eff_date), 0) AS months_active\n            FROM\n              `main__build`.`dbdemos_fsi_smart_claims`.policy\n            WHERE\n              pol_issue_date BETWEEN date_sub(\n                :start_date,\n                datediff(:end_date, :start_date)\n              )\n              AND date_sub(\n                :end_date,\n                datediff(:end_date, :start_date)\n              )\n          )\n        WHERE\n          months_active > 0\n      ) prev\n  ) p\n  JOIN (\n    SELECT\n      round(curr.total_claims, 0) AS total_claims\n    FROM\n      (\n        SELECT\n          sum(claim_amount_injury) AS total_claims\n        FROM\n          `main__build`.`dbdemos_fsi_smart_claims`.claim\n        WHERE\n          claim_date BETWEEN :start_date\n          AND :end_date\n      ) curr\n  ) c;",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2015-01-01"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2021-05-01"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ce8a3ca1",
+      "displayName": "Claim - vehicleAge",
+      "query": "SELECT\n  COUNT(*) AS count,\n  make,\n  model_year\nFROM\n  `main__build`.`dbdemos_fsi_smart_claims`.claim_insights\nGROUP BY\n  make,\n  model_year"
+    },
+    {
+      "name": "eac405b3",
+      "displayName": "Claims - Frequency by Hour",
+      "query": "SELECT\n  incident_hour,\n  COUNT(*) AS incidents,\n  SUM(claim_amount_injury) AS liability_amount,\n  SUM(claim_amount_property) + SUM(claim_amount_vehicle) AS property_amount\nFROM\n  `main__build`.`dbdemos_fsi_smart_claims`.claim\nGROUP BY\n  incident_hour\nORDER BY\n  incident_hour;"
+    },
+    {
+      "name": "4ed9ef43",
+      "displayName": "Claims - Summary",
+      "query": "SELECT\n  incident_type,\n  incident_severity,\n  COUNT(incident_severity)\nFROM\n  `main__build`.`dbdemos_fsi_smart_claims`.claim_insights\nWHERE\n  to_date(claim_date) > :start_date AND\n  to_date(claim_date) < :end_date\nGROUP BY\n  incident_type,\n  incident_severity",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2015-01-01"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-05-04T00:00:00.000"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fba42bc3",
+      "displayName": "Claims - loss_ratio_property",
+      "query": "SELECT\n  round(c.total_claims / p.total_premium, 2) AS loss_ratio\nFROM\n  (\n    SELECT\n      round(curr.total_premium, 0) as total_premium\n    FROM\n      (\n        SELECT\n          sum(premium * months_active) AS total_premium\n        FROM\n          (\n            SELECT\n              pol_eff_date,\n              pol_expiry_date,\n              premium,\n              round(months_between(pol_expiry_date, pol_eff_date), 0) AS months_active\n            FROM\n              `main__build`.`dbdemos_fsi_smart_claims`.policy\n            WHERE\n              pol_issue_date BETWEEN date(:start_date)\n              AND date(:end_date)\n          )\n        WHERE\n          months_active > 0\n      ) curr\n      JOIN (\n        SELECT\n          sum(premium * months_active) AS total_premium\n        FROM\n          (\n            SELECT\n              pol_eff_date,\n              pol_expiry_date,\n              premium,\n              round(months_between(pol_expiry_date, pol_eff_date), 0) AS months_active\n            FROM\n              `main__build`.`dbdemos_fsi_smart_claims`.policy\n            WHERE\n              pol_issue_date BETWEEN date_sub(\n                date(:start_date),\n                datediff(date(:end_date), date(:start_date))\n              )\n              AND date_sub(\n                date(:end_date),\n                datediff(date(:end_date), date(:start_date))\n              )\n          )\n        WHERE\n          months_active > 0\n      ) prev\n  ) p\n  JOIN (\n    SELECT\n      round(curr.total_claims, 0) AS total_claims\n    FROM\n      (\n        SELECT\n          sum(claim_amount_property) + sum(claim_amount_vehicle) AS total_claims\n        FROM\n          `main__build`.`dbdemos_fsi_smart_claims`.claim\n        WHERE\n          claim_date BETWEEN date(:start_date)\n          AND date(:end_date)\n      ) curr\n  ) c;",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2015-01-01"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2021-05-01"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "e932870b",
+      "displayName": "Claim - driverAge",
+      "query": "select\n  driver_age,\n  count(*)\nfrom\n  `main__build`.`dbdemos_fsi_smart_claims`.claim_insights\nwhere\n  driver_age >= 14\n  and driver_age < 110\nGROUP BY\n  driver_age\norder by\n  driver_age;"
+    },
+    {
+      "name": "48b7de84",
+      "displayName": "Claim - geo",
+      "query": "select\n  *\nfrom\n  `main__build`.`dbdemos_fsi_smart_claims`.claim_policy_telematics;"
+    },
+    {
+      "name": "ba40e7fe",
+      "displayName": "Claims - loss_ratio",
+      "query": "SELECT\n  round(c.total_claims / p.total_premium, 2) AS loss_ratio\nFROM\n  (\n    SELECT\n      round(curr.total_premium, 0) as total_premium\n    FROM\n      (\n        SELECT\n          sum(premium * months_active) AS total_premium\n        FROM\n          (\n            SELECT\n              pol_eff_date,\n              pol_expiry_date,\n              premium,\n              round(months_between(pol_expiry_date, pol_eff_date), 0) AS months_active\n            FROM\n              `main__build`.`dbdemos_fsi_smart_claims`.policy\n            WHERE\n              pol_issue_date BETWEEN :start_date\n              AND :end_date\n          )\n        WHERE\n          months_active > 0\n      ) curr\n      JOIN (\n        SELECT\n          sum(premium * months_active) AS total_premium\n        FROM\n          (\n            SELECT\n              pol_eff_date,\n              pol_expiry_date,\n              premium,\n              round(months_between(pol_expiry_date, pol_eff_date), 0) AS months_active\n            FROM\n              `main__build`.`dbdemos_fsi_smart_claims`.policy\n            WHERE\n              pol_issue_date BETWEEN date_sub(\n                :start_date,\n                datediff(:end_date, :start_date)\n              )\n              AND date_sub(\n                :end_date,\n                datediff(:end_date, :start_date)\n              )\n          )\n        WHERE\n          months_active > 0\n      ) prev\n  ) p\n  JOIN (\n    SELECT\n      round(curr.total_claims, 0) AS total_claims\n    FROM\n      (\n        SELECT\n          sum(claim_amount_total) AS total_claims\n        FROM\n          `main__build`.`dbdemos_fsi_smart_claims`.claim\n        WHERE\n          claim_date BETWEEN :start_date\n          AND :end_date\n      ) curr\n  ) c;",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2015-01-01"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2021-05-01"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eb80eff8",
+      "displayName": "Claims - Damage - Property vs Liability vs Event Type",
+      "query": "select\n  'liability damage' as type,\n  incident_type,\n  sum(claim_amount_injury) as amount\nfrom\n  `main__build`.`dbdemos_fsi_smart_claims`.claim_insights\nwhere\n  to_date(claim_date) >= :start_date\n  and to_date(claim_date) <= :end_date\ngroup by\n  incident_type\nUNION\nselect\n  'property damage' as type,\n  incident_type,\n  sum(claim_amount_property) + sum(claim_amount_vehicle) as amount\nfrom\n  `main__build`.`dbdemos_fsi_smart_claims`.claim_insights\nwhere\n  to_date(claim_date) >= :start_date\n  and to_date(claim_date) <= :end_date\ngroup by\n  incident_type",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2015-01-01"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2021-05-01"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "cf31fb25",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "e9c687b2",
+            "textbox_spec": "# FSI Demo - Smart Claims Analysis\n## Loss Overview"
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "3fa477d2",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4ed9ef43",
+                  "fields": [
+                    {
+                      "name": "incident_severity",
+                      "expression": "`incident_severity`"
+                    },
+                    {
+                      "name": "incident_type",
+                      "expression": "`incident_type`"
+                    },
+                    {
+                      "name": "sum(count(incident_severity))",
+                      "expression": "SUM(`count(incident_severity)`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(count(incident_severity))",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Count of Incident Type by Severity"
+                  },
+                  "displayName": "count(incident.severity)"
+                },
+                "y": {
+                  "fieldName": "incident_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "axis": {
+                    "title": "Incident type"
+                  },
+                  "displayName": "Incident type"
+                },
+                "color": {
+                  "fieldName": "incident_severity",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Total Loss",
+                        "color": "#E92828"
+                      },
+                      {
+                        "value": "Major Damage",
+                        "color": "#FB8D3D"
+                      },
+                      {
+                        "value": "Minor Damage",
+                        "color": "#FFF380"
+                      },
+                      {
+                        "value": "Trivial Damage",
+                        "color": "#1acc92"
+                      }
+                    ]
+                  },
+                  "displayName": "incident_severity"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Summary",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 4,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "66acbfb2",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ce8a3ca1",
+                  "fields": [
+                    {
+                      "name": "model_year",
+                      "expression": "`model_year`"
+                    },
+                    {
+                      "name": "sum(count)",
+                      "expression": "SUM(`count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "model_year",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Vehicle Manufactured Year"
+                  },
+                  "displayName": "Vehicle Manufactured Year"
+                },
+                "y": {
+                  "fieldName": "sum(count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Incident Count"
+                  },
+                  "displayName": "count"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Incidents by Vehicle Age",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "stack",
+                "colors": [
+                  "#077A9D",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 24,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "002c5a72",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "eb80eff8",
+                  "fields": [
+                    {
+                      "name": "incident_type",
+                      "expression": "`incident_type`"
+                    },
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Loss ratio"
+                },
+                "color": {
+                  "fieldName": "incident_type",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Multi-vehicle Collision",
+                        "color": "#FFF380"
+                      },
+                      {
+                        "value": "Parked Car",
+                        "color": "#E92828"
+                      },
+                      {
+                        "value": "Vehicle Theft",
+                        "color": "#1acc92"
+                      }
+                    ]
+                  },
+                  "displayName": "incident_type"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "title": "Loss Ratio by Incident Type",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 2,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "44d9d27c",
+            "queries": [
+              {
+                "name": "80817ee5d6754cb2b7439d77a7d112fc",
+                "query": {
+                  "datasetName": "fba42bc3",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"Property Loss Ratio\", \"counterColName\": \"loss_ratio\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 2, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "80817ee5d6754cb2b7439d77a7d112fc"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "842d657b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "48b7de84",
+                  "fields": [
+                    {
+                      "name": "ZIP_CODE",
+                      "expression": "`ZIP_CODE`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "ZIP_CODE",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y"
+                    }
+                  },
+                  "displayName": "ZIP_CODE"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative",
+                    "reverse": false
+                  },
+                  "displayName": "Count of Records"
+                }
+              },
+              "frame": {
+                "title": "Location of Policies",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#FCA4A1",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 3,
+            "height": 13
+          }
+        },
+        {
+          "widget": {
+            "name": "840b42ff",
+            "queries": [
+              {
+                "name": "a61d06bcbccb402f8c33d8a550ab24a1",
+                "query": {
+                  "datasetName": "294be7b1",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"Liability Loss Ratio\", \"counterColName\": \"loss_ratio\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 2, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "a61d06bcbccb402f8c33d8a550ab24a1"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 5,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "4a462d36",
+            "queries": [
+              {
+                "name": "b25343e549ab473297e4dcf1196b2687",
+                "query": {
+                  "datasetName": "ba40e7fe",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"Loss Ratio\", \"counterColName\": \"loss_ratio\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 2, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "b25343e549ab473297e4dcf1196b2687"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "b5d6f58e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "eac405b3",
+                  "fields": [
+                    {
+                      "name": "incident_hour",
+                      "expression": "`incident_hour`"
+                    },
+                    {
+                      "name": "sum(incidents)",
+                      "expression": "SUM(`incidents`)"
+                    },
+                    {
+                      "name": "sum(liability_amount)",
+                      "expression": "SUM(`liability_amount`)"
+                    },
+                    {
+                      "name": "sum(property_amount)",
+                      "expression": "SUM(`property_amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "incident_hour",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "incident_hour"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(incidents)",
+                      "displayName": "Sum of incidents"
+                    },
+                    {
+                      "fieldName": "sum(liability_amount)",
+                      "displayName": "Sum of liability_amount"
+                    },
+                    {
+                      "fieldName": "sum(property_amount)",
+                      "displayName": "Sum of property_amount"
+                    }
+                  ]
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Frequency & Severity by Hour of Day",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#002FB4"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 10,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "ec5ecca9",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e932870b",
+                  "fields": [
+                    {
+                      "name": "driver_age",
+                      "expression": "`driver_age`"
+                    },
+                    {
+                      "name": "sum(count(1))",
+                      "expression": "SUM(`count(1)`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "driver_age",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "driver_age"
+                },
+                "y": {
+                  "fieldName": "sum(count(1))",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Incident count"
+                }
+              },
+              "frame": {
+                "title": "Driver Age Distribution",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#077A9D",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 17,
+            "width": 3,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "9567ff47",
+            "queries": [
+              {
+                "name": "01e97040d489412c9a1ff5a469947d3b",
+                "query": {
+                  "datasetName": "4ed9ef43",
+                  "disaggregated": true
+                }
+              },
+              {
+                "name": "9338311fe4474ae7be998c952b491149",
+                "query": {
+                  "datasetName": "eb80eff8",
+                  "disaggregated": true
+                }
+              },
+              {
+                "name": "80817ee5d6754cb2b7439d77a7d112fc",
+                "query": {
+                  "datasetName": "fba42bc3",
+                  "disaggregated": true
+                }
+              },
+              {
+                "name": "a61d06bcbccb402f8c33d8a550ab24a1",
+                "query": {
+                  "datasetName": "294be7b1",
+                  "disaggregated": true
+                }
+              },
+              {
+                "name": "b25343e549ab473297e4dcf1196b2687",
+                "query": {
+                  "datasetName": "ba40e7fe",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "dashboard_parameter_spec": {
+                "query_and_parameter_keywords": [
+                  {
+                    "query_name": "01e97040d489412c9a1ff5a469947d3b",
+                    "keyword": "start_date"
+                  },
+                  {
+                    "query_name": "9338311fe4474ae7be998c952b491149",
+                    "keyword": "start_date"
+                  },
+                  {
+                    "query_name": "80817ee5d6754cb2b7439d77a7d112fc",
+                    "keyword": "start_date"
+                  },
+                  {
+                    "query_name": "a61d06bcbccb402f8c33d8a550ab24a1",
+                    "keyword": "start_date"
+                  },
+                  {
+                    "query_name": "b25343e549ab473297e4dcf1196b2687",
+                    "keyword": "start_date"
+                  }
+                ],
+                "display_name": "start_date",
+                "control_type": "DATE_PICKER"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "174bff40",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccc513bfa8175c582be4a4ac_end_date",
+                "query": {
+                  "datasetName": "4ed9ef43",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccd115c59b28ffcdbd9601f8_end_date",
+                "query": {
+                  "datasetName": "eb80eff8",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccc71cd698677224aeeb4139_end_date",
+                "query": {
+                  "datasetName": "fba42bc3",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccbd1c4e89130de56d0af212_end_date",
+                "query": {
+                  "datasetName": "294be7b1",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccce1e348ca1de8bfbc02349_end_date",
+                "query": {
+                  "datasetName": "ba40e7fe",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccc513bfa8175c582be4a4ac_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccd115c59b28ffcdbd9601f8_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccc71cd698677224aeeb4139_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccbd1c4e89130de56d0af212_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef0408ccba1f83b0e8ac9713214ada/datasets/01ef0408ccce1e348ca1de8bfbc02349_end_date"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "end_date",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ]
+    }
+  ]
+}

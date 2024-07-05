@@ -87,7 +87,7 @@
 # MAGIC <br/><br/> 
 # MAGIC
 # MAGIC
-# MAGIC <b><a href="/sql/dashboards/8731d250-a786-4fab-a832-b2479d4b8c34" target="_blank">Open the Summary Report Dashboard</a> </b>
+# MAGIC <b><a dbdemos-dashboard-id="claims-report" href='/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956' target="_blank">Open the Summary Report Dashboard</a> </b>
 # MAGIC
 
 # COMMAND ----------
@@ -117,7 +117,7 @@
 # MAGIC   - Telematic data draws the path taken by the vehicle
 # MAGIC   - Reported data is contrasted with assessed data insight 
 # MAGIC
-# MAGIC <b><a href="/sql/dashboards/e3cde222-ab48-4217-bf78-2243aae4ff88" target="_blank">Open the Investigation Dashboard</a> </b>
+# MAGIC <b><a dbdemos-dashboard-id="claims-investigation" href='/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956' target="_blank">Open the Investigation Dashboard</a> </b>
 # MAGIC
 # MAGIC
 

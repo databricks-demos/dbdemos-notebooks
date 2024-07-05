@@ -270,9 +270,9 @@
                 }
             }
         ],
-        "name": "dbdemos-fsi-fraud-detection",
-        "catalog": "dbdemos",
-        "target": "fsi_fraud_detection"
+        "name": "dbdemos_fraud_{{CATALOG}}_{{SCHEMA}}",
+        "catalog": "{{CATALOG}}",
+        "target": "{{SCHEMA}}"
       }
     }
   ],

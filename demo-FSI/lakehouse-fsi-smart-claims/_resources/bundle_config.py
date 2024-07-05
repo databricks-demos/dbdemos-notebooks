@@ -12,7 +12,7 @@
   "name": "lakehouse-fsi-smart-claims",
   "category": "lakehouse",
   "custom_schema_supported": True,
-  "default_schema": "fsi_smart_claims",
+  "default_schema": "dbdemos_fsi_smart_claims",
   "default_catalog": "main",
   "title": "Lakehouse for Smart Claims",
   "description": "Build your smart claims platform on the Lakehouse",
@@ -35,14 +35,6 @@
       "add_cluster_setup_cell": False,
       "title":  "Config", 
       "description": "Config file."
-    },
-    {
-      "path": "_resources/02-DLT-Persist-Streaming-Views", 
-      "pre_run": False, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": False,
-      "title":  "Prep data", 
-      "description": "Helpers & setup."
     },
     {
       "path": "00-Smart-Claims-Introduction", 
@@ -144,34 +136,6 @@
                 ]
             },
             {
-               "task_key": "featurization",
-               "depends_on": [
-                    {
-                        "task_key": "claim_policy_dlt_pipeline"
-                    }
-                ],
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/02-DLT-Persist-Streaming-Views",
-                    "source": "WORKSPACE"
-                },
-                "run_if": "ALL_SUCCESS",
-                "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "13.3.x-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
-                    "runtime_engine": "STANDARD"
-                },
-                "timeout_seconds": 0,
-                "email_notifications": {}
-            },
-            {
                 "task_key": "train_model",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/02-Data-Science-ML/02.1-Model-Training",
@@ -197,7 +161,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "featurization"
+                          "task_key": "claim_policy_dlt_pipeline"
                       },
                       {
                           "task_key": "train_model"
@@ -287,12 +251,14 @@
                 }
             }
         ],
-        "name": "dbdemos_dlt_fsi_smart_claims_{{CATALOG}}_{{SCHEMA}}",
+        "name": "dbdemos_claims_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
         "target": "{{SCHEMA}}"
       }
     }
   ],
-  "workflows": []  
+  "workflows": [],
+  "dashboards": [{"name": "[dbdemos] FSI - Smart Claims Investigation",       "id": "claims-report"},
+                 {"name": "[dbdemos] FSI - Smart Claims Summary Report",       "id": "claims-investigation"}]
 
 }

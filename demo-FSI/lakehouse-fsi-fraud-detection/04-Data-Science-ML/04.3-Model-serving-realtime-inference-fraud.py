@@ -55,7 +55,7 @@ mlflow.set_registry_uri('databricks-uc')
 # DBTITLE 1,Starting the model inference REST endpoint using Databricks API
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
-from mlflow import MLFlowClient
+from mlflow import MlflowClient
 
 model_name = f"{catalog}.{db}.dbdemos_fsi_fraud"
 serving_endpoint_name = "dbdemos_fsi_fraud_endpoint"

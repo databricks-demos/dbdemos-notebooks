@@ -127,7 +127,7 @@ display(spark.table("accident_images").limit(10))
 # MAGIC     t.*,
 # MAGIC     a.* EXCEPT (chassis_no, claim_no)
 # MAGIC   FROM
-# MAGIC     claim_policy_telematics_ml t
+# MAGIC     claim_policy_telematics t
 # MAGIC     JOIN accident_images a USING(claim_no)
 
 # COMMAND ----------

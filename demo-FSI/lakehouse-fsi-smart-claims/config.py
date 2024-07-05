@@ -11,6 +11,6 @@
 
 #Remember to change this in 01-Data-Ingestion/01.1-DLT-Ingest-Policy-Claims too
 catalog = "main__build"
-schema = dbName = db = "fsi_smart_claims"
+schema = dbName = db = "dbdemos_fsi_smart_claims"
 
 volume_name = "volume_claims"

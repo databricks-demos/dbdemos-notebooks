@@ -228,7 +228,7 @@ xp_name = f"automl_fraud_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
-    dataset = features.sample(0.1),
+    dataset = features.sample(0.05), #drastically reduce the training size to speedup the demo
     target_col = "is_fraud",
     timeout_minutes = 10
 )

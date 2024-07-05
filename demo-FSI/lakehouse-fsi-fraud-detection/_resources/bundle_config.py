@@ -35,6 +35,14 @@
       "description": "Helpers & setup."
     },
     {
+      "path": "_resources/01-load-data", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False,
+      "title":  "Prep data", 
+      "description": "Prep data for demo."
+    },
+    {
       "path": "00-FSI-fraud-detection-introduction-lakehouse", 
       "pre_run": False,
       "publish_on_website": True, 
@@ -268,5 +276,5 @@
       }
     }
   ],
-  "dashboards": [{"name": "[dbdemos] FSI Fraud Detection",       "id": "fraud-detection"}]
+  "dashboards": [{"name": "[dbdemos] FSI Credit Decisioning Analysis",       "id": "credit-decisioning"}]
 }

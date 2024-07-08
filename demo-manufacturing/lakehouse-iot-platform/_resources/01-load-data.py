@@ -41,22 +41,17 @@ def cleanup_folder(path):
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS main__build.dbdemos_iot_turbine.turbine_power_prediction ( hour INT, min FLOAT, max FLOAT, prediction FLOAT);
-# MAGIC
-# MAGIC insert into main__build.dbdemos_iot_turbine.turbine_power_prediction values (0, 377, 397, 391), (1, 393, 423, 412), (2, 399, 455, 426), (3, 391, 445, 404), (4, 345, 394, 365), (5, 235, 340, 276), (6, 144, 275, 195), (7, 93, 175, 133), (8, 45, 105, 76), (9, 55, 125, 95), (10, 35, 99, 77), (11, 14, 79, 44)
-
-# COMMAND ----------
-
-data_downloaded = False
+data_downloaded = True
 if not data_exists:
     try:
         DBDemos.download_file_from_git(folder+'/historical_turbine_status', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/historical_turbine_status")
         DBDemos.download_file_from_git(folder+'/parts', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/parts")
         DBDemos.download_file_from_git(folder+'/turbine', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/turbine")
         DBDemos.download_file_from_git(folder+'/incoming_data', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/incoming_data")
-        data_downloaded = True
+        spark.sql("CREATE TABLE IF NOT EXISTS turbine_power_prediction ( hour INT, min FLOAT, max FLOAT, prediction FLOAT);")
+        spark.sql("insert into turbine_power_prediction values (0, 377, 397, 391), (1, 393, 423, 412), (2, 399, 455, 426), (3, 391, 445, 404), (4, 345, 394, 365), (5, 235, 340, 276), (6, 144, 275, 195), (7, 93, 175, 133), (8, 45, 105, 76), (9, 55, 125, 95), (10, 35, 99, 77), (11, 14, 79, 44)")
     except Exception as e: 
+        data_downloaded = False
         print(f"Error trying to download the file from the repo: {str(e)}. Will generate the data instead...")    
         raise e
 
@@ -170,6 +165,7 @@ dfs = []
 # COMMAND ----------
 
 def generate_turbine_data(turbine):
+  turbine = int(turbine)
   rd = random.Random()
   rd.seed(turbine)
   damaged = turbine > turbine_count*0.6
@@ -223,7 +219,6 @@ def generate_turbine(iterator: Iterator[pd.DataFrame]) -> Iterator[pd.DataFrame]
       yield generate_turbine_data(row["id"])
 
 spark_df = spark.range(0, turbine_count).repartition(int(turbine_count/10)).mapInPandas(generate_turbine, schema=df_schema.schema)
-spark_df = spark_df.cache()
 
 # COMMAND ----------
 

@@ -1,0 +1,841 @@
+{
+  "datasets": [
+    {
+      "name": "8b43b1f7",
+      "displayName": "IOT platform - turbine sensors",
+      "query": "SELECT * FROM `main__build`.`dbdemos_iot_platform`.sensor_bronze;"
+    },
+    {
+      "name": "abee8d55",
+      "displayName": "IOT platform - turbine status",
+      "query": "select *, CASE WHEN prediction = 'ok' THEN 'Healthy' ELSE CONCAT('Faulty (', prediction, ')') END as status \n  from `main__build`.`dbdemos_iot_platform`.turbine_current_status"
+    }
+  ],
+  "pages": [
+    {
+      "name": "7afb9ef1",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "9be65588",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "bin(sensor_E, binWidth=1)",
+                      "expression": "BIN_FLOOR(`sensor_E`, 1)"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "histogram",
+              "encodings": {
+                "x": {
+                  "fieldName": "bin(sensor_E, binWidth=1)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sensor_E"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count of Records"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Histogram E",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#97D8C4",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 27,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "57f7dadc",
+            "queries": [
+              {
+                "name": "337ea72d8a0449088bb9cfd8a11fb549",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    },
+                    {
+                      "name": "column_e6e50d1615505",
+                      "expression": "SUM(`energy`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Energy produced",
+                "description": "",
+                "viz_type": "CHART",
+                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"area\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"Instant energy produced\"}}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_e6e50d1615505\": {\"yAxis\": 0, \"type\": \"area\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"timestamp\", \"id\": \"column_e6e50d1615502\"}, \"y\": [{\"id\": \"column_e6e50d1615505\", \"column\": \"energy\", \"transform\": \"SUM\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "337ea72d8a0449088bb9cfd8a11fb549"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "779fa782",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "bin(sensor_F, binWidth=1)",
+                      "expression": "BIN_FLOOR(`sensor_F`, 1)"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "histogram",
+              "encodings": {
+                "x": {
+                  "fieldName": "bin(sensor_F, binWidth=1)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sensor_F"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count of Records"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Histogram F",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#F4B942",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 17,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "9fc549b8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "sum(sensor_A)",
+                      "expression": "SUM(`sensor_A`)"
+                    },
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "timestamp",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "timestamp"
+                },
+                "y": {
+                  "fieldName": "sum(sensor_A)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {},
+                  "displayName": "Sum of sensor_A"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "sensor A readings",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#5f73df"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "7f17667b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "bin(sensor_B, binWidth=1)",
+                      "expression": "BIN_FLOOR(`sensor_B`, 1)"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "histogram",
+              "encodings": {
+                "x": {
+                  "fieldName": "bin(sensor_B, binWidth=1)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sensor_B"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count of Records"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#c46b6b",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              },
+              "frame": {
+                "title": "Histogram B",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 22,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "e2e0febd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "bin(sensor_A, binWidth=1)",
+                      "expression": "BIN_FLOOR(`sensor_A`, 1)"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "histogram",
+              "encodings": {
+                "x": {
+                  "fieldName": "bin(sensor_A, binWidth=1)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sensor_A"
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count of Records"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#5f73df",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              },
+              "frame": {
+                "title": "Histogram A - IOT platform - turbine sensors",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 12,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "8bbcd871",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "sum(sensor_F)",
+                      "expression": "SUM(`sensor_F`)"
+                    },
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "timestamp",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "timestamp"
+                },
+                "y": {
+                  "fieldName": "sum(sensor_F)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {},
+                  "displayName": "Sum of sensor_F"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Sensor F - IOT platform - turbine sensors",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#F4B942"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "0ecf2e3c",
+            "queries": [
+              {
+                "name": "337ea72d8a0449088bb9cfd8a11fb549",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    },
+                    {
+                      "name": "column_e6e50d1614596",
+                      "expression": "SUM(`sensor_E`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Sensor E - IOT platform - turbine sensors",
+                "description": "",
+                "viz_type": "CHART",
+                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"line\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\"}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_e6e50d1614596\": {\"yAxis\": 0, \"type\": \"line\", \"color\": \"#97D8C4\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"timestamp\", \"id\": \"column_e6e50d1614597\"}, \"y\": [{\"id\": \"column_e6e50d1614596\", \"column\": \"sensor_E\", \"transform\": \"SUM\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true, \"hideYAxes\": true}",
+                "query_name": "337ea72d8a0449088bb9cfd8a11fb549"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 27,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "4ea5428e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "sum(sensor_B)",
+                      "expression": "SUM(`sensor_B`)"
+                    },
+                    {
+                      "name": "timestamp",
+                      "expression": "`timestamp`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "timestamp",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "timestamp"
+                },
+                "y": {
+                  "fieldName": "sum(sensor_B)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {},
+                  "displayName": "Sum of sensor_B"
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Sensor B readings",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "layer",
+                "colors": [
+                  "#c46b6b"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "15570ae1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "abee8d55",
+                  "fields": [
+                    {
+                      "name": "countdistinct(lat)",
+                      "expression": "COUNT(DISTINCT `lat`)"
+                    },
+                    {
+                      "name": "long",
+                      "expression": "`long`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "countdistinct(lat)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count of Unique lat"
+                },
+                "y": {
+                  "fieldName": "long",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "long"
+                }
+              },
+              "frame": {
+                "title": "Map - IOT platform - turbine status",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 6,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "12d987a5",
+            "queries": [
+              {
+                "name": "35ac4279a9bd40b292b235610a95b586",
+                "query": {
+                  "datasetName": "abee8d55",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Model - IOT platform - turbine status",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"Turbine model\", \"counterColName\": \"model\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\"}",
+                "query_name": "35ac4279a9bd40b292b235610a95b586"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "97a13c7f",
+            "queries": [
+              {
+                "name": "35ac4279a9bd40b292b235610a95b586",
+                "query": {
+                  "datasetName": "abee8d55",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Status - IOT platform - turbine status",
+                "description": "",
+                "viz_type": "COUNTER",
+                "serialized_options": "{\"counterLabel\": \"Status\", \"counterColName\": \"status\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                "query_name": "35ac4279a9bd40b292b235610a95b586"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "735e4cda",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "abee8d55",
+                  "fields": [
+                    {
+                      "name": "avg_energy",
+                      "expression": "`avg_energy`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_energy",
+                  "displayName": "avg_energy"
+                }
+              },
+              "frame": {
+                "title": "energy - IOT platform - turbine status",
+                "showTitle": true,
+                "description": "Current energy produced in MW",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "55251e89",
+            "queries": [
+              {
+                "name": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b801250bb8dcda70aa16856_turbine_id",
+                "query": {
+                  "datasetName": "8b43b1f7",
+                  "fields": [
+                    {
+                      "name": "turbine_id",
+                      "expression": "`turbine_id`"
+                    },
+                    {
+                      "name": "turbine_id_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b8219b99dedc8d20c6e5a68_turbine_id",
+                "query": {
+                  "datasetName": "abee8d55",
+                  "fields": [
+                    {
+                      "name": "turbine_id",
+                      "expression": "`turbine_id`"
+                    },
+                    {
+                      "name": "turbine_id_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "turbine_id",
+                    "displayName": "turbine_id",
+                    "queryName": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b801250bb8dcda70aa16856_turbine_id"
+                  },
+                  {
+                    "fieldName": "turbine_id",
+                    "displayName": "turbine_id",
+                    "queryName": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b8219b99dedc8d20c6e5a68_turbine_id"
+                  }
+                ]
+              },
+              "disallowAll": true,
+              "frame": {
+                "title": "Turbine id",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "2b93af9f",
+            "textbox_spec": "## Wind turbine Analysis\nSelect the wind turbine to analyze"
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ]
+    }
+  ]
+}

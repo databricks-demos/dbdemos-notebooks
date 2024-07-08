@@ -258,7 +258,7 @@
     }
   ],
   "workflows": [],
-  "dashboards": [{"name": "[dbdemos] FSI - Smart Claims Investigation",       "id": "claims-report"},
-                 {"name": "[dbdemos] FSI - Smart Claims Summary Report",       "id": "claims-investigation"}]
+  "dashboards": [{"name": "[dbdemos] FSI - Smart Claims Investigation",   "id": "claims-report"},
+                 {"name": "[dbdemos] FSI - Smart Claims Summary Report",  "id": "claims-investigation"}]
 
 }

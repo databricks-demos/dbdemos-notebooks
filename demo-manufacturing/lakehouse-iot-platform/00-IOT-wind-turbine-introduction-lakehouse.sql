@@ -133,7 +133,6 @@
 -- MAGIC
 -- MAGIC <img width="300px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-1.png"  style="float: right; margin: 100px 0px 10px;"/>
 -- MAGIC
--- MAGIC
 -- MAGIC <img width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-3.png"  style="float: left; margin-right: 10px"/>
 -- MAGIC  
 -- MAGIC <br><br><br>
@@ -146,7 +145,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the [Datawarehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing-iot-turbine) to start running your BI queries or access or directly open the <a href="/sql/dashboards/a6bb11d9-1024-47df-918d-f47edc92d5f4" target="_blank">Wind turbine sensor dashboard</a>
+-- MAGIC Open the [Datawarehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing-iot-turbine) to start running your BI queries or access or directly open the <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956" target="_blank">Wind turbine sensor dashboard</a>
 
 -- COMMAND ----------
 
@@ -189,7 +188,7 @@
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC Open the <a href='/sql/dashboards/d966eb63-6d37-4762-b90f-d3a2b51b9ba8' target="_blank">DBSQL Predictive maintenance Dashboard</a> to have a complete view of your wind turbine farm, including potential faulty turbines and action to remedy that.
+-- MAGIC Open the <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">DBSQL Predictive maintenance Dashboard</a> to have a complete view of your wind turbine farm, including potential faulty turbines and action to remedy that.
 
 -- COMMAND ----------
 

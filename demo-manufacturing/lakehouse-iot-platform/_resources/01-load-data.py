@@ -41,6 +41,13 @@ def cleanup_folder(path):
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS main__build.dbdemos_iot_turbine.turbine_power_prediction ( hour INT, min FLOAT, max FLOAT, prediction FLOAT);
+# MAGIC
+# MAGIC insert into main__build.dbdemos_iot_turbine.turbine_power_prediction values (0, 377, 397, 391), (1, 393, 423, 412), (2, 399, 455, 426), (3, 391, 445, 404), (4, 345, 394, 365), (5, 235, 340, 276), (6, 144, 275, 195), (7, 93, 175, 133), (8, 45, 105, 76), (9, 55, 125, 95), (10, 35, 99, 77), (11, 14, 79, 44)
+
+# COMMAND ----------
+
 data_downloaded = False
 if not data_exists:
     try:

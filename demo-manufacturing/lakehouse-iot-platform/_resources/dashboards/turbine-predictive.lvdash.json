@@ -1,0 +1,474 @@
+{
+  "datasets": [
+    {
+      "name": "3c6bfbe2",
+      "displayName": "IOT platform Wind Turbines faulty parts count",
+      "query": "select type, count(*) faulty_equipment_count from (select turbine_id, state, country, prediction as fault, model, lat, long \nfrom `main__build`.`dbdemos_iot_platform`.turbine_current_status  where prediction != 'ok' limit 18) as t\nleft join `main__build`.`dbdemos_iot_platform`.parts p on t.state=p.stock_location\nwhere stock_available = 0 \ngroup by type\norder by faulty_equipment_count desc"
+    },
+    {
+      "name": "a80f9a9e",
+      "displayName": "IOT platform Wind Turbines stats faulty",
+      "query": "with test as (select status, sum(avg_energy) as energy_produced, avg(avg_energy) as avg_energy, count(*)/10 as count from \n(select *, case when prediction == 'ok' then 'ok' else 'faulty' end as status from `main__build`.`dbdemos_iot_platform`.turbine_current_status ) \ngroup by status)\n\nselect *, avg_energy/other_status_avg_energy*10 as efficiency_loss from (select *, LAG(avg_energy, -1) OVER (ORDER BY status) as other_status_avg_energy from test)\n\n-- , LAG(avg_energy) OVER (ORDER BY status) as other_status_avg_energy, other_status_avg_energy/avg_energy "
+    },
+    {
+      "name": "c94d0002",
+      "displayName": "IOT platform Wind Turbines stats",
+      "query": "select sum(avg_energy) as energy_produced, sum(avg_energy) * 110 as revenue_per_hour from `main__build`.`dbdemos_iot_platform`.turbine_current_status "
+    },
+    {
+      "name": "3beb98f7",
+      "displayName": "IOT platform Wind Turbines faulty parts",
+      "query": "select EAN, type, approvisioning_estimated_days, state, count(*) c from (select turbine_id, state, country, prediction as fault, model, lat, long \nfrom `main__build`.`dbdemos_iot_platform`.turbine_current_status where prediction != 'ok' limit 18) as t\nleft join `main__build`.`dbdemos_iot_platform`.parts p on t.state=p.stock_location\nwhere stock_available = 0 \ngroup by EAN, type, approvisioning_estimated_days, state\norder by c desc"
+    },
+    {
+      "name": "59e42cd7",
+      "displayName": "IOT platform Wind Turbines faulty",
+      "query": "select turbine_id, prediction as fault, model, state, lat, long, country from `main__build`.`dbdemos_iot_platform`.turbine_current_status where prediction != 'ok' limit 18"
+    },
+    {
+      "name": "0759c8c5",
+      "displayName": "Turbine power prediction",
+      "query": "select *, current_timestamp() + interval '1 hour' * h as time from ( select *, hour as h from `main__build`.`dbdemos_iot_platform`.turbine_power_prediction);"
+    },
+    {
+      "name": "03d81d62",
+      "displayName": "IOT platform Wind Turbines",
+      "query": "select * from `main__build`.`dbdemos_iot_platform`.turbine_current_status;"
+    }
+  ],
+  "pages": [
+    {
+      "name": "0594f5bf",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "98ce395e",
+            "textbox_spec": "# Maintenance part analysis & recommendation\n\nBased on our Predictive maintenance model and our stock status, we are able to provide recommendation to better organize our stock and potentially adjust spare parts command.  \n\nThe potential use-cases and potential revenue optimizations are huge. As other example we can also run analysis on the faulty equipment history and potentially detect frequent issues to take preventive action on the hardware.\n"
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 6,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "a118e91c",
+            "queries": [
+              {
+                "name": "72ddc9dbe3f147488adb3037ddadfc4f",
+                "query": {
+                  "datasetName": "3c6bfbe2",
+                  "fields": [
+                    {
+                      "name": "type",
+                      "expression": "`type`"
+                    },
+                    {
+                      "name": "column_d035ff2518054",
+                      "expression": "SUM(`faulty_equipment_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Recurrent equipment default over the last year - IOT platform Wind Turbines faulty parts count",
+                "description": "",
+                "viz_type": "CHART",
+                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"pie\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\"}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_d035ff2518054\": {\"name\": \"c\", \"yAxis\": 0, \"type\": \"pie\"}}, \"valuesOptions\": {\"anemometer\": {\"color\": \"#5C62D6\"}, \"Brake\": {\"color\": \"#6B9AC4\"}, \"Yaw drive\": {\"color\": \"#F4B942\"}, \"blade\": {\"color\": \"#5C62D6\"}, \"controller card #1\": {\"color\": \"#97D8C4\"}, \"controller card #2\": {\"color\": \"#EFF2F1\"}, \"electronic guidance system\": {\"color\": \"#B9E28C\"}}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"showDataLabels\": true, \"columnConfigurationMap\": {\"x\": {\"column\": \"type\", \"id\": \"column_d035ff2518053\"}, \"y\": [{\"column\": \"faulty_equipment_count\", \"transform\": \"SUM\", \"id\": \"column_d035ff2518054\"}]}, \"condensed\": true, \"withRowNumber\": true, \"isAggregationOn\": true}",
+                "query_name": "72ddc9dbe3f147488adb3037ddadfc4f"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 15,
+            "width": 3,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "4657223c",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "03d81d62",
+                  "fields": [
+                    {
+                      "name": "lat",
+                      "expression": "`lat`"
+                    },
+                    {
+                      "name": "location",
+                      "expression": "`location`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "location",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "location"
+                },
+                "y": {
+                  "fieldName": "lat",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "lat"
+                }
+              },
+              "frame": {
+                "title": "Wind turbine locations",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "d3a9b4c4",
+            "queries": [
+              {
+                "name": "1bd74d9f623949c397e27873e3bfd883",
+                "query": {
+                  "datasetName": "3beb98f7",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Parts for faulty Wind Turbine having no stock in the turbine region",
+                "description": "The following parts are not available close to the faulty wind turbine. Stocks need to be adjusted accordingly.",
+                "viz_type": "TABLE",
+                "serialized_options": "{\"version\": 2}",
+                "query_name": "1bd74d9f623949c397e27873e3bfd883"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 3,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "475135e1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a80f9a9e",
+                  "fields": [
+                    {
+                      "name": "count",
+                      "expression": "`count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count",
+                  "rowNumber": 1,
+                  "displayName": "count"
+                }
+              },
+              "frame": {
+                "title": "Number of damaged turbine",
+                "showTitle": true,
+                "description": "Faulty parts\nleading to energy production loss",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 1,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "5a18ef1d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a80f9a9e",
+                  "fields": [
+                    {
+                      "name": "sum(efficiency_loss)",
+                      "expression": "SUM(`efficiency_loss`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(efficiency_loss)",
+                  "displayName": "Sum of efficiency_loss"
+                }
+              },
+              "frame": {
+                "title": "Impact & Loss",
+                "showTitle": true,
+                "description": "Faulty train part impact\nEstimated production lost due to Turbine Malfunction. (%)",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "6fc28e6f",
+            "queries": [
+              {
+                "name": "b9d40aec0c964d9993d64d05c3608bc2",
+                "query": {
+                  "datasetName": "59e42cd7",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Wind Turbines with default",
+                "description": "The following wind turbines have a potential default and should be inspected",
+                "viz_type": "TABLE",
+                "serialized_options": "{\"version\": 2}",
+                "query_name": "b9d40aec0c964d9993d64d05c3608bc2"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 4,
+            "width": 2,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "a9f93e24",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c94d0002",
+                  "fields": [
+                    {
+                      "name": "revenue_per_hour",
+                      "expression": "`revenue_per_hour`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "revenue_per_hour",
+                  "rowNumber": 1,
+                  "displayName": "revenue_per_hour"
+                }
+              },
+              "frame": {
+                "title": "Estimated instant revenue",
+                "showTitle": true,
+                "description": "Revenue / hour ($)",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 0,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "f64a296e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c94d0002",
+                  "fields": [
+                    {
+                      "name": "energy_produced",
+                      "expression": "`energy_produced`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "energy_produced",
+                  "rowNumber": 1,
+                  "displayName": "energy_produced"
+                }
+              },
+              "frame": {
+                "title": "Instant Energy produced",
+                "showTitle": true,
+                "description": "Energy produced\nRealtime energy production (MW)",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "a9f62664",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "0759c8c5",
+                  "fields": [
+                    {
+                      "name": "hourly(time)",
+                      "expression": "DATE_TRUNC(\"HOUR\", `time`)"
+                    },
+                    {
+                      "name": "sum(max)",
+                      "expression": "SUM(`max`)"
+                    },
+                    {
+                      "name": "sum(min)",
+                      "expression": "SUM(`min`)"
+                    },
+                    {
+                      "name": "sum(prediction)",
+                      "expression": "SUM(`prediction`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "hourly(time)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "time"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(min)",
+                      "displayName": "Sum of min"
+                    },
+                    {
+                      "fieldName": "sum(max)",
+                      "displayName": "Sum of max"
+                    },
+                    {
+                      "fieldName": "sum(prediction)",
+                      "displayName": "Sum of prediction"
+                    }
+                  ]
+                }
+              },
+              "frame": {
+                "title": "Energy production forecast",
+                "showTitle": true,
+                "description": "Based on the weather forecast.",
+                "showDescription": true
+              },
+              "mark": {
+                "colors": [
+                  "#278bbb",
+                  "#39cd58",
+                  "#e3a91f",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 4,
+            "width": 2,
+            "height": 8
+          }
+        }
+      ]
+    }
+  ]
+}

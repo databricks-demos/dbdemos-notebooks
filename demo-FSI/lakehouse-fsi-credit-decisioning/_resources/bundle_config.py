@@ -235,7 +235,7 @@
                         "min_workers": 2,
                         "max_workers": 10
                     },
-                    "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    "spark_version": "15.3.x-cpu-ml-scala2.12",
                     "custom_tags": {
                         "ResourceClass": "SingleNode"
                     },
@@ -429,7 +429,7 @@
                             "min_workers": 2,
                             "max_workers": 10
                         },
-                        "spark_version": "12.2.x-cpu-ml-scala2.12",
+                        "spark_version": "15.3.x-cpu-ml-scala2.12",
                         "custom_tags": {
                             "ResourceClass": "SingleNode"
                         },

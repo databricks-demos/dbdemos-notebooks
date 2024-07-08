@@ -28,14 +28,6 @@
   "tags": [{"dlt": "Delta Live Table"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
   "notebooks": [
     {
-      "path": "_resources/00-prep-data-db-sql", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Dbsql data", 
-      "description": "Prep data for dbsql dashboard."
-    },
-    {
       "path": "_resources/00-setup", 
       "pre_run": False, 
       "publish_on_website": False, 
@@ -175,36 +167,6 @@
                 ]
             },
             {
-                "task_key": "load_dbsql_and_ml_data",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/00-prep-data-db-sql",
-                    "source": "WORKSPACE",
-                    "base_parameters": {
-                        "reset_all_data": "false"
-                    }
-                },
-                "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "13.3.x-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
-                    "runtime_engine": "STANDARD"
-                },
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "depends_on": [
-                    {
-                        "task_key": "start_dlt_pipeline"
-                    }
-                ]
-            },
-            {
                 "task_key": "create_feature_and_automl_run",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance",
@@ -215,7 +177,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "load_dbsql_and_ml_data"
+                          "task_key": "start_dlt_pipeline"
                       }
                   ]
             },
@@ -240,7 +202,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "13.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -262,7 +224,7 @@
     }
   },
   "cluster": {
-      "spark_version": "13.3.x-cpu-ml-scala2.12",
+      "spark_version": "15.3.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"
@@ -311,5 +273,7 @@
         "target": "{{SCHEMA}}"
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[dbdemos] IOT - Turbine analysis",                    "id": "turbine-analysis"},
+                 {"name": "[dbdemos] FSI - Wind Turbine predictive maintenance", "id": "turbine-predictive"}]
 }

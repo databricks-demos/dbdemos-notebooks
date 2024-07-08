@@ -88,7 +88,7 @@
 -- MAGIC
 -- MAGIC The next step is now to assemble our queries and their visualization in a comprehensive SQL dashboard that our business will be able to track.
 -- MAGIC
--- MAGIC The Dashboard has been loaded for you. Open the [Turbine DBSQL Dashboard](/sql/dashboards/a6bb11d9-1024-47df-918d-f47edc92d5f4) to start reviewing our our Wind Turbine Farm stats or the [DBSQL Predictive maintenance Dashboard](/sql/dashboards/d966eb63-6d37-4762-b90f-d3a2b51b9ba8).
+-- MAGIC The Dashboard has been loaded for you. Open the <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Turbine DBSQL Dashboard</a> to start reviewing our our Wind Turbine Farm stats or the <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">DBSQL Predictive maintenance Dashboard</a>.
 
 -- COMMAND ----------
 

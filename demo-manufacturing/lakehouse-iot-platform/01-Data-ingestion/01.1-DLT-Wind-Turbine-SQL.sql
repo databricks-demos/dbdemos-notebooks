@@ -305,7 +305,7 @@ SELECT * EXCEPT(m.row_number),
 -- MAGIC
 -- MAGIC Our final dataset includes our ML prediction for our Predictive Maintenance use-case. 
 -- MAGIC
--- MAGIC We are now ready to build our <a href="/sql/dashboards/a6bb11d9-1024-47df-918d-f47edc92d5f4">DBSQL Dashboard</a>to track the main KPIs and status of our entire Wind Turbine Farm and build complete <a href="/sql/dashboards/d966eb63-6d37-4762-b90f-d3a2b51b9ba8">Predictive maintenance DBSQL Dashboard</a>.
+-- MAGIC We are now ready to build our <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">DBSQL Dashboard</a>to track the main KPIs and status of our entire Wind Turbine Farm and build complete <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Predictive maintenance DBSQL Dashboard</a>.
 -- MAGIC
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-1.png" width="1000px">

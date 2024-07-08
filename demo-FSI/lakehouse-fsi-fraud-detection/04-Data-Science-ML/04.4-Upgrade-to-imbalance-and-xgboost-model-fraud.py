@@ -68,9 +68,6 @@ df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
 # Delete the temp data
 shutil.rmtree(input_temp_dir)
 
-#Fix pandas to a specific version to support all dbr version
-force_pandas_version(mlflow_run.info.run_id)
-
 # Preview data
 df_loaded.head(5)
 

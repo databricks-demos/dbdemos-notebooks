@@ -93,6 +93,7 @@ w.serving_endpoints.update_config_and_wait(name=serving_endpoint_name, served_en
 
 # COMMAND ----------
 
+mlflow.set_registry_uri('databricks-uc') 
 p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 

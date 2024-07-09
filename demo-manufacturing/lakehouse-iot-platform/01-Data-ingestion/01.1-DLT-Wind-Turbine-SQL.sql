@@ -126,15 +126,15 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Wind Turbine metadata:
--- MAGIC %python
--- MAGIC display(spark.read.json('/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/turbine'))
--- MAGIC display(spark.read.json('/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
+-- %python #uncomment to scan the data from the notebook
+-- display(spark.read.json('/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/turbine'))
+-- display(spark.read.json('/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Wind Turbine sensor data
--- MAGIC %python
--- MAGIC display(spark.read.parquet('/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/incoming_data'))
+-- %python #uncomment to scan the data from the notebook
+-- display(spark.read.parquet('/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/incoming_data'))
 
 -- COMMAND ----------
 
@@ -268,19 +268,7 @@ SELECT * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor
 
 -- COMMAND ----------
 
--- DBTITLE 1,Load the model and save it as a sql function
--- MAGIC %python
--- MAGIC import mlflow
--- MAGIC mlflow.set_registry_uri('databricks-uc')
--- MAGIC #                                                                                                               Stage/version  
--- MAGIC #                                                                      Model name                                         |        
--- MAGIC #                                                                                         |                               |        
--- MAGIC predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_turbine.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
--- MAGIC spark.udf.register("predict_maintenance", predict_maintenance_udf)
--- MAGIC #Note that this cell is just as example (dlt will ignore it), python needs to be on a separate notebook and the real udf is declared in the companion UDF notebook
-
--- COMMAND ----------
-
+-- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
 CREATE LIVE TABLE turbine_current_status 
 COMMENT "Wind turbine last status based on model prediction"
 AS

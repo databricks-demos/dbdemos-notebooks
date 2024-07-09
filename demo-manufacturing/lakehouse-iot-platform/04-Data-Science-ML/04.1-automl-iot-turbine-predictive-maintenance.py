@@ -85,7 +85,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.17.0
+# MAGIC %pip install databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -167,24 +167,34 @@ dataset.describe()
 
 # COMMAND ----------
 
-from databricks.feature_store import FeatureStoreClient
+dataset.spark.schema()
 
-fs = FeatureStoreClient()
+# COMMAND ----------
+
+import pyspark
+pyspark.__version__
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
+
+fe = FeatureEngineeringClient()
 try:
   #drop table if exists
-  fs.drop_table(f'{catalog}.{db}.turbine_hourly_features')
+  spark.sql('drop table turbine_hourly_features if exists')
+  fe.drop_table(f'{catalog}.{db}.turbine_hourly_features')
 except:
   pass
 #Note: You might need to delete the FS table using the UI
-churn_feature_table = fs.create_table(
+churn_feature_table = fe.create_table(
   name=f'{catalog}.{db}.turbine_hourly_features',
   primary_keys=['turbine_id','hourly_timestamp'],
   schema=dataset.spark.schema(),
   description='These features are derived from the turbine_training_dataset table in the lakehouse.  We made some basic transformations and removed NA value.'
 )
 
-fs.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.turbine_hourly_features', mode='overwrite')
-features = fs.read_table(f'{catalog}.{db}.turbine_hourly_features')
+fe.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.turbine_hourly_features', mode='overwrite')
+features = fe.read_table(f'{catalog}.{db}.turbine_hourly_features')
 display(features)
 
 # COMMAND ----------
@@ -220,6 +230,10 @@ display(features)
 # MAGIC Click on Start, and Databricks will do the rest.
 # MAGIC
 # MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
+
+# COMMAND ----------
+
+fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').count()
 
 # COMMAND ----------
 

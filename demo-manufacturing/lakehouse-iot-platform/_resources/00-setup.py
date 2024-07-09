@@ -30,7 +30,7 @@ if "evaluate" not in dir(mlflow):
     raise Exception("ERROR - YOU NEED MLFLOW 2.0 for this demo. Select DBRML 12+")
     
 
-folder = f"/Volumes/{catalog}/{db}/{volume_name}"
+folder = volume_folder
 
 if reset_all_data or DBDemos.is_any_folder_empty([folder+"/historical_turbine_status", folder+"/parts", folder+"/turbine", folder+"/incoming_data"]):
   #data generation on another notebook to avoid installing libraries (takes a few seconds to setup pip env)

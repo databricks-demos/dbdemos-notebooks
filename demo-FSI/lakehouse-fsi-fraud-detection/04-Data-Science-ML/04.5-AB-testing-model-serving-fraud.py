@@ -99,16 +99,12 @@ dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orien
 
 # COMMAND ----------
 
-dataset
-
-# COMMAND ----------
-
 # DBTITLE 1,Trying our new Model Serving setup
 from mlflow import deployments
 client = mlflow.deployments.get_deploy_client("databricks")
 #Let's do multiple call to track the results in the model endpoint inference table
-for row in dataset:
-    predictions = client.predict(endpoint=serving_endpoint_name, inputs=[row])
+for i in range(10):
+    predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
     print(predictions)
 
 # COMMAND ----------

@@ -115,12 +115,16 @@ profile_table = f"{TABLE_NAME}_profile_metrics"
 
 #Creating the monitor and computing its first metrics might take a few seconds, let's wait a bit before displaying the profile metrics
 while not spark.catalog.tableExists(profile_table) or spark.table(profile_table).isEmpty():
-  time.sleep(30)
+  time.sleep(10)
   
 display(spark.sql(f"SELECT * FROM {profile_table}"))
 
 # Display the drift metrics table
 drift_table = f"{TABLE_NAME}_drift_metrics"
+
+while not spark.catalog.tableExists(drift_table) or spark.table(drift_table).isEmpty():
+  time.sleep(10)
+
 display(spark.sql(f"SELECT * FROM {drift_table}"))
 
 # COMMAND ----------

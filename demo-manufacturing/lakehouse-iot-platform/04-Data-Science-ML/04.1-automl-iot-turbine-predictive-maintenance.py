@@ -103,9 +103,9 @@
 
 # DBTITLE 1,Quick data exploration leveraging pandas on spark (Koalas): sensor from 2 wind turbines
 def plot(sensor_report):
-  turbine_id = spark.table('turbine_training_dataset_ml').where(f"abnormal_sensor = '{sensor_report}' ").limit(1).collect()[0]['turbine_id']
+  turbine_id = spark.table('turbine_training_dataset').where(f"abnormal_sensor = '{sensor_report}' ").limit(1).collect()[0]['turbine_id']
   #Let's explore a bit our datasets with pandas on spark.
-  df = spark.table('sensor_bronze_ml').where(f"turbine_id == '{turbine_id}' ").orderBy('timestamp').pandas_api()
+  df = spark.table('sensor_bronze').where(f"turbine_id == '{turbine_id}' ").orderBy('timestamp').pandas_api()
   df.plot(x="timestamp", y=["sensor_B"], kind="line", title=f'Sensor report: {sensor_report}').show()
 plot('ok')
 plot('sensor_B')
@@ -117,7 +117,7 @@ plot('sensor_B')
 # COMMAND ----------
 
 # Read our churn_features table
-turbine_dataset = spark.table('turbine_training_dataset_ml').withColumn('damaged', col('abnormal_sensor') != 'ok')
+turbine_dataset = spark.table('turbine_training_dataset').withColumn('damaged', col('abnormal_sensor') != 'ok')
 display(turbine_dataset)
 
 # COMMAND ----------

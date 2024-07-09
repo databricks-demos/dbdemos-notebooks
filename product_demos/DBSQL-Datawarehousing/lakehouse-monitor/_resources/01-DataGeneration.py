@@ -522,11 +522,6 @@ spark_transaction_df.write.mode('overwrite').saveAsTable('bronze_transaction')
 
 # COMMAND ----------
 
-# Join the DataFrames
-joined_df = transaction_df.merge(user_df, on="UserID", how="left").merge(product_df, on="ProductID", how="left")
-
-# COMMAND ----------
-
 import pandas as pd
 import numpy as np
 import random
@@ -554,7 +549,10 @@ def inject_issues(df, campaign_start_dates):
     steady_null_columns = ['ProductTags', 'ShippingAddress', 'Wishlist', 'GiftWrap']
     for column in steady_null_columns:
         null_indices = df.sample(frac=random.uniform(0.1, 0.15)).index
-        df.loc[null_indices, column] = np.nan
+        if column in ['ProductTags', 'Wishlist']:
+            df.loc[null_indices, column] = df.loc[null_indices, column].apply(lambda x: [])
+        else:
+            df.loc[null_indices, column] = np.nan
 
     # Steady nulls around 10% in PreferredPaymentMethod columns
     steady_null_columns2 = ['PreferredPaymentMethod']
@@ -613,6 +611,9 @@ def inject_issues(df, campaign_start_dates):
     
     return df
 
+# Join the DataFrames
+joined_df = transaction_df.merge(user_df, on="UserID", how="left").merge(product_df, on="ProductID", how="left")
+
 # Example usage
 campaign_start_dates = [(current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
 #campaign_start_dates = ["2023-07-15", "2023-11-23", "2024-03-10", (current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
@@ -625,7 +626,13 @@ joined_df_with_issues = inject_issues(joined_df, campaign_start_dates)
 spark_joined_df_with_issues = spark.createDataFrame(joined_df_with_issues)
 
 # Write the Spark DataFrame to Delta format
-spark_joined_df_with_issues.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
+(spark_joined_df_with_issues
+    .write
+    .option("mergeSchema", "true")
+    .option("delta.enableChangeDataFeed", "true")
+    .mode('overwrite')
+    .saveAsTable('silver_transaction')
+)
 
 # COMMAND ----------
 

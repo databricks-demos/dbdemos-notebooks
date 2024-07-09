@@ -56,8 +56,8 @@ rag_chain_config = {
     },
     "llm_config": {
         "llm_parameters": {"max_tokens": 1500, "temperature": 0.01},
-        "llm_prompt_template": "You are a trusted assistant that helps answer questions based only on the provided information. If you do not know the answer to a question, you truthfully say you do not know.  Here is some context which might or might not help you answer: {context}.  Answer directly, do not repeat the question, do not start with something like: the answer to the question, do not add AI in front of your answer, do not say: here is the answer, do not mention the context or the question. Based on this context, answer this question: {question}",
-        "llm_prompt_template_variables": ["context", "question"],
+        "llm_prompt_template": "You are a trusted AI assistant that helps answer questions based only on the provided information. If you do not know the answer to a question, you truthfully say you do not know. Here is the history of the current conversation you are having with your user: {chat_history}. And here is some context which may or may not help you answer the following question: {context}.  Answer directly, do not repeat the question, do not start with something like: the answer to the question, do not add AI in front of your answer, do not say: here is the answer, do not mention the context or the question. Based on this context, answer this question: {question}",
+        "llm_prompt_template_variables": ["context", "chat_history", "question"],
     },
     "retriever_config": {
         "chunk_template": "Passage: {chunk_text}\n",
@@ -95,6 +95,15 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC # Return the string contents of the most recent message from the user
 # MAGIC def extract_user_query_string(chat_messages_array):
 # MAGIC     return chat_messages_array[-1]["content"]
+# MAGIC
+# MAGIC def extract_previous_messages(chat_messages_array):
+# MAGIC     messages = "\n"
+# MAGIC     for msg in chat_messages_array[:-1]:
+# MAGIC         messages += (msg["role"] + ": " + msg["content"] + "\n")
+# MAGIC     return messages
+# MAGIC
+# MAGIC def combine_all_messages_for_vector_search(chat_messages_array):
+# MAGIC     return extract_previous_messages(chat_messages_array) + extract_user_query_string(chat_messages_array)
 # MAGIC
 # MAGIC #Get the conf from the local conf file
 # MAGIC model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.yaml')
@@ -159,9 +168,10 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC     {
 # MAGIC         "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
 # MAGIC         "context": itemgetter("messages")
-# MAGIC         | RunnableLambda(extract_user_query_string)
+# MAGIC         | RunnableLambda(combine_all_messages_for_vector_search)
 # MAGIC         | vector_search_as_retriever
 # MAGIC         | RunnableLambda(format_context),
+# MAGIC         "chat_history": itemgetter("messages") | RunnableLambda(extract_previous_messages)
 # MAGIC     }
 # MAGIC     | prompt
 # MAGIC     | model

@@ -16,6 +16,15 @@ mlflow.langchain.autolog()
 def extract_user_query_string(chat_messages_array):
     return chat_messages_array[-1]["content"]
 
+def extract_previous_messages(chat_messages_array):
+    messages = "\n"
+    for msg in chat_messages_array[:-1]:
+        messages += (msg["role"] + ": " + msg["content"] + "\n")
+    return messages
+
+def combine_all_messages_for_vector_search(chat_messages_array):
+    return extract_previous_messages(chat_messages_array) + extract_user_query_string(chat_messages_array)
+
 #Get the conf from the local conf file
 model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.yaml')
 
@@ -79,9 +88,10 @@ chain = (
     {
         "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
         "context": itemgetter("messages")
-        | RunnableLambda(extract_user_query_string)
+        | RunnableLambda(combine_all_messages_for_vector_search)
         | vector_search_as_retriever
         | RunnableLambda(format_context),
+        "chat_history": itemgetter("messages") | RunnableLambda(extract_previous_messages)
     }
     | prompt
     | model

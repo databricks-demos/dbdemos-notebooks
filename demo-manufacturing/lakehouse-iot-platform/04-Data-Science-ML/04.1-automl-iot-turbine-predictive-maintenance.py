@@ -232,12 +232,14 @@ fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').coun
 from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+
+training_dataset = fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
-    dataset = fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id'),
+    dataset = training_dataset,
     target_col = "abnormal_sensor",
-    timeout_minutes = 7
+    timeout_minutes = 10
 )
 #Make sure all users can access dbdemos shared experiment
 DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")

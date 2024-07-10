@@ -5,10 +5,6 @@
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 {
   "name": "lakehouse-retail-c360",
   "category": "lakehouse",
@@ -183,8 +179,7 @@
                 "task_key": "load_dataset",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/_resources/01-load-data",
-                    "source": "WORKSPACE",
-                    "base_parameters": {"catalog": "{{CATALOG}}", "db": "{{SCHEMA}}"}
+                    "source": "WORKSPACE"
                 },
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
@@ -209,19 +204,6 @@
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/_resources/00-prep-data-db-sql",
                     "source": "WORKSPACE"
-                },
-                "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "13.3.x-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
-                    "runtime_engine": "STANDARD"
                 },
                 "timeout_seconds": 0,
                 "email_notifications": {},
@@ -267,7 +249,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "13.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -289,7 +271,7 @@
     }
   },
   "cluster": {
-      "spark_version": "13.3.x-cpu-ml-scala2.12",
+      "spark_version": "15.3.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

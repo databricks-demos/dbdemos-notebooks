@@ -54,7 +54,7 @@ spark.udf.register("predict_churn", predict_churn_udf)
 # DBTITLE 1,Run inferences
 columns = predict_churn_udf.metadata.get_input_schema().input_names()
 import pyspark.sql.functions as F
-spark.table('ml_churn_features').withColumn("churn_prediction", predict_churn_udf(*columns)).display()
+spark.table('churn_features').withColumn("churn_prediction", predict_churn_udf(*columns)).display()
 
 # COMMAND ----------
 
@@ -64,7 +64,7 @@ spark.table('ml_churn_features').withColumn("churn_prediction", predict_churn_ud
 # COMMAND ----------
 
 model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.{model_name}@prod")
-df = spark.table('ml_churn_features').select(*columns).limit(10).toPandas()
+df = spark.table('churn_features').select(*columns).limit(10).toPandas()
 df['churn_prediction'] = model.predict(df)
 df.head(3)
 
@@ -86,7 +86,7 @@ df.head(3)
 
 # COMMAND ----------
 
-dataset = spark.table('ml_churn_features').select(*columns).limit(3).toPandas()
+dataset = spark.table('churn_features').select(*columns).limit(3).toPandas()
 #Make it a string to send to the inference endpoint
 dataset['last_transaction'] = dataset['last_transaction'].astype(str)
 dataset

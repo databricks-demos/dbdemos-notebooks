@@ -4,17 +4,6 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Persist DLT streaming view
-# MAGIC To easily support DLT / UC / ML during the preview, we temporary recopy the final DLT view to another UC table 
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE main__build.dbdemos_retail_c360.ml_churn_features AS SELECT * FROM main__build.dbdemos_retail_c360.churn_features;
-
-# COMMAND ----------
-
 import json
 import time
 from pyspark.sql.window import Window

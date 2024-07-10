@@ -103,7 +103,7 @@
 
 # DBTITLE 1,Read our churn gold table
 # Read our churn_features table
-churn_dataset = spark.table("ml_churn_features")
+churn_dataset = spark.table("churn_features")
 display(churn_dataset)
 
 # COMMAND ----------

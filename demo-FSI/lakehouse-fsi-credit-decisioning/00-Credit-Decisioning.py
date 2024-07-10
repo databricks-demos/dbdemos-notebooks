@@ -1,12 +1,12 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Lakehouse for Financial Services - Serving the Underbanked population with the Databricks Lakehouse
+# MAGIC # Data Intelligence Platform for Financial Services - Serving the Underbanked population with the Databricks Lakehouse
 # MAGIC <br />
 # MAGIC <img src="https://raw.githubusercontent.com/borisbanushev/CAPM_Databricks/main/lakehouseDAIWTusecases.jpg" style="float: left; margin-right: 30px" width="650px" />
 # MAGIC
-# MAGIC ## What is The Databricks Lakehouse for Financial Services?
+# MAGIC ## What is The Databricks Data Intelligence Platform for Financial Services?
 # MAGIC
-# MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to always offer more engaging customer experiences driven by real-time data, at the lowest cost. The Lakehouse is built on the following three pillars:
+# MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to always offer more engaging customer experiences driven by real-time data, at the lowest cost. The Data Intelligence Platform is built on the following three pillars:
 # MAGIC
 # MAGIC ### 1. Simple
 # MAGIC   One single platform and governance/security layer for your data warehousing and AI to **accelerate innovation** and **reduce risks**. No need to stitch together multiple solutions with disparate governance and high complexity.

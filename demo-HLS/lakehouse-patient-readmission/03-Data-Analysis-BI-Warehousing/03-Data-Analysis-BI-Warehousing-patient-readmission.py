@@ -12,6 +12,9 @@
 # MAGIC To be able to analyze and reduce our patient readmission risk, we'll start by analyzing the underlying data and build patient cohorts.
 # MAGIC
 # MAGIC Once completed, we will create Dashboard to visualize and share our results. Note that visualization can also be done with external tools such as PowerBI or Tableau.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03-Data-Analysis-BI-Warehousing-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 # COMMAND ----------
 

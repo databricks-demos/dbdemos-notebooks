@@ -13,6 +13,10 @@
 # MAGIC Databricks AutoML allows you to quickly generate baseline models and notebooks. 
 # MAGIC
 # MAGIC ML experts can accelerate their workflow by fast-forwarding through the usual trial-and-error and focus on customizations using their domain knowledge, and citizen data scientists can quickly achieve usable results with a low-code approach.
+# MAGIC
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.2-AutoML-patient-admission-risk&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 # COMMAND ----------
 

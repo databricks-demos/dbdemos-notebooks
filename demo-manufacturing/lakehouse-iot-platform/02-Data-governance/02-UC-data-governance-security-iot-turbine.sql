@@ -69,6 +69,10 @@
 -- MAGIC   
 -- MAGIC   
 -- MAGIC </div>
+-- MAGIC
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-UC-data-governance-security-iot-turbine&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 -- COMMAND ----------
 

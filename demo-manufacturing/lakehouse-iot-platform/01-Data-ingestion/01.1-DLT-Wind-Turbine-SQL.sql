@@ -32,6 +32,10 @@
 -- MAGIC <br style="clear: both">
 -- MAGIC
 -- MAGIC This results in **operational complexity** and overhead, requiring expert profile and ultimatly **putting data projects at risk**.
+-- MAGIC
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01.1-DLT-Wind-Turbine-SQL&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 -- COMMAND ----------
 
@@ -87,9 +91,6 @@
 -- MAGIC For more details on Delta Lake, run dbdemos.install('delta-lake')
 -- MAGIC
 -- MAGIC
--- MAGIC
--- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Fmanufacturing%2Flakehouse_iot_turbine%2Fdlt_sql&dt=LAKEHOUSE_MANUFACTURING_TURBINE">
 
 -- COMMAND ----------
 

@@ -10,6 +10,9 @@
 # MAGIC In this example, we'll explain our model for the entire cohort, but also provide explanation for a specific patient.
 # MAGIC
 # MAGIC This information can be used to improve global care but also provide more context for a specific patient.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.5-Explainability-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 # COMMAND ----------
 

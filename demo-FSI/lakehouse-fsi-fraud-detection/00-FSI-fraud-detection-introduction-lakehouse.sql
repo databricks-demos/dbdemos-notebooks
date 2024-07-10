@@ -1,12 +1,12 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # FSI & Banking platform with Databricks Lakehouse - Fraud detection in real time
+-- MAGIC # FSI & Banking platform with Databricks Data Intelligence Platform - Fraud detection in real time
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/lakehouse-fsi-fraud-0.png " style="float: left; margin-right: 30px; margin-bottom: 50px" width="600px" />
 -- MAGIC
 -- MAGIC <br/>
 -- MAGIC
--- MAGIC ## What is The Databricks Lakehouse for Banking?
+-- MAGIC ## What is The Databricks Data Intelligence Platform for Banking?
 -- MAGIC
 -- MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to optimize your business with real time data, at the lowest cost. 
 -- MAGIC

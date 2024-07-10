@@ -9,6 +9,9 @@
 -- MAGIC It's critical to be able to add a security and privacy layer on top of our data, but also on all the other data assets that will use this data (notebooks dashboards, Models, files etc).
 -- MAGIC
 -- MAGIC This is made easy with Databricks Unity Catalog.
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-Data-Governance-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 -- COMMAND ----------
 

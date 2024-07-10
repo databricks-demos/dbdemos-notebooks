@@ -29,6 +29,9 @@
 # MAGIC
 # MAGIC
 # MAGIC For more details about Databricks Feature Store, run `dbdemos.install('feature-store')`
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.6-EXTRA-Feature-Store-ML-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 # COMMAND ----------
 

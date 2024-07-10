@@ -24,6 +24,9 @@
 # MAGIC * Built-in support for multiple models & version deployed.
 # MAGIC * A/B Testing and easy upgrade, routing traffic between each versions while measuring impact.
 # MAGIC * Built-in metrics & monitoring.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.4-Model-Serving-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 # COMMAND ----------
 

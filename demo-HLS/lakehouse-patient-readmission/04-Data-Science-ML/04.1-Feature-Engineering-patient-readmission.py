@@ -10,6 +10,10 @@
 # MAGIC Let's now take it to the next level and start building a Machine Learning model to predict wich patients are at risk. 
 # MAGIC
 # MAGIC We'll then be able to explain the model at a statistical level, understanding which features increase the readmission risk. This information will be critical in how we can specialize care for a specific patient population.
+# MAGIC
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.1-Feature-Engineering-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
 
 # COMMAND ----------
 

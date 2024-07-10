@@ -230,7 +230,7 @@ from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 
-training_dataset = fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
+training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,

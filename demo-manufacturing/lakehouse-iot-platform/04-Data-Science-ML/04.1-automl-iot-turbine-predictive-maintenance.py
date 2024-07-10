@@ -224,10 +224,6 @@ display(features)
 
 # COMMAND ----------
 
-fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').count()
-
-# COMMAND ----------
-
 # DBTITLE 1,We have already started a run for you, you can explore it here:
 from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"

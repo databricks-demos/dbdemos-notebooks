@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Lakehouse for HLS - Patient Cohorts and re-admission 
+# MAGIC # Intelligence Data Platform for HLS - Patient Cohorts and re-admission 
 # MAGIC <br />
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/hls/patient-readmission/hls-patient-readmision-lakehouse-0.png" style="float: left; margin-right: 30px; margin-top:10px" width="650px" />
 # MAGIC
-# MAGIC ## What is The Databricks Lakehouse for HLS?
+# MAGIC ## What is The Data Intelligence Platform for HLS?
 # MAGIC
 # MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload at the lowest cost.
 # MAGIC
@@ -146,7 +146,7 @@
 
 # MAGIC %md 
 # MAGIC
-# MAGIC Open the [Clinical Data Analysis notebook]($./03-Data-Analysis-BI-Warehousing/03-Data-Analysis-BI-Warehousing-patient-readmission) to start building your cohorts or directly open the <a href="/sql/dashboards/97b053d7-3ff5-45b7-b2d2-6cfc50e9bc1c" target="_blank">Patient analysis dashboard</a>
+# MAGIC Open the [Clinical Data Analysis notebook]($./03-Data-Analysis-BI-Warehousing/03-Data-Analysis-BI-Warehousing-patient-readmission) to start building your cohorts or directly open the <a dbdemos-dashboard-id="patient-summary" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Patient analysis dashboard</a>
 
 # COMMAND ----------
 

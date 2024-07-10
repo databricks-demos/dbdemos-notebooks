@@ -14,15 +14,27 @@
 
 # COMMAND ----------
 
-demo_data_folder = '/dbdemos/hls/synthea'
+# MAGIC %run ../config
+
+# COMMAND ----------
+
+# MAGIC %run ../../../_resources/00-global-setup-v2
+
+# COMMAND ----------
+
+DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
+volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
+
+# COMMAND ----------
+
+demo_data_folder = volume_folder
 synth_out = demo_data_folder+'/data'
 landing_data_folder = demo_data_folder+'/landing_zone'
 landing_data_folder_parquet = demo_data_folder+'/landing_zone_parquet'
 
 #Cleanup any existing folders
-assert demo_data_folder.startswith("/dbdemos/hls") #make sure we don't delete something outside of dbdemos
+assert demo_data_folder.startswith("/Volume/") and len(demo_data_folder) > 20  #make sure we don't delete something outside of dbdemos
 dbutils.fs.rm(demo_data_folder, True)
-dbutils.fs.rm("/tmp/dbdemos/hls", True)
 
 # COMMAND ----------
 
@@ -114,10 +126,10 @@ for folder in dbutils.fs.ls(landing_data_folder):
     #dbutils.fs.mv(folder.path, '/dbdemos/hls/synthea/data/congestive_heart_failure/'+table+'/')
     (spark.readStream.format("cloudFiles")
                   .option("cloudFiles.format", "csv")
-                  .option("cloudFiles.schemaLocation", f"/tmp/dbdemos/hls/inferred_schema/{table}")
+                  .option("cloudFiles.schemaLocation", f"{volume_folder}/ckpt/schema/{table}")
                   .option("cloudFiles.inferColumnTypes", "true")
                   .load(folder.path)
-                  .writeStream.trigger(once=True).option("checkpointLocation", f"/tmp/dbdemos/hls/ckpt/{table}").format("parquet").start(f"{landing_data_folder_parquet}/{table}"))
+                  .writeStream.trigger(once=True).option("checkpointLocation", f"{volume_folder}/ckpt/{table}").format("parquet").start(f"{landing_data_folder_parquet}/{table}"))
 
 # COMMAND ----------
 

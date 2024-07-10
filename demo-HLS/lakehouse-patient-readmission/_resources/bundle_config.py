@@ -50,14 +50,6 @@
       "description": "Load data for demo."
     },
     {
-      "path": "_resources/02-DLT-Persist-Streaming-Views", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Create tables from materialized view for persisting for ML consumption", 
-      "description": "SQL only notebook to support machine learning consumers"
-    },
-    {
       "path": "00-patient-readmission-introduction", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -179,30 +171,6 @@
                 "depends_on": [{"task_key": "init_data"}]
             },
             {
-               "task_key": "persist_streaming_table",
-               "depends_on": [{"task_key": "start_dlt_pipeline"}],
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/02-DLT-Persist-Streaming-Views",
-                    "source": "WORKSPACE"
-                },
-                "run_if": "ALL_SUCCESS",
-                "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "13.3.x-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
-                    "runtime_engine": "STANDARD"
-                },
-                "timeout_seconds": 0,
-                "email_notifications": {}
-            },
-            {
                 "task_key": "build_cohorts",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/03-Data-Analysis-BI-Warehousing/03-Data-Analysis-BI-Warehousing-patient-readmission",
@@ -211,7 +179,7 @@
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
-                "depends_on": [{"task_key": "persist_streaming_table"}]
+                "depends_on": [{"task_key": "start_dlt_pipeline"}]
             },
             {
                 "task_key": "feature_engineering",
@@ -328,5 +296,6 @@
         "target": "{{SCHEMA}}"
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[demos] HLS - Patient Summary",  "id": "patient-summary"}]
 }

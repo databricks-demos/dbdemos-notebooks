@@ -38,7 +38,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=hls_patient_readmission
+-- MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 -- COMMAND ----------
 
@@ -56,11 +56,6 @@ SHOW TABLES;
 -- MAGIC ## Step 1. Access control
 -- MAGIC
 -- MAGIC In the Lakehouse, you can use simple SQL GRANT and REVOKE statements to create granular (on data and even schema and catalog levels) access control irrespective of the data source or format.
-
--- COMMAND ----------
-
--- MAGIC %sql
--- MAGIC -- drop schema dbdemos.hls_patient_readmission cascade
 
 -- COMMAND ----------
 
@@ -90,16 +85,16 @@ CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
 ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo
 
 -- Mask all PII information
-ALTER TABLE patients_ml ALTER COLUMN FIRST SET MASK simple_mask;
-ALTER TABLE patients_ml ALTER COLUMN LAST SET MASK simple_mask;
-ALTER TABLE patients_ml ALTER COLUMN PASSPORT SET MASK simple_mask;
-ALTER TABLE patients_ml ALTER COLUMN DRIVERS SET MASK simple_mask;
-ALTER TABLE patients_ml ALTER COLUMN SSN SET MASK simple_mask;
-ALTER TABLE patients_ml ALTER COLUMN ADDRESS SET MASK simple_mask;
+ALTER TABLE patients ALTER COLUMN FIRST SET MASK simple_mask;
+ALTER TABLE patients ALTER COLUMN LAST SET MASK simple_mask;
+ALTER TABLE patients ALTER COLUMN PASSPORT SET MASK simple_mask;
+ALTER TABLE patients ALTER COLUMN DRIVERS SET MASK simple_mask;
+ALTER TABLE patients ALTER COLUMN SSN SET MASK simple_mask;
+ALTER TABLE patients ALTER COLUMN ADDRESS SET MASK simple_mask;
 
 ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
-SELECT * FROM patients_ml;
+SELECT * FROM patients
 
 -- COMMAND ----------
 
@@ -144,7 +139,7 @@ CREATE SHARE IF NOT EXISTS dbdemos_patient_readmission_visits
 ALTER SHARE dbdemos_patient_readmission_visits OWNER TO `account users`;
 
 -- Simply add the tables you want to share to your SHARE:
--- ALTER SHARE dbdemos_patient_readmission_visits  ADD TABLE patients_ml ;
+-- ALTER SHARE dbdemos_patient_readmission_visits  ADD TABLE patients ;
 
 -- COMMAND ----------
 

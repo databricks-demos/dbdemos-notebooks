@@ -13,7 +13,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=hls_patient_readmission
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -34,7 +34,7 @@
 from pyspark.sql import Window
 # Let's create our label: we'll predict the  30 days readmission risk
 windowSpec = Window.partitionBy("PATIENT").orderBy("START")
-labels = spark.table('encounters_ml').select("PATIENT", "Id", "START", "STOP") \
+labels = spark.table('encounters').select("PATIENT", "Id", "START", "STOP") \
               .withColumn('30_DAY_READMISSION', F.when(col('START').cast('long') - F.lag(col('STOP')).over(windowSpec).cast('long') < 30*24*60*60, 1).otherwise(0))
 display(labels)
 
@@ -70,7 +70,7 @@ def compute_pat_features(data):
 
 # DBTITLE 1,Select the cohort we want to analyze
 cohort_name = 'COVID-19-cohort' #or could be all_patients
-cohort = spark.sql(f"SELECT p.* FROM cohort c INNER JOIN patients_ml p on c.patient=p.id WHERE c.name='{cohort_name}'") \
+cohort = spark.sql(f"SELECT p.* FROM cohort c INNER JOIN patients p on c.patient=p.id WHERE c.name='{cohort_name}'") \
               .dropDuplicates(["id"])
 cohort_features_df = compute_pat_features(cohort)
 cohort_features_df.display()
@@ -101,12 +101,12 @@ def compute_enc_features(data):
       'ENCOUNTERCLASS_wellness',
     )
   )
-enc_features_df = compute_enc_features(spark.table('encounters_ml'))
+enc_features_df = compute_enc_features(spark.table('encounters'))
 display(enc_features_df)
 
 # COMMAND ----------
 
-enc_features_df = compute_enc_features(spark.table('encounters_ml'))
+enc_features_df = compute_enc_features(spark.table('encounters'))
 training_dataset = cohort_features_df.join(labels, [labels.PATIENT==cohort_features_df.Id], "inner") \
                                      .join(enc_features_df, [labels.Id==enc_features_df.ENCOUNTER_ID], "inner") \
                                      .drop("Id", "_rescued_data", "SSN", "DRIVERS", "PASSPORT", "FIRST", "LAST", "ADDRESS", "BIRTHPLACE")

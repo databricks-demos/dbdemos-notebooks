@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=hls_patient_readmission
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -62,7 +62,7 @@ def compute_pat_features(data):
 
 # COMMAND ----------
 
-pat_features_df = compute_pat_features(spark.table('patients_ml').dropDuplicates(["Id"]))
+pat_features_df = compute_pat_features(spark.table('patie').dropDuplicates(["Id"]))
 pat_features_df.display()
 
 # COMMAND ----------
@@ -125,7 +125,7 @@ def compute_enc_features(data):
 # COMMAND ----------
 
 # DBTITLE 1,Save as Feature Table
-enc_features_df = compute_enc_features(spark.table('encounters_ml'))
+enc_features_df = compute_enc_features(spark.table('encounters'))
 
 drop_fs_table(f'{dbName}.enc_features')
 
@@ -164,7 +164,7 @@ def compute_age_at_enc(encounters, patients):
 # COMMAND ----------
 
 # DBTITLE 1,Save as feature table
-aae_features_df = compute_age_at_enc(spark.table('encounters_ml'), spark.table('patients_ml'))
+aae_features_df = compute_age_at_enc(spark.table('encounters'), spark.table('patients'))
 
 drop_fs_table(f'{dbName}.age_at_enc_features')
 
@@ -198,7 +198,7 @@ fs.write_table(df=aae_features_df, name=f'{dbName}.age_at_enc_features', mode='o
 from pyspark.sql import Window
 # Let's create our label: we'll predict the  30 days readmission risk
 windowSpec = Window.partitionBy("PATIENT").orderBy("START")
-labels = spark.table('encounters_ml').select("PATIENT", "Id", "START", "STOP") \
+labels = spark.table('encounters').select("PATIENT", "Id", "START", "STOP") \
               .withColumn('30_DAY_READMISSION', F.when(col('START').cast('long') - F.lag(col('STOP')).over(windowSpec).cast('long') < 30*24*60*60, 1).otherwise(0))
 display(labels)
 

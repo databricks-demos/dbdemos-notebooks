@@ -15,7 +15,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog=dbdemos $db=hls_patient_readmission
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -36,12 +36,12 @@
 # COMMAND ----------
 
 # DBTITLE 1,Use SQL to explore your data
-# MAGIC %sql select * from patients_ml
+# MAGIC %sql select * from patients
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select GENDER, ceil(months_between(current_date(),BIRTHDATE)/12/5)*5 as age, count(*) as count from patients_ml group by GENDER, age order by age
+# MAGIC select GENDER, ceil(months_between(current_date(),BIRTHDATE)/12/5)*5 as age, count(*) as count from patients group by GENDER, age order by age
 # MAGIC -- Can use buildin visualization (Area: Key: age, group: gender_source_value, Values: count)
 
 # COMMAND ----------
@@ -60,8 +60,8 @@ px.area(_sqldf.toPandas(), x="age", y="count", color="GENDER", line_group="GENDE
 # COMMAND ----------
 
 #We can also leverage pure SQL to access data
-df = spark.table("patients_ml").join(spark.table("conditions_ml"), col("Id")==col("PATIENT")) \
-          .groupBy(['GENDER', 'conditions_ml.DESCRIPTION']).count() \
+df = spark.table("patients").join(spark.table("conditions"), col("Id")==col("PATIENT")) \
+          .groupBy(['GENDER', 'conditions.DESCRIPTION']).count() \
           .orderBy(F.desc('count')).limit(20).toPandas()
 #And use our usual plot libraries
 px.bar(df, x="DESCRIPTION", y="count", color="GENDER", barmode="group")
@@ -91,7 +91,7 @@ px.bar(df, x="DESCRIPTION", y="count", color="GENDER", barmode="group")
 # DBTITLE 1,Create patient cohorts based on specific conditions
 import random
 def create_save_cohort(name, condition_codes = []):
-  cohort1 = (spark.sql('select patient, to_date(start) as cohort_start_date, to_date(stop) as cohort_end_date from conditions_ml')
+  cohort1 = (spark.sql('select patient, to_date(start) as cohort_start_date, to_date(stop) as cohort_end_date from conditions')
                  .withColumn('id', F.lit(random.randint(999999, 99999999)))
                  .withColumn('name', F.lit(name)))
   if len(condition_codes)> 0:
@@ -180,7 +180,7 @@ create_save_cohort('all_patients')
 
 # MAGIC %md
 # MAGIC
-# MAGIC Open the <a href="/sql/dashboards/97b053d7-3ff5-45b7-b2d2-6cfc50e9bc1c" target="_blank">Cohort patient analysis Dashboard</a> to start reviewing our cohort data.
+# MAGIC Open the <a dbdemos-dashboard-id="patient-summary" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Cohort patient analysis Dashboard</a> to start reviewing our cohort data.
 
 # COMMAND ----------
 

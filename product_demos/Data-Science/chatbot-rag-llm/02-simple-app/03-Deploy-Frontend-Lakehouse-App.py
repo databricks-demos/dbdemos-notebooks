@@ -59,7 +59,7 @@ except:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Let's now create or chatbot application using Gradio
+# MAGIC ## Let's now create our chatbot application using Gradio
 
 # COMMAND ----------
 
@@ -159,6 +159,11 @@ app_details = helper.create("dbdemos-rag-chatbot-app", app_description="Your Dat
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Lakehouse apps come with an auto-provisioned Service Principal. Let's grant this Service Principal access to our model endpoint before deploying...
+
+# COMMAND ----------
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServingEndpointAccessControlRequest
 
@@ -181,9 +186,6 @@ w = w.serving_endpoints.set_permissions(
 # COMMAND ----------
 
 helper.deploy("dbdemos-rag-chatbot-app", os.path.join(os.getcwd(), 'chatbot_app'))
-
-# COMMAND ----------
-
 helper.details("dbdemos-rag-chatbot-app")
 
 # COMMAND ----------

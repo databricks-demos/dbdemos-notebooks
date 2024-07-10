@@ -85,7 +85,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0
+# MAGIC %pip install --quiet databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -167,22 +167,13 @@ dataset.describe()
 
 # COMMAND ----------
 
-dataset.spark.schema()
-
-# COMMAND ----------
-
-import pyspark
-pyspark.__version__
-
-# COMMAND ----------
-
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 
 fe = FeatureEngineeringClient()
 try:
   #drop table if exists
-  spark.sql('drop table turbine_hourly_features if exists')
-  fe.drop_table(f'{catalog}.{db}.turbine_hourly_features')
+  spark.sql('drop table if exists turbine_hourly_features')
+  fe.drop_table(name=f'{catalog}.{db}.turbine_hourly_features')
 except:
   pass
 #Note: You might need to delete the FS table using the UI
@@ -193,8 +184,8 @@ churn_feature_table = fe.create_table(
   description='These features are derived from the turbine_training_dataset table in the lakehouse.  We made some basic transformations and removed NA value.'
 )
 
-fe.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.turbine_hourly_features', mode='overwrite')
-features = fe.read_table(f'{catalog}.{db}.turbine_hourly_features')
+fe.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.turbine_hourly_features')
+features = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features')
 display(features)
 
 # COMMAND ----------
@@ -241,12 +232,14 @@ fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').coun
 from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+
+training_dataset = fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
-    dataset = fs.read_table(f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id'),
+    dataset = training_dataset,
     target_col = "abnormal_sensor",
-    timeout_minutes = 7
+    timeout_minutes = 10
 )
 #Make sure all users can access dbdemos shared experiment
 DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")

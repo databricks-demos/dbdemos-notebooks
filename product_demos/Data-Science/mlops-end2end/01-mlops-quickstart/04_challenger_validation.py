@@ -55,7 +55,7 @@
 
 # We are interested in validating the Challenger model
 model_alias = "Challenger"
-model_name = f"{catalog}.{dbName}.mlops_churn"
+model_name = f"{catalog}.{db}.mlops_churn"
 
 client = MlflowClient()
 model_details = client.get_model_version_by_alias(model_name, model_alias)
@@ -162,7 +162,13 @@ def get_model_value_in_dollar(model_alias):
     tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['predictions']).ravel()
     return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive
 
-champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
+try:
+    #Compare the challenger f1 score to the existing champion if it exists
+    champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
+except:
+    print(f"No Champion found. Accept the model as it's the first one.")
+    champion_potential_revenue_gain = 0
+    
 challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
 
 data = {'Model Alias': ['Challenger', 'Champion'],
@@ -170,8 +176,8 @@ data = {'Model Alias': ['Challenger', 'Champion'],
 
 # Create a bar plot using plotly express
 px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
-       labels={'Potential Revenue Gain': 'Revenue Impacted'},
-       title='Business Metrics - Revenue Impacted')
+    labels={'Potential Revenue Gain': 'Revenue Impacted'},
+    title='Business Metrics - Revenue Impacted')
 
 # COMMAND ----------
 
@@ -194,7 +200,7 @@ results.tags
 
 # COMMAND ----------
 
-if results.tags["has_description"] and results.tags["metric_f1_passed"]:
+if results.tags["has_description"] == "True" and results.tags["metric_f1_passed"] == "True":
   print('register model as Champion!')
   client.set_registered_model_alias(
     name=model_name,

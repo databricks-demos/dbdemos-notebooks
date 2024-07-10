@@ -7,6 +7,7 @@ setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 # COMMAND ----------
 
 catalog = "main__build"
+schema = dbName = db = "dbdemos_mlops"
 
 # COMMAND ----------
 

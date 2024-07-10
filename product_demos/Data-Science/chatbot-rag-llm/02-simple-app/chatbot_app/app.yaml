@@ -2,7 +2,7 @@ command:
 - uvicorn
 - main:app
 - --workers
-- '4'
+- '1'
 env:
 - name: MODEL_SERVING_ENDPOINT
   value: agents_main__build-dbdemos_rag_chatbot-dbdemos_rag_demo

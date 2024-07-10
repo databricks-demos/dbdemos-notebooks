@@ -47,7 +47,7 @@ endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:60]
 
 # Our frontend application will hit the model endpoint we deployed.
 # Because dbdemos let you change your catalog and database, let's make sure we deploy the app with the proper endpoint name
-yaml_app_config = {"command": ["uvicorn", "main:app", "--workers", "4"],
+yaml_app_config = {"command": ["uvicorn", "main:app", "--workers", "1"],
                     "env": [{"name": "MODEL_SERVING_ENDPOINT", "value": endpoint_name}]
                   }
 try:

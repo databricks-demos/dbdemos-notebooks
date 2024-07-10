@@ -110,21 +110,33 @@ except Exception as lhm_exception:
 # COMMAND ----------
 
 import time
-# Display profile metrics table
-profile_table = f"{TABLE_NAME}_profile_metrics"
+from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
 
-#Creating the monitor and computing its first metrics might take a few seconds, let's wait a bit before displaying the profile metrics
-while not spark.catalog.tableExists(profile_table) or spark.table(profile_table).isEmpty():
+# Wait for monitor to be created
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING::
+  info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{TABLE_NAME}")
   time.sleep(10)
-  
+
+assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
+
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{dbName}.{TABLE_NAME}").refreshes
+assert(len(refreshes) > 0)
+
+run_info = refreshes[0]
+while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{dbName}.{TABLE_NAME}", refresh_id=run_info.refresh_id)
+  time.sleep(30)
+
+assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
+
+# COMMAND ----------
+
+# Display profile metrics table
+profile_table = f"{TABLE_NAME}_profile_metrics"  
 display(spark.sql(f"SELECT * FROM {profile_table}"))
 
 # Display the drift metrics table
 drift_table = f"{TABLE_NAME}_drift_metrics"
-
-while not spark.catalog.tableExists(drift_table) or spark.table(drift_table).isEmpty():
-  time.sleep(10)
-
 display(spark.sql(f"SELECT * FROM {drift_table}"))
 
 # COMMAND ----------

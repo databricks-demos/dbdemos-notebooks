@@ -55,7 +55,7 @@ class LakehouseAppHelper:
             print(response)
             if response["status"]["state"] != "CREATING":
                 break
-        response
+        return response
 
     def deploy(self, app_name, source_code_path):
         # Deploy starts the pod, downloads the source code, install necessary dependencies, and starts the app.
@@ -72,7 +72,7 @@ class LakehouseAppHelper:
             response = requests.get(f"{self.host}/api/2.0/preview/apps/{app_name}/deployments/{deployment_id}", headers=self.get_headers()).json()
             if response["status"]["state"] != "IN_PROGRESS":
                 break
-        response
+        return response
 
     def get_app_details(self, app_name):
         url = self.host + f"/api/2.0/preview/apps/{app_name}"

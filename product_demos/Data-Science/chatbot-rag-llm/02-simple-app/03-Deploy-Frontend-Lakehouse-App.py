@@ -43,7 +43,7 @@
 # COMMAND ----------
 
 MODEL_NAME = "dbdemos_rag_demo"
-endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:63]
+endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:60]
 
 # Our frontend application will hit the model endpoint we deployed.
 # Because dbdemos let you change your catalog and database, let's make sure we deploy the app with the proper endpoint name
@@ -70,15 +70,14 @@ except:
 # MAGIC from gradio.themes.utils import sizes
 # MAGIC from databricks.sdk import WorkspaceClient
 # MAGIC from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
-# MAGIC 
+# MAGIC
 # MAGIC app = FastAPI()
-# MAGIC 
+# MAGIC
 # MAGIC # your endpoint will directly be setup with proper permissions when you deploy your app
 # MAGIC w = WorkspaceClient()
 # MAGIC available_endpoints = [x.name for x in w.serving_endpoints.list()]
-# MAGIC model_serving_endpoint_name = os.environ["MODEL_SERVING_ENDPOINT"]
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC def respond(message, history, dropdown):
 # MAGIC     if len(message.strip()) == 0:
 # MAGIC         return "ERROR the question should not be empty"
@@ -100,14 +99,14 @@ except:
 # MAGIC     except Exception as error:
 # MAGIC         return f"ERROR requesting endpoint {dropdown}: {error}"
 # MAGIC     return response.choices[0].message.content
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC theme = gr.themes.Soft(
 # MAGIC     text_size=sizes.text_sm,
 # MAGIC     radius_size=sizes.radius_sm,
 # MAGIC     spacing_size=sizes.spacing_sm,
 # MAGIC )
-# MAGIC 
+# MAGIC
 # MAGIC demo = gr.ChatInterface(
 # MAGIC     respond,
 # MAGIC     chatbot=gr.Chatbot(
@@ -134,7 +133,7 @@ except:
 # MAGIC     ),
 # MAGIC     additional_inputs_accordion="Settings",
 # MAGIC )
-# MAGIC 
+# MAGIC
 # MAGIC demo.queue(default_concurrency_limit=100)
 # MAGIC app = gr.mount_gradio_app(app, demo, path="/")
 
@@ -156,7 +155,31 @@ helper = LakehouseAppHelper()
 #helper.list()
 #Delete potential previous app version
 #helper.delete("dbdemos-rag-chatbot-app")
-helper.create("dbdemos-rag-chatbot-app", app_description="Your Databricks assistant")
+app_details = helper.create("dbdemos-rag-chatbot-app", app_description="Your Databricks assistant")
+
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServingEndpointAccessControlRequest
+
+w = WorkspaceClient()
+
+w = w.serving_endpoints.set_permissions(
+    serving_endpoint_id=w.serving_endpoints.get(endpoint_name).id,
+    access_control_list=[
+        ServingEndpointAccessControlRequest.from_dict(
+            {
+                "service_principal_name": w.service_principals.get(
+                    app_details["service_principal_id"]
+                ).application_id,
+                "permission_level": "CAN_QUERY",
+            }
+        )
+    ],
+)
+
+# COMMAND ----------
+
 helper.deploy("dbdemos-rag-chatbot-app", os.path.join(os.getcwd(), 'chatbot_app'))
 
 # COMMAND ----------

@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("raw_data_location", "/demos/raw_data", "Raw data location (stating dir)")
+dbutils.widgets.text("volume_folder", "/dbdemos/raw_data", "Raw data location (stating dir)")
 
 # COMMAND ----------
 
@@ -36,5 +36,5 @@ df = df.withColumn("email", fake_email())
 df = df.withColumn("address", fake_address())
 df = df.withColumn("gender", F.round(F.rand()+0.2))
 df = df.withColumn("age_group", F.round(F.rand()*10))
-raw_data_location = dbutils.widgets.get("raw_data_location")
-df.repartition(100).write.mode("overwrite").format("json").save(raw_data_location+"/user_json")
+volume_folder = dbutils.widgets.get("volume_folder")
+df.repartition(100).write.mode("overwrite").format("json").save(volume_folder+"/user_json")

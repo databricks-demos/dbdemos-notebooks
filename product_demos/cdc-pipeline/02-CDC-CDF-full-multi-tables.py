@@ -1,8 +1,4 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC # Full demo: Change Data Capture on multiple tables
@@ -21,11 +17,11 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 # MAGIC In this notebook, we'll see how this can be done using Python & standard streaming APIs (without DLT).
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcdc_cdf%2Fcdc_full_notebook&dt=DELTA">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=02-CDC-CDF-full-multi-tables&demo_name=cdc-pipeline&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=$reset_all_data
+# MAGIC %run ./_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -67,26 +63,27 @@ display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
 
-dbutils.fs.rm(f"{cloud_storage_path}/cdc_full", True)
+dbutils.fs.rm(f"{raw_data_location}/cdc_full", True)
 
 # COMMAND ----------
 
 # DBTITLE 1,Bronze ingestion with autoloader
+
 #Stream using the autoloader to ingest raw files and load them in a delta table
 def update_bronze_layer(path, bronze_table):
   print(f"ingesting RAW cdc data for {bronze_table} and building bronze layer...")
   (spark.readStream
           .format("cloudFiles")
           .option("cloudFiles.format", "csv")
-          .option("cloudFiles.schemaLocation", f"{cloud_storage_path}/cdc_full/schemas/{bronze_table}")
+          .option("cloudFiles.schemaLocation", f"{raw_data_location}/cdc_full/schemas/{bronze_table}")
           .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
           .option("cloudFiles.inferColumnTypes", "true")
           .load(path)
-       .withColumn("file_name", input_file_name())
+       .withColumn("file_name", F.input_file_name())
        .writeStream
-          .option("checkpointLocation", f"{cloud_storage_path}/cdc_full/checkpoints/{bronze_table}")
+          .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{bronze_table}")
           .option("mergeSchema", "true")
-          .trigger(once=True)
+          .trigger(availableNow=True)
           .table(bronze_table).awaitTermination())
 
 # COMMAND ----------
@@ -121,8 +118,8 @@ def update_silver_layer(bronze_table, silver_table):
          .table(bronze_table)
        .writeStream
          .foreachBatch(merge_stream)
-         .option("checkpointLocation", f"{cloud_storage_path}/cdc_full/checkpoints/{silver_table}")
-         .trigger(once=True)
+         .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{silver_table}")
+         .trigger(availableNow=True)
        .start().awaitTermination())
 
 # COMMAND ----------
@@ -189,4 +186,4 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we stop all actives streams
-stop_all_streams()
+DBDemos.stop_all_streams()

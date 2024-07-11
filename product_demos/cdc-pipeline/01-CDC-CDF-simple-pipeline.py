@@ -1,8 +1,4 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC # Implement CDC: Change Data Capture
@@ -24,12 +20,13 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 # MAGIC
 # MAGIC As you'll see, `APPLY CHANGES` handles the MERGE INTO + DEDUPLICATION complexity for you. 
 # MAGIC
+# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcdc_cdf%2Fcdc_notebook&dt=DELTA">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-CDC-CDF-simple-pipeline&demo_name=cdc-pipeline&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=$reset_all_data
+# MAGIC %run ./_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -77,12 +74,12 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.format", "csv")
                 #.option("cloudFiles.maxFilesPerTrigger", "1") #Simulate streaming, remove in production
                 .option("cloudFiles.inferColumnTypes", "true")
-                .option("cloudFiles.schemaLocation",  cloud_storage_path+"/schema_cdc_raw")
+                .option("cloudFiles.schemaLocation",  raw_data_location+"/stream/schema_cdc_raw")
                 .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
                 .load(raw_data_location+'/user_csv'))
 
-(bronzeDF.withColumn("file_name", input_file_name()).writeStream
-        .option("checkpointLocation", cloud_storage_path+"/checkpoint_cdc_raw")
+(bronzeDF.withColumn("file_name", F.input_file_name()).writeStream
+        .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
         .trigger(processingTime='10 seconds')
         .table("clients_cdc"))
 
@@ -138,7 +135,7 @@ spark.readStream \
        .table("clients_cdc") \
      .writeStream \
        .foreachBatch(merge_stream) \
-       .option("checkpointLocation", cloud_storage_path+"/checkpoint_clients_cdc") \
+       .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc") \
        .trigger(processingTime='10 seconds') \
      .start()
 
@@ -255,7 +252,7 @@ display(changes)
 # COMMAND ----------
 
 from pyspark.sql.window import Window
-from pyspark.sql.functions import dense_rank, regexp_replace, lit
+from pyspark.sql.functions import dense_rank, regexp_replace, lit, col
 
 #Function to upsert `microBatchOutputDF` into Delta table using MERGE
 def upsertToDelta(data, batchId):
@@ -325,4 +322,4 @@ time.sleep(20)
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we stop all actives streams
-stop_all_streams()
+DBDemos.stop_all_streams()

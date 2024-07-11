@@ -150,12 +150,11 @@ except:
 
 # COMMAND ----------
 
+app_name = "dbdemos-rag-chatbot-app"
+
 #Helper is defined in the _resources/02-lakehouse-app-helpers notebook (temporary helper)
 helper = LakehouseAppHelper()
-#helper.list()
-#Delete potential previous app version
-#helper.delete("dbdemos-rag-chatbot-app")
-app_details = helper.create("dbdemos-rag-chatbot-app", app_description="Your Databricks assistant")
+app_details = helper.create(app_name, app_description="Your Databricks assistant")
 
 # COMMAND ----------
 
@@ -164,29 +163,23 @@ app_details = helper.create("dbdemos-rag-chatbot-app", app_description="Your Dat
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import ServingEndpointAccessControlRequest
-
-w = WorkspaceClient()
-
-w = w.serving_endpoints.set_permissions(
-    serving_endpoint_id=w.serving_endpoints.get(endpoint_name).id,
-    access_control_list=[
-        ServingEndpointAccessControlRequest.from_dict(
-            {
-                "service_principal_name": w.service_principals.get(
-                    app_details["service_principal_id"]
-                ).application_id,
-                "permission_level": "CAN_QUERY",
-            }
-        )
+helper.add_dependencies(
+    app_name=app_name,
+    dependencies=[
+        {
+            "name": "rag-endpoint",
+            "serving_endpoint": {
+                "name": endpoint_name,
+                "permission": "CAN_QUERY",
+            },
+        }
     ],
 )
 
 # COMMAND ----------
 
-helper.deploy("dbdemos-rag-chatbot-app", os.path.join(os.getcwd(), 'chatbot_app'))
-helper.details("dbdemos-rag-chatbot-app")
+helper.deploy(app_name, os.path.join(os.getcwd(), 'chatbot_app'))
+helper.details(app_name)
 
 # COMMAND ----------
 

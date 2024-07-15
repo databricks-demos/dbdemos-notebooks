@@ -78,7 +78,11 @@ class LakehouseAppHelper:
                 break
         return response
 
-    def add_dependencies(self, app_name, dependencies):
+    def add_dependencies(self, app_name, dependencies, overwrite=True):
+        if not overwrite:
+            existing_dependencies = self.get_app_details(app_name).get('dependencies')
+            dependencies.extend(existing_dependencies) if existing_dependencies is not None else None
+        
         result = requests.patch(
             f"{self.host}/api/2.0/preview/apps/{app_name}",
             headers=self.get_headers(),

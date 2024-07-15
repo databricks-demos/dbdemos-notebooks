@@ -174,6 +174,7 @@ helper.add_dependencies(
             },
         }
     ],
+    overwrite=False # if False dependencies will be appended to existing ones
 )
 
 # COMMAND ----------

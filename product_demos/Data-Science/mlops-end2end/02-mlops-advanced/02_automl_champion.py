@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog="aminen_catalog" $db="advanced_mlops"
 
 # COMMAND ----------
 
@@ -43,6 +43,8 @@ import databricks.automl_runtime
 
 
 label_col = "churn"
+current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
+churn_experiment_name = "predict_churn_experiment"
 
 # COMMAND ----------
 

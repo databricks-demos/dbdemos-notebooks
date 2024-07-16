@@ -28,7 +28,7 @@ dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Res
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog="aminen_catalog" $db="advanced_mlops"
 
 # COMMAND ----------
 
@@ -63,8 +63,16 @@ display(telcoDF)
 
 # COMMAND ----------
 
+primary_key = "customer_id"
+timestamp_col ="transaction_ts"
+label_col = "churn"
+labels_table_name = "churn_label_table"
+feature_table_name = "churn_feature_table"
+
+# COMMAND ----------
+
 from pyspark.sql import DataFrame as SparkDataFrame
-from pyspark.sql.functions import pandas_udf, col, when
+from pyspark.sql.functions import pandas_udf, col, when, lit
 
 def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
   """
@@ -140,9 +148,8 @@ from datetime import datetime
 
 # Add current scoring timestamp
 this_time = (datetime.now()).timestamp()
-
 churn_features_n_predsDF = clean_churn_features(compute_service_features(telcoDF)) \
-                            .withColumn(timestamp_col, F.lit(this_time).cast("timestamp"))
+                            .withColumn(timestamp_col, lit(this_time).cast("timestamp"))
 
 display(churn_features_n_predsDF)
 
@@ -158,7 +165,7 @@ display(churn_features_n_predsDF)
 churn_features_n_predsDF.select(primary_key, timestamp_col, label_col) \
                         .write.format("delta") \
                         .mode("overwrite").option("overwriteSchema", "true") \
-                        .saveAsTable(f"{catalog}.{dbName}.{labels_table_name}")
+                        .saveAsTable(f"{catalog}.{db}.{labels_table_name}")
 
 churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
@@ -169,9 +176,9 @@ churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
 # COMMAND ----------
 
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ALTER COLUMN {primary_key} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ALTER COLUMN {timestamp_col} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ADD CONSTRAINT {labels_table_name}_pk PRIMARY KEY({primary_key}, {timestamp_col})")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{labels_table_name} ALTER COLUMN {primary_key} SET NOT NULL")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{labels_table_name} ALTER COLUMN {timestamp_col} SET NOT NULL")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{labels_table_name} ADD CONSTRAINT {labels_table_name}_pk PRIMARY KEY({primary_key}, {timestamp_col})")
 
 # COMMAND ----------
 
@@ -202,11 +209,11 @@ from pprint import pprint
 
 try:
 
-  online_table_specs = w.online_tables.get(f"{catalog}.{dbName}.{feature_table_name}_online_table")
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
   
   # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{dbName}.{feature_table_name}_online")
-  print(f"Dropping online feature table: {catalog}.{dbName}.{feature_table_name}_online")
+  w.online_tables.delete(f"{catalog}.{db}.{feature_table_name}_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.{feature_table_name}_online_table")
 
 except Exception as e:
   pprint(e)
@@ -218,16 +225,16 @@ except Exception as e:
 try:
 
   # Drop existing table from Feature Store
-  fe.drop_table(name=f"{catalog}.{dbName}.{feature_table_name}")
+  fe.drop_table(name=f"{catalog}.{db}.{feature_table_name}")
 
   # Delete underyling delta tables
-  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{dbName}.{feature_table_name}")
-  print(f"Dropping Feature Table {catalog}.{dbName}.{feature_table_name}")
+  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.{feature_table_name}")
+  print(f"Dropping Feature Table {catalog}.{db}.{feature_table_name}")
 
 
 except ValueError as ve:
   pass
-  print(f"Feature Table {catalog}.{dbName}.{feature_table_name} doesn't exist")
+  print(f"Feature Table {catalog}.{db}.{feature_table_name} doesn't exist")
 
 # COMMAND ----------
 
@@ -236,14 +243,14 @@ churn_feature_table = fe.create_table(
   primary_keys=[primary_key, timestamp_col],
   schema=churn_featuresDF.schema,
   timeseries_columns=timestamp_col,
-  description=f"These features are derived from the {catalog}.{dbName}.{bronze_table_name} table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground-truth and now can be used with AutoML's Feature Store integration"
+  description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground-truth and now can be used with AutoML's Feature Store integration"
 )
 
 # COMMAND ----------
 
 # DBTITLE 1,Write feature values to Feature Store
 fe.write_table(
-  name=f"{catalog}.{dbName}.{feature_table_name}",
+  name=f"{catalog}.{db}.{feature_table_name}",
   df=churn_featuresDF, # can be a streaming dataframe as well
   mode='merge' #'merge'/'overwrite' which supports schema evolution
 )
@@ -251,7 +258,7 @@ fe.write_table(
 # COMMAND ----------
 
 # DBTITLE 1,Enable Change-Data-Feed on Feature Table for performance considerations
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 # COMMAND ----------
 
@@ -290,7 +297,7 @@ if get_cloud_name() == "aws":
   dynamo_table_prefix = "one-env-feature_store" # [OPTIONAL] If table name has to start with specific prefix given policies
   churn_features_online_store_spec = AmazonDynamoDBSpec(
     region="us-west-2",
-    table_name = f"{dynamo_table_prefix}_{dbName}_{feature_table_name}"
+    table_name = f"{dynamo_table_prefix}_{db}_{feature_table_name}"
 #    ttl= # Publish window of feature values given time-to-live date
 )
 
@@ -351,22 +358,22 @@ fe.publish_table(
 
 # COMMAND ----------
 
-from databricks.sdk.service.catalog import OnlineTableSpec
+from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 
 
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
   primary_key_columns = [primary_key],
   timeseries_key = timestamp_col,
-  source_table_full_name = f"{catalog}.{dbName}.{feature_table_name}",
-  run_triggered={'triggered': 'true'}
+  source_table_full_name = f"{catalog}.{db}.{feature_table_name}",
+  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
 )
 
 # COMMAND ----------
 
 # Create the online table
 w.online_tables.create(
-  name=f"{catalog}.{dbName}.{feature_table_name}_online_table",
+  name=f"{catalog}.{db}.{feature_table_name}_online_table",
   spec=churn_features_online_store_spec
 )
 
@@ -375,9 +382,8 @@ w.online_tables.create(
 # DBTITLE 1,Check status of Online Table
 from pprint import pprint
 
-
 try:
-  online_table_spec = w.online_tables.get(f"{catalog}.{dbName}.{feature_table_name}_online_table")
+  online_table_exist = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
   pprint(online_table_exist)
 
 except Exception as e:
@@ -447,7 +453,69 @@ except Exception as e:
 
 # DBTITLE 1,Run 'baseline' autoML experiment in the back-ground
 force_refresh = dbutils.widgets.get("force_refresh_automl") == "true"
-display_automl_churn_link(f"{catalog}.{dbName}.{feature_table_name}", force_refresh = force_refresh, use_feature_table=True)
+display_automl_churn_link(f"{catalog}.{db}.{feature_table_name}", force_refresh = force_refresh, use_feature_table=True)
+
+# COMMAND ----------
+
+from pyspark.sql.functions import col
+from databricks.feature_store import FeatureStoreClient
+import mlflow
+
+import databricks
+from databricks import automl
+from datetime import datetime
+
+def get_automl_run(name):
+  #get the most recent automl run
+  df = spark.table("field_demos_metadata.automl_experiment").filter(col("name") == name).orderBy(col("date").desc()).limit(1)
+  return df.collect()
+
+#Get the automl run information from the field_demos_metadata.automl_experiment table. 
+#If it's not available in the metadata table, start a new run with the given parameters
+def get_automl_run_or_start(name, model_name, dataset, target_col, timeout_minutes):
+  spark.sql("create database if not exists field_demos_metadata")
+  spark.sql("create table if not exists field_demos_metadata.automl_experiment (name string, date string)")
+  result = get_automl_run(name)
+  if len(result) == 0:
+    print("No run available, start a new Auto ML run, this will take a few minutes...")
+    start_automl_run(name, model_name, dataset, target_col, timeout_minutes)
+    result = get_automl_run(name)
+  return result[0]
+
+
+#Start a new auto ml classification task and save it as metadata.
+def start_automl_run(name, model_name, dataset, target_col, timeout_minutes = 5):
+  automl_run = databricks.automl.classify(
+    dataset = dataset,
+    target_col = target_col,
+    timeout_minutes = timeout_minutes
+  )
+  experiment_id = automl_run.experiment.experiment_id
+  path = automl_run.experiment.name
+  data_run_id = mlflow.search_runs(experiment_ids=[automl_run.experiment.experiment_id], filter_string = "tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].run_id
+  exploration_notebook_id = automl_run.experiment.tags["_databricks_automl.exploration_notebook_id"]
+  best_trial_notebook_id = automl_run.experiment.tags["_databricks_automl.best_trial_notebook_id"]
+
+  cols = ["name", "date", "experiment_id", "experiment_path", "data_run_id", "best_trial_run_id", "exploration_notebook_id", "best_trial_notebook_id"]
+  spark.createDataFrame(data=[(name, datetime.today().isoformat(), experiment_id, path, data_run_id, automl_run.best_trial.mlflow_run_id, exploration_notebook_id, best_trial_notebook_id)], schema = cols).write.mode("append").option("mergeSchema", "true").saveAsTable("field_demos_metadata.automl_experiment")
+  #Create & save the first model version in the MLFlow repo (required to setup hooks etc)
+  mlflow.register_model(f"runs:/{automl_run.best_trial.mlflow_run_id}/model", model_name)
+  return get_automl_run(name)
+
+#Generate nice link for the given auto ml run
+def display_automl_link(name, model_name, dataset, target_col, force_refresh=False, timeout_minutes = 5):
+  r = get_automl_run_or_start(name, model_name, dataset, target_col, timeout_minutes)
+  html = f"""For exploratory data analysis, open the <a href="/#notebook/{r["exploration_notebook_id"]}">data exploration notebook</a><br/><br/>"""
+  html += f"""To view the best performing model, open the <a href="/#notebook/{r["best_trial_notebook_id"]}">best trial notebook</a><br/><br/>"""
+  html += f"""To view details about all trials, navigate to the <a href="/#mlflow/experiments/{r["experiment_id"]}/s?orderByKey=metrics.%60val_f1_score%60&orderByAsc=false">MLflow experiment</>"""
+  displayHTML(html)
+
+
+def display_automl_churn_link(): 
+  display_automl_link("churn_auto_ml", "field_demos_customer_churn", spark.table("churn_features"), "churn", 5)
+
+def get_automl_churn_run(): 
+  return get_automl_run_or_start("churn_auto_ml", "field_demos_customer_churn", spark.table("churn_features"), "churn", 5)
 
 # COMMAND ----------
 

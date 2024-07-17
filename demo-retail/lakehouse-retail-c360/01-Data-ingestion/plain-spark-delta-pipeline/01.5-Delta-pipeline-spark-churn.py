@@ -1,8 +1,4 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC # Ingesting and transforming churn data with Delta Lake and Spark API
 # MAGIC
@@ -32,7 +28,7 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %run ../../_resources/00-setup $reset_all_data=$reset_all_data
+# MAGIC %run ../../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -284,6 +280,11 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                 Model name (UC)                   |        |
 #                                                                     |                             |        |
 predict_churn_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_customer_churn@prod", "int")
+
+# COMMAND ----------
+
+# MAGIC %pip install mlflow==2.14.3 cloudpickle==2.0.0
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 

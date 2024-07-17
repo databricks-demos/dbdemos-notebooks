@@ -135,6 +135,8 @@
     "custom_tags": {
         "ResourceClass": "SingleNode"
     },
+    "single_user_name": "{{CURRENT_USER}}",
+    "data_security_mode": "SINGLE_USER",
     "num_workers": 0
   },
   "pipelines": [

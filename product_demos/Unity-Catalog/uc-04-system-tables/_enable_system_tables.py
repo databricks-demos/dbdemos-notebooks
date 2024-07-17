@@ -22,6 +22,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.20.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 metastore_id = spark.sql("SELECT current_metastore() as metastore_id").collect()[0]["metastore_id"]
 metastore_id = metastore_id[metastore_id.rfind(':')+1:]
 dbutils.widgets.removeAll()
@@ -42,7 +47,8 @@ import requests
 from time import sleep
 metastore_id = dbutils.widgets.get("metastore_id")
 host = "https://"+dbutils.notebook.entry_point.getDbutils().notebook().getContext().browserHostName().get()
-headers = {"Authorization": "Bearer "+dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()}
+from databricks.sdk import WorkspaceClient
+headers = WorkspaceClient().config.authenticate()
 
 # COMMAND ----------
 

@@ -4,26 +4,39 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ### Retail CDC Data Generator
-# MAGIC 
+# MAGIC
 # MAGIC Run this notebook to create new data. It's added in the pipeline to make sure data exists when we run it.
-# MAGIC 
+# MAGIC
 # MAGIC You can also run it in the background to periodically add data.
-# MAGIC 
+# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fdlt_cdc%2Fnotebook_generator&dt=DLT_CDC">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=00-Data_CDC_Generator&demo_name=dlt-cdc&event=VIEW">
 
 # COMMAND ----------
 
-folder = "/demos/dlt/cdc_raw"
-#dbutils.fs.rm(folder, True)
+catalog = "main__build"
+schema = dbName = db = "dbdemos_dlt_cdc"
+
+volume_name = "dlt"
+
+# COMMAND ----------
+
+spark.sql(f'CREATE CATALOG IF NOT EXISTS `{catalog}`')
+spark.sql(f'USE CATALOG `{catalog}`')
+spark.sql(f'CREATE SCHEMA IF NOT EXISTS `{catalog}`.`{schema}`')
+spark.sql(f'USE SCHEMA `{schema}`')
+spark.sql(f'CREATE VOLUME IF NOT EXISTS `{catalog}`.`{schema}`.`{volume_name}`')
+volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
+
+# COMMAND ----------
+
 try:
-  dbutils.fs.ls(folder)
-  dbutils.fs.ls(folder+"/transactions")
-  dbutils.fs.ls(folder+"/customers")
-except:
-  print("folder doesn't exists, generating the data...")
+  dbutils.fs.ls(volume_folder+"/transactions")
+  dbutils.fs.ls(volume_folder+"/customers")
+except:  
+  print(f"folder doesn't exists, generating the data under {volume_folder}...")
   from pyspark.sql import functions as F
   from faker import Faker
   from collections import OrderedDict 
@@ -49,7 +62,7 @@ except:
   df = df.withColumn("address", fake_address())
   df = df.withColumn("operation", fake_operation())
   df_customers = df.withColumn("operation_date", fake_date())
-  df_customers.repartition(100).write.format("json").mode("overwrite").save(folder+"/customers")
+  df_customers.repartition(100).write.format("json").mode("overwrite").save(volume_folder+"/customers")
 
   df = spark.range(0, 10000).repartition(20)
   df = df.withColumn("id", fake_id())
@@ -59,5 +72,5 @@ except:
   df = df.withColumn("operation", fake_operation())
   df = df.withColumn("operation_date", fake_date())
   #Join with the customer to get the same IDs generated.
-  df = df.withColumn("t_id", F.monotonically_increasing_id()).join(spark.read.json(folder+"/customers").select("id").withColumnRenamed("id", "customer_id").withColumn("t_id", F.monotonically_increasing_id()), "t_id").drop("t_id")
-  df.repartition(10).write.format("json").mode("overwrite").save(folder+"/transactions")
+  df = df.withColumn("t_id", F.monotonically_increasing_id()).join(spark.read.json(volume_folder+"/customers").select("id").withColumnRenamed("id", "customer_id").withColumn("t_id", F.monotonically_increasing_id()), "t_id").drop("t_id")
+  df.repartition(10).write.format("json").mode("overwrite").save(volume_folder+"/transactions")

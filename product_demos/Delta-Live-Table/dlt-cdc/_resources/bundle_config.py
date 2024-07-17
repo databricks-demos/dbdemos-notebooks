@@ -9,6 +9,9 @@
   "name": "dlt-cdc",
   "category": "data-engineering",
   "title": "CDC pipeline with Delta Live Table.",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_dlt_cdc",
   "description": "Ingest Change Data Capture flow with APPLY INTO and simplify SCDT2 implementation.",
   "fullDescription": "This demo highlight how Delta Live Table simplify CDC (Change Data Capture).<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/>We'll also implement a SCD2 (Slowly Changing Dimention table of type 2). While this can be really tricky to implement when data arrives out of order, DLT makes this super simple with one simple keyword.<br/><br/>Ultimately, we'll show you how to programatically scan multiple incoming folder and trigger N stream (1 for each CDC table), leveraging DLT with python.",
     "usecase": "Data Engineering",
@@ -110,7 +113,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "11.1.x-scala2.12",
+                    "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -169,10 +172,11 @@
                 }
             }
         ],
-        "name": "dbdemos_dlt_cdc_{{CURRENT_USER_NAME}}",
-        "storage": "/demos/dlt/cdc/{{CURRENT_USER_NAME}}",
-        "target": "demos_dlt_cdc_{{CURRENT_USER_NAME}}"
+        "name": "dbdemos_dlt_cdc_{{CATALOG}}_{{SCHEMA}}",
+        "catalog": "{{CATALOG}}",
+        "target": "{{SCHEMA}}"
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[dbdemos] Delta Lake - Data Quality Stats",  "id": "dlt-expectations"}]
 }

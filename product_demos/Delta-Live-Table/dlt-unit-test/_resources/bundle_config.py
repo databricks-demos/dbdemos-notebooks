@@ -9,6 +9,9 @@
   "name": "dlt-unit-test",
   "category": "data-engineering",
   "title": "Unit Testing Delta Live Table (DLT) for production-grade pipelines",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "&",
   "description": "Deploy robust Delta Live Table pipelines with unit tests leveraging expectation.",
   "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Delta Live Table let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your DLT pipeline and make it composable, easily switching input data with your test data.",
   "usecase": "Data Engineering",
@@ -63,17 +66,7 @@
       "add_cluster_setup_cell": False,
       "title":  "Unit test definition", 
       "description": "Main notebook containing the unit tests."
-    },
-    {
-      "path": "_resources/01-load-data-quality-dashboard", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Init dashboard dataset", 
-      "description": "Init dashboard dataset."
     }
-      
-    
   ],
   "init_job": {
     "settings": {
@@ -84,16 +77,6 @@
         "timeout_seconds": 0,
         "max_concurrent_runs": 1,
         "tasks": [
-            {
-                "task_key": "init_dbsql_data",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/01-load-data-quality-dashboard",
-                    "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {}
-            },
             {
                 "task_key": "init_data",
                 "notebook_task": {
@@ -123,7 +106,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "11.1.x-scala2.12",
+                    "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -191,9 +174,9 @@
                 }
             }
         ],
-        "name": "field_demos_dlt_unit_test_{{CURRENT_USER_NAME}}",
-        "storage": "/demos/dlt/unit_tests/{{CURRENT_USER_NAME}}",
-        "target": "demos_dlt_unit_tests_{{CURRENT_USER_NAME}}"
+        "name": "dbdemos_dlt_unit_test_{{CATALOG}}_{{SCHEMA}}",
+        "catalog": "{{CATALOG}}",
+        "target": "{{SCHEMA}}"
       }
     }
   ]

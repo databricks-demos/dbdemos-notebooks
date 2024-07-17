@@ -1,0 +1,363 @@
+{
+  "datasets": [
+    {
+      "name": "af93f93e",
+      "displayName": "DLT-retail-data-quality-stats",
+      "query": "select \n    date(timestamp) day, sum(failed_records)/sum(output_records)*100 failure_rate, sum(output_records) output_records from `main__build`.`dbdemos_dlt_cdc`.dlt_expectations \ngroup by day order by day"
+    },
+    {
+      "name": "210ed6ab",
+      "displayName": "DLT-retail-data-quality",
+      "query": "select sum(passed_records) as passed_records,\n       sum(failed_records) as failed_records,\n       sum(dropped_records) as dropped_records,\n       sum(output_records) as output_records,\n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       name,\n       dataset,\n        date(timestamp) as date from `main__build`.`dbdemos_dlt_cdc`.dlt_expectations values group by date, dataset, name;"
+    },
+    {
+      "name": "6770434a",
+      "displayName": "DLT-retail-data-quality-per-table",
+      "query": "select 'passed_records' as type,\n       sum(passed_records) as value, \n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       dataset \n   from `main__build`.`dbdemos_dlt_cdc`.dlt_expectations  group by dataset\nunion\nselect 'failed_records' as type,\n       sum(failed_records) as value, \n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       dataset \n   from `main__build`.`dbdemos_dlt_cdc`.dlt_expectations  group by dataset\nunion\nselect 'dropped_records' as type,\n       sum(dropped_records) as value, \n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       dataset \n   from `main__build`.`dbdemos_dlt_cdc`.dlt_expectations  group by dataset\n"
+    }
+  ],
+  "pages": [
+    {
+      "name": "7416f21b",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "b27f3885",
+            "textbox_spec": "# Retail ingestion quality tracker\nThis dashboard leverage the Delta Live Table expectation metrics to track our data quality over the ingestion pipeline.\n\nThe pipeline is incrementally consuming new data (each hour or in real time) and the dashboard is updated accordingly. Open notebook `02.1-Delta-Live-Table-Ingestion` to visualize the Delta Live Table pipeline.\n\nData has been prepared using a SQL query over the value from the `/system/events` table. Open `02.3-DLT-expectation-dashboard-data-prep` for more details."
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "7a3862c4",
+            "textbox_spec": "Demo dashboard. Please do not edit"
+          },
+          "position": {
+            "x": 0,
+            "y": 23,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "3d41baef",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "af93f93e",
+                  "fields": [
+                    {
+                      "name": "output_records",
+                      "expression": "`output_records`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "output_records",
+                  "rowNumber": 1,
+                  "displayName": "output_records"
+                }
+              },
+              "frame": {
+                "title": "Ingestion rate",
+                "showTitle": true,
+                "description": "Daily row ingested",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "e74af07b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "af93f93e",
+                  "fields": [
+                    {
+                      "name": "failure_rate",
+                      "expression": "`failure_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "failure_rate",
+                  "rowNumber": 11,
+                  "displayName": "failure_rate"
+                }
+              },
+              "frame": {
+                "title": "Invalid data",
+                "showTitle": true,
+                "description": "Quality Failure rate (%)",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 4,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "a3fd727b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "af93f93e",
+                  "fields": [
+                    {
+                      "name": "failure_rate",
+                      "expression": "`failure_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "failure_rate",
+                  "rowNumber": 1,
+                  "displayName": "failure_rate"
+                }
+              },
+              "frame": {
+                "title": "Incorrect input schema rate",
+                "showTitle": true,
+                "description": "Invalid input schema (%)",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 4,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "7b628bf9",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "210ed6ab",
+                  "fields": [
+                    {
+                      "name": "daily(date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `date`)"
+                    },
+                    {
+                      "name": "sum(failed_records)",
+                      "expression": "SUM(`failed_records`)"
+                    },
+                    {
+                      "name": "sum(passed_records)",
+                      "expression": "SUM(`passed_records`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "date"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative",
+                    "fn": {
+                      "type": "symlog"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(failed_records)",
+                      "displayName": "Sum of failed_records"
+                    },
+                    {
+                      "fieldName": "sum(passed_records)",
+                      "displayName": "Sum of passed_records"
+                    }
+                  ]
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "format": {
+                "timeFormat": {
+                  "formatType": "moment",
+                  "format": "YYYY-MM-DD HH:mm"
+                }
+              },
+              "frame": {
+                "title": "Daily ingestion and failure",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 3,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "3a571449",
+            "queries": [
+              {
+                "name": "7a1ec5ac5b114c3292244ebcd776e769",
+                "query": {
+                  "datasetName": "210ed6ab",
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Daily ingestion error per expectations",
+                "description": "",
+                "viz_type": "CHART",
+                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"column\", \"sortX\": true, \"legend\": {\"enabled\": true, \"placement\": \"auto\", \"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"date\"}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"failed_records\"}}, {\"type\": \"-\", \"opposite\": true, \"title\": {\"text\": null}}], \"alignYAxesAtZero\": false, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": \"stack\", \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"failed_records\": {\"yAxis\": 0}, \"user_gold_dlt\": {\"color\": \"#F58742\"}, \"spend_silver_dlt\": {\"color\": \"#F5C61B\"}, \"user_silver_dlt\": {\"color\": \"#A58AFF\"}, \"users_bronze_dlt\": {\"color\": \"#C63FA9\", \"type\": \"column\"}, \"valid_score\": {\"color\": \"#C44427\"}, \"valid_id\": {\"color\": \"#D67C1C\"}, \"valid_age\": {\"color\": \"#D6C31C\"}, \"correct_schema\": {\"color\": \"#A58AFF\"}, \"valid_income\": {\"color\": \"#C63FA9\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": false, \"swappedAxes\": false, \"showDataLabels\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm\", \"columnConfigurationMap\": {\"x\": {\"column\": \"date\"}, \"y\": [{\"column\": \"failed_records\"}], \"series\": {\"column\": \"name\"}}, \"showPlotlyControls\": true}",
+                "query_name": "7a1ec5ac5b114c3292244ebcd776e769"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "e79d0011",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6770434a",
+                  "fields": [
+                    {
+                      "name": "dataset",
+                      "expression": "`dataset`"
+                    },
+                    {
+                      "name": "sum(failure_rate)",
+                      "expression": "SUM(`failure_rate`)"
+                    },
+                    {
+                      "name": "type",
+                      "expression": "`type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "dataset",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "dataset"
+                },
+                "y": {
+                  "fieldName": "sum(failure_rate)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of failure_rate"
+                },
+                "color": {
+                  "fieldName": "type",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "dropped_records",
+                        "color": "#FFAB00"
+                      },
+                      {
+                        "value": "failed_records",
+                        "color": "#FF3621"
+                      }
+                    ]
+                  },
+                  "displayName": "type"
+                }
+              },
+              "frame": {
+                "title": "Quality stat per table",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 8,
+            "width": 3,
+            "height": 8
+          }
+        }
+      ]
+    }
+  ]
+}

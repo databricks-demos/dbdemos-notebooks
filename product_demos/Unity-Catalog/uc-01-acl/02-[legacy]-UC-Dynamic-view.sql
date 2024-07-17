@@ -18,8 +18,8 @@
 -- MAGIC
 -- MAGIC See the [documentation](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#dynamic-view-functions) for more details.
 -- MAGIC
--- MAGIC <!-- tracking, please Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fuc%2Ftable_acl%2Fdynamic_view&dt=FEATURE_UC_TABLE_ACL">
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=02-[legacy]-UC-Dynamic-view&demo_name=uc-01-acl&event=VIEW">
 
 -- COMMAND ----------
 

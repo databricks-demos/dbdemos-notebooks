@@ -3,7 +3,7 @@ dbutils.widgets.text('reset_all_data', 'false')
 
 # Change your schema here:
 catalog = "main"
-schema = "billing_forecast"
+schema = "dbdemos_billing_forecast"
 
 # COMMAND ----------
 
@@ -28,16 +28,7 @@ if len(catalog) > 0:
     catalogs = [r['catalog'] for r in spark.sql("SHOW CATALOGS").collect()]
     if catalog not in catalogs:
       spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog}")
-      if catalog == 'dbdemos':
-        spark.sql(f"ALTER CATALOG {catalog} OWNER TO `account users`")
   use_and_create_db(catalog, schema)
-
-if catalog == 'dbdemos':
-  try:
-    spark.sql(f"GRANT CREATE, USAGE on DATABASE {catalog}.{schema} TO `account users`")
-    spark.sql(f"ALTER SCHEMA {catalog}.{schema} OWNER TO `account users`")
-  except Exception as e:
-    print("Couldn't grant access to the schema to all users:"+str(e))    
 
 print(f"using catalog.database `{catalog}`.`{schema}`")
 spark.sql(f"""USE `{catalog}`.`{schema}`""")    

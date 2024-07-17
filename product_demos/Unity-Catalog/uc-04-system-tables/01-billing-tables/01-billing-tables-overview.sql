@@ -29,8 +29,17 @@
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC # Built in Account Usage Tracking Dashboard
+-- MAGIC
+-- MAGIC You can access and install built in $DBU Dashboard as an admin, from the Databricks account console.
+-- MAGIC
+-- MAGIC As part of this demo, we also installed this dashboard. You can access it here: <a dbdemos-dashboard-id="account-usage" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">forecasting dashboard</a>
+
+-- COMMAND ----------
+
 -- MAGIC %md 
--- MAGIC *Looking for the notebook used to create the [forecasting dashboard](/sql/dashboards/ab3b5298-e09e-4998-8ef3-ae456a7b888d)? Jump to the [02-forecast-billing-tables]($./02-forecast-billing-tables) notebook.*
+-- MAGIC *Looking for the notebook used to create the <a dbdemos-dashboard-id="cost-forecasting" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">forecasting dashboard</a>? Jump to the [02-forecast-billing-tables]($./02-forecast-billing-tables) notebook.*
 
 -- COMMAND ----------
 

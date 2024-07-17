@@ -10,7 +10,7 @@
   "category": "governance",
   "title": "System Tables: Billing Forecast, Usage and Audit",
   "custom_schema_supported": True,
-  "default_schema": "billing_forecast",
+  "default_schema": "dbdemos_billing_forecast",
   "default_catalog": "main",
   "custom_message": "System tables need the be enabled first on UC for this demo to work. See <a href=\"https://notebooks.databricks.com/demos/uc-04-system-tables/index.html#\">_enable_system_tables notebook</a> for more details (also installed as part of the demo).<br/><strong>We have a cache issue loading the dashboard - Please run the 2 widget queries individually to see all SKU & all workspace IDs - we're working on it. To find the queries, search \"System Tables - Distinct workspace id\" and \"System Tables - Distinct SKU\"</strong>",
   "description": "Track and analysis usage, billing & access with UC System tables.",

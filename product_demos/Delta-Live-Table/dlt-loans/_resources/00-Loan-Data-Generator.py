@@ -6,36 +6,46 @@
 # MAGIC %md
 # MAGIC # Data generator for DLT pipeline
 # MAGIC This notebook will generate data in the given storage path to simulate a data flow. 
-# MAGIC 
+# MAGIC
 # MAGIC **Make sure the storage path matches what you defined in your DLT pipeline as input.**
-# MAGIC 
+# MAGIC
 # MAGIC 1. Run Cmd 2 to show widgets
 # MAGIC 2. Specify Storage path in widget
 # MAGIC 3. "Run All" to generate your data
 # MAGIC 4. When finished generating data, "Stop Execution"
-# MAGIC 
+# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fdlt%2Fnotebook_dlt_generator&dt=DLT">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=00-Loan-Data-Generator&demo_name=dlt-loans&event=VIEW">
 
 # COMMAND ----------
 
 # DBTITLE 1,Run First for Widgets
-dbutils.widgets.text('path', '/demos/dlt/loans', 'Storage Path')
+catalog = "main__build"
+schema = dbName = db = "dbdemos_dlt_loan"
+
+volume_name = "dlt"
+
 dbutils.widgets.combobox('reset_all_data', 'false', ['true', 'false'], 'Reset all existing data')
 dbutils.widgets.combobox('batch_wait', '30', ['15', '30', '45', '60'], 'Speed (secs between writes)')
 dbutils.widgets.combobox('num_recs', '10000', ['5000', '10000', '20000'], 'Volume (# records per writes)')
-dbutils.widgets.combobox('batch_count', '0', ['0', '100', '200', '500'], 'Write count (how many times do we append data)')
+dbutils.widgets.combobox('batch_count', '1', ['1', '100', '200', '500'], 'Write count (how many times do we append data)')
+
+# COMMAND ----------
+
+spark.sql(f'CREATE CATALOG IF NOT EXISTS `{catalog}`')
+spark.sql(f'USE CATALOG `{catalog}`')
+spark.sql(f'CREATE SCHEMA IF NOT EXISTS `{catalog}`.`{schema}`')
+spark.sql(f'USE SCHEMA `{schema}`')
+spark.sql(f'CREATE VOLUME IF NOT EXISTS `{catalog}`.`{schema}`.`{volume_name}`')
+volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
 import pyspark.sql.functions as F
-output_path = dbutils.widgets.get('path')
+output_path = volume_folder+"/raw_data"
+dbutils.fs.mkdirs(output_path)
 reset_all_data = dbutils.widgets.get('reset_all_data') == "true"
 
-if reset_all_data and output_path.startswith('/demos/dlt/loans'):
-  print(f'cleanup data {output_path}')
-  dbutils.fs.rm(output_path, True)
-dbutils.fs.mkdirs(output_path)
 
 def cleanup_folder(path):
   #Cleanup to have something nicer

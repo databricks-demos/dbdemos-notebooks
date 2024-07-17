@@ -241,7 +241,7 @@ results.write.mode('append').saveAsTable("billing_forecast")
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/system_tables/dashboard-governance-billing.png?raw=true" width="500px" style="float: right">
 # MAGIC
 # MAGIC dbdemos installed a dashboard for you to start exploring your data. 
-# MAGIC [Open the dashboard](/sql/dashboards/ab3b5298-e09e-4998-8ef3-ae456a7b888d) to start exploring your billing data.<br/>
+# MAGIC <a dbdemos-dashboard-id="account-usage" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1'>Open the dashboard</a> to start exploring your billing data.<br/>
 # MAGIC Remember that if you changed your Catalog and Schema, you'll have to update the queries.
 # MAGIC
 # MAGIC

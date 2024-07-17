@@ -22,6 +22,9 @@
 -- MAGIC ## Column Level access control 
 -- MAGIC
 -- MAGIC Similarly, column-level access control helps you mask or anonymise the data that is in certain columns of your table, depending on the user or service principal that is trying to access it. This is typically used to mask or remove sensitive PII informations from your end users (email, SSN...).
+-- MAGIC
+-- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-Row-Column-access-control&demo_name=uc-01-acl&event=VIEW">
 
 -- COMMAND ----------
 

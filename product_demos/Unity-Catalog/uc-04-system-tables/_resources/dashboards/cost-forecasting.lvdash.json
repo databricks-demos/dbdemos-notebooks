@@ -1,0 +1,1371 @@
+{
+    "datasets": [
+        {
+            "name": "1d896a80",
+            "displayName": "System Tables - Distinct SKU",
+            "query": "--param query - the import needs the  query to be run first even empty.\nselect distinct(sku) from `main`.`dbdemos_billing_forecast`.billing_forecast order by sku "
+        },
+        {
+            "name": "4e36a648",
+            "displayName": "System Tables - Distinct workspace id",
+            "query": "select distinct(workspace_id) from `main`.`dbdemos_billing_forecast`.billing_forecast order by workspace_id DESC;"
+        },
+        {
+            "name": "b43bf887",
+            "displayName": "System Tables - date ranges",
+            "query": "SELECT CONCAT(start_date, ' | ', label) FROM (\n  SELECT cast(current_date as date) as start_date , label, o FROM \n( SELECT DATE_TRUNC('YEAR', CURRENT_DATE()) as current_date, 'Current Year' as label, 1 as o\n  UNION\n  SELECT DATE_TRUNC('MONTH', CURRENT_DATE()) as current_date, 'Current Month' as label, 2 as o\n  UNION\n  SELECT add_months(DATE_TRUNC('MONTH', CURRENT_DATE()), -6)  as current_date, 'Last 6 Months' as label, 3 as o\n  UNION\n  SELECT add_months(DATE_TRUNC('MONTH', CURRENT_DATE()), -12)  as current_date, 'Last 12 Months' as label, 4 as o\n  )\norder by o );\n"
+        },
+        {
+            "name": "a2bce587",
+            "displayName": "System Tables - next 6 mo forecast",
+            "query": "select sum(list_cost)\nfrom `main`.`dbdemos_billing_forecast`.detailed_billing_forecast \nWHERE  sku=:sku and workspace_id=:workspace_id and date >= now() and date < add_months(now(), 3)    ",
+            "parameters": [
+                {
+                    "displayName": "workspace_id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "sku",
+                    "keyword": "sku",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5374aadf",
+            "displayName": "System Tables - Total consumption",
+            "query": "WITH \n-- This makes sure we don't have gap (days without consumption) by creating 1 dataframe containing 1 row per day and then joining it to the actual billing.\nnumbers AS (\n  SELECT ROW_NUMBER() OVER (PARTITION BY 0 ORDER BY ds)  AS num\n  FROM `main`.`dbdemos_billing_forecast`.billing_forecast\n  LIMIT abs(datediff(SUBSTRING_INDEX(:start_date, ' |', 1), add_months(CURRENT_DATE(), 3)))\n),\nskus AS (\n  SELECT distinct(sku) as sku FROM `main`.`dbdemos_billing_forecast`.billing_forecast where sku != 'ALL'\n),\ndays as (select date_add(add_months(CURRENT_DATE(), 3), -num) as date, sku FROM numbers cross join skus),\nf as (SELECT * FROM `main`.`dbdemos_billing_forecast`.detailed_billing_forecast  where workspace_id=:workspace_id ),\ncum as (\n  SELECT *, SUM(list_cost) OVER (PARTITION BY sku ORDER BY date) AS cum_list_cost FROM (\n    select days.sku, days.date, coalesce(f.list_cost, 0) as list_cost FROM days left join f on f.date = days.date and f.sku=days.sku )\n    where sku != 'ALL' )\nSELECT * from cum\n-- Add a vertical bar on current date to highlight forecast\nUNION\n  SELECT '_NOW' as sku, NOW() as date, sum(cum.cum_list_cost)*1.4 as list_cost, sum(cum.cum_list_cost)*1.4 as cum_list_cost \n    from cum where date=CURRENT_DATE() \norder by sku asc \n;\n\n\n",
+            "parameters": [
+                {
+                    "displayName": "Start Date",
+                    "keyword": "start_date",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "2024-01-01 | Current Year"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "Workspace id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "a8af9843",
+            "displayName": "System Tables - training date check",
+            "query": "select datediff(current_date(), training_date) as days_since_last_training, training_date, 0 as target from (SELECT max(training_date) as training_date from `main`.`dbdemos_billing_forecast`.billing_forecast)\n\n\n"
+        },
+        {
+            "name": "f5bd44c1",
+            "displayName": "System Tables - dbus_monthly",
+            "query": "select date_trunc('MONTH', date), sum(list_cost)\nfrom `main`.`dbdemos_billing_forecast`.detailed_billing_forecast \nWHERE past_list_cost is not null AND sku=:sku and workspace_id=:workspace_id\nGROUP BY 1\nORDER By 1 desc",
+            "parameters": [
+                {
+                    "displayName": "sku",
+                    "keyword": "sku",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "workspace_id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5aef5de8",
+            "displayName": "System tables - Volume creation",
+            "query": "-- Dashboard Name: DBSQL Governance Dashboard\n-- Report Name: Volume Types by Created Mont\n-- Query Name: dbsql-volume-types\nSELECT\n    volume_catalog,\n    volume_schema,\n    volume_type,\n    DATE_TRUNC('month', created) AS month_created,\n    COUNT(*) AS volume_count\nFROM\n    system.information_schema.volumes\nWHERE\n    volume_schema NOT IN ('information_schema')\nGROUP BY\n    volume_catalog,\n    volume_schema,\n    DATE_TRUNC('month', created),\n    volume_type\nORDER BY\n    month_created ASC,\n    volume_count DESC"
+        },
+        {
+            "name": "90ab42b7",
+            "displayName": "System Tables - table-format",
+            "query": "-- Dashboard Name: DBSQL Governance Dashboard\n-- Report Name: Tables by Format\n-- Query Name: dbsql-table-formats\nSELECT\n    table_catalog AS cat_name,\n    table_schema AS sch_name,\n    data_source_format AS table_format,\n    COUNT(*) AS table_count\nFROM\n    system.information_schema.tables\nWHERE\n    table_type != 'VIEW'\n    AND table_schema NOT IN ('information_schema')\nGROUP BY\n    cat_name,\n    sch_name,\n    table_format \nORDER BY\n    table_count DESC"
+        },
+        {
+            "name": "461f1718",
+            "displayName": "System Tables - Table Count",
+            "query": "SELECT  count(DISTINCT table_catalog) AS catalog_count,\n        count(DISTINCT concat(table_catalog, table_schema)) AS schema_count,\n        count(DISTINCT concat(table_catalog, table_schema, table_name)) AS table_count\nFROM\n    system.information_schema.tables\nWHERE\n    table_type != 'VIEW'\n    AND table_schema NOT IN ('information_schema')"
+        },
+        {
+            "name": "fef630de",
+            "displayName": "System tables - Table creation",
+            "query": "-- Dashboard Name: DBSQL Governance Dashboard\n-- Report Name: Table Types by Created Mont\n-- Query Name: dbsql-table-types\nSELECT\n    table_catalog,\n    table_schema,\n    table_type,\n    DATE_TRUNC('month', created) AS month_created,\n    COUNT(*) AS table_count\nFROM\n    system.information_schema.tables\nWHERE\n    table_schema NOT IN ('information_schema')\nGROUP BY\n    table_catalog,\n    table_schema,\n    DATE_TRUNC('month', created),\n    table_type\nORDER BY\n    month_created ASC,\n    table_count DESC"
+        },
+        {
+            "name": "9ed96219",
+            "displayName": "System Tables - dbus forecast monthly",
+            "query": "select date_trunc('MONTH', date) as month, sum(list_cost)\nfrom `main`.`dbdemos_billing_forecast`.detailed_billing_forecast where sku=:sku and workspace_id=:workspace_id\nand date_trunc('MONTH', date) in (add_months(date_trunc('MONTH', now()),1), date_trunc('MONTH', now()))\nGROUP BY 1\nORDER By 1 desc",
+            "parameters": [
+                {
+                    "displayName": "sku",
+                    "keyword": "sku",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "workspace_id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "b31cf395",
+            "displayName": "System Tables - spend from date",
+            "query": "select sum(list_cost)\nfrom `main`.`dbdemos_billing_forecast`.detailed_billing_forecast \nwhere sku=:sku and workspace_id=:workspace_id and date <= now() and date >= SUBSTRING_INDEX(:start_date, ' |', 1)",
+            "parameters": [
+                {
+                    "displayName": "sku",
+                    "keyword": "sku",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "workspace_id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "Start Date",
+                    "keyword": "start_date",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "2024-01-01 | Current Year"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "1a49026a",
+            "displayName": "System Tables - SKU repartition",
+            "query": "WITH forecast as (\n  select date, sku, list_cost from `main`.`dbdemos_billing_forecast`.detailed_billing_forecast \n      where workspace_id=:workspace_id and sku !='ALL' and date > SUBSTRING_INDEX(:start_date, ' |', 1) )\nSELECT * FROM forecast\nUNION\n  select NOW() as date, '_NOW' as sku, sum(list_cost) * 1.5 as list_cost from forecast where date=CURRENT_DATE()\norder by sku ASC",
+            "parameters": [
+                {
+                    "displayName": "Workspace id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "Start Date",
+                    "keyword": "start_date",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "2024-01-01 | Current Year"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "60a64743",
+            "displayName": "System Tables - Forecast DBUs",
+            "query": "select * from `main`.`dbdemos_billing_forecast`.detailed_billing_forecast \n  where sku=:sku and workspace_id=:workspace_id and date > SUBSTRING_INDEX(:start_date, ' |', 1)",
+            "parameters": [
+                {
+                    "displayName": "Sku",
+                    "keyword": "sku",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "Workspace id",
+                    "keyword": "workspace_id",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "ALL"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "Start Date",
+                    "keyword": "start_date",
+                    "dataType": "STRING",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "STRING",
+                            "values": [
+                                {
+                                    "value": "2024-01-01 | Current Year"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "pages": [
+        {
+            "name": "08b6f19e",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "d5c10a83",
+                        "textbox_spec": "## Tables/Volumes\nUnity Catalog system tables also contains information on the objects created within your catalogs"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 23,
+                        "width": 6,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "20ca85fc",
+                        "textbox_spec": "## $DBUs forecasts and Data Assets Utility"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 13,
+                        "width": 6,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "6036d594",
+                        "textbox_spec": "# Cost Governance on Databricks\nUsing System Table data, this dashboard analyzes and monitors historical Databricks usage as well as forecasts future usage.\n\n**If queries don't render, ensure the training notebook was run first on the same schema**.    \nSchedule a daily job to refresh your consumption forecast - see the forecast notebook for more details.\n\n*This dbdemos dashboard is provided for educational/training purposes only. Estimated price lists are used. Not contractual.*"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 1,
+                        "width": 4,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a425692b",
+                        "queries": [
+                            {
+                                "name": "4d87d60a07ab4bef92f70869823c4393",
+                                "query": {
+                                    "datasetName": "fef630de",
+                                    "fields": [
+                                        {
+                                            "name": "table_type",
+                                            "expression": "`table_type`"
+                                        },
+                                        {
+                                            "name": "column_a44a939a7055",
+                                            "expression": "COUNT(`table_catalog`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Tables Created by Type",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"pie\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\"}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_a44a939a7055\": {\"yAxis\": 0, \"type\": \"pie\", \"name\": \"Table count\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm:ss\", \"showDataLabels\": true, \"columnConfigurationMap\": {\"x\": {\"column\": \"table_type\", \"id\": \"column_a44a939a7056\"}, \"y\": [{\"id\": \"column_a44a939a7055\", \"column\": \"table_catalog\", \"transform\": \"COUNT\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "4d87d60a07ab4bef92f70869823c4393"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 29,
+                        "width": 3,
+                        "height": 9
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "674a8ee5",
+                        "queries": [
+                            {
+                                "name": "4d87d60a07ab4bef92f70869823c4393",
+                                "query": {
+                                    "datasetName": "fef630de",
+                                    "fields": [
+                                        {
+                                            "name": "column_a44a939a2997",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `month_created`)"
+                                        },
+                                        {
+                                            "name": "column_a44a939a2996",
+                                            "expression": "SUM(`table_count`)"
+                                        },
+                                        {
+                                            "name": "table_type",
+                                            "expression": "`table_type`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Tables Created (MoM)",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"area\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": true, \"placement\": \"below\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\"}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": \"stack\", \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_a44a939a2996\": {\"yAxis\": 0, \"type\": \"area\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm:ss\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"month_created\", \"transform\": \"MONTH_LEVEL\", \"id\": \"column_a44a939a2997\"}, \"y\": [{\"id\": \"column_a44a939a2996\", \"column\": \"table_count\", \"transform\": \"SUM\"}], \"series\": {\"column\": \"table_type\", \"id\": \"column_a44a939a2998\"}}, \"isAggregationOn\": true}",
+                                "query_name": "4d87d60a07ab4bef92f70869823c4393"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 31,
+                        "width": 1,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "739be990",
+                        "queries": [
+                            {
+                                "name": "e1241954cbd94a8785bcbd7a15bb768b",
+                                "query": {
+                                    "datasetName": "9ed96219",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "$DBUs next Month forecast",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringPrefix\": \"$\"}",
+                                "query_name": "e1241954cbd94a8785bcbd7a15bb768b"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 9,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a0790b29",
+                        "queries": [
+                            {
+                                "name": "fa5e750849ff468db88fbd66d74c166a",
+                                "query": {
+                                    "datasetName": "f5bd44c1",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "$DBUs spent this month",
+                                "description": "Beginning of the month to date",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringPrefix\": \"$\"}",
+                                "query_name": "fa5e750849ff468db88fbd66d74c166a"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 5,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "192a5ced",
+                        "queries": [
+                            {
+                                "name": "fa5e750849ff468db88fbd66d74c166a",
+                                "query": {
+                                    "datasetName": "f5bd44c1",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "$DBUs monthly spend",
+                                "description": "Last full month",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 2, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringPrefix\": \"$\"}",
+                                "query_name": "fa5e750849ff468db88fbd66d74c166a"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 5,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "01d1ddc0",
+                        "queries": [
+                            {
+                                "name": "6b4771ccb09c422fab8cdd52d3b73ffb",
+                                "query": {
+                                    "datasetName": "a8af9843",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Training date check",
+                                "description": "Retrain every day for accurate results",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"Since forecast (must stay <1)\", \"counterColName\": \"days_since_last_training\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"targetColName\": \"\", \"countRow\": false, \"formatTargetValue\": false, \"stringPrefix\": \"\", \"stringSuffix\": \" days\"}",
+                                "query_name": "6b4771ccb09c422fab8cdd52d3b73ffb"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 1,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "9383a721",
+                        "queries": [
+                            {
+                                "name": "ee15dccf12124bb99fe73335f51bfdf2",
+                                "query": {
+                                    "datasetName": "a2bce587",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "$DBUs next quarter forecast",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"countRow\": false, \"stringPrefix\": \"$\", \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "ee15dccf12124bb99fe73335f51bfdf2"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 9,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8d2cca96",
+                        "queries": [
+                            {
+                                "name": "e273cd6529c548408ee15f53b22e89fc",
+                                "query": {
+                                    "datasetName": "461f1718",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Schemas",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"Schemas\", \"counterColName\": \"schema_count\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "e273cd6529c548408ee15f53b22e89fc"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 25,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "75d6a2aa",
+                        "queries": [
+                            {
+                                "name": "e273cd6529c548408ee15f53b22e89fc",
+                                "query": {
+                                    "datasetName": "461f1718",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Schemas",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"Catalogs\", \"counterColName\": \"catalog_count\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "e273cd6529c548408ee15f53b22e89fc"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 25,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8d54606a",
+                        "queries": [
+                            {
+                                "name": "e273cd6529c548408ee15f53b22e89fc",
+                                "query": {
+                                    "datasetName": "461f1718",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Tables",
+                                "description": "",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"Tables\", \"counterColName\": \"table_count\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "e273cd6529c548408ee15f53b22e89fc"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 25,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "6e784334",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "90ab42b7",
+                                    "fields": [
+                                        {
+                                            "name": "table_format",
+                                            "expression": "`table_format`"
+                                        },
+                                        {
+                                            "name": "sum(table_count)",
+                                            "expression": "SUM(`table_count`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "y": {
+                                    "fieldName": "sum(table_count)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "table count"
+                                },
+                                "color": {
+                                    "fieldName": "table_format",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "table_format"
+                                }
+                            },
+                            "frame": {
+                                "title": "Tables by format",
+                                "showTitle": true
+                            },
+                            "mark": {
+                                "layout": "group"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 31,
+                        "width": 2,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "4a4d1e01",
+                        "queries": [
+                            {
+                                "name": "a5df7726758f4e6aa29cafff2598e367",
+                                "query": {
+                                    "datasetName": "5aef5de8",
+                                    "fields": [
+                                        {
+                                            "name": "column_a44a939a9445",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `month_created`)"
+                                        },
+                                        {
+                                            "name": "column_a44a939a9447",
+                                            "expression": "SUM(`volume_count`)"
+                                        },
+                                        {
+                                            "name": "volume_type",
+                                            "expression": "`volume_type`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Volumes Created MoM",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"area\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": true, \"placement\": \"below\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"Volume count\"}}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": \"stack\", \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_a44a939a9447\": {\"yAxis\": 0, \"type\": \"area\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm:ss\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"month_created\", \"transform\": \"MONTH_LEVEL\", \"id\": \"column_a44a939a9445\"}, \"y\": [{\"id\": \"column_a44a939a9447\", \"column\": \"volume_count\", \"transform\": \"SUM\"}], \"series\": {\"column\": \"volume_type\", \"id\": \"column_a44a939a9448\"}}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "a5df7726758f4e6aa29cafff2598e367"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 25,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "14fad3bd",
+                        "queries": [
+                            {
+                                "name": "a5df7726758f4e6aa29cafff2598e367",
+                                "query": {
+                                    "datasetName": "5aef5de8",
+                                    "fields": [
+                                        {
+                                            "name": "volume_type",
+                                            "expression": "`volume_type`"
+                                        },
+                                        {
+                                            "name": "column_a44a939a9918",
+                                            "expression": "COUNT(`volume_count`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Volumes Created MoM",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"pie\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\"}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}}, \"yAxis\": [{\"type\": \"-\"}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_a44a939a9918\": {\"yAxis\": 0, \"type\": \"pie\", \"name\": \"volume count\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": true, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm:ss\", \"showDataLabels\": true, \"columnConfigurationMap\": {\"x\": {\"column\": \"volume_type\", \"id\": \"column_a44a939a9927\"}, \"y\": [{\"id\": \"column_a44a939a9918\", \"column\": \"volume_count\", \"transform\": \"COUNT\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "a5df7726758f4e6aa29cafff2598e367"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 25,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5755a9bd",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "5374aadf",
+                                    "fields": [
+                                        {
+                                            "name": "sku",
+                                            "expression": "`sku`"
+                                        },
+                                        {
+                                            "name": "monthly(date)",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `date`)"
+                                        },
+                                        {
+                                            "name": "sum(cum_list_cost)",
+                                            "expression": "SUM(`cum_list_cost`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "monthly(date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "fieldName": "sum(cum_list_cost)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of cum_list_cost"
+                                },
+                                "color": {
+                                    "fieldName": "sku",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "sku"
+                                }
+                            },
+                            "frame": {
+                                "title": "Total cumulative $DBU consumption for selected date and Workspace",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 5,
+                        "width": 4,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "9951915c",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "1a49026a",
+                                    "fields": [
+                                        {
+                                            "name": "sku",
+                                            "expression": "`sku`"
+                                        },
+                                        {
+                                            "name": "monthly(date)",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `date`)"
+                                        },
+                                        {
+                                            "name": "sum(list_cost)",
+                                            "expression": "SUM(`list_cost`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "monthly(date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "fieldName": "sum(list_cost)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of list_cost"
+                                },
+                                "color": {
+                                    "fieldName": "sku",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "sku"
+                                }
+                            },
+                            "frame": {
+                                "title": "$DBUs consumption for selected date and Workspace ",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 15,
+                        "width": 3,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "51bc40cb",
+                        "queries": [
+                            {
+                                "name": "bec2406e982d43758c369af89c9d38c0",
+                                "query": {
+                                    "datasetName": "b31cf395",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "$DBUs spend",
+                                "description": "From selected Start Date",
+                                "viz_type": "COUNTER",
+                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringSuffix\": \"\", \"stringPrefix\": \"$\"}",
+                                "query_name": "bec2406e982d43758c369af89c9d38c0"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 1,
+                        "width": 1,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8fb0681b",
+                        "queries": [
+                            {
+                                "name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                "query": {
+                                    "datasetName": "60a64743",
+                                    "fields": [
+                                        {
+                                            "name": "date",
+                                            "expression": "`date`"
+                                        },
+                                        {
+                                            "name": "column_fc16c2d0112762",
+                                            "expression": "SUM(`list_cost`)"
+                                        },
+                                        {
+                                            "name": "column_fc16c2d0112930",
+                                            "expression": "SUM(`past_list_cost`)"
+                                        },
+                                        {
+                                            "name": "column_fc16c2d0112932",
+                                            "expression": "SUM(`forecast_list_cost_upper_ma`)"
+                                        },
+                                        {
+                                            "name": "column_b1c4f1653426",
+                                            "expression": "SUM(`forecast_list_cost_lower_ma`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "viz_spec": {
+                                "display_name": "Forecast $DBUs for selected date, Workspace and SKU",
+                                "description": "",
+                                "viz_type": "CHART",
+                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"line\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": false}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"Date\"}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"Dollars ($)\"}}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_fc16c2d0112760\": {\"yAxis\": 0, \"type\": \"line\"}, \"column_fc16c2d0112762\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate List Cost\", \"color\": \"#FFAB00\"}, \"column_fc16c2d0112928\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate Forecast List Cost\"}, \"column_fc16c2d0112930\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate Forecast List Cost Lower\", \"color\": \"#077A9D\"}, \"column_fc16c2d0112932\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate Forecast List Cost Upper\", \"color\": \"#919191\"}, \"column_b1c4f1653426\": {\"yAxis\": 0, \"type\": \"line\", \"color\": \"#919191\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": false, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm:ss\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"date\", \"id\": \"column_fc16c2d0112758\"}, \"y\": [{\"id\": \"column_fc16c2d0112762\", \"column\": \"list_cost\", \"transform\": \"SUM\"}, {\"id\": \"column_fc16c2d0112930\", \"column\": \"past_list_cost\", \"transform\": \"SUM\"}, {\"id\": \"column_fc16c2d0112932\", \"column\": \"forecast_list_cost_upper_ma\", \"transform\": \"SUM\"}, {\"id\": \"column_b1c4f1653426\", \"column\": \"forecast_list_cost_lower_ma\", \"transform\": \"SUM\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
+                                "query_name": "1e4310a7d83b414c8604b30dc4fa00b8"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 15,
+                        "width": 3,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5444ffbb",
+                        "queries": [
+                            {
+                                "name": "e1241954cbd94a8785bcbd7a15bb768b",
+                                "query": {
+                                    "datasetName": "9ed96219",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "fa5e750849ff468db88fbd66d74c166a",
+                                "query": {
+                                    "datasetName": "f5bd44c1",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "ee15dccf12124bb99fe73335f51bfdf2",
+                                "query": {
+                                    "datasetName": "a2bce587",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "bec2406e982d43758c369af89c9d38c0",
+                                "query": {
+                                    "datasetName": "b31cf395",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                "query": {
+                                    "datasetName": "60a64743",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "81032cefc11a437e8f02053c7070e12e",
+                                "query": {
+                                    "datasetName": "1d896a80",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "dashboard_parameter_spec": {
+                                "query_and_field_names": [
+                                    {
+                                        "query_name": "81032cefc11a437e8f02053c7070e12e"
+                                    },
+                                    {
+                                        "query_name": "81032cefc11a437e8f02053c7070e12e"
+                                    },
+                                    {
+                                        "query_name": "81032cefc11a437e8f02053c7070e12e"
+                                    },
+                                    {
+                                        "query_name": "81032cefc11a437e8f02053c7070e12e"
+                                    },
+                                    {
+                                        "query_name": "81032cefc11a437e8f02053c7070e12e"
+                                    }
+                                ],
+                                "query_and_parameter_keywords": [
+                                    {
+                                        "query_name": "e1241954cbd94a8785bcbd7a15bb768b",
+                                        "keyword": "sku"
+                                    },
+                                    {
+                                        "query_name": "fa5e750849ff468db88fbd66d74c166a",
+                                        "keyword": "sku"
+                                    },
+                                    {
+                                        "query_name": "ee15dccf12124bb99fe73335f51bfdf2",
+                                        "keyword": "sku"
+                                    },
+                                    {
+                                        "query_name": "bec2406e982d43758c369af89c9d38c0",
+                                        "keyword": "sku"
+                                    },
+                                    {
+                                        "query_name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                        "keyword": "sku"
+                                    }
+                                ],
+                                "display_name": "Sku",
+                                "control_type": "SINGLE_SELECT"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "86d6b56e",
+                        "queries": [
+                            {
+                                "name": "e1241954cbd94a8785bcbd7a15bb768b",
+                                "query": {
+                                    "datasetName": "9ed96219",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "fa5e750849ff468db88fbd66d74c166a",
+                                "query": {
+                                    "datasetName": "f5bd44c1",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "ee15dccf12124bb99fe73335f51bfdf2",
+                                "query": {
+                                    "datasetName": "a2bce587",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "b054a4acbc26497894fb9ad3fcd061f5",
+                                "query": {
+                                    "datasetName": "5374aadf",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "cf83676614ad4077bd6d9c99bcad3fe2",
+                                "query": {
+                                    "datasetName": "1a49026a",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "bec2406e982d43758c369af89c9d38c0",
+                                "query": {
+                                    "datasetName": "b31cf395",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                "query": {
+                                    "datasetName": "60a64743",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "eca9c4cf184d4e9ca9b7490b813cfa0e",
+                                "query": {
+                                    "datasetName": "4e36a648",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "dashboard_parameter_spec": {
+                                "query_and_field_names": [
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    },
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    },
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    },
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    },
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    },
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    },
+                                    {
+                                        "query_name": "eca9c4cf184d4e9ca9b7490b813cfa0e"
+                                    }
+                                ],
+                                "query_and_parameter_keywords": [
+                                    {
+                                        "query_name": "e1241954cbd94a8785bcbd7a15bb768b",
+                                        "keyword": "workspace_id"
+                                    },
+                                    {
+                                        "query_name": "fa5e750849ff468db88fbd66d74c166a",
+                                        "keyword": "workspace_id"
+                                    },
+                                    {
+                                        "query_name": "ee15dccf12124bb99fe73335f51bfdf2",
+                                        "keyword": "workspace_id"
+                                    },
+                                    {
+                                        "query_name": "b054a4acbc26497894fb9ad3fcd061f5",
+                                        "keyword": "workspace_id"
+                                    },
+                                    {
+                                        "query_name": "cf83676614ad4077bd6d9c99bcad3fe2",
+                                        "keyword": "workspace_id"
+                                    },
+                                    {
+                                        "query_name": "bec2406e982d43758c369af89c9d38c0",
+                                        "keyword": "workspace_id"
+                                    },
+                                    {
+                                        "query_name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                        "keyword": "workspace_id"
+                                    }
+                                ],
+                                "display_name": "Workspace id",
+                                "control_type": "SINGLE_SELECT"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 0,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "7c10eb33",
+                        "queries": [
+                            {
+                                "name": "b054a4acbc26497894fb9ad3fcd061f5",
+                                "query": {
+                                    "datasetName": "5374aadf",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "cf83676614ad4077bd6d9c99bcad3fe2",
+                                "query": {
+                                    "datasetName": "1a49026a",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "bec2406e982d43758c369af89c9d38c0",
+                                "query": {
+                                    "datasetName": "b31cf395",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                "query": {
+                                    "datasetName": "60a64743",
+                                    "disaggregated": true
+                                }
+                            },
+                            {
+                                "name": "99b7762e84714082bf52463945240199",
+                                "query": {
+                                    "datasetName": "b43bf887",
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 0,
+                            "dashboard_parameter_spec": {
+                                "query_and_field_names": [
+                                    {
+                                        "query_name": "99b7762e84714082bf52463945240199"
+                                    },
+                                    {
+                                        "query_name": "99b7762e84714082bf52463945240199"
+                                    },
+                                    {
+                                        "query_name": "99b7762e84714082bf52463945240199"
+                                    },
+                                    {
+                                        "query_name": "99b7762e84714082bf52463945240199"
+                                    }
+                                ],
+                                "query_and_parameter_keywords": [
+                                    {
+                                        "query_name": "b054a4acbc26497894fb9ad3fcd061f5",
+                                        "keyword": "start_date"
+                                    },
+                                    {
+                                        "query_name": "cf83676614ad4077bd6d9c99bcad3fe2",
+                                        "keyword": "start_date"
+                                    },
+                                    {
+                                        "query_name": "bec2406e982d43758c369af89c9d38c0",
+                                        "keyword": "start_date"
+                                    },
+                                    {
+                                        "query_name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                        "keyword": "start_date"
+                                    }
+                                ],
+                                "display_name": "Start Date",
+                                "control_type": "SINGLE_SELECT"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 2,
+                        "height": 1
+                    }
+                }
+            ]
+        }
+    ]
+}

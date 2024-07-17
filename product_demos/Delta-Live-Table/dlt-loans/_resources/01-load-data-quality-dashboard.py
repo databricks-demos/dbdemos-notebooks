@@ -1,15 +1,13 @@
 # Databricks notebook source
 # MAGIC %md # Data initialization for DLT expectation dashboard
-# MAGIC 
+# MAGIC
 # MAGIC Run only once to reset the demo dashboard
-# MAGIC 
+# MAGIC
 # MAGIC Let's load a couple of expectations to be able to build our dbsql dashboard.
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC create database if not exists dbdemos;
-# MAGIC use dbdemos;
+# MAGIC %run ./00-Loan-Data-Generator
 
 # COMMAND ----------
 
@@ -89,9 +87,9 @@ spark.createDataFrame(expectations, headers.split(",")) \
   .withColumn("passed_records", F.col("passed_records").cast("int")) \
   .withColumn("output_records", F.col("output_records").cast("int")) \
   .withColumn("timestamp", F.to_timestamp("timestamp")) \
-  .withColumn("dropped_records", F.col("dropped_records").cast("int")).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("dbdemos.dlt_expectations")
+  .withColumn("dropped_records", F.col("dropped_records").cast("int")).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("dlt_expectations")
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC alter table dbdemos.dlt_expectations set tblproperties (delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true)
+# MAGIC alter table dlt_expectations set tblproperties (delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true)

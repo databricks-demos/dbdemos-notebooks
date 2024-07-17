@@ -46,7 +46,7 @@ SELECT * FROM event_log(TABLE(main__build.dbdemos_retail_c360.churn_features))
 
 -- DBTITLE 1,Adding our DLT system table to the metastore
 CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
-  as SELECT * FROM event_log(TABLE(churn_features));
+  as SELECT * FROM event_log(TABLE(main__build.dbdemos_retail_c360.churn_features));
 SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
 
 -- COMMAND ----------

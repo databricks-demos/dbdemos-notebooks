@@ -1,50 +1,45 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC 
+-- MAGIC
 -- MAGIC # DLT pipeline log analysis
--- MAGIC 
+-- MAGIC
 -- MAGIC <img style="float:right" width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
--- MAGIC 
+-- MAGIC
 -- MAGIC Each DLT Pipeline saves events and expectations metrics in the Storage Location defined on the pipeline. From this table we can see what is happening and the quality of the data passing through it.
--- MAGIC 
+-- MAGIC
 -- MAGIC You can leverage the expecations directly as a SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
--- MAGIC 
+-- MAGIC
 -- MAGIC This notebook extracts and analyses expectation metrics to build such KPIS.
--- MAGIC 
--- MAGIC You can find your metrics opening the Settings of your DLT pipeline, under `storage` :
--- MAGIC 
+-- MAGIC
+-- MAGIC ## Accessing the Delta Live Table pipeline events with Unity Catalog
+-- MAGIC
+-- MAGIC Databricks provides an `event_log` function which is automatically going to lookup the event log table. You can specify any table to get access to the logs:
+-- MAGIC
+-- MAGIC `SELECT * FROM event_log(TABLE(catalog.schema.my_table))`
+-- MAGIC
+-- MAGIC #### Using Legacy hive_metastore
+-- MAGIC *Note: If you are not using Unity Catalog (legacy hive_metastore), you can find your event log location opening the Settings of your DLT pipeline, under `storage` :*
+-- MAGIC
 -- MAGIC ```
 -- MAGIC {
 -- MAGIC     ...
--- MAGIC     "name": "test_dlt_cdc",
+-- MAGIC     "name": "lakehouse_churn_dlt",
 -- MAGIC     "storage": "/demos/dlt/loans",
--- MAGIC     "target": "quentin_dlt_cdc"
+-- MAGIC     "target": "your schema"
 -- MAGIC }
 -- MAGIC ```
--- MAGIC 
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fdlt%2Fnotebook_dlt_log&dt=DLT">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=03-Log-Analysis&demo_name=dlt-loans&event=VIEW">
 
 -- COMMAND ----------
 
--- DBTITLE 1,Load DLT system table 
--- MAGIC %python
--- MAGIC import re
--- MAGIC current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
--- MAGIC storage_path = '/demos/dlt/loans/'+re.sub("[^A-Za-z0-9]", '_', current_user[:current_user.rfind('@')])
--- MAGIC dbutils.widgets.text('storage_path', storage_path)
--- MAGIC print(f"using storage path: {storage_path}")
+SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.churn_features))
 
 -- COMMAND ----------
 
--- MAGIC %python display(dbutils.fs.ls(dbutils.widgets.get('storage_path')))
-
--- COMMAND ----------
-
--- MAGIC %sql 
--- MAGIC CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
--- MAGIC   as SELECT * FROM delta.`$storage_path/system/events`;
--- MAGIC SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
+CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
+  as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.churn_features));
+SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
 
 -- COMMAND ----------
 
@@ -99,4 +94,4 @@ FROM(
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your expectations are ready to be queried in SQL! Open the <a href="/sql/dashboards/b732d677-477b-4b5e-84b6-672174440e7d" target="_blank">data Quality Dashboard example</a> for more details.
+-- MAGIC Your expectations are ready to be queried in SQL! Open the <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">data Quality Dashboard example</a> for more details.

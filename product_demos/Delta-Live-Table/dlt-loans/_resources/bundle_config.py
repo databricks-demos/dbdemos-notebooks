@@ -9,6 +9,9 @@
   "name": "dlt-loans",
   "category": "data-engineering",
   "title": "Full Delta Live Tables Pipeline - Loan",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_dlt_loan",
   "description": "Ingest loan data and implement a DLT pipeline with quarantine.",
   "fullDescription": "This demo is an introduction to Delta Live Tables, an ETL frameworks making Data Engineering accessible for all. Simply declare your transformations in SQL or Python, and DLT will handle the Data Engineering complexity for you:<ul><li><strong>Accelerate ETL development</strong>: Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance</li><li><strong>Remove operational complexity</strong>: By automating complex administrative tasks and gaining broader visibility into pipeline operations</li><li><strong>Trust your data</strong>With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML</li><li><strong>Simplify batch and streaming</strong>: With self-optimization and auto-scaling data pipelines for batch or streaming processing</li></ul>In this demo, we will be using as input a raw dataset containing information on our customers' loan and historical transactions. Our goal is to ingest this data in near real time and build tables for our Analyst team while ensuring data quality.",
   "usecase": "Data Engineering",
@@ -90,7 +93,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "11.1.x-scala2.12",
+                    "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -149,10 +152,11 @@
                 }
             }
         ],
-        "name": "demos_dlt_loans_{{CURRENT_USER_NAME}}",
-        "storage": "/demos/dlt/loans/{{CURRENT_USER_NAME}}",
-        "target": "demos_dlt_loans_{{CURRENT_USER_NAME}}"
+        "name": "dbdemos_dlt_loan_{{CATALOG}}_{{SCHEMA}}",
+        "catalog": "{{CATALOG}}",
+        "target": "{{SCHEMA}}"
       }
     }
-  ]
+  ],
+  "dashboards": [{"name": "[dbdemos] Delta Lake - Data Quality Stats",  "id": "dlt-expectations"}]
 }

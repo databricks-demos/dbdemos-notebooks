@@ -27,7 +27,7 @@
 # MAGIC **Your DLT Pipeline is ready!** Your pipeline was started using the SQL notebook and is <a dbdemos-pipeline-id="dlt-loans" href="/#joblist/pipelines/460f840c-9ecc-4d19-a661-f60fd3a88297">available here</a>.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fdlt%2Fnotebook_dlt_sql&dt=DLT">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-DLT-Loan-pipeline-PYTHON&demo_name=dlt-loans&event=VIEW">
 
 # COMMAND ----------
 
@@ -44,7 +44,8 @@
 # COMMAND ----------
 
 # DBTITLE 1,Let's review the incoming data
-# MAGIC %fs ls /demos/dlt/loans
+# Uncomment to explore the raw data
+# %fs ls /Volumes/main__build/dbdemos_dlt_loan/dlt/loans/raw_transactions
 
 # COMMAND ----------
 
@@ -75,13 +76,13 @@ def raw_txs():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "json")
       .option("cloudFiles.inferColumnTypes", "true")
-      .load("/demos/dlt/loans/raw_transactions"))
+      .load("/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/raw_transactions"))
 
 # COMMAND ----------
 
 @dlt.create_table(comment="Lookup mapping for accounting codes")
 def ref_accounting_treatment():
-  return spark.read.format("delta").load("/demos/dlt/loans/ref_accounting_treatment")
+  return spark.read.format("delta").load("/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/ref_accounting_treatment")
 
 # COMMAND ----------
 
@@ -91,7 +92,7 @@ def raw_historical_loans():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "csv")
       .option("cloudFiles.inferColumnTypes", "true")
-      .load("/demos/dlt/loans/historical_loans"))
+      .load("/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/historical_loans"))
 
 # COMMAND ----------
 
@@ -234,4 +235,4 @@ def new_loan_balances_by_country():
 # MAGIC
 # MAGIC <img width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
 # MAGIC
-# MAGIC <a href="/sql/dashboards/b732d677-477b-4b5e-84b6-672174440e7d" target="_blank">Data Quality Dashboard example</a>
+# MAGIC <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard example</a>

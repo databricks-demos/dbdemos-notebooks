@@ -115,16 +115,11 @@
     }
   },
   "cluster": {
-      "spark_conf": {
-        "spark.master": "local[*]",
-        "spark.databricks.cluster.profile": "singleNode"
-    },
-    "custom_tags": {
-        "ResourceClass": "SingleNode"
-    },
-    "single_user_name": "{{CURRENT_USER}}",
-    "data_security_mode": "SINGLE_USER",
-    "num_workers": 0
+    "num_workers": 1,
+    "spark_version": "14.3.x-scala2.12",
+    "spark_conf": {},
+    "data_security_mode": "USER_ISOLATION",
+    "runtime_engine": "STANDARD"
   },
   "pipelines": [
     {

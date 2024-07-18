@@ -276,21 +276,16 @@ import mlflow
 # Setup registry to use Databricks Unity Catalog
 mlflow.set_registry_uri('databricks-uc')
 
-#                                                                                            Alias/version  output
-#                                                                 Model name (UC)                   |        |
-#                                                                     |                             |        |
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_customer_churn@prod", "int")
-
-# COMMAND ----------
-
-# MAGIC %pip install mlflow==2.14.3 cloudpickle==2.0.0
-# MAGIC dbutils.library.restartPython()
+#                                                                                            Alias/version
+#                                                                 Model name (UC)                   |   
+#                                                                     |                             |   
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_customer_churn@prod")
 
 # COMMAND ----------
 
 # DBTITLE 1,Call our model and predict churn in our pipeline
-model_features = predict_churn_udf.metadata.get_input_schema().input_names()
-predictions = spark.table('spark_churn_features').withColumn('churn_prediction', predict_churn_udf(*model_features))
+columns = predict_churn_udf.metadata.get_input_schema().input_names()
+predictions = spark.table('spark_churn_features').withColumn('churn_prediction', predict_churn_udf(*columns))
 display(predictions)
 
 # COMMAND ----------

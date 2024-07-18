@@ -214,7 +214,7 @@ automl_run = automl.classify(
     dataset = churn_features,
     target_col = "churn",
     split_col = "split", #This required DBRML 15.3+
-    timeout_minutes = 5,
+    timeout_minutes = 10,
     exclude_cols ='customer_id'
 )
 #Make sure all users can access dbdemos shared experiment

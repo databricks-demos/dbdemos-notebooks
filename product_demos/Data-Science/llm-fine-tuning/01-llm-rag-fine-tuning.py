@@ -39,8 +39,8 @@
 # MAGIC Databricks provides a simple, built-in API to fine tune the model and evaluate its performance. Let's get started!
 # MAGIC
 # MAGIC Documentation for Fine Tuning on Databricks:
-# MAGIC - Overview page: [Databricks Fine-tuning APIs](https://pr-14641-aws.dev-docs.dev.databricks.com/large-language-models/fine-tuning-api/index.html)
-# MAGIC - SDK Guide: [Setting up a fine-tuning session with Fine-tuning APIs](https://pr-14641-aws.dev-docs.dev.databricks.com/large-language-models/fine-tuning-api/create-fine-tune-run.html)
+# MAGIC - Overview page: [Databricks Fine-tuning APIs](https://docs.databricks.com/en/large-language-models/foundation-model-training/index.html)
+# MAGIC - SDK Guide: [Setting up a fine-tuning session with Fine-tuning APIs](https://docs.databricks.com/en/large-language-models/foundation-model-training/create-fine-tune-run.html)
 # MAGIC
 
 # COMMAND ----------

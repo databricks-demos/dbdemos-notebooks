@@ -75,7 +75,7 @@ def wait_for_run_to_finish(run):
     for e in events:
       if "FAILED" in e.type or "EXCEPTION" in e.type:
         raise Exception(f'Error with the fine tuning run, check the details in run.get_events(): {e}')
-    if events[-1].type == 'TRAIN_FINISHED':
+    if events[-1].type == 'COMPLETED':
       print('Run finished')
       return events
     if i % 30 == 0:

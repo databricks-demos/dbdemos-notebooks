@@ -43,6 +43,21 @@ def init_experiment_for_batch(demo_name, experiment_name):
 # COMMAND ----------
 
 # Helper function
+def check_model_exists(model_name):
+    from databricks.sdk import WorkspaceClient
+    from databricks.sdk.errors import ResourceDoesNotExist
+
+    w = WorkspaceClient()
+
+    try:
+        w.registered_models.get(model_name)
+        return True
+    except ResourceDoesNotExist:
+        return False
+
+# COMMAND ----------
+
+# Helper function
 def get_latest_model_version(model_name):
     from mlflow.tracking import MlflowClient
     mlflow_client = MlflowClient(registry_uri="databricks-uc")

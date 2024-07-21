@@ -67,7 +67,7 @@
 # DBTITLE 1,Input data from CDC
 # MAGIC %sql
 # MAGIC -- %python #Uncomment to explore the content 
-# MAGIC -- display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/dlt/cdc_raw/customers"))
+# MAGIC -- display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/d/customers"))
 
 # COMMAND ----------
 
@@ -111,7 +111,7 @@ def customers_cdc():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "json")
       .option("cloudFiles.inferColumnTypes", "true")
-      .load("/Volumes/main__build/dbdemos_dlt_cdc/dlt/cdc_raw/customers"))
+      .load("/Volumes/main__build/dbdemos_dlt_cdc/dlt/customers"))
 
 # COMMAND ----------
 

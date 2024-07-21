@@ -66,7 +66,7 @@
 
 -- DBTITLE 1,Input data from CDC
 -- %python #Uncomment to explore the content 
--- display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/dlt/cdc_raw/customers"))
+-- display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/dlt/customers"))
 
 -- COMMAND ----------
 
@@ -91,7 +91,7 @@
 -- DBTITLE 1,Let's ingest our incoming data using Autoloader (cloudFiles)
 CREATE STREAMING LIVE TABLE customers_cdc 
 COMMENT "New customer data incrementally ingested from cloud object storage landing zone"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_dlt_cdc/dlt/cdc_raw/customers", "json", map("cloudFiles.inferColumnTypes", "true"));
+AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_dlt_cdc/dlt/customers", "json", map("cloudFiles.inferColumnTypes", "true"));
 
 -- COMMAND ----------
 

@@ -3,7 +3,7 @@
     {
       "name": "3e00a0f3",
       "displayName": "dbdemos HLS - Patients by State",
-      "query": "SELECT NVL(state, 'XX' ) state_abbr, \n    count(*) as Num_Persons_count\nfrom `main__build`.`dbdemos_hsl_readmission`.patients p\nWHERE p.BIRTHDATE BETWEEN :start_date AND :end_date\nGROUP BY state_abbr\nORDER BY 1;",
+      "query": "SELECT NVL(state, 'XX' ) state_abbr, \n    count(*) as Num_Persons_count\nfrom `main__build`.`dbdemos_hls_readmission`.patients p\nWHERE p.BIRTHDATE BETWEEN :start_date AND :end_date\nGROUP BY state_abbr\nORDER BY 1;",
       "parameters": [
         {
           "displayName": "start_date",
@@ -40,7 +40,7 @@
     {
       "name": "c53be963",
       "displayName": "dbdemos HLS - patient summary",
-      "query": "SELECT c.concept_name gender, p.day_of_birth, p.month_of_birth, p.year_of_birth, COUNT(person_id) AS num_persons_count\nFROM `main__build`.`dbdemos_hsl_readmission`.person p\nLEFT JOIN `main__build`.`dbdemos_hsl_readmission`.concept c ON c.concept_id = p.gender_concept_id\nWHERE birth_datetime BETWEEN :start_date AND :end_date \nGROUP BY c.concept_name, p.day_of_birth, p.month_of_birth, p.year_of_birth\nORDER BY p.year_of_birth ASC",
+      "query": "SELECT c.concept_name gender, p.day_of_birth, p.month_of_birth, p.year_of_birth, COUNT(person_id) AS num_persons_count\nFROM `main__build`.`dbdemos_hls_readmission`.person p\nLEFT JOIN `main__build`.`dbdemos_hls_readmission`.concept c ON c.concept_id = p.gender_concept_id\nWHERE birth_datetime BETWEEN :start_date AND :end_date \nGROUP BY c.concept_name, p.day_of_birth, p.month_of_birth, p.year_of_birth\nORDER BY p.year_of_birth ASC",
       "parameters": [
         {
           "displayName": "start_date",
@@ -77,7 +77,7 @@
     {
       "name": "4b60505f",
       "displayName": "dbdemos HLS - Total Patients",
-      "query": "SELECT COUNT(person_id) AS num_persons_count\nFROM `main__build`.`dbdemos_hsl_readmission`.person\nWHERE birth_datetime BETWEEN :start_date AND :end_date",
+      "query": "SELECT COUNT(person_id) AS num_persons_count\nFROM `main__build`.`dbdemos_hls_readmission`.person\nWHERE birth_datetime BETWEEN :start_date AND :end_date",
       "parameters": [
         {
           "displayName": "start_date",
@@ -114,7 +114,7 @@
     {
       "name": "45dec363",
       "displayName": "all_visits",
-      "query": "select * from `main__build`.`dbdemos_hsl_readmission`.`all_visits` limit 100;"
+      "query": "select * from `main__build`.`dbdemos_hls_readmission`.`all_visits` limit 100;"
     }
   ],
   "pages": [

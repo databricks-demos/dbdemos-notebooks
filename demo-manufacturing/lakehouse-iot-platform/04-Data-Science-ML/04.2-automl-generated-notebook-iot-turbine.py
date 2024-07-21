@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.17.0
+# MAGIC %pip install databricks-sdk==0.20.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -533,11 +533,7 @@ display(Image(filename=eval_confusion_matrix_path))
 
 # MAGIC %md 
 # MAGIC ### MLFlow tracked all our model information and the model is ready to be deployed in our registry!
-# MAGIC We can do that manually:
-# MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail-cdc-forecast/resources/images/mlflow_artifact.gif" alt="MLFlow artifacts"/>
-# MAGIC
-# MAGIC or using MLFlow APIs directly:
+# MAGIC We can do that manually or using MLFlow APIs directly:
 
 # COMMAND ----------
 
@@ -546,17 +542,9 @@ model_name = "dbdemos_turbine_maintenance"
 
 #Use Databricks Unity Catalog to save our model
 mlflow.set_registry_uri('databricks-uc')
-client = MlflowClient()
-try:
-  #Get the model if it is already registered to avoid re-deploying the endpoint
-  latest_model = client.get_model_version_by_alias(f"{catalog}.{db}.{model_name}", "prod")
-  print(f"Our model is already deployed on UC: {catalog}.{db}.{model_name}")
-except:  
-  #Enable Unity Catalog with mlflow registry
-  #Add model within our catalog
-  latest_model = mlflow.register_model(f'runs:/{mlflow_run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
-  # Flag it as Production ready using UC Aliases
-  client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+latest_model = mlflow.register_model(f'runs:/{mlflow_run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
+# Flag it as Production ready using UC Aliases
+MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
 
 # COMMAND ----------
 

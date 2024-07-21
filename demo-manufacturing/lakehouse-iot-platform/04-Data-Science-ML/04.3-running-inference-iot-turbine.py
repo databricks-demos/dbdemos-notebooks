@@ -48,7 +48,7 @@ if not os.path.exists(requirements_path):
 # MAGIC %md-sandbox
 # MAGIC ##Deploying the model for batch inferences
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 20px" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn_batch_inference.gif" />
+# MAGIC <img style="float: right; margin-left: 20px" width="800" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/ep_model_serving_creation.gif?raw=true" />
 # MAGIC
 # MAGIC Now that our model is available in the Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
 # MAGIC
@@ -67,7 +67,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                                   Stage/version
 #                                                                                 Model name              |
 #                                                                                       |                 |
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string")
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", result_type="string")
 #We can use the function in SQL
 spark.udf.register("predict_maintenance", predict_maintenance)
 
@@ -101,7 +101,7 @@ display(df)
 # MAGIC
 # MAGIC ## Realtime model serving with Databricks serverless serving
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 20px" width="800" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-model-serving.gif" />
+# MAGIC <img style="float: right; margin-left: 20px" width="800" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/ep_model_serving_creation.gif?raw=true" />
 # MAGIC
 # MAGIC Databricks also provides serverless serving.
 # MAGIC
@@ -117,27 +117,15 @@ dataset
 # COMMAND ----------
 
 # DBTITLE 1,Call the REST API deployed using standard python
-import os
-import requests
-import numpy as np
-import pandas as pd
-import json
+from mlflow import deployments
 
-def create_tf_serving_json(data):
-  return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
-
+model_endpoint_name = "dbdemos_turbine_maintenance"
 
 def score_model(dataset):
-  url = f'https://{dbutils.notebook.entry_point.getDbutils().notebook().getContext().browserHostName().get()}/model-endpoint/dbdemos_turbine_maintenance/Production/invocations'
-  headers = {'Authorization': f'Bearer {dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()}', 'Content-Type': 'application/json'}
-  ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
-  data_json = json.dumps(ds_dict, allow_nan=True)
-  response = requests.request(method='POST', headers=headers, url=url, data=data_json)
-  if response.status_code != 200:
-    raise Exception(f'Request failed with status {response.status_code}, {response.text}')
-  return response.json()
+  client = mlflow.deployments.get_deploy_client("databricks")
+  predictions = client.predict(endpoint=model_endpoint_name, inputs=dataset.to_dict(orient='split'))
 
-#Start your model endpoint in the model menu and uncomment this line to test realtime serving!
+#Deploy your model and uncomment to run your inferences live!
 #score_model(dataset)
 
 # COMMAND ----------

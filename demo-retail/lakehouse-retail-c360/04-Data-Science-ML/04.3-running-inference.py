@@ -94,23 +94,13 @@ dataset
 # COMMAND ----------
 
 # DBTITLE 1,Call the REST API deployed using standard python
-import os
-import requests
-import numpy as np
-import pandas as pd
-import json
+from mlflow import deployments
 
 model_endpoint_name = "dbdemos_customer_churn_endpoint"
 
 def score_model(dataset):
-  url = f'https://{dbutils.notebook.entry_point.getDbutils().notebook().getContext().browserHostName().get()}/serving-endpoints/{model_endpoint_name}/invocations'
-  headers = {'Authorization': f'Bearer {dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()}', 'Content-Type': 'application/json'}
-  ds_dict = {'dataframe_split': dataset.to_dict(orient='split')}
-  data_json = json.dumps(ds_dict, allow_nan=True)
-  response = requests.request(method='POST', headers=headers, url=url, data=data_json)
-  if response.status_code != 200:
-    raise Exception(f'Request failed with status {response.status_code}, {response.text}')
-  return response.json()
+  client = mlflow.deployments.get_deploy_client("databricks")
+  predictions = client.predict(endpoint=model_endpoint_name, inputs=dataset.to_dict(orient='split'))
 
 #Deploy your model and uncomment to run your inferences live!
 #score_model(dataset)

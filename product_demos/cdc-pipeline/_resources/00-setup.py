@@ -23,7 +23,7 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 import json
 import time
 from pyspark.sql.window import Window
-from pyspark.sql.functions import row_number
+from pyspark.sql.functions import row_number, col
 import pyspark.sql.functions as F
 
 raw_data_location = volume_folder 

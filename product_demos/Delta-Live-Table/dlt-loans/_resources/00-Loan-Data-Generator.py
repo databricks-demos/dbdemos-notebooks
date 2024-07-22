@@ -42,7 +42,7 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 # COMMAND ----------
 
 import pyspark.sql.functions as F
-output_path = volume_folder+"/raw_data"
+output_path = volume_folder
 dbutils.fs.mkdirs(output_path)
 reset_all_data = dbutils.widgets.get('reset_all_data') == "true"
 
@@ -155,4 +155,4 @@ for i in range(0, int(dbutils.widgets.get('batch_count'))):
   if batch_count > 1:
     time.sleep(int(dbutils.widgets.get('batch_wait')))
   generate_transactions(int(dbutils.widgets.get('num_recs')), output_path+'/raw_transactions', 1, "append")
-  print(f'inished writing batch: {i}')
+  print(f'Finished writing batch: {i}')

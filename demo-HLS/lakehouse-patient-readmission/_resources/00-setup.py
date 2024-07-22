@@ -56,6 +56,7 @@ from mlflow.models.model import Model
 from databricks import feature_store
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
+import pyspark.sql.functions as F
 
 from datetime import date
 

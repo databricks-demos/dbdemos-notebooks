@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet shap==0.36.0
+# MAGIC %pip install --quiet shap==0.46.0
 # MAGIC dbutils.library.restartPython() 
 
 # COMMAND ----------

@@ -81,19 +81,48 @@
             {
                 "task_key": "init_data",
                 "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/01-load-data-quality-dashboard",
+                    "notebook_path": "{{DEMO_FOLDER}}/_resources/00-Loan-Data-Generator",
                     "source": "WORKSPACE"
                 },
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {}
+            },
+            {
+                "task_key": "start_dlt_pipeline",
+                "pipeline_task": {
+                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-loans}}",
+                    "full_refresh": true
+                },
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                    {
+                        "task_key": "init_data"
+                    }
+                ]
+            },
+            {
+                "task_key": "load_data_quality_dashboard",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/_resources/01-load-data-quality-dashboard",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                    {
+                        "task_key": "start_dlt_pipeline"
+                    }
+                ]
             }
         ],
         "job_clusters": [
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "14.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.3.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -138,11 +167,6 @@
         "edition": "ADVANCED",
         "photon": False,
         "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/_resources/00-Loan-Data-Generator"
-                }
-            },
             {
                 "notebook": {
                     "path": "{{DEMO_FOLDER}}/01-DLT-Loan-pipeline-SQL"

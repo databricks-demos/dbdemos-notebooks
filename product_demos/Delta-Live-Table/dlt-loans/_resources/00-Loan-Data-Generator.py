@@ -32,11 +32,14 @@ dbutils.widgets.combobox('batch_count', '1', ['1', '100', '200', '500'], 'Write 
 
 # COMMAND ----------
 
-spark.sql(f'CREATE CATALOG IF NOT EXISTS `{catalog}`')
-spark.sql(f'USE CATALOG `{catalog}`')
-spark.sql(f'CREATE SCHEMA IF NOT EXISTS `{catalog}`.`{schema}`')
-spark.sql(f'USE SCHEMA `{schema}`')
-spark.sql(f'CREATE VOLUME IF NOT EXISTS `{catalog}`.`{schema}`.`{volume_name}`')
+try:
+    spark.sql(f'CREATE CATALOG IF NOT EXISTS `{catalog}`')
+    spark.sql(f'USE CATALOG `{catalog}`')
+    spark.sql(f'CREATE SCHEMA IF NOT EXISTS `{catalog}`.`{schema}`')
+    spark.sql(f'USE SCHEMA `{schema}`')
+    spark.sql(f'CREATE VOLUME IF NOT EXISTS `{catalog}`.`{schema}`.`{volume_name}`')
+except:
+    print("skip for DLT")    
 volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------

@@ -69,7 +69,7 @@ GRANT SELECT ON TABLE condition_occurrence TO `analysts`;
 GRANT SELECT ON TABLE patients TO `analysts`;
 
 -- We'll grant an extra MODIFY to our Data Engineer
-GRANT SELECT, MODIFY ON SCHEMA hls_patient_readmission TO `dataengineers`;
+-- GRANT SELECT, MODIFY ON SCHEMA dbdemos_hls_readmission TO `dataengineers`;
 
 -- COMMAND ----------
 

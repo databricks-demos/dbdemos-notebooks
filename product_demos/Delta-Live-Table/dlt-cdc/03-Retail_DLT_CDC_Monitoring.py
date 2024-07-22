@@ -36,7 +36,7 @@
 
 # DBTITLE 1,Load DLT system table 
 # MAGIC %sql
-# MAGIC SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_cdc.churn_features)) 
+# MAGIC SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_cdc.customers)) 
 
 # COMMAND ----------
 
@@ -47,7 +47,7 @@
 
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
-# MAGIC   as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_cdc.churn_features));
+# MAGIC   as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_cdc.customers));
 # MAGIC SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
 
 # COMMAND ----------

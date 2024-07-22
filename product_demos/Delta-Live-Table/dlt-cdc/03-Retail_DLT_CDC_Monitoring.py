@@ -46,9 +46,9 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
+# MAGIC CREATE OR REPLACE TEMPORARY VIEW demo_cdc_dlt_system_event_log_raw 
 # MAGIC   as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_cdc.customers));
-# MAGIC SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
+# MAGIC SELECT * FROM demo_cdc_dlt_system_event_log_raw order by timestamp desc;
 
 # COMMAND ----------
 
@@ -111,7 +111,7 @@
 # MAGIC     details:flow_progress.status as status_update,
 # MAGIC     explode(from_json(details:flow_progress.data_quality.expectations
 # MAGIC              ,'array<struct<dataset: string, failed_records: bigint, name: string, passed_records: bigint>>')) expectations
-# MAGIC   FROM demo_cdc_dlt_system_event_log_raw
+# MAGIC   FROM demo_cdc_dlt_system_event_log_raw 
 # MAGIC   where details:flow_progress.data_quality.expectations is not null
 # MAGIC   ORDER BY timestamp);
 # MAGIC select * from cdc_dlt_expectations

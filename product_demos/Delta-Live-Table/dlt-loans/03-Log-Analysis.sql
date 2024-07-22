@@ -33,12 +33,12 @@
 
 -- COMMAND ----------
 
-SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.churn_features))
+SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.raw_txs))
 
 -- COMMAND ----------
 
 CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
-  as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.churn_features));
+  as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.raw_txs));
 SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
 
 -- COMMAND ----------

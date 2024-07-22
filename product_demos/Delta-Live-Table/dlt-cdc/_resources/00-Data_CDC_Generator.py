@@ -19,7 +19,7 @@
 catalog = "main__build"
 schema = dbName = db = "dbdemos_dlt_cdc"
 
-volume_name = "dlt"
+volume_name = "raw_data"
 
 # COMMAND ----------
 

@@ -20,7 +20,7 @@
 
 # DBTITLE 1,2 tables in our cdc_raw: customers and transactions
 # uncomment to see the raw files
-# %fs ls /Volumes/main__build/dbdemos_dlt_cdc/dlt
+# %fs ls /Volumes/main__build/dbdemos_dlt_cdc/raw_data
 
 # COMMAND ----------
 
@@ -41,7 +41,7 @@ def create_pipeline(table_name):
       spark.readStream.format("cloudFiles")
         .option("cloudFiles.format", "json")
         .option("cloudFiles.inferColumnTypes", "true")
-        .load("/Volumes/main__build/dbdemos_dlt_cdc/dlt/"+table_name))
+        .load("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/"+table_name))
   
   ##Clean CDC input and track quality with expectations
   @dlt.create_view(name=table_name+"_cdc_clean",
@@ -64,7 +64,7 @@ def create_pipeline(table_name):
                     except_column_list = ["operation", "operation_date", "_rescued_data"]) #in addition we drop metadata columns
   
   
-for folder in dbutils.fs.ls("/Volumes/main__build/dbdemos_dlt_cdc/dlt"):
+for folder in dbutils.fs.ls("/Volumes/main__build/dbdemos_dlt_cdc/raw_data"):
   table_name = folder.name[:-1]
   create_pipeline(table_name)
 

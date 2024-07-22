@@ -44,7 +44,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's review the incoming data
--- %fs ls /Volumes/main__build/dbdemos_dlt_loan/dlt/loans/raw_transactions
+-- %fs ls /Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions
 
 -- COMMAND ----------
 
@@ -70,14 +70,14 @@
 -- DBTITLE 1,Capture new incoming transactions
 CREATE STREAMING LIVE TABLE raw_txs
   COMMENT "New raw loan data incrementally ingested from cloud object storage landing zone"
-AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/raw_transactions', 'json', map("cloudFiles.inferColumnTypes", "true"))
+AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions', 'json', map("cloudFiles.inferColumnTypes", "true"))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Reference table - metadata (small & almost static)
 CREATE LIVE TABLE ref_accounting_treatment
   COMMENT "Lookup mapping for accounting codes"
-AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/ref_accounting_treatment`
+AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment`
 
 -- COMMAND ----------
 
@@ -86,7 +86,7 @@ AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/ref_acco
 CREATE STREAMING LIVE TABLE raw_historical_loans
   TBLPROPERTIES ("pipelines.trigger.interval"="6 hour")
   COMMENT "Raw historical transactions"
-AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/historical_loans', 'csv', map("cloudFiles.inferColumnTypes", "true"))
+AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans', 'csv', map("cloudFiles.inferColumnTypes", "true"))
 
 -- COMMAND ----------
 

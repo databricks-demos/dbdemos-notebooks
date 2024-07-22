@@ -45,7 +45,7 @@
 
 # DBTITLE 1,Let's review the incoming data
 # Uncomment to explore the raw data
-# %fs ls /Volumes/main__build/dbdemos_dlt_loan/dlt/loans/raw_transactions
+# %fs ls /Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions
 
 # COMMAND ----------
 
@@ -76,13 +76,13 @@ def raw_txs():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "json")
       .option("cloudFiles.inferColumnTypes", "true")
-      .load("/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/raw_transactions"))
+      .load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions"))
 
 # COMMAND ----------
 
 @dlt.create_table(comment="Lookup mapping for accounting codes")
 def ref_accounting_treatment():
-  return spark.read.format("delta").load("/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/ref_accounting_treatment")
+  return spark.read.format("delta").load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment")
 
 # COMMAND ----------
 
@@ -92,7 +92,7 @@ def raw_historical_loans():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "csv")
       .option("cloudFiles.inferColumnTypes", "true")
-      .load("/Volumes/main__build/dbdemos_dlt_loan/dlt/loans/historical_loans"))
+      .load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans"))
 
 # COMMAND ----------
 

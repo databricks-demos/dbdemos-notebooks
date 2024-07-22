@@ -43,10 +43,13 @@
 # DBTITLE 1,Load the model with "prod" alias from Unity Catalog Registry
 model_name = "dbdemos_hls_patient_readmission"
 full_model_name = f"{catalog}.{db}.{model_name}"
+import mlflow
 from mlflow import MlflowClient
 
 #Enable Unity Catalog with mlflow registry
+mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient(registry_uri="databricks-uc")
+
 #Get model with PROD alias (make sure you run the notebook 04.2 to save the model in UC)
 latest_model = client.get_model_version_by_alias(full_model_name, "prod")
 

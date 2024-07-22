@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md # Foundation Model Instruction fine-tuning: Named Entity Recognition
+# MAGIC %md # Foundation Model fine-tuning: Named Entity Recognition
 # MAGIC
 # MAGIC In this demo, we will focus on Fine Tuning our model for Instruction Fine Tuning, specializing llama2 to extract drug name from text. This process is call NER (Named Entity Recognition)
 # MAGIC

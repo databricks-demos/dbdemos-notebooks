@@ -69,7 +69,6 @@ warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 #Helper fuinction to Wait for the fine tuning run to finish
 def wait_for_run_to_finish(run):
   import time
-  print_train = False
   for i in range(300):
     events = run.get_events()
     for e in events:
@@ -77,12 +76,10 @@ def wait_for_run_to_finish(run):
         raise Exception(f'Error with the fine tuning run, check the details in run.get_events(): {e}')
     if events[-1].type == 'COMPLETED':
       print('Run finished')
+      display(events)
       return events
     if i % 30 == 0:
       print(f'waiting for run {run.name} to complete...')
-    if events[-1].type == 'TRAIN_UPDATED' and not print_train:
-      print_train = True
-      display(events)
     time.sleep(10)
 
 

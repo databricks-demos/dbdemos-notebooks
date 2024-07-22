@@ -295,6 +295,18 @@ chain = (
 
 # COMMAND ----------
 
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC #### Databricks will track all the chain for you
+# MAGIC
+# MAGIC <img src="https://ai-cookbook.io/_images/mlflow_trace2.gif" width="600px" style="float: right; margin-left: 10px">
+# MAGIC
+# MAGIC As you can see in the cell result below, Databricks automatically trace the chain call. 
+# MAGIC
+# MAGIC This makes it super easy to debug and improve your chain!
+
+# COMMAND ----------
+
 # Let's give it a try:
 input_example = {"messages": [ {"role": "user", "content": "What is Retrieval-augmented Generation?"}]}
 answer = chain.invoke(input_example)

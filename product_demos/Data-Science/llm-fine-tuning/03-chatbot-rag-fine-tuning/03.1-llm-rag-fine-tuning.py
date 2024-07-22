@@ -1,25 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Fine-tuning your LLM on Databricks
-# MAGIC
-# MAGIC Fine Tuning LLMs is the action of specializing an existing model to your own requirements.
-# MAGIC Technically speaking, you start from the weights of an existing foundation model (such as DBRX or LLAMA), and add another training round based on your own dataset.
-# MAGIC
-# MAGIC
-# MAGIC ## Why Fine Tuning?
-# MAGIC Databricks provides an easy way to specialize existing foundation models, making sure you own and control your model while also getting better performance, lower cost, and tighter security and privacy.
-# MAGIC
-# MAGIC The typical fine-tuning use cases are:
-# MAGIC * Train a model on specific, internal knowledge
-# MAGIC * Customize model behavior, ex: specialized entity extraction
-# MAGIC * Reduce model size and inference cost, while improving answer quality
-# MAGIC
-# MAGIC ## Continued Pre-Training vs Instruction Fine Tuning?
-# MAGIC
-# MAGIC Databricks Fine Tuning API enables you to adapt your model in several different ways:
-# MAGIC * **Supervised fine-tuning**: Train your model on structured prompt-response data. Use this to adapt your model to a new task, change its response style, or add instruction-following capabilities, such as NER (see [instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning]($./instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning)).
-# MAGIC * **Continued pre-training**: Train your model with additional unlabeled text data. Use this to add new knowledge to a model or focus a model on a specific domain. Requires several millions of token to be relevant.
-# MAGIC * **Chat completion**: Train your model on chat logs between a user and an AI assistant. This format can be used both for actual chat logs, and as a standard format for question answering and conversational text. The text is automatically formatted into the appropriate chat format for the specific model, and is what this demo will focus on.
+# MAGIC # Fine-tuning your RAG Chatbot LLM with Databricks Mosaic AI
 # MAGIC
 # MAGIC ## Fine Tuning or RAG?
 # MAGIC RAG and Instruction fine-tuning work together! If you have a relevant RAG use-case, you can start with RAG leveraging a foundational model, and then specialize your model if your corpus is specific to your business (ex: not part of the foundation model training) or need specific behavior (ex: answer to a specific task such as entity extraction)
@@ -72,6 +53,15 @@ dbutils.library.restartPython()
 # MAGIC * A Databricks user question (ex: how do I start a Warehouse?)
 # MAGIC * A page or chunk from Databricks documentation relevant to this question
 # MAGIC * The expected answer, reviewed by a human
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## A note on Databricks Mosaic AI Evaluation Framework
+# MAGIC
+# MAGIC Databricks makes it easy to build, deploy and review RAG application. Using Databricks review application, it's easy to build your Fine Tuning Dataset.
+# MAGIC
+# MAGIC To see how it's done, install the `dbdemos.install('llm-rag-chatbot')` demo!
 
 # COMMAND ----------
 
@@ -161,8 +151,6 @@ display(spark.table('chat_completion_training_dataset'))
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC #### 1.1) Instruction Fine Tune our Baseline Model
-# MAGIC
-# MAGIC <img src="https://docs.databricks.com/en/_images/finetuning-expt.png" style="float: right" width="500px">
 # MAGIC
 # MAGIC In this demo, we'll be using the API on the table we just created to programatically fine tune our LLM.
 # MAGIC

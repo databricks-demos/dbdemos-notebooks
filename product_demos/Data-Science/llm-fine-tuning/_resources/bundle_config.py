@@ -41,15 +41,23 @@
       "description": "Craft training FT dataset with DBRX."
     },
     {
-      "path": "01-llm-rag-fine-tuning",
+      "path": "01-classification-fine-tuning-customer-support",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Fine Tune LLM using Databricks API",
+      "title":  "Fine Tune LLM for Classification using Databricks API",
       "description": "Build the training dataset and leverage the Chat API to Fine Tune models."
     },
     {
-      "path": "02-llm-evaluation", 
+      "path": "03-chatbot-rag-fine-tuning/03.1-llm-rag-fine-tuning",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "Fine Tune a RAG LLM",
+      "description": "Build the training dataset and leverage the Chat API to Fine Tune models for RAG application (including history)."
+    },
+    {
+      "path": "03-chatbot-rag-fine-tuning/03.2-llm-evaluation",
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
@@ -65,7 +73,7 @@
       "description": "Define catalog and schema"
     },
     {
-      "path": "instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning", 
+      "path": "02-entity-extraction-fine-tuning/02.1-llm-entity-extraction-drug-fine-tuning", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 

@@ -11,32 +11,7 @@
 
 # COMMAND ----------
 
-# MAGIC %fs ls /FileStore/quentin
-
-# COMMAND ----------
-
-spark.table('raw_documentation').repartition(1).write.format('parquet').mode('overwrite').save('/FileStore/quentin/doc/raw_documentation')
-spark.table('databricks_documentation').repartition(1).write.format('parquet').mode('overwrite').save('/FileStore/quentin/doc/databricks_documentation')
-spark.table('training_dataset_question').repartition(1).write.format('parquet').mode('overwrite').save('/FileStore/quentin/doc/training_dataset_question')
-spark.table('training_dataset_answer').repartition(1).write.format('parquet').mode('overwrite').save('/FileStore/quentin/doc/training_dataset_answer')
-
-# COMMAND ----------
-
-folder = f"/Volumes/{catalog}/{db}/{volume_name}"
-
-tables_exist = spark.catalog.tableExists("databricks_documentation") and spark.catalog.tableExists("training_dataset_answer") and spark.catalog.tableExists("training_dataset_question")
-if not tables_exist:
-  
-
-# COMMAND ----------
-
-data_downloaded = False
-if not data_exists:
-    try:
-        DBDemos.download_file_from_git(folder+'/raw_documentation', "databricks-demos", "dbdemos-dataset", "/llm/databricks-documentation")
-        data_downloaded = True
-    except Exception as e: 
-        print(f"Error trying to download the file from the repo: {str(e)}. Will generate the data instead...")    
+folder = volume_folder
 
 # COMMAND ----------
 
@@ -310,3 +285,61 @@ question_df = df_q.join(df_d, df_q['q.doc_id'] == df_d['d.id'])
 # MAGIC SELECT * FROM databricks_documentation d
 # MAGIC   INNER JOIN training_dataset_question q on q.doc_id = d.id
 # MAGIC   INNER JOIN training_dataset_answer   a on a.question_id = q.id 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Create tickets/support dataset from the doc
+
+# COMMAND ----------
+
+# Define the prompt with escaped quotes
+prompt = """Using the provided text where HTML tags are represented in plain text format (e.g., <H1> is represented as H1), generate three dummy customer issues, each reflecting one of these specific intents: "impacting the prod," "urgent," or "not urgent." For each issue, generate a unique and random email ID for the customer submitting the request. Format the response as a JSON array, where each object includes the following three fields:
+
+description - Provides a detailed account of the customer issue, reflecting realistic scenarios that could arise from the content described in the text. Make the wording of the issue to highlight indirectly the priority of the issue to be either "Urgent," "Impacting the Prod," or "Not Urgent". Write the description as it is coming from customer directly.
+email - The fabricated email address of the customer submitting the issue. Make it unique coming from fictitious diffrent company domains.
+priority - The designated priority level of the issue, categorized as "Urgent," "Impacting the Prod," or "Not Urgent.
+created_on - The date on which issue was created. Format as "MM/DD/YYYY" (e.g., 01/01/2022). Assign random dates to issues based on the following ranges: 01/01/2023 - 01/01/2024,
+\\n"""
+
+# COMMAND ----------
+
+# Concatenate the prompt with the doc column
+from pyspark.sql.functions import concat, lit, col
+df = spark.table("databricks_documentation")
+df_with_prompt = df.withColumn("prompt", concat(lit(prompt), col("content")))
+display(df_with_prompt)
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC CREATE OR REPLACE FUNCTION GENERATE_ISSUES_FROM_DOC(doc STRING)
+# MAGIC RETURNS ARRAY<STRUCT<description: STRING, email: STRING, priority: STRING, created_on:STRING>>
+# MAGIC RETURN from_json(
+# MAGIC     ai_query("databricks-dbrx-instruct",  doc),
+# MAGIC     "array<struct<description:string, email:string, priority:string, created_on:string>>"
+# MAGIC );
+
+# COMMAND ----------
+
+import pyspark.sql.functions as F
+
+tickets = (
+    df_with_prompt.sample(0.5)
+    .selectExpr('id as doc_id', 'prompt')
+    .withColumn("ticket", F.expr("GENERATE_ISSUES_FROM_DOC(prompt)"))
+)
+
+tickets = tickets.drop('prompt')
+tickets = tickets.withColumn('ticket', F.explode('ticket'))
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS customer_tickets (
+# MAGIC    id BIGINT GENERATED ALWAYS AS IDENTITY
+# MAGIC )
+
+# COMMAND ----------
+
+tickets.write.mode("overwrite").option("mergeSchema", "true").saveAsTable("customer_tickets")

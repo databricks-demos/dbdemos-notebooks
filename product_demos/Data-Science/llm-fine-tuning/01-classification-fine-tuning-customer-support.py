@@ -37,6 +37,8 @@
 # MAGIC
 # MAGIC In this demo, we will show you how to specialize a LLM to classify URGENT / CRITICAL tickets and put them with a high priority in the queue.
 # MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-0.png?raw=true" width="1200px">
+# MAGIC
 # MAGIC We'll fine tune a small Llama3-7B to improve accuracy while reducing cost. 
 # MAGIC
 # MAGIC To do so, Databricks provides a simple, built-in API to fine tune the model and evaluate its performance. Let's get started!
@@ -59,9 +61,11 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Preparing our Training Dataset
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-1.png?raw=true" width="700px" style="float: right">
 # MAGIC
 # MAGIC ### Lets take a look at our current support tickets
 # MAGIC
@@ -116,12 +120,33 @@ spark.sql(f"""SELECT
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ### Creating our training dataset.
+# MAGIC %md-sandbox
+# MAGIC ## Preparing the Dataset for Chat Completion
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-2.png?raw=true" width="700px" style="float: right">
 # MAGIC
 # MAGIC Using the completion API is always recommended as default option as Databricks will properly format the final training prompt for you.
 # MAGIC
-# MAGIC It requires to prepare the dataset with a list of user/assistant prompt:
+# MAGIC Chat completion requires a list of **role** and **prompt**, following the OpenAI standard. This standard has the benefit of transforming our input into a prompt following our LLM instruction pattern. <br/>
+# MAGIC Note that each foundation model might be trained with a different instruction type, so it's best to use the same type when fine tuning.<br/>
+# MAGIC *We recommend using Chat Completion whenever possible.*
+# MAGIC
+# MAGIC ```
+# MAGIC [
+# MAGIC   {"role": "system", "content": "[system prompt]"},
+# MAGIC   {"role": "user", "content": "Here is a documentation page:[RAG context]. Based on this, answer the following question: [user question]"},
+# MAGIC   {"role": "assistant", "content": "[answer]"}
+# MAGIC ]
+# MAGIC ```
+# MAGIC
+# MAGIC *Remember that your Fine Tuning dataset should be the same format as the one you're using for your RAG application.<br/>*
+# MAGIC
+# MAGIC #### Training Data Type
+# MAGIC
+# MAGIC Databricks supports a large variety of dataset formats (Volume files, Delta tables, and public Hugging Face datasets in .jsonl format), but we recommend preparing the dataset as Delta tables within your Catalog as part of a proper data pipeline to ensure production quality.
+# MAGIC *Remember, this step is critical and you need to make sure your training dataset is of high quality.*
+# MAGIC
+# MAGIC Let's create a small pandas UDF to help create our final chat completion dataset.<br/>
 
 # COMMAND ----------
 
@@ -143,7 +168,7 @@ spark.table('ticket_priority_training_dataset').display()
 # MAGIC
 # MAGIC ## Starting a Fine Tuning Run
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-3.png?raw=true" width="700px" style="float: right">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-3.png?raw=true" width="700px" style="float: right">
 # MAGIC
 # MAGIC Once the training is done, your model will automatically be saved within Unity Catalog and available for you to serve!
 # MAGIC
@@ -243,6 +268,8 @@ except:
 
 # MAGIC %md-sandbox
 # MAGIC #### Testing the Model Endpoint
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-4.png?raw=true" width="700px" style="float: right">
 # MAGIC
 # MAGIC
 # MAGIC That's it! We're now ready to serve our Fine Tuned model and start asking questions!

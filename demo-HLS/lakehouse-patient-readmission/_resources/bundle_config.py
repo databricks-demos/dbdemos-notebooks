@@ -67,7 +67,7 @@
     },
     {
       "path": "02-Data-Governance/02-Data-Governance-patient-readmission", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Governance with Unity Catalog", 

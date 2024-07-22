@@ -180,6 +180,8 @@ def get_current_cluster_id():
 
 #Let's clean the model name
 registered_model_name = f"{catalog}.{db}." + re.sub(r'[^a-zA-Z0-9]', '_',  base_model_name)
+if model_exists(registered_model_name):
+    raise Exception(f"Model {registered_model_name} already exists.")
 
 run = fm.create(
     data_prep_cluster_id=get_current_cluster_id(),  # required if you are using delta tables as training data source. This is the cluster id that we want to use for our data prep job.

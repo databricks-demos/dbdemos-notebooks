@@ -153,6 +153,8 @@ SELECT * FROM reviews_answer
 -- MAGIC The next step is to set up a comprehensive dashboard in order to track and monitor our customer reviews.
 -- MAGIC
 -- MAGIC Open the <a dbdemos-dashboard-id="customer-review-analysis" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Customer review analysis dashboard</a> to have a complete view of your customers, products and reviews.
+-- MAGIC
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-dashboard.png" width="1200">
 
 
 -- COMMAND ----------

@@ -82,6 +82,10 @@ df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
 # Delete the temp data
 shutil.rmtree(input_temp_dir)
 
+try:
+    df_loaded = df_loaded.drop(['_automl_sample_weight_0000'], axis=1) #for demo only, to make it more stable across versions.
+except:
+    print('column weight not available - this might change depending on the automl version - can ignore')
 # Preview data
 df_loaded.head(5)
 

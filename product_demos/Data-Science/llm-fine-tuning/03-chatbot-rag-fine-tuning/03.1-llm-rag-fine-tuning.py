@@ -34,7 +34,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup
+# MAGIC %run ../_resources/00-setup
 
 # COMMAND ----------
 

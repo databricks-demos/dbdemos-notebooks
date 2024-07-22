@@ -24,7 +24,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.23.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0
+# MAGIC %pip install databricks-sdk==0.23.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

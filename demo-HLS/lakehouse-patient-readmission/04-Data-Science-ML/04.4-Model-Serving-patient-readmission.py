@@ -42,32 +42,45 @@
 
 # DBTITLE 1,Load the model with "prod" alias from Unity Catalog Registry
 model_name = "dbdemos_hls_patient_readmission"
+full_model_name = f"{catalog}.{db}.{model_name}"
 
 #Enable Unity Catalog with mlflow registry
 mlflow.set_registry_uri('databricks-uc')
 client = mlflow.tracking.MlflowClient()
 #Get model with PROD alias (make sure you run the notebook 04.2 to save the model in UC)
-latest_model = client.get_model_version_by_alias(f"{catalog}.{db}.dbdemos_hls_patient_readmission", "prod")
+latest_model = client.get_model_version_by_alias(full_model_name, "prod")
 
 # COMMAND ----------
 
-# DBTITLE 1,Deploy the model in our serving endpoint
-#See helper in companion notebook
-serving_client = EndpointApiClient()
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
+from mlflow import MlflowClient
 
-#The first deployment will build the image and take a few extra minute. Stop/Start is then instantly.
-serving_client.create_endpoint_if_not_exists(
-    "dbdemos_hls_patient_readmission_endpoint",
-    model_name=f"{catalog}.{db}.dbdemos_hls_patient_readmission",
-    model_version=latest_model.version,
-    workload_size="Small",
-    scale_to_zero_enabled=True,
-    wait_start=True
+serving_endpoint_name = "dbdemos_hls_patient_readmission_endpoint"
+w = WorkspaceClient()
+
+mlflow_client = MlflowClient(registry_uri="databricks-uc")
+endpoint_config = EndpointCoreConfigInput(
+    name=serving_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=full_model_name,
+            entity_version=latest_model.version,
+            scale_to_zero_enabled=True,
+            workload_size="Small"
+        )
+    ]
 )
 
-
-#Make sure all users can access our endpoint for this demo
-set_model_endpoint_permission("dbdemos_embedding_endpoint", "CAN_MANAGE", "users")
+force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+try:
+  existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
+  print(f"endpoint {serving_endpoint_name} already exist - force update = {force_update}...")
+  if force_update:
+    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+except:
+    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
 
 # COMMAND ----------
 
@@ -88,20 +101,17 @@ set_model_endpoint_permission("dbdemos_embedding_endpoint", "CAN_MANAGE", "users
 
 # COMMAND ----------
 
-p = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod").download_artifacts("") 
+p = ModelsArtifactRepository(f"models:/{full_model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 
 # COMMAND ----------
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import mlflow
+from mlflow import deployments
+client = mlflow.deployments.get_deploy_client("databricks")
+predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
 
-endpoint_url = f"{serving_client.base_url}/realtime-inference/dbdemos_hls_patient_readmission_endpoint/invocations"
-inferences = requests.post(
-    endpoint_url, json=dataset, headers=serving_client.headers
-).json()
-
-prediction_score = list(inferences["predictions"])[0]
-print(f"Patient readmission risk: {prediction_score}.")
+print(f"Patient readmission risk: {predictions}.")
 
 # COMMAND ----------
 

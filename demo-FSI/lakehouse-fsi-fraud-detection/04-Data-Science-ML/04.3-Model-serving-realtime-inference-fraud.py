@@ -67,7 +67,7 @@ endpoint_config = EndpointCoreConfigInput(
     served_entities=[
         ServedEntityInput(
             entity_name=model_name,
-            entity_version=mlflow_client.get_model_version_by_alias(model_name, "prod"),
+            entity_version=mlflow_client.get_model_version_by_alias(model_name, "prod").version,
             scale_to_zero_enabled=True,
             workload_size="Small"
         )

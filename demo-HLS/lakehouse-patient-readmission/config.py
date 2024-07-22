@@ -13,6 +13,6 @@
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("lakehouse-retail-c360", catalog="..", schema="...")
 
 catalog = "main__build"
-schema = dbName = db = "dbdemos_hsl_readmission"
+schema = dbName = db = "dbdemos_hls_readmission"
 
 volume_name = "synthea"

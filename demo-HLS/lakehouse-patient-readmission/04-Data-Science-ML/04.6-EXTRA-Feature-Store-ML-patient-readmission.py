@@ -65,7 +65,7 @@ def compute_pat_features(data):
 
 # COMMAND ----------
 
-pat_features_df = compute_pat_features(spark.table('patie').dropDuplicates(["Id"]))
+pat_features_df = compute_pat_features(spark.table('patients').dropDuplicates(["Id"]))
 pat_features_df.display()
 
 # COMMAND ----------

@@ -1,0 +1,2 @@
+gradio==4.37.2
+databricks-sdk==0.28.0

@@ -43,11 +43,11 @@
 # COMMAND ----------
 
 MODEL_NAME = "dbdemos_rag_demo"
-endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:63]
+endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:60]
 
 # Our frontend application will hit the model endpoint we deployed.
 # Because dbdemos let you change your catalog and database, let's make sure we deploy the app with the proper endpoint name
-yaml_app_config = {"command": ["uvicorn", "main:app", "--workers", "4"],
+yaml_app_config = {"command": ["uvicorn", "main:app", "--workers", "1"],
                     "env": [{"name": "MODEL_SERVING_ENDPOINT", "value": endpoint_name}]
                   }
 try:
@@ -59,12 +59,11 @@ except:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Let's now create or chatbot application using Gradio
+# MAGIC ## Let's now create our chatbot application using Gradio
 
 # COMMAND ----------
 
 # MAGIC %%writefile chatbot_app/main.py
-# MAGIC import itertools
 # MAGIC from fastapi import FastAPI
 # MAGIC import gradio as gr
 # MAGIC import os
@@ -74,51 +73,69 @@ except:
 # MAGIC
 # MAGIC app = FastAPI()
 # MAGIC
-# MAGIC #your endpoint will directly be setup with proper permissions when you deploy your app
+# MAGIC # your endpoint will directly be setup with proper permissions when you deploy your app
 # MAGIC w = WorkspaceClient()
+# MAGIC available_endpoints = [x.name for x in w.serving_endpoints.list()]
 # MAGIC
-# MAGIC model_serving_endpoint_name = os.environ['MODEL_SERVING_ENDPOINT']
 # MAGIC
-# MAGIC def respond(message, history):
+# MAGIC def respond(message, history, dropdown):
 # MAGIC     if len(message.strip()) == 0:
 # MAGIC         return "ERROR the question should not be empty"
 # MAGIC     try:
-# MAGIC         #TODO: we should send the history too - PR welcome!
+# MAGIC         messages = []
+# MAGIC         if history:
+# MAGIC             for human, assistant in history:
+# MAGIC                 messages.append(ChatMessage(content=human, role=ChatMessageRole.USER))
+# MAGIC                 messages.append(
+# MAGIC                     ChatMessage(content=assistant, role=ChatMessageRole.ASSISTANT)
+# MAGIC                 )
+# MAGIC         messages.append(ChatMessage(content=message, role=ChatMessageRole.USER))
 # MAGIC         response = w.serving_endpoints.query(
-# MAGIC             name=model_serving_endpoint_name,
-# MAGIC             messages=[ChatMessage(content=message, role=ChatMessageRole.USER)],
+# MAGIC             name=dropdown,
+# MAGIC             messages=messages,
 # MAGIC             temperature=1.0,
-# MAGIC             stream=False
+# MAGIC             stream=False,
 # MAGIC         )
 # MAGIC     except Exception as error:
-# MAGIC         return f"ERROR requesting endpoint {model_serving_endpoint_name}: {error}"       
+# MAGIC         return f"ERROR requesting endpoint {dropdown}: {error}"
 # MAGIC     return response.choices[0].message.content
 # MAGIC
+# MAGIC
 # MAGIC theme = gr.themes.Soft(
-# MAGIC     text_size=sizes.text_sm,radius_size=sizes.radius_sm, spacing_size=sizes.spacing_sm,
+# MAGIC     text_size=sizes.text_sm,
+# MAGIC     radius_size=sizes.radius_sm,
+# MAGIC     spacing_size=sizes.spacing_sm,
 # MAGIC )
 # MAGIC
 # MAGIC demo = gr.ChatInterface(
 # MAGIC     respond,
-# MAGIC     chatbot=gr.Chatbot(show_label=False, container=False, show_copy_button=True, bubble_full_width=True),
-# MAGIC     textbox=gr.Textbox(placeholder="What is RAG?",
-# MAGIC                        container=False, scale=7),
+# MAGIC     chatbot=gr.Chatbot(
+# MAGIC         show_label=False, container=False, show_copy_button=True, bubble_full_width=True
+# MAGIC     ),
+# MAGIC     textbox=gr.Textbox(placeholder="What is RAG?", container=False, scale=7),
 # MAGIC     title="Databricks App RAG demo - Chat with your Databricks assistant",
-# MAGIC     description="This chatbot is a demo example for the dbdemos llm chatbot. <br>It answers with the help of Databricks Documentation saved in a Knowledge databse.<br/>This content is provided as a LLM RAG educational example, without support. It is using DBRX, can hallucinate and should not be used as production content.<br>Please review our dbdemos license and terms for more details.",
-# MAGIC     examples=[["What is DBRX?"],
-# MAGIC               ["How can I start a Databricks cluster?"],
-# MAGIC               ["What is a Databricks Cluster Policy?"],
-# MAGIC               ["How can I track billing usage on my workspaces?"],],
+# MAGIC     description="This chatbot is a demo example for the dbdemos llm chatbot. <br>It answers with the help of Databricks Documentation saved in a Knowledge database.<br/>This content is provided as a LLM RAG educational example, without support. It is using DBRX, can hallucinate and should not be used as production content.<br>Please review our dbdemos license and terms for more details.",
+# MAGIC     examples=[
+# MAGIC         ["What is DBRX?"],
+# MAGIC         ["How can I start a Databricks cluster?"],
+# MAGIC         ["What is a Databricks Cluster Policy?"],
+# MAGIC         ["How can I track billing usage on my workspaces?"],
+# MAGIC     ],
 # MAGIC     cache_examples=False,
 # MAGIC     theme=theme,
 # MAGIC     retry_btn=None,
 # MAGIC     undo_btn=None,
 # MAGIC     clear_btn="Clear",
+# MAGIC     additional_inputs=gr.Dropdown(
+# MAGIC         choices=available_endpoints,
+# MAGIC         value=os.environ["MODEL_SERVING_ENDPOINT"],
+# MAGIC         label="Serving Endpoint",
+# MAGIC     ),
+# MAGIC     additional_inputs_accordion="Settings",
 # MAGIC )
 # MAGIC
 # MAGIC demo.queue(default_concurrency_limit=100)
 # MAGIC app = gr.mount_gradio_app(app, demo, path="/")
-# MAGIC
 
 # COMMAND ----------
 
@@ -133,17 +150,37 @@ except:
 
 # COMMAND ----------
 
+app_name = "dbdemos-rag-chatbot-app"
+
 #Helper is defined in the _resources/02-lakehouse-app-helpers notebook (temporary helper)
 helper = LakehouseAppHelper()
-#helper.list()
-#Delete potential previous app version
-#helper.delete("dbdemos-rag-chatbot-app")
-helper.create("dbdemos-rag-chatbot-app", app_description="Your Databricks assistant")
-helper.deploy("dbdemos-rag-chatbot-app", os.path.join(os.getcwd(), 'chatbot_app'))
+app_details = helper.create(app_name, app_description="Your Databricks assistant")
 
 # COMMAND ----------
 
-helper.details("dbdemos-rag-chatbot-app")
+# MAGIC %md
+# MAGIC Lakehouse apps come with an auto-provisioned Service Principal. Let's grant this Service Principal access to our model endpoint before deploying...
+
+# COMMAND ----------
+
+helper.add_dependencies(
+    app_name=app_name,
+    dependencies=[
+        {
+            "name": "rag-endpoint",
+            "serving_endpoint": {
+                "name": endpoint_name,
+                "permission": "CAN_QUERY",
+            },
+        }
+    ],
+    overwrite=False # if False dependencies will be appended to existing ones
+)
+
+# COMMAND ----------
+
+helper.deploy(app_name, os.path.join(os.getcwd(), 'chatbot_app'))
+helper.details(app_name)
 
 # COMMAND ----------
 

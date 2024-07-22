@@ -27,13 +27,13 @@ import timeit
 import time
 
 folders = ["/landing_zone/encounters", "/landing_zone/patients", "/landing_zone/conditions", "/landing_zone/medications", "/landing_zone/immunizations", "/landing_zone/location_ref", "/landing_vocab/CONCEPT", "/landing_vocab/CONCEPT_RELATIONSHIP"]
-                               
-if reset_all_data or DBDemos.is_any_folder_empty(folders):
+
+if reset_all_data or DBDemos.is_any_folder_empty([volume_folder+f for f in folders]):
   if reset_all_data:
     assert len(volume_folder) > 20 and volume_folder.startswith('/Volumes/')
     dbutils.fs.rm(volume_folder, True)
   for f in folders:
-      DBDemos.download_file_from_git(volume_folder+'/'+f, "databricks-demos", "dbdemos-dataset", "/hls/synthea"+f.replace("landing_zone", "landing_zone_parquet"))
+      DBDemos.download_file_from_git(volume_folder+f, "databricks-demos", "dbdemos-dataset", "/hls/synthea"+f.replace("landing_zone", "landing_zone_parquet"))
 else:
   print("data already existing. Run with reset_all_data=true to force a data cleanup for your local demo.")
 

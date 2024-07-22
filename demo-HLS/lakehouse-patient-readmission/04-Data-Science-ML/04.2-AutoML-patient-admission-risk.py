@@ -120,8 +120,8 @@ print("registering model version "+model_registered.version+" as production mode
 client = mlflow.tracking.MlflowClient()
 client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=model_registered.version)
 
-#Make sure all other users can access the model for our demo(see _resource/00-global-setup for details)
-set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
+#Make sure all other users can access the model for our demo
+#DBDemos.set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
 
 # COMMAND ----------
 

@@ -70,7 +70,7 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select ticket.* from customer_tickets limit 10
+# MAGIC select * from customer_tickets limit 10
 
 # COMMAND ----------
 
@@ -109,8 +109,8 @@ Based on the above categorize the following issue: \n\n"""
 # COMMAND ----------
 
 spark.sql(f"""SELECT 
-            ai_query("databricks-mixtral-8x7b-instruct", concat("{system_prompt}", ticket.description)) AS mixtral_small_classification,
-            ticket.description
+            ai_query("databricks-mixtral-8x7b-instruct", concat("{system_prompt}", description)) AS mixtral_small_classification,
+            description
         FROM customer_tickets 
         LIMIT 5""").display()
 
@@ -129,8 +129,8 @@ spark.sql(f"""
 CREATE OR REPLACE TABLE ticket_priority_training_dataset AS
 SELECT 
     ARRAY(
-        STRUCT('user' AS role, CONCAT('{system_prompt}', '\n', ticket.description) AS content),
-        STRUCT('assistant' AS role, ticket.priority AS content)
+        STRUCT('user' AS role, CONCAT('{system_prompt}', '\n', description) AS content),
+        STRUCT('assistant' AS role, priority AS content)
     ) AS messages
 FROM customer_tickets;
 """)
@@ -253,9 +253,9 @@ except:
 
 df = spark.sql(f"""
         SELECT 
-            ai_query("dbdemos_classification_fine_tuned", concat("{system_prompt}", ticket.description)) AS fine_tuned_prediction,
-            ticket.description,
-            ticket.email
+            ai_query("dbdemos_classification_fine_tuned", concat("{system_prompt}", description)) AS fine_tuned_prediction,
+            description,
+            email
         FROM customer_tickets 
         LIMIT 5""")
 display(df)

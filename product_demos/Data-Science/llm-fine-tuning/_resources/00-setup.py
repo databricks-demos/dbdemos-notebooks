@@ -14,13 +14,15 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 if not spark.catalog.tableExists('training_dataset_question') or \
     not spark.catalog.tableExists('training_dataset_answer') or \
-    not spark.catalog.tableExists('databricks_documentation'):
+    not spark.catalog.tableExists('databricks_documentation')or \
+    not spark.catalog.tableExists('customer_tickets'):
   DBDemos.download_file_from_git(volume_folder+"/training_dataset", "databricks-demos", "dbdemos-dataset", "llm/databricks-documentation")
 
   #spark.read.format('parquet').load(f"{volume_folder}/training_dataset/raw_documentation.parquet").write.saveAsTable("raw_documentation")
-  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/training_dataset_question.parquet").write.saveAsTable("training_dataset_question")
-  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/training_dataset_answer.parquet").write.saveAsTable("training_dataset_answer")
-  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/databricks_documentation.parquet").write.saveAsTable("databricks_documentation")
+  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/training_dataset_question.parquet").write.mode('overwrite').saveAsTable("training_dataset_question")
+  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/training_dataset_answer.parquet").write.mode('overwrite').saveAsTable("training_dataset_answer")
+  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/databricks_documentation.parquet").write.mode('overwrite').saveAsTable("databricks_documentation")
+  spark.read.format('parquet').load(f"{volume_folder}/training_dataset/customer_tickets.parquet").write.mode('overwrite').saveAsTable("customer_tickets")
 
 # COMMAND ----------
 

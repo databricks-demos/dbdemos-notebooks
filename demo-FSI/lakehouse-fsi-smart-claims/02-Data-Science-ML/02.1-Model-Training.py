@@ -264,10 +264,11 @@ model_name = "dbdemos_claims_damage_level"
 
 #Use Databricks Unity Catalog to save our model
 mlflow.set_registry_uri('databricks-uc')
+client = MlflowClient()
 #Add model within our catalog
 latest_model = mlflow.register_model(f'runs:/{run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
 # Flag it as Production ready using UC Aliases
-MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
 
 # COMMAND ----------
 

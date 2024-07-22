@@ -45,8 +45,7 @@ model_name = "dbdemos_hls_patient_readmission"
 full_model_name = f"{catalog}.{db}.{model_name}"
 
 #Enable Unity Catalog with mlflow registry
-mlflow.set_registry_uri('databricks-uc')
-client = mlflow.tracking.MlflowClient()
+client = MlflowClient(registry_uri="databricks-uc")
 #Get model with PROD alias (make sure you run the notebook 04.2 to save the model in UC)
 latest_model = client.get_model_version_by_alias(full_model_name, "prod")
 
@@ -59,7 +58,6 @@ from mlflow import MlflowClient
 serving_endpoint_name = "dbdemos_hls_patient_readmission_endpoint"
 w = WorkspaceClient()
 
-mlflow_client = MlflowClient(registry_uri="databricks-uc")
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,
     served_entities=[
@@ -108,8 +106,8 @@ dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orien
 
 import mlflow
 from mlflow import deployments
-client = mlflow.deployments.get_deploy_client("databricks")
-predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
+deployment_client = mlflow.deployments.get_deploy_client("databricks")
+predictions = deployment_client.predict(endpoint=serving_endpoint_name, inputs=dataset)
 
 print(f"Patient readmission risk: {predictions}.")
 

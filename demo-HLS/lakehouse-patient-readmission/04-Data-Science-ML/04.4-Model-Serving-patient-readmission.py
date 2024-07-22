@@ -43,6 +43,7 @@
 # DBTITLE 1,Load the model with "prod" alias from Unity Catalog Registry
 model_name = "dbdemos_hls_patient_readmission"
 full_model_name = f"{catalog}.{db}.{model_name}"
+from mlflow import MlflowClient
 
 #Enable Unity Catalog with mlflow registry
 client = MlflowClient(registry_uri="databricks-uc")
@@ -53,7 +54,6 @@ latest_model = client.get_model_version_by_alias(full_model_name, "prod")
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
-from mlflow import MlflowClient
 
 serving_endpoint_name = "dbdemos_hls_patient_readmission_endpoint"
 w = WorkspaceClient()

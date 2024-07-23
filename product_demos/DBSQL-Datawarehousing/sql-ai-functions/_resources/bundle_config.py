@@ -69,5 +69,6 @@
       "warehouse_id": "9be8079d873b30a6"
     }
   ],
+  "dashboards": [{"name": "[dbdemos] - AI Query - Customer review analysis",  "id": "customer-review-analysis"}],
   "create_cluster": False
 }

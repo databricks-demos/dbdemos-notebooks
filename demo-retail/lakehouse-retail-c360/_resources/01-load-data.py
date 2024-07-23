@@ -63,6 +63,8 @@ if not data_exists:
         data_downloaded = True
     except Exception as e: 
         print(f"Error trying to download the file from the repo: {str(e)}. Will generate the data instead...")    
+else:
+    data_downloaded = True
 
 # COMMAND ----------
 

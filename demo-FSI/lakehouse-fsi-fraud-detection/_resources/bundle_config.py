@@ -35,14 +35,6 @@
       "description": "Helpers & setup."
     },
     {
-      "path": "_resources/01-load-data", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Prep data", 
-      "description": "Prep data for demo."
-    },
-    {
       "path": "config", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -144,7 +136,7 @@
             {
                 "task_key": "init_data",
                 "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/01-load-data",
+                    "notebook_path": "{{DEMO_FOLDER}}/_resources/00-setup",
                     "source": "WORKSPACE"
                 },
                 "job_cluster_key": "Shared_job_cluster",
@@ -284,5 +276,5 @@
       }
     }
   ],
-  "dashboards": [{"name": "[dbdemos] FSI Credit Decisioning Analysis",       "id": "credit-decisioning"}]
+  "dashboards": [{"name": "[dbdemos] FSI Fraud analysis Analysis",       "id": "fraud-detection"}]
 }

@@ -103,7 +103,7 @@
 
 CREATE OR REFRESH STREAMING LIVE TABLE credit_bureau_bronze AS
   SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/credit-decisioning/credit_bureau', 'json',
+    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/credit_bureau', 'json',
                  map('header', 'true', 
                      'inferSchema', 'true', 
                      'cloudFiles.inferColumnTypes', 'true'))

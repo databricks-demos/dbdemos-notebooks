@@ -275,5 +275,5 @@
     }
   ],
   "dashboards": [{"name": "[dbdemos] IOT - Turbine analysis",                    "id": "turbine-analysis"},
-                 {"name": "[dbdemos] FSI - Wind Turbine predictive maintenance", "id": "turbine-predictive"}]
+                 {"name": "[dbdemos] IOT - Wind Turbine predictive maintenance", "id": "turbine-predictive"}]
 }

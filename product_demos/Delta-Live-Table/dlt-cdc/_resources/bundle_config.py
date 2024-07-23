@@ -160,11 +160,6 @@
         "libraries": [
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/_resources/00-Data_CDC_Generator"
-                }
-            },
-            {
-                "notebook": {
                     "path": "{{DEMO_FOLDER}}/01-Retail_DLT_CDC_SQL"
                 }
             }

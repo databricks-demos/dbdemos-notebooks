@@ -127,31 +127,31 @@
 -- data could be from any source: csv, json, parquet...
 CREATE OR REFRESH STREAMING LIVE TABLE encounters
   AS SELECT * EXCEPT(START, STOP), to_timestamp(START) as START, to_timestamp(STOP) as STOP
-      FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_zone/encounters", "parquet", 
+      FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/encounters", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE patients
-  AS SELECT * FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_zone/patients", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/patients", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE conditions
-  AS SELECT * FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_zone/conditions", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/conditions", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE medications
-  AS SELECT * FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_zone/medications", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/medications", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE immunizations
-  AS SELECT * FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_zone/immunizations", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/immunizations", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE concept
-  AS SELECT * FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE concept_relationship
-  AS SELECT * FROM cloud_files("/Volume/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT_RELATIONSHIP", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT_RELATIONSHIP", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 -- COMMAND ----------

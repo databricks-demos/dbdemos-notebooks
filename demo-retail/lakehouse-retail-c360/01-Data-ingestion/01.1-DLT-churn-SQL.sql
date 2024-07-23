@@ -123,20 +123,20 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's explore our raw incoming data data: users (json)
--- MAGIC %python
--- MAGIC display(spark.read.json('/Volumes/main__build/dbdemos_retail_c360/c360/users'))
+--%python
+--display(spark.read.json('/Volumes/main__build/dbdemos_retail_c360/c360/users'))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Raw incoming orders (json)
--- MAGIC %python
--- MAGIC display(spark.read.json('/Volumes/main__build/dbdemos_retail_c360/c360/orders'))
+--%python
+--display(spark.read.json('/Volumes/main__build/dbdemos_retail_c360/c360/orders'))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Raw incoming clickstream (csv)
--- MAGIC %python
--- MAGIC display(spark.read.csv('/Volumes/main__build/dbdemos_retail_c360/c360/events', header=True))
+--%python
+--display(spark.read.csv('/Volumes/main__build/dbdemos_retail_c360/c360/events', header=True))
 
 -- COMMAND ----------
 

@@ -43,6 +43,14 @@
       "description": "Prep data for demo."
     },
     {
+      "path": "config", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Demo setup", 
+      "description": "Setup schema and database name."
+    },
+    {
       "path": "00-FSI-fraud-detection-introduction-lakehouse", 
       "pre_run": False,
       "publish_on_website": True, 

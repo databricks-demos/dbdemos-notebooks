@@ -42,6 +42,14 @@
       "description": "Prep data for demo."
     },
     {
+      "path": "config", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "FSI Credit Decisioning setup", 
+      "description": "Setup schema and database name."
+    },
+    {
       "path": "00-Credit-Decisioning", 
       "pre_run": False, 
       "publish_on_website": True, 

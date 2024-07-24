@@ -1,6 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow & the ML libs to be able to load our model (from requirement.txt file):
-# MAGIC %pip install mlflow==2.14.3 importlib-metadata==6.8.0 cloudpickle==2.0.0 zipp==3.16.2
+# MAGIC %pip install mlflow==2.14.3 importlib-metadata==6.8.0 cloudpickle==2.2.1 zipp==3.16.2
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
 # MAGIC %pip install --ignore-installed Jinja2==3.1.2 markupsafe==2.1.1
 

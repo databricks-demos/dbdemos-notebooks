@@ -47,6 +47,7 @@
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput, TrafficConfig, Route
 from databricks.sdk import WorkspaceClient
 from mlflow import MlflowClient
+from datetime import timedelta
 
 model_name = f"{catalog}.{db}.dbdemos_fsi_fraud"
 serving_endpoint_name = "dbdemos_fsi_fraud_endpoint"
@@ -81,7 +82,7 @@ traffic_config=TrafficConfig(routes=[
     ])
 
 print('Updating the endpoint, this will take a few sec, please wait...')
-w.serving_endpoints.update_config_and_wait(name=serving_endpoint_name, served_entities=served_entities, traffic_config=traffic_config)
+w.serving_endpoints.update_config_and_wait(name=serving_endpoint_name, served_entities=served_entities, traffic_config=traffic_config, timeout=timedelta(minutes=30))
 
 # COMMAND ----------
 

@@ -34,6 +34,150 @@
 
 # COMMAND ----------
 
+from databricks.sdk import WorkspaceClient
+
+
+# Create workspace client [OPTIONAL: for publishing to online tables]
+w = WorkspaceClient()
+
+# COMMAND ----------
+
+# DBTITLE 1,Drop any existing online table (optional)
+from pprint import pprint
+
+
+try:
+
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
+  
+  # Drop existing online feature table
+  w.online_tables.delete(f"{catalog}.{db}.{feature_table_name}_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.{feature_table_name}_online_table")
+
+except Exception as e:
+  pprint(e)
+
+# COMMAND ----------
+
+# DBTITLE 1,Drop feature table if it already exists (optional)
+
+try:
+
+  # Drop existing table from Feature Store
+  fe.drop_table(name=f"{catalog}.{db}.{feature_table_name}")
+
+  # Delete underyling delta tables
+  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.{feature_table_name}")
+  print(f"Dropping Feature Table {catalog}.{db}.{feature_table_name}")
+
+
+except ValueError as ve:
+  pass
+  print(f"Feature Table {catalog}.{db}.{feature_table_name} doesn't exist")
+
+# COMMAND ----------
+
+# DBTITLE 1,Enable Change-Data-Feed on Feature Table for performance considerations
+spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Feature serving with Databrick's Online tables
+# MAGIC
+# MAGIC For serving predictions queries with low-latency, publish the features to Databricks online tables and serve them in real time.
+# MAGIC
+# MAGIC You create an online table from the Catalog Explorer. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
+# MAGIC
+# MAGIC
+# MAGIC ### OPTION 1: Use UI
+# MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the kebab menu, select **Create online table**.
+# MAGIC
+# MAGIC * Use the selectors in the dialog to configure the online table.
+# MAGIC   * Name: Name to use for the online table in Unity Catalog.
+# MAGIC   * Primary Key: Column(s) in the source table to use as primary key(s) in the online table.
+# MAGIC   * Timeseries Key: (Optional). Column in the source table to use as timeseries key. When specified, the online table includes only the row with the latest timeseries key value for each primary key.
+# MAGIC   * Sync mode: Specifies how the synchronization pipeline updates the online table. Select one of Snapshot, Triggered, or Continuous.
+# MAGIC   * Policy
+# MAGIC     * Snapshot - The pipeline runs once to take a snapshot of the source table and copy it to the online table. Subsequent changes to the source table are automatically reflected in the online table by taking a new snapshot of the source and creating a new copy. The content of the online table is updated atomically.
+# MAGIC     * Triggered - The pipeline runs once to create an initial snapshot copy of the source table in the online table. Unlike the Snapshot sync mode, when the online table is refreshed, only changes since the last pipeline execution are retrieved and applied to the online table. The incremental refresh can be manually triggered or automatically triggered according to a schedule.
+# MAGIC     * Continuous - The pipeline runs continuously. Subsequent changes to the source table are incrementally applied to the online table in real time streaming mode. No manual refresh is necessary.
+# MAGIC * When you are done, click Confirm. The online table page appears.
+# MAGIC
+# MAGIC The new online table is created under the catalog, schema, and name specified in the creation dialog. In Catalog Explorer, the online table is indicated by online table icon.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### OPTION 2: Use the Databricks SDK 
+# MAGIC
+# MAGIC The other alternative is the Databricks' python-sdk [AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#api-sdk) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-tables). Let's  first define the table specifications, then create the table.
+# MAGIC
+# MAGIC **🚨 Note:** The workspace must be enabled for using the SDK for creating and managing online tables. You can run following code blocks if your workspace is enabled for this feature (fill this [form](https://forms.gle/9jLZkpXnJF9ZcxtQA) to enable your workspace)
+
+# COMMAND ----------
+
+from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+
+
+# Create an online table specification
+churn_features_online_store_spec = OnlineTableSpec(
+  primary_key_columns = [primary_key],
+  timeseries_key = timestamp_col,
+  source_table_full_name = f"{catalog}.{db}.{feature_table_name}",
+  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
+)
+
+# COMMAND ----------
+
+# Create the online table
+w.online_tables.create(
+  name=f"{catalog}.{db}.{feature_table_name}_online_table",
+  spec=churn_features_online_store_spec
+)
+
+# COMMAND ----------
+
+# DBTITLE 1,Check status of Online Table
+from pprint import pprint
+
+try:
+  online_table_exist = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
+  pprint(online_table_exist)
+
+except Exception as e:
+  pprint(e)
+
+# COMMAND ----------
+
+# DBTITLE 1,Refresh Online Table (optional in case new data was added or offline table was dropped and re-created with new data))
+# Trigger an online table refresh by calling the pipeline API
+# w.pipelines.start_update(pipeline_id=online_table_spec.pipeline_id, full_refresh=True)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Define Featurization Logic(s) for realtime/on-demand feature functions
+# MAGIC
+# MAGIC For features that can only/needs to be calculated in "real-time" see more info here ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/on-demand-features.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/on-demand-features)) 
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC -- Define the Python UDF
+# MAGIC CREATE OR REPLACE FUNCTION avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
+# MAGIC RETURNS FLOAT
+# MAGIC LANGUAGE PYTHON
+# MAGIC COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
+# MAGIC AS $$
+# MAGIC if tenure_in > 0:
+# MAGIC   return monthly_charges_in - total_charges_in/tenure_in
+# MAGIC else:
+# MAGIC   return 0
+# MAGIC $$
+
+# COMMAND ----------
+
 endpoint_name = "dbdemos_mlops_churn"
 
 model_version_champion = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version

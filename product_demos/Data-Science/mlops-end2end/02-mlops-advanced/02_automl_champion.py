@@ -18,14 +18,12 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install new feature engineering client for UC [for MLR < 13.2]
-# MAGIC %pip install databricks-feature-engineering
-# MAGIC
+# MAGIC %pip install --quiet mlflow==2.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $catalog="aminen_catalog" $db="advanced_mlops"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -41,20 +39,22 @@
 import mlflow
 import databricks.automl_runtime
 
-
+primary_key = "customer_id"
+timestamp_col ="transaction_ts"
 label_col = "churn"
+labels_table_name = "churn_label_table"
+feature_table_name = "churn_feature_table"
+
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-churn_experiment_name = "predict_churn_experiment"
 
 # COMMAND ----------
 
 # Added for the demo purpose
 run=dict()
-xp_path = f"/Users/{current_user}/databricks_automl/{churn_experiment_name}"
+xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
 run["experiment_path"] = xp_path
 run["experiment_id"]   = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}%'",
                                                    order_by=["last_update_time DESC"])[0].experiment_id
-
 
 _ = mlflow.set_experiment(experiment_id=run["experiment_id"])
 print(f"Set experiment to: {run['experiment_id']}")
@@ -278,9 +278,28 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 
 # COMMAND ----------
 
+from sklearn.model_selection import train_test_split
+
 X_train, X_eval, y_train, y_eval = train_test_split(df_loaded.drop(label_col, axis=1), df_loaded[label_col], test_size=0.4, stratify=df_loaded[label_col], random_state=42)
 
 X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.4, stratify=y_eval, random_state=42)
+
+# COMMAND ----------
+
+# # AutoML completed train - validation - test split internally and used split to specify the set
+# split_train_df = df_loaded.loc[df_loaded.split == "train"]
+# split_val_df = df_loaded.loc[df_loaded.split == "validate"]
+# split_test_df = df_loaded.loc[df_loaded.split == "test"]
+
+# # Separate target co# Separate target column from features and drop split
+# X_train = split_train_df.drop([target_col, "split"], axis=1)
+# y_train = split_train_df[target_col]
+
+# X_val = split_val_df.drop([target_col, "split"], axis=1)
+# y_val = split_val_df[target_col]
+
+# X_test = split_test_df.drop([target_col, "split"], axis=1)
+# y_test = split_test_df[target_col]
 
 # COMMAND ----------
 
@@ -301,16 +320,16 @@ help(LGBMClassifier)
 
 # COMMAND ----------
 
-# Record specific additional dependencies required by model serving (only required for MLR<13.3)
-def pin_pandas_version(pandas_ver: str = model_serving_pandas_ver):
-  """
-  Custom pandas dependency to pin for deploying in model serving endpoints:
-  :: pandas_ver : default version running in model serving containers
-  """
-  if pd.__version__ <= pandas_ver:
-    return [f"pandas=={pandas_ver}"]
-  else:
-    return [f"pandas=={pd.__version__}"]
+# # Record specific additional dependencies required by model serving (only required for MLR<13.3)
+# def pin_pandas_version(pandas_ver: str = model_serving_pandas_ver):
+#   """
+#   Custom pandas dependency to pin for deploying in model serving endpoints:
+#   :: pandas_ver : default version running in model serving containers
+#   """
+#   if pd.__version__ <= pandas_ver:
+#     return [f"pandas=={pandas_ver}"]
+#   else:
+#     return [f"pandas=={pd.__version__}"]
 
 # COMMAND ----------
 
@@ -348,7 +367,7 @@ pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
 
 def objective(params):
-  with mlflow.start_run() as mlflow_run: # experiment_id=run['experiment_id']
+  with mlflow.start_run(run_name="mlops_best_run") as mlflow_run: # experiment_id=run['experiment_id']
     lgbmc_classifier = LGBMClassifier(**params)
 
     model = Pipeline([
@@ -382,10 +401,10 @@ def objective(params):
         model=model,
         artifact_path="model",
         flavor=mlflow.sklearn,
-        extra_pip_requirements=pin_pandas_version(),
+# Commenting this out since default value is missin in code:
+#        extra_pip_requirements=pin_pandas_version(),
         training_set=training_set_specs,
         output_schema=output_schema,
-        registered_model_name=model_name # Manual add to create "Champion" version
     )
 
     # Log metrics for the training set
@@ -429,9 +448,6 @@ def objective(params):
     # Truncate metric key names so they can be displayed together
     lgbmc_val_metrics = {k.replace("val_", ""): v for k, v in lgbmc_val_metrics.items()}
     lgbmc_test_metrics = {k.replace("test_", ""): v for k, v in lgbmc_test_metrics.items()}
-
-    # Set as Champion model [Manual Add]
-    client.set_registered_model_alias(model_name, "Champion", get_latest_model_version(model_name))
 
     return {
       "loss": loss,
@@ -562,82 +578,6 @@ if shap_enabled:
     explainer = KernelExplainer(predict, train_sample, link="logit")
     shap_values = explainer.shap_values(example, l1_reg=False, nsamples=100)
     summary_plot(shap_values, example, class_names=model.classes_)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Inference
-# MAGIC [The MLflow Model Registry](https://docs.databricks.com/applications/mlflow/model-registry.html) is a collaborative hub where teams can share ML models, work together from experimentation to online testing and production, integrate with approval and governance workflows, and monitor ML deployments and their performance. The snippets below show how to add the model trained in this notebook to the model registry and to retrieve it later for inference.
-# MAGIC
-# MAGIC > **NOTE:** The `model_uri` for the model already trained in this notebook can be found in the cell below
-# MAGIC
-# MAGIC ### Register to Model Registry
-# MAGIC ```
-# MAGIC model_name = "Example"
-# MAGIC
-# MAGIC model_uri = f"runs:/{ mlflow_run.info.run_id }/model"
-# MAGIC registered_model_version = mlflow.register_model(model_uri, model_name)
-# MAGIC ```
-# MAGIC
-# MAGIC ### Load from Model Registry
-# MAGIC ```
-# MAGIC model_name = "Example"
-# MAGIC model_version = registered_model_version.version
-# MAGIC
-# MAGIC model_uri=f"models:/{model_name}/{model_version}"
-# MAGIC from databricks.feature_engineering import FeatureEngineeringClient
-# MAGIC fe = FeatureEngineeringClient()
-# MAGIC fe.score_batch(model_uri=model_uri, df=input_X) # specify `result_type` if it is not "double"
-# MAGIC ```
-# MAGIC
-# MAGIC ### Load model without registering
-# MAGIC ```
-# MAGIC model_uri = f"runs:/{ mlflow_run.info.run_id }/model"
-# MAGIC
-# MAGIC from databricks.feature_engineering import FeatureEngineeringClient
-# MAGIC fe = FeatureEngineeringClient()
-# MAGIC fe.score_batch(model_uri=model_uri, df=input_X) # specify `result_type` if it is not "double"
-# MAGIC ```
-
-# COMMAND ----------
-
-# model_uri for the generated model
-print(f"runs:/{ mlflow_run.info.run_id }/model")
-
-# COMMAND ----------
-
-mlflow_run.info.experiment_id
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Create/Materialize baseline table (for ad-hoc model monitoring)
-
-# COMMAND ----------
-
-# Convert test/baseline pandas dataframe into pyspark dataframe
-test_baseline_df = spark.createDataFrame(y_test.reset_index())
-
-# COMMAND ----------
-
-baseline_table_name = f"{catalog}.{dbName}.{inference_table_name}_baseline"
-baseline_model_version = client.get_model_version_by_alias(name=model_name, alias="Baseline").version # Champion
-
-baseline_predictions_df = fe.score_batch(
-    df=test_baseline_df,
-    model_uri=f"models:/{model_name}/{baseline_model_version}",
-    result_type=test_baseline_df.schema[label_col].dataType
-  ).withColumn("Model_Version", F.lit(baseline_model_version))
-
-(
-  baseline_predictions_df.drop(timestamp_col)
-  .write
-  .format("delta")
-  .mode("overwrite") # "append" also works if baseline evolves
-  .option("overwriteSchema",True)
-  .option("delta.enableChangeDataFeed", "true")
-  .saveAsTable(baseline_table_name)
-)
 
 # COMMAND ----------
 

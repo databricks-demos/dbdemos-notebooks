@@ -10,6 +10,17 @@
 # MAGIC - Automated re-training
 # MAGIC - Infra setup abd hooks with Databricks MLOps Stack
 # MAGIC - ...
+# MAGIC
+# MAGIC Run this demo on a __DBR 15.4 ML LTS__ cluster. A demo cluster has been created for you.
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup
+
+# COMMAND ----------
+
+telcoDF = spark.table("mlops_churn_bronze_customers")
+display(telcoDF)
 
 # COMMAND ----------
 

@@ -1,13 +1,17 @@
 # Databricks notebook source
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-dbutils.widgets.dropdown("setup_inference_data", "false", ["true", "false"], "Setup inference data")
+dbutils.widgets.dropdown("setup_inference_data", "false", ["true", "false"], "Setup inference data for quickstart")
+dbutils.widgets.dropdown("setup_adv_inference_data", "false", ["true", "false"], "Setup inference data for advanced demo")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
+setup_adv_inference_data = dbutils.widgets.get("setup_adv_inference_data") == "true"
 
 # COMMAND ----------
 
 catalog = "aminen_catalog"
 db = "advanced_mlops"
+
+
 
 # COMMAND ----------
 
@@ -89,6 +93,22 @@ if setup_inference_data:
 
 # COMMAND ----------
 
+label_table_name = "churn_label_table"
+infrerence_table_name = "mlops_churn_advanced_cust_ids"
+
+if setup_adv_inference_data:
+  # Check that the label table exists first, as we'll be creating a copy of it
+  if spark.catalog.tableExists(f"{catalog}.{db}.{label_table_name}"):
+    # This should only be called from the advanced batch inference notebook
+    if not spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}"):
+      print("Creating table with customer records for inference...")
+      # Drop the label column for inference
+      spark.read.table(label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
+  else:
+    print("Label table doesn't exist, please run the notebook '01_feature_engineering'")
+
+# COMMAND ----------
+
 # DBTITLE 1,Get slack webhook
 # Replace this with your Slack webhook
 try:
@@ -99,7 +119,7 @@ except:
 # COMMAND ----------
 
 from pyspark.sql.functions import col
-from databricks.feature_store import FeatureStoreClient
+#from databricks.feature_store import FeatureStoreClient
 import mlflow
 
 import databricks

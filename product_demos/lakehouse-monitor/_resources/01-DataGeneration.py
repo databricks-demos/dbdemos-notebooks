@@ -621,11 +621,95 @@ joined_df_with_issues = inject_issues(joined_df, campaign_start_dates)
 
 # COMMAND ----------
 
-# Convert pandas DataFrame to Spark DataFrame
-spark_joined_df_with_issues = spark.createDataFrame(joined_df_with_issues)
+# DBTITLE 1,V2.0 works for DBR Runtime 14.3 LTS
+from pyspark.sql.types import (
+    StructType, StructField, StringType, TimestampType, DoubleType, IntegerType, BooleanType
+)
+
+# Define the schema
+schema = StructType([
+    StructField('TransactionID', StringType(), True),
+    StructField('UserID', StringType(), True),
+    StructField('ProductID', StringType(), True),
+    StructField('TransactionDate', TimestampType(), True),
+    StructField('Quantity', DoubleType(), True),
+    StructField('UnitPrice', DoubleType(), True),
+    StructField('TotalPrice', DoubleType(), True),
+    StructField('PaymentMethod', StringType(), True),
+    StructField('ShippingAddress', StringType(), True),
+    StructField('LoyaltyPointsEarned', IntegerType(), True),
+    StructField('GiftWrap', StringType(), True),
+    StructField('SpecialInstructions', StringType(), True),
+    StructField('Username', StringType(), True),
+    StructField('Email', StringType(), True),
+    StructField('PasswordHash', StringType(), True),
+    StructField('FullName', StringType(), True),
+    StructField('DateOfBirth', DateType(), True),
+    StructField('Gender', StringType(), True),
+    StructField('PhoneNumber', StringType(), True),
+    StructField('Address', StringType(), True),
+    StructField('City', StringType(), True),
+    StructField('State', StringType(), True),
+    StructField('Country', StringType(), True),
+    StructField('PostalCode', StringType(), True),
+    StructField('RegistrationDate', DateType(), True),
+    StructField('LastLoginDate', TimestampType(), True),
+    StructField('AccountStatus', StringType(), True),
+    StructField('UserRole', StringType(), True),
+    StructField('PreferredPaymentMethod', StringType(), True),
+    StructField('TotalPurchaseAmount', DoubleType(), True),
+    StructField('NewsletterSubscription', BooleanType(), True),
+    StructField('Wishlist', ArrayType(StringType()), True),
+    StructField('CartItems', ArrayType(StringType()), True),
+    StructField('ProductName', StringType(), True),
+    StructField('Category', StringType(), True),
+    StructField('SubCategory', StringType(), True),
+    StructField('Brand', StringType(), True),
+    StructField('Description', StringType(), True),
+    StructField('Price', DoubleType(), True),
+    StructField('Discount', DoubleType(), True),
+    StructField('StockQuantity', IntegerType(), True),
+    StructField('SKU', StringType(), True),
+    StructField('ProductImageURL', StringType(), True),
+    StructField('ProductRating', DoubleType(), True),
+    StructField('NumberOfReviews', IntegerType(), True),
+    StructField('SupplierID', StringType(), True),
+    StructField('DateAdded', DateType(), True),
+    StructField('Dimensions', StringType(), True),
+    StructField('Weight', DoubleType(), True),
+    StructField('Color', StringType(), True),
+    StructField('Material', StringType(), True),
+    StructField('WarrantyPeriod', StringType(), True),
+    StructField('ReturnPolicy', StringType(), True),
+    StructField('ShippingCost', DoubleType(), True),
+    StructField('ProductTags', ArrayType(StringType()), True),
+    StructField('Campaign_flag', BooleanType(), True)
+])
+# Convert the 'DateOfBirth' column to datetime
+joined_df_with_issues['DateOfBirth'] = pd.to_datetime(joined_df_with_issues['DateOfBirth'], errors='coerce')
+joined_df_with_issues['RegistrationDate'] = pd.to_datetime(joined_df_with_issues['RegistrationDate'], errors='coerce')
+joined_df_with_issues['DateAdded'] = pd.to_datetime(joined_df_with_issues['DateAdded'], errors='coerce')
+
+# Ensure Wishlist, CartItems, and ProductTags columns are lists or null
+joined_df_with_issues['Wishlist'] = joined_df_with_issues['Wishlist'].apply(lambda x: x if x is None or isinstance(x, list) else [x])
+joined_df_with_issues['CartItems'] = joined_df_with_issues['CartItems'].apply(lambda x: x if x is None or isinstance(x, list) else [x])
+joined_df_with_issues['ProductTags'] = joined_df_with_issues['ProductTags'].apply(lambda x: x if x is None or isinstance(x, list) else [x])
+
+
+# Convert pandas DataFrame to Spark DataFrame with schema
+spark_joined_df_with_issues = spark.createDataFrame(joined_df_with_issues, schema)
 
 # Write the Spark DataFrame to Delta format
 spark_joined_df_with_issues.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
+
+# COMMAND ----------
+
+# DBTITLE 1,V1.0 works for Serverless
+# Convert pandas DataFrame to Spark DataFrame
+#spark_joined_df_with_issues = spark.createDataFrame(joined_df_with_issues)
+
+# Write the Spark DataFrame to Delta format
+#spark_joined_df_with_issues.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
 
 # COMMAND ----------
 
@@ -681,3 +765,9 @@ user_purchase_behavior_by_month = spark_joined_df_with_issues \
 
 # Write the Spark DataFrame to Delta format
 user_purchase_behavior_by_month.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

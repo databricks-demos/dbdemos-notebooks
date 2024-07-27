@@ -22,58 +22,30 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Remove once databricks-sdk version in MLR will be >=0.9.0
-# MAGIC %pip install databricks-sdk --upgrade
-# MAGIC
-# MAGIC
+# DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
+# MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC %pip install -U databricks-sdk
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-
-
-# Create workspace client [OPTIONAL: for publishing to online tables]
-w = WorkspaceClient()
-
-# COMMAND ----------
-
-# DBTITLE 1,Drop any existing online table (optional)
-from pprint import pprint
-
-
-try:
-
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
-  
-  # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.{feature_table_name}_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.{feature_table_name}_online_table")
-
-except Exception as e:
-  pprint(e)
+feature_table_name = "churn_feature_table"
+primary_key = "customer_id"
+timestamp_col ="transaction_ts"
+model_name = f"{catalog}.{dbName}.mlops_advanced_churn"
 
 # COMMAND ----------
 
-# DBTITLE 1,Drop feature table if it already exists (optional)
-
-try:
-
-  # Drop existing table from Feature Store
-  fe.drop_table(name=f"{catalog}.{db}.{feature_table_name}")
-
-  # Delete underyling delta tables
-  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.{feature_table_name}")
-  print(f"Dropping Feature Table {catalog}.{db}.{feature_table_name}")
-
-
-except ValueError as ve:
-  pass
-  print(f"Feature Table {catalog}.{db}.{feature_table_name} doesn't exist")
+# MAGIC %md
+# MAGIC ## Feature serving with Databrick's Online tables
+# MAGIC
+# MAGIC For serving predictions queries with low-latency, publish the features to Databricks online tables and serve them in real time.
+# MAGIC
+# MAGIC Databricks allows the online tables to be refreshed efficiently whenever there are updates to the underlying feature tables. This is enabled through the Change Data Feed feature of Delta Lake. Let us first enable Change Data Feed on the underlying feature table `churn_feature_table`.
 
 # COMMAND ----------
 
@@ -83,14 +55,17 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (d
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Feature serving with Databrick's Online tables
 # MAGIC
-# MAGIC For serving predictions queries with low-latency, publish the features to Databricks online tables and serve them in real time.
+# MAGIC ### Creating the Online Table
 # MAGIC
-# MAGIC You create an online table from the Catalog Explorer. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
+# MAGIC You create an online table from the Catalog Explorer, or using the API. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
 # MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC
-# MAGIC ### OPTION 1: Use UI
+# MAGIC #### OPTION 1: Use the Catalog Explorer UI
 # MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the kebab menu, select **Create online table**.
 # MAGIC
 # MAGIC * Use the selectors in the dialog to configure the online table.
@@ -117,8 +92,30 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (d
 
 # COMMAND ----------
 
-from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+from databricks.sdk import WorkspaceClient
 
+# Create workspace client [OPTIONAL: for publishing to online tables]
+w = WorkspaceClient()
+
+# COMMAND ----------
+
+# DBTITLE 1,Drop any existing online table (optional)
+from pprint import pprint
+
+try:
+
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
+  
+  # Drop existing online feature table
+  w.online_tables.delete(f"{catalog}.{db}.{feature_table_name}_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.{feature_table_name}_online_table")
+
+except Exception as e:
+  pprint(e)
+
+# COMMAND ----------
+
+from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
@@ -157,32 +154,15 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Define Featurization Logic(s) for realtime/on-demand feature functions
+# MAGIC ## Review Featurization Logic for realtime/on-demand feature functions
 # MAGIC
-# MAGIC For features that can only/needs to be calculated in "real-time" see more info here ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/on-demand-features.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/on-demand-features)) 
+# MAGIC To recap, we have defined a function earlier to calculate the `avg_price_increase` feature on demand. Let's review the function here.
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- Define the Python UDF
-# MAGIC CREATE OR REPLACE FUNCTION avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
-# MAGIC RETURNS FLOAT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
-# MAGIC AS $$
-# MAGIC if tenure_in > 0:
-# MAGIC   return monthly_charges_in - total_charges_in/tenure_in
-# MAGIC else:
-# MAGIC   return 0
-# MAGIC $$
-
-# COMMAND ----------
-
-endpoint_name = "dbdemos_mlops_churn"
-
-model_version_champion = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
-model_version_challenger = client.get_model_version_by_alias(name=model_name, alias="Challenger").version # Get challenger version
-print(f"Deploying {model_name} versions {model_version_champion} (champion) & {model_version_challenger} (challenger) to endpoint {endpoint_name}")
+# MAGIC DESCRIBE FUNCTION avg_price_increase
+# MAGIC ;
 
 # COMMAND ----------
 
@@ -200,14 +180,53 @@ print(f"Deploying {model_name} versions {model_version_champion} (champion) & {m
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ##
+# MAGIC
+# MAGIC TODO
+# MAGIC
+# MAGIC Explain the flow for promoting models with canary deployment, or A/B testing.
+# MAGIC
+# MAGIC The flow will involve 3 aliases:
+# MAGIC - Production (for online serving - set to 100% traffic when this is the only version running, or 80% when doing "online testing")
+# MAGIC - Champion (20% traffic when doing online testing)
+# MAGIC - Challenger (This alias is used in the batch testing workflow. In our flow, the Challenger model never gets deployed in the serving endpoint.)
+# MAGIC
+# MAGIC To simplify packaging and presentation of the demo within dbdemo, we will use one catalog and schema for models of all aliases. (i.e. we are not keeping separate dev/qa/prod catalogs or schemas)
+# MAGIC
+# MAGIC -----
+# MAGIC
+# MAGIC Here, we are going to promote the Champion model to Production and deploy it for serving.
+# MAGIC
+
+# COMMAND ----------
+
+endpoint_name = "dbdemos_mlops_churn"
+
+model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
+
+# Promote Champion model to Production
+client.set_registered_model_alias(
+    name=model_name,
+    alias="Production",
+    version=model_version
+)
+
+print(f"Promoting {model_name} versions {model_version} from Champion to Production")
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Enable model serving endpoint via API call
 # MAGIC
-# MAGIC After calling `log_model`, a new version of the model is saved. To provision a serving endpoint, follow the steps below.
+# MAGIC To deploy a model for online serving, we need to provision a serving endpoint.
+# MAGIC
+# MAGIC Do it in the UI by following the steps below.
 # MAGIC
 # MAGIC 1. Click **Serving** in the left sidebar. If you don't see it, switch to the Machine Learning Persona ([AWS](https://docs.databricks.com/workspace/index.html#use-the-sidebar)|[Azure](https://docs.microsoft.com/azure/databricks//workspace/index#use-the-sidebar)).
 # MAGIC 2. Enable serving for your model. See the Databricks documentation for details ([AWS](https://docs.databricks.com/machine-learning/model-inference/serverless/create-manage-serverless-endpoints.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-inference/serverless/create-manage-serverless-endpoints)).
 # MAGIC
-# MAGIC The code below automatically creates a model serving endpoint for you.
+# MAGIC
+# MAGIC Alternatively, you can create the serving endpoint programatically. The code below automatically creates a model serving endpoint for you.
 
 # COMMAND ----------
 
@@ -226,16 +245,10 @@ from databricks.sdk.service.serving import EndpointCoreConfigInput
 
 endpoint_config_dict = {
     "served_models": [
+        # Add models to be served to this list
         {
             "model_name": model_name,
-            "model_version": model_version_champion,
-            "scale_to_zero_enabled": True,
-            "workload_size": "Small",
-            "instance_profile_arn": dbutils.secrets.get(scope="fieldeng", key="oneenv_ip_arn"),
-        },
-        {
-            "model_name": model_name,
-            "model_version": model_version_challenger,
+            "model_version": model_version,
             "scale_to_zero_enabled": True,
             "workload_size": "Small",
             "instance_profile_arn": dbutils.secrets.get(scope="fieldeng", key="oneenv_ip_arn"),
@@ -243,8 +256,10 @@ endpoint_config_dict = {
     ],
     "traffic_config": {
         "routes": [
-            {"served_model_name": f"{served_model_name}-{model_version_champion}", "traffic_percentage": 50},
-            {"served_model_name": f"{served_model_name}-{model_version_challenger}", "traffic_percentage": 50},
+            # Add versions of the model to be served to this list
+            # Make sure that traffic_percentage adds up to 100 over all served models
+            # Naming convention for served_model_name: <registered_model_name>-<model_version>
+            {"served_model_name": f"{served_model_name}-{model_version}", "traffic_percentage": 100},
         ]
     },
     "auto_capture_config":{
@@ -259,27 +274,20 @@ endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import EndpointTag
-
-
-# Create/Update endpoint and deploy model+version
-w = WorkspaceClient()
-
-# COMMAND ----------
 
 try:
   w.serving_endpoints.create_and_wait(
     name=endpoint_name,
     config=endpoint_config,
-    tags=[EndpointTag.from_dict({"key": "db_demos", "value": "mlops_churn"})]
+    tags=[EndpointTag.from_dict({"key": "db_demos", "value": "mlops_advanced_churn"})]
   )
   
-  print(f"Creating endpoint {endpoint_name} with models {model_name} versions {model_version_champion} & {model_version_challenger}")
+  print(f"Creating endpoint {endpoint_name} with models {model_name} version {model_version}")
 
 except Exception as e:
   if "already exists" in e.args[0]:
-    print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version_champion}/{model_version_challenger}")
+    print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version}")
 
     # TO-DO:
     # w.serving_endpoints.update_config_and_wait(
@@ -321,7 +329,7 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models import Model
 
-p = ModelsArtifactRepository(f"models:/{model_name}/{model_version_challenger}").download_artifacts("") 
+p = ModelsArtifactRepository(f"models:/{model_name}/{model_version}").download_artifacts("") 
 input_example =  Model.load(p).load_input_example(p)
 
 if input_example:
@@ -339,7 +347,7 @@ else:
 
 # DBTITLE 1,Query endpoint
 print("Churn inference:")
-response = w.serving_endpoints.query(name=endpoint_name, dataframe_records=dataframe_records)
+response = w.serving_endpoints.query(name="dbdemos_mlops_churn", dataframe_records=dataframe_records)
 print(response.predictions)
 
 # COMMAND ----------

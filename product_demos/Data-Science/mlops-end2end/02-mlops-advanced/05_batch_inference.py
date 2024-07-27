@@ -14,7 +14,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.14.0
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -57,6 +57,7 @@ model_name = f"{catalog}.{dbName}.mlops_advanced_churn"
 
 # DBTITLE 1,In a python notebook
 from databricks.feature_engineering import FeatureEngineeringClient
+import pyspark.sql.functions as F
 
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_advanced_cust_ids")

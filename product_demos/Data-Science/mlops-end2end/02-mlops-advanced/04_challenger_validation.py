@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.0
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -60,6 +60,7 @@ model_name = f"{catalog}.{dbName}.mlops_advanced_churn"
 client = MlflowClient()
 model_details = client.get_model_version_by_alias(model_name, model_alias)
 model_version = int(model_details.version)
+run_info = client.get_run(run_id=model_details.run_id)
 
 print(f"Validating {model_alias} model for {model_name} on model version {model_version}")
 
@@ -232,16 +233,25 @@ def get_model_value_in_dollar(model_alias):
     tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['prediction']).ravel()
     return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive
 
-champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
-challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
+try:
+    champion_model = client.get_model_version_by_alias(model_name, "Champion")
+    champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
+    challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
 
-data = {'Model Alias': ['Challenger', 'Champion'],
-        'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
+    data = {'Model Alias': ['Challenger', 'Champion'],
+            'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
+except:
+    print("No Champion found. Skipping business metrics evaluation.")
+    print("You can return to re-run this cell after promoting the Challenger model as Champion in the rest of this notebook.")
+
+    data = {'Model Alias': ['Challenger', 'Champion'],
+            'Potential Revenue Gain': [0, 0]}
 
 # Create a bar plot using plotly express
 px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
-       labels={'Potential Revenue Gain': 'Revenue Impacted'},
-       title='Business Metrics - Revenue Impacted')
+    labels={'Potential Revenue Gain': 'Revenue Impacted'},
+    title='Business Metrics - Revenue Impacted')
+
 
 # COMMAND ----------
 
@@ -264,7 +274,7 @@ results.tags
 
 # COMMAND ----------
 
-if results.tags["has_description"] and results.tags["metric_f1_passed"]:
+if results.tags["has_description"] and results.tags["metric_f1_passed"] and results.tags['predicts']:
   print('register model as Champion!')
   client.set_registered_model_alias(
     name=model_name,

@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.0
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -127,13 +127,17 @@ fe = FeatureEngineeringClient()
 training_set_specs = fe.create_training_set(
   df=labels_df, # DataFrame with lookup keys and label/target (+ any other input)
   label=label_col,
-  feature_lookups=features
-  # exclude_columns=[primary_key, timestamp_col] # Keeping them to create baseline table
+  feature_lookups=features,
+  exclude_columns=[primary_key, timestamp_col, 'split'] # Keeping them to create baseline table
 )
 
 # COMMAND ----------
 
-df_loaded = training_set_specs.load_df().toPandas().set_index(keys=[primary_key, timestamp_col])
+#df_loaded = training_set_specs.load_df().toPandas().set_index(keys=[primary_key, timestamp_col])
+
+# Try not to set index, as columns are not present
+
+df_loaded = training_set_specs.load_df().toPandas()
 
 # COMMAND ----------
 

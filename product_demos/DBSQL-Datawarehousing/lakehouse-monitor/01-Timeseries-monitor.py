@@ -81,9 +81,8 @@ TABLE_NAME = f"{catalog}.{dbName}.silver_transaction"
 TIMESTAMP_COL = "TransactionDate"
 
 # Enable Change Data Feed (CDF) to incrementally process changes to the table and make execution more efficient
-(spark.readStream.format("delta")
-  .option("readChangeFeed", "true")
-  .table(TABLE_NAME)
+spark.sql(
+  f"ALTER TABLE {TABLE_NAME} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)"
 )
 
 # COMMAND ----------

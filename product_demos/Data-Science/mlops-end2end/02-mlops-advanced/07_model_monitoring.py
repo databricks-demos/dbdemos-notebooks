@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -43,7 +43,7 @@ expected_loss_metric = [
     WHEN {{prediction_col}} != {{label_col}} AND {{label_col}} = 'Yes' THEN -monthly_charges
     ELSE 0 END
     )""",
-    output_data_type= StructField("output", T.DoubleType()).json()
+    output_data_type= StructField("output", DoubleType()).json()
   )
 ]
 
@@ -65,13 +65,12 @@ info = w.quality_monitors.create(
         timestamp_col=timestamp_col,
         granularities=["1 day"],
         model_id_col="Model_Version",
-        label_col="label_col", # optional
+        label_col=label_col, # optional
   ),
   assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{dbName}.{inference_table_name}",
   output_schema_name=f"{catalog}.{dbName}",
-  baseline_table_name=baseline_table_name,
+  baseline_table_name=f"{catalog}.{dbName}.{inference_table_name}_baseline",
   slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
-  output_schema_name=f"{catalog}.{dbName}",
   custom_metrics=expected_loss_metric
 )
 
@@ -86,7 +85,7 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 
 # Wait for monitor to be created
-while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING::
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
   info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
   time.sleep(10)
 
@@ -110,7 +109,16 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 
 # COMMAND ----------
 
-w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+from pprint import pprint
+
+
+info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+pprint(info)
+
+# COMMAND ----------
+
+# DBTITLE 1,Trigger a refresh [OPTIONAL]
+run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}")
 
 # COMMAND ----------
 
@@ -126,3 +134,9 @@ w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
 # MAGIC
 # MAGIC Next steps:
 # MAGIC * [Automate model re-training]($./08_retrain_churn_automl)
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

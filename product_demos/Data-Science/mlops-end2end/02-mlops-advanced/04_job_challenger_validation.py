@@ -37,13 +37,17 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/API_Helpers
 
 # COMMAND ----------
 
 # DBTITLE 1,Create job parameters input widgets
 dbutils.widgets.text("model_name",model_name,"Model Name")
-dbutils.widgets.text("version",get_latest_model_version(model_name),"Model Version")
+dbutils.widgets.text("version","3","Model Version")
 dbutils.widgets.dropdown("to_stage","Challenger",["Challenger", "Champion", "Baseline", "Archived"])
 
 # COMMAND ----------
@@ -76,6 +80,7 @@ run_info = client.get_run(run_id=model_details.run_id)
 # COMMAND ----------
 
 from databricks.feature_engineering import FeatureEngineeringClient
+from pyspark.sql.types import StructType
 import pandas as pd
 
 
@@ -87,7 +92,7 @@ model_uri = f"models:/{model_name}/{model_version}"
 # Predict on a Spark DataFrame
 try:
   # Read labels and IDs
-  labelsDF = spark.read.table(run_info.data.tags['labels_table'])
+  labelsDF = spark.read.table(f"{catalog}.{db}.{labels_table_name}")
 
   # Batch score
   features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)
@@ -112,7 +117,7 @@ except Exception as e:
 
 # COMMAND ----------
 
-TODO: a voir si la signature est obligatoire 
+# TODO: a voir si la signature est obligatoire 
 loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=model_uri)
 if not loaded_model.metadata.signature:
   print("This model version is missing a signature.  Please push a new version with a signature!  See https://mlflow.org/docs/latest/models.html#model-metadata for more details.")
@@ -140,7 +145,7 @@ try:
   features_w_preds_pdf['accurate'] = np.where(features_w_preds_pdf.churn == features_w_preds_pdf.prediction, 1, 0)
 
   # Check run tags for demographic columns and accuracy in each segment
-  demographics = run_info.data.tags['demographic_vars'].split(",")
+  demographics = ["gender", "senior_citizen"]
   slices = features_w_preds_pdf.groupby(demographics).accurate.agg(acc = 'sum', obs = lambda x:len(x), pct_acc = lambda x:sum(x)/len(x))
 
   # Threshold for passing on demographics is 55%
@@ -203,6 +208,41 @@ else:
   client.set_model_version_tag(name=model_name, version=model_version, key = "has_artifacts", value = True)
   print("Artifacts downloaded in: {}".format(local_path))
   print("Artifacts: {}".format(os.listdir(local_path)))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Model performance metric
+# MAGIC
+# MAGIC We want to validate the model performance metric. Typically, we want to compare this metric obtained for the Challenger model agaist that of the Champion model. Since we have yet to register a Champion model, we will only retrieve the metric for the Challenger model without doing a comparison.
+# MAGIC
+# MAGIC The registered model captures information about the MLflow experiment run, where the model metrics were logged during training. This gives you traceability from the deployed model back to the initial training runs.
+# MAGIC
+# MAGIC Here, we will use the F1 score for the out-of-sample test data that was set aside at training time.
+
+# COMMAND ----------
+
+model_run_id = model_details.run_id
+f1_score = mlflow.get_run(model_run_id).data.metrics['test_f1_score']
+
+try:
+    #Compare the challenger f1 score to the existing champion if it exists
+    champion_model = client.get_model_version_by_alias(model_name, "Champion")
+    champion_f1 = mlflow.get_run(champion_model.run_id).data.metrics['test_f1_score']
+    print(f'Champion f1 score: {champion_f1}. Challenger f1 score: {f1_score}.')
+    metric_f1_passed = f1_score >= champion_f1
+except:
+    print(f"No Champion found. Accept the model as it's the first one.")
+    metric_f1_passed = True
+
+if metric_f1_passed:
+  client.set_model_version_tag(name=model_name, version=model_version, key="f1_passed", value=True)
+else:
+  client.set_model_version_tag(name=model_name, version=model_version, key="f1_passed", value=False)
+
+print(f'Model {model_name} version {model_details.version} metric_f1_passed: {metric_f1_passed}')
+# Tag that F1 metric check has passed
+client.set_model_version_tag(name=model_name, version=model_details.version, key="metric_f1_passed", value=metric_f1_passed)
 
 # COMMAND ----------
 

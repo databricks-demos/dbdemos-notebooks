@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Model retrain based on detected drift metric(s)
+# MAGIC # Verify drift metric(s)
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-7.png" width="1200">
 # MAGIC
@@ -14,166 +14,140 @@
 
 # COMMAND ----------
 
-# MAGIC %md ## Synchronous re-training job
-# MAGIC
-# MAGIC We can programatically schedule a job to retrain our model, or retrain it based on an event if we realize that our model doesn't behave as expected.
-# MAGIC
-# MAGIC This notebook should be run as a job. It'll call the Databricks Auto-ML API, get the best model and request a validation to get the `Challenger` alias.
-
-# COMMAND ----------
-
-# MAGIC %pip install "https://ml-team-public-read.s3.amazonaws.com/wheels/data-monitoring/a4050ef7-b183-47a1-a145-e614628e3146/databricks_lakehouse_monitoring-0.4.6-py3-none-any.whl"
+# MAGIC %pip install "databricks-sdk>=0.28.0"
 # MAGIC
 # MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+dbutils.widgets.dropdown("perf_metric", "f1_score.macro", ["accuracy_score", "precision.weighted", "recall.weighted", "f1_score.macro"])
+dbutils.widgets.dropdown("drift_metric", "js_distance", ["chi_squared_test.statistic", "chi_squared_test.pvalue", "tv_distance", "l_infinity_distance", "js_distance"])
+dbutils.widgets.text("model_id", "*", "Model Id")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## First test drift metrics
-# MAGIC **TO-DO**
+# MAGIC ## First retrieve drift metrics
 # MAGIC
 # MAGIC Query Lakehouse Monitoring's drift metrics table for the inference table being monitored.
 # MAGIC Here we're testing if these metrics have exceeded a certain threshold (defined by the business):
-# MAGIC 1. prediction drift (Jansen-Shannen divergence) > 0.2
-# MAGIC 2. label drift (Jansen-Shannen divergence) > 0.2
-# MAGIC 3. expected_loss for last daily batch > 1000
+# MAGIC 1. prediction drift (Jensen–Shannon distance) > 0.2
+# MAGIC 2. label drift (Jensen–Shannon distance) > 0.2
+# MAGIC 3. expected_loss (daily) > 100
+# MAGIC 4. performance(i.e. f1_score) < 0.6
 
 # COMMAND ----------
 
-import databricks.lakehouse_monitoring as lm
+from databricks.sdk import WorkspaceClient
 
 
-monitor_info = lm.get_monitor(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+w = WorkspaceClient()
+monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
 drift_table_name = monitor_info.drift_metrics_table_name
 profile_table_name = monitor_info.profile_metrics_table_name
 
 # COMMAND ----------
 
-# drift_metrics_df = spark.sql(f"""
-#   SELECT
-#   column_name,
-#   chi_squared_test.statistic AS `Chi-squared test`,
-#   chi_squared_test.pvalue AS `Chi-squared test p-value`,
-#   tv_distance AS TVD,
-#   l_infinity_distance AS LID,
-#   js_distance AS JSD,
-#   window.start AS Window,
-#   granularity AS Granularity,
-#   COALESCE(slice_key, "No slice") AS `Slice key`,
-#   COALESCE(slice_value, "No slice") AS `Slice value`
-# FROM {drift_table_name}
-# WHERE
-#   (column_name IS IN ('prediction', '')
-#   AND ks_test IS NULL -- categorical
-# """
-# )
+metric = dbutils.widgets.get("perf_metric")
+drift = dbutils.widgets.get("drift_metric")
+model_id = dbutils.widgets.get("model_id")
 
 # COMMAND ----------
 
-# TO-DO: test verify drift and expected loss metrics
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Retrain model if drift/EL have exceeded a certin threshold
-
-# COMMAND ----------
-
-# DBTITLE 1,Create new experiment
-import uuid
-
-
-this_experiment_name = f"{churn_experiment_name}_{str(uuid.uuid4())[:4]}"
-print(f"Running new autoML experiment {this_experiment_name} and pushing best model to {model_name}")
-
-# COMMAND ----------
-
-from databricks import automl
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Train using Feature Store tables
-
-# COMMAND ----------
-
-# DBTITLE 1,Define feature lookups
-churn_feature_lookups = [
-  {
-    "table_name" : f"{catalog}.{dbName}.{feature_table_name}",
-    "lookup_key" : [primary_key],
-    "timestamp_lookup_key": timestamp_col
-  }
-]
-
-# COMMAND ----------
-
-# DBTITLE 1,Run AutoML
-model = automl.classify(
-  dataset=f"{catalog}.{dbName}.{labels_table_name}",
-  target_col=label_col,
-  exclude_cols=[primary_key, timestamp_col],
-  feature_store_lookups=churn_feature_lookups,
-  timeout_minutes=20,
-  experiment_name=this_experiment_name,
-  pos_label="Yes"
+performance_metrics_df = spark.sql(f"""
+SELECT
+  window.start as time,
+  {metric} AS performance_metric,
+  expected_loss,
+  Model_Version AS `Model Id`
+FROM {profile_table_name}
+WHERE
+  window.start >= "2024-06-01"
+	AND log_type = "INPUT"
+  AND column_name = ":table"
+  AND slice_key is null
+  AND slice_value is null
+  AND Model_Version = '{model_id}'
+ORDER BY
+  window.start
+"""
 )
 
 # COMMAND ----------
 
-# DBTITLE 1,Register the Best Run
-import mlflow
-from mlflow.tracking.client import MlflowClient
-
-
-run_id = model.best_trial.mlflow_run_id
-model_uri = f"runs:/{run_id}/model"
-
-client.set_tag(run_id, key='demographic_vars', value="senior_citizen,gender")
-client.set_tag(run_id, key='feature_table', value=f"{catalog}.{dbName}.{feature_table_name}")
-client.set_tag(run_id, key='labels_table', value=f"{catalog}.{dbName}.{labels_table_name}")
-
-model_details = mlflow.register_model(model_uri, model_name)
+display(performance_metrics_df)
 
 # COMMAND ----------
 
-# DBTITLE 1,Add Descriptions
-best_score = model.best_trial.metrics['test_f1_score']
-run_name = model.best_trial.model_description.split("(")[0]
-
-client.update_model_version(
-  name=model_details.name,
-  version=model_details.version,
-  description=f"[AutoML] This model version was built using automated retraining with an accuracy/F1 validation metric of {round(best_score,2)*100}%"
+drift_metrics_df = spark.sql(f"""
+  SELECT
+  window.start AS time,
+  column_name,
+  {drift} AS drift_metric,
+  Model_Version AS `Model Id`
+FROM {drift_table_name}
+WHERE
+  column_name IN ('prediction', 'churn')
+  AND window.start >= "2024-06-01"
+  AND slice_key is null
+  AND slice_value is null
+  AND Model_Version = '{model_id}'
+  AND drift_type = "CONSECUTIVE"
+ORDER BY
+  window.start
+"""
 )
 
 # COMMAND ----------
 
-# DBTITLE 1,Request transition to Challenger
-r_t = request_transition(
-  model_name = model_name,
-  version = model_details.version,
-  stage = "Challenger"
-)
+# DBTITLE 1,Unstack
+from pyspark.sql.functions import first
+
+
+unstacked_drift_metrics_df = drift_metrics_df \
+                            .groupBy("time", "`Model Id`") \
+                            .pivot("column_name").agg(first("drift_metric")) \
+                            .orderBy("time")
+
+display(unstacked_drift_metrics_df)
+
+# COMMAND ----------
+
+# DBTITLE 1,Join all metrics together
+all_metrics_df = performance_metrics_df.join(unstacked_drift_metrics_df, on=["time", "Model Id"], how='inner')
+
+display(all_metrics_df)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC ## Next: Building a dashboard with Customer Churn information & Creating model monitor
-# MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-dashboard.png" width="600px" style="float:right"/>
-# MAGIC
-# MAGIC We now have all our data ready, including customer churn.
-# MAGIC
-# MAGIC The Churn table containing analysis and Churn predictions can be shared with the Analyst and Marketing team.
-# MAGIC
-# MAGIC With Databricks SQL, we can build our Customer Churn monitoring Dashboard to start tracking our Marketing campaign effect!
-# MAGIC
-# MAGIC Next:
-# MAGIC * [Explore DBSQL Churn Dashboard](TO-DO/ add-link)
+# MAGIC Count total violations and save as task value
+
+# COMMAND ----------
+
+from pyspark.sql.functions import col
+
+
+all_violations_count = all_metrics_df \
+  .where(
+    (col("performance_metric") < 0.5) & (col("expected_loss") > 100) \
+     & (col("churn") > 0.19) & (col("prediction") > 0.19) \
+  ).count()
+
+# COMMAND ----------
+
+print(f"Total number of joint violations: {all_violations_count}")
+
+# COMMAND ----------
+
+# DBTITLE 1,Exit notebook by setting a task value
+dbutils.jobs.taskValues.set(key = 'all_violations_count', value = all_violations_count)
+
+# COMMAND ----------
+
+

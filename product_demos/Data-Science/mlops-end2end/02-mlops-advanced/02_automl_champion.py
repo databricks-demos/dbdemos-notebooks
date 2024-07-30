@@ -21,11 +21,12 @@
 # DBTITLE 1,Install new feature engineering client for UC [for MLR < 13.2]
 # MAGIC %pip install databricks-feature-engineering
 # MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -40,9 +41,6 @@
 
 import mlflow
 import databricks.automl_runtime
-
-
-label_col = "churn"
 
 # COMMAND ----------
 
@@ -136,6 +134,9 @@ df_loaded = training_set_specs.load_df().toPandas().set_index(keys=[primary_key,
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Write training code
+# MAGIC Once we have the dataset in a pandas DF
+# MAGIC
 # MAGIC ### Select supported columns
 # MAGIC Select only the columns that are supported. This allows us to train a model that can predict on a dataset that has extra columns that are not used in training.
 # MAGIC `[]` are dropped in the pipelines. See the Alerts tab of the AutoML Experiment page for details on why these columns are dropped.
@@ -250,34 +251,14 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # MAGIC - Validation (20% of the dataset used to tune the hyperparameters of the model)
 # MAGIC - Test (20% of the dataset used to report the true performance of the model on an unseen dataset)
 # MAGIC
-# MAGIC `_automl_split_col_xxxx` (or `_automl_split_col_0000` for MLR>=13.3LTS) contains the information of which set a given row belongs to.
-# MAGIC We use this column to split the dataset into the above 3 sets.
-# MAGIC The column should not be used for training so it is dropped after split is done.
+# MAGIC ** You can also set the splits by providing the a `split` column **
 
 # COMMAND ----------
 
-# automl_split_col = list(filter(lambda x: "_automl_split_col_" in x, df_loaded.columns))[0]
+from sklearn.model_selection import train_test_split
 
-
-# # AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-# split_train_df = df_loaded.loc[df_loaded[automl_split_col] == "train"]
-# split_val_df = df_loaded.loc[df_loaded[automl_split_col] == "val"]
-# split_test_df = df_loaded.loc[df_loaded[automl_split_col] == "test"]
-
-# # Separate target column from features and drop _automl_split_col_xxxx
-# X_train = split_train_df.drop([target_col, automl_split_col], axis=1)
-# y_train = split_train_df[target_col]
-
-# X_val = split_val_df.drop([target_col, automl_split_col], axis=1)
-# y_val = split_val_df[target_col]
-
-# X_test = split_test_df.drop([target_col, automl_split_col], axis=1)
-# y_test = split_test_df[target_col]
-
-# COMMAND ----------
 
 X_train, X_eval, y_train, y_eval = train_test_split(df_loaded.drop(label_col, axis=1), df_loaded[label_col], test_size=0.4, stratify=df_loaded[label_col], random_state=42)
-
 X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.4, stratify=y_eval, random_state=42)
 
 # COMMAND ----------
@@ -300,7 +281,7 @@ help(LGBMClassifier)
 # COMMAND ----------
 
 # Record specific additional dependencies required by model serving (only required for MLR<13.3)
-def pin_pandas_version(pandas_ver: str = model_serving_pandas_ver):
+def pin_pandas_version(pandas_ver: str = "1.5.3"):
   """
   Custom pandas dependency to pin for deploying in model serving endpoints:
   :: pandas_ver : default version running in model serving containers
@@ -309,12 +290,6 @@ def pin_pandas_version(pandas_ver: str = model_serving_pandas_ver):
     return [f"pandas=={pandas_ver}"]
   else:
     return [f"pandas=={pd.__version__}"]
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### [TODO] Create custom pyfunc wrapper function to expose `predict_proba` method _(nice-to-have)_
-# MAGIC To get AUC/ROC metrics in monitoring metrics
 
 # COMMAND ----------
 
@@ -334,6 +309,7 @@ import sklearn
 from sklearn import set_config
 from sklearn.pipeline import Pipeline
 from hyperopt import hp, tpe, fmin, STATUS_OK, Trials
+
 
 
 # Create a separate pipeline to transform the validation dataset. This is used for early stopping.
@@ -380,10 +356,10 @@ def objective(params):
         model=model,
         artifact_path="model",
         flavor=mlflow.sklearn,
-        extra_pip_requirements=pin_pandas_version(),
         training_set=training_set_specs,
         output_schema=output_schema,
-        registered_model_name=model_name # Manual add to create "Champion" version
+        extra_pip_requirements=pin_pandas_version(),
+        # registered_model_name=model_name # Manual add to create "Champion" version
     )
 
     # Log metrics for the training set
@@ -429,7 +405,7 @@ def objective(params):
     lgbmc_test_metrics = {k.replace("test_", ""): v for k, v in lgbmc_test_metrics.items()}
 
     # Set as Champion model [Manual Add]
-    client.set_registered_model_alias(model_name, "Champion", get_latest_model_version(model_name))
+    # client.set_registered_model_alias(model_name, "Champion", get_latest_model_version(model_name))
 
     return {
       "loss": loss,
@@ -467,9 +443,9 @@ space = {
   "colsample_bytree": 0.4120544919020157,
   "lambda_l1": 2.6616074270114995,
   "lambda_l2": 514.9224373768443,
-  "learning_rate": 0.0678497372371143,
+  "learning_rate": 0.0778497372371143,
   "max_bin": 229,
-  "max_depth": 8,
+  "max_depth": 9,
   "min_child_samples": 66,
   "n_estimators": 250,
   "num_leaves": 100,
@@ -618,6 +594,9 @@ test_baseline_df = spark.createDataFrame(y_test.reset_index())
 
 # COMMAND ----------
 
+from pyspark.sql.functions import lit
+
+
 baseline_table_name = f"{catalog}.{dbName}.{inference_table_name}_baseline"
 baseline_model_version = client.get_model_version_by_alias(name=model_name, alias="Baseline").version # Champion
 
@@ -625,7 +604,7 @@ baseline_predictions_df = fe.score_batch(
     df=test_baseline_df,
     model_uri=f"models:/{model_name}/{baseline_model_version}",
     result_type=test_baseline_df.schema[label_col].dataType
-  ).withColumn("Model_Version", F.lit(baseline_model_version))
+  ).withColumn("Model_Version", lit(baseline_model_version))
 
 (
   baseline_predictions_df.drop(timestamp_col)

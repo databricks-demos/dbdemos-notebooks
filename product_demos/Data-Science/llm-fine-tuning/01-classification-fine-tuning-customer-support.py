@@ -306,3 +306,9 @@ display(df)
 # MAGIC
 # MAGIC [Open the 02.1-llm-rag-fine-tuning]($./03-chatbot-rag-fine-tuning/03.1-llm-rag-fine-tuning) notebook to explore how to evaluate your LLM using Databricks built-in eval capabilities.
 # MAGIC
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

@@ -109,7 +109,7 @@
     },
     {
       "path": "04-Data-Science-ML/04.5-AB-testing-model-serving-fraud", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Roll-out our new model with A/B testing.", 

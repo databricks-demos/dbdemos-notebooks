@@ -1,29 +1,37 @@
 # Databricks notebook source
-# MAGIC %md
-# MAGIC # Building composable AI systems using 
+# MAGIC %md-sandbox
+# MAGIC # Composable AI systems: Building and AI Stylist Specialist selling our products
 # MAGIC
 # MAGIC ## What's a composable AI systems
 # MAGIC
-# MAGIC Composable AI systems are advanced AI deployments, composed of multiple entities (tools) specialized in different action. <br/>
-# MAGIC You can think of a RAG system as a simple version having a single tool: retrieving similar documents.
+# MAGIC LLMs are great at answering generate questions. However, this alone isn't enough to provide value to your customers.
 # MAGIC
-# MAGIC However, what if you need extra information (your customer contract ID, the last email they sent to your support, your most recent sales report), but each information might be specific to the context and who is asking it.
+# MAGIC To be able to provide valuable answer, extra information is requred, specific to the user (your customer contract ID, the last email they sent to your support, your most recent sales report etc.).
 # MAGIC
-# MAGIC This is what Function calling enable. You present all the functions available to your LLM explaining what they do, and let the AI reason about it, finding what will be relevant to answer the customer question.
+# MAGIC Composable AI systems are designed to answer this challenge. They are more advanced AI deployments, composed of multiple entities (tools) specialized in different action (retrieving information or acting on external systems). <br/>
+# MAGIC
+# MAGIC A a high level, you build & present a set of custom functions to the AI. The LLM can then reason about it, deciding which tool should be called and information gathered to answer the customer need.
 # MAGIC
 # MAGIC ## Building Composable AI Systems with Databricks Mosaic AI agent framework
 # MAGIC
-# MAGIC Databricks simplifies this by providing a builtin service, reasonning about the tools you have and acting based on them. 
 # MAGIC
+# MAGIC Databricks simplifies this by providing a builtin service to:
 # MAGIC
-# MAGIC  your own Chatbot Assisstant to help your customers answer questions about Databricks, using Retrieval Augmented Generation (RAG), Databricks State of The Art LLM DBRX Instruct Foundation Model Vector Search.
+# MAGIC - Create and store your functions (tools) leveraging UC
+# MAGIC - Execute the functions in a safe way
+# MAGIC - Reason about the tools you selected and chain them together to properly answer your question. 
+# MAGIC
+# MAGIC A a high level, here is the AI system we will implement in this demo:
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/llm-tools-functions-flow.png?raw=true" width="900px">
+# MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&notebook=00-AI-function-tools-introduction&demo_name=ai-function-calling&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&notebook=00-AI-function-tools-introduction&demo_name=llm-tools-functions&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %pip install -U databricks-sdk==0.23.0 langchain-community langchain-openai mlflow==2.14.3
+# MAGIC %pip install -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -32,15 +40,25 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Computing Mathematics: converting inches to centimeters
+# MAGIC %md
+# MAGIC ## Creating our tools: Unity Catalog Functions
 # MAGIC
-# MAGIC Our online shop is selling across all regions, and we know our customers often ask to convert cm to inches. However, plain LLMs are very bad at executing math. To solve this, let's create a simple function doing the conversion.
+# MAGIC Let's start by defining the functions our LLM will be able to execute. These functions can contain any logic, from simple SQL to advanced python.
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ### Computing Mathematics: converting inches to centimeters
+# MAGIC
+# MAGIC Our online shop is selling across all regions, and we know our customers often ask to convert cm to inches. However, plain LLMs are quite bad at executing math. To solve this, let's create a simple function doing the conversion.
+# MAGIC
+# MAGIC We'll save this function within Unity Catalog. You can open the explorer to review the functions created in this notebook.
 # MAGIC
 # MAGIC *Note: This is a very simple first example for this demo. We'll implement a broader math tool later on.*
 
 # COMMAND ----------
 
+# DBTITLE 1,Convert inch to cm
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE FUNCTION convert_inch_to_cm(size_in_inch FLOAT)
 # MAGIC RETURNS FLOAT
@@ -54,7 +72,7 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Executing Python and fetching external dataset in realtime: getting the weather
+# MAGIC ### Executing a Python function to fetch external dataset in realtime: getting the weather
 # MAGIC
 # MAGIC We want our stylist assistant to give us recommendations based on the weather. Let's add a tool to fetch the weather based on longitude/latitude, using Python to call an external Weather API.
 
@@ -85,7 +103,7 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Using LLMs with specific prompt as a tool
+# MAGIC ### Creating a function calling an LLMs with specific prompt as a tool
 # MAGIC
 # MAGIC You can also register tools containing custom prompts that your LLM can use to to execute actions based on the customer context.
 # MAGIC
@@ -108,7 +126,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Using Vector search to find similar content as a tool
+# MAGIC ### Using Vector search to find similar content as a tool
 # MAGIC
 # MAGIC Let's now add a tool to recomment similar items, based on an article description.
 # MAGIC
@@ -150,13 +168,57 @@
 
 # COMMAND ----------
 
+# MAGIC %md-sandbox
+# MAGIC ## Using Databricks Playground to test our functions
+# MAGIC
+# MAGIC Databricks Playground provides a built-in integration with your functions. It'll analyze which functions are available, and call them to properly answer your question.
+# MAGIC
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/llm-tools-functions-playground.gif?raw=true" style="float: right; margin-left: 10px; margin-bottom: 10px;">
+# MAGIC
+# MAGIC To try out our functions with playground:
+# MAGIC - Open the Playground 
+# MAGIC - Select a model supporting tools (like Llama3.1)
+# MAGIC - Add the functions you want your model to leverage (`catalog.schema.function_name`)
+# MAGIC - Ask a question (for example to convert inch to cm), and playground will do the magic for you!
+# MAGIC
+# MAGIC <br/>
+# MAGIC <div style="background-color: #d4e7ff; padding: 10px; border-radius: 15px;clear:both">
+# MAGIC <strong>Note:</strong> Tools in playground is in preview, reach-out your Databricks Account team for more details and to enable it.
+# MAGIC </div>
+# MAGIC
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC # Building an AI system leveraging our Databricks UC functions with Langchain
+# MAGIC
+# MAGIC ## Building an AI system leveraging our Databricks UC functions with Langchain
+# MAGIC
+# MAGIC These tools can also directly be leveraged on custom model. In this case, you'll be in charge of chaining and calling the functions yourself (the playground does it for you!)
+# MAGIC
+# MAGIC Langchain makes it easy for you. You can create your own custom AI System using a Langchain model and a list of existing tools (in our case, the tools will be the functions we just created)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Enable MLflow Tracing
+# MAGIC
+# MAGIC Enabling MLflow Tracing is required to:
+# MAGIC - View the chain's trace visualization in this notebook
+# MAGIC - Capture the chain's trace in production via Inference Tables
+# MAGIC - Evaluate the chain via the Mosaic AI Evaluation Suite
+
+# COMMAND ----------
+
+import mlflow
+mlflow.langchain.autolog(disable=False)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Start by creating our tools from Unity Catalog
+# MAGIC
+# MAGIC Let's use UCFunctionToolkit to select which functions we want to use as tool for our demo:
 
 # COMMAND ----------
 
@@ -257,9 +319,70 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Extra: running any python code as a tool:
+# MAGIC ## Extra: running more advanced functions using python:
 # MAGIC
+# MAGIC Let's see a few more advanced tools example
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ### Calculator tool: Supporting math operations 
+# MAGIC Let's add a function to allow our llm to execute any Math operation. 
 # MAGIC
+# MAGIC Databricks runs the python in a safe container. However, we'll filter what the function can do to avoid any potential issues with prompt injection (so that the user cannot execute other python instructions).
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE FUNCTION compute_math(expr STRING)
+# MAGIC RETURNS STRING
+# MAGIC LANGUAGE PYTHON
+# MAGIC COMMENT 'Run any mathematical function and returns the result as output. Supports python syntax like math.sqrt(13)'
+# MAGIC AS
+# MAGIC $$
+# MAGIC   import ast
+# MAGIC   import operator
+# MAGIC   import math
+# MAGIC   operators = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv, ast.Pow: operator.pow, ast.Mod: operator.mod, ast.FloorDiv: operator.floordiv, ast.UAdd: operator.pos, ast.USub: operator.neg}
+# MAGIC     
+# MAGIC   # Supported functions from the math module
+# MAGIC   functions = {name: getattr(math, name) for name in dir(math) if callable(getattr(math, name))}
+# MAGIC
+# MAGIC   def eval_node(node):
+# MAGIC     if isinstance(node, ast.Num):  # <number>
+# MAGIC       return node.n
+# MAGIC     elif isinstance(node, ast.BinOp):  # <left> <operator> <right>
+# MAGIC       return operators[type(node.op)](eval_node(node.left), eval_node(node.right))
+# MAGIC     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
+# MAGIC       return operators[type(node.op)](eval_node(node.operand))
+# MAGIC     elif isinstance(node, ast.Call):  # <func>(<args>)
+# MAGIC       func = node.func.id
+# MAGIC       if func in functions:
+# MAGIC         args = [eval_node(arg) for arg in node.args]
+# MAGIC         return functions[func](*args)
+# MAGIC       else:
+# MAGIC         raise TypeError(f"Unsupported function: {func}")
+# MAGIC     else:
+# MAGIC       raise TypeError(f"Unsupported type: {type(node)}")  
+# MAGIC   try:
+# MAGIC     if expr.startswith('```') and expr.endswith('```'):
+# MAGIC       expr = expr[3:-3].strip()      
+# MAGIC     node = ast.parse(expr, mode='eval').body
+# MAGIC     return eval_node(node)
+# MAGIC   except Exception as ex:
+# MAGIC     return str(ex)
+# MAGIC $$;
+# MAGIC -- let's test our function:
+# MAGIC SELECT compute_math("(2+2)/3") as result;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Run any python function
+# MAGIC
+# MAGIC If we are creating an coding assistant, it can be useful to allow our AI System to run python code to try them, and output the results to the user. **Be careful doing that, as any code could be executed by the user.**
+# MAGIC
+# MAGIC Here is an example:
 
 # COMMAND ----------
 
@@ -272,15 +395,16 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC $$
 # MAGIC   import traceback
 # MAGIC   try:
-# MAGIC       if code_string.startswith('```') and code_string.endswith('```'):
-# MAGIC           code_string = code_string[3:-3].strip()      
+# MAGIC       if python_code.startswith('```') and python_code.endswith('```'):
+# MAGIC           python_code = python_code[3:-3].strip()      
 # MAGIC       result = eval(python_code, globals())
 # MAGIC       return str(result)
 # MAGIC   except Exception as ex:
 # MAGIC       return traceback.format_exc()
 # MAGIC $$;
 # MAGIC -- let's test our function:
-# MAGIC SELECT execute_python_code("2+2") as result;
+# MAGIC
+# MAGIC SELECT execute_python_code("'Hello Word! '* 3") as result;
 
 # COMMAND ----------
 

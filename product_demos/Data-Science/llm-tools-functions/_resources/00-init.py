@@ -13,7 +13,6 @@
 
 # COMMAND ----------
 
-
 dbutils.widgets.text("reset_all_data", "false", "Reset Data")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
@@ -43,7 +42,7 @@ def get_shared_warehouse(name=None):
     raise Exception("Couldn't find any Warehouse to use. Please create a wh first to run the demo and add the id here")
 
 
-  def display_tools(tools):
+def display_tools(tools):
     display(pd.DataFrame([{k: str(v) for k, v in vars(tool).items()} for tool in tools]))
 
 

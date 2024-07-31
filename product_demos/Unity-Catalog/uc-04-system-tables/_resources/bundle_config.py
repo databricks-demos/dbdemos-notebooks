@@ -133,5 +133,7 @@
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
     "spark_version": "13.3.x-cpu-ml-scala2.12"
-  }
+  },
+  "dashboards": [{"name": "[dbdemos] System Tables - account usage overview",       "id": "account-usage"},
+                 {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"}]
 }

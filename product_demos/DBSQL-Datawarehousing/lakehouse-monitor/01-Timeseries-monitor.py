@@ -113,18 +113,19 @@ import time
 from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
 
 # Wait for monitor to be created
-while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING::
-  info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{TABLE_NAME}")
+info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
+  info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
   time.sleep(10)
 
 assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{dbName}.{TABLE_NAME}").refreshes
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{TABLE_NAME}").refreshes
 assert(len(refreshes) > 0)
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{dbName}.{TABLE_NAME}", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{TABLE_NAME}", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"

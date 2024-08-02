@@ -147,7 +147,3 @@ print(f"Total number of joint violations: {all_violations_count}")
 
 # DBTITLE 1,Exit notebook by setting a task value
 dbutils.jobs.taskValues.set(key = 'all_violations_count', value = all_violations_count)
-
-# COMMAND ----------
-
-

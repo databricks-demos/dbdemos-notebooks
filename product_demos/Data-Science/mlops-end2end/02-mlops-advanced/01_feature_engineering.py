@@ -152,6 +152,7 @@ display(churn_features_n_predsDF)
 
 # MAGIC %md
 # MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
+# MAGIC * In reality ground-truth label data should be in its own separate table
 
 # COMMAND ----------
 
@@ -234,6 +235,7 @@ except ValueError as ve:
 
 # COMMAND ----------
 
+# DBTITLE 1,Create "feature"/UC table
 churn_feature_table = fe.create_table(
   name=feature_table_name, # f"{catalog}.{dbName}.{feature_table_name}"
   primary_keys=[primary_key, timestamp_col],

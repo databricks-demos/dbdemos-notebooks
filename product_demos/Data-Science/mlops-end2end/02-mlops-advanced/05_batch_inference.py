@@ -146,7 +146,7 @@ predictions.withColumn(timestamp_col, lit(this_timestamp).cast("timestamp")) \
 
 # MAGIC %md
 # MAGIC ## Run inference on baseline/test table 
-# MAGIC _Usually should be done once after model (re)training but put here for demo purposes_
+# MAGIC _Usually should be done once after model (re)training and promotion validation but put here for demo purposes_
 
 # COMMAND ----------
 

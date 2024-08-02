@@ -9,7 +9,7 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %pip install faker databricks-sdk==0.17.0 mlflow==2.14.4 cloudpickle==2.2.1
+# MAGIC %pip install faker databricks-sdk==0.17.0 mlflow==2.14.3 cloudpickle==2.2.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

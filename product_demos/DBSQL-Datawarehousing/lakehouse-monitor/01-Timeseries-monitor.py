@@ -16,8 +16,7 @@
 # MAGIC 2. If it's not normal, what was the root cause for this integrity issue? 
 # MAGIC 3. What are the downstream assets that might've been impacted by this issue?
 # MAGIC
-# MAGIC Let's explore how Lakehouse Monitoring documentation ([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)| [Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) can help you answer these types of questions. 
-# MAGIC
+# MAGIC Let's explore how Lakehouse Monitoring ([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)| [Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) can help you answer these types of questions. 
 
 # COMMAND ----------
 

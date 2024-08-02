@@ -34,7 +34,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.14.0
+# MAGIC %pip install --quiet mlflow==2.14.4
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

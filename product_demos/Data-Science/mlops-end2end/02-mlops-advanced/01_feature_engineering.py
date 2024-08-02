@@ -28,7 +28,7 @@ dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Res
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -137,12 +137,14 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
 
 # DBTITLE 1,Compute Churn Features and append a timestamp
 from datetime import datetime
+from pyspark.sql.functions import lit
+
 
 # Add current scoring timestamp
 this_time = (datetime.now()).timestamp()
 
 churn_features_n_predsDF = clean_churn_features(compute_service_features(telcoDF)) \
-                            .withColumn(timestamp_col, F.lit(this_time).cast("timestamp"))
+                            .withColumn(timestamp_col, lit(this_time).cast("timestamp"))
 
 display(churn_features_n_predsDF)
 
@@ -150,6 +152,7 @@ display(churn_features_n_predsDF)
 
 # MAGIC %md
 # MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
+# MAGIC * In reality ground-truth label data should be in its own separate table
 
 # COMMAND ----------
 
@@ -183,6 +186,7 @@ spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ADD CONSTRAINT {l
 
 # DBTITLE 1,Import Feature Store Client
 from databricks.feature_engineering import FeatureEngineeringClient
+
 
 fe = FeatureEngineeringClient()
 
@@ -231,6 +235,7 @@ except ValueError as ve:
 
 # COMMAND ----------
 
+# DBTITLE 1,Create "feature"/UC table
 churn_feature_table = fe.create_table(
   name=feature_table_name, # f"{catalog}.{dbName}.{feature_table_name}"
   primary_keys=[primary_key, timestamp_col],
@@ -352,6 +357,7 @@ fe.publish_table(
 # COMMAND ----------
 
 from databricks.sdk.service.catalog import OnlineTableSpec
+from databricks.sdk.service.catalog import OnlineTableSpecTriggeredSchedulingPolicy
 
 
 # Create an online table specification
@@ -359,7 +365,7 @@ churn_features_online_store_spec = OnlineTableSpec(
   primary_key_columns = [primary_key],
   timeseries_key = timestamp_col,
   source_table_full_name = f"{catalog}.{dbName}.{feature_table_name}",
-  run_triggered={'triggered': 'true'}
+  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
 )
 
 # COMMAND ----------
@@ -378,7 +384,7 @@ from pprint import pprint
 
 try:
   online_table_spec = w.online_tables.get(f"{catalog}.{dbName}.{feature_table_name}_online_table")
-  pprint(online_table_exist)
+  pprint(online_table_spec)
 
 except Exception as e:
   pprint(e)
@@ -446,8 +452,69 @@ except Exception as e:
 # COMMAND ----------
 
 # DBTITLE 1,Run 'baseline' autoML experiment in the back-ground
-force_refresh = dbutils.widgets.get("force_refresh_automl") == "true"
-display_automl_churn_link(f"{catalog}.{dbName}.{feature_table_name}", force_refresh = force_refresh, use_feature_table=True)
+from databricks import automl
+from datetime import datetime
+
+
+current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
+xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
+
+#xp_path = "/Shared/dbdemos/experiments/mlops"
+xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+
+
+churn_labels = spark.read.table(f"{catalog}.{dbName}.{labels_table_name}")
+
+# Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
+#churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
+ 
+feature_store_lookups = [
+  {
+     "table_name": f"{catalog}.{dbName}.{feature_table_name}",
+     "lookup_key": primary_key,
+     "timestamp_lookup_key": timestamp_col,
+  }
+]
+
+spark.conf.set("spark.databricks.automl.serviceEnabled", "true")
+
+automl_run = automl.classify(
+    experiment_name = xp_name,
+    experiment_dir = xp_path,
+    dataset = churn_labels,
+    target_col = "churn",
+    timeout_minutes = 6,
+    exclude_cols ='customer_id',
+    feature_store_lookups=feature_store_lookups
+)
+#Make sure all users can access dbdemos shared experiment
+DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+
+# COMMAND ----------
+
+# DBTITLE 1,Log model to UC
+import mlflow
+
+
+model_name = "customer_churn"
+mlflow.set_registry_uri("databricks-uc")
+model_details = mlflow.register_model(
+    model_uri=f"runs:/{automl_run.best_trial.mlflow_run_id}/model",
+    name=f"{catalog}.{schema}.{model_name}"
+)
+
+# COMMAND ----------
+
+# DBTITLE 1,Set @baseline alias
+from mlflow import MlflowClient
+
+client = MlflowClient()
+
+client.set_registered_model_alias(
+  name=f"{catalog}.{schema}.{model_name}",
+  alias="baseline",
+  version="1"
+)
 
 # COMMAND ----------
 

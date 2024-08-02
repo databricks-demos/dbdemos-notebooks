@@ -118,7 +118,7 @@ def request_transition(model_name, version, stage="Challenger", validation_job_i
     """
     Inner helper function to send slack notification mimic-ing mlflow models transition-requests webhooks
     """
-    slack_webhook = dbutils.secrets.get("fieldeng", f"{current_user_no_at}_slack_webhook")
+    slack_webhook = dbutils.secrets.get("fieldeng", f"{get_current_username()}_slack_webhook")
 
     body = {'text': message}
     response = requests.post(

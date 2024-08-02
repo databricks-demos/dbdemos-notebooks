@@ -30,11 +30,11 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
-endpoint_name = "dbdemos_mlops_churn"
+endpoint_name = "dbdemos_mlops_churn_aelhelou"
 
 model_version_champion = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 model_version_challenger = client.get_model_version_by_alias(name=model_name, alias="Challenger").version # Get challenger version
@@ -73,6 +73,7 @@ print(f"Deploying {model_name} versions {model_version_champion} (champion) & {m
 # COMMAND ----------
 
 # Parse model name from UC namespace
+model_name = f"{catalog}.{dbName}.{model_name}"
 served_model_name =  model_name.split('.')[-1]
 
 # COMMAND ----------
@@ -106,7 +107,7 @@ endpoint_config_dict = {
     "auto_capture_config":{
         "catalog_name": catalog,
         "schema_name": schema,
-        "table_name_prefix": "mlops_churn_served"
+        "table_name_prefix": "endpoint"
     }
 }
 
@@ -165,8 +166,8 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
-# MAGIC     {"customer_id": "0002-ORFBO", "scoring_timestamp": "2024-02-05"},
-# MAGIC     {"customer_id": "0003-MKNFE", "scoring_timestamp": "2024-02-05"}
+# MAGIC     {"customer_id": "0002-ORFBO", "scoring_timestamp": "2024-07-29"},
+# MAGIC     {"customer_id": "0003-MKNFE", "scoring_timestamp": "2024-07-29"}
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
@@ -187,8 +188,8 @@ if input_example:
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {primary_key: "0002-ORFBO", timestamp_col: "2024-02-05"},
-    {primary_key: "0003-MKNFE", timestamp_col: "2024-02-05"}
+    {primary_key: "0002-ORFBO", timestamp_col: "2024-07-29"},
+    {primary_key: "0003-MKNFE", timestamp_col: "2024-07-29"}
   ]
 
 # COMMAND ----------

@@ -51,22 +51,14 @@
 
 import mlflow
 
-churn_experiment_name = "churn_auto_ml"
-
-model_name = f"{catalog}.{dbName}.mlops_advanced_churn"
-print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
-
-current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-
-xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
-experiment_id = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}%'", order_by=["last_update_time DESC"])[0].experiment_id
-print(experiment_id)
+model_name = f"{catalog}.{db}.mlops_advanced_churn"
+print(f"Finding best run from {xp_name} and pushing new model version to {model_name}")
+_ = mlflow.set_experiment(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 
 # Let's get our best ml run
 best_model = mlflow.search_runs(
-  experiment_ids=experiment_id,
   order_by=["metrics.test_f1_score DESC"],
   max_results=1,
   filter_string="status = 'FINISHED' and run_name='mlops_best_run'" #filter on mlops_best_run to always use the notebook 02 to have a more predictable demo

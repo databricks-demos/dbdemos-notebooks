@@ -49,6 +49,11 @@ current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
 
 # COMMAND ----------
 
+mlflow.set_experiment(f"{xp_path}/{xp_name}")
+print(f"Set experiment to: {xp_name}")
+
+# COMMAND ----------
+
 # Added for the demo purpose
 run=dict()
 xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
@@ -68,7 +73,7 @@ print(f"Set experiment to: {run['experiment_id']}")
 
 # COMMAND ----------
 
-feature_table_full_name = f"{catalog}.{dbName}.{feature_table_name}"
+feature_table_full_name = f"{catalog}.{db}.{feature_table_name}"
 
 display(spark.table(feature_table_full_name))
 
@@ -94,12 +99,12 @@ from databricks.feature_store import FeatureFunction, FeatureLookup
 
 features = [
     FeatureLookup(
-      table_name=f"{catalog}.{dbName}.{feature_table_name}",
+      table_name=f"{catalog}.{db}.{feature_table_name}",
       lookup_key=[primary_key],
       timestamp_lookup_key=timestamp_col
     ),
     FeatureFunction(
-      udf_name=f"{catalog}.{dbName}.avg_price_increase",
+      udf_name=f"{catalog}.{db}.avg_price_increase",
       input_bindings={
         "monthly_charges_in" : "monthly_charges",
         "tenure_in" : "tenure",
@@ -113,7 +118,7 @@ features = [
 
 # DBTITLE 1,Pull labels to use for training/validating/testing
 
-labels_df = spark.read.table(f"{catalog}.{dbName}.{labels_table_name}")
+labels_df = spark.read.table(f"{catalog}.{db}.{labels_table_name}")
 
 # COMMAND ----------
 

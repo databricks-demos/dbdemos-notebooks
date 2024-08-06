@@ -51,7 +51,7 @@
 # COMMAND ----------
 
 model_alias = "Champion"
-model_name = f"{catalog}.{dbName}.mlops_advanced_churn"
+model_name = f"{catalog}.{db}.mlops_advanced_churn"
 
 # COMMAND ----------
 

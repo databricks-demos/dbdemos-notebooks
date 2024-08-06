@@ -1,5 +1,5 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Restart AutoML run")
+#dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Restart AutoML run")
 
 # COMMAND ----------
 
@@ -293,7 +293,7 @@ fe.write_table(
 # Define the Python UDF
 
 function_def = f"""
-  CREATE OR REPLACE FUNCTION {catalog}.{dbName}.avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
+  CREATE OR REPLACE FUNCTION {catalog}.{db}.avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
   RETURNS FLOAT
   LANGUAGE PYTHON
   COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
@@ -350,23 +350,15 @@ spark.sql(function_def)
 # COMMAND ----------
 
 from databricks import automl
-from datetime import datetime
 
-current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
-
-#xp_path = "/Shared/dbdemos/experiments/mlops"
-xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-
-
-churn_labels = spark.read.table(f"{catalog}.{dbName}.{labels_table_name}")
+churn_labels = spark.read.table(f"{catalog}.{db}.{labels_table_name}")
 
 # Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
 #churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
  
 feature_store_lookups = [
   {
-     "table_name": f"{catalog}.{dbName}.{feature_table_name}",
+     "table_name": f"{catalog}.{db}.{feature_table_name}",
      "lookup_key": primary_key,
      "timestamp_lookup_key": timestamp_col,
   }

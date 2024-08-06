@@ -13,19 +13,59 @@
 
 # DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
 # MAGIC %pip install "databricks-sdk>=0.28.0"
-# MAGIC
-# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+### TODO: fix setup script to correctly define the variables
+offline_inference_table_name = "mlops_churn_advanced_offline_inference"
+inference_table_name = "mlops_churn_advanced_inference"
+baseline_table_name = "mlops_churn_advanced_baseline"
+timestamp_col = "inference_timestamp"
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Create monitor
 # MAGIC One-time setup
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Create Inference Table
+# MAGIC
+# MAGIC This can serve as a union for offline & online processed inference
+
+# COMMAND ----------
+
+spark.sql(f"""
+          CREATE OR REPLACE TABLE {catalog}.{db}.{inference_table_name} AS
+          SELECT * EXCEPT (split) FROM {catalog}.{db}.{offline_inference_table_name} LEFT JOIN {catalog}.{db}.{label_table_name} USING(customer_id, transaction_ts)"""
+)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Create baseline table
+# MAGIC
+# MAGIC For simplification purposes, we will create the baseline table from the pre-existing `mlops_churn_advanced_offline_inference` table
+
+# COMMAND ----------
+
+### TODO: understand why we need model version in the baseline table
+spark.sql( f"""
+          CREATE OR REPLACE TABLE {catalog}.{db}.{baseline_table_name} AS
+          SELECT * EXCEPT (customer_id, transaction_ts, model_alias, inference_timestamp) FROM {catalog}.{db}.{inference_table_name}"""
+)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Create a custom metric
 
 # COMMAND ----------
 
@@ -43,9 +83,14 @@ expected_loss_metric = [
     WHEN {{prediction_col}} != {{label_col}} AND {{label_col}} = 'Yes' THEN -monthly_charges
     ELSE 0 END
     )""",
-    output_data_type= StructField("output", T.DoubleType()).json()
+    output_data_type= StructField("output", DoubleType()).json()
   )
 ]
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
 
 # COMMAND ----------
 
@@ -58,20 +103,19 @@ print(f"Creating monitor for {inference_table_name}")
 w = WorkspaceClient()
 
 info = w.quality_monitors.create(
-  table_name=f"{catalog}.{dbName}.{inference_table_name}",
+  table_name=f"{catalog}.{db}.{inference_table_name}",
   inference_log=MonitorInferenceLog(
         problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
         prediction_col="prediction",
         timestamp_col=timestamp_col,
         granularities=["1 day"],
-        model_id_col="Model_Version",
-        label_col="label_col", # optional
+        model_id_col="model_version",
+        label_col="churn", # optional
   ),
-  assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{dbName}.{inference_table_name}",
-  output_schema_name=f"{catalog}.{dbName}",
-  baseline_table_name=baseline_table_name,
+  assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{db}.{inference_table_name}",
+  output_schema_name=f"{catalog}.{db}",
+  baseline_table_name=f"{catalog}.{db}.{baseline_table_name}",
   slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
-  output_schema_name=f"{catalog}.{dbName}",
   custom_metrics=expected_loss_metric
 )
 
@@ -86,8 +130,8 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 
 # Wait for monitor to be created
-while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING::
-  info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
+  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
   time.sleep(10)
 
 assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
@@ -98,19 +142,19 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{dbName}.{inference_table_name}").refreshes
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.{inference_table_name}").refreshes
 assert(len(refreshes) > 0)
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.{inference_table_name}", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
-w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
 
 # COMMAND ----------
 

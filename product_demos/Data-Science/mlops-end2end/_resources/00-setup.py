@@ -21,6 +21,7 @@ db = "advanced_mlops"
 
 import mlflow
 import pandas as pd
+import random
 import re
 #remove warnings for nicer display
 import warnings
@@ -38,6 +39,12 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # Set UC Model Registry as default
 mlflow.set_registry_uri("databricks-uc")
+
+# Set Experiment name as default
+current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
+xp_path = f"/Users/{current_user}/databricks_automl"
+xp_name = "advanced_mlops_churn_demo_experiment"
+
 client = MlflowClient()
 
 # COMMAND ----------
@@ -78,32 +85,32 @@ def delete_feature_store_table(catalog, db, feature_table_name):
 # COMMAND ----------
 
 training_table_name = "mlops_churn_training"
-infrerence_table_name = "mlops_churn_inference"
+inference_table_name = "mlops_churn_advanced_inference"
 
 if setup_inference_data:
   # Check that the training table exists first, as we'll be creating a copy of it
   if spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}"):
     # This should only be called from the quickstart challenger validation or batch inference notebooks
-    if not spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}"):
+    if not spark.catalog.tableExists(f"{catalog}.{db}.{inference_table_name}"):
       print("Creating table for inference...")
       # Drop the label column for inference
-      spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
+      spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(inference_table_name)
   else:
     print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 
 label_table_name = "churn_label_table"
-infrerence_table_name = "mlops_churn_advanced_cust_ids"
+inference_table_name = "mlops_churn_advanced_cust_ids"
 
 if setup_adv_inference_data:
   # Check that the label table exists first, as we'll be creating a copy of it
   if spark.catalog.tableExists(f"{catalog}.{db}.{label_table_name}"):
     # This should only be called from the advanced batch inference notebook
-    if not spark.catalog.tableExists(f"{catalog}.{db}.{infrerence_table_name}"):
+    if not spark.catalog.tableExists(f"{catalog}.{db}.{inference_table_name}"):
       print("Creating table with customer records for inference...")
       # Drop the label column for inference
-      spark.read.table(label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(infrerence_table_name)
+      spark.read.table(label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(inference_table_name)
   else:
     print("Label table doesn't exist, please run the notebook '01_feature_engineering'")
 

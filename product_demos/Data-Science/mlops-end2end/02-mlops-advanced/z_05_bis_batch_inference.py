@@ -15,10 +15,9 @@
 # COMMAND ----------
 
 # MAGIC %pip install dbldatagen -qU
-
-# COMMAND ----------
-
-dbutils.library.restartPython()
+# MAGIC
+# MAGIC
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -92,6 +91,11 @@ else:
 
 # COMMAND ----------
 
+from datetime import datetime, timedelta
+from pyspark.sql.functions import lit
+
+# COMMAND ----------
+
 # MAGIC %md 
 # MAGIC ### OPTIONAL
 # MAGIC **For Demo purposes:** 
@@ -100,16 +104,12 @@ else:
 
 # COMMAND ----------
 
-from datetime import datetime, timedelta
-
-# COMMAND ----------
-
 # Simulate first batch with baseline model/version "1"
 this_timestamp = (datetime.now() + timedelta(days=-1)).timestamp()
 
 predictions.sample(fraction=np.random.random()) \
-           .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-           .withColumn("Model_Version", F.lit("1")) \
+           .withColumn(timestamp_col, lit(this_timestamp).cast("timestamp")) \
+           .withColumn("Model_Version", lit("1")) \
            .write.format("delta").mode(mode).option("overwriteSchema", True) \
            .option("delta.enableChangeDataFeed", True) \
            .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
@@ -120,8 +120,8 @@ predictions.sample(fraction=np.random.random()) \
 this_timestamp = (datetime.now() + timedelta(days=-1)).timestamp()
 
 predictions.sample(fraction=np.random.random()) \
-          .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-          .withColumn("Model_Version", F.lit("2")) \
+          .withColumn(timestamp_col, lit(this_timestamp).cast("timestamp")) \
+          .withColumn("Model_Version", lit("2")) \
           .write.format("delta").mode(mode).option("overwriteSchema", True) \
           .option("delta.enableChangeDataFeed", True) \
           .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
@@ -136,9 +136,8 @@ predictions.sample(fraction=np.random.random()) \
 # DBTITLE 1,Write random sample to a delta inference table
 this_timestamp = (datetime.now()).timestamp()
 
-predictions.sample(fraction=np.random.random()) \
-           .withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")) \
-           .withColumn("Model_Version", F.lit(model_version)) \
+predictions.withColumn(timestamp_col, lit(this_timestamp).cast("timestamp")) \
+           .withColumn("Model_Version", lit(model_version)) \
            .write.format("delta").mode(mode).option("overwriteSchema", True) \
            .option("delta.enableChangeDataFeed", True) \
            .saveAsTable(f"{catalog}.{dbName}.{inference_table_name}")
@@ -147,20 +146,20 @@ predictions.sample(fraction=np.random.random()) \
 
 # MAGIC %md
 # MAGIC ## Run inference on baseline/test table 
-# MAGIC _Usually should be done once after model (re)training but put here for demo purposes_
+# MAGIC _Usually should be done once after model (re)training and promotion validation but put here for demo purposes_
 
 # COMMAND ----------
 
 # DBTITLE 1,Read baseline table
 # Read baseline table without prediction and model version columns and select distinct to avoid dupes
-baseline_df = spark.table(baseline_table_name).drop("prediction", "Model_Version").distinct()
+baseline_df = spark.table(f"{catalog}.{db}.{inference_table_name}_baseline").drop("prediction", "Model_Version").distinct()
 
 # COMMAND ----------
 
 # DBTITLE 1,Batch score using provided feature values from baseline table
 # Features included in baseline_df will be used rather than those stored in feature tables
 baseline_predictions_df = fe.score_batch(
-  df=baseline_df.withColumn(timestamp_col, F.lit(this_timestamp).cast("timestamp")), # Add dummy timestamp
+  df=baseline_df.withColumn(timestamp_col, lit(this_timestamp).cast("timestamp")), # Add dummy timestamp
   model_uri=model_uri,
   result_type=baseline_df.schema[label_col].dataType
 )
@@ -168,9 +167,10 @@ baseline_predictions_df = fe.score_batch(
 # COMMAND ----------
 
 # DBTITLE 1,Append/Materialize to baseline table
-baseline_predictions_df.drop(timestamp_col).withColumn("Model_Version", F.lit(model_version)) \
+baseline_predictions_df.withColumn("Model_Version", lit("model_version")) \
                         .write.format("delta").mode("append").option("overwriteSchema", True) \
-                        .saveAsTable(baseline_table_name)
+                        .option("mergeSchema", "true") \
+                        .saveAsTable(f"{catalog}.{db}.{inference_table_name}_baseline")
 
 # COMMAND ----------
 
@@ -197,7 +197,7 @@ baseline_predictions_df.drop(timestamp_col).withColumn("Model_Version", F.lit(mo
 import dbldatagen as dg
 
 
-dfSource = spark.read.table(f"dbdemos.retail_amine_elhelou.mlops_churn_inference_log")
+dfSource = spark.read.table("dbdemos.retail_amine_elhelou.mlops_churn_inference_log")
 analyzer = dg.DataAnalyzer(sparkSession=spark, df=dfSource)
 
 display(analyzer.summarizeToDF())
@@ -218,11 +218,11 @@ import pyspark.sql.types
 generation_spec = (
     dg.DataGenerator(sparkSession=spark, 
                      name='synthetic_data', 
-                     rows=10000,
+                     rows=5000,
                      random=True,
                      )
     .withColumn('customer_id', 'string', template=r'dddd-AAAA')
-    .withColumn('scoring_timestamp', 'timestamp', begin="2024-02-16 01:00:00", end="2024-04-12 23:59:00", interval="1 hour")
+    .withColumn('scoring_timestamp', 'timestamp', begin=(datetime.now() + timedelta(days=-30)), end=(datetime.now() + timedelta(days=-1)), interval="1 hour")
     .withColumn('churn', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
     .withColumn('gender', 'string', values=['Female', 'Male'], random=True, weights=[0.5, 0.5])
     .withColumn('senior_citizen', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
@@ -247,7 +247,7 @@ generation_spec = (
     .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
     .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
     .withColumn('prediction', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-    .withColumn('Model_Version', 'string', values=['1', '2'], random=True, weights=[0.5, 0.5])
+    .withColumn('Model_Version', 'string', values=['1', '2'], random=True, weights=[0.2, 0.8])
     )
 
 # COMMAND ----------
@@ -260,4 +260,4 @@ display(df_synthetic_data)
 
 # COMMAND ----------
 
-df_synthetic_data.write.mode("append").saveAsTable("dbdemos.retail_amine_elhelou.mlops_churn_inference_log")
+df_synthetic_data.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name}")

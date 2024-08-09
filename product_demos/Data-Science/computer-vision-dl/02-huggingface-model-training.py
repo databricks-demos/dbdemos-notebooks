@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Demo Initialization
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
+# MAGIC %run ./_resources/00-init $reset_all_data=false
 
 # COMMAND ----------
 
@@ -132,7 +132,7 @@ val_ds.set_transform(preprocess_val)
 
 # COMMAND ----------
 
-# DBTITLE 1,Build our model from 
+# DBTITLE 1,Build our model from the pretrained model
 from transformers import AutoModelForImageClassification, TrainingArguments, Trainer
 
 #Mapping between class label and value (huggingface use it during inference to output the proper label)
@@ -202,7 +202,10 @@ def compute_metrics(eval_pred):
 
 # DBTITLE 1,Start our Training and log the model to MLFlow
 import mlflow
+from mlflow.models.signature import infer_signature
 import torch
+from PIL import Image
+from torchvision.transforms import ToPILImage
 from transformers import pipeline, DefaultDataCollator, EarlyStoppingCallback
 
 def collate_fn(examples):
@@ -214,20 +217,54 @@ def collate_fn(examples):
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 model.to(device)
 
-#mlflow.autolog(log_models=False)
 with mlflow.start_run(run_name="hugging_face") as run:
   early_stop = EarlyStoppingCallback(early_stopping_patience=10)
-  trainer = Trainer(model, args, train_dataset=train_ds, eval_dataset=val_ds, tokenizer=model_def, compute_metrics=compute_metrics, data_collator=collate_fn, callbacks = [early_stop])
+  trainer = Trainer(
+    model, 
+    args, 
+    train_dataset=train_ds, 
+    eval_dataset=val_ds, 
+    tokenizer=model_def, 
+    compute_metrics=compute_metrics, 
+    data_collator=collate_fn, 
+    callbacks = [early_stop])
 
   train_results = trainer.train()
 
   #Build our final hugging face pipeline
-  classifier = pipeline("image-classification", model=trainer.state.best_model_checkpoint, tokenizer = model_def, device_map='auto')
+  classifier = pipeline(
+    "image-classification", 
+    model=trainer.state.best_model_checkpoint, 
+    tokenizer = model_def, 
+    device_map='auto')
+  
   #log the model to MLFlow
+  #    pip_requirements is optional, buit it is used to specify a custom set of dependencies
   reqs = mlflow.transformers.get_default_pip_requirements(model)
-  mlflow.transformers.log_model(artifact_path="model", transformers_model=classifier, pip_requirements=reqs)
+
+  #    signature is used to specify the input and output schema.  Make a single prediction to get the output schema
+  transform = ToPILImage()
+  img = transform(val_ds[0]['image'])
+  prediction = classifier(img)
+  signature = infer_signature(
+    model_input=np.array(img), 
+    model_output=pd.DataFrame(prediction))
+  
+   #    log the model, set tags, and log metrics
+  mlflow.transformers.log_model(
+    artifact_path="model", 
+    transformers_model=classifier, 
+    pip_requirements=reqs,
+    signature=signature)
+  
   mlflow.set_tag("dbdemos", "pcb_classification")
   mlflow.log_metrics(train_results.metrics)
+
+  #    Log the input dataset for lineage tracking from table to model
+  src_dataset = mlflow.data.load_delta(
+    table_name=f'{catalog}.{db}.training_dataset_augmented', 
+    version=0)
+  mlflow.log_input(src_dataset, context="Training-Input")
 
 # COMMAND ----------
 
@@ -248,11 +285,20 @@ img
 # COMMAND ----------
 
 #Save the model in the registry & move it to Production
-model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", "dbdemos_pcb_classification")
-client = mlflow.tracking.MlflowClient()
+
+# Register models in Unity Catalog
+mlflow.set_registry_uri("databricks-uc")
+MODEL_NAME = f"{catalog}.{db}.dbdemos_pcb_classification"
+
+model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", MODEL_NAME)
 print("registering model version "+model_registered.version+" as production model")
-#Move the model as Production
-client.transition_model_version_stage(name = "dbdemos_pcb_classification", version = model_registered.version, stage = "Production", archive_existing_versions=True)
+
+## Alias the model version as the Production version
+client = mlflow.tracking.MlflowClient()
+client.set_registered_model_alias(
+  name = MODEL_NAME, 
+  version = model_registered.version,
+  alias = "Production")
 
 # COMMAND ----------
 

@@ -12,14 +12,14 @@
 # MAGIC
 # MAGIC This table will then be used to train a ML Classification model to learn to detect anomalies in our images in real time!
 # MAGIC
-# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Delta Live Tables. For more details on DLT, install `dbdemos.install('dlt-loans)`*
+# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Delta Live Tables. For more details on DLT, install `dbdemos.install('dlt-loans')`*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcomputer-vision-dl%2Fetl&dt=ML">
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
+# MAGIC %run ./_resources/00-init $reset_all_data=false
 
 # COMMAND ----------
 
@@ -139,8 +139,12 @@ display(spark.table("pcb_labels"))
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TABLE training_dataset AS 
 # MAGIC   (SELECT 
-# MAGIC     *, CASE WHEN labelDetail = 'normal' THEN 'normal' ELSE 'damaged' END as label
-# MAGIC     FROM pcb_images INNER JOIN pcb_labels USING (filename)) ;
+# MAGIC       *, 
+# MAGIC       CASE WHEN labelDetail = 'normal' THEN 'normal' ELSE 'damaged' END as label
+# MAGIC    FROM 
+# MAGIC       pcb_images 
+# MAGIC     INNER JOIN pcb_labels USING (filename)
+# MAGIC   );
 # MAGIC
 # MAGIC ALTER TABLE training_dataset OWNER TO `account users`;
 # MAGIC
@@ -230,7 +234,14 @@ def flip_image_horizontal_udf(content_series):
 # COMMAND ----------
 
 # DBTITLE 1,Final dataset now has 20% damaged images
-# MAGIC %sql select label, count(*) from training_dataset_augmented group by label
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   label,
+# MAGIC   count(*)
+# MAGIC FROM
+# MAGIC   training_dataset_augmented
+# MAGIC GROUP BY
+# MAGIC   label
 
 # COMMAND ----------
 

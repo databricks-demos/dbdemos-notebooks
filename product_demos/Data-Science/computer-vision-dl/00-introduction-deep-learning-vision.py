@@ -7,7 +7,7 @@
 # MAGIC <img width="300px" src="https://raw.githubusercontent.com/databricks-industry-solutions/cv-quality-inspection/main/images/PCB1.png">
 # MAGIC </div>
 # MAGIC
-# MAGIC In this demo, we will show you how Databricks can help you build end to end a computer vision model. 
+# MAGIC In this demo, we will show you how Databricks can help you build end to end a computer vision model to inspect the quality of Printed Circuit Boards (PCBs). 
 # MAGIC
 # MAGIC We will use the [Visual Anomaly (VisA)](https://registry.opendata.aws/visa/) detection dataset, and build a pipeline to detect anomalies in our PCB images. 
 # MAGIC

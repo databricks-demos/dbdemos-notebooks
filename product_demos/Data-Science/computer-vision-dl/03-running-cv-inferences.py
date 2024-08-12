@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Load the pip requirement from the model registry
+# DBTITLE 1,Load the pip requirements from the model registry
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import os
 
@@ -168,7 +168,7 @@ class RealtimeCVModelWrapper(mlflow.pyfunc.PythonModel):
 
 import os
 
-#Make sure we use the CPU as we will use a serverless CPU-based endpoint
+#Make sure we use the CPU as we will use a serverless CPU-based endpoint later
 os.environ["MLFLOW_HUGGINGFACE_USE_DEVICE_MAP"] = "false"
 
 # COMMAND ----------
@@ -183,10 +183,6 @@ pipeline_cpu = mlflow.transformers.load_model(
   MODEL_URI, 
   return_type="pipeline", 
   device=torch.device("cpu"))
-
-#DEBUG
-display(pipeline_cpu.device)
-display(pipeline_cpu.model.device)
 
 # Wrap our model as a PyFuncModel so that it can be used as a realtime serving endpoint
 rt_model = RealtimeCVModelWrapper(pipeline_cpu)
@@ -210,7 +206,7 @@ display(predictions)
 
 # DBTITLE 1,Save or RT model taking base64 in the registry
 from mlflow.models.signature import infer_signature
-init_experiment_for_batch("computer-vision-dl", "pcb")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
 
 with mlflow.start_run(run_name="hugging_face_rt") as run:
   signature = infer_signature(df_input, predictions)
@@ -283,11 +279,11 @@ for i in range(3):
 # MAGIC %md 
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC We covered how Databricks makes it easy to deploy deep learning model at scale, including behind a REST endpoint with Databricks Serverless Model Serving.
+# MAGIC We covered how Databricks makes it easy to deploy deep learning models at scale, including behind a REST endpoint with Databricks Serverless Model Serving.
 # MAGIC
 # MAGIC ### Next step: model explainability
 # MAGIC
-# MAGIC As next step, let's discover how to explain and highlight the pixels our model consider as damaged.
+# MAGIC As next step, let's discover how to explain and highlight the pixels our model considers as damaged.
 # MAGIC
 # MAGIC Open the [04-explaining-inference notebook]($./04-explaining-inference) to discover how to use SHAP to analyze our prediction.
 # MAGIC

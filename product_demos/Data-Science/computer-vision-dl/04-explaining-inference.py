@@ -148,7 +148,7 @@ explain_image(transform(image_bytes), explainer, class_names)
 # MAGIC %md 
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Not only we can predict our damaged parts, but we can also understand where the damage is and help resolve defect!
+# MAGIC Not only we can predict our damaged parts, but we can also understand where the damage is and help resolve defects!
 # MAGIC
 # MAGIC ### Going further
 # MAGIC

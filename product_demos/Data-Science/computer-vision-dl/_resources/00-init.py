@@ -1,25 +1,47 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-#Empty value will try default: dbdemos with a fallback to hive_metastore
-dbutils.widgets.text("catalog", "dbdemos", "Catalog")
-dbutils.widgets.text("db", "manufacturing_pcb", "Database")
+# MAGIC %md
+# MAGIC %md 
+# MAGIC # init notebook setting up the backend. 
+# MAGIC
+# MAGIC Do not edit the notebook, it contains import and helpers for the demo
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=%2F_resources%2F00-init&demo_name=llm-rag-chatbot&event=VIEW&path=%2F_dbdemos%2Fdata-science%2Fllm-rag-chatbot%2F_resources%2F00-init&version=1">
 
 # COMMAND ----------
 
-# MAGIC %run ../../../../_resources/00-global-setup $reset_all_data=$reset_all_data $catalog=$catalog $db=$db
+# MAGIC %run ../config
+
+# COMMAND ----------
+
+dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
+reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
+
+# COMMAND ----------
+
+# MAGIC %run ../../../../_resources/00-global-setup-v2 $reset_all_data=$reset_all_data
+
+# COMMAND ----------
+
+DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # COMMAND ----------
 
 import os
 import torch
 import mlflow
+import pandas as pd
+import numpy as np
+import pyspark.sql.functions as F
+from pyspark.sql.functions import to_date, col, regexp_extract, rand, to_timestamp, initcap, sha1
+from pyspark.sql.functions import pandas_udf, PandasUDFType, input_file_name, col
 
-reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
+
 folder = "/dbdemos/manufacturing/pcb/"
 
 if reset_all_data:
   dbutils.fs.rm("/dbdemos/manufacturing/pcb/", True)
-if reset_all_data or is_folder_empty(folder+"/labels"):
+if reset_all_data or DBDemos.is_folder_empty(folder+"/labels"):
   #data generation on another notebook to avoid installing libraries (takes a few seconds to setup pip env)
   print(f"Loading raw data under {folder} , please wait a few minutes as we extract all images...")
   path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
@@ -152,7 +174,7 @@ class EndpointApiClient:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Extra: ligthning dataloader from hugging face dataset
+# MAGIC ## Extra: lightning dataloader from hugging face dataset
 # MAGIC
 # MAGIC If your dataset is small, you could also load it from your spark dataframe with the huggingface dataset library:
 

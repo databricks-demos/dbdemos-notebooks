@@ -36,7 +36,7 @@
 
 # DBTITLE 1,Review our training dataset
 #Setup the training experiment
-init_experiment_for_batch("computer-vision-dl", "pcb")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
 
 df = spark.read.table("training_dataset_augmented")
 display(df.limit(10))
@@ -269,10 +269,25 @@ with mlflow.start_run(run_name="hugging_face") as run:
 # COMMAND ----------
 
 # DBTITLE 1,Let's try our model to make sure it works as expected
-test = spark.read.table("training_dataset_augmented").where("filename = '010.JPG'").toPandas()
-img = Image.open(io.BytesIO(test.iloc[0]['content']))
-print(f"predictions: {classifier(img)}")
-img
+import json
+import io
+from PIL import Image
+
+def test_image(test, index):
+  img = Image.open(io.BytesIO(test.iloc[index]['content']))
+  print("Filename: " + test.iloc[index]['filename'])
+  print("Ground truth label: " + test.iloc[index]['label'])
+  print(f"predictions: {json.dumps(classifier(img), indent=4)}")
+  display(img)
+
+# Sample some images from the training dataset labeled as 'normal' and some labeled as 'damaged'
+normal_samples = spark.read.table("training_dataset_augmented").filter("label == 'normal'").select("content", "filename", "label").limit(10).toPandas()
+damaged_samples = spark.read.table("training_dataset_augmented").filter("label == 'damaged'").select("content", "filename", "label").limit(10).toPandas()
+
+# Test the model using the first image from each group
+test_image(normal_samples, 0)
+print('\n\n=======================')
+test_image(damaged_samples, 0)
 
 # COMMAND ----------
 

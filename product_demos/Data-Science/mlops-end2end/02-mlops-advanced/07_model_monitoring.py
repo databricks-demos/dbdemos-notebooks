@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Monitor Model using Lakehouse Monitoring
-# MAGIC This feature([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) is in **Public Preview**.
+# MAGIC This feature([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) is **Generally Available**.
 # MAGIC
 # MAGIC Given the inference tables we can monitor stats and drifts on table containing:
 # MAGIC * batch scoring inferences
@@ -25,7 +25,7 @@
 
 # MAGIC %md
 # MAGIC ### Create monitor
-# MAGIC One-time setup
+# MAGIC **One-time setup**
 
 # COMMAND ----------
 
@@ -117,8 +117,61 @@ pprint(info)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### [OPTIONAL] Join ground-truth label data to inference table
+# MAGIC Update late labels into inference table
+# MAGIC
+# MAGIC **PS: This is normally scheduled as its own batch or streaming job but showcased here for demo purposes**
+
+# COMMAND ----------
+
+ID_COL = "customer_id"
+LABEL_COL = "churn"
+TABLE_NAME = f"{catalog}.{dbName}.{labels_table_name}" #Table containing ground-truth labels
+TIMESTAMP_COL = "scoring_timestamp"
+cutoff_date = '2024-07-25'
+
+# Option 1: Create temporary view using only new/late labels
+late_labels_df = spark.sql(f"""
+                           SELECT {ID_COL}, {LABEL_COL} FROM {TABLE_NAME}
+                           WHERE {TIMESTAMP_COL} > '{cutoff_date}' AND {LABEL_COL} IS NOT NULL
+                           """)
+                           # OR READ FROM WHEREVER LABELS SOURCES ARE
+late_labels_view_name = "customer_churn_late_labels"
+late_labels_df.createOrReplaceTempView(late_labels_view_name)
+
+# Option 2: Use full labels table (if applicable)
+# late_labels_view_name = TABLE_NAME
+
+# Step 2: Merge late_labels VIEW or full labels table into inference table
+merge_info = spark.sql(
+  f"""
+  MERGE INTO {catalog}.{dbName}.{inference_table_name} AS i
+  USING {late_labels_view_name} AS l
+  ON i.{ID_COL} == l.{ID_COL}
+  WHEN MATCHED THEN UPDATE SET i.{LABEL_COL} == l.{LABEL_COL}
+  """
+)
+display(merge_info)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Trigger a refresh
+# MAGIC Assuming monitor was created, refresh/update monitoring metrics (manual trigger)
+
+# COMMAND ----------
+
 # DBTITLE 1,Trigger a refresh [OPTIONAL]
 run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+
+# COMMAND ----------
+
+while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}", refresh_id=run_info.refresh_id)
+  time.sleep(60)
+
+assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
@@ -134,9 +187,3 @@ run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{dbName}.{infer
 # MAGIC
 # MAGIC Next steps:
 # MAGIC * [Automate model re-training]($./08_retrain_churn_automl)
-
-# COMMAND ----------
-
-# MAGIC %environment
-# MAGIC "client": "1"
-# MAGIC "base_environment": ""

@@ -54,18 +54,6 @@ print(f"Set experiment to: {xp_name}")
 
 # COMMAND ----------
 
-# Added for the demo purpose
-run=dict()
-xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
-run["experiment_path"] = xp_path
-run["experiment_id"]   = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}%'",
-                                                   order_by=["last_update_time DESC"])[0].experiment_id
-
-_ = mlflow.set_experiment(experiment_id=run["experiment_id"])
-print(f"Set experiment to: {run['experiment_id']}")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Load Data
 # MAGIC Load data directly from feature store

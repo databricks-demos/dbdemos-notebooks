@@ -45,10 +45,21 @@ inference_table_name = "mlops_churn_advanced_inference"
 
 # COMMAND ----------
 
+# DBTITLE 1,Refresh the monitor
 from databricks.sdk import WorkspaceClient
-
+from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
+import time
 
 w = WorkspaceClient()
+
+run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.{inference_table_name}")
+while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.{inference_table_name}", refresh_id=run_info.refresh_id)
+  time.sleep(30)
+
+
+# COMMAND ----------
+
 monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
 drift_table_name = monitor_info.drift_metrics_table_name
 profile_table_name = monitor_info.profile_metrics_table_name
@@ -79,9 +90,6 @@ ORDER BY
   window.start
 """
 )
-
-# COMMAND ----------
-
 display(performance_metrics_df)
 
 # COMMAND ----------
@@ -104,6 +112,7 @@ ORDER BY
   window.start
 """
 )
+display(drift_metrics_df )
 
 # COMMAND ----------
 
@@ -137,19 +146,19 @@ display(all_metrics_df)
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, abs
 
 performance_violation_count = all_metrics_df.where(
-    (col("performance_metric") < 0.5) & (col("expected_loss") > 100)
+    (col("performance_metric") < 0.5) & (abs(col("expected_loss")) > 40)
 ).count()
 
-performance_violation_count = 0
+drift_violation_count = 0
 if not drift_metrics_df.isEmpty():
-    performance_violation_count = all_metrics_df.where(
+    drift_violation_count = all_metrics_df.where(
         (col("churn") > 0.19) & (col("prediction") > 0.19)
     ).count()
 
-all_violations_count = performance_violation_count + performance_violation_count
+all_violations_count = drift_violation_count + performance_violation_count
 
 # COMMAND ----------
 

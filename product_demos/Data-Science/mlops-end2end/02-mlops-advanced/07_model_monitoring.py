@@ -46,6 +46,7 @@ spark.sql(f"""
           CREATE OR REPLACE TABLE {catalog}.{db}.{inference_table_name} AS
           SELECT * EXCEPT (split) FROM {catalog}.{db}.{offline_inference_table_name} LEFT JOIN {catalog}.{db}.{label_table_name} USING(customer_id, transaction_ts)"""
 )
+spark.sql(f"ALTER TABLE {catalog}.{db}.{inference_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 # COMMAND ----------
 

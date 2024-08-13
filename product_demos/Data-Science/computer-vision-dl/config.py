@@ -2,7 +2,11 @@
 # MAGIC %md 
 # MAGIC ## Configuration file
 # MAGIC
-# MAGIC Please change your catalog and schema here to run the demo on a different catalog.
+# MAGIC If you wish to install the demo using another schema and database, it's best to do it with dbdemos:
+# MAGIC
+# MAGIC `dbdemos.install('xxx', catalog='xx', schema='xx')`
+# MAGIC
+# MAGIC This notebook is updated by the dbdemos installer.  Do not rename the variables defined below.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=%2Fconfig&demo_name=llm-rag-chatbot&event=VIEW&path=%2F_dbdemos%2Fdata-science%2Fllm-rag-chatbot%2Fconfig&version=1">
@@ -11,6 +15,7 @@
 
 catalog = "dennis_schultz" # "manufacturing_pcb"
 dbName = db = "dbdemos_pcb" # "dbdemos"
+volume_name = "pcb_training_data"
 
 # COMMAND ----------
 

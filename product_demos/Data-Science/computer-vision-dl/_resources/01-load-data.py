@@ -1,4 +1,9 @@
 # Databricks notebook source
+dbutils.widgets.text("volume_folder", "")
+volume_folder = dbutils.widgets.get("volume_folder")
+
+# COMMAND ----------
+
 # MAGIC %pip install awscli
 
 # COMMAND ----------
@@ -16,12 +21,13 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Mode data to DBFS
+# MAGIC # Copy data to the volume
 
 # COMMAND ----------
 
-# MAGIC %sh
-# MAGIC rm -rf /dbfs/dbdemos/manufacturing/pcb 
-# MAGIC mkdir -p /dbfs/dbdemos/manufacturing/pcb/labels
-# MAGIC cp -r /tmp/data/pcb1/Data/Images/ /dbfs/dbdemos/manufacturing/pcb/
-# MAGIC cp /tmp/data/pcb1/image_anno.csv /dbfs/dbdemos/manufacturing/pcb/labels/
+dbutils.fs.rm(volume_folder + "/images", recurse=True)
+dbutils.fs.rm(volume_folder + "/labels", recurse=True)
+dbutils.fs.mkdirs(volume_folder + "/images")
+dbutils.fs.cp("file:/tmp/data/pcb1/Data/Images/", volume_folder + "/images", recurse=True)
+dbutils.fs.mkdirs(volume_folder + "/labels")
+dbutils.fs.cp("file:/tmp/data/pcb1/image_anno.csv/", volume_folder + "/labels")

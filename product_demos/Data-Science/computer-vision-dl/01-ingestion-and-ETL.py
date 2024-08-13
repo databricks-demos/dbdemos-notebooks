@@ -23,6 +23,14 @@
 
 # COMMAND ----------
 
+
+
+# COMMAND ----------
+
+print(f"Training data has been installed in the volume {volume_folder}")
+
+# COMMAND ----------
+
 # MAGIC %md 
 # MAGIC ## Reviewing the incoming dataset
 # MAGIC
@@ -30,11 +38,9 @@
 
 # COMMAND ----------
 
-# MAGIC %fs ls /dbdemos/manufacturing/pcb/Images/Normal/
-
-# COMMAND ----------
-
-# MAGIC %fs ls /dbdemos/manufacturing/pcb/labels
+display(dbutils.fs.ls(f"{volume_folder}/images/Normal/"))
+display(dbutils.fs.ls(f"{volume_folder}/labels/"))
+display(dbutils.fs.head(f"{volume_folder}/labels/image_anno.csv"))
 
 # COMMAND ----------
 
@@ -57,8 +63,8 @@ def display_image(path, dpi=300):
     plt.imshow(img, interpolation="nearest", aspect="auto")
 
 
-display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Normal/0000.JPG")
-display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Anomaly/000.JPG")
+display_image(f"{volume_folder}/images/Normal/0000.JPG")
+display_image(f"{volume_folder}/images/Anomaly/000.JPG")
 
 # COMMAND ----------
 
@@ -88,11 +94,11 @@ display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Anomaly/000.JPG")
                  .option("cloudFiles.format", "binaryFile")
                  .option("pathGlobFilter", "*.JPG")
                  .option("recursiveFileLookup", "true")
-                 .option("cloudFiles.schemaLocation", "/dbdemos/manufacturing/pcb/stream/pcb_schema")
-                 .load(f"/dbdemos/manufacturing/pcb/Images/")
+                 .option("cloudFiles.schemaLocation", f"{volume_folder}/stream/pcb_schema")
+                 .load(f"{volume_folder}/images/")
     .withColumn("filename", F.substring_index(col("path"), "/", -1))
     .writeStream.trigger(availableNow=True)
-                .option("checkpointLocation", f"/dbdemos/manufacturing/pcb/stream/pcb_checkpoint")
+                .option("checkpointLocation", f"{volume_folder}/stream/pcb_checkpoint")
                 .toTable("pcb_images").awaitTermination())
 
 spark.sql("ALTER TABLE pcb_images OWNER TO `account users`")
@@ -109,13 +115,13 @@ display(spark.table("pcb_images"))
 (spark.readStream.format("cloudFiles")
                  .option("cloudFiles.format", "csv")
                  .option("header", True)
-                 .option("cloudFiles.schemaLocation", "/dbdemos/manufacturing/pcb/stream/labels_schema")
-                 .load(f"/dbdemos/manufacturing/pcb/labels/")
+                 .option("cloudFiles.schemaLocation", f"{volume_folder}/stream/labels_schema")
+                 .load(f"{volume_folder}/labels/")
       .withColumn("filename", F.substring_index(col("image"), "/", -1))
       .select("filename", "label")
       .withColumnRenamed("label", "labelDetail")
       .writeStream.trigger(availableNow=True)
-                  .option("checkpointLocation", "/dbdemos/manufacturing/pcb/stream/labels_checkpoint")
+                  .option("checkpointLocation", f"{volume_folder}/stream/labels_checkpoint")
                   .toTable("pcb_labels").awaitTermination())
 
 spark.sql("ALTER TABLE pcb_labels OWNER TO `account users`")

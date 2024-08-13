@@ -206,7 +206,7 @@ display(predictions)
 
 # DBTITLE 1,Save or RT model taking base64 in the registry
 from mlflow.models.signature import infer_signature
-DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcbTEMP")
 
 with mlflow.start_run(run_name="hugging_face_rt") as run:
   signature = infer_signature(df_input, predictions)
@@ -235,18 +235,49 @@ model_registered = mlflow.register_model(
 
 # COMMAND ----------
 
-#Simple wrapper on top of the REST API. See the _resource/00-init companion notebook for more details or the Databricks endpoint API documentation
-serving_client = EndpointApiClient()
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-# Start the endpoint using the REST API (you can do it using the UI directly)
-# The first run might take some time as it's building the image. Further deployment are very fast even when scaled to zero.
-serving_client.create_endpoint_if_not_exists(
-  "dbdemos_pcb_classification_endpoint", 
-  model_name=MODEL_NAME, 
-  model_version=model_registered.version, 
-  workload_size="Small", 
-  scale_to_zero_enabled=True, 
-  wait_start = True)
+serving_endpoint_name = "dbdemos_pcb_classification_endpoint_TEST"
+
+# Specify the model serving endpoint configuration
+endpoint_config = EndpointCoreConfigInput(
+    name=serving_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=MODEL_NAME,
+            entity_version=model_registered.version,
+            workload_size="Small",
+            workload_type="CPU",
+            scale_to_zero_enabled=True
+        )
+    ],
+    auto_capture_config = AutoCaptureConfigInput(
+      catalog_name=catalog, 
+      schema_name=db, 
+      enabled=True)
+)
+
+#Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+force_update = False 
+
+# Check existing endpoints to see if this one already exists
+w = WorkspaceClient()
+existing_endpoint = next(
+    (e for e in w.serving_endpoints.list() if e.name == serving_endpoint_name), None
+)
+if existing_endpoint == None:
+    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    w.serving_endpoints.create_and_wait(
+      name=serving_endpoint_name, 
+      config=endpoint_config, 
+      timeout="0:60:00")
+else:
+  print(f"endpoint {serving_endpoint_name} already exist...")
+  if force_update:
+    w.serving_endpoints.update_config_and_wait(
+      served_entities=endpoint_config.served_entities, 
+      name=serving_endpoint_name)
 
 # COMMAND ----------
 
@@ -261,16 +292,19 @@ serving_client.create_endpoint_if_not_exists(
 # COMMAND ----------
 
 import timeit
+import mlflow
+from mlflow import deployments
 
-endpoint_url = f"{serving_client.base_url}/realtime-inference/dbdemos_pcb_classification_endpoint/invocations"
-print(f"Sending requests to {endpoint_url}")
+client = mlflow.deployments.get_deploy_client("databricks")
+
 for i in range(3):
-    rest_input = df_input[2*i:2*i+2]
+    input_slice = df_input[2*i:2*i+2]
     starting_time = timeit.default_timer()
-    inferences = requests.post(
-        endpoint_url, 
-        json={"dataframe_records": rest_input.to_dict(orient='records')}, 
-        headers=serving_client.headers).json()
+    inferences = client.predict(
+        endpoint=serving_endpoint_name, 
+        inputs={
+            "dataframe_records": input_slice.to_dict(orient='records')
+        })
     print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
     print("  "+str(inferences))
 

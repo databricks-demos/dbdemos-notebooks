@@ -328,7 +328,12 @@ def train_model(dm, num_gpus=1, single_node=True):
 
 # COMMAND ----------
 
-delta_dataloader = DeltaDataModule("/dbfs/tmp/dbdemos/pcb_torch_delta/train", "/dbfs/tmp/dbdemos/pcb_torch_delta/test")
+delta_dataloader = DeltaDataModule(
+  "/dbfs/tmp/dbdemos/pcb_torch_delta/train", 
+  "/dbfs/tmp/dbdemos/pcb_torch_delta/test")
+
+# COMMAND ----------
+
 run = train_model(delta_dataloader, 1, True)
 
 # COMMAND ----------

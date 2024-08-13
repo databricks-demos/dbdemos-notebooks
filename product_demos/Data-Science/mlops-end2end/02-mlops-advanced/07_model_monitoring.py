@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Monitor Model using Lakehouse Monitoring
-# MAGIC This feature([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) is in **Public Preview**.
+# MAGIC This feature([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) is **Generally Available**.
 # MAGIC
 # MAGIC Given the inference tables we can monitor stats and drifts on table containing:
 # MAGIC * batch scoring inferences
@@ -19,13 +19,13 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Create monitor
-# MAGIC One-time setup
+# MAGIC **One-time setup**
 
 # COMMAND ----------
 
@@ -43,7 +43,7 @@ expected_loss_metric = [
     WHEN {{prediction_col}} != {{label_col}} AND {{label_col}} = 'Yes' THEN -monthly_charges
     ELSE 0 END
     )""",
-    output_data_type= StructField("output", T.DoubleType()).json()
+    output_data_type= StructField("output", DoubleType()).json()
   )
 ]
 
@@ -65,13 +65,12 @@ info = w.quality_monitors.create(
         timestamp_col=timestamp_col,
         granularities=["1 day"],
         model_id_col="Model_Version",
-        label_col="label_col", # optional
+        label_col=label_col, # optional
   ),
   assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{dbName}.{inference_table_name}",
   output_schema_name=f"{catalog}.{dbName}",
-  baseline_table_name=baseline_table_name,
+  baseline_table_name=f"{catalog}.{dbName}.{inference_table_name}_baseline",
   slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
-  output_schema_name=f"{catalog}.{dbName}",
   custom_metrics=expected_loss_metric
 )
 
@@ -86,7 +85,7 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 
 # Wait for monitor to be created
-while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING::
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
   info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
   time.sleep(10)
 
@@ -110,7 +109,69 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 
 # COMMAND ----------
 
-w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+from pprint import pprint
+
+
+info = w.quality_monitors.get(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+pprint(info)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### [OPTIONAL] Join ground-truth label data to inference table
+# MAGIC Update late labels into inference table
+# MAGIC
+# MAGIC **PS: This is normally scheduled as its own batch or streaming job but showcased here for demo purposes**
+
+# COMMAND ----------
+
+ID_COL = "customer_id"
+LABEL_COL = "churn"
+TABLE_NAME = f"{catalog}.{dbName}.{labels_table_name}" #Table containing ground-truth labels
+TIMESTAMP_COL = "scoring_timestamp"
+cutoff_date = '2024-07-25'
+
+# Option 1: Create temporary view using only new/late labels
+late_labels_df = spark.sql(f"""
+                           SELECT {ID_COL}, {LABEL_COL} FROM {TABLE_NAME}
+                           WHERE {TIMESTAMP_COL} > '{cutoff_date}' AND {LABEL_COL} IS NOT NULL
+                           """)
+                           # OR READ FROM WHEREVER LABELS SOURCES ARE
+late_labels_view_name = "customer_churn_late_labels"
+late_labels_df.createOrReplaceTempView(late_labels_view_name)
+
+# Option 2: Use full labels table (if applicable)
+# late_labels_view_name = TABLE_NAME
+
+# Step 2: Merge late_labels VIEW or full labels table into inference table
+merge_info = spark.sql(
+  f"""
+  MERGE INTO {catalog}.{dbName}.{inference_table_name} AS i
+  USING {late_labels_view_name} AS l
+  ON i.{ID_COL} == l.{ID_COL}
+  WHEN MATCHED THEN UPDATE SET i.{LABEL_COL} == l.{LABEL_COL}
+  """
+)
+display(merge_info)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Trigger a refresh
+# MAGIC Assuming monitor was created, refresh/update monitoring metrics (manual trigger)
+
+# COMMAND ----------
+
+# DBTITLE 1,Trigger a refresh [OPTIONAL]
+run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}")
+
+# COMMAND ----------
+
+while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{dbName}.{inference_table_name}", refresh_id=run_info.refresh_id)
+  time.sleep(60)
+
+assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 

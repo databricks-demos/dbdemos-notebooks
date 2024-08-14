@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init $reset_all_data=true
+# MAGIC %run ./_resources/00-init $reset_all_data=false
 
 # COMMAND ----------
 
@@ -91,6 +91,7 @@ display_image(f"{volume_folder}/images/Anomaly/000.JPG")
                  .option("pathGlobFilter", "*.JPG")
                  .option("recursiveFileLookup", "true")
                  .option("cloudFiles.schemaLocation", f"{volume_folder}/stream/pcb_schema")
+                 .option("cloudFiles.maxFilesPerTrigger", 200)
                  .load(f"{volume_folder}/images/")
     .withColumn("filename", F.substring_index(col("path"), "/", -1))
     .writeStream.trigger(availableNow=True)
@@ -120,7 +121,7 @@ display(spark.table("pcb_images"))
                   .option("checkpointLocation", f"{volume_folder}/stream/labels_checkpoint")
                   .toTable("pcb_labels").awaitTermination())
 
-spark.sql("ALTER TABLE pcb_labels OWNER TO `account users`")
+spark.sql("ALTER TABLE pcb_labels SET OWNER TO `account users`")
 display(spark.table("pcb_labels"))
 
 # COMMAND ----------
@@ -148,7 +149,7 @@ display(spark.table("pcb_labels"))
 # MAGIC     INNER JOIN pcb_labels USING (filename)
 # MAGIC   );
 # MAGIC
-# MAGIC ALTER TABLE training_dataset OWNER TO `account users`;
+# MAGIC ALTER TABLE training_dataset SET OWNER TO `account users`;
 # MAGIC
 # MAGIC SELECT * FROM training_dataset LIMIT 10;
 

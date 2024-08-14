@@ -82,7 +82,7 @@
     },
     {
       "path": "05-torch-lightning-training-and-inference", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Train & deploy a Pytorch Lightning", 
@@ -91,7 +91,7 @@
   ],
   "cluster": {
     "num_workers": 0,
-    "spark_version": "15.4.x-gpu-ml-scala2.12",
+    "spark_version": "14.3.x-gpu-ml-scala2.12",
     "spark_conf": {
         "spark.databricks.cluster.profile": "singleNode",
         "spark.master": "local[*, 4]"

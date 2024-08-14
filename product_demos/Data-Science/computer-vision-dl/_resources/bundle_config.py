@@ -96,8 +96,16 @@
         "spark.databricks.cluster.profile": "singleNode",
         "spark.master": "local[*, 4]"
     },
-    "node_type_id": {"AWS": "Standard_NC4as_T4_v3", "AZURE": "Standard_NC4as_T4_v3", "GCP": "a2-highgpu-1g"},
-    "driver_node_type_id": {"AWS": "Standard_NC4as_T4_v3", "AZURE": "Standard_NC4as_T4_v3", "GCP": "a2-highgpu-1g"},
+    "node_type_id": {
+        "AWS": "g4dn.2xlarge", 
+        "AZURE": "Standard_NC4as_T4_v3", 
+        "GCP": "a2-highgpu-1g"
+    },
+    "driver_node_type_id": {
+        "AWS": "g4dn.2xlarge", 
+        "AZURE": "Standard_NC4as_T4_v3", 
+        "GCP": "a2-highgpu-1g"
+    },
     "custom_tags": {
         "ResourceClass": "SingleNode"
     },

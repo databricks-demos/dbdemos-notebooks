@@ -10,6 +10,25 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Library updates
+# MAGIC SDK 0.1.6 has an issue with notebook-native authentication.  See https://github.com/databricks/databricks-sdk-py/issues/221
+# MAGIC Update to the latest version of databricks-sdk
+
+# COMMAND ----------
+
+# DBTITLE 1,SDK 0.1.6 (DBR 13.3 and 14.3) update
+# MAGIC %pip install -U databricks-sdk
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Demo initialization
+
+# COMMAND ----------
+
+# DBTITLE 1,Reset all data widget
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
@@ -25,13 +44,13 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
-# DBTITLE 1,Setup the demo context
+# DBTITLE 1,Setup the demo catalog, schema, and volume context
 DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
 volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
-# DBTITLE 1,Modules used in the notebooks
+# DBTITLE 1,Import modules that will be used in the notebooks
 import os
 import torch
 import mlflow
@@ -40,6 +59,11 @@ import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql.functions import to_date, col, regexp_extract, rand, to_timestamp, initcap, sha1
 from pyspark.sql.functions import pandas_udf, PandasUDFType, input_file_name, col
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Data initialization (optional)
 
 # COMMAND ----------
 
@@ -59,7 +83,7 @@ else:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Extra: lightning dataloader from hugging face dataset example
+# MAGIC ## Example code: lightning dataloader from hugging face dataset example
 # MAGIC
 # MAGIC If your dataset is small, you could also load it from your spark dataframe with the huggingface dataset library:
 

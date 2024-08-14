@@ -168,7 +168,8 @@ class RealtimeCVModelWrapper(mlflow.pyfunc.PythonModel):
 
 import os
 
-#Make sure we use the CPU as we will use a serverless CPU-based endpoint later
+# Make sure we use the CPU as we will use a serverless CPU-based endpoint later
+# See https://github.com/mlflow/mlflow/issues/12871
 os.environ["MLFLOW_HUGGINGFACE_USE_DEVICE_MAP"] = "false"
 
 # COMMAND ----------
@@ -259,7 +260,7 @@ endpoint_config = EndpointCoreConfigInput(
 )
 
 #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
-force_update = False 
+force_update = True 
 
 # Check existing endpoints to see if this one already exists
 w = WorkspaceClient()
@@ -268,13 +269,15 @@ existing_endpoint = next(
 )
 if existing_endpoint == None:
     print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    from datetime import timedelta
     w.serving_endpoints.create_and_wait(
       name=serving_endpoint_name, 
       config=endpoint_config, 
-      timeout="0:60:00")
+      timeout=timedelta(minutes=60))
 else:
-  print(f"endpoint {serving_endpoint_name} already exist...")
+  print(f"Endpoint {serving_endpoint_name} already exists...")
   if force_update:
+    print(f"Updating the version of {endpoint_config.served_entities[0].entity_name} to version {endpoint_config.served_entities[0].entity_version} on endpoint {serving_endpoint_name}...")
     w.serving_endpoints.update_config_and_wait(
       served_entities=endpoint_config.served_entities, 
       name=serving_endpoint_name)

@@ -91,7 +91,7 @@
   ],
   "cluster": {
     "num_workers": 0,
-    "spark_version": "14.3.x-gpu-ml-scala2.12",
+    "spark_version": "15.4.x-gpu-ml-scala2.12",
     "spark_conf": {
         "spark.databricks.cluster.profile": "singleNode",
         "spark.master": "local[*, 4]"

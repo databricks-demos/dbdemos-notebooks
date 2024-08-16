@@ -84,33 +84,58 @@ def delete_feature_store_table(catalog, db, feature_table_name):
 
 # COMMAND ----------
 
-training_table_name = "mlops_churn_training"
-inference_table_name = "mlops_churn_advanced_inference"
+# This setup is used in the quickstart demo only
+
+quickstart_training_table_name = "mlops_churn_training"
+quickstart_unlabelled_table_name = "mlops_churn_inference"
 
 if setup_inference_data:
   # Check that the training table exists first, as we'll be creating a copy of it
-  if spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}"):
+  if spark.catalog.tableExists(f"{catalog}.{db}.{quickstart_training_table_name}"):
     # This should only be called from the quickstart challenger validation or batch inference notebooks
-    if not spark.catalog.tableExists(f"{catalog}.{db}.{inference_table_name}"):
-      print("Creating table for inference...")
+    if not spark.catalog.tableExists(f"{catalog}.{db}.{quickstart_unlabelled_table_name}"):
+      print("Creating unlabelled data table for performing inference...")
       # Drop the label column for inference
-      spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(inference_table_name)
+      spark.read.table(quickstart_training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(quickstart_unlabelled_table_name)
   else:
     print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 
-label_table_name = "churn_label_table"
-inference_table_name = "mlops_churn_advanced_cust_ids"
+## This block should never be called in the advanced demo, and may have ended up here by mistake
+## Note that {training_table_name} is never created in the advanced demo so the rest of this code should not run
+## Commenting it out first to see if the whole demo set up runs properly
+## TODO: Remove this cell if testing is good
+
+# training_table_name = "mlops_churn_training"
+# inference_table_name = "mlops_churn_advanced_inference"
+
+# if setup_inference_data:
+#   # Check that the training table exists first, as we'll be creating a copy of it
+#   if spark.catalog.tableExists(f"{catalog}.{db}.{training_table_name}"):
+#     # This should only be called from the quickstart challenger validation or batch inference notebooks
+#     if not spark.catalog.tableExists(f"{catalog}.{db}.{inference_table_name}"):
+#       print("Creating table for inference...")
+#       # Drop the label column for inference
+#       spark.read.table(training_table_name).drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(inference_table_name)
+#   else:
+#     print("Training table doesn't exist, please run the notebook '01_feature_engineering'")
+
+# COMMAND ----------
+
+# This setup is used in the advanced demo only
+
+advanced_label_table_name = "churn_label_table"
+advanced_inference_table_name = "mlops_churn_advanced_cust_ids"
 
 if setup_adv_inference_data:
   # Check that the label table exists first, as we'll be creating a copy of it
-  if spark.catalog.tableExists(f"{catalog}.{db}.{label_table_name}"):
+  if spark.catalog.tableExists(f"{catalog}.{db}.{advanced_label_table_name}"):
     # This should only be called from the advanced batch inference notebook
-    if not spark.catalog.tableExists(f"{catalog}.{db}.{inference_table_name}"):
+    if not spark.catalog.tableExists(f"{catalog}.{db}.{advanced_inference_table_name}"):
       print("Creating table with customer records for inference...")
       # Drop the label column for inference
-      spark.read.table(label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(inference_table_name)
+      spark.read.table(advanced_label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(advanced_inference_table_name)
   else:
     print("Label table doesn't exist, please run the notebook '01_feature_engineering'")
 

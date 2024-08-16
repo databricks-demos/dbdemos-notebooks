@@ -200,7 +200,7 @@ except Exception as e:
 
 # COMMAND ----------
 
-endpoint_name = "dbdemos_mlops_churn"
+endpoint_name = "dbdemos_mlops_advanced_churn"
 
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
@@ -277,7 +277,9 @@ endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 from databricks.sdk.service.serving import EndpointTag
 
 try:
-  w.serving_endpoints.create_and_wait(
+  #w.serving_endpoints.create_and_wait(
+  # Create and do not wait. Check readiness of endpoint in next cell.
+  w.serving_endpoints.create(
     name=endpoint_name,
     config=endpoint_config,
     tags=[EndpointTag.from_dict({"key": "db_demos", "value": "mlops_advanced_churn"})]
@@ -286,8 +288,12 @@ try:
   print(f"Creating endpoint {endpoint_name} with models {model_name} version {model_version}")
 
 except Exception as e:
+  print(e)
+  # TODO: When inference table already exists, "already exists" phrase is also present in exception message. Make sure that endpoint already exists case is properly handled. Otherwise, the following error message can cause a lot of confusion when debugging.
+
   if "already exists" in e.args[0]:
     print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version}")
+    print("--- TODO: Code to be implemented ---")
 
     # TO-DO:
     # w.serving_endpoints.update_config_and_wait(
@@ -302,10 +308,15 @@ except Exception as e:
 
 # MAGIC %md
 # MAGIC #### Wait/Verify that endpoint is ready
+# MAGIC
+# MAGIC Leave the following cell to run. It may take an hour or so for the endpoint to be ready.
 
 # COMMAND ----------
 
-endpoint = w.serving_endpoints.wait_get_serving_endpoint_not_updating(endpoint_name)
+from datetime import timedelta
+
+# Wait for endpoint to be ready or finish updating
+endpoint = w.serving_endpoints.wait_get_serving_endpoint_not_updating(endpoint_name, timeout=timedelta(minutes=120))
 
 assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.ready.value == "READY" , "Endpoint not ready or failed"
 
@@ -345,9 +356,15 @@ else:
 
 # COMMAND ----------
 
+# Wait 20 sec for endpoint to be available to avoid errors in the next command
+import time
+time.sleep(20)
+
+# COMMAND ----------
+
 # DBTITLE 1,Query endpoint
 print("Churn inference:")
-response = w.serving_endpoints.query(name="dbdemos_mlops_churn", dataframe_records=dataframe_records)
+response = w.serving_endpoints.query(name=f"{endpoint_name}", dataframe_records=dataframe_records)
 print(response.predictions)
 
 # COMMAND ----------

@@ -36,7 +36,7 @@
 
 # DBTITLE 1,Review our training dataset
 #Setup the training experiment
-DBDemos.init_experiment_for_batch("computer-vision-dl", "pcbTEMP")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
 
 df = spark.read.table("training_dataset_augmented")
 display(df.limit(10))

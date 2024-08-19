@@ -207,7 +207,7 @@ display(predictions)
 
 # DBTITLE 1,Save or RT model taking base64 in the registry
 from mlflow.models.signature import infer_signature
-DBDemos.init_experiment_for_batch("computer-vision-dl", "pcbTEMP")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
 
 with mlflow.start_run(run_name="hugging_face_rt") as run:
   signature = infer_signature(df_input, predictions)
@@ -239,7 +239,7 @@ model_registered = mlflow.register_model(
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-serving_endpoint_name = "dbdemos_pcb_classification_endpoint_TEST"
+serving_endpoint_name = "dbdemos_pcb_classification_endpoint"
 
 # Specify the model serving endpoint configuration
 endpoint_config = EndpointCoreConfigInput(

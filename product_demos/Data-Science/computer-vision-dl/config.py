@@ -13,8 +13,8 @@
 
 # COMMAND ----------
 
-catalog = "dennis_schultz" # "manufacturing_pcb"
-dbName = db = "dbdemos_pcb" # "dbdemos"
+catalog = "main"
+dbName = db = "dbdemos_computer_vision_dl"
 volume_name = "pcb_training_data"
 
 # COMMAND ----------

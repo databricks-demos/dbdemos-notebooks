@@ -260,7 +260,7 @@ endpoint_config = EndpointCoreConfigInput(
 )
 
 #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
-force_update = True 
+force_update = False 
 
 # Check existing endpoints to see if this one already exists
 w = WorkspaceClient()

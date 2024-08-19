@@ -1,10 +1,24 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC
+# MAGIC # Lakehouse Monitoring Demo
+# MAGIC
+# MAGIC ## Inference Monitor 
+# MAGIC In a machine learning project, you are likely curious about the quality of predictions over time and may like to compare them against your ground truth predictions. For use cases like this, you can create an inference monitor. 
+
+# COMMAND ----------
+
 # MAGIC %pip install "databricks-sdk>=0.28.0"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/01-DataGeneration
+# If you haven't run 01-Timeseries-Monitor notebook before, run the following cell
+# %run ./_resources/01-DataGeneration
+
+# COMMAND ----------
+
+# MAGIC %run ./config
 
 # COMMAND ----------
 
@@ -113,6 +127,36 @@ try:
 
 except Exception as lhm_exception:
   print(lhm_exception)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC This next step waits for the monitor to be created and then waits for the initial calculation of metrics to complete.
+# MAGIC
+# MAGIC Note: It can take 10+ minutes to create and refresh the monitor
+
+# COMMAND ----------
+
+import time
+from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
+
+# Wait for monitor to be created
+info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
+  info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+  time.sleep(10)
+
+assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
+
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{TABLE_NAME}").refreshes
+assert(len(refreshes) > 0)
+
+run_info = refreshes[0]
+while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  run_info = w.quality_monitors.get_refresh(table_name=f"{TABLE_NAME}", refresh_id=run_info.refresh_id)
+  time.sleep(30)
+
+assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
@@ -262,11 +306,6 @@ except Exception as lhm_exception:
 
 # COMMAND ----------
 
-import time
-from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
-
-# COMMAND ----------
-
 w = WorkspaceClient()
 run_info = w.quality_monitors.run_refresh(TABLE_NAME_PREDICTIONS)
 
@@ -306,4 +345,5 @@ display(spark.sql(f"SELECT window, window_cmp, r2_score_delta from {drift_table}
 
 # COMMAND ----------
 
-#w.quality_monitors.delete(TABLE_NAME_PREDICTIONS)
+# Uncomment the following line of code to clean up the monitor (if you wish to run the quickstart on this table again).
+# w.quality_monitors.delete(TABLE_NAME_PREDICTIONS)

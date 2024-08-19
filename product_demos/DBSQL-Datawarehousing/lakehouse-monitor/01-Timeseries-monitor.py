@@ -2,6 +2,8 @@
 # MAGIC %md
 # MAGIC # Lakehouse Monitoring Demo
 # MAGIC
+# MAGIC ## Time-series Monitor
+# MAGIC
 # MAGIC ### Use case
 # MAGIC Let's explore a retail use case where one of the most important layers is the `silver_transaction` table that joins data from upstream bronze tables and impacts downstream gold tables. The data schema used in the demo is as follows: 
 # MAGIC
@@ -85,7 +87,6 @@ display(spark.sql(f"ALTER TABLE {TABLE_NAME} SET TBLPROPERTIES (delta.enableChan
 # COMMAND ----------
 
 w = WorkspaceClient()
-
 
 # COMMAND ----------
 
@@ -219,6 +220,8 @@ display(spark.sql(f"SELECT * FROM {drift_table} where column_name = 'TotalPurcha
 # MAGIC **Drift metrics**, which compare previously computed aggregate or derived metrics from two different time windows, or between the primary table and the baseline table. Drift metrics are stored in the drift metrics table.
 # MAGIC
 # MAGIC Using derived and drift metrics where possible minimizes recomputation over the full primary table. Only aggregate metrics access data from the primary table. Derived and drift metrics can then be computed directly from the aggregate metric values.
+# MAGIC
+# MAGIC ([AWS](https://docs.databricks.com/en/lakehouse-monitoring/custom-metrics.html) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/custom-metrics))
 
 # COMMAND ----------
 
@@ -339,6 +342,8 @@ variance_metric = MonitorMetric(
 
 # MAGIC %md
 # MAGIC We'll also demonstrate creating the standard deviation by using the variance metric that we just created. Note that stddev is already included in the default metrics, and this is for illustration purposes. This is done by creating a derived metric. Note that derived metrics cannot access template items like `{{input_column}}` in their definitions. This metric uses `variance` which was calculated for the `TotalPurchaseAmount` and `Discount` fields, so we can use them here as input columns.
+# MAGIC
+# MAGIC Notice that we pass in `["TotalPurchaseAmount", "Discount"]` as `input_columns. If you use `:table` as `input_columns`, you need to specify the column names in calculating the metric, i.e. you'd need to create a metric for `TotalPurchaseAmountStd` and the following drift metrics. The steps would need to be repeated for the `Discount` column again. Specifying `input_columns=["TotalPurchaseAmount", "Discount"]` is more efficient.
 
 # COMMAND ----------
 
@@ -464,8 +469,3 @@ display(spark.sql(f"SELECT window, window_cmp, std_price_after_discount_delta, s
 
 # Uncomment the following line of code to clean up the monitor (if you wish to run the quickstart on this table again).
 # w.quality_monitors.delete(table_name=TABLE_NAME)
-
-
-# COMMAND ----------
-
-

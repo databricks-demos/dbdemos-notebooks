@@ -343,7 +343,7 @@ variance_metric = MonitorMetric(
 # MAGIC %md
 # MAGIC We'll also demonstrate creating the standard deviation by using the variance metric that we just created. Note that stddev is already included in the default metrics, and this is for illustration purposes. This is done by creating a derived metric. Note that derived metrics cannot access template items like `{{input_column}}` in their definitions. This metric uses `variance` which was calculated for the `TotalPurchaseAmount` and `Discount` fields, so we can use them here as input columns.
 # MAGIC
-# MAGIC Notice that we pass in `["TotalPurchaseAmount", "Discount"]` as `input_columns. If you use `:table` as `input_columns`, you need to specify the column names in calculating the metric, i.e. you'd need to create a metric for `TotalPurchaseAmountStd` and the following drift metrics. The steps would need to be repeated for the `Discount` column again. Specifying `input_columns=["TotalPurchaseAmount", "Discount"]` is more efficient.
+# MAGIC Notice that we pass in `["TotalPurchaseAmount", "Discount"]` as `input_columns`. If you use `:table` as `input_columns`, you need to specify the column names in calculating the metric, i.e. you'd need to create a metric for `TotalPurchaseAmountStd` and the following drift metrics. The steps would need to be repeated for the `Discount` column again. Specifying `input_columns=["TotalPurchaseAmount", "Discount"]` is more efficient.
 
 # COMMAND ----------
 

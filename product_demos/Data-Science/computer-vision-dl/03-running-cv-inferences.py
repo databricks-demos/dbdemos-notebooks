@@ -239,7 +239,7 @@ model_registered = mlflow.register_model(
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-serving_endpoint_name = "dbdemos_pcb_classification_endpoint"
+serving_endpoint_name = "dbdemos_pcb_classification_endpoint_TEST"
 
 # Specify the model serving endpoint configuration
 endpoint_config = EndpointCoreConfigInput(
@@ -260,7 +260,7 @@ endpoint_config = EndpointCoreConfigInput(
 )
 
 #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
-force_update = False 
+force_update = True 
 
 # Check existing endpoints to see if this one already exists
 w = WorkspaceClient()

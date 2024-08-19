@@ -50,8 +50,6 @@
 # COMMAND ----------
 
 import mlflow
-
-model_name = f"{catalog}.{db}.mlops_advanced_churn"
 print(f"Finding best run from {xp_name} and pushing new model version to {model_name}")
 _ = mlflow.set_experiment(f"{xp_path}/{xp_name}")
 

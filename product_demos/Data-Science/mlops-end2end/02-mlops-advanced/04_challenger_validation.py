@@ -55,8 +55,6 @@
 
 # We are interested in validating the Challenger model
 model_alias = "Challenger"
-model_name = f"{catalog}.{db}.mlops_advanced_churn"
-
 client = MlflowClient()
 model_details = client.get_model_version_by_alias(model_name, model_alias)
 model_version = int(model_details.version)
@@ -110,14 +108,12 @@ fe = FeatureEngineeringClient()
 
 # Load model as a Spark UDF
 model_uri = f"models:/{model_name}@{model_alias}"
-
-labels_table_name = "churn_label_table"
 label_col = "churn"
 
 # Predict on a Spark DataFrame
 try:
   # Read labels and IDs
-  labelsDF = spark.read.table(f"{catalog}.{db}.{labels_table_name}")
+  labelsDF = spark.read.table(f"{catalog}.{db}.{advanced_label_table_name}")
 
   # Batch score
   features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)

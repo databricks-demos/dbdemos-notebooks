@@ -14,12 +14,13 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install "databricks-sdk>=0.28.0"
+# MAGIC %pip install "databricks-sdk>=0.28.0" 
+# MAGIC %pip install dbldatagen -qU
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $gen_synthetic_data=true
 
 # COMMAND ----------
 
@@ -38,10 +39,6 @@ dbutils.widgets.text("model_id", "*", "Model Id")
 # MAGIC 2. label drift (Jensen–Shannon distance) > 0.2
 # MAGIC 3. expected_loss (daily) > 100
 # MAGIC 4. performance(i.e. f1_score) < 0.6
-
-# COMMAND ----------
-
-inference_table_name = "mlops_churn_advanced_inference"
 
 # COMMAND ----------
 

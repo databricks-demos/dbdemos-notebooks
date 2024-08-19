@@ -1,16 +1,20 @@
 # Databricks notebook source
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
+dbutils.widgets.dropdown("gen_synthetic_data", "false", ["true", "false"], "Generate Synthetic data for Drift Detection")
 dbutils.widgets.dropdown("setup_inference_data", "false", ["true", "false"], "Setup inference data for quickstart")
 dbutils.widgets.dropdown("setup_adv_inference_data", "false", ["true", "false"], "Setup inference data for advanced demo")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 setup_adv_inference_data = dbutils.widgets.get("setup_adv_inference_data") == "true"
+generate_synthetic_data = dbutils.widgets.get("gen_synthetic_data") == "true"
 
 # COMMAND ----------
 
 catalog = "aminen_catalog"
 db = "advanced_mlops"
-
+model_name = f"{catalog}.{db}.mlops_churn"
+model_alias = "Champion"
+inference_table_name = "mlops_churn_advanced_inference_table"
 
 
 # COMMAND ----------
@@ -103,7 +107,6 @@ if setup_inference_data:
 # COMMAND ----------
 
 # This setup is used in the advanced demo only
-
 advanced_label_table_name = "churn_label_table"
 advanced_unlabelled_table_name = "mlops_churn_advanced_cust_ids"
 
@@ -117,6 +120,73 @@ if setup_adv_inference_data:
       spark.read.table(advanced_label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(advanced_unlabelled_table_name)
   else:
     print("Label table doesn't exist, please run the notebook '01_feature_engineering'")
+
+# COMMAND ----------
+
+# DBTITLE 1,Generate inference synthetic data
+gen_synthetic_data = False
+def generate_synthetic(inference_table, drift_type="label_drift"):
+  import dbldatagen as dg
+  import pyspark.sql.types
+  from databricks.feature_engineering import FeatureEngineeringClient
+  import pyspark.sql.functions as F
+  from datetime import datetime, timedelta
+  # Column definitions are stubs only - modify to generate correct data  
+  #
+  generation_spec = (
+      dg.DataGenerator(sparkSession=spark, 
+                      name='synthetic_data', 
+                      rows=5000,
+                      random=True,
+                      )
+      .withColumn('customer_id', 'string', template=r'dddd-AAAA')
+      .withColumn('transaction_ts', 'timestamp', begin=(datetime.now() + timedelta(days=-30)), end=(datetime.now() + timedelta(days=-1)), interval="1 hour")
+      .withColumn('gender', 'string', values=['Female', 'Male'], random=True, weights=[0.5, 0.5])
+      .withColumn('senior_citizen', 'string', values=['No', 'Yes'], random=True, weights=[0.85, 0.15])
+      .withColumn('partner', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+      .withColumn('dependents', 'string', values=['No', 'Yes'], random=True, weights=[0.7, 0.3])
+      .withColumn('tenure', 'double', minValue=0.0, maxValue=72.0, step=1.0)
+      .withColumn('phone_service', values=['No', 'Yes'], random=True, weights=[0.9, 0.1])
+      .withColumn('multiple_lines', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+      .withColumn('internet_service', 'string', values=['Fiber optic', 'DSL', 'No'], random=True, weights=[0.5, 0.3, 0.2])
+      .withColumn('online_security', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+      .withColumn('online_backup', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+      .withColumn('device_protection', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+      .withColumn('tech_support', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+      .withColumn('streaming_tv', 'string', values=['No', 'Yes', 'No internet service'], random=True, weights=[0.4, 0.4, 0.2])
+      .withColumn('streaming_movies', 'string', values=['No', 'Yes', 'No internet service'], random=True, weights=[0.4, 0.4, 0.2])
+      .withColumn('contract', 'string', values=['Month-to-month', 'One year','Two year'], random=True, weights=[0.5, 0.25, 0.25])
+      .withColumn('paperless_billing', 'string', values=['No', 'Yes'], random=True, weights=[0.6, 0.4])
+      .withColumn('payment_method', 'string', values=['Credit card (automatic)', 'Mailed check',
+  'Bank transfer (automatic)', 'Electronic check'], weights=[0.2, 0.2, 0.2, 0.4])
+      .withColumn('monthly_charges', 'double', minValue=18.0, maxValue=118.0, step=0.5)
+      .withColumn('total_charges', 'double', minValue=0.0, maxValue=8684.0, step=20)
+      .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
+      .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
+      .withColumn('churn', 'string', values=[ 'Yes'], random=True)
+      )
+
+
+  # Generate Synthetic Data
+  df_synthetic_data = generation_spec.build()
+
+  fe = FeatureEngineeringClient()
+
+  # Model URI
+  model_uri = f"models:/{model_name}@{model_alias}"
+
+  # Batch score
+  preds_df = fe.score_batch(df=df_synthetic_data, model_uri=model_uri, result_type="string")
+  preds_df = preds_df \
+    .withColumn('model_name', F.lit(f"{model_name}")) \
+    .withColumn('model_version', F.lit(2)) \
+    .withColumn('model_alias', F.lit("Champion")) \
+    .withColumn('inference_timestamp', F.lit(datetime.now())) 
+
+  preds_df.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name}")
+
+if generate_synthetic_data:
+  generate_synthetic(inference_table=inference_table_name)
 
 # COMMAND ----------
 

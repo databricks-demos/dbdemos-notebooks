@@ -42,7 +42,6 @@ import databricks.automl_runtime
 primary_key = "customer_id"
 timestamp_col ="transaction_ts"
 label_col = "churn"
-labels_table_name = "churn_label_table"
 feature_table_name = "churn_feature_table"
 
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
@@ -106,7 +105,7 @@ features = [
 
 # DBTITLE 1,Pull labels to use for training/validating/testing
 
-labels_df = spark.read.table(f"{catalog}.{db}.{labels_table_name}")
+labels_df = spark.read.table(f"{catalog}.{db}.{advanced_label_table_name}")
 
 # COMMAND ----------
 

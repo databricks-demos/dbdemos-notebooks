@@ -62,7 +62,6 @@ display(telcoDF)
 primary_key = "customer_id"
 timestamp_col ="transaction_ts"
 label_col = "churn"
-labels_table_name = "churn_label_table"
 feature_table_name = "churn_feature_table"
 
 # COMMAND ----------
@@ -174,7 +173,7 @@ churn_features_n_predsDF.select(primary_key, timestamp_col, label_col) \
                         .drop("random") \
                         .write.format("delta") \
                         .mode("overwrite").option("overwriteSchema", "true") \
-                        .saveAsTable(f"{catalog}.{db}.{labels_table_name}")
+                        .saveAsTable(f"{catalog}.{db}.{advanced_label_table_name}")
 
 churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
@@ -185,9 +184,9 @@ churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
 # COMMAND ----------
 
-spark.sql(f"ALTER TABLE {catalog}.{db}.{labels_table_name} ALTER COLUMN {primary_key} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{db}.{labels_table_name} ALTER COLUMN {timestamp_col} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{db}.{labels_table_name} ADD CONSTRAINT {labels_table_name}_pk PRIMARY KEY({primary_key}, {timestamp_col})")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ALTER COLUMN {primary_key} SET NOT NULL")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ALTER COLUMN {timestamp_col} SET NOT NULL")
+spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ADD CONSTRAINT {advanced_label_table_name }_pk PRIMARY KEY({primary_key}, {timestamp_col})")
 
 # COMMAND ----------
 
@@ -346,38 +345,6 @@ spark.sql(function_def)
 # MAGIC * Join remaining features from the feature table (i.e. `dbdemos.schema.churn_feature_table`)
 # MAGIC
 # MAGIC Refer to the __Quickstart__ version of this demo for an example of AutoML in action.
-
-# COMMAND ----------
-
-from databricks import automl
-
-churn_labels = spark.read.table(f"{catalog}.{db}.{labels_table_name}")
-
-# Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
-#churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
- 
-feature_store_lookups = [
-  {
-     "table_name": f"{catalog}.{db}.{feature_table_name}",
-     "lookup_key": primary_key,
-     "timestamp_lookup_key": timestamp_col,
-  }
-]
-
-spark.conf.set("spark.databricks.automl.serviceEnabled", "true")
-
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = churn_labels,
-    target_col = "churn",
-    split_col = "split", #This required DBRML 15.3+
-    timeout_minutes = 10,
-    exclude_cols ='customer_id',
-    feature_store_lookups=feature_store_lookups
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 

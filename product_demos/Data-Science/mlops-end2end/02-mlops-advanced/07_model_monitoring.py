@@ -23,7 +23,6 @@
 
 ### TODO: fix setup script to correctly define the variables
 offline_inference_table_name = "mlops_churn_advanced_offline_inference"
-inference_table_name = "mlops_churn_advanced_inference"
 baseline_table_name = "mlops_churn_advanced_baseline"
 timestamp_col = "inference_timestamp"
 

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Churn Prediction Model Inference
+# MAGIC # Generate synthetic data
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-6.png" width="1200">
 # MAGIC
@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
+# MAGIC %run ./_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -186,7 +186,9 @@ preds_df.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name
 
 import dbldatagen as dg
 import pyspark.sql.types
-from datetime import timedelta
+from databricks.feature_engineering import FeatureEngineeringClient
+import pyspark.sql.functions as F
+from datetime import datetime
 # Column definitions are stubs only - modify to generate correct data  
 #
 generation_spec = (
@@ -222,16 +224,9 @@ generation_spec = (
     .withColumn('churn', 'string', values=[ 'Yes'], random=True)
     )
 
-# COMMAND ----------
 
+# Generate Synthetic Data
 df_synthetic_data = generation_spec.build()
-display(df_synthetic_data)
-
-# COMMAND ----------
-
-from databricks.feature_engineering import FeatureEngineeringClient
-import pyspark.sql.functions as F
-
 
 fe = FeatureEngineeringClient()
 
@@ -245,7 +240,5 @@ preds_df = preds_df \
   .withColumn('model_version', F.lit(2)) \
   .withColumn('model_alias', F.lit("Champion")) \
   .withColumn('inference_timestamp', F.lit(datetime.now())) 
-
-# COMMAND ----------
 
 preds_df.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name}")

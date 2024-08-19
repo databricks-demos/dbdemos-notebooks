@@ -36,7 +36,6 @@
 feature_table_name = "churn_feature_table"
 primary_key = "customer_id"
 timestamp_col ="transaction_ts"
-model_name = f"{catalog}.{dbName}.mlops_advanced_churn"
 
 # COMMAND ----------
 

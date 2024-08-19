@@ -50,17 +50,12 @@
 
 # COMMAND ----------
 
-model_alias = "Champion"
-model_name = f"{catalog}.{db}.mlops_advanced_churn"
-
-# COMMAND ----------
-
 # DBTITLE 1,In a python notebook
 from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F
 
 # Load customer features to be scored
-inference_df = spark.read.table(f"mlops_churn_advanced_cust_ids")
+inference_df = spark.read.table(advanced_unlabelled_table_name)
 
 fe = FeatureEngineeringClient()
 

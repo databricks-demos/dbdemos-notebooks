@@ -153,7 +153,16 @@ display(spark.sql(f"SELECT * FROM {drift_table}"))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Let's view the drift metricts that are calculated for the `TotalPurchaseAmount` column.
+# MAGIC Let's view the profile metrics that are calculated for the individual TotalPurchaseAmount column. Note that metrics are calculated across the table and for individual columns. We'll see this in more detail when we add custom metrics.
+
+# COMMAND ----------
+
+display(spark.sql(f"SELECT * FROM {profile_table} where column_name = 'TotalPurchaseAmount'"))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC And let's view the drift metrics that are calculated for the `TotalPurchaseAmount` column.
 
 # COMMAND ----------
 
@@ -272,7 +281,6 @@ std_price_after_discount = MonitorMetric(
 # MAGIC The drift metrics table has the suffix `_drift_metrics`. For a list of statistics that are shown in the table, see the documentation ([AWS](https://docs.databricks.com/lakehouse-monitoring/monitor-output.html#drift-metrics-table) | [Azure](https://learn.microsoft.com/azure/databricks/lakehouse-monitoring/monitor-output#drift-metrics-table)). 
 # MAGIC
 # MAGIC - For every column in the primary table, the drift table shows a set of metrics that compare the current values in the table to the values at the time of the previous analysis run and to the baseline table. The column `drift_type` shows `BASELINE` to indicate drift relative to the baseline table, and `CONSECUTIVE` to indicate drift relative to a previous time window. As in the profile table, the column from the primary table is identified in the column `column_name`.
-# MAGIC   - At this point, because this is the first run of this monitor, there is no previous window to compare to. So there are no rows where `drift_type` is `CONSECUTIVE`. 
 # MAGIC - For `TimeSeries` type analysis, the `granularity` column shows the granularity corresponding to that row.
 # MAGIC - The table shows statistics for each value of each slice key in each time window, and for the table as whole. Statistics for the table as a whole are indicated by `slice_key` = `slice_value` = `null`.
 # MAGIC - The `window` column shows the the time window corresponding to that row. The `window_cmp` column shows the comparison window. If the comparison is to the baseline table, `window_cmp` is `null`.  
@@ -330,7 +338,7 @@ variance_metric = MonitorMetric(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We'll also demonstrate creating the standard deviation by using the variance metric that we just created. Note that stddev is already included in the default metrics, and this is for illustration purposes. This is done by creating a derived metric. Not that derived metrics cannot access template items like `{{input_column}}` in their definitions. This metric uses `variance` which was calculated for the `TotalPurchaseAmount` and `Discount` fields, so we can use them here as input columns.
+# MAGIC We'll also demonstrate creating the standard deviation by using the variance metric that we just created. Note that stddev is already included in the default metrics, and this is for illustration purposes. This is done by creating a derived metric. Note that derived metrics cannot access template items like `{{input_column}}` in their definitions. This metric uses `variance` which was calculated for the `TotalPurchaseAmount` and `Discount` fields, so we can use them here as input columns.
 
 # COMMAND ----------
 
@@ -345,7 +353,7 @@ std_metric = MonitorMetric(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC And then let's see how to build two drift metrics that use our derived standard deviation metric and calculate the difference and percentage difference across our `TotalPurchaseAmount` and `Discount` fields.
+# MAGIC Next let's build two drift metrics that use our derived standard deviation metric and calculate the difference and percentage difference across our `TotalPurchaseAmount` and `Discount` fields.
 
 # COMMAND ----------
 
@@ -431,7 +439,7 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 # COMMAND ----------
 
 
-display(spark.sql(f"SELECT variance, stddev, std from {profile_table} where variance is not null"))
+display(spark.sql(f"SELECT window, column_name, variance, stddev, std from {profile_table} where variance is not null"))
 
 # COMMAND ----------
 
@@ -456,4 +464,8 @@ display(spark.sql(f"SELECT window, window_cmp, std_price_after_discount_delta, s
 
 # Uncomment the following line of code to clean up the monitor (if you wish to run the quickstart on this table again).
 # w.quality_monitors.delete(table_name=TABLE_NAME)
+
+
+# COMMAND ----------
+
 

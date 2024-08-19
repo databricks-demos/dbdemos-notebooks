@@ -145,7 +145,7 @@ display(spark.sql(f"SELECT window, mean_squared_error, r2_score from {profile_ta
 
 # COMMAND ----------
 
-display(spark.sql(f"SELECT window, window_cmp, * from {drift_table} where drift_type = 'BASELINE';"))
+display(spark.sql(f"SELECT * from {drift_table} where drift_type = 'BASELINE';"))
 
 # COMMAND ----------
 
@@ -289,12 +289,7 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 
 # COMMAND ----------
 
-display(spark.sql(f"SELECT mean_squared_error, weights_sum, weighted_mse from {profile_table} where weights_sum is not null;"))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC And using the drift table, we can see our change in r2 score.
+display(spark.sql(f"SELECT window, mean_squared_error, weights_sum, weighted_mse from {profile_table} where weights_sum is not null;"))
 
 # COMMAND ----------
 
@@ -302,9 +297,13 @@ display(spark.sql(f"SELECT window, r2_score_delta from {drift_table} where drift
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC And using our drift table, we can see the change in r2 score.
+
+# COMMAND ----------
+
 display(spark.sql(f"SELECT window, window_cmp, r2_score_delta from {drift_table} where drift_type = 'CONSECUTIVE';"))
 
 # COMMAND ----------
 
-# Perform clean-up
 #w.quality_monitors.delete(TABLE_NAME_PREDICTIONS)

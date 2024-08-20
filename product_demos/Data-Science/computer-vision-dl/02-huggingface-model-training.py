@@ -320,27 +320,27 @@ client.set_registered_model_alias(
 # MAGIC Let's check out the model in the Unity Catalog model registry.
 # MAGIC 1.  Open the Catalog Explorer from the left navigation menu
 # MAGIC
-# MAGIC <img src="https://github.com/dennisschultz-db/dbdemos-resources/blob/cv-pcb-2024/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-01.png?raw=true"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-01.png?raw=true"/>
 # MAGIC
 # MAGIC 2.  Use the search box or the Catalog browser to locate the `dbdemos_pcb_classification` model in your catalog and schema.
 # MAGIC
-# MAGIC <img src="https://github.com/dennisschultz-db/dbdemos-resources/blob/cv-pcb-2024/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-02.png?raw=true"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-02.png?raw=true"/>
 # MAGIC
 # MAGIC 3.  Open the version with the alias `@production`.
 # MAGIC
-# MAGIC <img src="https://github.com/dennisschultz-db/dbdemos-resources/blob/cv-pcb-2024/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-03.png?raw=true"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-03.png?raw=true"/>
 # MAGIC
 # MAGIC 4.  Select the Lineage tab.  Note that the `training_dataset_augmented` table is identified as an upstream connection to the model.
 # MAGIC
-# MAGIC <img src="https://github.com/dennisschultz-db/dbdemos-resources/blob/cv-pcb-2024/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-04.png?raw=true"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-04.png?raw=true"/>
 # MAGIC
 # MAGIC 5.  Click `See lineage graph`.  
 # MAGIC
-# MAGIC <img src="https://github.com/dennisschultz-db/dbdemos-resources/blob/cv-pcb-2024/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-05.png?raw=true"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-05.png?raw=true"/>
 # MAGIC
 # MAGIC 6.  Use the expansion icons and column names to explore the lineage of the model all the way back to the raw training data ingested from the Volume.
 # MAGIC
-# MAGIC <img src="https://github.com/dennisschultz-db/dbdemos-resources/blob/cv-pcb-2024/images/product/computer-vision/deeplearning-cv-pcb-model-lineage.png?raw=true"/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage.png?raw=true"/>
 # MAGIC
 # MAGIC Unity Catalog Lineage provides end-to-end visibility into how data flows and is consumed in your organization from raw ingestion all the way to model training.  Lineage data is available through [System Tables](https://docs.databricks.com/en/admin/system-tables/lineage.html) as well as the UI.
 

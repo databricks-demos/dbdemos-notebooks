@@ -239,7 +239,7 @@ model_registered = mlflow.register_model(
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-serving_endpoint_name = "dbdemos_pcb_classification_endpoint_TEST"
+serving_endpoint_name = "dbdemos_pcb_classification_endpoint"
 
 # Specify the model serving endpoint configuration
 endpoint_config = EndpointCoreConfigInput(

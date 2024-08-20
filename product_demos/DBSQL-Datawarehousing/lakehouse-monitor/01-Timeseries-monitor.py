@@ -469,3 +469,14 @@ display(spark.sql(f"SELECT window, window_cmp, std_price_after_discount_delta, s
 
 # Uncomment the following line of code to clean up the monitor (if you wish to run the quickstart on this table again).
 # w.quality_monitors.delete(table_name=TABLE_NAME)
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ## Next step - conclusion
+# MAGIC
+# MAGIC We saw how to leverage Databricks to monitor your existing table and data.
+# MAGIC
+# MAGIC But Databricks Monitors can do more! 
+# MAGIC
+# MAGIC Open the next [02-Inference-monitor]($./02-Inference-monitor) notebook to see how to monitor your Machine Learning models from Inference tables!

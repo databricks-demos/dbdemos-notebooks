@@ -6,8 +6,19 @@ setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 
 # COMMAND ----------
 
-catalog = "main__build"
-schema = dbName = db = "dbdemos_mlops"
+current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
+user_name = current_user.split(sep='@')[0].replace(".", "_")
+
+catalog = "amine_elhelou"
+schema = dbName = db = "mlops_churn"
+timestamp_col = "scoring_timestamp"
+label_col = "churn"
+primary_key = "customer_id"
+labels_table_name="customers_churn"
+feature_table_name="features_churn"
+model_name = "customer_churn"
+churn_experiment_name = "dbdemos_mlops"
+inference_table_name = "batch_inference_churn"
 
 # COMMAND ----------
 
@@ -92,6 +103,6 @@ if setup_inference_data:
 # DBTITLE 1,Get slack webhook
 # Replace this with your Slack webhook
 try:
-  slack_webhook = dbutils.secrets.get(scope="dbdemos", key=f"slack_webhook")
+  slack_webhook = dbutils.secrets.get(scope="fieldeng", key=f"{user_name}_slack_webhook")
 except:
   slack_webhook = "" # https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX

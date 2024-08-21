@@ -35,7 +35,11 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false $catalog="dbdemos"
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/API_Helpers
 
 # COMMAND ----------
 
@@ -88,6 +92,11 @@ run_id = best_model.iloc[0]['run_id']
 client.set_tag(run_id, key='labels_table', value=f"{catalog}.{dbName}.{labels_table_name}") # Get this from lineage info [TODO]
 client.set_tag(run_id, key='feature_table', value=f"{catalog}.{dbName}.{feature_table_name}") # Get this from lineage info [TODO]
 client.set_tag(run_id, key='demographic_vars', value="senior_citizen,gender") # Get Fairness & Bias metrics from drift table [TODO]
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Register/Push new version to registry for testing
 
 # COMMAND ----------
 
@@ -159,7 +168,8 @@ client.set_model_version_tag(
 # COMMAND ----------
 
 # Helper function to get job_id automatically (if job doesn't exist, it will automatically be created [as part of demo])
-validation_job_id = get_churn_staging_job_id()
+# validation_job_id = 
+validation_job_id = "596443196191007"
 
 # COMMAND ----------
 
@@ -214,6 +224,7 @@ run_id = request_transition(
 # MAGIC Next:
 # MAGIC  * Find out how the model is being tested befored labbeled as `Challenger` [using the model validation test notebook]($./04_job_challenger_validation)
 # MAGIC  * Or discover how to [run Batch and Real-time inference from our Challenger model]($./05_batch_inference)
-# MAGIC
-# MAGIC ### TODOs: _(TBC)_
-# MAGIC  * Promote model from `dev` to `staging` catalog ? (according to recommended catalog-based promotion in [UC](https://docs.gcp.databricks.com/en/machine-learning/manage-model-lifecycle/upgrade-workflows.html#im-used-to-model-version-stage-transitions-how-do-i-promote-a-model-across-environments))
+
+# COMMAND ----------
+
+

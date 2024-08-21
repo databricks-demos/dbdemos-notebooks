@@ -12,7 +12,7 @@
   "custom_schema_supported": True,
   "default_schema": "dbdemos_billing_forecast",
   "default_catalog": "main",
-  "custom_message": "System tables need the be enabled first on UC for this demo to work. See <a href=\"https://notebooks.databricks.com/demos/uc-04-system-tables/index.html#\">_enable_system_tables notebook</a> for more details (also installed as part of the demo).<br/><strong>We have a cache issue loading the dashboard - Please run the 2 widget queries individually to see all SKU & all workspace IDs - we're working on it. To find the queries, search \"System Tables - Distinct workspace id\" and \"System Tables - Distinct SKU\"</strong>",
+  "custom_message": "System tables need the be enabled first on UC for this demo to work. See <a href=\"https://notebooks.databricks.com/demos/uc-04-system-tables/index.html#\">_enable_system_tables notebook</a> for more details (also installed as part of the demo).",
   "description": "Track and analysis usage, billing & access with UC System tables.",
   "fullDescription": "Databricks Unity Catalog is the world's first AI-powered governance solution for the lakehouse. It empowers enterprises to seamlessly govern their structured and unstructured data, ML models, notebooks, dashboards, and files on any cloud or platform. <br/>Through Delta Sharing, Databricks Unity Catalog offers direct access to many of the lakehouse activity logs exposed in Delta as System Tables. System Tables are the cornerstone of lakehouse observability and enable at-scale operational intelligence on numerous key business questions. <br/>In this demo, we'll show how Unity Catalog System Tables can be used to: <ul><li>Monitor your consumption and leverage the lakehouse AI capabilities to forecast your future usage, triggering alerts when billing goes above your criterias</li><li>Monitor accesses to your data assets</li><li>Monitor and understand your platform usage</li></ul>",
     "usecase": "Data Governance",
@@ -132,8 +132,10 @@
     "num_workers": 4,
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
-    "spark_version": "13.3.x-cpu-ml-scala2.12"
+    "spark_version": "15.4.x-scala2.12"
   },
   "dashboards": [{"name": "[dbdemos] System Tables - account usage overview",       "id": "account-usage"},
-                 {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"}]
+                 {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"},
+                 {"name": "[dbdemos] System Tables - Databricks Model Serving Endpoint Cost Attribution", "id": "model-serving-cost"}
+                 ]
 }

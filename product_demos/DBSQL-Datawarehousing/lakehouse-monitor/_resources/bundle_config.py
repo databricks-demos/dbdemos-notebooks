@@ -34,6 +34,14 @@
       "description": "Discover Lakehouse Montoring."
     },
     {
+      "path": "02-Inference-monitor", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Monitor your Inference table", 
+      "description": "Leverage Lakehouse Montoring to track your Model performance."
+    },
+    {
       "path": "config", 
       "pre_run": False, 
       "publish_on_website": False, 

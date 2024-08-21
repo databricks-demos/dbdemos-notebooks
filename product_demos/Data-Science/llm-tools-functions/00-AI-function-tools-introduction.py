@@ -431,9 +431,3 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC - generating images and calling ML models endpoints
 # MAGIC
 # MAGIC Stay tuned!
-
-# COMMAND ----------
-
-# MAGIC %environment
-# MAGIC "client": "1"
-# MAGIC "base_environment": ""

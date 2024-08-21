@@ -71,6 +71,9 @@ if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
   df = cleanup_column(df)
   print(f"creating `{bronze_table_name}` raw table")
   spark.createDataFrame(df).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(bronze_table_name)
+  experiment_details = client.get_experiment_by_name(f"{xp_path}/{xp_name}")
+  if experiment_details:
+    client.delete_experiment(f'{experiment_details.experiment_id}')
 
 # COMMAND ----------
 
@@ -179,7 +182,7 @@ def generate_synthetic(inference_table, drift_type="label_drift"):
   preds_df = fe.score_batch(df=df_synthetic_data, model_uri=model_uri, result_type="string")
   preds_df = preds_df \
     .withColumn('model_name', F.lit(f"{model_name}")) \
-    .withColumn('model_version', F.lit(2)) \
+    .withColumn('model_version', F.lit(1)) \
     .withColumn('model_alias', F.lit("Champion")) \
     .withColumn('inference_timestamp', F.lit(datetime.now())) 
 

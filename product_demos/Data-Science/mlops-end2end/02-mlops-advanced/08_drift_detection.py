@@ -146,7 +146,7 @@ display(all_metrics_df)
 from pyspark.sql.functions import col, abs
 
 performance_violation_count = all_metrics_df.where(
-    (col("performance_metric") < 0.5) & (abs(col("expected_loss")) > 40)
+    (col("performance_metric") < 0.5) & (abs(col("expected_loss")) > 30)
 ).count()
 
 drift_violation_count = 0

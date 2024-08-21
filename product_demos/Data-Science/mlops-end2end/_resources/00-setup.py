@@ -10,8 +10,11 @@ generate_synthetic_data = dbutils.widgets.get("gen_synthetic_data") == "true"
 
 # COMMAND ----------
 
-catalog = "aminen_catalog"
-db = "advanced_mlops"
+current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
+reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
+
+catalog = "dbdemos"
+db = f"advanced_mlops_{reformat_current_user}"
 model_name = f"{catalog}.{db}.mlops_churn"
 model_alias = "Champion"
 inference_table_name = "mlops_churn_advanced_inference_table"
@@ -45,7 +48,6 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 mlflow.set_registry_uri("databricks-uc")
 
 # Set Experiment name as default
-current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 xp_path = f"/Users/{current_user}/databricks_automl"
 xp_name = "advanced_mlops_churn_demo_experiment"
 

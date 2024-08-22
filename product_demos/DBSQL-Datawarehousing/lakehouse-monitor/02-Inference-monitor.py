@@ -164,11 +164,11 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 # COMMAND ----------
 
 # Display profile metrics table
-profile_table = f"{TABLE_NAME_PREDICTIONS}_profile_metrics"  
+profile_table = lhm_monitor.profile_metrics_table_name
 display(spark.sql(f"SELECT * FROM {profile_table}"))
 
 # Display the drift metrics table
-drift_table = f"{TABLE_NAME_PREDICTIONS}_drift_metrics"
+drift_table = lhm_monitor.drift_metrics_table_name
 display(spark.sql(f"SELECT * FROM {drift_table}"))
 
 # COMMAND ----------

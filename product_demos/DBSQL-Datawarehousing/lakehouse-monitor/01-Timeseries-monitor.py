@@ -257,13 +257,13 @@ display(spark.sql(f"SELECT * FROM {drift_table} where column_name = 'TotalPurcha
 # MAGIC %md
 # MAGIC ### Aggergate and Derived metrics
 # MAGIC
-# MAGIC These metrics can be calculated either on individual columns or as combination (of user-defined) columns.
+# MAGIC These metrics can be calculated either on individual columns or as a combination (of user-defined) columns.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC #### Combination of mutiple columns
-# MAGIC We'll create a metric to calculate the average of the price after discount. The price after discount is calculated as `**Price** * (1 - Discount)`. This metric will appear as a new column in the profile metrics table. We will use the `Price` and `Discount` fields from the table, so it will need to include `:table` as the input_column. You'll use `:table` whenever you need to use multiple fields in your calculation
+# MAGIC We'll create a metric to calculate the average of the price after discount. The price after discount is calculated as `Price * (1 - Discount)`. This metric will appear as a new column in the profile metrics table. We will use the `Price` and `Discount` fields from the table, so it will need to include `:table` as the input_column. You'll use `:table` whenever you need to use multiple fields in your calculation
 
 # COMMAND ----------
 
@@ -344,11 +344,11 @@ std_metric_derived = MonitorMetric(
 
 # COMMAND ----------
 
-std_pct_delta_drift = MonitorMetric(
+std_delta_pct_drift = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
-    name="std_pct_delta",
-    input_columns=[":table"], #["TotalPurchaseAmount", "Discount"],
-    definition="(({{current_df}}.std - {{base_df}}.std) / {{base_df}}.std) * 100",
+    name="std_delta_pct",
+    input_columns=["TotalPurchaseAmount", "Discount"],
+    definition="100*({{current_df}}.std - {{base_df}}.std)/{{base_df}}.std",
     output_data_type=T.StructField("std_pct_delta", T.DoubleType()).json(),
 )
 
@@ -388,7 +388,7 @@ try:
             log_price_after_discount_delta_drift,
             variance_metric_agg,
             std_metric_derived,
-            std_pct_delta_drift,
+            std_delta_pct_drift,
         ],
         output_schema_name=f"{catalog}.{dbName}",
     )
@@ -448,7 +448,11 @@ display(spark.sql(f"SELECT window, column_name, variance, std FROM {profile_tabl
 # COMMAND ----------
 
 # Let's look at our custom drift metrics
-display(spark.sql(f"SELECT window, window_cmp, std_pct_delta, log_price_after_discount_ratio FROM {drift_table} WHERE column_name = ':table' ORDER BY window.start;"))
+display(spark.sql(f"SELECT window, window_cmp, log_price_after_discount_ratio FROM {drift_table} WHERE column_name = ':table' ORDER BY window.start;"))
+
+# COMMAND ----------
+
+display(spark.sql(f"SELECT window, window_cmp, std_delta_pct FROM {drift_table} WHERE std_delta_pct IS NOT NULL ORDER BY window.start;"))
 
 # COMMAND ----------
 

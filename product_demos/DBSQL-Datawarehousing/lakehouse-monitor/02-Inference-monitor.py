@@ -9,6 +9,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install "databricks-sdk>=0.28.0"
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -42,8 +44,8 @@ TIMESTAMP_COL = "TransactionDate"
 
 # COMMAND ----------
 
-
 import pyspark.sql.functions as F
+
 
 (spark.table(TABLE_NAME)
    .withColumn("Prediction",  F.least(F.greatest(F.col("ProductRating") + F.randn(), F.lit(0.0)), F.lit(5.0)))
@@ -51,11 +53,10 @@ import pyspark.sql.functions as F
    .withColumn("Critical", F.when(F.col("UserRole") == "Customer", F.lit(True)).otherwise(F.lit(False)))
    .write
    .option("overwriteSchema", "true")
+   .option("delta.enableChangeDataFeed", "true")
    .mode("overwrite")
    .saveAsTable(TABLE_NAME_PREDICTIONS)
 )
-  
-display(spark.sql(f"ALTER TABLE {TABLE_NAME_PREDICTIONS} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)"))
 
 # COMMAND ----------
 
@@ -141,19 +142,21 @@ import time
 from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
 
 # Wait for monitor to be created
-info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+info = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
 while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
-  info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+  info = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
   time.sleep(10)
 
 assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{TABLE_NAME}").refreshes
+# COMMAND ----------
+
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{TABLE_NAME_PREDICTIONS}").refreshes
 assert(len(refreshes) > 0)
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{TABLE_NAME}", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{TABLE_NAME_PREDICTIONS}", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
@@ -332,12 +335,12 @@ display(spark.sql(f"SELECT window, mean_squared_error, weights_sum, weighted_mse
 
 # COMMAND ----------
 
-display(spark.sql(f"SELECT window, r2_score_delta from {drift_table} where drift_type = 'BASELINE';"))
+# MAGIC %md
+# MAGIC And using our drift table, we can see the change in r2 score.
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC And using our drift table, we can see the change in r2 score.
+display(spark.sql(f"SELECT window, r2_score_delta from {drift_table} where drift_type = 'BASELINE';"))
 
 # COMMAND ----------
 

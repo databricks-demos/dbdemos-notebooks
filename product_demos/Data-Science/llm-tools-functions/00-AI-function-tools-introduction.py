@@ -31,7 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3
+# MAGIC %pip install -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3 faker
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -41,7 +41,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Creating our tools: Unity Catalog Functions
+# MAGIC ## Creating our tools: Using Unity Catalog Functions
 # MAGIC
 # MAGIC Let's start by defining the functions our LLM will be able to execute. These functions can contain any logic, from simple SQL to advanced python.
 
@@ -68,6 +68,32 @@
 # MAGIC
 # MAGIC -- let's test our function:
 # MAGIC SELECT convert_inch_to_cm(10) as 10_inches_in_cm;
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ### Executing a tool to fetch internal data: getting the latest customer orders
+# MAGIC
+# MAGIC We want our stylist assistant to be able to list all existing customer orders
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE FUNCTION get_customer_orders ()
+# MAGIC RETURNS TABLE(user_id STRING,
+# MAGIC   id STRING,
+# MAGIC   transaction_date STRING,
+# MAGIC   item_count DOUBLE,
+# MAGIC   amount DOUBLE,
+# MAGIC   order_status STRING)
+# MAGIC COMMENT 'Returns a list of customer orders for the given customer ID (expect a UUID)'
+# MAGIC LANGUAGE SQL
+# MAGIC     RETURN
+# MAGIC     SELECT o.* from tools_orders o 
+# MAGIC     inner join tools_customers c on c.id = o.user_id 
+# MAGIC     where email=current_user() ORDER BY transaction_date desc;
+# MAGIC
+# MAGIC SELECT * FROM get_customer_orders();
 
 # COMMAND ----------
 
@@ -267,6 +293,7 @@ def get_prompt(history = [], prompt = None):
     if not prompt:
             prompt = """You are a helpful fashion assistant. Your task is to recommend cothes to the users. You can use the following tools:
     - Use the convert_inch_to_cm to covert inch to cm if the customer ask for it
+    - Use get_customer_orders to get the list of orders and their status, total amount and number of article. 
     - Use find_clothes_matching_description to find existing clothes from our internal catalog and suggest article to the customer
     - Use recommend_outfit if a customer ask you for a style. This function take the weather as parameter. Use the get_weather function first before calling this function to get the current temperature and rain. The current user location is 52.52, 13.41.
 
@@ -294,6 +321,10 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 # COMMAND ----------
 
 agent_executor.invoke({"input": "what's 12in in cm?"})
+
+# COMMAND ----------
+
+agent_executor.invoke({"input": "what's are my latest orders?"})
 
 # COMMAND ----------
 
@@ -424,10 +455,14 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC
 # MAGIC This demo gave you a simple overview and some example to get started. You can take it to the next level within your own AI Systems!
 # MAGIC
+# MAGIC Once your application complete and your chain ready to be deployed, you can easily serve your model as a Model Serving Endpoint, acting as your Compound AI System!
+# MAGIC
 # MAGIC ### Coming soon
 # MAGIC
 # MAGIC We'll soon update this demo to add more example, including:
 # MAGIC - how to properly leverage secrets within AI functions to call external system having Authentication
 # MAGIC - generating images and calling ML models endpoints
+# MAGIC - Use Genie as an agent to query any table!
+# MAGIC - More to come!
 # MAGIC
 # MAGIC Stay tuned!

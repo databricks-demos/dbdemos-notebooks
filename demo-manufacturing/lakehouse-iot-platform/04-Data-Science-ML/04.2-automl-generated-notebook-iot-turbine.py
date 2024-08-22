@@ -270,6 +270,10 @@ y_val = split_val_df[target_col]
 X_test = split_test_df.drop([target_col, split_col], axis=1)
 y_test = split_test_df[target_col]
 
+if len(X_val) == 0: #hack for the demo to support all version - don't do that in production
+    X_val = X_test
+    y_val = y_test
+
 # COMMAND ----------
 
 # MAGIC %md

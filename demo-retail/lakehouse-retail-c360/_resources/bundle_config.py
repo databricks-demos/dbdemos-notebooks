@@ -205,6 +205,7 @@
                     "notebook_path": "{{DEMO_FOLDER}}/_resources/00-prep-data-db-sql",
                     "source": "WORKSPACE"
                 },
+                "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "depends_on": [

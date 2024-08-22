@@ -1,0 +1,1974 @@
+{
+  "datasets": [
+    {
+      "name": "16afdf32",
+      "displayName": "Spend by Endpoints",
+      "query": "WITH pricing AS (\n  select\n    pricing.effective_list.default as price,\n    price_start_time,\n    sku_name,\n    COALESCE(price_end_time, NOW()) as price_end_time\n  from\n    system.billing.list_prices p\n),\nendpoint_data AS (\n  SELECT\n    usage_quantity * price as cost,\n    --endpoint_name field was added in June 2024, previously it was null\n    IF(\n      usage_metadata.endpoint_name IS NULL,\n      'not populated',\n      usage_metadata.endpoint_name\n    ) AS endpoint_name,\n    u.usage_quantity,\n    u.usage_start_time,\n    u.usage_date,\n    u.usage_type,\n    CASE\n      WHEN u.usage_type = 'TOKEN' THEN 'PAY_PER_TOKEN'\n      WHEN product_features ['serving_type'] = 'MODEL' THEN 'CPU_MODEL'\n      ELSE product_features ['serving_type']\n    END AS serving_type,\n    u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags,\n    u.workspace_id,\n    u.usage_metadata,\n    u.billing_origin_product\n  FROM\n    system.billing.usage u\n    INNER JOIN pricing p ON p.sku_name = u.sku_name\n    AND u.usage_start_time BETWEEN p.price_start_time AND p.price_end_time\n    AND if(:workspace_id='<ALL WORKSPACES>', true, workspace_id = :workspace_id)\n  WHERE\n    u.billing_origin_product = 'MODEL_SERVING'\n    AND usage_date BETWEEN :start_date AND :end_date\n)\nSELECT\n  *\nFROM\n  endpoint_data\nWHERE\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  )",
+      "parameters": [
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-08-01T00:00:00.000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-08-16T00:00:00.000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6bc00bf9",
+      "displayName": "Model endpoint last 7 days",
+      "query": "with pricing as \n  (select pricing.effective_list.default as price, price_start_time, sku_name, coalesce(price_end_time, now()) as price_end_time  from system.billing.list_prices p),\nendpoint_ids AS (\n  SELECT\n    GET_JSON_OBJECT(response.result, '$.id') AS id,\n    GET_JSON_OBJECT(response.result, '$.name') AS name,\n    user_identity.email as email\n  FROM\n    system.access.audit\n  WHERE\n    action_name = 'createServingEndpoint'\n)\nSELECT\n    sum(usage_quantity) AS DBU, \n    sum(dollar) as dollar,\n    endpoint_name,\n    first(email) as email,\n    first(workspace_id) as workspace_id\n  FROM\n  (select *, price*usage_quantity as dollar, usage_metadata.endpoint_name as endpoint_name, u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(u.custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags from `system`.billing.usage u\n    inner join pricing p on p.sku_name = u.sku_name and u.usage_start_time between p.price_start_time and p.price_end_time\n    LEFT JOIN endpoint_ids e ON e.id = u.custom_tags.EndpointId\n    WHERE billing_origin_product = 'MODEL_SERVING' \n          and if(:workspace_id='<ALL WORKSPACES>', true, workspace_id = :workspace_id) \n          and u.usage_date > :start_day\n  )\n  WHERE\n  --Apply tag filters.\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  ) \n  GROUP BY endpoint_name\n  order by dollar desc\n",
+      "parameters": [
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "start_day",
+          "keyword": "start_day",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "now-7d/d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "e0b182aa",
+      "displayName": "Top 10 Pay Per Token Endpoints",
+      "query": "WITH pricing AS (\n  SELECT\n    pricing.effective_list.default AS price,\n    price_start_time,\n    sku_name,\n    COALESCE(price_end_time, NOW()) AS price_end_time\n  FROM\n    system.billing.list_prices p\n),\nfiltered_data AS (\n  SELECT\n    --endpoint_name field was added in June 2024, previously it was null\n    usage_metadata.endpoint_name AS endpoint_name,\n    u.usage_quantity,\n    price,\n    u.workspace_id,\n    DATE_FORMAT(usage_date, 'yyyy-MM') AS formatted_date,\n    u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(u.custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags\n  FROM\n    system.billing.usage u\n    INNER JOIN pricing p ON p.sku_name = u.sku_name\n    AND u.usage_start_time BETWEEN p.price_start_time\n    AND p.price_end_time\n  WHERE\n    u.billing_origin_product = 'MODEL_SERVING'\n    AND usage_type = \"TOKEN\"\n    AND usage_date BETWEEN :start_date AND :end_date\n    AND IF(:workspace_id='<ALL WORKSPACES>', TRUE, workspace_id = :workspace_id)\n),\nppt_endpoint_data AS (\n  SELECT\n    endpoint_name,\n    SUM(usage_quantity * price) AS total_dollar,\n    formatted_date,\n    ROW_NUMBER() OVER(\n      PARTITION BY formatted_date\n      ORDER BY\n        SUM(usage_quantity * price) DESC\n    ) AS RN\n  FROM\n    filtered_data\n  --Apply tag filters\n  WHERE\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  )\n  GROUP BY\n    endpoint_name,\n    formatted_date\n)\nSELECT\n  *\nFROM\n  ppt_endpoint_data WHERE RN < 11",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-08-01T00:00:00.000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-08-16T00:00:00.000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "64882be7",
+      "displayName": "Monthly Top 10 Serving Endpoints",
+      "query": "WITH pricing AS (\n  SELECT\n    pricing.effective_list.default AS price,\n    price_start_time,\n    sku_name,\n    COALESCE(price_end_time, NOW()) AS price_end_time\n  FROM\n    system.billing.list_prices p\n),\nfiltered_data AS (\n  SELECT --endpoint_name field was added in June 2024, previously it was null\n    usage_metadata.endpoint_name AS endpoint_name,\n    u.usage_quantity,\n    price,\n    u.workspace_id,\n    DATE_FORMAT(usage_date, 'yyyy-MM') AS formatted_date,\n    u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(u.custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags\n  FROM\n    system.billing.usage u\n    INNER JOIN pricing p \n    ON p.sku_name = u.sku_name\n    AND u.usage_start_time BETWEEN p.price_start_time AND p.price_end_time\n    AND if(:workspace_id='<ALL WORKSPACES>', true, workspace_id = :workspace_id)\n  WHERE\n    u.billing_origin_product = 'MODEL_SERVING'\n    AND usage_metadata.endpoint_name IS NOT NULL\n    AND usage_date BETWEEN :start_date AND :end_date\n),\nendpoint_data AS (\n  SELECT\n    endpoint_name AS endpoint_name,\n    SUM(usage_quantity * price) AS cost,\n    formatted_date,\n    ROW_NUMBER() OVER(\n      PARTITION BY formatted_date\n      ORDER BY\n        SUM(usage_quantity * price) DESC\n    ) AS RN\n  FROM\n    filtered_data\n  --Apply tag filters\n  WHERE\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  )\n  GROUP BY\n    endpoint_name,\n    formatted_date\n)\nSELECT\n  *\nFROM\n  endpoint_data\n  WHERE RN < 11",
+      "parameters": [
+        {
+          "displayName": "start_date",
+          "keyword": "start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-08-01T00:00:00.000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "end_date",
+          "keyword": "end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "2024-08-16T00:00:00.000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "b7f9af13",
+      "displayName": "Endpoint top 10 consumption per day",
+      "query": "with pricing as \n  (select pricing.effective_list.default as price, price_start_time, sku_name, coalesce(price_end_time, now()) as price_end_time  from system.billing.list_prices p),\nranked_usage AS (\n  SELECT\n    sum(usage_quantity) AS DBU, \n    sum(dollar) as dollar,\n    usage_date,\n    endpoint_name,\n    RANK() OVER (PARTITION BY usage_date ORDER BY sum(usage_quantity) DESC) AS rank\n  FROM\n  (select *, price*usage_quantity as dollar, usage_metadata.endpoint_name as endpoint_name, u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(u.custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags from `system`.billing.usage u\n    inner join pricing p on p.sku_name = u.sku_name and u.usage_start_time between p.price_start_time and p.price_end_time\n    WHERE billing_origin_product = 'MODEL_SERVING' and if(:workspace_id='<ALL WORKSPACES>', true, workspace_id = :workspace_id) and u.usage_date between :param_start_date and :param_end_date\n  )\n  WHERE\n    --Apply tag filters.\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  ) \n  GROUP BY usage_date, endpoint_name\n)\nselect * from (\n  SELECT\n    CASE WHEN rank <= 10 THEN endpoint_name ELSE 'OTHER' END AS endpoint_name,\n    usage_date,\n    sum(DBU) AS DBU,\n    sum(dollar) AS dollar\n  FROM ranked_usage\n  GROUP BY usage_date, CASE WHEN rank <= 10 THEN endpoint_name ELSE 'OTHER' END\n  ) \nORDER BY usage_date, DBU DESC",
+      "parameters": [
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "param_start_date",
+          "keyword": "param_start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "now-1M/M"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "param_end_date",
+          "keyword": "param_end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "now/d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fc1ecaa6",
+      "displayName": "Top 10 LLM Fine Tuning Spend",
+      "query": "with pricing as \n  (select pricing.effective_list.default as price, price_start_time, sku_name, coalesce(price_end_time, now()) as price_end_time  from system.billing.list_prices p)\nSELECT\n    sum(usage_quantity) AS DBU, \n    sum(dollar) as dollar,\n    email\n  FROM\n  (select *, price*usage_quantity as dollar, identity_metadata.run_as as email, u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(u.custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags\n    from \n    `system`.billing.usage u INNER JOIN pricing p on p.sku_name = u.sku_name and u.usage_start_time between p.price_start_time and p.price_end_time\n    WHERE billing_origin_product = 'FOUNDATION_MODEL_TRAINING' \n          and if(:workspace_id='<ALL WORKSPACES>', true, workspace_id = :workspace_id) \n          and u.usage_date > :start_day\n  )\n  WHERE\n  --Apply tag filters.\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  )\n  GROUP BY email\n  order by dollar desc",
+      "parameters": [
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "start_day",
+          "keyword": "start_day",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "now-7d/d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a589bd23",
+      "displayName": "LLM Fine Tuning daily",
+      "query": "with pricing as \n  (select pricing.effective_list.default as price, price_start_time, sku_name, coalesce(price_end_time, now()) as price_end_time  from system.billing.list_prices p),\nranked_usage AS (\n  SELECT\n    sum(usage_quantity) AS DBU, \n    sum(dollar) as dollar,\n    usage_date,\n    email,\n    RANK() OVER (PARTITION BY usage_date ORDER BY sum(usage_quantity) DESC) AS rank\n  FROM\n  (select *, price*usage_quantity as dollar, identity_metadata.run_as as email, u.custom_tags,\n    TRANSFORM(\n      MAP_KEYS(u.custom_tags),\n      (k, i) -> CONCAT(k, '=', MAP_VALUES(custom_tags) [i])\n    ) AS key_value_tags from `system`.billing.usage u\n    inner join pricing p on p.sku_name = u.sku_name and u.usage_start_time between p.price_start_time and p.price_end_time\n    WHERE billing_origin_product = 'FOUNDATION_MODEL_TRAINING' and if(:workspace_id='<ALL WORKSPACES>', true, workspace_id = :workspace_id) and u.usage_date between :param_start_date and :param_end_date\n  )\n  WHERE\n    --Apply tag filters.\n  (\n    :tags = \"include all tags\"\n    OR ARRAY_CONTAINS(key_value_tags, :tags)\n    OR MAP_CONTAINS_KEY(custom_tags, :tags)\n  ) \n  GROUP BY usage_date, email\n)\nselect * from (\n  SELECT\n    CASE WHEN rank <= 10 THEN email ELSE 'OTHER' END AS email,\n    usage_date,\n    sum(DBU) AS DBU,\n    sum(dollar) AS dollar\n  FROM ranked_usage\n  GROUP BY usage_date, CASE WHEN rank <= 10 THEN email ELSE 'OTHER' END\n  ) \nORDER BY usage_date, DBU DESC",
+      "parameters": [
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "<ALL WORKSPACES>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "param_start_date",
+          "keyword": "param_start_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "now/M"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "param_end_date",
+          "keyword": "param_end_date",
+          "dataType": "DATE",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATE",
+              "values": [
+                {
+                  "value": "now/d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "include all tags"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "71858402",
+      "displayName": "New Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "a5186b26",
+            "queries": [
+              {
+                "name": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_endpoint_name",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "fields": [
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "endpoint_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_endpoint_name",
+                "query": {
+                  "datasetName": "e0b182aa",
+                  "fields": [
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "endpoint_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_endpoint_name",
+                "query": {
+                  "datasetName": "64882be7",
+                  "fields": [
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "endpoint_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_endpoint_name",
+                "query": {
+                  "datasetName": "b7f9af13",
+                  "fields": [
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "endpoint_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "endpoint_name",
+                    "displayName": "endpoint_name",
+                    "queryName": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_endpoint_name"
+                  },
+                  {
+                    "fieldName": "endpoint_name",
+                    "displayName": "endpoint_name",
+                    "queryName": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_endpoint_name"
+                  },
+                  {
+                    "fieldName": "endpoint_name",
+                    "displayName": "endpoint_name",
+                    "queryName": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_endpoint_name"
+                  },
+                  {
+                    "fieldName": "endpoint_name",
+                    "displayName": "endpoint_name",
+                    "queryName": "dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_endpoint_name"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Endpoint Name(s):",
+                "showDescription": true,
+                "description": "Endpoint name was added to usage table in June 2024. Prior endpoints will show up as \"not populated\"."
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 4,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "a7c238f5",
+            "textbox_spec": "# [dbdemos] - Databricks Model Serving Endpoint Cost Attribution Dashboard\n\nThis dashboard gives you an overview of your cost for Model Serving Endpoint, and allow you to analyze your current spend. It's using Databricks System table to display price list as $.\n\n*This dashboard is provided for demo/educational purpose, as part of dbdemos, please review the [License](https://github.com/databricks-demos/dbdemos/blob/main/LICENSE) and [Notice](https://github.com/databricks-demos/dbdemos/blob/main/NOTICE) for more details. Please open a github issue for any feedback!*"
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c3181f34",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "fields": [
+                    {
+                      "name": "serving_type",
+                      "expression": "`serving_type`"
+                    },
+                    {
+                      "name": "daily(usage_start_time)",
+                      "expression": "DATE_TRUNC(\"DAY\", `usage_start_time`)"
+                    },
+                    {
+                      "name": "sum(cost)",
+                      "expression": "SUM(`cost`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(usage_start_time)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Date of Usage"
+                  },
+                  "displayName": "Date of Usage"
+                },
+                "y": {
+                  "fieldName": "sum(cost)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Total $DBUs"
+                  },
+                  "displayName": "DBUs"
+                },
+                "color": {
+                  "fieldName": "serving_type",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "MODEL",
+                        "color": "#919191"
+                      },
+                      {
+                        "value": "CPU_MODEL",
+                        "color": "#919191"
+                      },
+                      {
+                        "value": "VECTOR_SEARCH",
+                        "color": "#FFAB00"
+                      },
+                      {
+                        "value": "FOUNDATION_MODEL",
+                        "color": "#077A9D"
+                      },
+                      {
+                        "value": "FEATURE",
+                        "color": "#FFAB00"
+                      }
+                    ]
+                  },
+                  "legend": {
+                    "hideTitle": true
+                  },
+                  "displayName": "serving_type"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "Daily Consumption per model serving type",
+                "description": "Databricks Units (DBUs) for the endpoints selected. "
+              },
+              "mark": {
+                "colors": [
+                  "#00A972",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ],
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 25,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "0b53f782",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "fields": [
+                    {
+                      "name": "sum(cost)",
+                      "expression": "SUM(`cost`)"
+                    },
+                    {
+                      "name": "serving_type",
+                      "expression": "`serving_type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(cost)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Total $DBUs"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Total $DBUs"
+                },
+                "y": {
+                  "fieldName": "serving_type",
+                  "axis": {
+                    "title": "Endpoint Type"
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x"
+                    }
+                  },
+                  "displayName": "Endpoint Type"
+                },
+                "color": {
+                  "fieldName": "sum(cost)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of cost"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "Proportion of Model Serving Costs by Endpoint Type"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "01316476",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_tags",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_tags",
+                "query": {
+                  "datasetName": "e0b182aa",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_tags",
+                "query": {
+                  "datasetName": "64882be7",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5c6d88ee1db98103132863c25905_tags",
+                "query": {
+                  "datasetName": "6bc00bf9",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_tags",
+                "query": {
+                  "datasetName": "b7f9af13",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5ed9638012f7a8fd00ac368c8624_tags",
+                "query": {
+                  "datasetName": "fc1ecaa6",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_tags",
+                "query": {
+                  "datasetName": "a589bd23",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5c6d88ee1db98103132863c25905_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5ed9638012f7a8fd00ac368c8624_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_tags"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Tag Key:",
+                "showDescription": true,
+                "description": "You can select a key (example: \"CostCenter\") or a specific key/value pair (example: \"CostCenter=DataScience\")."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ca09842e",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_workspace_id",
+                "query": {
+                  "datasetName": "e0b182aa",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_workspace_id",
+                "query": {
+                  "datasetName": "64882be7",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_workspace_id",
+                "query": {
+                  "datasetName": "b7f9af13",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5c6d88ee1db98103132863c25905_workspace_id",
+                "query": {
+                  "datasetName": "6bc00bf9",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_workspace_id",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5ed9638012f7a8fd00ac368c8624_workspace_id",
+                "query": {
+                  "datasetName": "fc1ecaa6",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_workspace_id",
+                "query": {
+                  "datasetName": "a589bd23",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5c6d88ee1db98103132863c25905_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5ed9638012f7a8fd00ac368c8624_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_workspace_id"
+                  }
+                ]
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "STRING",
+                    "values": [
+                      {
+                        "value": "<ALL WORKSPACES>"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Workspace ID(s):"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "666f144c",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_start_date",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_start_date",
+                "query": {
+                  "datasetName": "e0b182aa",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_start_date",
+                "query": {
+                  "datasetName": "64882be7",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_start_date",
+                "query": {
+                  "datasetName": "b7f9af13",
+                  "parameters": [
+                    {
+                      "name": "param_start_date",
+                      "keyword": "param_start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_start_date",
+                "query": {
+                  "datasetName": "a589bd23",
+                  "parameters": [
+                    {
+                      "name": "param_start_date",
+                      "keyword": "param_start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_start_date"
+                  },
+                  {
+                    "parameterName": "param_start_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_start_date"
+                  },
+                  {
+                    "parameterName": "param_start_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_start_date"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Start date:"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 3,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "165300fe",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_end_date",
+                "query": {
+                  "datasetName": "16afdf32",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_end_date",
+                "query": {
+                  "datasetName": "e0b182aa",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_end_date",
+                "query": {
+                  "datasetName": "64882be7",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_end_date",
+                "query": {
+                  "datasetName": "b7f9af13",
+                  "parameters": [
+                    {
+                      "name": "param_end_date",
+                      "keyword": "param_end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_end_date",
+                "query": {
+                  "datasetName": "a589bd23",
+                  "parameters": [
+                    {
+                      "name": "param_end_date",
+                      "keyword": "param_end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_end_date"
+                  },
+                  {
+                    "parameterName": "param_end_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_end_date"
+                  },
+                  {
+                    "parameterName": "param_end_date",
+                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_end_date"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "End date:"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f416fc56",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6bc00bf9",
+                  "fields": [
+                    {
+                      "name": "dollar",
+                      "expression": "`dollar`"
+                    },
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "email",
+                      "expression": "`email`"
+                    },
+                    {
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "dollar",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "decimal",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "dollar",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "dollar"
+                  },
+                  {
+                    "fieldName": "endpoint_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "endpoint_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "endpoint_name"
+                  },
+                  {
+                    "fieldName": "email",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "email",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "email"
+                  },
+                  {
+                    "fieldName": "workspace_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "workspace_id",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "workspace_id"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "DBU",
+                  "type": "decimal",
+                  "displayAs": "number",
+                  "order": 100000,
+                  "title": "DBU",
+                  "allowSearch": false,
+                  "alignContent": "right",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "Last 7 Days Top Endpoint consumption",
+                "showDescription": true,
+                "description": " Ignores date parameters - emails are null if EP are created in another region (will be improved)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "2f63127f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e0b182aa",
+                  "fields": [
+                    {
+                      "name": "formatted_date",
+                      "expression": "`formatted_date`"
+                    },
+                    {
+                      "name": "sum(total_dollar)",
+                      "expression": "SUM(`total_dollar`)"
+                    },
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_dollar)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Total $DBUs"
+                },
+                "y": {
+                  "fieldName": "endpoint_name",
+                  "axis": {
+                    "title": "",
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "Pay per Token Endpoint Name"
+                },
+                "color": {
+                  "fieldName": "formatted_date",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "hideTitle": true
+                  },
+                  "displayName": "formatted_date"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Most Costly Pay-Per-Token Endpoints"
+              },
+              "mark": {
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 39,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "0d205588",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "64882be7",
+                  "fields": [
+                    {
+                      "name": "formatted_date",
+                      "expression": "`formatted_date`"
+                    },
+                    {
+                      "name": "sum(cost)",
+                      "expression": "SUM(`cost`)"
+                    },
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(cost)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "axis": {
+                    "title": "Total $DBUs"
+                  },
+                  "displayName": "Total $DBUs"
+                },
+                "y": {
+                  "fieldName": "endpoint_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "Model Serving Endpoint Name"
+                },
+                "color": {
+                  "fieldName": "formatted_date",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "position": "right",
+                    "title": "",
+                    "hideTitle": true
+                  },
+                  "displayName": "Month"
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Most Costly Serving Endpoints"
+              },
+              "mark": {
+                "colors": [
+                  "#AB4057",
+                  "#FFAB00",
+                  "#00A972",
+                  "#FF3621",
+                  "#8BCAE7",
+                  "#AB4057",
+                  "#99DDB4",
+                  "#FCA4A1",
+                  "#919191",
+                  "#BF7080"
+                ],
+                "layout": "stack"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 31,
+            "width": 6,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "fbca806f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b7f9af13",
+                  "fields": [
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "daily(usage_date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `usage_date`)"
+                    },
+                    {
+                      "name": "sum(dollar)",
+                      "expression": "SUM(`dollar`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(usage_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "usage_date"
+                },
+                "y": {
+                  "fieldName": "sum(dollar)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Total $DBUs"
+                  },
+                  "displayName": "Total $DBUs"
+                },
+                "color": {
+                  "fieldName": "endpoint_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "hideTitle": true,
+                    "hide": true
+                  },
+                  "displayName": "endpoint_name"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "302218a7",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "fc1ecaa6",
+                  "fields": [
+                    {
+                      "name": "DBU",
+                      "expression": "`DBU`"
+                    },
+                    {
+                      "name": "dollar",
+                      "expression": "`dollar`"
+                    },
+                    {
+                      "name": "email",
+                      "expression": "`email`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "DBU",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "decimal",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "DBU",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "DBU"
+                  },
+                  {
+                    "fieldName": "dollar",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "decimal",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "dollar",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "dollar"
+                  },
+                  {
+                    "fieldName": "email",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "email",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "email"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "LLM Fine tuning - last 7 days spend"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 48,
+            "width": 3,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "b7152919",
+            "textbox_spec": "# Fine Tuning LLM cost analysis"
+          },
+          "position": {
+            "x": 0,
+            "y": 46,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "99fe9a95",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a589bd23",
+                  "fields": [
+                    {
+                      "name": "email",
+                      "expression": "`email`"
+                    },
+                    {
+                      "name": "daily(usage_date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `usage_date`)"
+                    },
+                    {
+                      "name": "sum(dollar)",
+                      "expression": "SUM(`dollar`)"
+                    }
+                  ],
+                  "parameterValues": [
+                    {
+                      "keyword": "tags",
+                      "selection": {
+                        "values": {
+                          "dataType": "STRING",
+                          "values": [
+                            {
+                              "value": "include all tags"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(usage_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "usage_date"
+                },
+                "y": {
+                  "fieldName": "sum(dollar)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of dollar"
+                },
+                "color": {
+                  "fieldName": "email",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "email"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "LLM Fine tuning spend per email"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 48,
+            "width": 3,
+            "height": 7
+          }
+        }
+      ]
+    }
+  ]
+}

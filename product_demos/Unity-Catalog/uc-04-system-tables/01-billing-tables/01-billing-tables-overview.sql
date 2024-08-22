@@ -34,7 +34,16 @@
 -- MAGIC
 -- MAGIC You can access and install built in $DBU Dashboard as an admin, from the Databricks account console.
 -- MAGIC
--- MAGIC As part of this demo, we also installed this dashboard. You can access it here: <a dbdemos-dashboard-id="account-usage" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">forecasting dashboard</a>
+-- MAGIC As part of this demo, we also installed this dashboard. You can access it here: <a dbdemos-dashboard-id="account-usage" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Account Usage Cost tracking dashboard</a>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC # Model Serving Endpoint Tracking Dashboard demo example
+-- MAGIC
+-- MAGIC Dbdemos also installed for you a Model Serving endpoint dashboard. Use it to track your Model Serving cost and analyse which endpoint is running.
+-- MAGIC
+-- MAGIC You can access it here: <a dbdemos-dashboard-id="model-serving-cost" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Model Serving Endpoint Cost tracking dashboard</a>
 
 -- COMMAND ----------
 

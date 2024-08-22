@@ -15,12 +15,7 @@
 
 # COMMAND ----------
 
-# If you haven't run 01-Timeseries-Monitor notebook before, run the following cell
-# %run ./_resources/01-DataGeneration
-
-# COMMAND ----------
-
-# MAGIC %run ./config
+# MAGIC %run ./_resources/01-DataGeneration
 
 # COMMAND ----------
 

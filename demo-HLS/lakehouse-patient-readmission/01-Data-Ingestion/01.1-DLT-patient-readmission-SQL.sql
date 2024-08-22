@@ -606,80 +606,96 @@ inner join live.person p
 CREATE OR REFRESH LIVE TABLE drug_exposure AS 
   SELECT row_number() over(order by person_id) AS drug_exposure_id, 
   *
-  from (
-  select
-    p.person_id,
-    coalesce(srctostdvm.target_concept_id,0) as drug_concept_id,
-    c.start AS drug_exposure_start_date,
-    c.start AS drug_exposure_start_datetime,
-    coalesce(c.stop,c.start) AS drug_exposure_end_date,
-    coalesce(c.stop,c.start) AS drug_exposure_end_datetime,
-    c.stop AS verbatim_end_date,
-    581452 as drug_type_concept_id,
-    null as  stop_reason,
-    0 as refills,
-    0 as quantity,
-    coalesce(datediff(c.stop,c.start),0) as days_supply,
-    null as  sig,
-    0 as route_concept_id,
-    0 as lot_number,
-    0 as provider_id,
-    fv.visit_occurrence_id_new AS visit_occurrence_id,
-    0 as visit_detail_id,
-    c.code AS drug_source_value,
-    coalesce(srctosrcvm.source_concept_id,0) AS drug_source_concept_id,
-    null as  route_source_value,
-    null as  dose_unit_source_value
-  from live.conditions c
-  join live.source_to_standard_vocab_map   srctostdvm
-  on srctostdvm.source_code             = c.code
-  and srctostdvm.target_domain_id        = 'Drug'
-  and srctostdvm.source_vocabulary_id    = 'RxNorm'
-  and srctostdvm.target_standard_concept = 'S'
-  and (srctostdvm.target_invalid_reason IS NULL OR srctostdvm.target_invalid_reason = '')
-  left join live.source_to_source_vocab_map srctosrcvm
-    on srctosrcvm.source_code             = c.code
-  and srctosrcvm.source_vocabulary_id    = 'RxNorm'
-  left join live.final_visit_ids fv
-    on fv.encounter_id = c.encounter
-  join live.person p
-    on p.person_source_value              = c.patient
-  union all
-  select
-    p.person_id, coalesce(srctostdvm.target_concept_id,0) as drug_concept_id, m.start, m.start, coalesce(m.stop,m.start), coalesce(m.stop,m.start), m.stop, 38000177, null, 0, 0, coalesce(datediff(m.stop,m.start),0), null, 0, 0, 0, fv.visit_occurrence_id_new AS visit_occurrence_id, 0, m.code, coalesce(srctosrcvm.source_concept_id,0), null, null 
-  from live.medications m
-    join live.source_to_standard_vocab_map   srctostdvm
-  on srctostdvm.source_code             = m.code
-  and srctostdvm.target_domain_id        = 'Drug'
-  and srctostdvm.source_vocabulary_id    = 'RxNorm'
-  and srctostdvm.target_standard_concept = 'S'
-  and (srctostdvm.target_invalid_reason IS  NULL OR srctostdvm.target_invalid_reason = '')
-  left join live.source_to_source_vocab_map srctosrcvm
-    on srctosrcvm.source_code             = m.code
-  and srctosrcvm.source_vocabulary_id    = 'RxNorm'
-  left join live.final_visit_ids fv
-    on fv.encounter_id = m.encounter
-  join live.person p
-    on p.person_source_value              = m.patient
-  union all
-  select
-    p.person_id, coalesce(srctostdvm.target_concept_id,0) as drug_concept_id, i.date, i.date, i.date,
-    i.date, i.date, 581452, null, 0, 0, 0, null, 0, 0, 0, fv.visit_occurrence_id_new AS visit_occurrence_id, 0, i.code, coalesce(srctosrcvm.source_concept_id,0), null, null
-  from live.immunizations i
-    left join live.source_to_standard_vocab_map   srctostdvm
-  on srctostdvm.source_code             = i.code
-  and srctostdvm.target_domain_id        = 'Drug'
-  and srctostdvm.source_vocabulary_id    = 'CVX'
-  and srctostdvm.target_standard_concept = 'S'
-  and (srctostdvm.target_invalid_reason IS NULL OR srctostdvm.target_invalid_reason = '')
-  left join live.source_to_source_vocab_map srctosrcvm
-    on srctosrcvm.source_code             = i.code
-  and srctosrcvm.source_vocabulary_id    = 'CVX'
-  left join live.final_visit_ids fv
-    on fv.encounter_id = i.encounter
-  join live.person p
-    on p.person_source_value = i.patient
-    ) tmp;
+  FROM (
+    SELECT
+      p.person_id,
+      coalesce(srctostdvm.target_concept_id, 0) AS drug_concept_id,
+      c.start AS drug_exposure_start_date,
+      c.start AS drug_exposure_start_datetime,
+      coalesce(c.stop, c.start) AS drug_exposure_end_date,
+      coalesce(c.stop, c.start) AS drug_exposure_end_datetime,
+      c.stop AS verbatim_end_date,
+      581452 AS drug_type_concept_id,
+      '' AS stop_reason,  -- Changed from null to empty string
+      0 AS refills,
+      0 AS quantity,
+      coalesce(datediff(c.stop, c.start), 0) AS days_supply,
+      '' AS sig,  -- Changed from null to empty string
+      0 AS route_concept_id,
+      0 AS lot_number,
+      0 AS provider_id,
+      fv.visit_occurrence_id_new AS visit_occurrence_id,
+      0 AS visit_detail_id,
+      c.code AS drug_source_value,
+      coalesce(srctosrcvm.source_concept_id, 0) AS drug_source_concept_id,
+      '' AS route_source_value,  -- Changed from null to empty string
+      '' AS dose_unit_source_value  -- Changed from null to empty string
+    FROM live.conditions c
+    JOIN live.source_to_standard_vocab_map srctostdvm
+      ON srctostdvm.source_code = c.code
+      AND srctostdvm.target_domain_id = 'Drug'
+      AND srctostdvm.source_vocabulary_id = 'RxNorm'
+      AND srctostdvm.target_standard_concept = 'S'
+      AND (srctostdvm.target_invalid_reason IS NULL OR srctostdvm.target_invalid_reason = '')
+    LEFT JOIN live.source_to_source_vocab_map srctosrcvm
+      ON srctosrcvm.source_code = c.code
+      AND srctosrcvm.source_vocabulary_id = 'RxNorm'
+    LEFT JOIN live.final_visit_ids fv
+      ON fv.encounter_id = c.encounter
+    JOIN live.person p
+      ON p.person_source_value = c.patient
+
+    UNION ALL
+
+    SELECT
+      p.person_id,
+      coalesce(srctostdvm.target_concept_id, 0) AS drug_concept_id,
+      m.start, m.start, coalesce(m.stop, m.start), coalesce(m.stop, m.start), m.stop,
+      38000177, '' AS stop_reason, 0, 0, coalesce(datediff(m.stop, m.start), 0),
+      '' AS sig, 0, 0, 0, fv.visit_occurrence_id_new AS visit_occurrence_id,
+      0, m.code, coalesce(srctosrcvm.source_concept_id, 0),
+      '' AS route_source_value, '' AS dose_unit_source_value
+    FROM live.medications m
+    JOIN live.source_to_standard_vocab_map srctostdvm
+      ON srctostdvm.source_code = m.code
+      AND srctostdvm.target_domain_id = 'Drug'
+      AND srctostdvm.source_vocabulary_id = 'RxNorm'
+      AND srctostdvm.target_standard_concept = 'S'
+      AND (srctostdvm.target_invalid_reason IS NULL OR srctostdvm.target_invalid_reason = '')
+    LEFT JOIN live.source_to_source_vocab_map srctosrcvm
+      ON srctosrcvm.source_code = m.code
+      AND srctosrcvm.source_vocabulary_id = 'RxNorm'
+    LEFT JOIN live.final_visit_ids fv
+      ON fv.encounter_id = m.encounter
+    JOIN live.person p
+      ON p.person_source_value = m.patient
+
+    UNION ALL
+
+    SELECT
+      p.person_id,
+      coalesce(srctostdvm.target_concept_id, 0) AS drug_concept_id,
+      i.date, i.date, i.date, i.date, i.date,
+      581452, '' AS stop_reason, 0, 0, 0,
+      '' AS sig, 0, 0, 0, fv.visit_occurrence_id_new AS visit_occurrence_id,
+      0, i.code, coalesce(srctosrcvm.source_concept_id, 0),
+      '' AS route_source_value, '' AS dose_unit_source_value
+    FROM live.immunizations i
+    LEFT JOIN live.source_to_standard_vocab_map srctostdvm
+      ON srctostdvm.source_code = i.code
+      AND srctostdvm.target_domain_id = 'Drug'
+      AND srctostdvm.source_vocabulary_id = 'CVX'
+      AND srctostdvm.target_standard_concept = 'S'
+      AND (srctostdvm.target_invalid_reason IS NULL OR srctostdvm.target_invalid_reason = '')
+    LEFT JOIN live.source_to_source_vocab_map srctosrcvm
+      ON srctosrcvm.source_code = i.code
+      AND srctosrcvm.source_vocabulary_id = 'CVX'
+    LEFT JOIN live.final_visit_ids fv
+      ON fv.encounter_id = i.encounter
+    JOIN live.person p
+      ON p.person_source_value = i.patient
+  ) tmp;
+
 
 -- COMMAND ----------
 

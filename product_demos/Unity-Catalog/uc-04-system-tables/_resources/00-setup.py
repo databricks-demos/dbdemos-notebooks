@@ -1,3 +1,6 @@
+# MAGIC %pip install -q prophet==1.1.2 holidays==0.24
+# MAGIC dbutils.library.restartPython()
+
 # Databricks notebook source
 dbutils.widgets.text('reset_all_data', 'false')
 

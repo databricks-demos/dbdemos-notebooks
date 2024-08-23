@@ -15,7 +15,7 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
 folder = f"/Volumes/{catalog}/{db}/{volume_name}"
 
-data_missing = DBDemos.is_any_folder_empty([folder+"/customers_parquet", folder+"/transactions_parquet", folder+"/country_code", folder+"/fraud_report_parquet"])
+data_missing = DBDemos.is_any_folder_empty([folder+"/customers", folder+"/transactions", folder+"/country_code", folder+"/fraud_report"])
 
 # COMMAND ----------
 
@@ -42,6 +42,7 @@ if reset_all_data or data_missing:
       spark.read.format('parquet').load(folder).repartition(16).write.format(output_format).option('header', 'true').mode('overwrite').save(output_folder)
     
     from concurrent.futures import ThreadPoolExecutor
+    time.sleep(10)
     with ThreadPoolExecutor(max_workers=3) as executor:
         executor.submit(write_to(folder+'/transactions_parquet', 'json', folder+'/transactions'))
         executor.submit(write_to(folder+'/customers_parquet', 'csv', folder+'/customers'))

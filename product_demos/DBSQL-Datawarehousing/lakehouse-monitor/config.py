@@ -9,8 +9,8 @@
 
 # COMMAND ----------
 
-catalog = "amine_elhelou"
-dbName = db = "monitoring_dq"
+catalog = "main__build"
+dbName = db = "dbdemos_lhm"
 
 # COMMAND ----------
 

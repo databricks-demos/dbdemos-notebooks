@@ -273,11 +273,11 @@ display_tools(get_tools()) #display in a table the tools - see _resource/00-init
 # DBTITLE 1,Create the chat
 
 from langchain_openai import ChatOpenAI
-hostname = dbutils.notebook.entry_point.getDbutils().notebook().getContext().browserHostName().get()
-# Note: langchain_community.chat_models.ChatDatabricks doesn't support create_tool_calling_agent yet
-# Let's use ChatOpenAI for now
+from databricks.sdk import WorkspaceClient
+
+# Note: langchain_community.chat_models.ChatDatabricks doesn't support create_tool_calling_agent yet - it'll soon be availableK. Let's use ChatOpenAI for now
 llm = ChatOpenAI(
-  base_url=f"https://{hostname}/serving-endpoints/",
+  base_url=f"{WorkspaceClient().config.host}/serving-endpoints/",
   api_key=dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get(),
   model="databricks-meta-llama-3-70b-instruct"
 )

@@ -26,6 +26,7 @@ import time
 from datetime import datetime
 
 if reset_all_data or data_missing:
+  print("data_missing, re-loading data")
   if reset_all_data:
     assert len(folder) > 15 and folder.startswith("/Volumes/")
     dbutils.fs.rm(folder, True)
@@ -41,12 +42,13 @@ if reset_all_data or data_missing:
     def write_to(folder, output_format, output_folder):
       spark.read.format('parquet').load(folder).repartition(16).write.format(output_format).option('header', 'true').mode('overwrite').save(output_folder)
     
-    from concurrent.futures import ThreadPoolExecutor
-    time.sleep(10)
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     with ThreadPoolExecutor(max_workers=3) as executor:
-        executor.submit(write_to(folder+'/transactions_parquet', 'json', folder+'/transactions'))
-        executor.submit(write_to(folder+'/customers_parquet', 'csv', folder+'/customers'))
-        executor.submit(write_to(folder+'/fraud_report_parquet', 'csv', folder+'/fraud_report'))
+      [future.result() for future in as_completed([
+          executor.submit(write_to, folder+'/transactions_parquet', 'json', folder+'/transactions'),
+          executor.submit(write_to, folder+'/customers_parquet', 'csv', folder+'/customers'),
+          executor.submit(write_to, folder+'/fraud_report_parquet', 'csv', folder+'/fraud_report')
+      ])]
     
   except Exception as e: 
     print(f"Error trying to download the file from the repo: {str(e)}.")    

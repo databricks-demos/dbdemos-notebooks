@@ -28,6 +28,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install "databricks-sdk>=0.28.0"
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -44,7 +46,7 @@
 
 # MAGIC %sql 
 # MAGIC -- To setup monitoring, load in the silver_transaction dataset
-# MAGIC SELECT * from silver_transaction limit 100;
+# MAGIC SELECT * from silver_transaction limit 10;
 
 # COMMAND ----------
 
@@ -143,12 +145,39 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 
 # COMMAND ----------
 
+# MAGIC %md ### Orientation to the profile metrics table
+# MAGIC
+# MAGIC The profile metrics table has the suffix `_profile_metrics`. For a list of statistics that are shown in the table, see the documentation ([AWS](https://docs.databricks.com/lakehouse-monitoring/monitor-output.html#profile-metrics-table)|[Azure](https://learn.microsoft.com/azure/databricks/lakehouse-monitoring/monitor-output#profile-metrics-table)). 
+# MAGIC
+# MAGIC - For every column in the primary table, the profile table shows summary statistics for the baseline table and for the primary table. The column `log_type` shows `INPUT` to indicate statistics for the primary table, and `BASELINE` to indicate statistics for the baseline table. The column from the primary table is identified in the column `column_name`.
+# MAGIC - For `TimeSeries` type analysis, the `granularity` column shows the granularity corresponding to the row. For baseline table statistics, the `granularity` column shows `null`.
+# MAGIC - The table shows statistics for each value of each slice key in each time window, and for the table as whole. Statistics for the table as a whole are indicated by `slice_key` = `slice_value` = `null`.
+# MAGIC - In the primary table, the `window` column shows the time window corresponding to that row. For baseline table statistics, the `window` column shows `null`.  
+# MAGIC - Some statistics are calculated based on the table as a whole, not on a single column. In the column `column_name`, these statistics are identified by `:table`.
+# MAGIC
+
+# COMMAND ----------
+
 # Display profile metrics table
-profile_table = f"{TABLE_NAME}_profile_metrics"  
+profile_table = lhm_monitor.profile_metrics_table_name  
 display(spark.sql(f"SELECT * FROM {profile_table}"))
 
+# COMMAND ----------
+
+# MAGIC %md ### Orientation to the drift metrics table
+# MAGIC
+# MAGIC The drift metrics table has the suffix `_drift_metrics`. For a list of statistics that are shown in the table, see the documentation ([AWS](https://docs.databricks.com/lakehouse-monitoring/monitor-output.html#drift-metrics-table) | [Azure](https://learn.microsoft.com/azure/databricks/lakehouse-monitoring/monitor-output#drift-metrics-table)). 
+# MAGIC
+# MAGIC - For every column in the primary table, the drift table shows a set of metrics that compare the current values in the table to the values at the time of the previous analysis run and to the baseline table. The column `drift_type` shows `BASELINE` to indicate drift relative to the baseline table, and `CONSECUTIVE` to indicate drift relative to a previous time window. As in the profile table, the column from the primary table is identified in the column `column_name`.
+# MAGIC - For `TimeSeries` type analysis, the `granularity` column shows the granularity corresponding to that row.
+# MAGIC - The table shows statistics for each value of each slice key in each time window, and for the table as whole. Statistics for the table as a whole are indicated by `slice_key` = `slice_value` = `null`.
+# MAGIC - The `window` column shows the the time window corresponding to that row. The `window_cmp` column shows the comparison window. If the comparison is to the baseline table, `window_cmp` is `null`.  
+# MAGIC - Some statistics are calculated based on the table as a whole, not on a single column. In the column `column_name`, these statistics are identified by `:table`.
+
+# COMMAND ----------
+
 # Display the drift metrics table
-drift_table = f"{TABLE_NAME}_drift_metrics"
+drift_table = lhm_monitor.drift_metrics_table_name  
 display(spark.sql(f"SELECT * FROM {drift_table}"))
 
 # COMMAND ----------
@@ -226,6 +255,14 @@ display(spark.sql(f"SELECT * FROM {drift_table} where column_name = 'TotalPurcha
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Aggergate and Derived metrics
+# MAGIC
+# MAGIC These metrics can be calculated either on individual columns or as a combination (of user-defined) columns.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Combination of mutiple columns
 # MAGIC We'll create a metric to calculate the average of the price after discount. The price after discount is calculated as `Price * (1 - Discount)`. This metric will appear as a new column in the profile metrics table. We will use the `Price` and `Discount` fields from the table, so it will need to include `:table` as the input_column. You'll use `:table` whenever you need to use multiple fields in your calculation
 
 # COMMAND ----------
@@ -235,7 +272,7 @@ import pyspark.sql.types as T
 
 # COMMAND ----------
 
-avg_price_after_discount = MonitorMetric(
+avg_price_after_discount_agg = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,
     name="avg_price_after_discount",
     input_columns=[":table"],
@@ -245,92 +282,32 @@ avg_price_after_discount = MonitorMetric(
 
 # COMMAND ----------
 
-avg_price_after_discount.definition
+avg_price_after_discount_agg.definition
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We'll create another metric that calculates the variance of the price after discount and we'll then use this variable to as part of a derived metric that can use the `var_price_after_discount` metric to calculate the standard deviation of the price after discount.
+# MAGIC Next, we'll create a **derived metric**. Note that it uses `avg_price_after_discount` in the definition. 
 
 # COMMAND ----------
 
-var_price_after_discount = MonitorMetric(
-    type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,
-    name="var_price_after_discount",
-    input_columns=[":table"],
-    definition="var_samp(Price*(1-Discount))",
-    output_data_type=T.StructField("var_price_after_discount", T.DoubleType()).json(),
-)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Next, we'll create a derived metric. Note that it uses `var_price_after_discount` in the definition. 
-
-# COMMAND ----------
-
-std_price_after_discount = MonitorMetric(
+log_price_after_discount_derived = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DERIVED,
-    name="std_price_after_discount",
+    name="log_price_after_discount",
     input_columns=[":table"],
-    definition="sqrt(var_price_after_discount)",
-    output_data_type=T.StructField("std_price_after_discount", T.DoubleType()).json(),
-)
-
-# COMMAND ----------
-
-# MAGIC %md ### Drift Metrics
-# MAGIC
-# MAGIC The drift metrics table has the suffix `_drift_metrics`. For a list of statistics that are shown in the table, see the documentation ([AWS](https://docs.databricks.com/lakehouse-monitoring/monitor-output.html#drift-metrics-table) | [Azure](https://learn.microsoft.com/azure/databricks/lakehouse-monitoring/monitor-output#drift-metrics-table)). 
-# MAGIC
-# MAGIC - For every column in the primary table, the drift table shows a set of metrics that compare the current values in the table to the values at the time of the previous analysis run and to the baseline table. The column `drift_type` shows `BASELINE` to indicate drift relative to the baseline table, and `CONSECUTIVE` to indicate drift relative to a previous time window. As in the profile table, the column from the primary table is identified in the column `column_name`.
-# MAGIC - For `TimeSeries` type analysis, the `granularity` column shows the granularity corresponding to that row.
-# MAGIC - The table shows statistics for each value of each slice key in each time window, and for the table as whole. Statistics for the table as a whole are indicated by `slice_key` = `slice_value` = `null`.
-# MAGIC - The `window` column shows the the time window corresponding to that row. The `window_cmp` column shows the comparison window. If the comparison is to the baseline table, `window_cmp` is `null`.  
-# MAGIC - Some statistics are calculated based on the table as a whole, not on a single column. In the column `column_name`, these statistics are identified by `:table`.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Let's create a custom drift metric that calulate the difference between our current value for the standard deviation of the price after discount and the base value.
-# MAGIC
-# MAGIC We'll also create a drift metric that shows the changes as a percentage of the base or prior value.
-
-# COMMAND ----------
-
-std_price_after_discount_delta = MonitorMetric(
-    type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
-    name="std_price_after_discount_delta",
-    input_columns=[":table"],
-    definition="{{current_df}}.std_price_after_discount - {{base_df}}.std_price_after_discount",
-    output_data_type=T.StructField("std_price_after_discount_delta", T.DoubleType()).json(),
-)
-
-# COMMAND ----------
-
-std_price_after_discount_pct_delta = MonitorMetric(
-    type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
-    name="std_price_after_discount_pct_delta",
-    input_columns=[":table"],
-    definition="(({{current_df}}.std_price_after_discount - {{base_df}}.std_price_after_discount) / {{base_df}}.std_price_after_discount) * 100",
-    output_data_type=T.StructField(
-        "std_price_after_discount_pct_delta", T.DoubleType()
-    ).json(),
+    definition="log(avg_price_after_discount)",
+    output_data_type=T.StructField("log_price_after_discount", T.DoubleType()).json(),
 )
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Metrics for Individual Fields
-
-# COMMAND ----------
-
-# MAGIC %md
+# MAGIC #### Metrics on individual column(s)
 # MAGIC We can also create metrics that can be calulated for individual fields and we can specify which of these fields that we want to use by passing them into `input_columns`, and then they will be used in the definition with `{{input_column}}`. Note that the calculation will be performed separately for each input column and `{{input_column}}` will only refer to the value for the one field that the metric is being calculated for. In this example, we'll create a metric that calculates the variance of a field and apply it to `TotalPurchaseAmount` and `Discount`. So, we independently calculate the variance of the `TotalPurchaseAmount` and  `Discount` fields.
 
 # COMMAND ----------
 
-variance_metric = MonitorMetric(
+variance_metric_agg = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,
     name="variance",
     input_columns=["TotalPurchaseAmount", "Discount"],
@@ -341,13 +318,13 @@ variance_metric = MonitorMetric(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We'll also demonstrate creating the standard deviation by using the variance metric that we just created. Note that stddev is already included in the default metrics, and this is for illustration purposes. This is done by creating a derived metric. Note that derived metrics cannot access template items like `{{input_column}}` in their definitions. This metric uses `variance` which was calculated for the `TotalPurchaseAmount` and `Discount` fields, so we can use them here as input columns.
+# MAGIC We'll also demonstrate creating the standard deviation by using the variance metric that we just created. Note that stddev is already included in the default metrics, and this is for illustration purposes. This is done by creating a derived metric. Note that **derived metrics cannot access template items like `{{input_column}}` in their definitions.** This metric uses `variance` which was calculated for the `TotalPurchaseAmount` and `Discount` fields, so we can use them here as input columns.
 # MAGIC
-# MAGIC Notice that we pass in `["TotalPurchaseAmount", "Discount"]` as `input_columns`. If you use `:table` as `input_columns`, you need to specify the column names in calculating the metric, i.e. you'd need to create a metric for `TotalPurchaseAmountStd` and the following drift metrics. The steps would need to be repeated for the `Discount` column again. Specifying `input_columns=["TotalPurchaseAmount", "Discount"]` is more efficient.
+# MAGIC **Notice that we pass in `["TotalPurchaseAmount", "Discount"]` as `input_columns` as well**. If you use `:table` as `input_columns`, you need to specify the column names in calculating the metric, i.e. you'd need to create a metric for `TotalPurchaseAmountStd` and the following drift metrics. The steps would need to be repeated for the `Discount` column again. Specifying `input_columns=["TotalPurchaseAmount", "Discount"]` is more efficient.
 
 # COMMAND ----------
 
-std_metric = MonitorMetric(
+std_metric_derived = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DERIVED,
     name="std",
     input_columns=["TotalPurchaseAmount", "Discount"],
@@ -357,27 +334,38 @@ std_metric = MonitorMetric(
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Next let's build two drift metrics that use our derived standard deviation metric and calculate the difference and percentage difference across our `TotalPurchaseAmount` and `Discount` fields.
+# MAGIC %md ### Drift Metrics
+# MAGIC
 
 # COMMAND ----------
 
-std_delta = MonitorMetric(
+# MAGIC %md
+# MAGIC Next let's build a drift metrics that use our derived standard deviation metric and calculate the percentage difference across our `TotalPurchaseAmount` and `Discount` fields.
+
+# COMMAND ----------
+
+std_delta_pct_drift = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
-    name="std_delta",
+    name="std_delta_pct",
     input_columns=["TotalPurchaseAmount", "Discount"],
-    definition="{{current_df}}.std - {{base_df}}.std",
-    output_data_type=T.StructField("std_delta", T.DoubleType()).json(),
+    definition="100*({{current_df}}.std - {{base_df}}.std)/{{base_df}}.std",
+    output_data_type=T.StructField("std_pct_delta", T.DoubleType()).json(),
 )
 
 # COMMAND ----------
 
-std_pct_delta = MonitorMetric(
+# MAGIC %md
+# MAGIC
+# MAGIC Let's create a custom drift metric that calulate the difference between our current value for the standard deviation of the price after discount and the base value.
+
+# COMMAND ----------
+
+log_price_after_discount_delta_drift = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
-    name="std_pct_delta",
-    input_columns=["TotalPurchaseAmount", "Discount"],
-    definition="(({{current_df}}.std - {{base_df}}.std) / {{base_df}}.std) * 100",
-    output_data_type=T.StructField("std_pct_delta", T.DoubleType()).json(),
+    name="log_price_after_discount_ratio",
+    input_columns=[":table"],
+    definition="{{current_df}}.log_price_after_discount/{{base_df}}.log_price_after_discount",
+    output_data_type=T.StructField("log_price_after_discount_delta", T.DoubleType()).json(),
 )
 
 # COMMAND ----------
@@ -395,15 +383,12 @@ try:
             timestamp_col=TIMESTAMP_COL, granularities=GRANULARITIES
         ),
         custom_metrics=[
-            avg_price_after_discount,
-            var_price_after_discount,
-            std_price_after_discount,
-            std_price_after_discount_delta,
-            std_price_after_discount_pct_delta,
-            variance_metric,
-            std_metric,
-            std_delta,
-            std_pct_delta,
+            avg_price_after_discount_agg,
+            log_price_after_discount_derived,
+            log_price_after_discount_delta_drift,
+            variance_metric_agg,
+            std_metric_derived,
+            std_delta_pct_drift,
         ],
         output_schema_name=f"{catalog}.{dbName}",
     )
@@ -432,28 +417,28 @@ assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh faile
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 7. View the Profile and Drift Table Updates
+# MAGIC ## 7. Query Custom Metrics from Profile and Drift Metrics Table
 # MAGIC
 # MAGIC Once the refresh has finished our profile and drift tables will be updated to include our custom variables. Note that for variables that used `:table` as input, you can see them by filtering by `column_name = ':table'`. Metrics that are calculated on a single field can filtered for using the field name, for example, `column_name = 'TotalPurchasedAmount'`. For your custom metrics you can also use SQL to filter by where that metric isn't null. For example, `where variance is not null`. The aggregate and derived metrics show up as new fields in the profile table and the drift metrics show up in the drift table. 
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Let's take a look at our profile table to see the variance metric that we created.
+# MAGIC Let's take a look at our profile table to see our table-based custom metrics
 
 # COMMAND ----------
 
-
-display(spark.sql(f"SELECT window, column_name, variance, stddev, std from {profile_table} where variance is not null"))
+display(spark.sql(f"SELECT window, avg_price_after_discount, log_price_after_discount FROM {profile_table} WHERE column_name = ':table' ORDER BY window.start;"))
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC And we can query to see our table based custom metrics.
+# MAGIC And the custom aggregate & derived metric that we created on the individual columns (e.g. `TotalPurchaseAmount` and `Discount`)
 
 # COMMAND ----------
 
-display(spark.sql(f"SELECT window, avg_price_after_discount, var_price_after_discount, std_price_after_discount from {profile_table} WHERE column_name = ':table';"))
+
+display(spark.sql(f"SELECT window, column_name, variance, std FROM {profile_table} WHERE variance IS NOT NULL ORDER BY window.start, column_name"))
 
 # COMMAND ----------
 
@@ -463,7 +448,11 @@ display(spark.sql(f"SELECT window, avg_price_after_discount, var_price_after_dis
 # COMMAND ----------
 
 # Let's look at our custom drift metrics
-display(spark.sql(f"SELECT window, window_cmp, std_price_after_discount_delta, std_price_after_discount_pct_delta from {drift_table} WHERE column_name = ':table';"))
+display(spark.sql(f"SELECT window, window_cmp, log_price_after_discount_ratio FROM {drift_table} WHERE column_name = ':table' ORDER BY window.start;"))
+
+# COMMAND ----------
+
+display(spark.sql(f"SELECT window, window_cmp, std_delta_pct FROM {drift_table} WHERE std_delta_pct IS NOT NULL ORDER BY window.start;"))
 
 # COMMAND ----------
 

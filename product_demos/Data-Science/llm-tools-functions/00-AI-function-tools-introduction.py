@@ -31,7 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3 faker
+# MAGIC %pip install --quiet -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3 faker
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

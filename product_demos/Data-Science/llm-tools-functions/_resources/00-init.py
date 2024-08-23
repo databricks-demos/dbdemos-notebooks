@@ -32,6 +32,8 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 data_exists = False
 try:
   data_exists = spark.catalog.tableExists('tools_orders') and spark.catalog.tableExists('tools_customers')
+  if data_exists:
+    data_exists = spark.sql('select count(*) as c from tools_customers where email=current_user').collect()[0]['c'] > 0
 except Exception as e:
   print(f"folder doesn't exists, generating the data...")
 

@@ -33,6 +33,14 @@
       "description": "Init data for demo."
     },
     {
+      "path": "config",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "Config",
+      "description": "Setup schema and database."
+    },
+    {
       "path": "00-AI-function-tools-introduction",
       "pre_run": True,
       "publish_on_website": True,

@@ -122,7 +122,12 @@ try:
   )
 
 except Exception as lhm_exception:
-  print(lhm_exception)
+  if "already exist" in str(lhm_exception):
+      print(f"Monitor for {TABLE_NAME_PREDICTIONS} already exists, retrieving monitor info:")
+      lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
+
+    else:
+      raise lhm_exception
 
 # COMMAND ----------
 
@@ -136,13 +141,14 @@ except Exception as lhm_exception:
 import time
 from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
 
+
 # Wait for monitor to be created
-info = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
-while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
-  info = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
+lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
+while lhm_monitor.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
+  lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME_PREDICTIONS}")
   time.sleep(10)
 
-assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
+assert lhm_monitor.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
 
 # COMMAND ----------
 
@@ -211,6 +217,7 @@ display(spark.sql(f"SELECT * from {drift_table} where drift_type = 'BASELINE';")
 
 from databricks.sdk.service.catalog import MonitorMetric, MonitorMetricType
 from pyspark.sql import types as T
+
 
 weights_sum = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,

@@ -107,9 +107,14 @@ try:
     assets_dir = os.getcwd(),
     output_schema_name=f"{catalog}.{dbName}"
   )
-
+  
 except Exception as lhm_exception:
-  print(lhm_exception)
+  if "already exist" in str(lhm_exception):
+    print(f"Monitor for {TABLE_NAME} already exists, retrieving monitor info:")
+    lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+
+  else:
+    raise lhm_exception
 
 # COMMAND ----------
 
@@ -126,12 +131,12 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 # COMMAND ----------
 
 # Wait for monitor to be created
-info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
-while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
-  info = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
+while lhm_monitor.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
+  lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
   time.sleep(10)
 
-assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
+assert lhm_monitor.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
 
 refreshes = w.quality_monitors.list_refreshes(table_name=f"{TABLE_NAME}").refreshes
 assert(len(refreshes) > 0)

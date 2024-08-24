@@ -59,15 +59,3 @@ print(f"Schemas that are not enabled: {not_enabled}")
 for system_schema in not_enabled:
     print(f'Enabling system schema "{system_schema.schema}"')
     w.system_schemas.enable(metastore_id=metastore_id, schema_name=system_schema.schema)
-
-# COMMAND ----------
-
-for schema in schemas_to_enable:
-    host = "https://"+dbutils.notebook.entry_point.getDbutils().notebook().getContext().browserHostName().get()
-    headers = {"Authorization": "Bearer "+dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()}
-    r = requests.put(f"{host}/api/2.0/unity-catalog/metastores/{metastore_id}/systemschemas/{schema}", headers=headers)
-    if r.status_code == 200:
-        print(f"Schema {schema} enabled successfully")
-    else:
-        print(f"""Error enabling the schema `{schema}`: {r.json()["error_code"]} | Description: {r.json()["message"]}""")
-    sleep(1)

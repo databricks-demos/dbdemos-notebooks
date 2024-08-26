@@ -1,11 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Churn Prediction Model Serving
+# MAGIC # Churn Prediction Realtime Inference
 # MAGIC
-# MAGIC **Work-In-Progress**
-# MAGIC Only works when deploying models without feature functions for now
+# MAGIC We have just seen how to get predictions in batches. Now, we will deploy the features and model to make realtime predictions via a REST API call. Customer application teams can embed this predictive capabilities into customer-facing applications and apply a retention strategy for customers predicted to churn and they interact with the application.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-6.png" width="1200">
+# MAGIC Because the predictions are to be made in a customer-facing application as the customer interacts with it, they have to be returned with low-latency.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-5.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F06_staging_inference&dt=MLOPS">
@@ -14,15 +15,19 @@
 # MAGIC  "db_resources":{},
 # MAGIC   "search_tags":{"vertical": "retail", "step": "Model testing", "components": ["mlflow"]},
 # MAGIC                  "canonicalUrl": {"AWS": "", "Azure": "", "GCP": ""}}] -->
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC To serve the features and model, we will:
+# MAGIC
+# MAGIC - Make the features available for low-latency retrieval by the model through Databrick's online tables
+# MAGIC - Deploy the registered model from Unity Catalog to a Model Serving endpoint for low latency serving
+# MAGIC
+# MAGIC These tasks can be done in the UI. They can also be automated by leveraging the Databricks Python SDK ([AWS](https://docs.databricks.com/en/dev-tools/sdk-python.html#)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/dev-tools/sdk-python)|[GCP](https://docs.gcp.databricks.com/dev-tools/sdk-python.html)) available in Databricks Runtime 13.3LTS+
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC To manage model serving endpoints we'll leverage the databricks pyhton sdk ([AWS](https://docs.databricks.com/en/dev-tools/sdk-python.html#)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/dev-tools/sdk-python)|[GCP](https://docs.gcp.databricks.com/dev-tools/sdk-python.html)) available in Databricks Runtime 13.3LTS+
-
-# COMMAND ----------
-
-# DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
+# DBTITLE 1,Install Databricks Python SDK [for MLR < 13.3] and MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC %pip install -U databricks-sdk
 # MAGIC dbutils.library.restartPython()
@@ -33,6 +38,15 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # Serve features with Databricks online tables
+# MAGIC
+# MAGIC For serving predictions queries with low-latency, publish the features to Databricks online tables and serve them in real time to the model.
+# MAGIC
+# MAGIC From the feature engineering step, we have already created a Delta Table for the feature table. Recall that any Delta Table that has a primary key can be a feature table in Databricks.
+
+# COMMAND ----------
+
 feature_table_name = "churn_feature_table"
 primary_key = "customer_id"
 timestamp_col ="transaction_ts"
@@ -40,24 +54,24 @@ timestamp_col ="transaction_ts"
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Feature serving with Databrick's Online tables
 # MAGIC
-# MAGIC For serving predictions queries with low-latency, publish the features to Databricks online tables and serve them in real time.
+# MAGIC ## Enable Change-Data-Feed on Feature Table for performance considerations
+# MAGIC
+# MAGIC An online table is a read-only copy of a Delta Table that is stored in row-oriented format optimized for online access. 
 # MAGIC
 # MAGIC Databricks allows the online tables to be refreshed efficiently whenever there are updates to the underlying feature tables. This is enabled through the Change Data Feed feature of Delta Lake. Let us first enable Change Data Feed on the underlying feature table `churn_feature_table`.
 
 # COMMAND ----------
 
-# DBTITLE 1,Enable Change-Data-Feed on Feature Table for performance considerations
 spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
-# MAGIC ### Creating the Online Table
+# MAGIC ### Create the Online Table
 # MAGIC
-# MAGIC You create an online table from the Catalog Explorer, or using the API. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
+# MAGIC You can create an online table from the Catalog Explorer UI, or by using the API. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
 # MAGIC
 
 # COMMAND ----------
@@ -65,20 +79,36 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (d
 # MAGIC %md
 # MAGIC
 # MAGIC #### OPTION 1: Use the Catalog Explorer UI
-# MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the kebab menu, select **Create online table**.
+# MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the **Create** menu, select **Online table**.
 # MAGIC
-# MAGIC * Use the selectors in the dialog to configure the online table.
-# MAGIC   * Name: Name to use for the online table in Unity Catalog.
-# MAGIC   * Primary Key: Column(s) in the source table to use as primary key(s) in the online table.
-# MAGIC   * Timeseries Key: (Optional). Column in the source table to use as timeseries key. When specified, the online table includes only the row with the latest timeseries key value for each primary key.
-# MAGIC   * Sync mode: Specifies how the synchronization pipeline updates the online table. Select one of Snapshot, Triggered, or Continuous.
-# MAGIC   * Policy
-# MAGIC     * Snapshot - The pipeline runs once to take a snapshot of the source table and copy it to the online table. Subsequent changes to the source table are automatically reflected in the online table by taking a new snapshot of the source and creating a new copy. The content of the online table is updated atomically.
-# MAGIC     * Triggered - The pipeline runs once to create an initial snapshot copy of the source table in the online table. Unlike the Snapshot sync mode, when the online table is refreshed, only changes since the last pipeline execution are retrieved and applied to the online table. The incremental refresh can be manually triggered or automatically triggered according to a schedule.
-# MAGIC     * Continuous - The pipeline runs continuously. Subsequent changes to the source table are incrementally applied to the online table in real time streaming mode. No manual refresh is necessary.
-# MAGIC * When you are done, click Confirm. The online table page appears.
+# MAGIC <br>
 # MAGIC
-# MAGIC The new online table is created under the catalog, schema, and name specified in the creation dialog. In Catalog Explorer, the online table is indicated by online table icon.
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_create_online_table.gif?raw=true" width="1200">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Fill in the following fields:
+# MAGIC
+# MAGIC * **Name**: `churn_feature_table_online_table`
+# MAGIC   * This is the name to use for the online table in Unity Catalog.
+# MAGIC * **Primary Key**: `customer_id`
+# MAGIC   * This is the column in the source table to use as primary key in the online table.
+# MAGIC * **Timeseries Key**: `transaction_ts`
+# MAGIC   * This is the column in the source table to use as the timeseries key.
+# MAGIC
+# MAGIC Leave the **Sync mode** as **Snapshot**. This is the synchronization strategy to update the pipeline from its source feature table. Refer to the documentation to learn more ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-tables)).
+# MAGIC
+# MAGIC When you are done, click Confirm.
+# MAGIC
+# MAGIC You are brought to the online table page. Wait for the synchronization to complete.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_online_table.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC *The new online table is created under the catalog, schema, and name specified in the creation dialog. In Catalog Explorer, the online table is indicated by online table icon.*
 
 # COMMAND ----------
 
@@ -86,14 +116,12 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (d
 # MAGIC #### OPTION 2: Use the Databricks SDK 
 # MAGIC
 # MAGIC The other alternative is the Databricks' python-sdk [AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#api-sdk) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-tables). Let's  first define the table specifications, then create the table.
-# MAGIC
-# MAGIC **🚨 Note:** The workspace must be enabled for using the SDK for creating and managing online tables. You can run following code blocks if your workspace is enabled for this feature (fill this [form](https://forms.gle/9jLZkpXnJF9ZcxtQA) to enable your workspace)
 
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
 
-# Create workspace client [OPTIONAL: for publishing to online tables]
+# Create workspace client for the Databricks Python SDK
 w = WorkspaceClient()
 
 # COMMAND ----------
@@ -114,6 +142,7 @@ except Exception as e:
 
 # COMMAND ----------
 
+# DBTITLE 1,Create the online table specification
 from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 
 # Create an online table specification
@@ -126,6 +155,7 @@ churn_features_online_store_spec = OnlineTableSpec(
 
 # COMMAND ----------
 
+# DBTITLE 1,Create the online table
 # Create the online table
 w.online_tables.create(
   name=f"{catalog}.{db}.{feature_table_name}_online_table",
@@ -134,7 +164,7 @@ w.online_tables.create(
 
 # COMMAND ----------
 
-# DBTITLE 1,Check status of Online Table
+# DBTITLE 1,Check the status of the online table
 from pprint import pprint
 
 try:
@@ -146,40 +176,83 @@ except Exception as e:
 
 # COMMAND ----------
 
-# DBTITLE 1,Refresh Online Table (optional in case new data was added or offline table was dropped and re-created with new data))
+# DBTITLE 1,Refresh online table (optional in case new data was added or offline table was dropped and re-created with new data))
 # Trigger an online table refresh by calling the pipeline API
 # w.pipelines.start_update(pipeline_id=online_table_spec.pipeline_id, full_refresh=True)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Review Featurization Logic for realtime/on-demand feature functions
+# MAGIC ## Review Featurization Logic to compute features on-demand
 # MAGIC
-# MAGIC To recap, we have defined a function earlier to calculate the `avg_price_increase` feature on demand. Let's review the function here.
+# MAGIC We have deployed the online table and features are now available on-demand at low latency to the model.
+# MAGIC
+# MAGIC Recall that we have also defined a function earlier to calculate the `avg_price_increase` feature on-demand. Let's review the function here.
+# MAGIC
+# MAGIC This function was specified as a feature function when creating the training dataset with the Feature Engineering Client in the model training notebook. This information is logged with the model in MLflow. That means that at serving time, not only does the model know to retrieve features from the online table, but it also know that the `avg_price_increase` feature has to be computed on-demand using this function.
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DESCRIBE FUNCTION avg_price_increase
+# MAGIC DESCRIBE FUNCTION EXTENDED avg_price_increase
 # MAGIC ;
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC #Deploying the model for real-time inferences
+# MAGIC # Deploying the model for real-time inference
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 20px" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn_realtime_inference.gif" />
+# MAGIC To make the model available for real-time inference through a REST API we will deploying it as a Model Serving endpoint.
 # MAGIC
-# MAGIC Our marketing team also needs to run inferences in real-time using REST api (send a customer ID and get back the inference).
+# MAGIC Our marketing team can then have it run in a customer-facing application used by many concurrent customers. Databricks makes it easy for ML teams to deploy this type of low-latency and high-concurrency applications. Model Serving handles all the infrastructure, deployment and scaling for you. You just need to deploy the model!
 # MAGIC
-# MAGIC While Feature store integration in real-time serving will come with Model Serving v2, you can deploy your Databricks Model in a single click.
-# MAGIC
-# MAGIC Open the Model page and click on "Serving". It'll start your model behind a REST endpoint and you can start sending your HTTP requests!
+# MAGIC You can do it through the UI, or by using the API.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ##
+# MAGIC
+# MAGIC ## OPTION 1: Use the UI
+# MAGIC
+# MAGIC Go to the **Serving** section under **Machine Learning** and click **Create serving endpoint**.
+# MAGIC
+# MAGIC Open the Model page and click on "Serving". It'll start your model behind a REST endpoint and you can start sending your HTTP requests!
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_create_serving_endpoint.gif?raw=true" width="854">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Fill in the following fields:
+# MAGIC
+# MAGIC * **Name**: `dbdemos_mlops_advanced_churn`
+# MAGIC   * This is the name of the serving endpoint
+# MAGIC * **Entity**: Type `mlops_churn` and choose the model registered from the previous notebooks.
+# MAGIC   * This is the Unity Catalog-registered model that you want to serve.
+# MAGIC * **Compute type**: Leave it as **CPU**
+# MAGIC   * This is the column in the source table to use as the timeseries key.
+# MAGIC * **Compute scale out**: Choose **Small**
+# MAGIC   * This determines how many concurrent requests the endpoint can handle.
+# MAGIC * **Scale to zero**: Keep it checked
+# MAGIC   * This allows the serving endpoint to scale down to zero when there are no requests
+# MAGIC
+# MAGIC Click **Create** and wait for the endpoint to provision. Be patient, as this can take more than an hour. Take a break and check back later.
+# MAGIC
+# MAGIC When the endpoint is ready, it should show that the status is **Ready**.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_served_model.png?raw=true" width="854">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Refer to the documentation to learn more about creating and managing serving endpoints. ([AWS](https://docs.databricks.com/machine-learning/model-inference/serverless/create-manage-serverless-endpoints.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-inference/serverless/create-manage-serverless-endpoints))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## TODO: Model promotion
 # MAGIC
 # MAGIC TODO
 # MAGIC
@@ -199,9 +272,18 @@ except Exception as e:
 
 # COMMAND ----------
 
+from databricks.sdk import WorkspaceClient
+
+# Create workspace client for the Databricks Python SDK
+w = WorkspaceClient()
+
+# COMMAND ----------
+
 endpoint_name = "dbdemos_mlops_advanced_churn"
 
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
+
+# COMMAND ----------
 
 # Promote Champion model to Production
 client.set_registered_model_alias(
@@ -215,17 +297,9 @@ print(f"Promoting {model_name} versions {model_version} from Champion to Product
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Enable model serving endpoint via API call
+# MAGIC ## OPTION 2: Enable model serving endpoint via API call
 # MAGIC
-# MAGIC To deploy a model for online serving, we need to provision a serving endpoint.
-# MAGIC
-# MAGIC Do it in the UI by following the steps below.
-# MAGIC
-# MAGIC 1. Click **Serving** in the left sidebar. If you don't see it, switch to the Machine Learning Persona ([AWS](https://docs.databricks.com/workspace/index.html#use-the-sidebar)|[Azure](https://docs.microsoft.com/azure/databricks//workspace/index#use-the-sidebar)).
-# MAGIC 2. Enable serving for your model. See the Databricks documentation for details ([AWS](https://docs.databricks.com/machine-learning/model-inference/serverless/create-manage-serverless-endpoints.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-inference/serverless/create-manage-serverless-endpoints)).
-# MAGIC
-# MAGIC
-# MAGIC Alternatively, you can create the serving endpoint programatically. The code below automatically creates a model serving endpoint for you.
+# MAGIC What is done above using the UI to create a serving endpoint can also be done programmatically. The code below automatically creates a model serving endpoint for you.
 
 # COMMAND ----------
 
@@ -306,9 +380,9 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### Wait/Verify that endpoint is ready
+# MAGIC ### Wait/Verify that endpoint is ready
 # MAGIC
-# MAGIC Leave the following cell to run. It may take an hour or so for the endpoint to be ready.
+# MAGIC Leave the following cell to run. It may take an hour or so for the endpoint to be ready. Take a break and check back later.
 
 # COMMAND ----------
 
@@ -322,8 +396,12 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Send payloads via REST call
-# MAGIC Example payload format expected by endpoint
+# MAGIC # Send payloads via REST call
+# MAGIC
+# MAGIC You can test the endpoint on the UI. Copy and paste this json input to the UI to test the endpoint.
+# MAGIC
+# MAGIC <br>
+# MAGIC
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
@@ -332,12 +410,26 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_online_scoring.gif?raw=true" width="950">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Run the next cells to call the endpoint programatically.
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
 # DBTITLE 1,Get input example directly from mlfow model or hard-code
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models import Model
+
+# Setting these variables again in case the user skipped running the cells to deploy the model
+endpoint_name = "dbdemos_mlops_advanced_churn"
+model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
 p = ModelsArtifactRepository(f"models:/{model_name}/{model_version}").download_artifacts("") 
 input_example =  Model.load(p).load_input_example(p)
@@ -355,9 +447,9 @@ else:
 
 # COMMAND ----------
 
-# Wait 20 sec for endpoint to be available to avoid errors in the next command
+# Wait 60 sec for endpoint to be available to avoid errors in the next command
 import time
-time.sleep(20)
+time.sleep(60)
 
 # COMMAND ----------
 

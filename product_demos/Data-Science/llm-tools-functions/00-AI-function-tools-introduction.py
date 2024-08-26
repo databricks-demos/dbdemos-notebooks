@@ -2,26 +2,26 @@
 # MAGIC %md-sandbox
 # MAGIC # Composable AI systems: Building and AI Stylist Specialist selling our products
 # MAGIC
-# MAGIC ## What's a composable AI systems
+# MAGIC ## What's a composable AI system
 # MAGIC
-# MAGIC LLMs are great at answering generate questions. However, this alone isn't enough to provide value to your customers.
+# MAGIC LLMs are great at answering generated questions. However, this alone isn't enough to provide value to your customers.
 # MAGIC
-# MAGIC To be able to provide valuable answer, extra information is requred, specific to the user (your customer contract ID, the last email they sent to your support, your most recent sales report etc.).
+# MAGIC To be able to provide valuable answers, extra information is requred, specific to the user (your customer contract ID, the last email they sent to your support, your most recent sales report etc.).
 # MAGIC
 # MAGIC Composable AI systems are designed to answer this challenge. They are more advanced AI deployments, composed of multiple entities (tools) specialized in different action (retrieving information or acting on external systems). <br/>
 # MAGIC
-# MAGIC A a high level, you build & present a set of custom functions to the AI. The LLM can then reason about it, deciding which tool should be called and information gathered to answer the customer need.
+# MAGIC At a high level, you build & present a set of custom functions to the AI. The LLM can then reason about it, deciding which tool should be called and information gathered to answer the customer need.
 # MAGIC
 # MAGIC ## Building Composable AI Systems with Databricks Mosaic AI agent framework
 # MAGIC
 # MAGIC
-# MAGIC Databricks simplifies this by providing a builtin service to:
+# MAGIC Databricks simplifies this by providing a built-in service to:
 # MAGIC
 # MAGIC - Create and store your functions (tools) leveraging UC
 # MAGIC - Execute the functions in a safe way
 # MAGIC - Reason about the tools you selected and chain them together to properly answer your question. 
 # MAGIC
-# MAGIC A a high level, here is the AI system we will implement in this demo:
+# MAGIC At a high level, here is the AI system we will implement in this demo:
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/llm-tools-functions-flow.png?raw=true" width="900px">
 # MAGIC
@@ -129,7 +129,7 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ### Creating a function calling an LLMs with specific prompt as a tool
+# MAGIC ### Creating a function calling LLMs with specific prompt as a tool
 # MAGIC
 # MAGIC You can also register tools containing custom prompts that your LLM can use to to execute actions based on the customer context.
 # MAGIC
@@ -158,7 +158,7 @@
 # MAGIC
 # MAGIC We'll be using Databricks Vector Search to perform a realtime similarity search and return articles that we could suggest from our database.
 # MAGIC
-# MAGIC Do do so, you can leverage the new `vector_search` SQL function. See [Documentation](https://docs.databricks.com/en/sql/language-manual/functions/vector_search.html) for more details.
+# MAGIC To do so, you can leverage the new `vector_search` SQL function. See [Documentation](https://docs.databricks.com/en/sql/language-manual/functions/vector_search.html) for more details.
 # MAGIC
 # MAGIC <div style="background-color: #e3efff"> To simplify this demo, we'll fake the call to the vector_search and make it work without pre-loading the demo</div>
 
@@ -324,7 +324,7 @@ agent_executor.invoke({"input": "what's 12in in cm?"})
 
 # COMMAND ----------
 
-agent_executor.invoke({"input": "what's are my latest orders?"})
+agent_executor.invoke({"input": "what are my latest orders?"})
 
 # COMMAND ----------
 
@@ -336,12 +336,12 @@ agent_executor.invoke({"input": "what's are my latest orders?"})
 # COMMAND ----------
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-answer = agent_executor.invoke({"input": "I need a dress for an Interview I have today. What style would recommend for today?"})
+answer = agent_executor.invoke({"input": "I need a dress for an interview I have today. What style would you recommend for today?"})
 
 # COMMAND ----------
 
 #Note: in a real app, we would include the preview discussion as history to keep the reference.
-answer = agent_executor.invoke({"input": "Can you give me a list of red dress I can buy?"})
+answer = agent_executor.invoke({"input": "Can you give me a list of red dresses I can buy?"})
 
 # COMMAND ----------
 
@@ -358,7 +358,7 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 
 # MAGIC %md 
 # MAGIC ### Calculator tool: Supporting math operations 
-# MAGIC Let's add a function to allow our llm to execute any Math operation. 
+# MAGIC Let's add a function to allow our LLM to execute any Math operation. 
 # MAGIC
 # MAGIC Databricks runs the python in a safe container. However, we'll filter what the function can do to avoid any potential issues with prompt injection (so that the user cannot execute other python instructions).
 
@@ -411,7 +411,7 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC %md
 # MAGIC ### Run any python function
 # MAGIC
-# MAGIC If we are creating an coding assistant, it can be useful to allow our AI System to run python code to try them, and output the results to the user. **Be careful doing that, as any code could be executed by the user.**
+# MAGIC If we are creating a coding assistant, it can be useful to allow our AI System to run python code to try them and output the results to the user. **Be careful doing that, as any code could be executed by the user.**
 # MAGIC
 # MAGIC Here is an example:
 
@@ -426,8 +426,8 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC $$
 # MAGIC   import traceback
 # MAGIC   try:
-# MAGIC       if python_code.startswith('```') and python_code.endswith('```'):
-# MAGIC           python_code = python_code[3:-3].strip()      
+# MAGIC       import re
+# MAGIC       python_code = re.sub(r"^\s*```(?:python)?|```\s*$", "", python_code).strip()
 # MAGIC       result = eval(python_code, globals())
 # MAGIC       return str(result)
 # MAGIC   except Exception as ex:
@@ -440,7 +440,7 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # COMMAND ----------
 
 from langchain.agents import AgentExecutor, create_tool_calling_agent
-prompt = get_prompt(prompt="You are an assistant for python developer. you can run any python code the customer is asking for to output to test and run the code, and display the output. Don't mention you have tools or the tools name. Make sure you send the full python code to the function")
+prompt = get_prompt(prompt="You are an assistant for a python developer. You can run any python code the customer is asking for to output to test and run the code, and display the output. Don't mention you have tools or the tools name. Make sure you send the full python code at once to the function")
 tools = get_tools()
 agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
@@ -449,19 +449,95 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC ## Deploying our Agent Executor as Model Serving Endpoint
+# MAGIC
+# MAGIC We're now ready to package our chain within MLFLow, and deploy it as a Model Serving Endpoint, leveraging Databricks Agent Framework and its review application
+
+# COMMAND ----------
+
+# DBTITLE 1,Create the chain
+from langchain.schema.runnable import RunnableLambda
+from langchain_core.output_parsers import StrOutputParser
+
+# Function to extract the user's query
+def extract_user_query_string(chat_messages_array):
+    return chat_messages_array[-1]["content"]
+
+# Wrapping the agent_executor invocation
+def agent_executor_wrapper(input_data):
+    result = agent_executor.invoke({"input": input_data})
+    return result["output"]
+
+# Create the chain using the | operator with StrOutputParser
+chain = (
+    RunnableLambda(lambda data: extract_user_query_string(data["messages"]))  # Extract the user query
+    | RunnableLambda(agent_executor_wrapper)  # Pass the query to the agent executor
+    | StrOutputParser()  # Optionally parse the output to ensure it's a clean string
+)
+
+# Example input data
+input_data = {
+    "messages": [
+        {"content": "Write me a function that computes the Fibonacci sequence in Python and displays its result for 5."}
+    ]
+}
+
+# Run the chain
+answer = chain.invoke(input_data)
+displayHTML(answer.replace('\n', '<br>'))
+
+# COMMAND ----------
+
+# DBTITLE 1,Deploy the chain to MLFLow & UC
+def deploy_chain():
+  # Log the model to MLflow
+  with mlflow.start_run(run_name="basic_rag_bot"):
+    logged_chain_info = mlflow.langchain.log_model(
+            #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
+            lc_model=os.path.join(os.getcwd(), 'chain'),  # Chain code file e.g., /path/to/the/chain.py 
+            model_config='<TODO: write your chain in a separate file>', # Chain configuration 
+            artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
+            input_example=input_data,
+            example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
+        )
+
+  MODEL_NAME = "tools_agent_demo"
+  MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
+  # Register to UC
+  uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
+
+
+  from databricks import agents
+  # Deploy to enable the Review APP and create an API endpoint
+  # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
+  deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
+
+  instructions_to_reviewer = f"""## Instructions for Testing our Databricks Agent with Compound AI system
+
+  Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
+
+  # Add the user-facing instructions to the Review App
+  agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+
+# Uncomment to deploy
+#deploy_chain()
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Conclusion
 # MAGIC That's it, we saw how you can leverage Databricks Functions as tools within your AI system.
 # MAGIC
-# MAGIC This demo gave you a simple overview and some example to get started. You can take it to the next level within your own AI Systems!
+# MAGIC This demo gave you a simple overview and some examples to get started. You can take it to the next level within your own AI Systems!
 # MAGIC
-# MAGIC Once your application complete and your chain ready to be deployed, you can easily serve your model as a Model Serving Endpoint, acting as your Compound AI System!
+# MAGIC Once your application is complete and your chain ready to be deployed, you can easily serve your model as a Model Serving Endpoint, acting as your Compound AI System!
 # MAGIC
 # MAGIC ### Coming soon
 # MAGIC
-# MAGIC We'll soon update this demo to add more example, including:
-# MAGIC - how to properly leverage secrets within AI functions to call external system having Authentication
-# MAGIC - generating images and calling ML models endpoints
+# MAGIC We'll soon update this demo to add more examples, including:
+# MAGIC - how to properly leverage secrets within AI functions to call external systems having Authentication
+# MAGIC - generating images and calling ML model endpoints
 # MAGIC - Use Genie as an agent to query any table!
 # MAGIC - More to come!
 # MAGIC

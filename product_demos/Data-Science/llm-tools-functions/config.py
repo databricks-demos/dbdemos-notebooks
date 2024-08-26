@@ -12,4 +12,5 @@
 VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"
 
 catalog = "main__build"
-dbName = db = "dbdemos_ai_function_calling"
+dbName = db = "dbdemos_agent_tools"
+volume_name = "dbdemos_agent_volume"

@@ -27,7 +27,7 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 # COMMAND ----------
 
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
-DBDemos.setup_schema(catalog, db, reset_all_data)
+DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
 
 data_exists = False
 try:

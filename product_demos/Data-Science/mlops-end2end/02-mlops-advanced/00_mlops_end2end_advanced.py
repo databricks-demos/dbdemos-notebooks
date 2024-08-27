@@ -21,11 +21,3 @@
 
 telcoDF = spark.table("mlops_churn_bronze_customers")
 display(telcoDF)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ## Coming soon!
-# MAGIC
-# MAGIC *We're actively updating the mlops pipeline and will release this next serie soon within dbdemos!*

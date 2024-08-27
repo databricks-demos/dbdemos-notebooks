@@ -1,6 +1,22 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Verify drift metric(s)
+# MAGIC # Drift detection
+# MAGIC
+# MAGIC In this step, we will build a drift detection logic to run periodically on the inference data.
+# MAGIC
+# MAGIC **Drift detection** refers to the process of identifying changes in the statistical properties of input data, which can lead to a decline in model performance over time. This is crucial for maintaining the accuracy and reliability of models in dynamic environments, as it allows for timely interventions such as model retraining or adaptation to new data distributions
+# MAGIC
+# MAGIC In order to simulate some data drifts, we will use _dbldatagen_ library. the _dbldatagen_ Databricks Labs project is a Python library for generating synthetic data within the Databricks environment using Spark.
+# MAGIC
+# MAGIC We will simulate a label drift using the data generator package.
+# MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors.
+# MAGIC
+# MAGIC _We will set all labels to True_
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-7.png" width="1200">
 # MAGIC
@@ -14,16 +30,16 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install "databricks-sdk>=0.28.0" 
-# MAGIC %pip install dbldatagen -qU
-# MAGIC dbutils.library.restartPython()
+# DBTITLE 1,Install needed package
+# Install Databricks Python SDK
+%pip install "databricks-sdk>=0.28.0" -qU
+# Install Databricks Data Generator package
+%pip install dbldatagen -qU
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $gen_synthetic_data=true
-
-# COMMAND ----------
-
+# DBTITLE 1,Define drift metrics
 dbutils.widgets.dropdown("perf_metric", "f1_score.macro", ["accuracy_score", "precision.weighted", "recall.weighted", "f1_score.macro"])
 dbutils.widgets.dropdown("drift_metric", "js_distance", ["chi_squared_test.statistic", "chi_squared_test.pvalue", "tv_distance", "l_infinity_distance", "js_distance"])
 dbutils.widgets.text("model_id", "*", "Model Id")
@@ -31,14 +47,18 @@ dbutils.widgets.text("model_id", "*", "Model Id")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## First retrieve drift metrics
+# MAGIC Run setup notebook & generate synthetic data
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $gen_synthetic_data=true
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Refresh the monitor 
 # MAGIC
-# MAGIC Query Lakehouse Monitoring's drift metrics table for the inference table being monitored.
-# MAGIC Here we're testing if these metrics have exceeded a certain threshold (defined by the business):
-# MAGIC 1. prediction drift (Jensen–Shannon distance) > 0.2
-# MAGIC 2. label drift (Jensen–Shannon distance) > 0.2
-# MAGIC 3. expected_loss (daily) > 100
-# MAGIC 4. performance(i.e. f1_score) < 0.6
+# MAGIC The previous step performs a write of the synthetic data to the inteference table. We should referesh the monitor to re-compute the metrics.
 
 # COMMAND ----------
 
@@ -60,6 +80,18 @@ while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoStat
 monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
 drift_table_name = monitor_info.drift_metrics_table_name
 profile_table_name = monitor_info.profile_metrics_table_name
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Retrieve drift metrics
+# MAGIC
+# MAGIC Query Lakehouse Monitoring's drift metrics table for the inference table being monitored.
+# MAGIC Here we're testing if these metrics have exceeded a certain threshold (defined by the business):
+# MAGIC 1. prediction drift (Jensen–Shannon distance) > 0.2
+# MAGIC 2. label drift (Jensen–Shannon distance) > 0.2
+# MAGIC 3. expected_loss (daily) > 100
+# MAGIC 4. performance(i.e. f1_score) < 0.4
 
 # COMMAND ----------
 
@@ -139,10 +171,12 @@ display(all_metrics_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Count total violations and save as task value
+# MAGIC
+# MAGIC ## Count total violations and save as task value
 
 # COMMAND ----------
 
+# DBTITLE 1,count nr violations
 from pyspark.sql.functions import col, abs
 
 performance_violation_count = all_metrics_df.where(
@@ -160,6 +194,21 @@ all_violations_count = drift_violation_count + performance_violation_count
 # COMMAND ----------
 
 print(f"Total number of joint violations: {all_violations_count}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Trigger model retraining
+# MAGIC
+# MAGIC Upon detecting a number of violations, we should automate some actions, such as:
+# MAGIC - Retrain the machine learning model
+# MAGIC - Send an alert to owners via slack or email
+# MAGIC
+# MAGIC One way of performing this in Databricks is to add branching logic to your job with [the If/else condition task](https://docs.databricks.com/en/jobs/conditional-tasks.html#add-branching-logic-to-your-job-with-the-ifelse-condition-task). 
+# MAGIC
+# MAGIC In order to do that, we should save the number of violations in a [task value](https://docs.databricks.com/en/jobs/share-task-context.html) to be consumed in the If/else condition. 
+# MAGIC
+# MAGIC In our workflow, we will trigger a model training, which will be a job run task of the train model job.
 
 # COMMAND ----------
 

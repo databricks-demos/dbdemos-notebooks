@@ -126,15 +126,11 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
 # MAGIC
 # MAGIC ## Compute & Write to Feature Store
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-feature-store.png" style="float:right" width="500" />
+# MAGIC Once our features are ready, we'll save them in Databricks Feature Store. Any Delta Table registered to Unity Catalog can be used as a feature table.
 # MAGIC
-# MAGIC Once our features are ready, we'll save them in Databricks Feature Store. Under the hood, features store are backed by a Delta Lake table.
+# MAGIC This will allows us to leverage Unity Catalog for governance, discoverability and reusability of our features accross our organization, as well as increasing team efficiency.
 # MAGIC
-# MAGIC This will allow discoverability and reusability of our feature accross our organization, increasing team efficiency.
-# MAGIC
-# MAGIC Feature store will bring traceability and governance in our deployment, knowing which model is dependent of which set of features.
-# MAGIC
-# MAGIC Make sure you're using the "Machine Learning" menu to have access to your feature store using the UI.
+# MAGIC The lineage capability in Unity Catalog brings traceability and governance in our deployment, knowing which model is dependent of which feature tables.
 
 # COMMAND ----------
 
@@ -284,7 +280,13 @@ fe.write_table(
 # MAGIC %md
 # MAGIC ## Define Featurization Logic for on-demand feature functions
 # MAGIC
-# MAGIC For features that can needs to be calculated on-demand see more info here ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/on-demand-features.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/on-demand-features)) These can be used in both batch inference and online inference.
+# MAGIC We will define a function for features that can needs to be calculated on-demand. These functions can be used in both batch inference and online inference.
+# MAGIC
+# MAGIC It is common that customers who have elevated bills of monthly charges have a higher propensity to churn. The `avg_price_increase` function calculates the potential average price increase based on their historical charges, as well as their current tenure. The function lets the model use this freshly calculated value as a feature for training and, later, scoring.
+# MAGIC
+# MAGIC This function is defined under Unity Catalog, which provides governance over who can use the function.
+# MAGIC
+# MAGIC Refer to the documentation for more information. ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/on-demand-features.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/on-demand-features)) 
 
 # COMMAND ----------
 
@@ -323,22 +325,30 @@ spark.sql(function_def)
 # MAGIC
 # MAGIC Instead of creating the same boilerplate for each new project, Databricks Auto-ML can automatically generate state of the art models for Classifications, regression, and forecast.
 # MAGIC
+# MAGIC Models can be directly deployed, or instead leverage generated notebooks to boostrap projects with best-practices, saving you weeks of efforts.
 # MAGIC
 # MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
 # MAGIC
-# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
 # MAGIC
-# MAGIC Models can be directly deployed, or instead leverage generated notebooks to boostrap projects with best-practices, saving you weeks of efforts.
+# MAGIC <br>
 # MAGIC
 # MAGIC ### Using Databricks Auto ML with our Churn dataset
 # MAGIC
-# MAGIC Auto ML is available in the "Machine Learning" space. All we have to do is start a new Auto-ML experimentation and select the table containint the ground-truth labels (i.e. `dbdemos.schema.churn_label_table`) and join it with the features in the feature table (i.e. `dbdemos.schema.churn_feature_table`)
+# MAGIC <br>
+# MAGIC
+# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Auto ML is available under **Machine Learning - Experiments**. All we have to do is create a new Auto-ML experiment and select the table containing the ground-truth labels and join it with the features in the feature table.
 # MAGIC
 # MAGIC Our prediction target is the `churn` column.
 # MAGIC
-# MAGIC Click on Start, and Databricks will do the rest.
+# MAGIC Click on **Start**, and Databricks will do the rest.
 # MAGIC
 # MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
+# MAGIC
+# MAGIC <br>
 # MAGIC
 # MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API]()
 # MAGIC * Select the table containing the ground-truth labels (i.e. `dbdemos.schema.churn_label_table`)
@@ -349,11 +359,8 @@ spark.sql(function_def)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Using the generated notebook to build our model
+# MAGIC ### Using the AutoML-generated notebook to build our model
+# MAGIC
+# MAGIC We have pre-run AutoML, which generated the notebook that trained the best model in the AutoML run. We take this notebook and improve on the model.
 # MAGIC
 # MAGIC Next step: [Explore the modfied version of the notebook generated from Auto-ML]($./02_automl_champion)
-# MAGIC
-# MAGIC TODO: To check - may not be able to simply register an AutoML model
-# MAGIC
-# MAGIC **Note:**
-# MAGIC For demo purposes, run the above notebook OR create and register a new version of the model from your autoML experiment and label/alias the model as "Champion"

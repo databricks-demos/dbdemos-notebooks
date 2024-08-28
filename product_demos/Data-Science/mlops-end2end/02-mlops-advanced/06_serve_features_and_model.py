@@ -83,7 +83,7 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (d
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_create_online_table.gif?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/06_create_online_table.gif?raw=true" width="1200">
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -104,7 +104,7 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (d
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_online_table.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/06_online_table.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -205,69 +205,33 @@ except Exception as e:
 # MAGIC To make the model available for real-time inference through a REST API we will deploying it as a Model Serving endpoint.
 # MAGIC
 # MAGIC Our marketing team can then have it run in a customer-facing application used by many concurrent customers. Databricks makes it easy for ML teams to deploy this type of low-latency and high-concurrency applications. Model Serving handles all the infrastructure, deployment and scaling for you. You just need to deploy the model!
-# MAGIC
-# MAGIC You can do it through the UI, or by using the API.
 
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Promote model for real-time serving
 # MAGIC
-# MAGIC ## OPTION 1: Use the UI
+# MAGIC We have seen earlier how to use the `@Champion` and `@Challenger` aliases to promote models to be called in a batch pipeline.
 # MAGIC
-# MAGIC Go to the **Serving** section under **Machine Learning** and click **Create serving endpoint**.
+# MAGIC Since real-time inference is another way the model will be consumed, we need a workflow to ensure the model is deployed safely. You can adopt different strategies to deploy a new model version as an endpoint. We will look at  A/B testing as an example here. Other strategies include canary deploying, shadow testing, etc.
 # MAGIC
-# MAGIC Open the Model page and click on "Serving". It'll start your model behind a REST endpoint and you can start sending your HTTP requests!
+# MAGIC In A/B testing, there is a 'live' model served in production. When we have a new model version, we want to divert a percentage of our online traffic to this new model version. We let the new model version predict if these customers will churn, and compare the results to that of the 'live' model. We monitor the results. If the results are acceptable, then we divert all traffic to the new model version, and it now becomes the new 'live' version.
 # MAGIC
-# MAGIC <br>
+# MAGIC Let's introduce a third alias, `@Production` to track this workflow:
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_create_serving_endpoint.gif?raw=true" width="854">
+# MAGIC - `@Production`: Production model that is 'live'
+# MAGIC - `@Champion`: New model version that was promoted after Champion-Challenger testing
+# MAGIC - `@Challenger`: Model that challenges the Champion. Never gets deployed for real-time serving unless promoted to Champion.
 # MAGIC
-# MAGIC <br>
-# MAGIC
-# MAGIC Fill in the following fields:
-# MAGIC
-# MAGIC * **Name**: `dbdemos_mlops_advanced_churn`
-# MAGIC   * This is the name of the serving endpoint
-# MAGIC * **Entity**: Type `mlops_churn` and choose the model registered from the previous notebooks.
-# MAGIC   * This is the Unity Catalog-registered model that you want to serve.
-# MAGIC * **Compute type**: Leave it as **CPU**
-# MAGIC   * This is the column in the source table to use as the timeseries key.
-# MAGIC * **Compute scale out**: Choose **Small**
-# MAGIC   * This determines how many concurrent requests the endpoint can handle.
-# MAGIC * **Scale to zero**: Keep it checked
-# MAGIC   * This allows the serving endpoint to scale down to zero when there are no requests
-# MAGIC
-# MAGIC Click **Create** and wait for the endpoint to provision. Be patient, as this can take more than an hour. Take a break and check back later.
-# MAGIC
-# MAGIC When the endpoint is ready, it should show that the status is **Ready**.
+# MAGIC Model Serving lets you deploy multiple model versions to a serving endpoint and specify a traffic split between these versions. For example, when there is a new Champion model to be A/B tested, you can route 20% of the traffic to the the Champion model and let the Production model process only 80%.
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_served_model.png?raw=true" width="854">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/06_traffic_percent.png?raw=true" width="450">
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC Refer to the documentation to learn more about creating and managing serving endpoints. ([AWS](https://docs.databricks.com/machine-learning/model-inference/serverless/create-manage-serverless-endpoints.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-inference/serverless/create-manage-serverless-endpoints))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## TODO: Model promotion
-# MAGIC
-# MAGIC TODO
-# MAGIC
-# MAGIC Explain the flow for promoting models with canary deployment, or A/B testing.
-# MAGIC
-# MAGIC The flow will involve 3 aliases:
-# MAGIC - Production (for online serving - set to 100% traffic when this is the only version running, or 80% when doing "online testing")
-# MAGIC - Champion (20% traffic when doing online testing)
-# MAGIC - Challenger (This alias is used in the batch testing workflow. In our flow, the Challenger model never gets deployed in the serving endpoint.)
-# MAGIC
-# MAGIC To simplify packaging and presentation of the demo within dbdemo, we will use one catalog and schema for models of all aliases. (i.e. we are not keeping separate dev/qa/prod catalogs or schemas)
-# MAGIC
-# MAGIC -----
-# MAGIC
-# MAGIC Here, we are going to promote the Champion model to Production and deploy it for serving.
+# MAGIC Since we are deplying a model as an endpoint for the first time, we will promote set the `@Production` alias to the Champion model and deploy it for serving against 100% traffic.
 # MAGIC
 
 # COMMAND ----------
@@ -297,14 +261,63 @@ print(f"Promoting {model_name} versions {model_version} from Champion to Product
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## OPTION 2: Enable model serving endpoint via API call
+# MAGIC
+# MAGIC ## Create the Model Serving endpoint
+# MAGIC
+# MAGIC We'll now create the Model Serving endpoint. This is very simple once the model has been registered in Unity Catalog. You can do it through the UI, or by using the API.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ### OPTION 1: Use the UI
+# MAGIC
+# MAGIC Go to the **Serving** section under **Machine Learning** and click **Create serving endpoint**.
+# MAGIC
+# MAGIC Open the Model page and click on "Serving". It'll start your model behind a REST endpoint and you can start sending your HTTP requests!
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/06_create_serving_endpoint.gif?raw=true" width="854">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Fill in the following fields:
+# MAGIC
+# MAGIC * **Name**: `dbdemos_mlops_advanced_churn`
+# MAGIC   * This is the name of the serving endpoint
+# MAGIC * **Entity**: Type `mlops_churn` and choose the model registered from the previous notebooks.
+# MAGIC   * This is the Unity Catalog-registered model that you want to serve.
+# MAGIC * **Compute type**: Leave it as **CPU**
+# MAGIC   * This is the column in the source table to use as the timeseries key.
+# MAGIC * **Compute scale out**: Choose **Small**
+# MAGIC   * This determines how many concurrent requests the endpoint can handle.
+# MAGIC * **Scale to zero**: Keep it checked
+# MAGIC   * This allows the serving endpoint to scale down to zero when there are no requests
+# MAGIC
+# MAGIC Click **Create** and wait for the endpoint to provision. Be patient, as this can take more than an hour. Take a break and check back later.
+# MAGIC
+# MAGIC When the endpoint is ready, it should show that the status is **Ready**.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/06_served_model.png?raw=true" width="854">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Refer to the documentation to learn more about creating and managing serving endpoints. ([AWS](https://docs.databricks.com/machine-learning/model-inference/serverless/create-manage-serverless-endpoints.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-inference/serverless/create-manage-serverless-endpoints))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### OPTION 2: Enable model serving endpoint via API call
 # MAGIC
 # MAGIC What is done above using the UI to create a serving endpoint can also be done programmatically. The code below automatically creates a model serving endpoint for you.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Create/Update serving endpoint
+# MAGIC #### Create/Update serving endpoint
 
 # COMMAND ----------
 
@@ -362,9 +375,8 @@ try:
 
 except Exception as e:
   print(e)
-  # TODO: When inference table already exists, "already exists" phrase is also present in exception message. Make sure that endpoint already exists case is properly handled. Otherwise, the following error message can cause a lot of confusion when debugging.
 
-  if "already exists" in e.args[0]:
+  if f"Endpoint with name '{endpoint_name}' already exists" in e.args[0]:
     print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version}")
     print("--- TODO: Code to be implemented ---")
 
@@ -380,7 +392,7 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Wait/Verify that endpoint is ready
+# MAGIC #### Wait/Verify that endpoint is ready
 # MAGIC
 # MAGIC Leave the following cell to run. It may take an hour or so for the endpoint to be ready. Take a break and check back later.
 
@@ -413,7 +425,7 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/06_online_scoring.gif?raw=true" width="950">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/06_online_scoring.gif?raw=true" width="950">
 # MAGIC
 # MAGIC <br>
 # MAGIC

@@ -452,11 +452,12 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC %md 
 # MAGIC ## Deploying our Agent Executor as Model Serving Endpoint
 # MAGIC
-# MAGIC We're now ready to package our chain within MLFLow, and deploy it as a Model Serving Endpoint, leveraging Databricks Agent Framework and its review application
+# MAGIC We're now ready to package our chain within MLFLow, and deploy it as a Model Serving Endpoint, leveraging Databricks Agent Framework and its review application.
 
 # COMMAND ----------
 
 # DBTITLE 1,Create the chain
+# TODO: write this as a separate file if you want to deploy it properly
 from langchain.schema.runnable import RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 
@@ -476,13 +477,15 @@ chain = (
     | StrOutputParser()  # Optionally parse the output to ensure it's a clean string
 )
 
+# COMMAND ----------
+
+# DBTITLE 1,Let's try our chain
 # Example input data
 input_data = {
     "messages": [
         {"content": "Write me a function that computes the Fibonacci sequence in Python and displays its result for 5."}
     ]
 }
-
 # Run the chain
 answer = chain.invoke(input_data)
 displayHTML(answer.replace('\n', '<br>'))
@@ -491,12 +494,14 @@ displayHTML(answer.replace('\n', '<br>'))
 
 # DBTITLE 1,Deploy the chain to MLFLow & UC
 def deploy_chain():
+  # For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
+  chain_config = {} # TODO: complete your chain config here
   # Log the model to MLflow
   with mlflow.start_run(run_name="basic_rag_bot"):
     logged_chain_info = mlflow.langchain.log_model(
             #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
-            lc_model=os.path.join(os.getcwd(), 'chain'),  # Chain code file e.g., /path/to/the/chain.py 
-            model_config='<TODO: write your chain in a separate file>', # Chain configuration 
+            lc_model=chain, #TODO: save it as a file instead: os.path.join(os.getcwd(), 'chain.py'),  # Chain code file e.g., /path/to/the/chain.py 
+            model_config=chain_config, # Chain configuration 
             artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
             input_example=input_data,
             example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema

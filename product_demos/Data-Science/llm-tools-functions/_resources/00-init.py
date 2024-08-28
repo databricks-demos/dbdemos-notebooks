@@ -48,7 +48,10 @@ def get_shared_warehouse(name=None):
         if wh.name == name:
             return wh
     for wh in warehouses:
-        if wh.name == "dbdemos-shared-endpoint":
+        if wh.name.lower() == "shared endpoint":
+            return wh
+    for wh in warehouses:
+        if wh.name.lower() == "dbdemos-shared-endpoint":
             return wh
     #Try to fallback to an existing shared endpoint.
     for wh in warehouses:

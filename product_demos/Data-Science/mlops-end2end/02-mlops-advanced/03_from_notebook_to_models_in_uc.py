@@ -43,7 +43,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Programmatically find best run and push model to the Unity Catalog for validation
+# MAGIC ## Programmatically find best run and push model to Unity Catalog for validation
 # MAGIC
 # MAGIC We have completed the training runs to find a candidate __Challenger__ model. We'll programatically select the best model from our last ML experiment and register it to Unity Catalog. We can easily do that using MLFlow `search_runs` API:
 
@@ -152,6 +152,18 @@ client.set_registered_model_alias(
 # MAGIC %md
 # MAGIC
 # MAGIC Now, visually inspect the model verions in Unity Catalog Explorer. You should see the version description and `Challenger` alias applied to the version.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ## Model lineage in Unity Catalog
+# MAGIC
+# MAGIC Unity Catalog allows you to track model lineage. Select the model in the Catalog Explorer, click on the latest model version, and click **See lineage graph** in the **Lineage** tab.
+# MAGIC
+# MAGIC Unity Catalog captures the upstream featurization logic in the form of the feature table used to train the model, as well as the feature function used to calculate features. It also traces back to the notebook where the model was trained. You can navigate to all these assets using the link displayed on the screen. This allows you to have traceability on where the model got its features from and lets you perform impact analysis.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/03_model_lineage.png?raw=true" width="1200">
 
 # COMMAND ----------
 

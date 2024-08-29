@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC We have selected the notebook from best run from the Auto ML experiment and reusing it to build our model.
 # MAGIC
-# MAGIC All the code below has been automatically generated. As Data Scientist, I can tune it based on the business knowledge I have if needed.
+# MAGIC AutoML generates the code in this notebook automatically. As Data Scientist, I can tune it based on the business knowledge I have if needed.
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-2.png" width="1200">
 # MAGIC
@@ -66,7 +66,11 @@ display(spark.table(feature_table_full_name))
 
 # COMMAND ----------
 
-# MAGIC %md We'll also use specific feature functions for `on-demand features`
+# MAGIC %md
+# MAGIC
+# MAGIC We'll also use specific feature functions for on-demand features.
+# MAGIC
+# MAGIC Recall that we have defined the `avg_price_increase` feature function in the [feature engineering notebook]($./01_feature_engineering)
 
 # COMMAND ----------
 
@@ -76,7 +80,13 @@ display(spark.table(feature_table_full_name))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Create features specifications
+# MAGIC Create features specifications.
+# MAGIC
+# MAGIC The feature lookup defintion specifies the tables to use as feature tables and the lookup keys to use to lookup feature values.
+# MAGIC
+# MAGIC The feature function definition specifies which columns from the feature table are bound to the function inputs.
+# MAGIC
+# MAGIC The Feature Engineering client will use these values to create a training specification that's used to assemble the training dataset from the labels table and the feature table.
 
 # COMMAND ----------
 
@@ -103,9 +113,21 @@ features = [
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC Read the label table.
+
+# COMMAND ----------
+
 # DBTITLE 1,Pull labels to use for training/validating/testing
 
 labels_df = spark.read.table(f"{catalog}.{db}.{advanced_label_table_name}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC Create the training set specifications. This contains information how the training set should be assembled from the label table, feature table and feature function.
 
 # COMMAND ----------
 
@@ -125,10 +147,15 @@ training_set_specs = fe.create_training_set(
 
 # COMMAND ----------
 
-#df_loaded = training_set_specs.load_df().toPandas().set_index(keys=[primary_key, timestamp_col])
+# MAGIC %md
+# MAGIC
+# MAGIC With the training set specification, we can now build the training dataset.
+# MAGIC
+# MAGIC `training_set_specs.load_df()` returns a pySpark dataframe. We will convert it to a Pandas dataframe to train an LGBM model.
 
-# Try not to set index, as columns are not present
+# COMMAND ----------
 
+# DBTITLE 1,Load training set as Pandas dataframe
 df_loaded = training_set_specs.load_df().toPandas()
 
 # COMMAND ----------
@@ -243,34 +270,11 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 
 # MAGIC %md
 # MAGIC ## Train - Validation - Test Split
-# MAGIC The input data is split by AutoML into 3 sets:
+# MAGIC Split the training data into 3 sets:
 # MAGIC - Train (60% of the dataset used to train the model)
 # MAGIC - Validation (20% of the dataset used to tune the hyperparameters of the model)
 # MAGIC - Test (20% of the dataset used to report the true performance of the model on an unseen dataset)
 # MAGIC
-# MAGIC `_automl_split_col_xxxx` (or `_automl_split_col_0000` for MLR>=13.3LTS) contains the information of which set a given row belongs to.
-# MAGIC We use this column to split the dataset into the above 3 sets.
-# MAGIC The column should not be used for training so it is dropped after split is done.
-
-# COMMAND ----------
-
-# automl_split_col = list(filter(lambda x: "_automl_split_col_" in x, df_loaded.columns))[0]
-
-
-# # AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-# split_train_df = df_loaded.loc[df_loaded[automl_split_col] == "train"]
-# split_val_df = df_loaded.loc[df_loaded[automl_split_col] == "val"]
-# split_test_df = df_loaded.loc[df_loaded[automl_split_col] == "test"]
-
-# # Separate target column from features and drop _automl_split_col_xxxx
-# X_train = split_train_df.drop([target_col, automl_split_col], axis=1)
-# y_train = split_train_df[target_col]
-
-# X_val = split_val_df.drop([target_col, automl_split_col], axis=1)
-# y_val = split_val_df[target_col]
-
-# X_test = split_test_df.drop([target_col, automl_split_col], axis=1)
-# y_test = split_test_df[target_col]
 
 # COMMAND ----------
 
@@ -278,24 +282,7 @@ from sklearn.model_selection import train_test_split
 
 X_train, X_eval, y_train, y_eval = train_test_split(df_loaded.drop(label_col, axis=1), df_loaded[label_col], test_size=0.4, stratify=df_loaded[label_col], random_state=42)
 
-X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.4, stratify=y_eval, random_state=42)
-
-# COMMAND ----------
-
-# # AutoML completed train - validation - test split internally and used split to specify the set
-# split_train_df = df_loaded.loc[df_loaded.split == "train"]
-# split_val_df = df_loaded.loc[df_loaded.split == "validate"]
-# split_test_df = df_loaded.loc[df_loaded.split == "test"]
-
-# # Separate target co# Separate target column from features and drop split
-# X_train = split_train_df.drop([target_col, "split"], axis=1)
-# y_train = split_train_df[target_col]
-
-# X_val = split_val_df.drop([target_col, "split"], axis=1)
-# y_val = split_val_df[target_col]
-
-# X_test = split_test_df.drop([target_col, "split"], axis=1)
-# y_test = split_test_df[target_col]
+X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.5, stratify=y_eval, random_state=42)
 
 # COMMAND ----------
 
@@ -313,19 +300,6 @@ from lightgbm import LGBMClassifier
 
 
 help(LGBMClassifier)
-
-# COMMAND ----------
-
-# # Record specific additional dependencies required by model serving (only required for MLR<13.3)
-# def pin_pandas_version(pandas_ver: str = model_serving_pandas_ver):
-#   """
-#   Custom pandas dependency to pin for deploying in model serving endpoints:
-#   :: pandas_ver : default version running in model serving containers
-#   """
-#   if pd.__version__ <= pandas_ver:
-#     return [f"pandas=={pandas_ver}"]
-#   else:
-#     return [f"pandas=={pd.__version__}"]
 
 # COMMAND ----------
 
@@ -393,12 +367,13 @@ def objective(params):
       warnings.warn(f"Could not infer model output schema: {e}")
       output_schema = None
     
+    # Use the Feature Engineering client to log the model
+    # This logs the feature specifications along with the model,
+    # allowing it to be used at inference time to retrieve features
     fe.log_model(
         model=model,
         artifact_path="model",
         flavor=mlflow.sklearn,
-# Commenting this out since default value is missin in code:
-#        extra_pip_requirements=pin_pandas_version(),
         training_set=training_set_specs,
         output_schema=output_schema,
     )

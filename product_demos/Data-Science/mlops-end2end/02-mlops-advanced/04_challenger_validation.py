@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-4.png?raw=true" width="1200">
 # MAGIC
-# MAGIC *Note: in a typical mlops setup, this would run as part of an automated job to validate new model. For this simpel demo, we'll run it as an interactive notebook.*
+# MAGIC *Note: in a typical mlops setup, this would run as part of an automated job to validate new model. For this demo, we'll run it as an interactive notebook.*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04_challenger_validation&demo_name=mlops-end2end&event=VIEW">
@@ -192,7 +192,7 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 # MAGIC
 # MAGIC Let's use our validation dataset to check the potential new model impact.
 # MAGIC
-# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic to 2 models and requires a feedback loop to evaluate the effect of the prediction (e.g. after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing in the advanced part.*
+# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic to 2 models and requires a feedback loop to evaluate the effect of the prediction (e.g. after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing later in the real-time model serving notebook.*
 
 # COMMAND ----------
 

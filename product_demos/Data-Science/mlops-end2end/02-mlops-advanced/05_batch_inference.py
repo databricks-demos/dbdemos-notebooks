@@ -84,9 +84,7 @@ display(preds_df)
 # MAGIC
 # MAGIC Note that this table does not have the ground truth labels. These are usually collected and made available over time, and in many cases, may not even be available! However, this does not stop us from monitoring the data for drift, as that alone may be a sign that the model has to be retrained.
 # MAGIC
-# MAGIC This is from the table saved in the inference notebooks
-# MAGIC Includes model version, alias, predictions and timestamp
-# MAGIC No labels
+# MAGIC The table displayed below is saved into `mlops_churn_advanced_offline_inference`. It includes the model version used for scoring, the model alias, the predictions and timestamp when the inference was made. It does not contain any labels.
 # MAGIC
 
 # COMMAND ----------
@@ -118,20 +116,8 @@ display(offline_inference_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Conclusion
+# MAGIC ### Congratulations! You have successfully used the model for batch inference.
 # MAGIC
-# MAGIC TODO: Add text for advanced demo.
+# MAGIC Let's look at how we can deploy this model as a REST API endpoint for real-time inference.
 # MAGIC
-# MAGIC This is all for the quickstart demo! We have looked at basic concepts of MLOps and how Databricks helps you achieve them. They include:
-# MAGIC
-# MAGIC - Feature engineering and storing feature tables with labels in Databricks
-# MAGIC - AutoML, model training and experiment tracking in MLflow
-# MAGIC - Registering models as Models in Unity Catalog for governed usage
-# MAGIC - Model validation, Champion-Challenger testing, and model promotion
-# MAGIC - Batch inference by loading the model as a pySpark UDF
-# MAGIC
-# MAGIC We hope you've enjoyed this demo. As the next step, look out for our Advanced End-to-end MLOps demo, which will include more in-depth walkthroughs on the following aspects of MLOps:
-# MAGIC
-# MAGIC - Feature serving and Feature Store
-# MAGIC - Data and model monitoring
-# MAGIC - Deployment for real-time inference
+# MAGIC Next:  [Serve the features and model in real-time]($./06_serve_features_and_model)

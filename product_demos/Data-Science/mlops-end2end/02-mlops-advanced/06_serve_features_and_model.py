@@ -363,7 +363,6 @@ endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 from databricks.sdk.service.serving import EndpointTag
 
 try:
-  #w.serving_endpoints.create_and_wait(
   # Create and do not wait. Check readiness of endpoint in next cell.
   w.serving_endpoints.create(
     name=endpoint_name,
@@ -378,16 +377,23 @@ except Exception as e:
 
   if f"Endpoint with name '{endpoint_name}' already exists" in e.args[0]:
     print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version}")
-    print("--- TODO: Code to be implemented ---")
 
-    # TO-DO:
-    # w.serving_endpoints.update_config_and_wait(
-    #   name=endpoint_name,
-    #   end=TrafficConfig(routes=routes_handle),
-    #   served_models=served_models_handle
-    # )
+    w.serving_endpoints.update_config(
+      name=endpoint_name,
+      served_models=endpoint_config.served_models,
+      traffic_config=endpoint_config.traffic_config
+    )
   else:
     raise(e)
+
+# COMMAND ----------
+
+w.serving_endpoints.update_config(
+  name=endpoint_name,
+  served_models=endpoint_config.served_models,
+  traffic_config=endpoint_config.traffic_config
+)
+
 
 # COMMAND ----------
 
@@ -473,7 +479,9 @@ print(response.predictions)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Next: Monitor model performance [OPTIONAL]
+# MAGIC ### Congratulations! You have deployed a feature and model serving endpoint.
+# MAGIC
+# MAGIC Now that we are able to both make predictions in batches, and predict a customer's propensity to churn in real-time, we will next look at how we can monitor the model's performance.
 # MAGIC
 # MAGIC With inference tables availables we can create a monitor to track our ML's system behavior over time (feature drifts, prediction drift, label drift, model accuracy and metrics etc.)
 # MAGIC

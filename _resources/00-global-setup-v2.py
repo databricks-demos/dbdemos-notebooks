@@ -23,8 +23,11 @@ class DBDemos():
   def setup_schema(catalog, db, reset_all_data, volume_name = None):
     if reset_all_data:
       print(f'clearing up volume named `{catalog}`.`{db}`.`{volume_name}`')
-      spark.sql(f"DROP VOLUME IF EXISTS `{catalog}`.`{db}`.`{volume_name}`")
-      spark.sql(f"DROP SCHEMA IF EXISTS `{catalog}`.`{db}` CASCADE")
+      try:
+        spark.sql(f"DROP VOLUME IF EXISTS `{catalog}`.`{db}`.`{volume_name}`")
+        spark.sql(f"DROP SCHEMA IF EXISTS `{catalog}`.`{db}` CASCADE")
+      except Exception as e:
+        print(f'catalog `{catalog}` or schema `{db}` do not exist.  Skipping data reset')
 
     def use_and_create_db(catalog, dbName, cloud_storage_path = None):
       print(f"USE CATALOG `{catalog}`")

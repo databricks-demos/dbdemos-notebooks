@@ -19,27 +19,47 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install opencv-python==4.8.0.74 numpy==1.21.5 shap==0.41.0
+# MAGIC %pip install opencv-python
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
+# DBTITLE 1,Init the demo
+# MAGIC %run ./_resources/00-init $reset_all_data=false
+
+# COMMAND ----------
+
+# DBTITLE 1,Load the pip requirements from the model registry
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-requirements_path = ModelsArtifactRepository("models:/dbdemos_pcb_classification/Production").download_artifacts(artifact_path="requirements.txt") # download model requirement from remote registry
+import os
+
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+MODEL_NAME = f"{catalog}.{db}.dbdemos_pcb_classification"
+MODEL_URI = f"models:/{MODEL_NAME}@Production"
+
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(MODEL_URI).download_artifacts(artifact_path="requirements.txt") 
+
+if not os.path.exists(requirements_path):
+  dbutils.fs.put("file:" + requirements_path, "", True)
 
 # COMMAND ----------
 
+# DBTITLE 1,Install the requirements
 # MAGIC %pip install -r $requirements_path
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
-
-# COMMAND ----------
-
-model_uri = "models:/dbdemos_pcb_classification/Production"
+# DBTITLE 1,Load the model from the Registry
+import torch
+#Make sure to leverage the GPU when available
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-pipeline = mlflow.transformers.load_model(model_uri, device=device)
-print(f"Model loaded from {model_uri} to device {device}")
+
+pipeline = mlflow.transformers.load_model(
+  MODEL_URI, 
+  device=device.index)
+print(f"Model loaded from {MODEL_URI} to device {device}")
 
 # COMMAND ----------
 
@@ -128,7 +148,7 @@ explain_image(transform(image_bytes), explainer, class_names)
 # MAGIC %md 
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Not only we can predict our default, but we can also understand where they are and help resolving default!
+# MAGIC Not only we can predict our damaged parts, but we can also understand where the damage is and help resolve defects!
 # MAGIC
 # MAGIC ### Going further
 # MAGIC

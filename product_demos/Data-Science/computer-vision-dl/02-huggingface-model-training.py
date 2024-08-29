@@ -30,13 +30,13 @@
 # COMMAND ----------
 
 # DBTITLE 1,Demo Initialization
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
+# MAGIC %run ./_resources/00-init $reset_all_data=false
 
 # COMMAND ----------
 
 # DBTITLE 1,Review our training dataset
 #Setup the training experiment
-init_experiment_for_batch("computer-vision-dl", "pcb")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
 
 df = spark.read.table("training_dataset_augmented")
 display(df.limit(10))
@@ -132,7 +132,7 @@ val_ds.set_transform(preprocess_val)
 
 # COMMAND ----------
 
-# DBTITLE 1,Build our model from 
+# DBTITLE 1,Build our model from the pretrained model
 from transformers import AutoModelForImageClassification, TrainingArguments, Trainer
 
 #Mapping between class label and value (huggingface use it during inference to output the proper label)
@@ -202,7 +202,10 @@ def compute_metrics(eval_pred):
 
 # DBTITLE 1,Start our Training and log the model to MLFlow
 import mlflow
+from mlflow.models.signature import infer_signature
 import torch
+from PIL import Image
+from torchvision.transforms import ToPILImage
 from transformers import pipeline, DefaultDataCollator, EarlyStoppingCallback
 
 def collate_fn(examples):
@@ -214,28 +217,76 @@ def collate_fn(examples):
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 model.to(device)
 
-#mlflow.autolog(log_models=False)
 with mlflow.start_run(run_name="hugging_face") as run:
   early_stop = EarlyStoppingCallback(early_stopping_patience=10)
-  trainer = Trainer(model, args, train_dataset=train_ds, eval_dataset=val_ds, tokenizer=model_def, compute_metrics=compute_metrics, data_collator=collate_fn, callbacks = [early_stop])
+  trainer = Trainer(
+    model, 
+    args, 
+    train_dataset=train_ds, 
+    eval_dataset=val_ds, 
+    tokenizer=model_def, 
+    compute_metrics=compute_metrics, 
+    data_collator=collate_fn, 
+    callbacks = [early_stop])
 
   train_results = trainer.train()
 
   #Build our final hugging face pipeline
-  classifier = pipeline("image-classification", model=trainer.state.best_model_checkpoint, tokenizer = model_def, device_map='auto')
+  classifier = pipeline(
+    "image-classification", 
+    model=trainer.state.best_model_checkpoint, 
+    tokenizer = model_def, 
+    device_map='auto')
+  
   #log the model to MLFlow
+  #    pip_requirements is optional, buit it is used to specify a custom set of dependencies
   reqs = mlflow.transformers.get_default_pip_requirements(model)
-  mlflow.transformers.log_model(artifact_path="model", transformers_model=classifier, pip_requirements=reqs)
+
+  #    signature is used to specify the input and output schema.  Make a single prediction to get the output schema
+  transform = ToPILImage()
+  img = transform(val_ds[0]['image'])
+  prediction = classifier(img)
+  signature = infer_signature(
+    model_input=np.array(img), 
+    model_output=pd.DataFrame(prediction))
+  
+   #    log the model, set tags, and log metrics
+  mlflow.transformers.log_model(
+    artifact_path="model", 
+    transformers_model=classifier, 
+    pip_requirements=reqs,
+    signature=signature)
+  
   mlflow.set_tag("dbdemos", "pcb_classification")
   mlflow.log_metrics(train_results.metrics)
+
+  #    Log the input dataset for lineage tracking from table to model
+  src_dataset = mlflow.data.load_delta(
+    table_name=f'{catalog}.{db}.training_dataset_augmented')
+  mlflow.log_input(src_dataset, context="Training-Input")
 
 # COMMAND ----------
 
 # DBTITLE 1,Let's try our model to make sure it works as expected
-test = spark.read.table("training_dataset_augmented").where("filename = '010.JPG'").toPandas()
-img = Image.open(io.BytesIO(test.iloc[0]['content']))
-print(f"predictions: {classifier(img)}")
-img
+import json
+import io
+from PIL import Image
+
+def test_image(test, index):
+  img = Image.open(io.BytesIO(test.iloc[index]['content']))
+  print("Filename: " + test.iloc[index]['filename'])
+  print("Ground truth label: " + test.iloc[index]['label'])
+  print(f"predictions: {json.dumps(classifier(img), indent=4)}")
+  display(img)
+
+# Sample some images from the training dataset labeled as 'normal' and some labeled as 'damaged'
+normal_samples = spark.read.table("training_dataset_augmented").filter("label == 'normal'").select("content", "filename", "label").limit(10).toPandas()
+damaged_samples = spark.read.table("training_dataset_augmented").filter("label == 'damaged'").select("content", "filename", "label").limit(10).toPandas()
+
+# Test the model using the first image from each group
+test_image(normal_samples, 0)
+print('\n\n=======================')
+test_image(damaged_samples, 0)
 
 # COMMAND ----------
 
@@ -247,12 +298,51 @@ img
 
 # COMMAND ----------
 
-#Save the model in the registry & move it to Production
-model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", "dbdemos_pcb_classification")
-client = mlflow.tracking.MlflowClient()
+# DBTITLE 1,Save the model in the registry & mark it for Production
+# Register models in Unity Catalog
+mlflow.set_registry_uri("databricks-uc")
+MODEL_NAME = f"{catalog}.{db}.dbdemos_pcb_classification"
+
+model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", MODEL_NAME)
 print("registering model version "+model_registered.version+" as production model")
-#Move the model as Production
-client.transition_model_version_stage(name = "dbdemos_pcb_classification", version = model_registered.version, stage = "Production", archive_existing_versions=True)
+
+## Alias the model version as the Production version
+client = mlflow.tracking.MlflowClient()
+client.set_registered_model_alias(
+  name = MODEL_NAME, 
+  version = model_registered.version,
+  alias = "Production")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## The model registry
+# MAGIC Let's check out the model in the Unity Catalog model registry.
+# MAGIC 1.  Open the Catalog Explorer from the left navigation menu
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-01.png?raw=true"/>
+# MAGIC
+# MAGIC 2.  Use the search box or the Catalog browser to locate the `dbdemos_pcb_classification` model in your catalog and schema.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-02.png?raw=true"/>
+# MAGIC
+# MAGIC 3.  Open the version with the alias `@production`.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-03.png?raw=true"/>
+# MAGIC
+# MAGIC 4.  Select the Lineage tab.  Note that the `training_dataset_augmented` table is identified as an upstream connection to the model.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-04.png?raw=true"/>
+# MAGIC
+# MAGIC 5.  Click `See lineage graph`.  
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage-05.png?raw=true"/>
+# MAGIC
+# MAGIC 6.  Use the expansion icons and column names to explore the lineage of the model all the way back to the raw training data ingested from the Volume.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/computer-vision/deeplearning-cv-pcb-model-lineage.png?raw=true"/>
+# MAGIC
+# MAGIC Unity Catalog Lineage provides end-to-end visibility into how data flows and is consumed in your organization from raw ingestion all the way to model training.  Lineage data is available through [System Tables](https://docs.databricks.com/en/admin/system-tables/lineage.html) as well as the UI.
 
 # COMMAND ----------
 

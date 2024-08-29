@@ -32,10 +32,22 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Load the pip requirement from the model registry
+# DBTITLE 1,Init the demo
+# MAGIC %run ./_resources/00-init $reset_all_data=false
+
+# COMMAND ----------
+
+# DBTITLE 1,Load the pip requirements from the model registry
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import os
-requirements_path = ModelsArtifactRepository("models:/dbdemos_pcb_classification/Production").download_artifacts(artifact_path="requirements.txt") # download model requirement from remote registry
+
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+MODEL_NAME = f"{catalog}.{db}.dbdemos_pcb_classification"
+MODEL_URI = f"models:/{MODEL_NAME}@Production"
+
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(MODEL_URI).download_artifacts(artifact_path="requirements.txt") 
 
 if not os.path.exists(requirements_path):
   dbutils.fs.put("file:" + requirements_path, "", True)
@@ -47,17 +59,14 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
-# DBTITLE 1,Init the demo
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
-
-# COMMAND ----------
-
 # DBTITLE 1,Load the model from the Registry
 import torch
-#Make sure to legerage the GPU when available
-model_uri = "models:/dbdemos_pcb_classification/Production"
+#Make sure to leverage the GPU when available
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-pipeline = mlflow.transformers.load_model(model_uri, device=device.index)
+
+pipeline = mlflow.transformers.load_model(
+  MODEL_URI, 
+  device=device.index)
 
 # COMMAND ----------
 
@@ -104,10 +113,9 @@ from typing import Iterator
 
 #Only batch the inferences in our udf by 1000 as images can take some memory
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 1000)
+
 @pandas_udf("struct<score: float, label: string>")
 def detect_damaged_pcb(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
-  #device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-  #pipeline = mlflow.transformers.load_model(model_uri, device=device.index) #Load pipeline outside for now to avoid error (ES-750064)
   #Switch pipeline to eval mode
   pipeline.model.eval()
   with torch.set_grad_enabled(False):
@@ -151,21 +159,40 @@ class RealtimeCVModelWrapper(mlflow.pyfunc.PythonModel):
         with torch.set_grad_enabled(False):
           #Convert the base64 to PIL images
           images = images['data'].apply(lambda b: Image.open(BytesIO(base64.b64decode(b)))).to_list()
+          # Make the predictions
           predictions = self.pipeline(images)
+          # Return the prediction with the highest score
           return pd.DataFrame([max(r, key=lambda x: x['score']) for r in predictions])
-        
-#Build our final hugging face pipeline. Load it as CPU as our endpoint will be cpu for now
-pipeline_cpu = mlflow.transformers.load_model(model_uri, return_type="pipeline", device=torch.device("cpu").index)
-rt_model = RealtimeCVModelWrapper(pipeline_cpu)
 
+# COMMAND ----------
+
+import os
+
+# Make sure we use the CPU as we will use a serverless CPU-based endpoint later
+# See https://github.com/mlflow/mlflow/issues/12871
+os.environ["MLFLOW_HUGGINGFACE_USE_DEVICE_MAP"] = "false"
+
+# COMMAND ----------
+
+# DBTITLE 1,Load our image-based model, wrap it as base64-based, and test it
 def to_base64(b):
   return base64.b64encode(b).decode("ascii")
 
-#Let's try locally before deploying our endpoint to make sure it works as expected:
-pdf = df.toPandas()
 
-#Transform our input as a pandas dataframe containing base64 as this is what our serverless model endpoint will receive.
+# Build our final hugging face pipeline by loading the model from the registry
+pipeline_cpu = mlflow.transformers.load_model(
+  MODEL_URI, 
+  return_type="pipeline", 
+  device=torch.device("cpu"))
+
+# Wrap our model as a PyFuncModel so that it can be used as a realtime serving endpoint
+rt_model = RealtimeCVModelWrapper(pipeline_cpu)
+
+# Let's try locally before deploying our endpoint to make sure it works as expected:
+#     Transform our input as a pandas dataframe containing base64 as this is what our serverless model endpoint will receive.
+pdf = df.toPandas()
 df_input = pd.DataFrame(pdf["content"].apply(to_base64).to_list(), columns=["data"])
+
 predictions = rt_model.predict(None, df_input)
 display(predictions)
 
@@ -180,17 +207,24 @@ display(predictions)
 
 # DBTITLE 1,Save or RT model taking base64 in the registry
 from mlflow.models.signature import infer_signature
-init_experiment_for_batch("computer-vision-dl", "pcb")
+DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb")
 
 with mlflow.start_run(run_name="hugging_face_rt") as run:
   signature = infer_signature(df_input, predictions)
   #log the model to MLFlow
-  reqs = mlflow.pyfunc.log_model("model", python_model = rt_model, pip_requirements=requirements_path, input_example=df_input, signature = signature)
+  reqs = mlflow.pyfunc.log_model(
+    artifact_path="model", 
+    python_model=rt_model, 
+    pip_requirements=requirements_path, 
+    input_example=df_input, 
+    signature = signature)
   mlflow.set_tag("dbdemos", "pcb_classification")
   mlflow.set_tag("rt", "true")
 
-#Save the model in the registry & move it to Production
-model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", "dbdemos_pcb_classification")
+#Save the model in the registry
+model_registered = mlflow.register_model(
+  model_uri="runs:/"+run.info.run_id+"/model", 
+  name="dbdemos_pcb_classification")
 
 # COMMAND ----------
 
@@ -202,12 +236,53 @@ model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", "dbd
 
 # COMMAND ----------
 
-#Simple wrapper on top of the REST API. See the _resource/00-init companion notebook for more details or the Databricks endpoint API documentation
-serving_client = EndpointApiClient()
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-# Start the endpoint using the REST API (you can do it using the UI directly)
-# The first run might take some time as it's building the image. Further deployment are very fast even when scaled to zero.
-serving_client.create_endpoint_if_not_exists("dbdemos_pcb_classification_endpoint", model_name="dbdemos_pcb_classification", model_version = model_registered.version, workload_size="Small", scale_to_zero_enabled=True, wait_start = True)
+serving_endpoint_name = "dbdemos_pcb_classification_endpoint"
+
+# Specify the model serving endpoint configuration
+endpoint_config = EndpointCoreConfigInput(
+    name=serving_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=MODEL_NAME,
+            entity_version=model_registered.version,
+            workload_size="Small",
+            workload_type="CPU",
+            scale_to_zero_enabled=True
+        )
+    ],
+    auto_capture_config = AutoCaptureConfigInput(
+      catalog_name=catalog, 
+      schema_name=db, 
+      enabled=True)
+)
+
+#Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+force_update = False 
+
+# Check existing endpoints to see if this one already exists
+w = WorkspaceClient()
+existing_endpoint = next(
+    (e for e in w.serving_endpoints.list() if e.name == serving_endpoint_name), None
+)
+if existing_endpoint == None:
+    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+    from datetime import timedelta
+    w.serving_endpoints.create_and_wait(
+      name=serving_endpoint_name, 
+      config=endpoint_config, 
+      timeout=timedelta(minutes=60))
+else:
+  print(f"Endpoint {serving_endpoint_name} already exists...")
+  if force_update:
+    print(f"Updating the version of {endpoint_config.served_entities[0].entity_name} to version {endpoint_config.served_entities[0].entity_version} on endpoint {serving_endpoint_name}...")
+    from datetime import timedelta
+    w.serving_endpoints.update_config_and_wait(
+      served_entities=endpoint_config.served_entities, 
+      name=serving_endpoint_name,
+      timeout=timedelta(minutes=60))
 
 # COMMAND ----------
 
@@ -222,13 +297,19 @@ serving_client.create_endpoint_if_not_exists("dbdemos_pcb_classification_endpoin
 # COMMAND ----------
 
 import timeit
+import mlflow
+from mlflow import deployments
 
-endpoint_url = f"{serving_client.base_url}/realtime-inference/dbdemos_pcb_classification_endpoint/invocations"
-print(f"Sending requests to {endpoint_url}")
+client = mlflow.deployments.get_deploy_client("databricks")
+
 for i in range(3):
-    rest_input = df_input[2*i:2*i+2]
+    input_slice = df_input[2*i:2*i+2]
     starting_time = timeit.default_timer()
-    inferences = requests.post(endpoint_url, json={"dataframe_records": rest_input.to_dict(orient='records')}, headers=serving_client.headers).json()
+    inferences = client.predict(
+        endpoint=serving_endpoint_name, 
+        inputs={
+            "dataframe_records": input_slice.to_dict(orient='records')
+        })
     print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
     print("  "+str(inferences))
 
@@ -237,11 +318,11 @@ for i in range(3):
 # MAGIC %md 
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC We covered how Databricks makes it easy to deploy deep learning model at scale, including behind a REST endpoint with Databricks Serverless Model Serving.
+# MAGIC We covered how Databricks makes it easy to deploy deep learning models at scale, including behind a REST endpoint with Databricks Serverless Model Serving.
 # MAGIC
 # MAGIC ### Next step: model explainability
 # MAGIC
-# MAGIC As next step, let's discover how to explain and highlight the pixels our model consider as damaged.
+# MAGIC As next step, let's discover how to explain and highlight the pixels our model considers as damaged.
 # MAGIC
 # MAGIC Open the [04-explaining-inference notebook]($./04-explaining-inference) to discover how to use SHAP to analyze our prediction.
 # MAGIC

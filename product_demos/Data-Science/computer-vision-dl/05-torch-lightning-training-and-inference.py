@@ -4,9 +4,9 @@
 # MAGIC
 # MAGIC In this demo, we will cover how to leverage Lightning to distribute our model training using multiple instances.
 # MAGIC
-# MAGIC We will cover the same steps as what we did with Hugging Face transformers library, but implementing the training steps ourselve.
+# MAGIC We will cover the same steps as what we did with Hugging Face transformers library, but implementing the training steps ourselves.
 # MAGIC
-# MAGIC This notebook is more advanced as the Hugging Face one, but gives you more control on the training.
+# MAGIC This notebook is more advanced as the Hugging Face one, but gives you more control over the training.
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -21,7 +21,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Demo setup
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
+# MAGIC %run ./_resources/00-init $reset_all_data=false
 
 # COMMAND ----------
 
@@ -34,9 +34,9 @@ display(df.limit(10))
 # MAGIC %md
 # MAGIC ## Create our Dataset
 # MAGIC
-# MAGIC In this example, we will be using Deltatorch to load our dataset. Deltatorch reads directly from Delta Lake tables using native reader. 
+# MAGIC In this example, we will be using Deltatorch to load our dataset. Deltatorch reads directly from Delta Lake tables using a native reader. 
 # MAGIC
-# MAGIC Deltatorch splits the dataframe in multiple chuncks to spread it across multiple nodes in an efficient way. This makes distributed training on multi node easy. 
+# MAGIC Deltatorch splits the dataframe in multiple chuncks to spread it across multiple nodes in an efficient way. This makes distributed training on multi-node clusters easy. 
 # MAGIC
 # MAGIC To be able to do this split in the most efficient way, deltatorch needs a unique, incremental ID without gaps. We can add it to our existing dataset with a rank and directly split our test/training datasets:
 
@@ -49,9 +49,11 @@ training_df = df.withColumnRenamed("label", "labelName") \
                 .withColumn("label", when(col("labelName").eqNullSafe("normal"), 0).otherwise(1))
 
 train, test = training_df.randomSplit([0.7, 0.3], seed=42)
-#Split the data and write them in a dbfs folder or S3 bucket available by all our node. This could be an external location.
-#Note that for deltatorch to be able to split and distribute the data, we're adding an extra incremental id column.
+
+# Split the data and write them in a dbfs folder or S3 bucket available by all our nodes. This could be an external location.
+# Note that for deltatorch to be able to split and distribute the data, we're adding an extra incremental id column.
 w = Window().orderBy(rand())
+
 train.withColumn("id", row_number().over(w)).write.mode("overwrite").save("/tmp/dbdemos/pcb_torch_delta/train")
 test.withColumn("id", row_number().over(w)).write.mode("overwrite").save("/tmp/dbdemos/pcb_torch_delta/test")
 
@@ -59,8 +61,8 @@ test.withColumn("id", row_number().over(w)).write.mode("overwrite").save("/tmp/d
 
 # DBTITLE 1,Data Loaders using deltatorch
 # Deltatorch makes it easy to load Delta Dataframe to torch and efficiently distribute it among multiple nodes.
-# This requires deltatorch being installed. 
-# Note: For small dataset, a LightningDataModule exemple directly using hugging face transformers is also available in the _resources/00-init notebook.
+# This requires deltatorch to be installed. 
+# Note: For small dataset, a LightningDataModule example directly using hugging face transformers is also available in the _resources/00-init notebook.
 from PIL import Image
 import pytorch_lightning as pl
 from deltatorch import create_pytorch_dataloader
@@ -209,7 +211,7 @@ class CVModel(pl.LightningModule):
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC The following `train` function can be used as it is to perform single-node training, with one or multiple GPUs, leveraging DDP. And also can be used with the aforementioned `TorchDistributor` for multinode training. Bear in mind that `DATABRICKS_HOST` and `DATABRICKS_TOKEN` environment variables need to be defined inside the function, so they can be fed to the pararell subprocesses when running it distributed.
+# MAGIC The following `train` function can be used as it is to perform single-node training, with one or multiple GPUs, leveraging DDP. And also can be used with the aforementioned `TorchDistributor` for multinode training. Bear in mind that `DATABRICKS_HOST` and `DATABRICKS_TOKEN` environment variables need to be defined inside the function, so they can be fed to the parallel subprocesses when running it distributed.
 
 # COMMAND ----------
 
@@ -227,7 +229,7 @@ EARLY_STOP_MIN_DELTA = 0.01
 EARLY_STOP_PATIENCE = 10
 NUM_WORKERS = 8
 
-xp = init_experiment_for_batch("computer-vision-dl", "pcb_torch")
+xp = DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb_torch")
 ## Specifying the mlflow host server and access token 
 # We put them to a variable to feed into horovod later on
 db_host = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
@@ -326,7 +328,12 @@ def train_model(dm, num_gpus=1, single_node=True):
 
 # COMMAND ----------
 
-delta_dataloader = DeltaDataModule("/dbfs/tmp/dbdemos/pcb_torch_delta/train", "/dbfs/tmp/dbdemos/pcb_torch_delta/test")
+delta_dataloader = DeltaDataModule(
+  "/dbfs/tmp/dbdemos/pcb_torch_delta/train", 
+  "/dbfs/tmp/dbdemos/pcb_torch_delta/test")
+
+# COMMAND ----------
+
 run = train_model(delta_dataloader, 1, True)
 
 # COMMAND ----------
@@ -337,7 +344,7 @@ run = train_model(delta_dataloader, 1, True)
 
 # COMMAND ----------
 
-# Note: we won't run this as our demo starts a single node GPU by default. To make it works, starts a cluster with multiple GPU instead!
+# Note: we won't run this as our demo starts a single node GPU by default. To make it work, starts a cluster with multiple GPU instead!
 # For now disable autolog with TorchDistributor
 # mlflow.pytorch.autolog(disable=True)
 # distributed = TorchDistributor(num_processes=2, local_mode=False, use_gpu=True)
@@ -359,11 +366,20 @@ run = train_model(delta_dataloader, 1, True)
 # COMMAND ----------
 
 #Save the model in the registry & move it to Production
-model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", "dbdemos_pcb_torch_classification")
-client = mlflow.tracking.MlflowClient()
+
+# Register models in Unity Catalog
+mlflow.set_registry_uri("databricks-uc")
+MODEL_NAME = f"{catalog}.{db}.dbdemos_pcb_torch_classification"
+
+model_registered = mlflow.register_model("runs:/"+run.info.run_id+"/model", MODEL_NAME)
 print("registering model version "+model_registered.version+" as production model")
-#Move the model as Production
-client.transition_model_version_stage(name = "dbdemos_pcb_torch_classification", version = model_registered.version, stage = "Production", archive_existing_versions=True)
+
+## Alias the model version as the Production version
+client = mlflow.tracking.MlflowClient()
+client.set_registered_model_alias(
+  name = MODEL_NAME, 
+  version = model_registered.version,
+  alias = "Production")
 
 # COMMAND ----------
 
@@ -395,10 +411,17 @@ import pandas as pd
 from typing import Iterator
 from pyspark.sql.functions import pandas_udf
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-model_uri = "models:/dbdemos_pcb_torch_classification/Production"
-requirements_path = ModelsArtifactRepository(model_uri).download_artifacts(artifact_path="requirements.txt") # download model from remote registry
-#%pip install $requirements_path
+import os
 
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+MODEL_NAME = f"{catalog}.{db}.dbdemos_pcb_torch_classification"
+MODEL_URI = f"models:/{MODEL_NAME}@Production"
+
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(MODEL_URI).download_artifacts(artifact_path="requirements.txt") 
+
+#%pip install $requirements_path
 
 #loaded_model = torch.load(local_path+"data/model.pth", map_location=torch.device(device))
 
@@ -411,10 +434,10 @@ requirements_path = ModelsArtifactRepository(model_uri).download_artifacts(artif
 
 # COMMAND ----------
 
-model = mlflow.pytorch.load_model(model_uri)
+model = mlflow.pytorch.load_model(MODEL_URI)
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 model.to(device)
-print(f"Model loaded from {model_uri} to device {device}")
+print(f"Model loaded from {MODEL_URI} to device {device}")
 
 # COMMAND ----------
 
@@ -427,16 +450,17 @@ print(f"Model loaded from {model_uri} to device {device}")
 
 # DBTITLE 1,Load back the transform
 # Again, another option is to ship this as part of the model so that the transformation is done in the model directly.
-transform_path = ModelsArtifactRepository(model_uri).download_artifacts(artifact_path="transform.pkl") # download model from remote registry
+transform_path = ModelsArtifactRepository(MODEL_URI).download_artifacts(artifact_path="transform.pkl") 
+
 with open(transform_path, "rb") as f:
   transform = cloudpickle.loads(f.read())
 
 # COMMAND ----------
 
 id2label = {0: "normal", 1: "anomaly"}
-def predict_byte_serie(content_as_byte_serie, model, device = torch.device("cpu")):
+def predict_byte_series(content_as_byte_series, model, device = torch.device("cpu")):
   #Transform the bytes as PIL images
-  image_list = content_as_byte_serie.apply(lambda b: Image.open(io.BytesIO(b))).to_list()
+  image_list = content_as_byte_series.apply(lambda b: Image.open(io.BytesIO(b))).to_list()
   #Apply our transformations & stack them for our model
   vector_images = torch.stack([transform(b).to(device) for b in image_list])
   #Call the model to get our inference
@@ -447,7 +471,7 @@ def predict_byte_serie(content_as_byte_serie, model, device = torch.device("cpu"
   return pd.DataFrame({"score": probs, "label": preds, "labelName": [id2label[p] for p in preds]})
 
 df = spark.read.table("training_dataset_augmented")
-display(predict_byte_serie(df.limit(10).toPandas()['content'], model, device))
+display(predict_byte_series(df.limit(10).toPandas()['content'], model, device))
 
 # COMMAND ----------
 
@@ -461,16 +485,16 @@ display(predict_byte_serie(df.limit(10).toPandas()['content'], model, device))
 @pandas_udf("struct<score: float, label: int, labelName: string>")
 def detect_damaged_pcb(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-    model = mlflow.pytorch.load_model(model_uri)
+    model = mlflow.pytorch.load_model(MODEL_URI)
     model.to(device)
     model.eval()
     with torch.set_grad_enabled(False):
         for images in images_iter:
-            yield predict_byte_serie(images, model, device)
+            yield predict_byte_series(images, model, device)
 
 # COMMAND ----------
 
-# Reduce the number of image we send at once to avoid memory issue
+# Reduce the number of images we send at once to avoid memory issue
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 1000)
 
 display(df.select('filename', 'content').withColumn("prediction", detect_damaged_pcb("content")).limit(50))
@@ -502,11 +526,11 @@ class RealtimeCVTorchModelWrapper(mlflow.pyfunc.PythonModel):
         with torch.set_grad_enabled(False):
           #Convert the base64 to PIL images
           images = images['data'].apply(lambda b: base64.b64decode(b))
-          return predict_byte_serie(images, self.model)
+          return predict_byte_series(images, self.model)
 
 
 #Load it as CPU as our endpoint will be cpu for now
-model_cpu = mlflow.pytorch.load_model(model_uri).to(torch.device("cpu"))
+model_cpu = mlflow.pytorch.load_model(MODEL_URI).to(torch.device("cpu"))
 rt_model = RealtimeCVTorchModelWrapper(model_cpu)
 
 def to_base64(b):
@@ -523,7 +547,7 @@ display(predictions)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Congratulation
+# MAGIC ## Congratulations!
 # MAGIC
 # MAGIC Your model is now ready to be deployed using Databricks Model Endpoint. For more details on how this can be done, open the [03-running-cv-inferences notebooks]($./03-running-cv-inferences) and follow the same steps
 # MAGIC

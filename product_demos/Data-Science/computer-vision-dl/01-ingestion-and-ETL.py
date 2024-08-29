@@ -12,14 +12,18 @@
 # MAGIC
 # MAGIC This table will then be used to train a ML Classification model to learn to detect anomalies in our images in real time!
 # MAGIC
-# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Delta Live Tables. For more details on DLT, install `dbdemos.install('dlt-loans)`*
+# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Delta Live Tables. For more details on DLT, install `dbdemos.install('dlt-loans')`*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcomputer-vision-dl%2Fetl&dt=ML">
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init $reset_all_data=false $db=dbdemos $catalog=manufacturing_pcb
+# MAGIC %run ./_resources/00-init $reset_all_data=true
+
+# COMMAND ----------
+
+print(f"Training data has been installed in the volume {volume_folder}")
 
 # COMMAND ----------
 
@@ -30,11 +34,9 @@
 
 # COMMAND ----------
 
-# MAGIC %fs ls /dbdemos/manufacturing/pcb/Images/Normal/
-
-# COMMAND ----------
-
-# MAGIC %fs ls /dbdemos/manufacturing/pcb/labels
+display(dbutils.fs.ls(f"{volume_folder}/images/Normal/"))
+display(dbutils.fs.ls(f"{volume_folder}/labels/"))
+display(dbutils.fs.head(f"{volume_folder}/labels/image_anno.csv"))
 
 # COMMAND ----------
 
@@ -57,8 +59,8 @@ def display_image(path, dpi=300):
     plt.imshow(img, interpolation="nearest", aspect="auto")
 
 
-display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Normal/0000.JPG")
-display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Anomaly/000.JPG")
+display_image(f"{volume_folder}/images/Normal/0000.JPG")
+display_image(f"{volume_folder}/images/Anomaly/000.JPG")
 
 # COMMAND ----------
 
@@ -88,11 +90,12 @@ display_image("/dbfs/dbdemos/manufacturing/pcb/Images/Anomaly/000.JPG")
                  .option("cloudFiles.format", "binaryFile")
                  .option("pathGlobFilter", "*.JPG")
                  .option("recursiveFileLookup", "true")
-                 .option("cloudFiles.schemaLocation", "/dbdemos/manufacturing/pcb/stream/pcb_schema")
-                 .load(f"/dbdemos/manufacturing/pcb/Images/")
+                 .option("cloudFiles.schemaLocation", f"{volume_folder}/stream/pcb_schema")
+                 .option("cloudFiles.maxFilesPerTrigger", 200)
+                 .load(f"{volume_folder}/images/")
     .withColumn("filename", F.substring_index(col("path"), "/", -1))
     .writeStream.trigger(availableNow=True)
-                .option("checkpointLocation", f"/dbdemos/manufacturing/pcb/stream/pcb_checkpoint")
+                .option("checkpointLocation", f"{volume_folder}/stream/pcb_checkpoint")
                 .toTable("pcb_images").awaitTermination())
 
 spark.sql("ALTER TABLE pcb_images OWNER TO `account users`")
@@ -109,16 +112,16 @@ display(spark.table("pcb_images"))
 (spark.readStream.format("cloudFiles")
                  .option("cloudFiles.format", "csv")
                  .option("header", True)
-                 .option("cloudFiles.schemaLocation", "/dbdemos/manufacturing/pcb/stream/labels_schema")
-                 .load(f"/dbdemos/manufacturing/pcb/labels/")
+                 .option("cloudFiles.schemaLocation", f"{volume_folder}/stream/labels_schema")
+                 .load(f"{volume_folder}/labels/")
       .withColumn("filename", F.substring_index(col("image"), "/", -1))
       .select("filename", "label")
       .withColumnRenamed("label", "labelDetail")
       .writeStream.trigger(availableNow=True)
-                  .option("checkpointLocation", "/dbdemos/manufacturing/pcb/stream/labels_checkpoint")
+                  .option("checkpointLocation", f"{volume_folder}/stream/labels_checkpoint")
                   .toTable("pcb_labels").awaitTermination())
 
-spark.sql("ALTER TABLE pcb_labels OWNER TO `account users`")
+spark.sql("ALTER TABLE pcb_labels SET OWNER TO `account users`")
 display(spark.table("pcb_labels"))
 
 # COMMAND ----------
@@ -139,10 +142,14 @@ display(spark.table("pcb_labels"))
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TABLE training_dataset AS 
 # MAGIC   (SELECT 
-# MAGIC     *, CASE WHEN labelDetail = 'normal' THEN 'normal' ELSE 'damaged' END as label
-# MAGIC     FROM pcb_images INNER JOIN pcb_labels USING (filename)) ;
+# MAGIC       *, 
+# MAGIC       CASE WHEN labelDetail = 'normal' THEN 'normal' ELSE 'damaged' END as label
+# MAGIC    FROM 
+# MAGIC       pcb_images 
+# MAGIC     INNER JOIN pcb_labels USING (filename)
+# MAGIC   );
 # MAGIC
-# MAGIC ALTER TABLE training_dataset OWNER TO `account users`;
+# MAGIC ALTER TABLE training_dataset SET OWNER TO `account users`;
 # MAGIC
 # MAGIC SELECT * FROM training_dataset LIMIT 10;
 
@@ -230,7 +237,14 @@ def flip_image_horizontal_udf(content_series):
 # COMMAND ----------
 
 # DBTITLE 1,Final dataset now has 20% damaged images
-# MAGIC %sql select label, count(*) from training_dataset_augmented group by label
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   label,
+# MAGIC   count(*)
+# MAGIC FROM
+# MAGIC   training_dataset_augmented
+# MAGIC GROUP BY
+# MAGIC   label
 
 # COMMAND ----------
 

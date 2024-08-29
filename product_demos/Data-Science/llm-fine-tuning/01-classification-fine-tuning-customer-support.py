@@ -25,8 +25,8 @@
 # MAGIC
 # MAGIC ### Want to access our more advanced demos?
 # MAGIC If you already know how to use the Fine Tuning API, you can directly jump to the advanced demos:
-# MAGIC - [Named Entity Extraction and evaluation]($./02-entity-extraction-fine-tuning/02.1-llm-entity-extraction-drug-fine-tuning)
-# MAGIC - [RAG LLM fine tuning]($./03-chatbot-rag-fine-tuning/03.1-llm-rag-fine-tuning) 
+# MAGIC - [Named Entity Extraction and evaluation]($./03-entity-extraction-fine-tuning/03.1-llm-entity-extraction-drug-fine-tuning)
+# MAGIC - [RAG LLM fine tuning]($./02-chatbot-rag-fine-tuning/02.1-llm-rag-fine-tuning) 
 # MAGIC
 
 # COMMAND ----------
@@ -298,11 +298,11 @@ display(df)
 # MAGIC
 # MAGIC Explore the 2 other use-cases to discover:
 # MAGIC
-# MAGIC ### Entity extraction and evaluation
-# MAGIC
-# MAGIC [Open the 02.1-llm-entity-extraction-drug-fine-tuning]($./02-entity-extraction-fine-tuning/02.1-llm-entity-extraction-drug-fine-tuning) notebook for a Named Entity Extraction (NER) example, benchmarking the based model with the Fine Tuned one.
-# MAGIC
 # MAGIC ### Fine tune your Chat Bot / Assistant RAG model
 # MAGIC
-# MAGIC [Open the 02.1-llm-rag-fine-tuning]($./03-chatbot-rag-fine-tuning/03.1-llm-rag-fine-tuning) notebook to explore how to evaluate your LLM using Databricks built-in eval capabilities.
+# MAGIC [Open the 02.1-llm-rag-fine-tuning]($./02-chatbot-rag-fine-tuning/02.1-llm-rag-fine-tuning) notebook to explore how to evaluate your LLM using Databricks built-in eval capabilities.
+# MAGIC
+# MAGIC ### Entity extraction and evaluation
+# MAGIC
+# MAGIC [Open the 03.1-llm-entity-extraction-drug-fine-tuning]($./03-entity-extraction-fine-tuning/03.1-llm-entity-extraction-drug-fine-tuning) notebook for a Named Entity Extraction (NER) example, benchmarking the based model with the Fine Tuned one.
 # MAGIC

@@ -204,4 +204,4 @@ fine_tuned_results.metrics
 # MAGIC
 # MAGIC ## Next: Want to go deeper and explore another fine-tuning use-case? 
 # MAGIC
-# MAGIC See how to do Instruction Fine tuning to specialize your model on NER (Named Entity Recognition) with the notebook [instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning]($./instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning)
+# MAGIC See how to do Instruction Fine tuning to specialize your model on NER (Named Entity Recognition) with the notebook [instruction-fine-tuning/01-llm-instruction-drug-extraction-fine-tuning]($../03-entity-extraction-fine-tuning/03.1-llm-entity-extraction-drug-fine-tuning)

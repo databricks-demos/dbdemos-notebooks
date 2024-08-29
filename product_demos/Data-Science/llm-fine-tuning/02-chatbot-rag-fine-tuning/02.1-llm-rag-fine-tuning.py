@@ -281,8 +281,4 @@ client.predict(endpoint=serving_endpoint_name, inputs={"messages": messages, "ma
 # MAGIC
 # MAGIC Databricks makes this easy too! In the next section, we'll leverage MLFlow Evaluate capabilities to compare the fine tune model against the baseline Foundation Model to see how successful our tuning run was.
 # MAGIC
-# MAGIC Open the [02-llm-evaluation]($./02-llm-evaluation) notebook to benchmark our new custom LLM!
-
-# COMMAND ----------
-
-
+# MAGIC Open the [02.2-llm-evaluation]($./02.2-llm-evaluation) notebook to benchmark our new custom LLM!

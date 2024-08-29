@@ -304,8 +304,11 @@ help(LGBMClassifier)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### [TODO] Create custom pyfunc wrapper function to expose `predict_proba` method _(nice-to-have)_
-# MAGIC To get AUC/ROC metrics in monitoring metrics
+# MAGIC ### Optional: Expose `predict_proba` method in a pyfunc wrapper function
+# MAGIC
+# MAGIC Optionally, you can expose the prediction probabilities returned by the `predict_proba` method by implementing a pyfunc wrapper function.
+# MAGIC
+# MAGIC This would be useful later on for calculating the AUC/ROC metrics for monitoring.
 
 # COMMAND ----------
 

@@ -13,7 +13,7 @@
 
 # COMMAND ----------
 
-catalog = "main"
+catalog = "main__build"
 dbName = db = "dbdemos_computer_vision_dl"
 volume_name = "pcb_training_data"
 

@@ -3,15 +3,22 @@
 # MAGIC # Monitor Model using Lakehouse Monitoring
 # MAGIC In this step, we will leverage Databricks Lakehouse Monitoring([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) to monitor our inference table.
 # MAGIC
-# MAGIC .....
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-7.png?raw=true" width="1200">
 # MAGIC
-# MAGIC Databricks Lakehouse Monitoring enables us to monitor stats and drifts on table containing:
+# MAGIC Databricks Lakehouse Monitoring lets you simply attach a data monitor to any Delta table and it will generate the necessary pipelines to profile the data and calculate quality metrics. You just need to tell it how frequently these quality metrics need to be collected.
+# MAGIC
+# MAGIC Use Databricks Lakehouse Monitoring to monitor for data drifts, as well as label drift, prediction drift and changes in model quality metrics in Machine Learning use cases. Databricks Lakehouse Monitoring enables us to monitor stats and drifts on tables containing:
 # MAGIC * batch scoring inferences
 # MAGIC * request logs from Model Serving endpoint ([AWS](https://docs.databricks.com/en/machine-learning/model-serving/inference-tables.html) |[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-serving/inference-tables))
 # MAGIC
-# MAGIC For demo simplicity purpose, we will use the batch scoring model inference as our inference table.
+# MAGIC Databricks Lakehouse Monitoring stores the data quality and drift metrics in two tables that it automatically creates for the table that is monitored:
+# MAGIC - Profile metrics table (with a `_profile_metrics` suffix)
+# MAGIC   - Metrics like percentage of null values, descriptive statistics, model metrics such as accuracy, RMSE, fairness and bias metrics etc.
+# MAGIC - Drift metrics table (with a `_drift_metrics` suffix)
+# MAGIC   - Metrics like the "delta" between percentage of null values, averages, as well as metrics from statistical tests to detect data drift.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-0.png" width="1200">
+# MAGIC For demo simplicity purpose, we will use the batch scoring model inference as our inference table. We will attach a monitor to the table `mlops_churn_advanced_inference_table`.
+# MAGIC
 
 # COMMAND ----------
 

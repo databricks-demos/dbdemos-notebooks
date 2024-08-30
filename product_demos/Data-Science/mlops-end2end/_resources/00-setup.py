@@ -168,7 +168,7 @@ def generate_synthetic(inference_table, drift_type="label_drift"):
       .withColumn('total_charges', 'double', minValue=0.0, maxValue=8684.0, step=20)
       .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
       .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
-      .withColumn('churn', 'string', values=[ 'Yes'], random=True)
+      .withColumn('churn', 'string', values=['Yes'], random=True)
       )
 
 
@@ -186,7 +186,7 @@ def generate_synthetic(inference_table, drift_type="label_drift"):
     .withColumn('model_name', F.lit(f"{model_name}")) \
     .withColumn('model_version', F.lit(1)) \
     .withColumn('model_alias', F.lit("Champion")) \
-    .withColumn('inference_timestamp', F.lit(datetime.now())) 
+    .withColumn('inference_timestamp', F.lit(datetime.now()- timedelta(days=1))) 
 
   preds_df.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name}")
 

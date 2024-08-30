@@ -102,11 +102,12 @@ model_version = int(
 # COMMAND ----------
 
 import pyspark.sql.functions as F
+from datetime import datetime, timedelta
 
 offline_inference_df = preds_df.withColumn("model_name", F.lit(model_name)) \
                               .withColumn("model_version", F.lit(model_version)) \
                               .withColumn("model_alias", F.lit(model_alias)) \
-                              .withColumn("inference_timestamp", F.current_timestamp())
+                              .withColumn("inference_timestamp", F.lit(datetime.now()- timedelta(days=2)))
 
 offline_inference_df.write.mode("overwrite") \
                     .saveAsTable("mlops_churn_advanced_offline_inference")

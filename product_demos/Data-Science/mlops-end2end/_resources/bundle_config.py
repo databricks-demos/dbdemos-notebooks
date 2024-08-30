@@ -174,7 +174,7 @@
             "task_key": "Feature_engineering",
             "run_if": "ALL_SUCCESS",
             "notebook_task": {
-              "notebook_path": "{{DEMO_FOLDER}}/product_demos/Data-Science/mlops-end2end/02-mlops-advanced/01_feature_engineering",
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
               "source": "WORKSPACE"
             },
             "new_cluster": {
@@ -187,7 +187,7 @@
                     },
                     "cluster_source": "JOB",
                     "init_scripts": [],
-                    "data_security_mode": "USER_ISOLATION",
+                    "data_security_mode": "SINGLE_USER",
                     "runtime_engine": "STANDARD"
                 },
             "timeout_seconds": 0,
@@ -230,7 +230,7 @@
             ],
             "run_if": "ALL_SUCCESS",
             "notebook_task": {
-              "notebook_path": "{{DEMO_FOLDER}}/product_demos/Data-Science/mlops-end2end/02-mlops-advanced/03_from_notebook_to_models_in_uc",
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
               "source": "WORKSPACE"
             },
             "job_cluster_key": "Shared_job_cluster",
@@ -252,7 +252,7 @@
             ],
             "run_if": "ALL_SUCCESS",
             "notebook_task": {
-              "notebook_path": "{{DEMO_FOLDER}}/product_demos/Data-Science/mlops-end2end/02-mlops-advanced/04_challenger_validation",
+              "notebook_path": "{{DEMO_FOLDER}}/04_challenger_validation",
               "source": "WORKSPACE"
             },
             "job_cluster_key": "Shared_job_cluster",

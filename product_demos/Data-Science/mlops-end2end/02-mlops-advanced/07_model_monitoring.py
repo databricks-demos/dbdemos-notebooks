@@ -1,18 +1,22 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Monitor Model using Lakehouse Monitoring
-# MAGIC This feature([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) is in **Public Preview**.
+# MAGIC In this step, we will leverage Databricks Lakehouse Monitoring([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) to monitor our inference table.
 # MAGIC
-# MAGIC Given the inference tables we can monitor stats and drifts on table containing:
+# MAGIC .....
+# MAGIC
+# MAGIC Databricks Lakehouse Monitoring enables us to monitor stats and drifts on table containing:
 # MAGIC * batch scoring inferences
-# MAGIC * request logs from Model Serving endpoint (Public Preview [AWS](https://docs.databricks.com/en/machine-learning/model-serving/inference-tables.html) |[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-serving/inference-tables))
+# MAGIC * request logs from Model Serving endpoint ([AWS](https://docs.databricks.com/en/machine-learning/model-serving/inference-tables.html) |[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-serving/inference-tables))
+# MAGIC
+# MAGIC For demo simplicity purpose, we will use the batch scoring model inference as our inference table.
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-0.png" width="1200">
 
 # COMMAND ----------
 
 # DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
-# MAGIC %pip install "databricks-sdk>=0.28.0"
+# MAGIC %pip install "databricks-sdk>=0.28.0" -qU
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -30,14 +34,18 @@ timestamp_col = "inference_timestamp"
 
 # MAGIC %md
 # MAGIC ### Create monitor
-# MAGIC One-time setup
+# MAGIC Now, we will create a monitor on top of the inference table. 
+# MAGIC It is a one-time setup.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Create Inference Table
 # MAGIC
-# MAGIC This can serve as a union for offline & online processed inference
+# MAGIC This can serve as a union for offline & online processed inference.
+# MAGIC For simplicity of this demo, we will create the inference table as a copy of the first offline batch prediction table.
+# MAGIC
+# MAGIC In a different scenario, we could have processed the online inference table and store them in the inference table alongside with the offline inference table.
 
 # COMMAND ----------
 
@@ -66,6 +74,10 @@ spark.sql( f"""
 
 # MAGIC %md
 # MAGIC ### Create a custom metric
+# MAGIC
+# MAGIC Customer metrics can be defined and will automatically be calculated by lakehouse monitoring. They often serve as a mean to capture some aspect of business logic or use a custom model quality score. 
+# MAGIC
+# MAGIC In this example, we will calculate the business impact (loss in monthly charges) of a bad model performance
 
 # COMMAND ----------
 
@@ -90,7 +102,9 @@ expected_loss_metric = [
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Create monitor
 # MAGIC
+# MAGIC As we are monitoring an inference table ( includes machine learning model predcitions data), we will pick an [Inference profile](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/create-monitor-api#inferencelog-profile) for the monitor.
 
 # COMMAND ----------
 
@@ -138,7 +152,7 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-# MAGIC %md Monitor creation for the first time will also trigger an initial refresh so fetch/wait or trigger a monitoring job and wait until completion
+# MAGIC %md Monitor creation for the first time will also **trigger an initial refresh** so fetch/wait or trigger a monitoring job and wait until completion
 
 # COMMAND ----------
 
@@ -164,9 +178,9 @@ w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Next: Automate model retrain [OPTIONAL]
+# MAGIC ### Next: Drift Detection
 # MAGIC
-# MAGIC Automate model retraining using the automl python API and using drift metrics information
+# MAGIC After creating the monitor, we will create some logics to detect drfits on the inference data.
 # MAGIC
 # MAGIC Next steps:
-# MAGIC * [Automate model re-training]($./08_retrain_churn_automl)
+# MAGIC * [Drift Detection]($./08_drift_detection)

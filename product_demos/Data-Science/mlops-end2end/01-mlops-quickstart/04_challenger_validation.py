@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.0
+# MAGIC %pip install --quiet mlflow==2.14.0 -q
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -161,15 +161,23 @@ def get_model_value_in_dollar(model_alias):
     # Calculate the confusion matrix
     tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['predictions']).ravel()
     return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive
+#add exception to catch non-existing model champion yet
+is_champ_model_exist = True
+try:
+    client.get_model_version_by_alias(f"{catalog}.{db}.mlops_churn", "Champion")
+    print("Model already registered as Champion")
+except Exception as error:
+    print("An error occurred:", type(error).__name__, "It means no champion model yet exist")
+    is_champ_model_exist = False
+if is_champ_model_exist:
+    champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
+    challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
 
-champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
-challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
-
-data = {'Model Alias': ['Challenger', 'Champion'],
+    data = {'Model Alias': ['Challenger', 'Champion'],
         'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
 
-# Create a bar plot using plotly express
-px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
+    # Create a bar plot using plotly express
+    px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
        labels={'Potential Revenue Gain': 'Revenue Impacted'},
        title='Business Metrics - Revenue Impacted')
 

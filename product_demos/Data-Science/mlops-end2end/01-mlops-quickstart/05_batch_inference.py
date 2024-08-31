@@ -70,7 +70,7 @@ import mlflow
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
 # Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{schema}.mlops_churn@Champion")
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@Champion")
 
 # Batch score
 preds_df = inference_df.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))

@@ -17,7 +17,7 @@
   "description": "Automate your model deployment with MLFlow and UC, end 2 end!",
   "fullDescription": "This demo covers a full MLOPs pipeline. We'll show you how Databricks Lakehouse can be leverage to orchestrate and deploy model in production while ensuring governance, security and robustness.<ul></li>Ingest data and save them as feature store</li><li>Build ML model with Databricks AutoML</li><li>Setup MLFlow hook to automatically test our models</li><li>Create the model test job</li><li>Automatically move model in production once the test are validated</li><li>Periodically retrain our model to prevent from drift</li></ul><br/><br/>Note that this is a fairly advanced demo. If you're new to Databricks and just want to learn about ML, we recommend starting with a ML demo or one of the Lakehouse demos.",
     "usecase": "Data Science & AI",
-  "products": ["LLM", "Dolly", "AI"],
+  "products": ["Lakehouse Monitoring", "MLFlow", "Model Serving", "Online Tables", "Workflows"],
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Free Dolly", "url": "https://www.databricks.com/blog/2023/04/12/dolly-first-open-commercially-viable-instruction-tuned-llm"}],
@@ -89,6 +89,7 @@
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
+      "depends_on_previous": False,
       "title":  "MLOps Advanced end2end presentation", 
       "description": "Understand MLOps and the flow we'll implement for Customer Churn detection."
     },
@@ -133,14 +134,6 @@
       "description": "Leverage your ML model within inference pipelines."
     },
     {
-      "path": "02-mlops-advanced/06_serve_features_and_model", 
-      "pre_run": True, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": False, 
-      "title":  "Serve feature & model in real time serving endpoint", 
-      "description": "Create online table & serve model in a serverless endpoint"
-    },
-    {
       "path": "02-mlops-advanced/07_model_monitoring", 
       "pre_run": True, 
       "publish_on_website": True, 
@@ -155,6 +148,14 @@
       "add_cluster_setup_cell": True, 
       "title":  "Generate synthetic inference ata & detect drift", 
       "description": "Create synthetic data and detect drift"
+    },
+    {
+      "path": "02-mlops-advanced/06_serve_features_and_model", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Serve feature & model in real time serving endpoint", 
+      "description": "Create online table & serve model in a serverless endpoint"
     }
   ],
   "workflows": [{
@@ -180,7 +181,7 @@
             "new_cluster": {
                     "num_workers": 1,
                     "cluster_name": "",
-                    "spark_version": "15.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.4.x-cpu-ml-scala2.12",
                     "spark_conf": {},
                     "spark_env_vars": {
                       "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
@@ -208,7 +209,7 @@
             ],
             "run_if": "ALL_SUCCESS",
             "notebook_task": {
-              "notebook_path": "{{DEMO_FOLDER}}/product_demos/Data-Science/mlops-end2end/02-mlops-advanced/02_automl_champion",
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
               "source": "WORKSPACE"
             },
             "job_cluster_key": "Shared_job_cluster",
@@ -272,9 +273,9 @@
         }
       }
     }
-  }]
+  }],
   "cluster": {
-      "spark_version": "15.3.x-cpu-ml-scala2.12",
+      "spark_version": "15.4.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

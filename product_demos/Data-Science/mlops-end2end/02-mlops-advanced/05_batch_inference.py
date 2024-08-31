@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $setup_adv_inference_data=true
+# MAGIC %run ../_resources/00-setup $adv_mlops=true $setup_adv_inference_data=true
 
 # COMMAND ----------
 

@@ -53,7 +53,7 @@
 import mlflow
 
 churn_experiment_name = "churn_auto_ml"
-model_name = f"{catalog}.{dbName}.mlops_churn"
+model_name = f"{catalog}.{db}.mlops_churn"
 print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
 
 xp_path = "/Shared/dbdemos/experiments/mlops"

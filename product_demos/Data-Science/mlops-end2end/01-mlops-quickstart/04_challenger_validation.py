@@ -55,7 +55,7 @@
 
 # We are interested in validating the Challenger model
 model_alias = "Challenger"
-model_name = f"{catalog}.{dbName}.mlops_churn"
+model_name = f"{catalog}.{db}.mlops_churn"
 
 client = MlflowClient()
 model_details = client.get_model_version_by_alias(model_name, model_alias)

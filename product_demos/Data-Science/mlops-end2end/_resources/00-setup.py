@@ -1,12 +1,14 @@
 # Databricks notebook source
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.dropdown("gen_synthetic_data", "false", ["true", "false"], "Generate Synthetic data for Drift Detection")
+dbutils.widgets.dropdown("adv_mlops", "false", ["true", "false"], "Setup for advanced MLOps demo")
 dbutils.widgets.dropdown("setup_inference_data", "false", ["true", "false"], "Setup inference data for quickstart")
 dbutils.widgets.dropdown("setup_adv_inference_data", "false", ["true", "false"], "Setup inference data for advanced demo")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 setup_adv_inference_data = dbutils.widgets.get("setup_adv_inference_data") == "true"
 generate_synthetic_data = dbutils.widgets.get("gen_synthetic_data") == "true"
+is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
 
 # COMMAND ----------
 
@@ -14,10 +16,12 @@ current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
 reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 
 catalog = "dbdemos"
-db = f"advanced_mlops_{reformat_current_user}"
-model_name = f"{catalog}.{db}.mlops_churn"
-model_alias = "Champion"
-inference_table_name = "mlops_churn_advanced_inference_table"
+db = f"quickstart_mlops_{reformat_current_user}"
+if is_advanced_mlops_demo:
+  db = f"avanced_mlops_{reformat_current_user}"
+  model_name = f"{catalog}.{db}.mlops_churn"
+  model_alias = "Champion"
+  inference_table_name = "mlops_churn_advanced_inference_table"
 
 
 # COMMAND ----------
@@ -46,10 +50,10 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # Set UC Model Registry as default
 mlflow.set_registry_uri("databricks-uc")
-
-# Set Experiment name as default
-xp_path = f"/Users/{current_user}/databricks_automl"
-xp_name = "advanced_mlops_churn_demo_experiment"
+if is_advanced_mlops_demo:
+  # Set Experiment name as default
+  xp_path = f"/Users/{current_user}/databricks_automl"
+  xp_name = "advanced_mlops_churn_demo_experiment"
 
 client = MlflowClient()
 
@@ -73,9 +77,10 @@ if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
   df = cleanup_column(df)
   print(f"creating `{bronze_table_name}` raw table")
   spark.createDataFrame(df).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(bronze_table_name)
-  experiment_details = client.get_experiment_by_name(f"{xp_path}/{xp_name}")
-  if experiment_details:
-    client.delete_experiment(f'{experiment_details.experiment_id}')
+  if is_advanced_mlops_demo:
+    experiment_details = client.get_experiment_by_name(f"{xp_path}/{xp_name}")
+    if experiment_details:
+      client.delete_experiment(f'{experiment_details.experiment_id}')
 
 # COMMAND ----------
 

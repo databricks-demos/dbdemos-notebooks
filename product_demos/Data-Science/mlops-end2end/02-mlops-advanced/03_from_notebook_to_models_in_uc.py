@@ -38,7 +38,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 

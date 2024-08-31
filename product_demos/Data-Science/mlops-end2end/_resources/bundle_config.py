@@ -151,7 +151,7 @@
     },
     {
       "path": "02-mlops-advanced/06_serve_features_and_model", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Serve feature & model in real time serving endpoint", 

@@ -18,7 +18,7 @@ reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 catalog = "dbdemos"
 db = f"quickstart_mlops_{reformat_current_user}"
 if is_advanced_mlops_demo:
-  db = f"avanced_mlops_{reformat_current_user}"
+  db = f"advanced_mlops_{reformat_current_user}"
   model_name = f"{catalog}.{db}.mlops_churn"
   model_alias = "Champion"
   inference_table_name = "mlops_churn_advanced_inference_table"

@@ -43,7 +43,7 @@
 
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{schema}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
 

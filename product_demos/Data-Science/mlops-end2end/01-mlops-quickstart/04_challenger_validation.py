@@ -137,7 +137,7 @@ validation_df = spark.table('mlops_churn_training').filter("split='validate'")
 
 #Call the model with the given alias and return the prediction
 def predict_churn(validation_df, model_alias):
-    model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{schema}.mlops_churn@{model_alias}")
+    model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@{model_alias}")
     return validation_df.withColumn('predictions', model(*model.metadata.get_input_schema().input_names()))
 
 # COMMAND ----------

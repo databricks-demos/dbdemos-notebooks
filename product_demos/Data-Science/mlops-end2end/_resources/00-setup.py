@@ -80,6 +80,7 @@ if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
   if is_advanced_mlops_demo:
     experiment_details = client.get_experiment_by_name(f"{xp_path}/{xp_name}")
     if experiment_details:
+      print(f' Deleting experiment: {experiment_details.experiment_id}')
       client.delete_experiment(f'{experiment_details.experiment_id}')
 
 # COMMAND ----------
@@ -117,17 +118,17 @@ if setup_inference_data:
 # COMMAND ----------
 
 # This setup is used in the advanced demo only
-advanced_label_table_name = "churn_label_table"
-advanced_unlabelled_table_name = "mlops_churn_advanced_cust_ids"
+#advanced_label_table_name = "churn_label_table"
+#advanced_unlabelled_table_name = "mlops_churn_advanced_cust_ids"
 
 if setup_adv_inference_data:
   # Check that the label table exists first, as we'll be creating a copy of it
-  if spark.catalog.tableExists(f"{catalog}.{db}.{advanced_label_table_name}"):
+  if spark.catalog.tableExists(f"churn_label_table"):
     # This should only be called from the advanced batch inference notebook
-    if not spark.catalog.tableExists(f"{catalog}.{db}.{advanced_unlabelled_table_name}"):
+    if not spark.catalog.tableExists(f"mlops_churn_advanced_cust_ids"):
       print("Creating table with customer records for inference...")
       # Drop the label column for inference
-      spark.read.table(advanced_label_table_name).drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(advanced_unlabelled_table_name)
+      spark.read.table("churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
   else:
     print("Label table doesn't exist, please run the notebook '01_feature_engineering'")
 

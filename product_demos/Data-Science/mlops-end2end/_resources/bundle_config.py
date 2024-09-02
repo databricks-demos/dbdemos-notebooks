@@ -160,10 +160,10 @@
   ],
   "workflows": [{
     "start_on_install": False,
-    "id": "credit-job",
+    "id": "model-dev-job",
     "definition": { 
       "settings": {
-        "name": "Advanced MLOps - Model Developement",
+        "name": "Advanced MLops - Model Developement",
         "email_notifications": {
           "no_alert_for_skipped_runs": false
         },
@@ -178,19 +178,7 @@
               "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
               "source": "WORKSPACE"
             },
-            "new_cluster": {
-                    "num_workers": 1,
-                    "cluster_name": "",
-                    "spark_version": "15.4.x-cpu-ml-scala2.12",
-                    "spark_conf": {},
-                    "spark_env_vars": {
-                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "cluster_source": "JOB",
-                    "init_scripts": [],
-                    "data_security_mode": "SINGLE_USER",
-                    "runtime_engine": "STANDARD"
-                },
+            "job_cluster_key": "model_dev_shared_cluster",
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
@@ -212,7 +200,7 @@
               "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
               "source": "WORKSPACE"
             },
-            "job_cluster_key": "Shared_job_cluster",
+            "job_cluster_key": "model_dev_shared_cluster",
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
@@ -234,7 +222,7 @@
               "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
               "source": "WORKSPACE"
             },
-            "job_cluster_key": "Shared_job_cluster",
+            "job_cluster_key": "model_dev_shared_cluster",
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
@@ -253,10 +241,10 @@
             ],
             "run_if": "ALL_SUCCESS",
             "notebook_task": {
-              "notebook_path": "{{DEMO_FOLDER}}/04_challenger_validation",
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
               "source": "WORKSPACE"
             },
-            "job_cluster_key": "Shared_job_cluster",
+            "job_cluster_key": "model_dev_shared_cluster",
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
@@ -267,9 +255,27 @@
             "webhook_notifications": {}
           }
         ],
-        "format": "MULTI_TASK",
+        "job_clusters": [
+          {
+            "job_cluster_key": "model_dev_shared_cluster",
+            "new_cluster": {
+              "cluster_name": "",
+              "spark_version": "15.4.x-cpu-ml-scala2.12",
+              "spark_conf": {
+                "spark.master": "local[*, 4]",
+                "spark.databricks.cluster.profile": "singleNode"
+              },
+              "custom_tags": {
+                "ResourceClass": "SingleNode"
+              },
+              "data_security_mode": "SINGLE_USER",
+              "runtime_engine": "STANDARD",
+              "num_workers": 0
+            }
+          }
+        ],
         "queue": {
-          "enabled": true
+          "enabled": false
         }
       }
     }

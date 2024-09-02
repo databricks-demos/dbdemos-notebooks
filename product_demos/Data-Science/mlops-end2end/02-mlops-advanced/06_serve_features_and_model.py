@@ -194,8 +194,7 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DESCRIBE FUNCTION EXTENDED avg_price_increase
-# MAGIC ;
+# MAGIC DESCRIBE FUNCTION EXTENDED avg_price_increase;
 
 # COMMAND ----------
 

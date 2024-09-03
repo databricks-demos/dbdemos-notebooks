@@ -32,13 +32,6 @@
 
 # COMMAND ----------
 
-### TODO: fix setup script to correctly define the variables
-offline_inference_table_name = "mlops_churn_advanced_offline_inference"
-baseline_table_name = "mlops_churn_advanced_baseline"
-timestamp_col = "inference_timestamp"
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ### Create monitor
 # MAGIC Now, we will create a monitor on top of the inference table. 
@@ -56,11 +49,11 @@ timestamp_col = "inference_timestamp"
 
 # COMMAND ----------
 
-spark.sql(f"""
-          CREATE OR REPLACE TABLE {catalog}.{db}.{inference_table_name} AS
-          SELECT * EXCEPT (split) FROM {catalog}.{db}.{offline_inference_table_name} LEFT JOIN {catalog}.{db}.{advanced_label_table_name} USING(customer_id, transaction_ts)"""
-)
-spark.sql(f"ALTER TABLE {catalog}.{db}.{inference_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE mlops_churn_advanced_offline_inference AS
+# MAGIC           SELECT * EXCEPT (split) FROM mlops_churn_advanced_offline_inference LEFT JOIN churn_label_table USING(customer_id, transaction_ts) ;
+# MAGIC
+# MAGIC ALTER TABLE mlops_churn_advanced_offline_inference SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
 
 # COMMAND ----------
 
@@ -71,11 +64,10 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{inference_table_name} SET TBLPROPERTIES 
 
 # COMMAND ----------
 
-### TODO: understand why we need model version in the baseline table
-spark.sql( f"""
-          CREATE OR REPLACE TABLE {catalog}.{db}.{baseline_table_name} AS
-          SELECT * EXCEPT (customer_id, transaction_ts, model_alias, inference_timestamp) FROM {catalog}.{db}.{inference_table_name}"""
-)
+# MAGIC %sql
+# MAGIC -- TODO: understand why we need model version in the baseline table
+# MAGIC CREATE OR REPLACE TABLE mlops_churn_advanced_baseline AS
+# MAGIC   SELECT * EXCEPT (customer_id, transaction_ts, model_alias, inference_timestamp) FROM mlops_churn_advanced_offline_inference
 
 # COMMAND ----------
 
@@ -120,22 +112,22 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInferenceLogProblemType
 
 
-print(f"Creating monitor for {inference_table_name}")
+print(f"Creating monitor for inference table }")
 w = WorkspaceClient()
 
 info = w.quality_monitors.create(
-  table_name=f"{catalog}.{db}.{inference_table_name}",
+  table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference",
   inference_log=MonitorInferenceLog(
         problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
         prediction_col="prediction",
-        timestamp_col=timestamp_col,
+        timestamp_col="inference_timestamp",
         granularities=["1 day"],
         model_id_col="model_version",
         label_col="churn", # optional
   ),
-  assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{db}.{inference_table_name}",
+  assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{db}.mlops_churn_advanced_offline_inference",
   output_schema_name=f"{catalog}.{db}",
-  baseline_table_name=f"{catalog}.{db}.{baseline_table_name}",
+  baseline_table_name=f"{catalog}.{db}.mlops_churn_advanced_baseline",
   slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
   custom_metrics=expected_loss_metric
 )
@@ -152,7 +144,7 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 # Wait for monitor to be created
 while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
-  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
+  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference")
   time.sleep(10)
 
 assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
@@ -163,24 +155,24 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.{inference_table_name}").refreshes
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference").refreshes
 assert(len(refreshes) > 0)
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.{inference_table_name}", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
-w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
+w.quality_monitors.get(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference")
 
 # COMMAND ----------
 
 # DBTITLE 1,Delete existing monitor [OPTIONAL]
-# w.quality_monitors.delete(table_name=f"{catalog}.{dbName}.{inference_table_name}", purge_artifacts=True)
+# w.quality_monitors.delete(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference", purge_artifacts=True)
 
 # COMMAND ----------
 

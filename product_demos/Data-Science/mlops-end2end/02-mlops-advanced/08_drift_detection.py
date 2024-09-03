@@ -69,16 +69,16 @@ import time
 
 w = WorkspaceClient()
 
-run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.{inference_table_name}")
+run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.mlops_churn_advanced_inference_table")
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.{inference_table_name}", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.mlops_churn_advanced_inference_table", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 
 # COMMAND ----------
 
 # DBTITLE 1,Get information about the monitor
-monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.{inference_table_name}")
+monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.mlops_churn_advanced_inference_table")
 drift_table_name = monitor_info.drift_metrics_table_name
 profile_table_name = monitor_info.profile_metrics_table_name
 

@@ -55,7 +55,7 @@ from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F
 
 # Load customer features to be scored
-inference_df = spark.read.table(advanced_unlabelled_table_name)
+inference_df = spark.read.table("mlops_churn_advanced_cust_ids")
 
 fe = FeatureEngineeringClient()
 
@@ -64,7 +64,6 @@ model_uri = f"models:/{model_name}@{model_alias}"
 
 # Batch score
 preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string")
-
 display(preds_df)
 
 # COMMAND ----------
@@ -95,9 +94,7 @@ from datetime import datetime
 client = MlflowClient()
 
 model = client.get_registered_model(name=model_name)
-model_version = int(
-    client.get_model_version_by_alias(name=model_name, alias=model_alias).version
-)
+model_version = int(client.get_model_version_by_alias(name=model_name, alias=model_alias).version)
 
 # COMMAND ----------
 

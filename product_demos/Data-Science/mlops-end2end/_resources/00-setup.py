@@ -15,13 +15,14 @@ is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 
-catalog = "dbdemos"
-db = f"quickstart_mlops_{reformat_current_user}"
+#catalog = "dbdemos"
+#db = f"quickstart_mlops_{reformat_current_user}"
+#TODO: Advanced and quickstart demo must live in the same schema
 if is_advanced_mlops_demo:
-  db = f"advanced_mlops_{reformat_current_user}"
+  #  db = f"advanced_mlops_{reformat_current_user}"
   model_name = f"{catalog}.{db}.mlops_churn"
-  model_alias = "Champion"
-  inference_table_name = "mlops_churn_advanced_inference_table"
+  # model_alias = "Champion"
+  # inference_table_name = "mlops_churn_advanced_inference_table"
 
 
 # COMMAND ----------

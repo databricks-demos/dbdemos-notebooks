@@ -39,15 +39,7 @@
 import mlflow
 import databricks.automl_runtime
 
-primary_key = "customer_id"
-timestamp_col ="transaction_ts"
-label_col = "churn"
-feature_table_name = "churn_feature_table"
-
-current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-
-# COMMAND ----------
-
+# Path defined in the init notebook
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
 print(f"Set experiment to: {xp_name}")
 
@@ -60,9 +52,7 @@ print(f"Set experiment to: {xp_name}")
 
 # COMMAND ----------
 
-feature_table_full_name = f"{catalog}.{db}.{feature_table_name}"
-
-display(spark.table(feature_table_full_name))
+display(spark.table("churn_feature_table"))
 
 # COMMAND ----------
 
@@ -93,12 +83,11 @@ display(spark.table(feature_table_full_name))
 # DBTITLE 1,Define feature lookups
 from databricks.feature_store import FeatureFunction, FeatureLookup
 
-
 features = [
     FeatureLookup(
-      table_name=f"{catalog}.{db}.{feature_table_name}",
-      lookup_key=[primary_key],
-      timestamp_lookup_key=timestamp_col
+      table_name=f"{catalog}.{db}.churn_feature_table",
+      lookup_key=["customer_id"],
+      timestamp_lookup_key="transaction_ts"
     ),
     FeatureFunction(
       udf_name=f"{catalog}.{db}.avg_price_increase",
@@ -121,7 +110,7 @@ features = [
 
 # DBTITLE 1,Pull labels to use for training/validating/testing
 
-labels_df = spark.read.table(f"{catalog}.{db}.{advanced_label_table_name}")
+labels_df = spark.read.table(f"churn_label_table")
 
 # COMMAND ----------
 
@@ -142,7 +131,7 @@ training_set_specs = fe.create_training_set(
   df=labels_df, # DataFrame with lookup keys and label/target (+ any other input)
   label=label_col,
   feature_lookups=features,
-  exclude_columns=[primary_key, timestamp_col, 'split'] # Keeping them to create baseline table
+  exclude_columns=["customer_id", "transaction_ts", 'split'] # Keeping them to create baseline table
 )
 
 # COMMAND ----------

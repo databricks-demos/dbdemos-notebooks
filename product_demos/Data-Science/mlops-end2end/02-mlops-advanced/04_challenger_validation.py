@@ -113,7 +113,7 @@ label_col = "churn"
 # Predict on a Spark DataFrame
 try:
   # Read labels and IDs
-  labelsDF = spark.read.table(f"{catalog}.{db}.{advanced_label_table_name}")
+  labelsDF = spark.read.table(f"churn_label_table")
 
   # Batch score
   features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)
@@ -143,7 +143,7 @@ if not os.path.exists(local_dir):
     os.mkdir(local_dir)
 
 # Download artifacts from tracking server - no need to specify DBFS path here
-local_path = mlflow.artifacts.download_artifacts(run_id=run_info.info.run_id,dst_path=local_dir)
+local_path = mlflow.artifacts.download_artifacts(run_id=run_info.info.run_id, dst_path=local_dir)
 
 # Tag model version as possessing artifacts or not
 if not os.listdir(local_path):
@@ -202,8 +202,8 @@ validation_df = spark.table('churn_label_table').filter("split='validate'")
 
 #Call the model with the given alias and return the prediction
 def predict_churn(validation_df, model_alias):
-    features_w_preds = fe.score_batch(df=validation_df, model_uri=f"models:/{model_name}@{model_alias}"
-, result_type=validation_df.schema[label_col].dataType)
+    features_w_preds = fe.score_batch(df=validation_df, model_uri=f"models:/{model_name}@{model_alias}", 
+                                      result_type=validation_df.schema[label_col].dataType)
 
     return features_w_preds
 

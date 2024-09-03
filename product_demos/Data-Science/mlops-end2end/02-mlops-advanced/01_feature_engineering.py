@@ -59,25 +59,15 @@ display(telcoDF)
 
 # COMMAND ----------
 
-primary_key = "customer_id"
-timestamp_col ="transaction_ts"
-label_col = "churn"
-feature_table_name = "churn_feature_table"
-
-# COMMAND ----------
-
 from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql.functions import pandas_udf, col, when, lit
 
+#  Count number of optional services enabled, like streaming TV
 def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
-  """
-  Count number of optional services enabled, like streaming TV
-  """
-
   # Create pandas UDF function
   @pandas_udf('double')
   def num_optional_services(*cols):
-    """Nested helper function to count number of optional services in a pandas dataframe"""
+    #N ested helper function to count number of optional services in a pandas dataframe
     return sum(map(lambda s: (s == "Yes").astype('double'), cols))
 
   return inputDF.\
@@ -169,7 +159,7 @@ churn_features_n_predsDF.select(primary_key, timestamp_col, label_col) \
                         .drop("random") \
                         .write.format("delta") \
                         .mode("overwrite").option("overwriteSchema", "true") \
-                        .saveAsTable(f"{catalog}.{db}.{advanced_label_table_name}")
+                        .saveAsTable(f"churn_label_table")
 
 churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
@@ -180,9 +170,10 @@ churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
 # COMMAND ----------
 
-spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ALTER COLUMN {primary_key} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ALTER COLUMN {timestamp_col} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ADD CONSTRAINT {advanced_label_table_name }_pk PRIMARY KEY({primary_key}, {timestamp_col})")
+# MAGIC %sql
+# MAGIC ALTER TABLE churn_label_table ALTER COLUMN customer_id SET NOT NULL;
+# MAGIC ALTER TABLE churn_label_table ALTER COLUMN transaction_ts SET NOT NULL;
+# MAGIC ALTER TABLE churn_label_table ADD CONSTRAINT churn_label_table_pk PRIMARY KEY(customer_id, transaction_ts:
 
 # COMMAND ----------
 
@@ -214,7 +205,6 @@ spark.sql(f"ALTER TABLE {catalog}.{db}.{advanced_label_table_name } ADD CONSTRAI
 
 # DBTITLE 1,Import Feature Store Client
 from databricks.feature_engineering import FeatureEngineeringClient
-
 fe = FeatureEngineeringClient()
 
 # COMMAND ----------
@@ -223,38 +213,31 @@ fe = FeatureEngineeringClient()
 from pprint import pprint
 from databricks.sdk import WorkspaceClient
 
-
 # Create workspace client
 w = WorkspaceClient()
 
+#TODO: explain what we are doing here / why - can we simplify that?
 try:
-
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
-  
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.churn_feature_table_online_table")
   # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.{feature_table_name}_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.{feature_table_name}_online_table")
-
+  w.online_tables.delete(f"{catalog}.{db}.churn_feature_table_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.churn_feature_table_online_table")
 except Exception as e:
   pprint(e)
 
 # COMMAND ----------
 
 # DBTITLE 1,Drop feature table if it already exists (optional)
-
+#TODO: explain what we are doing here / why - can we simplify that?
 try:
-
   # Drop existing table from Feature Store
-  fe.drop_table(name=f"{catalog}.{db}.{feature_table_name}")
-
+  fe.drop_table(name=f"{catalog}.{db}.churn_feature_table")
   # Delete underyling delta tables
-  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.{feature_table_name}")
-  print(f"Dropping Feature Table {catalog}.{db}.{feature_table_name}")
-
-
+  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.churn_feature_table")
+  print(f"Dropping Feature Table {catalog}.{db}.churn_feature_table")
 except ValueError as ve:
   pass
-  print(f"Feature Table {catalog}.{db}.{feature_table_name} doesn't exist")
+  print(f"Feature Table {catalog}.{db}.churn_feature_table doesn't exist")
 
 # COMMAND ----------
 
@@ -290,29 +273,22 @@ fe.write_table(
 
 # COMMAND ----------
 
-
-# Define the Python UDF
-
-function_def = f"""
-  CREATE OR REPLACE FUNCTION {catalog}.{db}.avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
-  RETURNS FLOAT
-  LANGUAGE PYTHON
-  COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
-  AS $$
-  if tenure_in > 0:
-    return monthly_charges_in - total_charges_in/tenure_in
-  else:
-    return 0
-  $$
-"""
-
-spark.sql(function_def)
+# MAGIC %sql
+# MAGIC   CREATE OR REPLACE FUNCTION avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
+# MAGIC   RETURNS FLOAT
+# MAGIC   LANGUAGE PYTHON
+# MAGIC   COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
+# MAGIC   AS $$
+# MAGIC   if tenure_in > 0:
+# MAGIC     return monthly_charges_in - total_charges_in/tenure_in
+# MAGIC   else:
+# MAGIC     return 0
+# MAGIC   $$
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DESCRIBE FUNCTION avg_price_increase
-# MAGIC ;
+# MAGIC DESCRIBE FUNCTION avg_price_increase;
 
 # COMMAND ----------
 

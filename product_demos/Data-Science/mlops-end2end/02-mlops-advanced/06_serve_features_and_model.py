@@ -47,12 +47,6 @@
 
 # COMMAND ----------
 
-feature_table_name = "churn_feature_table"
-primary_key = "customer_id"
-timestamp_col ="transaction_ts"
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC ## Enable Change-Data-Feed on Feature Table for performance considerations
@@ -63,7 +57,8 @@ timestamp_col ="transaction_ts"
 
 # COMMAND ----------
 
-spark.sql(f"ALTER TABLE {catalog}.{db}.{feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+# MAGIC %sql
+# MAGIC ALTER TABLE churn_feature_table SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
 
 # COMMAND ----------
 
@@ -131,11 +126,11 @@ from pprint import pprint
 
 try:
 
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.churn_feature_table_online_table")
   
   # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.{feature_table_name}_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.{feature_table_name}_online_table")
+  w.online_tables.delete(f"{catalog}.{db}.churn_feature_table_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.churn_feature_table_online_table")
 
 except Exception as e:
   pprint(e)
@@ -147,9 +142,9 @@ from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTrigg
 
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
-  primary_key_columns = [primary_key],
-  timeseries_key = timestamp_col,
-  source_table_full_name = f"{catalog}.{db}.{feature_table_name}",
+  primary_key_columns = ["customer_id"],
+  timeseries_key = "transaction_ts",
+  source_table_full_name = f"{catalog}.{db}.churn_feature_table",
   run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
 )
 
@@ -158,7 +153,7 @@ churn_features_online_store_spec = OnlineTableSpec(
 # DBTITLE 1,Create the online table
 # Create the online table
 w.online_tables.create(
-  name=f"{catalog}.{db}.{feature_table_name}_online_table",
+  name=f"{catalog}.{db}.churn_feature_table_online_table",
   spec=churn_features_online_store_spec
 )
 
@@ -168,9 +163,8 @@ w.online_tables.create(
 from pprint import pprint
 
 try:
-  online_table_exist = w.online_tables.get(f"{catalog}.{db}.{feature_table_name}_online_table")
+  online_table_exist = w.online_tables.get(f"{catalog}.{db}.churn_feature_table_online_table")
   pprint(online_table_exist)
-
 except Exception as e:
   pprint(e)
 
@@ -235,25 +229,13 @@ except Exception as e:
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-
-# Create workspace client for the Databricks Python SDK
-w = WorkspaceClient()
-
-# COMMAND ----------
-
 endpoint_name = "dbdemos_mlops_advanced_churn"
-
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
 # COMMAND ----------
 
 # Promote Champion model to Production
-client.set_registered_model_alias(
-    name=model_name,
-    alias="Production",
-    version=model_version
-)
+client.set_registered_model_alias(name=model_name, alias="Production", version=model_version)
 
 print(f"Promoting {model_name} versions {model_version} from Champion to Production")
 
@@ -327,7 +309,6 @@ served_model_name =  model_name.split('.')[-1]
 
 from databricks.sdk.service.serving import EndpointCoreConfigInput
 
-
 endpoint_config_dict = {
     "served_models": [
         # Add models to be served to this list
@@ -349,11 +330,10 @@ endpoint_config_dict = {
     },
     "auto_capture_config":{
         "catalog_name": catalog,
-        "schema_name": schema,
+        "schema_name": db,
         "table_name_prefix": "mlops_churn_served"
     }
 }
-
 
 endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 
@@ -366,16 +346,14 @@ try:
   w.serving_endpoints.create(
     name=endpoint_name,
     config=endpoint_config,
-    tags=[EndpointTag.from_dict({"key": "db_demos", "value": "mlops_advanced_churn"})]
+    tags=[EndpointTag.from_dict({"key": "dbdemos", "value": "mlops_advanced_churn"})]
   )
   
   print(f"Creating endpoint {endpoint_name} with models {model_name} version {model_version}")
 
 except Exception as e:
-  print(e)
-
   if f"Endpoint with name '{endpoint_name}' already exists" in e.args[0]:
-    print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version}")
+    print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version} ({str(e)})")
 
     w.serving_endpoints.update_config(
       name=endpoint_name,
@@ -454,7 +432,6 @@ input_example =  Model.load(p).load_input_example(p)
 if input_example:
   # Only works if model NOT logged with feature store client
   dataframe_records =  [{input_example.to_dict(orient='records')}]
-
 else:
   # Hard-code test-sample
   dataframe_records = [
@@ -464,13 +441,11 @@ else:
 
 # COMMAND ----------
 
-# Wait 60 sec for endpoint to be available to avoid errors in the next command
+# DBTITLE 1,Query endpoint
+# Wait 60 sec for endpoint so that the endpoint is fully ready to available errors in the next command
 import time
 time.sleep(60)
 
-# COMMAND ----------
-
-# DBTITLE 1,Query endpoint
 print("Churn inference:")
 response = w.serving_endpoints.query(name=f"{endpoint_name}", dataframe_records=dataframe_records)
 print(response.predictions)

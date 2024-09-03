@@ -51,7 +51,7 @@
 
 import mlflow
 print(f"Finding best run from {xp_name} and pushing new model version to {model_name}")
-_ = mlflow.set_experiment(f"{xp_path}/{xp_name}")
+mlflow.set_experiment(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 

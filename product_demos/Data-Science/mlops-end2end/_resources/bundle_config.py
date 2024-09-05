@@ -151,7 +151,7 @@
     },
     {
       "path": "02-mlops-advanced/06_serve_features_and_model", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Serve feature & model in real time serving endpoint", 
@@ -163,9 +163,9 @@
     "id": "model-dev-job",
     "definition": { 
       "settings": {
-        "name": "Advanced MLops - Model Developement",
+        "name": "Advanced MLOPS - Model Developement",
         "email_notifications": {
-          "no_alert_for_skipped_runs": false
+          "no_alert_for_skipped_runs": False
         },
         "webhook_notifications": {},
         "timeout_seconds": 0,
@@ -182,9 +182,9 @@
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
-              "no_alert_for_skipped_runs": false,
-              "no_alert_for_canceled_runs": false,
-              "alert_on_last_attempt": false
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
             },
             "webhook_notifications": {}
           },
@@ -204,9 +204,9 @@
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
-              "no_alert_for_skipped_runs": false,
-              "no_alert_for_canceled_runs": false,
-              "alert_on_last_attempt": false
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
             },
             "webhook_notifications": {}
           },
@@ -226,9 +226,9 @@
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
-              "no_alert_for_skipped_runs": false,
-              "no_alert_for_canceled_runs": false,
-              "alert_on_last_attempt": false
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
             },
             "webhook_notifications": {}
           },
@@ -248,9 +248,9 @@
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {
-              "no_alert_for_skipped_runs": false,
-              "no_alert_for_canceled_runs": false,
-              "alert_on_last_attempt": false
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
             },
             "webhook_notifications": {}
           }
@@ -275,9 +275,230 @@
           }
         ],
         "queue": {
-          "enabled": false
+          "enabled": False
         }
       }
+    }
+  },
+  {
+    "start_on_install": False,
+    "id": "inference-drift-job",
+    "definition": { 
+      "settings": {
+        "name": "Advanced MLOPS - Batch inference & drift detection",
+        "email_notifications": {
+          "no_alert_for_skipped_runs": False
+        },
+        "webhook_notifications": {},
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+          {
+            "task_key": "Feature_engineering",
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Batch_inference",
+            "depends_on": [
+              {
+                "task_key": "Feature_engineering"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Create_Monitor",
+            "depends_on": [
+              {
+                "task_key": "Batch_inference"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/07_model_monitoring",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Drift_detection",
+            "depends_on": [
+              {
+                "task_key": "Create_Monitor"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/08_drift_detection",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Check_Violations",
+            "depends_on": [
+              {
+                "task_key": "Drift_detection"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "condition_task": {
+              "op": "GREATER_THAN",
+              "left": "{{tasks.Drift_detection.values.all_violations_count}}",
+              "right": "0"
+            },
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Model_training",
+            "depends_on": [
+              {
+                "task_key": "Check_Violations",
+                "outcome": "true"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Register_model",
+            "depends_on": [
+              {
+                "task_key": "Model_training"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          },
+          {
+            "task_key": "Challenger_validation",
+            "depends_on": [
+              {
+                "task_key": "Register_model"
+              }
+            ],
+            "run_if": "ALL_SUCCESS",
+            "notebook_task": {
+              "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
+              "source": "WORKSPACE"
+            },
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "timeout_seconds": 0,
+            "email_notifications": {},
+            "notification_settings": {
+              "no_alert_for_skipped_runs": False,
+              "no_alert_for_canceled_runs": False,
+              "alert_on_last_attempt": False
+            },
+            "webhook_notifications": {}
+          }
+        ],
+        "job_clusters": [
+          {
+            "job_cluster_key": "mlops_batch_inference_cluster",
+            "new_cluster": {
+              "cluster_name": "",
+              "spark_version": "15.4.x-cpu-ml-scala2.12",
+              "spark_conf": {
+                "spark.master": "local[*, 4]",
+                "spark.databricks.cluster.profile": "singleNode"
+              },
+              "azure_attributes": {
+                "first_on_demand": 1,
+                "availability": "ON_DEMAND_AZURE",
+                "spot_bid_max_price": -1
+              },
+              "node_type_id": "Standard_D4ds_v5",
+              "custom_tags": {
+                "ResourceClass": "SingleNode"
+              },
+              "spark_env_vars": {
+                "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+              },
+              "enable_elastic_disk": True,
+              "data_security_mode": "SINGLE_USER",
+              "runtime_engine": "STANDARD",
+              "num_workers": 0
+            }
+    }
+  ],
+  "queue": {
+    "enabled": True
+  }
+}
     }
   }],
   "cluster": {

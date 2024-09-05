@@ -15,17 +15,8 @@ is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 
-#catalog = "dbdemos"
-#db = f"quickstart_mlops_{reformat_current_user}"
-#TODO: Advanced and quickstart demo must live in the same schema
-#if is_advanced_mlops_demo:
-  #  db = f"advanced_mlops_{reformat_current_user}"
-
-  # 2024-09-04: Moving definitions of these variables to the cell for data generation
-  # These variables are needed by the data generation function
-  #model_name = f"{catalog}.{db}.advanced_mlops_churn"
-  #model_alias = "Champion"
-  #inference_table_name = "advanced_churn_inference_table"
+catalog = "main__build"
+dbName = db = "dbdemos_mlops"
 
 
 # COMMAND ----------

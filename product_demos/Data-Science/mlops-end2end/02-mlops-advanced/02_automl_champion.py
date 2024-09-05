@@ -52,7 +52,7 @@ print(f"Set experiment to: {xp_name}")
 
 # COMMAND ----------
 
-display(spark.table("churn_feature_table"))
+display(spark.table("advanced_churn_feature_table"))
 
 # COMMAND ----------
 
@@ -85,7 +85,7 @@ from databricks.feature_store import FeatureFunction, FeatureLookup
 
 features = [
     FeatureLookup(
-      table_name=f"{catalog}.{db}.churn_feature_table",
+      table_name=f"{catalog}.{db}.advanced_churn_feature_table",
       lookup_key=["customer_id"],
       timestamp_lookup_key="transaction_ts"
     ),
@@ -110,7 +110,10 @@ features = [
 
 # DBTITLE 1,Pull labels to use for training/validating/testing
 
-labels_df = spark.read.table(f"churn_label_table")
+labels_df = spark.read.table(f"advanced_churn_label_table")
+
+# Set variable for label column. This will be used within the training code.
+label_col = "churn"
 
 # COMMAND ----------
 
@@ -129,7 +132,7 @@ fe = FeatureEngineeringClient()
 # Create Feature specifications object
 training_set_specs = fe.create_training_set(
   df=labels_df, # DataFrame with lookup keys and label/target (+ any other input)
-  label=label_col,
+  label="churn",
   feature_lookups=features,
   exclude_columns=["customer_id", "transaction_ts", 'split'] # Keeping them to create baseline table
 )

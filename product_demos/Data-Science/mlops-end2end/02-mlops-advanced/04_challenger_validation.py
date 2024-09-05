@@ -53,8 +53,12 @@
 
 # COMMAND ----------
 
+# Fully qualified model name
+model_name = f"{catalog}.{db}.advanced_mlops_churn"
+
 # We are interested in validating the Challenger model
 model_alias = "Challenger"
+
 client = MlflowClient()
 model_details = client.get_model_version_by_alias(model_name, model_alias)
 model_version = int(model_details.version)
@@ -198,7 +202,7 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 
 import pyspark.sql.functions as F
 #get our validation dataset:
-validation_df = spark.table('churn_label_table').filter("split='validate'")
+validation_df = spark.table('advanced_churn_label_table').filter("split='validate'")
 
 #Call the model with the given alias and return the prediction
 def predict_churn(validation_df, model_alias):

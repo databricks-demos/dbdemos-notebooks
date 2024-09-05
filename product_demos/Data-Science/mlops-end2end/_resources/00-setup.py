@@ -18,11 +18,14 @@ reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 #catalog = "dbdemos"
 #db = f"quickstart_mlops_{reformat_current_user}"
 #TODO: Advanced and quickstart demo must live in the same schema
-if is_advanced_mlops_demo:
+#if is_advanced_mlops_demo:
   #  db = f"advanced_mlops_{reformat_current_user}"
-  model_name = f"{catalog}.{db}.mlops_churn"
-  # model_alias = "Champion"
-  # inference_table_name = "mlops_churn_advanced_inference_table"
+
+  # 2024-09-04: Moving definitions of these variables to the cell for data generation
+  # These variables are needed by the data generation function
+  #model_name = f"{catalog}.{db}.advanced_mlops_churn"
+  #model_alias = "Champion"
+  #inference_table_name = "advanced_churn_inference_table"
 
 
 # COMMAND ----------
@@ -61,7 +64,13 @@ client = MlflowClient()
 # COMMAND ----------
 
 # DBTITLE 1,Create Raw/Bronze customer data from IBM Telco public dataset and sanitize column name
+# Default for quickstart
 bronze_table_name = "mlops_churn_bronze_customers"
+
+# Bronze table name for advanced
+if is_advanced_mlops_demo:
+  bronze_table_name = "advanced_churn_bronze_customers"
+
 if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
   import requests
   from io import StringIO
@@ -124,14 +133,16 @@ if setup_inference_data:
 
 if setup_adv_inference_data:
   # Check that the label table exists first, as we'll be creating a copy of it
-  if spark.catalog.tableExists(f"churn_label_table"):
+  if spark.catalog.tableExists(f"advanced_churn_label_table"):
     # This should only be called from the advanced batch inference notebook
-    if not spark.catalog.tableExists(f"mlops_churn_advanced_cust_ids"):
+    if not spark.catalog.tableExists(f"advanced_churn_cust_ids"):
       print("Creating table with customer records for inference...")
       # Drop the label column for inference
-      spark.read.table("churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
+      # This seems to be writing to the wrong table. Comment out first to test writing to advanced_churn_cust_ids.
+      #spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
+      spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
   else:
-    print("Label table doesn't exist, please run the notebook '01_feature_engineering'")
+    print("Label table `advanced_churn_label_table` doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 
@@ -185,7 +196,7 @@ def generate_synthetic(inference_table, drift_type="label_drift"):
   fe = FeatureEngineeringClient()
 
   # Model URI
-  model_uri = f"models:/{model_name}@{model_alias}"
+  model_uri = f"models:/{model_name}@Champion"
 
   # Batch score
   preds_df = fe.score_batch(df=df_synthetic_data, model_uri=model_uri, result_type="string")
@@ -197,8 +208,11 @@ def generate_synthetic(inference_table, drift_type="label_drift"):
 
   preds_df.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name}")
 
-if generate_synthetic_data:
-  generate_synthetic(inference_table=inference_table_name)
+if is_advanced_mlops_demo:
+  model_name = f"{catalog}.{db}.advanced_mlops_churn"
+  inference_table_name = "advanced_churn_inference_table"
+  if generate_synthetic_data:
+    generate_synthetic(inference_table=inference_table_name)
 
 # COMMAND ----------
 

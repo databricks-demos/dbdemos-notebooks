@@ -50,6 +50,9 @@
 # COMMAND ----------
 
 import mlflow
+
+model_name = f"{catalog}.{db}.advanced_mlops_churn"
+
 print(f"Finding best run from {xp_name} and pushing new model version to {model_name}")
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
 
@@ -71,13 +74,13 @@ best_model
 
 # COMMAND ----------
 
-print(f"Registering model to {model_name}")
+print(f"Registering model to {catalog}.{db}.advanced_mlops_churn")
 
 # Get the run id from the best model
 run_id = best_model.iloc[0]['run_id']
 
 # Register best model from experiments run to MLflow model registry
-model_details = mlflow.register_model(f"runs:/{run_id}/model", model_name)
+model_details = mlflow.register_model(f"runs:/{run_id}/model", f"{catalog}.{db}.advanced_mlops_churn")
 
 # COMMAND ----------
 
@@ -142,7 +145,7 @@ client.set_model_version_tag(
 
 # Set this version as the Challenger model, using its model alias
 client.set_registered_model_alias(
-  name=model_name,
+  name=f"{catalog}.{db}.advanced_mlops_churn",
   alias="Challenger",
   version=model_details.version
 )

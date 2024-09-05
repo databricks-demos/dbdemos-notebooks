@@ -38,7 +38,7 @@
 
 # DBTITLE 1,Read in Bronze Delta table using Spark
 # Read into Spark
-telcoDF = spark.read.table(bronze_table_name)
+telcoDF = spark.read.table("advanced_churn_bronze_customers")
 display(telcoDF)
 
 # COMMAND ----------
@@ -105,7 +105,7 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
 
   # Add/Force semantic data types for specific colums (to facilitate autoML)
   data_cleanDF = data_psdf.to_spark()
-  data_cleanDF = data_cleanDF.withMetadata(primary_key, {"spark.contentAnnotation.semanticType":"native"})
+  data_cleanDF = data_cleanDF.withMetadata("customer_id", {"spark.contentAnnotation.semanticType":"native"})
   data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
   return data_cleanDF
@@ -130,7 +130,7 @@ from datetime import datetime
 # Add current scoring timestamp
 this_time = (datetime.now()).timestamp()
 churn_features_n_predsDF = clean_churn_features(compute_service_features(telcoDF)) \
-                            .withColumn(timestamp_col, lit(this_time).cast("timestamp"))
+                            .withColumn("transaction_ts", lit(this_time).cast("timestamp"))
 
 display(churn_features_n_predsDF)
 
@@ -150,7 +150,7 @@ import pyspark.sql.functions as F
 # Specify train-val-test split
 train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
 
-churn_features_n_predsDF.select(primary_key, timestamp_col, label_col) \
+churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
                         .withColumn("random", F.rand(seed=42)) \
                         .withColumn("split",
                                     F.when(F.col("random") < train_ratio, "train")
@@ -159,9 +159,9 @@ churn_features_n_predsDF.select(primary_key, timestamp_col, label_col) \
                         .drop("random") \
                         .write.format("delta") \
                         .mode("overwrite").option("overwriteSchema", "true") \
-                        .saveAsTable(f"churn_label_table")
+                        .saveAsTable(f"advanced_churn_label_table")
 
-churn_featuresDF = churn_features_n_predsDF.drop(label_col)
+churn_featuresDF = churn_features_n_predsDF.drop("churn")
 
 # COMMAND ----------
 
@@ -171,9 +171,9 @@ churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC ALTER TABLE churn_label_table ALTER COLUMN customer_id SET NOT NULL;
-# MAGIC ALTER TABLE churn_label_table ALTER COLUMN transaction_ts SET NOT NULL;
-# MAGIC ALTER TABLE churn_label_table ADD CONSTRAINT churn_label_table_pk PRIMARY KEY(customer_id, transaction_ts:
+# MAGIC ALTER TABLE advanced_churn_label_table ALTER COLUMN customer_id SET NOT NULL;
+# MAGIC ALTER TABLE advanced_churn_label_table ALTER COLUMN transaction_ts SET NOT NULL;
+# MAGIC ALTER TABLE advanced_churn_label_table ADD CONSTRAINT advanced_churn_label_table_pk PRIMARY KEY(customer_id, transaction_ts);
 
 # COMMAND ----------
 
@@ -203,9 +203,9 @@ churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
 # COMMAND ----------
 
-# DBTITLE 1,Import Feature Store Client
-from databricks.feature_engineering import FeatureEngineeringClient
-fe = FeatureEngineeringClient()
+# MAGIC %md
+# MAGIC
+# MAGIC First, since we are creating the feature table from scratch, we want to make sure that our environment is clean and any previously created offline/online feature tables are deleted.
 
 # COMMAND ----------
 
@@ -218,34 +218,34 @@ w = WorkspaceClient()
 
 #TODO: explain what we are doing here / why - can we simplify that?
 try:
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.churn_feature_table_online_table")
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.churn_feature_table_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.churn_feature_table_online_table")
+  w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
 except Exception as e:
   pprint(e)
 
 # COMMAND ----------
 
-# DBTITLE 1,Drop feature table if it already exists (optional)
-#TODO: explain what we are doing here / why - can we simplify that?
-try:
-  # Drop existing table from Feature Store
-  fe.drop_table(name=f"{catalog}.{db}.churn_feature_table")
-  # Delete underyling delta tables
-  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.churn_feature_table")
-  print(f"Dropping Feature Table {catalog}.{db}.churn_feature_table")
-except ValueError as ve:
-  pass
-  print(f"Feature Table {catalog}.{db}.churn_feature_table doesn't exist")
+# DBTITLE 1,Drop feature table if it already exists
+# MAGIC %sql
+# MAGIC -- We are creating the feature table from scratch.
+# MAGIC -- Let's drop any existing feature table if it exists
+# MAGIC DROP TABLE IF EXISTS advanced_churn_feature_table;
+
+# COMMAND ----------
+
+# DBTITLE 1,Import Feature Store Client
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
 
 # COMMAND ----------
 
 churn_feature_table = fe.create_table(
-  name=feature_table_name, # f"{catalog}.{dbName}.{feature_table_name}"
-  primary_keys=[primary_key, timestamp_col],
+  name="advanced_churn_feature_table", # f"{catalog}.{dbName}.{feature_table_name}"
+  primary_keys=["customer_id", "transaction_ts"],
   schema=churn_featuresDF.schema,
-  timeseries_columns=timestamp_col,
+  timeseries_columns="transaction_ts",
   description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground-truth and now can be used with AutoML's Feature Store integration"
 )
 
@@ -253,7 +253,7 @@ churn_feature_table = fe.create_table(
 
 # DBTITLE 1,Write feature values to Feature Store
 fe.write_table(
-  name=f"{catalog}.{db}.{feature_table_name}",
+  name=f"{catalog}.{db}.advanced_churn_feature_table",
   df=churn_featuresDF, # can be a streaming dataframe as well
   mode='merge' #'merge'/'overwrite' which supports schema evolution
 )

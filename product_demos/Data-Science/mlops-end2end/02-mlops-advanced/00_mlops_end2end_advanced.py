@@ -76,7 +76,7 @@
 
 # COMMAND ----------
 
-telcoDF = spark.table("mlops_churn_bronze_customers")
+telcoDF = spark.table("advanced_churn_bronze_customers")
 display(telcoDF)
 
 # COMMAND ----------

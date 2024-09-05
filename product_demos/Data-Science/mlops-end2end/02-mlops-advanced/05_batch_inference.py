@@ -55,12 +55,15 @@ from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F
 
 # Load customer features to be scored
-inference_df = spark.read.table("mlops_churn_advanced_cust_ids")
+inference_df = spark.read.table("advanced_churn_cust_ids")
 
 fe = FeatureEngineeringClient()
 
+# Fully qualified model name
+model_name = f"{catalog}.{db}.advanced_mlops_churn"
+
 # Model URI
-model_uri = f"models:/{model_name}@{model_alias}"
+model_uri = f"models:/{model_name}@Champion"
 
 # Batch score
 preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string")
@@ -83,7 +86,7 @@ display(preds_df)
 # MAGIC
 # MAGIC Note that this table does not have the ground truth labels. These are usually collected and made available over time, and in many cases, may not even be available! However, this does not stop us from monitoring the data for drift, as that alone may be a sign that the model has to be retrained.
 # MAGIC
-# MAGIC The table displayed below is saved into `mlops_churn_advanced_offline_inference`. It includes the model version used for scoring, the model alias, the predictions and timestamp when the inference was made. It does not contain any labels.
+# MAGIC The table displayed below is saved into `advanced_churn_offline_inference`. It includes the model version used for scoring, the model alias, the predictions and timestamp when the inference was made. It does not contain any labels.
 # MAGIC
 
 # COMMAND ----------
@@ -94,7 +97,7 @@ from datetime import datetime
 client = MlflowClient()
 
 model = client.get_registered_model(name=model_name)
-model_version = int(client.get_model_version_by_alias(name=model_name, alias=model_alias).version)
+model_version = int(client.get_model_version_by_alias(name=model_name, alias="Champion").version)
 
 # COMMAND ----------
 
@@ -103,11 +106,11 @@ from datetime import datetime, timedelta
 
 offline_inference_df = preds_df.withColumn("model_name", F.lit(model_name)) \
                               .withColumn("model_version", F.lit(model_version)) \
-                              .withColumn("model_alias", F.lit(model_alias)) \
+                              .withColumn("model_alias", F.lit("Champion")) \
                               .withColumn("inference_timestamp", F.lit(datetime.now()- timedelta(days=2)))
 
 offline_inference_df.write.mode("overwrite") \
-                    .saveAsTable("mlops_churn_advanced_offline_inference")
+                    .saveAsTable("advanced_churn_offline_inference")
 
 display(offline_inference_df)
 

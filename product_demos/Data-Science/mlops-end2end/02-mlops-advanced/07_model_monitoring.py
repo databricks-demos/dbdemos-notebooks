@@ -50,24 +50,24 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE mlops_churn_advanced_offline_inference AS
-# MAGIC           SELECT * EXCEPT (split) FROM mlops_churn_advanced_offline_inference LEFT JOIN churn_label_table USING(customer_id, transaction_ts) ;
+# MAGIC CREATE OR REPLACE TABLE advanced_churn_inference_table AS
+# MAGIC           SELECT * EXCEPT (split) FROM advanced_churn_offline_inference LEFT JOIN advanced_churn_label_table USING(customer_id, transaction_ts) ;
 # MAGIC
-# MAGIC ALTER TABLE mlops_churn_advanced_offline_inference SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
+# MAGIC ALTER TABLE advanced_churn_inference_table SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Create baseline table
 # MAGIC
-# MAGIC For simplification purposes, we will create the baseline table from the pre-existing `mlops_churn_advanced_offline_inference` table
+# MAGIC For simplification purposes, we will create the baseline table from the pre-existing `advanced_churn_offline_inference` table
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- TODO: understand why we need model version in the baseline table
-# MAGIC CREATE OR REPLACE TABLE mlops_churn_advanced_baseline AS
-# MAGIC   SELECT * EXCEPT (customer_id, transaction_ts, model_alias, inference_timestamp) FROM mlops_churn_advanced_offline_inference
+# MAGIC CREATE OR REPLACE TABLE advanced_churn_baseline AS
+# MAGIC   SELECT * EXCEPT (customer_id, transaction_ts, model_alias, inference_timestamp) FROM advanced_churn_inference_table
 
 # COMMAND ----------
 
@@ -107,16 +107,36 @@ expected_loss_metric = [
 
 # COMMAND ----------
 
+import re
+
+# Find the workspace folder where this notebook is stored
+# We will save the monitor assets in the same folder as the notebook
+
+# Find the notebook's path
+notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+
+# Define the regular expression pattern to get the folder path
+# Groups the text before the last slash and the text after the last slash
+pattern = r'/(.+)/(.+)$'
+
+# Use re.search to find the regex match
+match = re.search(pattern, notebook_path)
+
+demo_folder_path = match.group(1)
+print(f"Monitor assets will be saved in: /{demo_folder_path}/monitoring")
+
+# COMMAND ----------
+
 # DBTITLE 1,Create Monitor
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInferenceLogProblemType
 
 
-print(f"Creating monitor for inference table }")
+print(f"Creating monitor for inference table {catalog}.{db}.advanced_churn_inference_table")
 w = WorkspaceClient()
 
 info = w.quality_monitors.create(
-  table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference",
+  table_name=f"{catalog}.{db}.advanced_churn_inference_table",
   inference_log=MonitorInferenceLog(
         problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
         prediction_col="prediction",
@@ -125,9 +145,10 @@ info = w.quality_monitors.create(
         model_id_col="model_version",
         label_col="churn", # optional
   ),
-  assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{db}.mlops_churn_advanced_offline_inference",
+  #assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{db}.mlops_churn_advanced_offline_inference",
+  assets_dir=f"/Workspace/{demo_folder_path}/monitoring",
   output_schema_name=f"{catalog}.{db}",
-  baseline_table_name=f"{catalog}.{db}.mlops_churn_advanced_baseline",
+  baseline_table_name=f"{catalog}.{db}.advanced_churn_baseline",
   slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
   custom_metrics=expected_loss_metric
 )
@@ -144,7 +165,7 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 # Wait for monitor to be created
 while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
-  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference")
+  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
   time.sleep(10)
 
 assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
@@ -155,24 +176,24 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference").refreshes
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.advanced_churn_inference_table").refreshes
 assert(len(refreshes) > 0)
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
-w.quality_monitors.get(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference")
+w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
 
 # COMMAND ----------
 
 # DBTITLE 1,Delete existing monitor [OPTIONAL]
-# w.quality_monitors.delete(table_name=f"{catalog}.{db}.mlops_churn_advanced_offline_inference", purge_artifacts=True)
+# w.quality_monitors.delete(table_name=f"{catalog}.{db}.advanced_churn_offline_inference", purge_artifacts=True)
 
 # COMMAND ----------
 

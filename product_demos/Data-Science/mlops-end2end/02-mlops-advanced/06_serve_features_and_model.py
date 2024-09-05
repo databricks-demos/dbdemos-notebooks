@@ -58,7 +58,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC ALTER TABLE churn_feature_table SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
+# MAGIC ALTER TABLE advanced_churn_feature_table SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
 
 # COMMAND ----------
 
@@ -126,11 +126,11 @@ from pprint import pprint
 
 try:
 
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.churn_feature_table_online_table")
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   
   # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.churn_feature_table_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.churn_feature_table_online_table")
+  w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
 
 except Exception as e:
   pprint(e)
@@ -144,7 +144,7 @@ from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTrigg
 churn_features_online_store_spec = OnlineTableSpec(
   primary_key_columns = ["customer_id"],
   timeseries_key = "transaction_ts",
-  source_table_full_name = f"{catalog}.{db}.churn_feature_table",
+  source_table_full_name = f"{catalog}.{db}.advanced_churn_feature_table",
   run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
 )
 
@@ -153,7 +153,7 @@ churn_features_online_store_spec = OnlineTableSpec(
 # DBTITLE 1,Create the online table
 # Create the online table
 w.online_tables.create(
-  name=f"{catalog}.{db}.churn_feature_table_online_table",
+  name=f"{catalog}.{db}.advanced_churn_feature_table_online_table",
   spec=churn_features_online_store_spec
 )
 
@@ -163,7 +163,7 @@ w.online_tables.create(
 from pprint import pprint
 
 try:
-  online_table_exist = w.online_tables.get(f"{catalog}.{db}.churn_feature_table_online_table")
+  online_table_exist = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   pprint(online_table_exist)
 except Exception as e:
   pprint(e)
@@ -229,7 +229,10 @@ except Exception as e:
 
 # COMMAND ----------
 
-endpoint_name = "dbdemos_mlops_advanced_churn"
+endpoint_name = "advanced_mlops_churn_ep"
+
+# Fully qualified model name
+model_name = f"{catalog}.{db}.advanced_mlops_churn"
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
 # COMMAND ----------
@@ -317,7 +320,6 @@ endpoint_config_dict = {
             "model_version": model_version,
             "scale_to_zero_enabled": True,
             "workload_size": "Small",
-            "instance_profile_arn": dbutils.secrets.get(scope="fieldeng", key="oneenv_ip_arn"),
         },
     ],
     "traffic_config": {
@@ -331,7 +333,7 @@ endpoint_config_dict = {
     "auto_capture_config":{
         "catalog_name": catalog,
         "schema_name": db,
-        "table_name_prefix": "mlops_churn_served"
+        "table_name_prefix": "advanced_churn_served"
     }
 }
 
@@ -346,7 +348,7 @@ try:
   w.serving_endpoints.create(
     name=endpoint_name,
     config=endpoint_config,
-    tags=[EndpointTag.from_dict({"key": "dbdemos", "value": "mlops_advanced_churn"})]
+    tags=[EndpointTag.from_dict({"key": "dbdemos", "value": "advanced_mlops_churn"})]
   )
   
   print(f"Creating endpoint {endpoint_name} with models {model_name} version {model_version}")
@@ -362,15 +364,6 @@ except Exception as e:
     )
   else:
     raise(e)
-
-# COMMAND ----------
-
-w.serving_endpoints.update_config(
-  name=endpoint_name,
-  served_models=endpoint_config.served_models,
-  traffic_config=endpoint_config.traffic_config
-)
-
 
 # COMMAND ----------
 
@@ -423,7 +416,7 @@ from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models import Model
 
 # Setting these variables again in case the user skipped running the cells to deploy the model
-endpoint_name = "dbdemos_mlops_advanced_churn"
+endpoint_name = "advanced_mlops_churn_ep"
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
 p = ModelsArtifactRepository(f"models:/{model_name}/{model_version}").download_artifacts("") 
@@ -435,8 +428,8 @@ if input_example:
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {primary_key: "0002-ORFBO", timestamp_col: "2024-02-05"},
-    {primary_key: "0003-MKNFE", timestamp_col: "2024-02-05"}
+    {"customer_id": "0002-ORFBO", "transaction_ts": "2024-02-05"},
+    {"customer_id": "0003-MKNFE", "transaction_ts": "2024-02-05"}
   ]
 
 # COMMAND ----------

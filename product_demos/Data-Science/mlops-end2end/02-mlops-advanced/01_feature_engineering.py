@@ -216,7 +216,7 @@ from databricks.sdk import WorkspaceClient
 # Create workspace client
 w = WorkspaceClient()
 
-#TODO: explain what we are doing here / why - can we simplify that?
+# Remove any existing online feature table
 try:
   online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   # Drop existing online feature table

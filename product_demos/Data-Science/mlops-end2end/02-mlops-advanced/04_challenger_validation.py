@@ -117,7 +117,7 @@ label_col = "churn"
 # Predict on a Spark DataFrame
 try:
   # Read labels and IDs
-  labelsDF = spark.read.table(f"churn_label_table")
+  labelsDF = spark.read.table(f"advanced_churn_label_table")
 
   # Batch score
   features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)

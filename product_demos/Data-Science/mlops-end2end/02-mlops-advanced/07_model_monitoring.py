@@ -198,9 +198,42 @@ w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_tabl
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Inspect dashboard
+# MAGIC
+# MAGIC You can now inspect the monitoring dashboard that is automatically generated for you. Navigate to `advanced_churn_inference_table` in the __Catalog Explorer__, go to the __Quality__ tab and click on the __View dashboard__ button.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/07_view_dashboard_button.png?raw=true" width="480">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC ---
+# MAGIC
+# MAGIC You can see the number of inferences being done before the first monitor refresh (the first refresh "window"), as well as the model performance metrics.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/07_model_inferences.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Scrolling further down to the section on __Prediction drift__, you can see the confusion matrix and the percentage of the model's predictions.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/07_confusion_matrix.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC We do not observe any drift yet, as we only have the first refresh "window". We will simulate some drifted data in the next step and refresh the monitor against the newly captured data.
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Next: Drift Detection
 # MAGIC
-# MAGIC After creating the monitor, we will create some logics to detect drfits on the inference data.
+# MAGIC Now, let us create some logic to detect drfit on the inference data.
 # MAGIC
 # MAGIC Next steps:
 # MAGIC * [Drift Detection]($./08_drift_detection)

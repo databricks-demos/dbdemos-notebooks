@@ -85,6 +85,32 @@ profile_table_name = monitor_info.profile_metrics_table_name
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC
+# MAGIC ## Inspect dashboard
+# MAGIC
+# MAGIC Once the monitor is refreshed, refreshing the monitoring dashboard will show the latest model performance metrics. When evaluated against the latest labelled data, the model has poor accuracy, weighted F1 score and recall. On the other hand, it has a weighted precision of 1.
+# MAGIC
+# MAGIC We expect this because the model is now heavily weighted towards the `churn = Yes` class. All predictions of `Yes` are correct, leading to a weighted precision of 1.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/08_model_kpis.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC We will go ahead and illustrate how you can programatically retrieve the drift metrics and trigger model retraining.
+# MAGIC
+# MAGIC However, it is worthwhile to mention that by inspecting the confusion matrix in the monitoring dashboard, we can see that the latest labelled data only has the `Yes` label. i.e. all customers have churned. This is an unlikely scenario. That should lead us to question whether labelling was done correctly, or if there were data quality issues upstream. These causes of label drift do not necessitate model retraining.
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/08_confusion_matrix.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <br>
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Retrieve drift metrics
 # MAGIC
 # MAGIC Query Lakehouse Monitoring's drift metrics table for the inference table being monitored.

@@ -74,15 +74,23 @@ if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
     pdf.columns = [re.sub(r'[\(\)]', '', name).lower() for name in pdf.columns]
     pdf.columns = [re.sub(r'[ -]', '_', name).lower() for name in pdf.columns]
     return pdf.rename(columns = {'streaming_t_v': 'streaming_tv', 'customer_i_d': 'customer_id'})
-
-  df = cleanup_column(df)
-  print(f"creating `{bronze_table_name}` raw table")
-  spark.createDataFrame(df).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(bronze_table_name)
+  def drop_tables(prefix):
+    # List all tables in the schema
+    tables = spark.sql(f"SHOW TABLES IN {db}").filter(f"tableName LIKE '{prefix}%'")
+    # Drop each table that matches the prefix
+    for table in tables.collect():
+        table_name = table['tableName']
+        spark.sql(f"DROP TABLE {db}.{table_name}")
   if is_advanced_mlops_demo:
+    drop_tables("advanced")
     experiment_details = client.get_experiment_by_name(f"{xp_path}/{xp_name}")
     if experiment_details:
       print(f' Deleting experiment: {experiment_details.experiment_id}')
       client.delete_experiment(f'{experiment_details.experiment_id}')
+  
+  df = cleanup_column(df)
+  print(f"creating `{bronze_table_name}` raw table")
+  spark.createDataFrame(df).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(bronze_table_name)
 
 # COMMAND ----------
 
@@ -125,16 +133,12 @@ if setup_inference_data:
 if setup_adv_inference_data:
   # Check that the label table exists first, as we'll be creating a copy of it
   if spark.catalog.tableExists(f"advanced_churn_label_table"):
-
     # This should only be called from the advanced batch inference notebook
-    # When the notebook is run, we want it to always create the advanced_churn_cust_ids
-    # table from the advanced_churn_label_table
-    # This will ensure that feature lookup later in the notebook will succeed
-    # regardless of whether the user re-ran the feature engineering notebook
-    # that would have re-generated the advanced_churn_label_table with new timestamps
-    
+    # if not spark.catalog.tableExists(f"advanced_churn_cust_ids"):
     print("Creating table with customer records for inference...")
     # Drop the label column for inference
+    # This seems to be writing to the wrong table. Comment out first to test writing to advanced_churn_cust_ids.
+    #spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
     spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
   else:
     print("Label table `advanced_churn_label_table` doesn't exist, please run the notebook '01_feature_engineering'")

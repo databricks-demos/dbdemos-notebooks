@@ -125,13 +125,17 @@ if setup_inference_data:
 if setup_adv_inference_data:
   # Check that the label table exists first, as we'll be creating a copy of it
   if spark.catalog.tableExists(f"advanced_churn_label_table"):
+
     # This should only be called from the advanced batch inference notebook
-    if not spark.catalog.tableExists(f"advanced_churn_cust_ids"):
-      print("Creating table with customer records for inference...")
-      # Drop the label column for inference
-      # This seems to be writing to the wrong table. Comment out first to test writing to advanced_churn_cust_ids.
-      #spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
-      spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
+    # When the notebook is run, we want it to always create the advanced_churn_cust_ids
+    # table from the advanced_churn_label_table
+    # This will ensure that feature lookup later in the notebook will succeed
+    # regardless of whether the user re-ran the feature engineering notebook
+    # that would have re-generated the advanced_churn_label_table with new timestamps
+    
+    print("Creating table with customer records for inference...")
+    # Drop the label column for inference
+    spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
   else:
     print("Label table `advanced_churn_label_table` doesn't exist, please run the notebook '01_feature_engineering'")
 

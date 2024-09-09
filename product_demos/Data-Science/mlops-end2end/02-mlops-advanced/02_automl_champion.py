@@ -4,9 +4,9 @@
 # MAGIC
 # MAGIC We have selected the notebook from best run from the Auto ML experiment and reusing it to build our model.
 # MAGIC
-# MAGIC All the code below has been automatically generated. As Data Scientist, I can tune it based on the business knowledge I have if needed.
+# MAGIC AutoML generates the code in this notebook automatically. As Data Scientist, I can tune it based on the business knowledge I have if needed.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-2.png" width="1200">
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-2.png?raw=True" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_auto_ml&dt=MLOPS">
@@ -18,15 +18,12 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install new feature engineering client for UC [for MLR < 13.2]
-# MAGIC %pip install databricks-feature-engineering
-# MAGIC
-# MAGIC
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true
 
 # COMMAND ----------
 
@@ -42,18 +39,9 @@
 import mlflow
 import databricks.automl_runtime
 
-# COMMAND ----------
-
-# Added for the demo purpose
-run=dict()
-xp_path = f"/Users/{current_user}/databricks_automl/{churn_experiment_name}"
-run["experiment_path"] = xp_path
-run["experiment_id"]   = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}%'",
-                                                   order_by=["last_update_time DESC"])[0].experiment_id
-
-
-_ = mlflow.set_experiment(experiment_id=run["experiment_id"])
-print(f"Set experiment to: {run['experiment_id']}")
+# Path defined in the init notebook
+mlflow.set_experiment(f"{xp_path}/{xp_name}")
+print(f"Set experiment to: {xp_name}")
 
 # COMMAND ----------
 
@@ -64,13 +52,15 @@ print(f"Set experiment to: {run['experiment_id']}")
 
 # COMMAND ----------
 
-feature_table_full_name = f"{catalog}.{dbName}.{feature_table_name}"
-
-display(spark.table(feature_table_full_name))
+display(spark.table("advanced_churn_feature_table"))
 
 # COMMAND ----------
 
-# MAGIC %md We'll also use specific feature functions for `on-demand features`
+# MAGIC %md
+# MAGIC
+# MAGIC We'll also use specific feature functions for on-demand features.
+# MAGIC
+# MAGIC Recall that we have defined the `avg_price_increase` feature function in the [feature engineering notebook]($./01_feature_engineering)
 
 # COMMAND ----------
 
@@ -80,22 +70,27 @@ display(spark.table(feature_table_full_name))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Create features specifications
+# MAGIC Create features specifications.
+# MAGIC
+# MAGIC The feature lookup defintion specifies the tables to use as feature tables and the lookup keys to use to lookup feature values.
+# MAGIC
+# MAGIC The feature function definition specifies which columns from the feature table are bound to the function inputs.
+# MAGIC
+# MAGIC The Feature Engineering client will use these values to create a training specification that's used to assemble the training dataset from the labels table and the feature table.
 
 # COMMAND ----------
 
 # DBTITLE 1,Define feature lookups
 from databricks.feature_store import FeatureFunction, FeatureLookup
 
-
 features = [
     FeatureLookup(
-      table_name=f"{catalog}.{dbName}.{feature_table_name}",
-      lookup_key=[primary_key],
-      timestamp_lookup_key=timestamp_col
+      table_name=f"{catalog}.{db}.advanced_churn_feature_table",
+      lookup_key=["customer_id"],
+      timestamp_lookup_key="transaction_ts"
     ),
     FeatureFunction(
-      udf_name=f"{catalog}.{dbName}.avg_price_increase",
+      udf_name=f"{catalog}.{db}.avg_price_increase",
       input_bindings={
         "monthly_charges_in" : "monthly_charges",
         "tenure_in" : "tenure",
@@ -107,9 +102,24 @@ features = [
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC Read the label table.
+
+# COMMAND ----------
+
 # DBTITLE 1,Pull labels to use for training/validating/testing
 
-labels_df = spark.read.table(f"{catalog}.{dbName}.{labels_table_name}")
+labels_df = spark.read.table(f"advanced_churn_label_table")
+
+# Set variable for label column. This will be used within the training code.
+label_col = "churn"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC Create the training set specifications. This contains information how the training set should be assembled from the label table, feature table and feature function.
 
 # COMMAND ----------
 
@@ -122,14 +132,23 @@ fe = FeatureEngineeringClient()
 # Create Feature specifications object
 training_set_specs = fe.create_training_set(
   df=labels_df, # DataFrame with lookup keys and label/target (+ any other input)
-  label=label_col,
-  feature_lookups=features
-  # exclude_columns=[primary_key, timestamp_col] # Keeping them to create baseline table
+  label="churn",
+  feature_lookups=features,
+  exclude_columns=["customer_id", "transaction_ts", 'split'] # Keeping them to create baseline table
 )
 
 # COMMAND ----------
 
-df_loaded = training_set_specs.load_df().toPandas().set_index(keys=[primary_key, timestamp_col])
+# MAGIC %md
+# MAGIC
+# MAGIC With the training set specification, we can now build the training dataset.
+# MAGIC
+# MAGIC `training_set_specs.load_df()` returns a pySpark dataframe. We will convert it to a Pandas dataframe to train an LGBM model.
+
+# COMMAND ----------
+
+# DBTITLE 1,Load training set as Pandas dataframe
+df_loaded = training_set_specs.load_df().toPandas()
 
 # COMMAND ----------
 
@@ -246,20 +265,19 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 
 # MAGIC %md
 # MAGIC ## Train - Validation - Test Split
-# MAGIC The input data is split by AutoML into 3 sets:
+# MAGIC Split the training data into 3 sets:
 # MAGIC - Train (60% of the dataset used to train the model)
 # MAGIC - Validation (20% of the dataset used to tune the hyperparameters of the model)
 # MAGIC - Test (20% of the dataset used to report the true performance of the model on an unseen dataset)
 # MAGIC
-# MAGIC ** You can also set the splits by providing the a `split` column **
 
 # COMMAND ----------
 
 from sklearn.model_selection import train_test_split
 
-
 X_train, X_eval, y_train, y_eval = train_test_split(df_loaded.drop(label_col, axis=1), df_loaded[label_col], test_size=0.4, stratify=df_loaded[label_col], random_state=42)
-X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.4, stratify=y_eval, random_state=42)
+
+X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.5, stratify=y_eval, random_state=42)
 
 # COMMAND ----------
 
@@ -280,16 +298,12 @@ help(LGBMClassifier)
 
 # COMMAND ----------
 
-# Record specific additional dependencies required by model serving (only required for MLR<13.3)
-def pin_pandas_version(pandas_ver: str = "1.5.3"):
-  """
-  Custom pandas dependency to pin for deploying in model serving endpoints:
-  :: pandas_ver : default version running in model serving containers
-  """
-  if pd.__version__ <= pandas_ver:
-    return [f"pandas=={pandas_ver}"]
-  else:
-    return [f"pandas=={pd.__version__}"]
+# MAGIC %md
+# MAGIC ### Optional: Expose `predict_proba` method in a pyfunc wrapper function
+# MAGIC
+# MAGIC Optionally, you can expose the prediction probabilities returned by the `predict_proba` method by implementing a pyfunc wrapper function.
+# MAGIC
+# MAGIC This would be useful later on for calculating the AUC/ROC metrics for monitoring.
 
 # COMMAND ----------
 
@@ -322,7 +336,7 @@ pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
 
 def objective(params):
-  with mlflow.start_run() as mlflow_run: # experiment_id=run['experiment_id']
+  with mlflow.start_run(run_name="mlops_best_run") as mlflow_run: # experiment_id=run['experiment_id']
     lgbmc_classifier = LGBMClassifier(**params)
 
     model = Pipeline([
@@ -352,14 +366,15 @@ def objective(params):
       warnings.warn(f"Could not infer model output schema: {e}")
       output_schema = None
     
+    # Use the Feature Engineering client to log the model
+    # This logs the feature specifications along with the model,
+    # allowing it to be used at inference time to retrieve features
     fe.log_model(
         model=model,
         artifact_path="model",
         flavor=mlflow.sklearn,
         training_set=training_set_specs,
         output_schema=output_schema,
-        extra_pip_requirements=pin_pandas_version(),
-        # registered_model_name=model_name # Manual add to create "Champion" version
     )
 
     # Log metrics for the training set
@@ -403,9 +418,6 @@ def objective(params):
     # Truncate metric key names so they can be displayed together
     lgbmc_val_metrics = {k.replace("val_", ""): v for k, v in lgbmc_val_metrics.items()}
     lgbmc_test_metrics = {k.replace("test_", ""): v for k, v in lgbmc_test_metrics.items()}
-
-    # Set as Champion model [Manual Add]
-    # client.set_registered_model_alias(model_name, "Champion", get_latest_model_version(model_name))
 
     return {
       "loss": loss,
@@ -536,85 +548,6 @@ if shap_enabled:
     explainer = KernelExplainer(predict, train_sample, link="logit")
     shap_values = explainer.shap_values(example, l1_reg=False, nsamples=100)
     summary_plot(shap_values, example, class_names=model.classes_)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Inference
-# MAGIC [The MLflow Model Registry](https://docs.databricks.com/applications/mlflow/model-registry.html) is a collaborative hub where teams can share ML models, work together from experimentation to online testing and production, integrate with approval and governance workflows, and monitor ML deployments and their performance. The snippets below show how to add the model trained in this notebook to the model registry and to retrieve it later for inference.
-# MAGIC
-# MAGIC > **NOTE:** The `model_uri` for the model already trained in this notebook can be found in the cell below
-# MAGIC
-# MAGIC ### Register to Model Registry
-# MAGIC ```
-# MAGIC model_name = "Example"
-# MAGIC
-# MAGIC model_uri = f"runs:/{ mlflow_run.info.run_id }/model"
-# MAGIC registered_model_version = mlflow.register_model(model_uri, model_name)
-# MAGIC ```
-# MAGIC
-# MAGIC ### Load from Model Registry
-# MAGIC ```
-# MAGIC model_name = "Example"
-# MAGIC model_version = registered_model_version.version
-# MAGIC
-# MAGIC model_uri=f"models:/{model_name}/{model_version}"
-# MAGIC from databricks.feature_engineering import FeatureEngineeringClient
-# MAGIC fe = FeatureEngineeringClient()
-# MAGIC fe.score_batch(model_uri=model_uri, df=input_X) # specify `result_type` if it is not "double"
-# MAGIC ```
-# MAGIC
-# MAGIC ### Load model without registering
-# MAGIC ```
-# MAGIC model_uri = f"runs:/{ mlflow_run.info.run_id }/model"
-# MAGIC
-# MAGIC from databricks.feature_engineering import FeatureEngineeringClient
-# MAGIC fe = FeatureEngineeringClient()
-# MAGIC fe.score_batch(model_uri=model_uri, df=input_X) # specify `result_type` if it is not "double"
-# MAGIC ```
-
-# COMMAND ----------
-
-# model_uri for the generated model
-print(f"runs:/{ mlflow_run.info.run_id }/model")
-
-# COMMAND ----------
-
-mlflow_run.info.experiment_id
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Create/Materialize baseline table (for ad-hoc model monitoring)
-
-# COMMAND ----------
-
-# Convert test/baseline pandas dataframe into pyspark dataframe
-test_baseline_df = spark.createDataFrame(y_test.reset_index())
-
-# COMMAND ----------
-
-from pyspark.sql.functions import lit
-
-
-baseline_table_name = f"{catalog}.{dbName}.{inference_table_name}_baseline"
-baseline_model_version = client.get_model_version_by_alias(name=model_name, alias="Baseline").version # Champion
-
-baseline_predictions_df = fe.score_batch(
-    df=test_baseline_df,
-    model_uri=f"models:/{model_name}/{baseline_model_version}",
-    result_type=test_baseline_df.schema[label_col].dataType
-  ).withColumn("Model_Version", lit(baseline_model_version))
-
-(
-  baseline_predictions_df.drop(timestamp_col)
-  .write
-  .format("delta")
-  .mode("overwrite") # "append" also works if baseline evolves
-  .option("overwriteSchema",True)
-  .option("delta.enableChangeDataFeed", "true")
-  .saveAsTable(baseline_table_name)
-)
 
 # COMMAND ----------
 

@@ -12,6 +12,10 @@ is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
 
 # COMMAND ----------
 
+# MAGIC %pip install "databricks-sdk>=0.28.0" -qU
+
+# COMMAND ----------
+
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 
@@ -54,6 +58,11 @@ client = MlflowClient()
 
 # COMMAND ----------
 
+from databricks.sdk import WorkspaceClient
+w = WorkspaceClient()
+
+# COMMAND ----------
+
 # DBTITLE 1,Create Raw/Bronze customer data from IBM Telco public dataset and sanitize column name
 # Default for quickstart
 bronze_table_name = "mlops_churn_bronze_customers"
@@ -74,15 +83,12 @@ if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
     pdf.columns = [re.sub(r'[\(\)]', '', name).lower() for name in pdf.columns]
     pdf.columns = [re.sub(r'[ -]', '_', name).lower() for name in pdf.columns]
     return pdf.rename(columns = {'streaming_t_v': 'streaming_tv', 'customer_i_d': 'customer_id'})
-  def drop_tables(prefix):
-    # List all tables in the schema
-    tables = spark.sql(f"SHOW TABLES IN {db}").filter(f"tableName LIKE '{prefix}%'")
-    # Drop each table that matches the prefix
-    for table in tables.collect():
-        table_name = table['tableName']
-        spark.sql(f"DROP TABLE {db}.{table_name}")
+  
   if is_advanced_mlops_demo:
-    drop_tables("advanced")
+    try:
+      w.quality_monitors.delete(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
+    except Exception as error:
+      print(f"Error deleting monitor: {type(error).__name__}")
     experiment_details = client.get_experiment_by_name(f"{xp_path}/{xp_name}")
     if experiment_details:
       print(f' Deleting experiment: {experiment_details.experiment_id}')

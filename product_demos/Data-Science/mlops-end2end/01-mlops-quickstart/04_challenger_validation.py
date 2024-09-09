@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.0 -q
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

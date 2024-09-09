@@ -77,6 +77,15 @@ while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoStat
 
 # COMMAND ----------
 
+from databricks.sdk import WorkspaceClient
+w = WorkspaceClient()
+try:
+  w.quality_monitors.delete(table_name=f"main__build.dbdemos_mlops.advanced_churn_baseline")
+except Exception as error:
+  print(f"Error deleting monitor: {type(error).__name__}")
+
+# COMMAND ----------
+
 # DBTITLE 1,Get information about the monitor
 monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
 drift_table_name = monitor_info.drift_metrics_table_name

@@ -253,16 +253,18 @@ print(f"Total number of joint violations: {all_violations_count}")
 # MAGIC
 # MAGIC Upon detecting a number of violations, we should automate some actions, such as:
 # MAGIC - Retrain the machine learning model
-# MAGIC - Send an alert to owners via slack or email
+# MAGIC - Send an alert to owners via slack or email to investigate (the recommended approach)
 # MAGIC
 # MAGIC One way of performing this in Databricks is to add branching logic to your job with [the If/else condition task](https://docs.databricks.com/en/jobs/conditional-tasks.html#add-branching-logic-to-your-job-with-the-ifelse-condition-task). 
 # MAGIC
 # MAGIC
-# MAGIC <img src="https://github.com/aminenouira-db/images/raw/main/mlops_advanced_drift_detection.png" width="1200">
+# MAGIC <img src="https://github.com/aminenouira-db/dbdemos-resources/raw/main/images/product/mlops/advanced/08_view_retraining_workflow.png" width="1200">
 # MAGIC
 # MAGIC In order to do that, we should save the number of violations in a [task value](https://docs.databricks.com/en/jobs/share-task-context.html) to be consumed in the If/else condition. 
 # MAGIC
-# MAGIC In our workflow, we will trigger a model training, which will be a job run task of the train model job.
+# MAGIC In our workflow, we will trigger a model training task, which are part of the train model job. 
+# MAGIC
+# MAGIC In the upcoming demo version, we will replace these tasks by one job run task for model retraining.
 
 # COMMAND ----------
 

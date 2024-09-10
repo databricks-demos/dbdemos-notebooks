@@ -8,9 +8,9 @@
 # MAGIC
 # MAGIC When organizations first start to put MLOps processes in place, they should consider having a "human-in-the-loop" to perform visual analyses to validate models before promoting them. As they get more familiar with the process, they can consider automating the steps in a __Workflow__ . The benefits of automation is to ensure that these validation checks are systematically performed before new models are integrated into inference pipelines or deployed for realtime serving. Of course, organizations can opt to retain a "human-in-the-loop" in any part of the process and put in place the degree of automation that suits its business needs.
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-4.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-4.png?raw=true" width="1200">
 # MAGIC
-# MAGIC *Note: in a typical mlops setup, this would run as part of an automated job to validate new model. For this simpel demo, we'll run it as an interactive notebook.*
+# MAGIC *Note: in a typical mlops setup, this would run as part of an automated job to validate new model. For this demo, we'll run it as an interactive notebook.*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04_challenger_validation&demo_name=mlops-end2end&event=VIEW">
@@ -42,7 +42,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 
@@ -53,13 +53,16 @@
 
 # COMMAND ----------
 
+# Fully qualified model name
+model_name = f"{catalog}.{db}.advanced_mlops_churn"
+
 # We are interested in validating the Challenger model
 model_alias = "Challenger"
-model_name = f"{catalog}.{db}.mlops_churn"
 
 client = MlflowClient()
 model_details = client.get_model_version_by_alias(model_name, model_alias)
 model_version = int(model_details.version)
+run_info = client.get_run(run_id=model_details.run_id)
 
 print(f"Validating {model_alias} model for {model_name} on model version {model_version}")
 
@@ -89,6 +92,72 @@ else:
 
 print(f'Model {model_name} version {model_details.version} has description: {has_description}')
 client.set_model_version_tag(name=model_name, version=str(model_details.version), key="has_description", value=has_description)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC #### Validate prediction
+# MAGIC
+# MAGIC We want to test to see that the model can predict on production data.  So, we will load the model and the latest from the feature store and test making some predictions.
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient
+from pyspark.sql.types import StructType
+import pandas as pd
+
+
+fe = FeatureEngineeringClient()
+
+# Load model as a Spark UDF
+model_uri = f"models:/{model_name}@{model_alias}"
+label_col = "churn"
+
+# Predict on a Spark DataFrame
+try:
+  # Read labels and IDs
+  labelsDF = spark.read.table("advanced_churn_label_table")
+
+  # Batch score
+  features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)
+  display(features_w_preds)
+  client.set_model_version_tag(name=model_name, version=str(model_version), key="predicts", value=True)
+
+except Exception as e:
+  print(e)
+  features_w_preds = spark.createDataFrame([], StructType([]))
+  print("Unable to predict on features.")
+  client.set_model_version_tag(name=model_name, version=str(model_version), key="predicts", value=False)
+  pass
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Artifact check
+# MAGIC Has the data scientist logged supplemental artifacts along with the original model?
+
+# COMMAND ----------
+
+import os
+
+# Create local directory
+local_dir = "/tmp/model_artifacts"
+if not os.path.exists(local_dir):
+    os.mkdir(local_dir)
+
+# Download artifacts from tracking server - no need to specify DBFS path here
+local_path = mlflow.artifacts.download_artifacts(run_id=run_info.info.run_id, dst_path=local_dir)
+
+# Tag model version as possessing artifacts or not
+if not os.listdir(local_path):
+  client.set_model_version_tag(name=model_name, version=model_version, key="has_artifacts", value=False)
+  print("There are no artifacts associated with this model.  Please include some data visualization or data profiling.  MLflow supports HTML, .png, and more.")
+
+else:
+  client.set_model_version_tag(name=model_name, version=str(model_version), key = "has_artifacts", value = True)
+  print("Artifacts downloaded in: {}".format(local_path))
+  print("Artifacts: {}".format(os.listdir(local_path)))
 
 # COMMAND ----------
 
@@ -127,18 +196,20 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 # MAGIC
 # MAGIC Let's use our validation dataset to check the potential new model impact.
 # MAGIC
-# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic to 2 models and requires a feedback loop to evaluate the effect of the prediction (e.g. after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing in the advanced part.*
+# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic to 2 models and requires a feedback loop to evaluate the effect of the prediction (e.g. after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing later in the real-time model serving notebook.*
 
 # COMMAND ----------
 
 import pyspark.sql.functions as F
 #get our validation dataset:
-validation_df = spark.table('mlops_churn_training').filter("split='validate'")
+validation_df = spark.table('advanced_churn_label_table').filter("split='validate'")
 
 #Call the model with the given alias and return the prediction
 def predict_churn(validation_df, model_alias):
-    model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@{model_alias}")
-    return validation_df.withColumn('predictions', model(*model.metadata.get_input_schema().input_names()))
+    features_w_preds = fe.score_batch(df=validation_df, model_uri=f"models:/{model_name}@{model_alias}", 
+                                      result_type=validation_df.schema[label_col].dataType)
+
+    return features_w_preds
 
 # COMMAND ----------
 
@@ -159,36 +230,28 @@ def get_model_value_in_dollar(model_alias):
     # Convert preds_df to Pandas DataFrame
     model_predictions = predict_churn(validation_df, model_alias).toPandas()
     # Calculate the confusion matrix
-    tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['predictions']).ravel()
+    tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['prediction']).ravel()
     return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive
-#add exception to catch non-existing model champion yet
-is_champ_model_exist = True
+
 try:
-    client.get_model_version_by_alias(f"{catalog}.{db}.mlops_churn", "Champion")
-    print("Model already registered as Champion")
-except Exception as error:
-    print("An error occurred:", type(error).__name__, "It means no champion model yet exist")
-    is_champ_model_exist = False
-if is_champ_model_exist:
+    champion_model = client.get_model_version_by_alias(model_name, "Champion")
     champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
     challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
 
-try:
-    #Compare the challenger f1 score to the existing champion if it exists
-    champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
+    data = {'Model Alias': ['Challenger', 'Champion'],
+            'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
 except:
-    print(f"No Champion found. Accept the model as it's the first one.")
-    champion_potential_revenue_gain = 0
-    
-challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
+    print("No Champion found. Skipping business metrics evaluation.")
+    print("You can return to re-run this cell after promoting the Challenger model as Champion in the rest of this notebook.")
 
-data = {'Model Alias': ['Challenger', 'Champion'],
-        'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
+    data = {'Model Alias': ['Challenger', 'Champion'],
+            'Potential Revenue Gain': [0, 0]}
 
 # Create a bar plot using plotly express
 px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
     labels={'Potential Revenue Gain': 'Revenue Impacted'},
     title='Business Metrics - Revenue Impacted')
+
 
 # COMMAND ----------
 
@@ -211,7 +274,7 @@ results.tags
 
 # COMMAND ----------
 
-if results.tags["has_description"] == "True" and results.tags["metric_f1_passed"] == "True":
+if results.tags["has_description"] and results.tags["metric_f1_passed"] and results.tags['predicts']:
   print('register model as Champion!')
   client.set_registered_model_alias(
     name=model_name,
@@ -220,6 +283,13 @@ if results.tags["has_description"] == "True" and results.tags["metric_f1_passed"
   )
 else:
   raise Exception("Model not ready for promotion")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Note that we are promoting the model while keeping in in one catalog and schema in this demo. We do this for simplicity so that the demo can be self-contained to a catalog and schema.
+# MAGIC
+# MAGIC In actual practice, it is common practice to maintain separate catalogs for Dev, QA and Prod data and AI assets. This applies to models as well. In that case, we would register the production model to a production catalog, with an appropriate alias set for it. This can be done programatically, and triggered when the model is ready to be promoted to production.
 
 # COMMAND ----------
 

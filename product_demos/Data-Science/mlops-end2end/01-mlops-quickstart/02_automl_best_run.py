@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.14.0
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

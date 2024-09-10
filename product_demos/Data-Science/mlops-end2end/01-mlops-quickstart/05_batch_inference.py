@@ -14,7 +14,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.14.0
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -43,7 +43,7 @@
 
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{schema}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
 
@@ -70,7 +70,7 @@ import mlflow
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
 # Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{schema}.mlops_churn@Champion")
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@Champion")
 
 # Batch score
 preds_df = inference_df.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))

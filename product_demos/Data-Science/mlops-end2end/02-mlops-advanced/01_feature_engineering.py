@@ -1,5 +1,5 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Restart AutoML run")
+#dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Restart AutoML run")
 
 # COMMAND ----------
 
@@ -7,7 +7,7 @@ dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Res
 # MAGIC # Churn Prediction Feature Engineering
 # MAGIC Our first step is to analyze the data and build the features we'll use to train our model. Let's see how this can be done.
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-1.png" width="1200">
+# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-1.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_feature_prep&dt=MLOPS">
@@ -19,16 +19,12 @@ dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Res
 
 # COMMAND ----------
 
-# DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python sdk
-# MAGIC %pip install databricks-feature-engineering --upgrade
-# MAGIC %pip install databricks-sdk --upgrade
-# MAGIC
-# MAGIC
+# MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true
 
 # COMMAND ----------
 
@@ -42,7 +38,7 @@ dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Res
 
 # DBTITLE 1,Read in Bronze Delta table using Spark
 # Read into Spark
-telcoDF = spark.read.table(bronze_table_name)
+telcoDF = spark.read.table("advanced_churn_bronze_customers")
 display(telcoDF)
 
 # COMMAND ----------
@@ -64,17 +60,14 @@ display(telcoDF)
 # COMMAND ----------
 
 from pyspark.sql import DataFrame as SparkDataFrame
-from pyspark.sql.functions import pandas_udf, col, when
+from pyspark.sql.functions import pandas_udf, col, when, lit
 
+#  Count number of optional services enabled, like streaming TV
 def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
-  """
-  Count number of optional services enabled, like streaming TV
-  """
-
   # Create pandas UDF function
   @pandas_udf('double')
   def num_optional_services(*cols):
-    """Nested helper function to count number of optional services in a pandas dataframe"""
+    #N ested helper function to count number of optional services in a pandas dataframe
     return sum(map(lambda s: (s == "Yes").astype('double'), cols))
 
   return inputDF.\
@@ -112,7 +105,7 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
 
   # Add/Force semantic data types for specific colums (to facilitate autoML)
   data_cleanDF = data_psdf.to_spark()
-  data_cleanDF = data_cleanDF.withMetadata(primary_key, {"spark.contentAnnotation.semanticType":"native"})
+  data_cleanDF = data_cleanDF.withMetadata("customer_id", {"spark.contentAnnotation.semanticType":"native"})
   data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
   return data_cleanDF
@@ -123,15 +116,11 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
 # MAGIC
 # MAGIC ## Compute & Write to Feature Store
 # MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-feature-store.png" style="float:right" width="500" />
+# MAGIC Once our features are ready, we'll save them in Databricks Feature Store. Any Delta Table registered to Unity Catalog can be used as a feature table.
 # MAGIC
-# MAGIC Once our features are ready, we'll save them in Databricks Feature Store. Under the hood, features store are backed by a Delta Lake table.
+# MAGIC This will allows us to leverage Unity Catalog for governance, discoverability and reusability of our features accross our organization, as well as increasing team efficiency.
 # MAGIC
-# MAGIC This will allow discoverability and reusability of our feature accross our organization, increasing team efficiency.
-# MAGIC
-# MAGIC Feature store will bring traceability and governance in our deployment, knowing which model is dependent of which set of features.
-# MAGIC
-# MAGIC Make sure you're using the "Machine Learning" menu to have access to your feature store using the UI.
+# MAGIC The lineage capability in Unity Catalog brings traceability and governance in our deployment, knowing which model is dependent of which feature tables.
 
 # COMMAND ----------
 
@@ -142,9 +131,8 @@ from pyspark.sql.functions import lit
 
 # Add current scoring timestamp
 this_time = (datetime.now()).timestamp()
-
 churn_features_n_predsDF = clean_churn_features(compute_service_features(telcoDF)) \
-                            .withColumn(timestamp_col, lit(this_time).cast("timestamp"))
+                            .withColumn("transaction_ts", lit(this_time).cast("timestamp"))
 
 display(churn_features_n_predsDF)
 
@@ -158,12 +146,25 @@ display(churn_features_n_predsDF)
 
 # DBTITLE 1,Extract ground-truth labels in a separate table and drop from Feature table
 # Extract labels in separate table before pushing to Feature Store to avoid label leakage
-churn_features_n_predsDF.select(primary_key, timestamp_col, label_col) \
+# Also specify train-val-test split in the label table
+
+import pyspark.sql.functions as F
+
+# Specify train-val-test split
+train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
+
+churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
+                        .withColumn("random", F.rand(seed=42)) \
+                        .withColumn("split",
+                                    F.when(F.col("random") < train_ratio, "train")
+                                    .when(F.col("random") < train_ratio + val_ratio, "validate")
+                                    .otherwise("test")) \
+                        .drop("random") \
                         .write.format("delta") \
                         .mode("overwrite").option("overwriteSchema", "true") \
-                        .saveAsTable(f"{catalog}.{dbName}.{labels_table_name}")
+                        .saveAsTable(f"advanced_churn_label_table")
 
-churn_featuresDF = churn_features_n_predsDF.drop(label_col)
+churn_featuresDF = churn_features_n_predsDF.drop("churn")
 
 # COMMAND ----------
 
@@ -172,250 +173,126 @@ churn_featuresDF = churn_features_n_predsDF.drop(label_col)
 
 # COMMAND ----------
 
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ALTER COLUMN {primary_key} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ALTER COLUMN {timestamp_col} SET NOT NULL")
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{labels_table_name} ADD CONSTRAINT {labels_table_name}_pk PRIMARY KEY({primary_key}, {timestamp_col})")
+# MAGIC %sql
+# MAGIC ALTER TABLE advanced_churn_label_table ALTER COLUMN customer_id SET NOT NULL;
+# MAGIC ALTER TABLE advanced_churn_label_table ALTER COLUMN transaction_ts SET NOT NULL;
+# MAGIC ALTER TABLE advanced_churn_label_table ADD CONSTRAINT advanced_churn_label_table_pk PRIMARY KEY(customer_id, transaction_ts);
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Create Feature Table and write to offline-store
-# MAGIC One-time setup
+# MAGIC ### Write the feature table to Unity Catalog
+# MAGIC
+# MAGIC With Unity Catalog, any Delta table with a primary key constraint can be used as a feature table. It is used as the offline store. It's that easy.
+# MAGIC
+# MAGIC Time series feature tables have an additional primary key on the time column.
+# MAGIC
+# MAGIC After the table is created, you can write data to it like other Delta tables, and use it as a feature table.
+# MAGIC
+# MAGIC Here, we demonstrate creating the feature table using the `FeatureEngineeringClient` API. You can also easily create it using SQL:
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC ```
+# MAGIC CREATE TABLE {catalog}.{db}.{feature_table_name} (
+# MAGIC   {primary_key} int NOT NULL,
+# MAGIC   {timestamp_col} timestamp NOT NULL,
+# MAGIC   feat1 long,
+# MAGIC   feat2 varchar(100),
+# MAGIC   CONSTRAINT customer_features_pk PRIMARY KEY ({primary_key}, {timestamp_col} TIMESERIES)
+# MAGIC );
+# MAGIC ```
+# MAGIC
 
 # COMMAND ----------
 
-# DBTITLE 1,Import Feature Store Client
-from databricks.feature_engineering import FeatureEngineeringClient
-
-
-fe = FeatureEngineeringClient()
-
-# COMMAND ----------
-
-from databricks.sdk import WorkspaceClient
-
-
-# Create workspace client [OPTIONAL: for publishing to online tables]
-w = WorkspaceClient()
+# MAGIC %md
+# MAGIC
+# MAGIC First, since we are creating the feature table from scratch, we want to make sure that our environment is clean and any previously created offline/online feature tables are deleted.
 
 # COMMAND ----------
 
 # DBTITLE 1,Drop any existing online table (optional)
 from pprint import pprint
+from databricks.sdk import WorkspaceClient
 
+# Create workspace client
+w = WorkspaceClient()
 
+# Remove any existing online feature table
 try:
-
-  online_table_specs = w.online_tables.get(f"{catalog}.{dbName}.{feature_table_name}_online_table")
-  
+  online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{dbName}.{feature_table_name}_online")
-  print(f"Dropping online feature table: {catalog}.{dbName}.{feature_table_name}_online")
-
+  w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
+  print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
 except Exception as e:
   pprint(e)
 
 # COMMAND ----------
 
-# DBTITLE 1,Drop feature table if it already exists (optional)
+# DBTITLE 1,Drop feature table if it already exists
+# MAGIC %sql
+# MAGIC -- We are creating the feature table from scratch.
+# MAGIC -- Let's drop any existing feature table if it exists
+# MAGIC DROP TABLE IF EXISTS advanced_churn_feature_table;
 
-try:
+# COMMAND ----------
 
-  # Drop existing table from Feature Store
-  fe.drop_table(name=f"{catalog}.{dbName}.{feature_table_name}")
-
-  # Delete underyling delta tables
-  spark.sql(f"DROP TABLE IF EXISTS {catalog}.{dbName}.{feature_table_name}")
-  print(f"Dropping Feature Table {catalog}.{dbName}.{feature_table_name}")
-
-
-except ValueError as ve:
-  pass
-  print(f"Feature Table {catalog}.{dbName}.{feature_table_name} doesn't exist")
+# DBTITLE 1,Import Feature Store Client
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
 
 # COMMAND ----------
 
 # DBTITLE 1,Create "feature"/UC table
 churn_feature_table = fe.create_table(
-  name=feature_table_name, # f"{catalog}.{dbName}.{feature_table_name}"
-  primary_keys=[primary_key, timestamp_col],
+  name="advanced_churn_feature_table", # f"{catalog}.{dbName}.{feature_table_name}"
+  primary_keys=["customer_id", "transaction_ts"],
   schema=churn_featuresDF.schema,
-  timeseries_columns=timestamp_col,
-  description=f"These features are derived from the {catalog}.{dbName}.{bronze_table_name} table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground-truth and now can be used with AutoML's Feature Store integration"
+  timeseries_columns="transaction_ts",
+  description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features, cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground-truth and now can be used with AutoML's Feature Store integration"
 )
 
 # COMMAND ----------
 
 # DBTITLE 1,Write feature values to Feature Store
 fe.write_table(
-  name=f"{catalog}.{dbName}.{feature_table_name}",
+  name=f"{catalog}.{db}.advanced_churn_feature_table",
   df=churn_featuresDF, # can be a streaming dataframe as well
   mode='merge' #'merge'/'overwrite' which supports schema evolution
 )
 
 # COMMAND ----------
 
-# DBTITLE 1,Enable Change-Data-Feed on Feature Table for performance considerations
-spark.sql(f"ALTER TABLE {catalog}.{dbName}.{feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
-
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC ## Publish features to online store
+# MAGIC ## Define Featurization Logic for on-demand feature functions
 # MAGIC
-# MAGIC For serving prediction queries with low-latency. Databricks offer 2 possibilities:
-# MAGIC 1. Third-party online store ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-feature-stores.html) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-feature-stores))
-# MAGIC 2. **Databricks online tables** ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#use-online-tables-with-databricks-model-serving) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-tables))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Publish to 3rd-party online store
+# MAGIC We will define a function for features that can needs to be calculated on-demand. These functions can be used in both batch inference and online inference.
 # MAGIC
-# MAGIC For authentication with 3rd-party online stores, please referr to the different options in ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/fs-authentication.html#authentication-for-working-with-online-stores) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/fs-authentication)).
+# MAGIC It is common that customers who have elevated bills of monthly charges have a higher propensity to churn. The `avg_price_increase` function calculates the potential average price increase based on their historical charges, as well as their current tenure. The function lets the model use this freshly calculated value as a feature for training and, later, scoring.
 # MAGIC
-# MAGIC For production purposes and rotating keys it's better to use instance profiles ([AWS only](https://docs.databricks.com/en/machine-learning/feature-store/fs-authentication.html#provide-lookup-authentication-through-an-instance-profile-configured-to-a-served-model))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC #### For pushing to CosmosDB (Azure), make sure to:
-# MAGIC 1. Install the latest cosmosdb connector as a cluster library by pointing to the latest maven coordinates [here](https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/cosmos/azure-cosmos-spark_3-4_2-12#azure-cosmos-spark_3-3_2-12)(i.e. `com.azure.cosmos.spark:azure-cosmos-spark_3-3_2-12:4.21.1`)
-# MAGIC 2. Create a CosmosDB instance/account and get the `account_uri` (i.e. "https://field-demo.documents.azure.com:443/" for databricks's field-engineering team).
-# MAGIC 3. Create static read/write keys, store in secrets (under 2 different read/write scopes) and embedd in model's fs lookup mechanism (e.g. below).
-
-# COMMAND ----------
-
-# DBTITLE 1,Setup Online Store spec object
-from databricks.feature_store.online_store_spec import AmazonDynamoDBSpec, AzureCosmosDBSpec
-
-
-if get_cloud_name() == "aws":
-  # DynamoDB spec
-  dynamo_table_prefix = "one-env-feature_store" # [OPTIONAL] If table name has to start with specific prefix given policies
-  churn_features_online_store_spec = AmazonDynamoDBSpec(
-    region="us-west-2",
-    table_name = f"{dynamo_table_prefix}_{dbName}_{feature_table_name}"
-#    ttl= # Publish window of feature values given time-to-live date
-)
-
-elif get_cloud_name() == "azure":
-  # Shared AWS/Azure field-eng secrets for Dynamo/CosmosDB
-  prefix = "field-eng"
-  read_scope = "field-all-users-feature-store-example-read"
-  write_scope = "field-all-users-feature-store-example-write"
-
-  # CosmosDB spec
-  churn_features_online_store_spec = AzureCosmosDBSpec(
-    account_uri="https://field-demo.documents.azure.com:443/",
-    write_secret_prefix=f"{write_scope}/{prefix}",
-    read_secret_prefix=f"{read_scope}/{prefix}"
-  )
-
-# COMMAND ----------
-
-# DBTITLE 1,Publish from Offline to Online Store
-fe.publish_table(
-  name=feature_table_name,
-  online_store=churn_features_online_store_spec,
-  streaming = False
-)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Publish to Databrick's Online tables **(Preferred method)**
+# MAGIC This function is defined under Unity Catalog, which provides governance over who can use the function.
 # MAGIC
-# MAGIC You create an online table from the Catalog Explorer. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
-# MAGIC
-# MAGIC
-# MAGIC #### OPTION 1: Use UI
-# MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the kebab menu, select **Create online table**.
-# MAGIC
-# MAGIC * Use the selectors in the dialog to configure the online table.
-# MAGIC   * Name: Name to use for the online table in Unity Catalog.
-# MAGIC   * Primary Key: Column(s) in the source table to use as primary key(s) in the online table.
-# MAGIC   * Timeseries Key: (Optional). Column in the source table to use as timeseries key. When specified, the online table includes only the row with the latest timeseries key value for each primary key.
-# MAGIC   * Sync mode: Specifies how the synchronization pipeline updates the online table. Select one of Snapshot, Triggered, or Continuous.
-# MAGIC   * Policy
-# MAGIC     * Snapshot - The pipeline runs once to take a snapshot of the source table and copy it to the online table. Subsequent changes to the source table are automatically reflected in the online table by taking a new snapshot of the source and creating a new copy. The content of the online table is updated atomically.
-# MAGIC     * Triggered - The pipeline runs once to create an initial snapshot copy of the source table in the online table. Unlike the Snapshot sync mode, when the online table is refreshed, only changes since the last pipeline execution are retrieved and applied to the online table. The incremental refresh can be manually triggered or automatically triggered according to a schedule.
-# MAGIC     * Continuous - The pipeline runs continuously. Subsequent changes to the source table are incrementally applied to the online table in real time streaming mode. No manual refresh is necessary.
-# MAGIC * When you are done, click Confirm. The online table page appears.
-# MAGIC
-# MAGIC The new online table is created under the catalog, schema, and name specified in the creation dialog. In Catalog Explorer, the online table is indicated by online table icon.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC #### OPTION 2: Use the Databricks SDK 
-# MAGIC
-# MAGIC The other alternative is the Databricks' python-sdk [AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#api-sdk) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-tables). Let's  first define the table specifications, then create the table.
-# MAGIC
-# MAGIC **🚨 Note:** The workspace must be enabled for using the SDK for creating and managing online tables. You can run following code blocks if your workspace is enabled for this feature (fill this [form](https://forms.gle/9jLZkpXnJF9ZcxtQA) to enable your workspace)
-
-# COMMAND ----------
-
-from databricks.sdk.service.catalog import OnlineTableSpec
-from databricks.sdk.service.catalog import OnlineTableSpecTriggeredSchedulingPolicy
-
-
-# Create an online table specification
-churn_features_online_store_spec = OnlineTableSpec(
-  primary_key_columns = [primary_key],
-  timeseries_key = timestamp_col,
-  source_table_full_name = f"{catalog}.{dbName}.{feature_table_name}",
-  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
-)
-
-# COMMAND ----------
-
-# Create the online table
-w.online_tables.create(
-  name=f"{catalog}.{dbName}.{feature_table_name}_online_table",
-  spec=churn_features_online_store_spec
-)
-
-# COMMAND ----------
-
-# DBTITLE 1,Check status of Online Table
-from pprint import pprint
-
-
-try:
-  online_table_spec = w.online_tables.get(f"{catalog}.{dbName}.{feature_table_name}_online_table")
-  pprint(online_table_spec)
-
-except Exception as e:
-  pprint(e)
-
-# COMMAND ----------
-
-# DBTITLE 1,Refresh Online Table (optional in case new data was added or offline table was dropped and re-created with new data))
-# Trigger an online table refresh by calling the pipeline API
-# w.pipelines.start_update(pipeline_id=online_table_spec.pipeline_id, full_refresh=True)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Define Featurization Logic(s) for realtime/on-demand feature functions
-# MAGIC
-# MAGIC For features that can only/needs to be calculated in "real-time" see more info here ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/on-demand-features.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/on-demand-features)) 
+# MAGIC Refer to the documentation for more information. ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/on-demand-features.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/on-demand-features)) 
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- Define the Python UDF
-# MAGIC CREATE OR REPLACE FUNCTION avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
-# MAGIC RETURNS FLOAT
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
-# MAGIC AS $$
-# MAGIC if tenure_in > 0:
-# MAGIC   return monthly_charges_in - total_charges_in/tenure_in
-# MAGIC else:
-# MAGIC   return 0
-# MAGIC $$
+# MAGIC   CREATE OR REPLACE FUNCTION avg_price_increase(monthly_charges_in DOUBLE, tenure_in DOUBLE, total_charges_in DOUBLE)
+# MAGIC   RETURNS FLOAT
+# MAGIC   LANGUAGE PYTHON
+# MAGIC   COMMENT "[Feature Function] Calculate potential average price increase for tenured customers based on last monthly charges and updated tenure"
+# MAGIC   AS $$
+# MAGIC   if tenure_in > 0:
+# MAGIC     return monthly_charges_in - total_charges_in/tenure_in
+# MAGIC   else:
+# MAGIC     return 0
+# MAGIC   $$
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE FUNCTION avg_price_increase;
 
 # COMMAND ----------
 
@@ -428,100 +305,42 @@ except Exception as e:
 # MAGIC
 # MAGIC Instead of creating the same boilerplate for each new project, Databricks Auto-ML can automatically generate state of the art models for Classifications, regression, and forecast.
 # MAGIC
+# MAGIC Models can be directly deployed, or instead leverage generated notebooks to boostrap projects with best-practices, saving you weeks of efforts.
 # MAGIC
 # MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
 # MAGIC
-# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
 # MAGIC
-# MAGIC Models can be directly deployed, or instead leverage generated notebooks to boostrap projects with best-practices, saving you weeks of efforts.
+# MAGIC <br>
 # MAGIC
 # MAGIC ### Using Databricks Auto ML with our Churn dataset
 # MAGIC
-# MAGIC Auto ML is available in the "Machine Learning" space. All we have to do is start a new Auto-ML experimentation and select the feature table we just created (`dbdemos.retail_username.mlops_churn_features`)
+# MAGIC <br>
+# MAGIC
+# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
+# MAGIC
+# MAGIC <br>
+# MAGIC
+# MAGIC Auto ML is available under **Machine Learning - Experiments**. All we have to do is create a new Auto-ML experiment and select the table containing the ground-truth labels and join it with the features in the feature table.
 # MAGIC
 # MAGIC Our prediction target is the `churn` column.
 # MAGIC
-# MAGIC Click on Start, and Databricks will do the rest.
+# MAGIC Click on **Start**, and Databricks will do the rest.
 # MAGIC
 # MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
 # MAGIC
+# MAGIC <br>
+# MAGIC
 # MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API]()
-# MAGIC * Select the table containing the ground-truth labels (i.e. `dbdemos.schema.mlops_churn_labels`)
-# MAGIC * Join remaining features from the feature table (i.e. `dbdemos.schema.mlops_churn_features`)
-
-# COMMAND ----------
-
-# DBTITLE 1,Run 'baseline' autoML experiment in the back-ground
-from databricks import automl
-from datetime import datetime
-
-
-current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-xp_path = f"/Users/{current_user}/databricks_automl/dbdemos_mlops"
-
-#xp_path = "/Shared/dbdemos/experiments/mlops"
-xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-
-
-churn_labels = spark.read.table(f"{catalog}.{dbName}.{labels_table_name}")
-
-# Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
-#churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
- 
-feature_store_lookups = [
-  {
-     "table_name": f"{catalog}.{dbName}.{feature_table_name}",
-     "lookup_key": primary_key,
-     "timestamp_lookup_key": timestamp_col,
-  }
-]
-
-spark.conf.set("spark.databricks.automl.serviceEnabled", "true")
-
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = churn_labels,
-    target_col = "churn",
-    timeout_minutes = 6,
-    exclude_cols ='customer_id',
-    feature_store_lookups=feature_store_lookups
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
-
-# COMMAND ----------
-
-# DBTITLE 1,Log model to UC
-import mlflow
-
-
-model_name = "customer_churn"
-mlflow.set_registry_uri("databricks-uc")
-model_details = mlflow.register_model(
-    model_uri=f"runs:/{automl_run.best_trial.mlflow_run_id}/model",
-    name=f"{catalog}.{schema}.{model_name}"
-)
-
-# COMMAND ----------
-
-# DBTITLE 1,Set @baseline alias
-from mlflow import MlflowClient
-
-client = MlflowClient()
-
-client.set_registered_model_alias(
-  name=f"{catalog}.{schema}.{model_name}",
-  alias="baseline",
-  version="1"
-)
+# MAGIC * Select the table containing the ground-truth labels (i.e. `dbdemos.schema.churn_label_table`)
+# MAGIC * Join remaining features from the feature table (i.e. `dbdemos.schema.churn_feature_table`)
+# MAGIC
+# MAGIC Refer to the __Quickstart__ version of this demo for an example of AutoML in action.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Using the generated notebook to build our model
+# MAGIC ### Using the AutoML-generated notebook to build our model
 # MAGIC
-# MAGIC Next step: [Explore the generated Auto-ML notebook]($./02_automl_champion)
+# MAGIC We have pre-run AutoML, which generated the notebook that trained the best model in the AutoML run. We take this notebook and improve on the model.
 # MAGIC
-# MAGIC **Note:**
-# MAGIC For demo purposes, run the above notebook OR create and register a new version of the model from your autoML experiment and label/alias the model as "Champion"
+# MAGIC Next step: [Explore the modfied version of the notebook generated from Auto-ML]($./02_automl_champion)

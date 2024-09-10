@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %pip install "databricks-sdk>=0.28.0" -qU
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.dropdown("gen_synthetic_data", "false", ["true", "false"], "Generate Synthetic data for Drift Detection")
 dbutils.widgets.dropdown("adv_mlops", "false", ["true", "false"], "Setup for advanced MLOps demo")
@@ -9,10 +14,6 @@ setup_inference_data = dbutils.widgets.get("setup_inference_data") == "true"
 setup_adv_inference_data = dbutils.widgets.get("setup_adv_inference_data") == "true"
 generate_synthetic_data = dbutils.widgets.get("gen_synthetic_data") == "true"
 is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
-
-# COMMAND ----------
-
-# MAGIC %pip install "databricks-sdk>=0.28.0" -qU
 
 # COMMAND ----------
 
@@ -58,11 +59,6 @@ client = MlflowClient()
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-w = WorkspaceClient()
-
-# COMMAND ----------
-
 # DBTITLE 1,Create Raw/Bronze customer data from IBM Telco public dataset and sanitize column name
 # Default for quickstart
 bronze_table_name = "mlops_churn_bronze_customers"
@@ -85,7 +81,10 @@ if reset_all_data or not spark.catalog.tableExists(bronze_table_name):
     return pdf.rename(columns = {'streaming_t_v': 'streaming_tv', 'customer_i_d': 'customer_id'})
   
   if is_advanced_mlops_demo:
+    from databricks.sdk import WorkspaceClient
+    w = WorkspaceClient()
     try:
+      print(f"Deleting existing monitors for {catalog}.{db}.advanced_churn_inference_table")
       w.quality_monitors.delete(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
     except Exception as error:
       print(f"Error deleting monitor: {type(error).__name__}")

@@ -18,7 +18,7 @@
 # MAGIC %md
 # MAGIC
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-8.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-8.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F07_retrain_automl&dt=MLOPS">
@@ -103,7 +103,7 @@ profile_table_name = monitor_info.profile_metrics_table_name
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/08_model_kpis.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/08_model_kpis.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -113,7 +113,7 @@ profile_table_name = monitor_info.profile_metrics_table_name
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/cylee-db/dbdemos-resources/blob/main/images/product/mlops/advanced/08_confusion_matrix.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/08_confusion_matrix.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <br>
 
@@ -253,18 +253,16 @@ print(f"Total number of joint violations: {all_violations_count}")
 # MAGIC
 # MAGIC Upon detecting a number of violations, we should automate some actions, such as:
 # MAGIC - Retrain the machine learning model
-# MAGIC - Send an alert to owners via slack or email to investigate (the recommended approach)
+# MAGIC - Send an alert to owners via slack or email
 # MAGIC
 # MAGIC One way of performing this in Databricks is to add branching logic to your job with [the If/else condition task](https://docs.databricks.com/en/jobs/conditional-tasks.html#add-branching-logic-to-your-job-with-the-ifelse-condition-task). 
 # MAGIC
 # MAGIC
-# MAGIC <img src="https://github.com/aminenouira-db/dbdemos-resources/raw/main/images/product/mlops/advanced/08_view_retraining_workflow.png" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/mlops/advanced/08_view_retraining_workflow.png?raw=true" width="1200">
 # MAGIC
 # MAGIC In order to do that, we should save the number of violations in a [task value](https://docs.databricks.com/en/jobs/share-task-context.html) to be consumed in the If/else condition. 
 # MAGIC
-# MAGIC In our workflow, we will trigger a model training task, which are part of the train model job. 
-# MAGIC
-# MAGIC In the upcoming demo version, we will replace these tasks by one job run task for model retraining.
+# MAGIC In our workflow, we will trigger a model training, which will be a job run task of the train model job.
 
 # COMMAND ----------
 

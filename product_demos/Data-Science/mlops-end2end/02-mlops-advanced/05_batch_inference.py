@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC ## Inference with the Champion model
 # MAGIC
-# MAGIC With Models in Unity Catalog, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies, or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
+# MAGIC Models in Unity Catalog can be loaded for use in batch inference pipelines. Generated predictions would be used to advise on customer retention strategies, or be used for analytics. The model in use is the __@Champion__ model, and we will load it for use in our pipeline.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-5.png?raw=true" width="1200">
 # MAGIC
@@ -15,6 +15,8 @@
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -30,7 +32,7 @@
 # MAGIC
 # MAGIC Now that our model is available in the Unity Catalog Model Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
 # MAGIC
-# MAGIC We will use MLFlow function to load a pyspark UDF and distribute our inference in the entire cluster. If the data is small, we can also load the model with plain python and use a pandas Dataframe.
+# MAGIC We will use the feature engineering client's `score_batch` method which would automatically load a pyspark UDF and distribute the inference on the entire cluster. If the data is small, we can also load the model in plain python and use a pandas Dataframe.
 # MAGIC
 # MAGIC If you don't know how to start, you can get sample code from the __"Artifacts"__ page of the model's experiment run.
 
@@ -44,15 +46,16 @@
 # MAGIC %md
 # MAGIC ### Batch inference on the Champion model
 # MAGIC
-# MAGIC We are ready to run inference on the Champion model. We will load the model as a Spark UDF and generate predictions for our customer records.
+# MAGIC We are ready to run inference on the Champion model. We will leverage the feature engineering client's `score_batch` method and generate predictions for our customer records.
 # MAGIC
-# MAGIC For simplicity, we assume that features have been extracted for the new customer records and these are already stored in the feature table. These are typically done by separate feature engineering pipelines.
+# MAGIC For simplicity, we assume that features have been pre-computed for all new customer records and already stored in a feature table. These are typically done by separate feature engineering pipelines.
 
 # COMMAND ----------
 
 # DBTITLE 1,In a python notebook
 from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F
+
 
 # Load customer features to be scored
 inference_df = spark.read.table("advanced_churn_cust_ids")
@@ -94,6 +97,7 @@ display(preds_df)
 from mlflow import MlflowClient
 from datetime import datetime
 
+
 client = MlflowClient()
 
 model = client.get_registered_model(name=model_name)
@@ -103,6 +107,7 @@ model_version = int(client.get_model_version_by_alias(name=model_name, alias="Ch
 
 import pyspark.sql.functions as F
 from datetime import datetime, timedelta
+
 
 offline_inference_df = preds_df.withColumn("model_name", F.lit(model_name)) \
                               .withColumn("model_version", F.lit(model_version)) \

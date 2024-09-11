@@ -34,6 +34,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -50,6 +52,7 @@
 # COMMAND ----------
 
 import mlflow
+
 
 model_name = f"{catalog}.{db}.advanced_mlops_churn"
 
@@ -97,6 +100,7 @@ model_details = mlflow.register_model(f"runs:/{run_id}/model", f"{catalog}.{db}.
 # COMMAND ----------
 
 from mlflow import MlflowClient
+
 
 client = MlflowClient()
 

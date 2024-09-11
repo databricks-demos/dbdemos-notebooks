@@ -2,13 +2,13 @@
 # MAGIC %md
 # MAGIC # Drift detection
 # MAGIC
-# MAGIC In this step, we will build a drift detection logic to run periodically on the inference data.
+# MAGIC In this step, we will define drift detection rules to run periodically on the inference data.
 # MAGIC
 # MAGIC **Drift detection** refers to the process of identifying changes in the statistical properties of input data, which can lead to a decline in model performance over time. This is crucial for maintaining the accuracy and reliability of models in dynamic environments, as it allows for timely interventions such as model retraining or adaptation to new data distributions
 # MAGIC
-# MAGIC In order to simulate some data drifts, we will use _dbldatagen_ library. the _dbldatagen_ Databricks Labs project is a Python library for generating synthetic data within the Databricks environment using Spark.
+# MAGIC In order to simulate some data drifts, we will use [_dbldatagen_ library](https://github.com/databrickslabs/dbldatagen), a Databricks Labs project which is a Python library for generating synthetic data using Spark.
 # MAGIC
-# MAGIC We will simulate a label drift using the data generator package.
+# MAGIC We will simulate label drift using the data generator package.
 # MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors.
 # MAGIC
 # MAGIC _We will set all labels to True_
@@ -32,9 +32,12 @@
 
 # DBTITLE 1,Install needed package
 # Install Databricks Python SDK
-%pip install "databricks-sdk>=0.28.0" -qU
+%pip install -qU "databricks-sdk>=0.28.0"
+
 # Install Databricks Data Generator package
-%pip install dbldatagen -qU
+%pip install -qU dbldatagen
+
+
 dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -59,34 +62,27 @@ dbutils.widgets.text("model_id", "*", "Model Id")
 # MAGIC ## Refresh the monitor 
 # MAGIC
 # MAGIC The previous step performs a write of the synthetic data to the inteference table. We should referesh the monitor to re-compute the metrics.
+# MAGIC
+# MAGIC **PS:** Refresh is only necessary if the monitored table has undergone changes
 
 # COMMAND ----------
 
 # DBTITLE 1,Refresh the monitor
+import time
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
-import time
+
 
 w = WorkspaceClient()
+refresh_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
 
-run_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
-while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table", refresh_id=run_info.refresh_id)
+while refresh_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+  refresh_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table", refresh_id=refresh_info.refresh_id)
   time.sleep(30)
 
-
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-w = WorkspaceClient()
-try:
-  w.quality_monitors.delete(table_name=f"main__build.dbdemos_mlops.advanced_churn_baseline")
-except Exception as error:
-  print(f"Error deleting monitor: {type(error).__name__}")
-
-# COMMAND ----------
-
-# DBTITLE 1,Get information about the monitor
+# DBTITLE 1,Programmatically retrieve profile and drift table names from monitor info
 monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
 drift_table_name = monitor_info.drift_metrics_table_name
 profile_table_name = monitor_info.profile_metrics_table_name
@@ -124,10 +120,10 @@ profile_table_name = monitor_info.profile_metrics_table_name
 # MAGIC
 # MAGIC Query Lakehouse Monitoring's drift metrics table for the inference table being monitored.
 # MAGIC Here we're testing if these metrics have exceeded a certain threshold (defined by the business):
-# MAGIC 1. prediction drift (Jensen–Shannon distance) > 0.2
-# MAGIC 2. label drift (Jensen–Shannon distance) > 0.2
-# MAGIC 3. expected_loss (daily) > 100
-# MAGIC 4. performance(i.e. f1_score) < 0.4
+# MAGIC 1. Prediction drift (Jensen–Shannon distance) > 0.2
+# MAGIC 2. Label drift (Jensen–Shannon distance) > 0.2
+# MAGIC 3. Expected Loss (daily average per user) > 30
+# MAGIC 4. Performance(i.e. F1-Score) < 0.4
 
 # COMMAND ----------
 
@@ -222,13 +218,14 @@ display(all_metrics_df)
 # MAGIC ## Count total violations and save as task value
 # MAGIC
 # MAGIC Here we will define the different threshholds for the metrics we are interested in to qualify a drift:
-# MAGIC - Performance metrcis < 0.5 
-# MAGIC - average_loss (our custom metric connected to business) > 30 dollars
+# MAGIC - Performance metric < 0.5 
+# MAGIC - Average Expected Loss per customer (our custom metric connected to business) > 30 dollars
 
 # COMMAND ----------
 
 # DBTITLE 1,count nr violations
 from pyspark.sql.functions import col, abs
+
 
 performance_violation_count = all_metrics_df.where(
     (col("performance_metric") < 0.5) & (abs(col("expected_loss")) > 30)
@@ -251,7 +248,7 @@ print(f"Total number of joint violations: {all_violations_count}")
 # MAGIC %md
 # MAGIC ## Next: Trigger model retraining
 # MAGIC
-# MAGIC Upon detecting a number of violations, we should automate some actions, such as:
+# MAGIC Upon detecting the number of violations, we should automate some actions, such as:
 # MAGIC - Retrain the machine learning model
 # MAGIC - Send an alert to owners via slack or email
 # MAGIC

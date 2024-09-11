@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Churn Prediction Realtime Inference
 # MAGIC
-# MAGIC We have just seen how to get predictions in batches. Now, we will deploy the features and model to make realtime predictions via a REST API call. Customer application teams can embed this predictive capabilities into customer-facing applications and apply a retention strategy for customers predicted to churn and they interact with the application.
+# MAGIC We have just seen how to get predictions in batches. Now, we will deploy the features and model to make realtime predictions via REST API call. Customer application teams can embed this predictive capability into customer-facing applications and apply a retention strategy for customers predicted to churn as they interact with the application.
 # MAGIC
 # MAGIC Because the predictions are to be made in a customer-facing application as the customer interacts with it, they have to be returned with low-latency.
 # MAGIC
@@ -30,6 +30,8 @@
 # DBTITLE 1,Install Databricks Python SDK [for MLR < 13.3] and MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC %pip install -U databricks-sdk
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -43,7 +45,7 @@
 # MAGIC
 # MAGIC For serving predictions queries with low-latency, publish the features to Databricks online tables and serve them in real time to the model.
 # MAGIC
-# MAGIC From the feature engineering step, we have already created a Delta Table for the feature table. Recall that any Delta Table that has a primary key can be a feature table in Databricks.
+# MAGIC During the feature engineering step, we have created a Delta Table as an offline feature table. Recall that any Delta Table that has a primary key can be a feature table in Databricks.
 
 # COMMAND ----------
 
@@ -116,6 +118,7 @@
 
 from databricks.sdk import WorkspaceClient
 
+
 # Create workspace client for the Databricks Python SDK
 w = WorkspaceClient()
 
@@ -140,6 +143,7 @@ except Exception as e:
 # DBTITLE 1,Create the online table specification
 from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 
+
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
   primary_key_columns = ["customer_id"],
@@ -161,6 +165,7 @@ w.online_tables.create(
 
 # DBTITLE 1,Check the status of the online table
 from pprint import pprint
+
 
 try:
   online_table_exist = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
@@ -195,9 +200,9 @@ except Exception as e:
 # MAGIC %md-sandbox
 # MAGIC # Deploying the model for real-time inference
 # MAGIC
-# MAGIC To make the model available for real-time inference through a REST API we will deploying it as a Model Serving endpoint.
+# MAGIC To make the model available for real-time inference through a REST API we will deploy to a Model Serving endpoint.
 # MAGIC
-# MAGIC Our marketing team can then have it run in a customer-facing application used by many concurrent customers. Databricks makes it easy for ML teams to deploy this type of low-latency and high-concurrency applications. Model Serving handles all the infrastructure, deployment and scaling for you. You just need to deploy the model!
+# MAGIC Our marketing team can point customer-facing applications used by many concurrent customers to this endpoint. Databricks makes it easy for ML teams to deploy this type of low-latency and high-concurrency applications. Model Serving handles all the infrastructure, deployment and scaling for you. You just need to deploy the model!
 
 # COMMAND ----------
 
@@ -312,6 +317,7 @@ served_model_name =  model_name.split('.')[-1]
 
 from databricks.sdk.service.serving import EndpointCoreConfigInput
 
+
 endpoint_config_dict = {
     "served_models": [
         # Add models to be served to this list
@@ -342,6 +348,7 @@ endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 # COMMAND ----------
 
 from databricks.sdk.service.serving import EndpointTag
+
 
 try:
   # Create and do not wait. Check readiness of endpoint in next cell.
@@ -376,6 +383,7 @@ except Exception as e:
 
 from datetime import timedelta
 
+
 # Wait for endpoint to be ready or finish updating
 endpoint = w.serving_endpoints.wait_get_serving_endpoint_not_updating(endpoint_name, timeout=timedelta(minutes=120))
 
@@ -393,8 +401,8 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
-# MAGIC     {"customer_id": "0002-ORFBO", "scoring_timestamp": "2024-02-05"},
-# MAGIC     {"customer_id": "0003-MKNFE", "scoring_timestamp": "2024-02-05"}
+# MAGIC     {"customer_id": "0002-ORFBO", "scoring_timestamp": "2024-09-10"},
+# MAGIC     {"customer_id": "0003-MKNFE", "scoring_timestamp": "2024-9-10"}
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
@@ -415,6 +423,7 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models import Model
 
+
 # Setting these variables again in case the user skipped running the cells to deploy the model
 endpoint_name = "advanced_mlops_churn_ep"
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
@@ -428,15 +437,17 @@ if input_example:
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {"customer_id": "0002-ORFBO", "transaction_ts": "2024-02-05"},
-    {"customer_id": "0003-MKNFE", "transaction_ts": "2024-02-05"}
+    {"customer_id": "0002-ORFBO", "transaction_ts": "2024-09-10"},
+    {"customer_id": "0003-MKNFE", "transaction_ts": "2024-09-10"}
   ]
 
 # COMMAND ----------
 
 # DBTITLE 1,Query endpoint
-# Wait 60 sec for endpoint so that the endpoint is fully ready to available errors in the next command
 import time
+
+
+# Wait 60 sec for endpoint so that the endpoint is fully ready to available errors in the next command
 time.sleep(60)
 
 print("Churn inference:")
@@ -454,4 +465,4 @@ print(response.predictions)
 # MAGIC
 # MAGIC Next steps:
 # MAGIC * [Create monitor for model performance]($./07_model_monitoring)
-# MAGIC * [Automate model re-training]($./08_retrain_churn_automl)
+# MAGIC * [Detect drift and trigger model retrain]($./08_drift_detection)

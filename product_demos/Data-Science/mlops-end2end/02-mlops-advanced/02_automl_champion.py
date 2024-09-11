@@ -19,6 +19,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -38,6 +40,7 @@
 
 import mlflow
 import databricks.automl_runtime
+
 
 # Path defined in the init notebook
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
@@ -109,7 +112,6 @@ features = [
 # COMMAND ----------
 
 # DBTITLE 1,Pull labels to use for training/validating/testing
-
 labels_df = spark.read.table(f"advanced_churn_label_table")
 
 # Set variable for label column. This will be used within the training code.
@@ -134,7 +136,7 @@ training_set_specs = fe.create_training_set(
   df=labels_df, # DataFrame with lookup keys and label/target (+ any other input)
   label="churn",
   feature_lookups=features,
-  exclude_columns=["customer_id", "transaction_ts", 'split'] # Keeping them to create baseline table
+  exclude_columns=["customer_id", "transaction_ts", 'split']
 )
 
 # COMMAND ----------
@@ -274,6 +276,7 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # COMMAND ----------
 
 from sklearn.model_selection import train_test_split
+
 
 X_train, X_eval, y_train, y_eval = train_test_split(df_loaded.drop(label_col, axis=1), df_loaded[label_col], test_size=0.4, stratify=df_loaded[label_col], random_state=42)
 
@@ -610,4 +613,4 @@ display(Image(filename=eval_pr_curve_path))
 # MAGIC %md
 # MAGIC ### Automate model promotion validation
 # MAGIC
-# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_registry)
+# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_models_in_uc)

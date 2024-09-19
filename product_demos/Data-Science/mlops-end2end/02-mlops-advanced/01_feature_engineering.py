@@ -20,6 +20,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -37,7 +39,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Read in Bronze Delta table using Spark
-# Read into Spark
+# Read into spark dataframe
 telcoDF = spark.read.table("advanced_churn_bronze_customers")
 display(telcoDF)
 
@@ -62,12 +64,13 @@ display(telcoDF)
 from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql.functions import pandas_udf, col, when, lit
 
+
 #  Count number of optional services enabled, like streaming TV
 def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
   # Create pandas UDF function
   @pandas_udf('double')
   def num_optional_services(*cols):
-    #N ested helper function to count number of optional services in a pandas dataframe
+    # Nested helper function to count number of optional services in a pandas dataframe
     return sum(map(lambda s: (s == "Yes").astype('double'), cols))
 
   return inputDF.\
@@ -145,12 +148,10 @@ display(churn_features_n_predsDF)
 # COMMAND ----------
 
 # DBTITLE 1,Extract ground-truth labels in a separate table and drop from Feature table
-# Extract labels in separate table before pushing to Feature Store to avoid label leakage
-# Also specify train-val-test split in the label table
-
 import pyspark.sql.functions as F
 
-# Specify train-val-test split
+
+# Best practice: specify train-val-test split as categorical label (to be used by automl and/or model validation jobs)
 train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
 
 churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
@@ -183,7 +184,7 @@ churn_featuresDF = churn_features_n_predsDF.drop("churn")
 # MAGIC %md
 # MAGIC ### Write the feature table to Unity Catalog
 # MAGIC
-# MAGIC With Unity Catalog, any Delta table with a primary key constraint can be used as a feature table. It is used as the offline store. It's that easy.
+# MAGIC With Unity Catalog, any Delta table with a primary key constraint can be used as a offline feature table.
 # MAGIC
 # MAGIC Time series feature tables have an additional primary key on the time column.
 # MAGIC
@@ -216,6 +217,7 @@ churn_featuresDF = churn_features_n_predsDF.drop("churn")
 from pprint import pprint
 from databricks.sdk import WorkspaceClient
 
+
 # Create workspace client
 w = WorkspaceClient()
 
@@ -225,6 +227,7 @@ try:
   # Drop existing online feature table
   w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
+
 except Exception as e:
   pprint(e)
 
@@ -240,6 +243,8 @@ except Exception as e:
 
 # DBTITLE 1,Import Feature Store Client
 from databricks.feature_engineering import FeatureEngineeringClient
+
+
 fe = FeatureEngineeringClient()
 
 # COMMAND ----------
@@ -259,7 +264,7 @@ churn_feature_table = fe.create_table(
 fe.write_table(
   name=f"{catalog}.{db}.advanced_churn_feature_table",
   df=churn_featuresDF, # can be a streaming dataframe as well
-  mode='merge' #'merge'/'overwrite' which supports schema evolution
+  mode='merge' #'merge' supports schema evolution
 )
 
 # COMMAND ----------
@@ -267,7 +272,7 @@ fe.write_table(
 # MAGIC %md
 # MAGIC ## Define Featurization Logic for on-demand feature functions
 # MAGIC
-# MAGIC We will define a function for features that can needs to be calculated on-demand. These functions can be used in both batch inference and online inference.
+# MAGIC We will define a function for features that need to be calculated on-demand. These functions can be used in both batch/offline and serving/online inference.
 # MAGIC
 # MAGIC It is common that customers who have elevated bills of monthly charges have a higher propensity to churn. The `avg_price_increase` function calculates the potential average price increase based on their historical charges, as well as their current tenure. The function lets the model use this freshly calculated value as a feature for training and, later, scoring.
 # MAGIC

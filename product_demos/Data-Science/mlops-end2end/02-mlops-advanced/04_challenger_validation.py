@@ -38,6 +38,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -141,6 +143,7 @@ except Exception as e:
 
 import os
 
+
 # Create local directory
 local_dir = "/tmp/model_artifacts"
 if not os.path.exists(local_dir):
@@ -164,9 +167,9 @@ else:
 # MAGIC %md
 # MAGIC #### Model performance metric
 # MAGIC
-# MAGIC We want to validate the model performance metric. Typically, we want to compare this metric obtained for the Challenger model agaist that of the Champion model. Since we have yet to register a Champion model, we will only retrieve the metric for the Challenger model without doing a comparison.
+# MAGIC We want to validate the model performance metric. Typically, we want to compare this metric obtained for the `@Challenger` model against that of the `@Champion` model. Since we have yet to register a `@Champion` model, we will only retrieve the metric for the `@Challenger` model without doing a comparison.
 # MAGIC
-# MAGIC The registered model captures information about the MLflow experiment run, where the model metrics were logged during training. This gives you traceability from the deployed model back to the initial training runs.
+# MAGIC The registered model captures information about the MLflow experiment run, where the model metrics were logged during training. This gives traceability from the deployed model back to the initial training runs.
 # MAGIC
 # MAGIC Here, we will use the F1 score for the out-of-sample test data that was set aside at training time.
 
@@ -181,11 +184,13 @@ try:
     champion_f1 = mlflow.get_run(champion_model.run_id).data.metrics['test_f1_score']
     print(f'Champion f1 score: {champion_f1}. Challenger f1 score: {f1_score}.')
     metric_f1_passed = f1_score >= champion_f1
+
 except:
     print(f"No Champion found. Accept the model as it's the first one.")
     metric_f1_passed = True
 
 print(f'Model {model_name} version {model_details.version} metric_f1_passed: {metric_f1_passed}')
+
 # Tag that F1 metric check has passed
 client.set_model_version_tag(name=model_name, version=model_details.version, key="metric_f1_passed", value=metric_f1_passed)
 
@@ -201,10 +206,12 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 # COMMAND ----------
 
 import pyspark.sql.functions as F
-#get our validation dataset:
+
+
+# Get our validation dataset:
 validation_df = spark.table('advanced_churn_label_table').filter("split='validate'")
 
-#Call the model with the given alias and return the prediction
+# Call the model with the given alias and return the prediction
 def predict_churn(validation_df, model_alias):
     features_w_preds = fe.score_batch(df=validation_df, model_uri=f"models:/{model_name}@{model_alias}", 
                                       result_type=validation_df.schema[label_col].dataType)
@@ -217,7 +224,8 @@ import pandas as pd
 import plotly.express as px
 from sklearn.metrics import confusion_matrix
 
-#Note: this is over-simplified and depends of your use-case, but the idea is to evaluate our model against business metrics
+
+# Note: this is over-simplified and depends on the use-case, but the idea is to evaluate our model against business metrics
 cost_of_customer_churn = 2000 #in dollar
 cost_of_discount = 500 #in dollar
 
@@ -240,6 +248,7 @@ try:
 
     data = {'Model Alias': ['Challenger', 'Champion'],
             'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
+
 except:
     print("No Champion found. Skipping business metrics evaluation.")
     print("You can return to re-run this cell after promoting the Challenger model as Champion in the rest of this notebook.")
@@ -251,7 +260,6 @@ except:
 px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
     labels={'Potential Revenue Gain': 'Revenue Impacted'},
     title='Business Metrics - Revenue Impacted')
-
 
 # COMMAND ----------
 
@@ -275,7 +283,7 @@ results.tags
 # COMMAND ----------
 
 if results.tags["has_description"] and results.tags["metric_f1_passed"] and results.tags['predicts']:
-  print('register model as Champion!')
+  print(f"Registering model {model_name} Version {model_version} as Champion!")
   client.set_registered_model_alias(
     name=model_name,
     alias="Champion",
@@ -287,9 +295,9 @@ else:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Note that we are promoting the model while keeping in in one catalog and schema in this demo. We do this for simplicity so that the demo can be self-contained to a catalog and schema.
+# MAGIC Note that we are promoting the model while keeping in one catalog and schema in this demo. We do this for simplicity so that the demo can be self-contained to a catalog and schema.
 # MAGIC
-# MAGIC In actual practice, it is common practice to maintain separate catalogs for Dev, QA and Prod data and AI assets. This applies to models as well. In that case, we would register the production model to a production catalog, with an appropriate alias set for it. This can be done programatically, and triggered when the model is ready to be promoted to production.
+# MAGIC In actual practice, it is recommended to maintain separate catalogs for Dev, QA and Prod data and AI assets. This applies to models as well. In that case, we would register the production model to a production catalog, with an appropriate `@alias` set for it. This can be done programatically, and triggered when the model is ready to be promoted to production.
 
 # COMMAND ----------
 

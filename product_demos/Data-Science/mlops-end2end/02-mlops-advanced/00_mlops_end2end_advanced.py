@@ -36,11 +36,11 @@
 # MAGIC
 # MAGIC This end-to-end MLOps workflow involes:
 # MAGIC
-# MAGIC * preparing features for an offline feature store
+# MAGIC * preparing features, functions computing and persisting to an offline feature store
 # MAGIC * training a model for deployment
 # MAGIC * registering the model for its use to be goverened
 # MAGIC * validating the model in a champion-challenger analysis
-# MAGIC * invoking a trained ML model as a pySpark UDF
+# MAGIC * invoking a trained ML model as part of a batch inference job
 # MAGIC * deploying features for real-time feature lookup
 # MAGIC * deploying the model to a real-time serving endpoint
 # MAGIC * monitoring data and model drift

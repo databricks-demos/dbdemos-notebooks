@@ -5,13 +5,13 @@
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-7.png?raw=true" width="1200">
 # MAGIC
-# MAGIC Databricks Lakehouse Monitoring lets you simply attach a data monitor to any Delta table and it will generate the necessary pipelines to profile the data and calculate quality metrics. You just need to tell it how frequently these quality metrics need to be collected.
+# MAGIC Databricks Lakehouse Monitoring attaches a data monitor to any Delta table and it will generate the necessary pipelines to profile the data and calculate quality metrics. You just need to tell it how frequently these quality metrics need to be collected.
 # MAGIC
-# MAGIC Use Databricks Lakehouse Monitoring to monitor for data drifts, as well as label drift, prediction drift and changes in model quality metrics in Machine Learning use cases. Databricks Lakehouse Monitoring enables us to monitor stats and drifts on tables containing:
+# MAGIC Use Databricks Lakehouse Monitoring to monitor for data drifts, as well as label drift, prediction drift and changes in model quality metrics in Machine Learning use cases. Databricks Lakehouse Monitoring enables monitoring for statistics (e.g. data profiles) and drifts on tables containing:
 # MAGIC * batch scoring inferences
 # MAGIC * request logs from Model Serving endpoint ([AWS](https://docs.databricks.com/en/machine-learning/model-serving/inference-tables.html) |[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-serving/inference-tables))
 # MAGIC
-# MAGIC Databricks Lakehouse Monitoring stores the data quality and drift metrics in two tables that it automatically creates for the table that is monitored:
+# MAGIC Databricks Lakehouse Monitoring stores the data quality and drift metrics in two tables that it automatically creates for each monitored table:
 # MAGIC - Profile metrics table (with a `_profile_metrics` suffix)
 # MAGIC   - Metrics like percentage of null values, descriptive statistics, model metrics such as accuracy, RMSE, fairness and bias metrics etc.
 # MAGIC - Drift metrics table (with a `_drift_metrics` suffix)
@@ -23,7 +23,9 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
-# MAGIC %pip install "databricks-sdk>=0.28.0" -qU
+# MAGIC %pip install -qU "databricks-sdk>=0.28.0"
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -103,31 +105,12 @@ expected_loss_metric = [
 # MAGIC %md
 # MAGIC ### Create monitor
 # MAGIC
-# MAGIC As we are monitoring an inference table ( includes machine learning model predcitions data), we will pick an [Inference profile](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/create-monitor-api#inferencelog-profile) for the monitor.
-
-# COMMAND ----------
-
-import re
-
-# Find the workspace folder where this notebook is stored
-# We will save the monitor assets in the same folder as the notebook
-
-# Find the notebook's path
-notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-
-# Define the regular expression pattern to get the folder path
-# Groups the text before the last slash and the text after the last slash
-pattern = r'/(.+)/(.+)$'
-
-# Use re.search to find the regex match
-match = re.search(pattern, notebook_path)
-
-demo_folder_path = match.group(1)
-print(f"Monitor assets will be saved in: /{demo_folder_path}/monitoring")
+# MAGIC As we are monitoring an inference table (including machine learning model predcitions data), we will pick an [Inference profile](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/create-monitor-api#inferencelog-profile) for the monitor.
 
 # COMMAND ----------
 
 # DBTITLE 1,Create Monitor
+import os
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInferenceLogProblemType
 
@@ -145,8 +128,7 @@ info = w.quality_monitors.create(
         model_id_col="model_version",
         label_col="churn", # optional
   ),
-  #assets_dir=f"/Workspace/Users/{current_user}/databricks_lakehouse_monitoring/{catalog}.{db}.mlops_churn_advanced_offline_inference",
-  assets_dir=f"/Workspace/{demo_folder_path}/monitoring",
+  assets_dir=f"{os.getcwd()}/monitoring", # Change this to another folder of choice if needed
   output_schema_name=f"{catalog}.{db}",
   baseline_table_name=f"{catalog}.{db}.advanced_churn_baseline",
   slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
@@ -231,9 +213,9 @@ w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_tabl
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Next: Drift Detection
+# MAGIC ### Next: Test for drift and trigger a model retrain
 # MAGIC
-# MAGIC Now, let us create some logic to detect drfit on the inference data.
+# MAGIC Now, let explore how to detect drift on the inference data and define violations rules for triggering a model (re)train workflow.
 # MAGIC
 # MAGIC Next steps:
-# MAGIC * [Drift Detection]($./08_drift_detection)
+# MAGIC * [Detect drift and trigger model retrain]($./08_drift_detection)

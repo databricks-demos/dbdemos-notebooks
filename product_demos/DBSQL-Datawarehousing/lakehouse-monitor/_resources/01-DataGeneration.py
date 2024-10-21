@@ -70,10 +70,11 @@ if data_exists:
 
 if not data_exists:
 
-    from faker import Faker
     import pandas as pd
     import random
     from datetime import datetime, timedelta
+    from faker import Faker
+    from pyspark.sql.types import StructType, StructField, StringType, DateType, FloatType, BooleanType, ArrayType, IntegerType, TimestampType, DoubleType
 
     # Initialize Faker
     fake = Faker()
@@ -112,12 +113,8 @@ if not data_exists:
         return pd.DataFrame(user_data)
 
     # Generate the user data
-    user_df = generate_user_data(10000)
+    user_pdf = generate_user_data(10000)
 
-
-
-
-    from pyspark.sql.types import StructType, StructField, StringType, DateType, FloatType, BooleanType, ArrayType
     # Convert the Pandas DataFrame to a PySpark DataFrame
     schema = StructType([
         StructField("UserID", StringType(), False),
@@ -144,11 +141,11 @@ if not data_exists:
         StructField("CartItems", ArrayType(StringType()), False)
     ])
 
-    # Create Spark DataFrame
-    spark_user_df = spark.createDataFrame(user_df, schema)
+    # Create Spark DataFrame and Write to Delta
+    user_df = spark.createDataFrame(user_pdf, schema)
 
     # Write the Spark DataFrame to Delta format
-    spark_user_df.write.mode('overwrite').saveAsTable('bronze_user')
+    user_df.write.mode('overwrite').saveAsTable('bronze_user')
 
 # COMMAND ----------
 
@@ -183,8 +180,7 @@ if not data_exists:
 # COMMAND ----------
 
 if not data_exists:
-    from faker import Faker
-    import pandas as pd
+
     import random
 
     # Initialize Faker
@@ -327,13 +323,11 @@ if not data_exists:
         return pd.DataFrame(product_data)
 
     # Generate the product data
-    product_df = generate_product_data(10000)
-
+    product_pdf = generate_product_data(10000)
 
 # COMMAND ----------
 
 if not data_exists:
-    from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, DateType, ArrayType
 
     # Convert the Pandas DataFrame to a PySpark DataFrame
     schema = StructType([
@@ -362,11 +356,9 @@ if not data_exists:
         StructField("ProductTags", ArrayType(StringType()), False)
     ])
 
-    # Create Spark DataFrame
-    spark_product_df = spark.createDataFrame(product_df, schema)
-
-    # Write the Spark DataFrame to Delta format
-    spark_product_df.write.mode('overwrite').saveAsTable('bronze_product')
+    # Create Spark DataFrame & Write to Delta
+    product_df = spark.createDataFrame(product_pdf, schema)
+    product_df.write.mode('overwrite').saveAsTable('bronze_product')
 
 # COMMAND ----------
 
@@ -399,21 +391,19 @@ if not data_exists:
 # COMMAND ----------
 
 if not data_exists:
-    from faker import Faker
-    import pandas as pd
-    import random
+
     from datetime import datetime, timedelta
 
     # Initialize Faker
     fake = Faker()
 
     # Function to generate transaction data
-    def generate_transaction_data(user_df, product_df, start_date, end_date, campaigns={}):
+    def generate_transaction_data(user_pdf_, product_pdf_, start_date_, end_date_, campaigns={}):
         transaction_data = []
         
         # Convert date strings to datetime objects
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        start_date = datetime.strptime(start_date_, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_, "%Y-%m-%d")
         
         # Define seasonality factors
         seasonality_factors = {
@@ -455,8 +445,8 @@ if not data_exists:
             
             # Generate transactions for the day
             for _ in range(daily_transactions):
-                user = user_df.sample(1).iloc[0]
-                product = product_df.sample(1).iloc[0]
+                user = user_pdf_.sample(1).iloc[0]
+                product = product_pdf_.sample(1).iloc[0]
                 quantity = random.randint(1, 5)
                 transaction = {
                     "TransactionID": fake.uuid4(),
@@ -498,12 +488,7 @@ if not data_exists:
     }
 
     # Generate the transaction data
-    transaction_df = generate_transaction_data(user_df, product_df, start_date, end_date, campaigns)
-
-# COMMAND ----------
-
-if not data_exists:
-    from pyspark.sql.types import StructType, StructField, StringType, TimestampType, IntegerType, FloatType
+    transaction_pdf = generate_transaction_data(user_pdf, product_pdf, start_date, end_date, campaigns)
 
     # Convert the Pandas DataFrame to a PySpark DataFrame
     schema = StructType([
@@ -521,11 +506,9 @@ if not data_exists:
         StructField("SpecialInstructions", StringType(), False)
     ])
 
-    # Create Spark DataFrame
-    spark_transaction_df = spark.createDataFrame(transaction_df, schema)
-
-    # Write the Spark DataFrame to Delta format
-    spark_transaction_df.write.mode('overwrite').saveAsTable('bronze_transaction')
+    # Create Spark DataFrame and Write to Delta table
+    transaction_df = spark.createDataFrame(transaction_pdf, schema)
+    transaction_df.write.mode('overwrite').saveAsTable('bronze_transaction')
 
 # COMMAND ----------
 
@@ -535,19 +518,22 @@ import random
 from datetime import datetime
 from pyspark.sql.functions import col, when, to_date, lit, rand, date_add
 
-spark_transaction_df = spark.read.table("bronze_transaction")
-spark_user_df = spark.read.table("bronze_user")
-spark_product_df = spark.read.table("bronze_product")
+
+if data_exists:
+    user_df = spark.read.table("bronze_user")
+    product_df = spark.read.table("bronze_product")
+    transaction_df = spark.read.table("bronze_transaction")
+
 # Join the DataFrames
-joined_df_spark = (
-    spark_transaction_df
-    .join(spark_user_df, on="UserID", how="left")
-    .join(spark_product_df, on="ProductID", how="left")
+joined_df = (
+    transaction_df
+    .join(user_df, on="UserID", how="left")
+    .join(product_df, on="ProductID", how="left")
 )
 
-def inject_issues_spark(df, campaign_start_dates):
+def inject_issues(df_in, campaign_start_dates):
     # Ensure TransactionDate is in the correct format and create 'TempDate'
-    df = df.withColumn('TempDate', to_date(col('TransactionDate')))
+    df = df_in.withColumn('TempDate', to_date(col('TransactionDate')))
     
     # Add the Campaign_flag column, initially set to False
     df = df.withColumn('Campaign_flag', lit(False))
@@ -584,8 +570,8 @@ def inject_issues_spark(df, campaign_start_dates):
         df = df.withColumn('Quantity', when(campaign_mask, col('Quantity') * 1.5).otherwise(col('Quantity')))
         df = df.withColumn('TotalPrice', when(campaign_mask, col('Quantity') * col('UnitPrice')).otherwise(col('TotalPrice')))
         
-        # Set the Campaign_flag for these dates
-        df = df.withColumn('Campaign_flag', when(campaign_mask, lit(True)).otherwise(col('Campaign_flag')))
+        # Set the Campaign_flag for these dates and return
+        return df.withColumn('Campaign_flag', when(campaign_mask, lit(True)).otherwise(col('Campaign_flag')))
     
     # After May 2024: Apply changes to WarrantyPeriod and ReturnPolicy
     may_2024_mask = (col('TempDate').substr(0, 4) == "2024") & (col('TempDate').substr(6, 2) >= "05")
@@ -612,21 +598,11 @@ if not data_exists:
     # campaign_start_dates = ["2023-07-15", "2023-11-23", "2024-03-10", (current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
 
     # Apply the inject_issues_spark function to the Spark DataFrame
-    joined_df_with_issues_spark = inject_issues_spark(joined_df_spark, campaign_start_dates)
-
-    # Example: Show the resulting DataFrame (optional for debugging)
-    # joined_df_with_issues_spark.show()
-
-    # Write the transformed DataFrame to a Delta table in Unity Catalog for proper lineage tracking
-
-
+    joined_with_issues_df = inject_issues(joined_df, campaign_start_dates)
 
 # COMMAND ----------
 
 if not data_exists:
-    from pyspark.sql.types import (
-        StructType, StructField, StringType, TimestampType, DoubleType, IntegerType, BooleanType
-    )
 
     # Define the schema
     schema = StructType([
@@ -688,23 +664,19 @@ if not data_exists:
         StructField('Campaign_flag', BooleanType(), True)
     ])
     
-# Make sure to convert dates like 'DateOfBirth', 'RegistrationDate', and 'DateAdded' to appropriate formats
-joined_df_with_issues_spark = joined_df_with_issues_spark \
-    .withColumn('DateOfBirth', col('DateOfBirth').cast(DateType())) \
-    .withColumn('RegistrationDate', col('RegistrationDate').cast(DateType())) \
-    .withColumn('DateAdded', col('DateAdded').cast(DateType()))
+    # Make sure to convert dates like 'DateOfBirth', 'RegistrationDate', and 'DateAdded' to appropriate formats
+    joined_with_issues_df = joined_with_issues_df \
+        .withColumn('DateOfBirth', col('DateOfBirth').cast(DateType())) \
+        .withColumn('RegistrationDate', col('RegistrationDate').cast(DateType())) \
+        .withColumn('DateAdded', col('DateAdded').cast(DateType()))
 
-# Since the original Pandas code also ensured that columns like Wishlist, CartItems, and ProductTags were lists, in Spark we just need to ensure they remain as arrays or null
-from pyspark.sql.functions import col, when
-
-# Ensure Wishlist, CartItems, and ProductTags are either arrays or null
-joined_df_with_issues_spark = joined_df_with_issues_spark \
-    .withColumn('Wishlist', when(col('Wishlist').isNull(), None).otherwise(col('Wishlist'))) \
-    .withColumn('CartItems', when(col('CartItems').isNull(), None).otherwise(col('CartItems'))) \
-    .withColumn('ProductTags', when(col('ProductTags').isNull(), None).otherwise(col('ProductTags')))
-
-# Write the Spark DataFrame with schema applied to Delta format
-joined_df_with_issues_spark.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
+    # Ensure Wishlist, CartItems, and ProductTags are either arrays or null and Write to Delta as "Silver transaction" table
+    joined_with_issues_df = joined_with_issues_df \
+        .withColumn('Wishlist', when(col('Wishlist').isNull(), None).otherwise(col('Wishlist'))) \
+        .withColumn('CartItems', when(col('CartItems').isNull(), None).otherwise(col('CartItems'))) \
+        .withColumn('ProductTags', when(col('ProductTags').isNull(), None).otherwise(col('ProductTags')))
+        
+    joined_with_issues_df.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
 
 # COMMAND ----------
 
@@ -714,62 +686,47 @@ joined_df_with_issues_spark.write.option("mergeSchema", "true").mode('overwrite'
 # COMMAND ----------
 
 if not data_exists:
-    from pyspark.sql import functions as F
-    # Create a temporary column for Month
-    spark_joined_df_with_issues = spark.read.table('silver_transaction').withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
-
-    # Monthly Sales Summary by Category
-    monthly_sales_summary = spark_joined_df_with_issues \
-        .groupBy("Month", "Category") \
-        .agg(
-            F.sum("TotalPrice").alias("TotalSales"),
-            F.sum("Quantity").alias("TotalQuantitySold")
-        ) \
-        .orderBy("Month", "Category")
-
-    # Write the Spark DataFrame to Delta format
-    monthly_sales_summary.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable(f'gold_monthly_sales')
-
-# COMMAND ----------
-
-if not data_exists:
 
     from pyspark.sql import Window
-    # Top 10 Products by Total Sales by Month
-    silver_enhanced_df = spark.read.table('silver_transaction').withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
-    top_10_products_by_month = silver_enhanced_df \
+    from pyspark.sql.functions import avg, count, date_format, desc, row_number, sum
+
+    # Create a temporary column for Month from silver table
+    tmp_df = joined_with_issues_df.withColumn("Month", date_format(col("TransactionDate"), "yyyy-MM"))
+
+    ## Monthly Sales Summary by Category
+    tmp_df \
+        .groupBy("Month", "Category") \
+        .agg(
+            sum("TotalPrice").alias("TotalSales"),
+            sum("Quantity").alias("TotalQuantitySold")
+        ) \
+        .orderBy("Month", "Category") \
+        .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable(f'gold_monthly_sales')
+
+    ## Top 10 Products by Total Sales by Month
+    tmp_df \
         .groupBy("Month", "ProductID", "ProductName") \
         .agg(
-            F.sum("TotalPrice").alias("TotalSales")
+            sum("TotalPrice").alias("TotalSales")
         ) \
-        .withColumn("Rank", F.row_number().over(Window.partitionBy("Month").orderBy(F.desc("TotalSales")))) \
-        .filter(F.col("Rank") <= 10) \
-        .orderBy("Month", "Rank")
+        .withColumn("Rank", row_number().over(Window.partitionBy("Month").orderBy(desc("TotalSales")))) \
+        .filter(col("Rank") <= 10) \
+        .orderBy("Month", "Rank")\
+        .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_top_products')
 
-    # Write the Spark DataFrame to Delta format
-    top_10_products_by_month.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_top_products')
-
-    # User Purchase Behavior by Month
-    user_purchase_behavior_by_month = silver_enhanced_df \
+    ## User Purchase Behavior by Month
+    tmp_df \
         .groupBy("Month", "UserID", "Username") \
         .agg(
-            F.sum("TotalPrice").alias("TotalPurchaseAmount"),
-            F.avg("TotalPrice").alias("AveragePurchaseAmount"),
-            F.count("TransactionID").alias("TotalTransactions")
+            sum("TotalPrice").alias("TotalPurchaseAmount"),
+            avg("TotalPrice").alias("AveragePurchaseAmount"),
+            count("TransactionID").alias("TotalTransactions")
         ) \
-        .orderBy("Month", "UserID")
+        .orderBy("Month", "UserID") \
+        .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')
 
-    # Write the Spark DataFrame to Delta format
-    user_purchase_behavior_by_month.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')
-
-
-# COMMAND ----------
-
-import pyspark.sql.functions as F
-
-if not data_exists:
-    # Read from the silver_transaction Delta table and select required columns
-    gold_payment_method = spark.read.table('silver_transaction') \
+    ## Gold Payment methods
+    joined_with_issues_df \
         .select(
             "TransactionID", 
             "UserID", 
@@ -778,10 +735,9 @@ if not data_exists:
             "Price", 
             "Quantity"
         ) \
-        .orderBy("TransactionID")
+        .orderBy("TransactionID") \
+        .write.mode('overwrite').option("mergeSchema", "true").saveAsTable('gold_payment_method')
 
-    # Write the resulting DataFrame to a new Delta table called gold_payment_method
-    gold_payment_method.write.mode('overwrite').option("mergeSchema", "true").saveAsTable('gold_payment_method')
+# COMMAND ----------
 
-    # Optionally, you can show a preview of the resulting DataFrame
-    # gold_payment_method.show()
+

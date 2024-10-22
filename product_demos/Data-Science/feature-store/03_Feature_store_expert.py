@@ -110,10 +110,6 @@ fe.create_table(name=f"{catalog}.{db}.destination_location_features",
 
 # COMMAND ----------
 
-# MAGIC %md <img src="https://docs.databricks.com/_static/images/machine-learning/feature-store/realtime/streaming.png"/>
-
-# COMMAND ----------
-
 spark.sql('CREATE VOLUME IF NOT EXISTS feature_store_volume')
 destination_availability_stream = (
   spark.readStream

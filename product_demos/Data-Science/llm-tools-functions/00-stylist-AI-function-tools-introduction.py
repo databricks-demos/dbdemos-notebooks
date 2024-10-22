@@ -4,9 +4,9 @@
 # MAGIC
 # MAGIC ## What's a composable AI system
 # MAGIC
-# MAGIC LLMs are great at answering generated questions. However, this alone isn't enough to provide value to your customers.
+# MAGIC LLMs are great at answering general questions. However, general intelligence alone isn't enough to provide value to your customers.
 # MAGIC
-# MAGIC To be able to provide valuable answers, extra information is requred, specific to the user (your customer contract ID, the last email they sent to your support, your most recent sales report etc.).
+# MAGIC To be able to provide valuable answers, extra information is required, specific to your business and the user asking the question (your customer contract ID, the last email they sent to your support, your most recent sales report etc.).
 # MAGIC
 # MAGIC Composable AI systems are designed to answer this challenge. They are more advanced AI deployments, composed of multiple entities (tools) specialized in different action (retrieving information or acting on external systems). <br/>
 # MAGIC
@@ -36,7 +36,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init $reset_all=false
+# MAGIC %run ./_resources/00-init-stylist $reset_all=false
 
 # COMMAND ----------
 
@@ -101,6 +101,8 @@
 # MAGIC ### Executing a Python function to fetch external dataset in realtime: getting the weather
 # MAGIC
 # MAGIC We want our stylist assistant to give us recommendations based on the weather. Let's add a tool to fetch the weather based on longitude/latitude, using Python to call an external Weather API.
+# MAGIC
+# MAGIC **Note: This will be run by a serverless compute, and accessing external data, therefore requires serverless network egress access. If this fails in a serverless setup/playground, make sure you are allowing it in your networking configuration (open the workspace network option at admin account level)**
 
 # COMMAND ----------
 
@@ -203,7 +205,7 @@
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/llm-tools-functions-playground.gif?raw=true" style="float: right; margin-left: 10px; margin-bottom: 10px;">
 # MAGIC
 # MAGIC To try out our functions with playground:
-# MAGIC - Open the Playground 
+# MAGIC - Open the [Playground](/ml/playground) 
 # MAGIC - Select a model supporting tools (like Llama3.1)
 # MAGIC - Add the functions you want your model to leverage (`catalog.schema.function_name`)
 # MAGIC - Ask a question (for example to convert inch to cm), and playground will do the magic for you!

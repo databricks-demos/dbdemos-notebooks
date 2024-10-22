@@ -10,8 +10,8 @@ dbutils.widgets.text("produce_time_sec", "600", "How long we'll produce data (se
 # MAGIC
 # MAGIC Run all the cells, once. Currently requires to run on a cluster with instance profile allowing kafka connection (one-env, aws).
 # MAGIC
-# MAGIC <!-- tracking, please Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fstreaming%2Fsessionization%2Fproducer&dt=FEATURE_STREAMING_SESSIONIZATION">
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-Delta-session-GOLD&demo_name=streaming-sessionization&event=VIEW">
 
 # COMMAND ----------
 
@@ -19,7 +19,9 @@ dbutils.widgets.text("produce_time_sec", "600", "How long we'll produce data (se
 
 # COMMAND ----------
 
-kafka_bootstrap_servers_tls = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
+# NOTE: the demo runs with Kafka, and dbdemos doesn't publically expose its demo kafka servers. Use your own IPs to run the demo properly
+#kafka_bootstrap_servers_tls = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
+kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
 
 from kafka import KafkaProducer
 producer = KafkaProducer(security_protocol="SSL", bootstrap_servers=kafka_bootstrap_servers_tls.split(","), value_serializer=lambda x: x.encode('utf-8'))

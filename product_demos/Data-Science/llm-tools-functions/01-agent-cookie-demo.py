@@ -26,6 +26,9 @@
 # MAGIC AI needs be customized to your own business with your own data to be relevant!
 # MAGIC
 # MAGIC Let's give it a try and ask a general AI to generate an instagram post for our cookie franchise:
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&notebook=01-agent-cookie-demo&demo_name=llm-tools-functions&event=VIEW">
 
 # COMMAND ----------
 

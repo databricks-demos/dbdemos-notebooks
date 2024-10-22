@@ -1,7 +1,6 @@
 # Databricks notebook source
 # MAGIC
 # MAGIC
-# MAGIC
 # MAGIC %md 
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
@@ -12,8 +11,8 @@
   "name": "lakehouse-fsi-smart-claims",
   "category": "lakehouse",
   "custom_schema_supported": True,
-  "default_schema": "dbdemos_fsi_smart_claims",
   "default_catalog": "main",
+  "default_schema": "dbdemos_fsi_smart_claims",
   "title": "Lakehouse for Smart Claims",
   "description": "Build your smart claims platform on the Lakehouse",
   "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end claims automation for car accident claims, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both policy and claims data, and then transform them using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Ingest telematics data as an external streaming source to understand customer behavior</li><li>Build a Machine Learning model with Databricks and HuggingFace to identify the seviarity of the accident and car damage</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the policy holder and claims overview and also serve the the analytics outcome to claims investigators</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",

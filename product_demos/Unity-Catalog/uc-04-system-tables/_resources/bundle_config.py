@@ -136,6 +136,7 @@
   },
   "dashboards": [{"name": "[dbdemos] System Tables - account usage overview",       "id": "account-usage"},
                  {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"},
-                 {"name": "[dbdemos] System Tables - Databricks Model Serving Endpoint Cost Attribution", "id": "model-serving-cost"}
+                 {"name": "[dbdemos] System Tables - Databricks Model Serving Endpoint Cost Attribution", "id": "model-serving-cost"},
+                 {"name": "[dbdemos] System Tables - Warehouse Monitoring and Cost Attribution", "id": "warehouse-serverless-cost"}
                  ]
 }

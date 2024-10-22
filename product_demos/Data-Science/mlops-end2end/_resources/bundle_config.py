@@ -134,6 +134,14 @@
       "description": "Leverage your ML model within inference pipelines."
     },
     {
+      "path": "02-mlops-advanced/06_serve_features_and_model", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Serve feature & model in real time serving endpoint", 
+      "description": "Create online table & serve model in a serverless endpoint"
+    },
+    {
       "path": "02-mlops-advanced/07_model_monitoring", 
       "pre_run": True, 
       "publish_on_website": True, 
@@ -148,14 +156,6 @@
       "add_cluster_setup_cell": True, 
       "title":  "Generate synthetic inference ata & detect drift", 
       "description": "Create synthetic data and detect drift"
-    },
-    {
-      "path": "02-mlops-advanced/06_serve_features_and_model", 
-      "pre_run": True, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": False, 
-      "title":  "Serve feature & model in real time serving endpoint", 
-      "description": "Create online table & serve model in a serverless endpoint"
     }
   ],
   "workflows": [{

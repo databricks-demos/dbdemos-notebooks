@@ -512,11 +512,11 @@ if not data_exists:
 
 # COMMAND ----------
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pyspark.sql.functions as F
 import random
 from datetime import datetime
-from pyspark.sql.functions import col, when, to_date, lit, rand, date_add
 
 
 if data_exists:
@@ -533,54 +533,54 @@ joined_df = (
 
 def inject_issues(df_in, campaign_start_dates):
     # Ensure TransactionDate is in the correct format and create 'TempDate'
-    df = df_in.withColumn('TempDate', to_date(col('TransactionDate')))
+    df = df_in.withColumn('TempDate', F.to_date(F.col('TransactionDate')))
     
     # Add the Campaign_flag column, initially set to False
-    df = df.withColumn('Campaign_flag', lit(False))
+    df = df.withColumn('Campaign_flag', F.lit(False))
     
     # Steady nulls around 10-15% in specified columns (e.g., ProductTags, ShippingAddress, Wishlist, GiftWrap)
     steady_null_columns = ['ProductTags', 'ShippingAddress', 'Wishlist', 'GiftWrap']
     for column in steady_null_columns:
-        df = df.withColumn(column, when(rand() < random.uniform(0.1, 0.15), None).otherwise(col(column)))
+        df = df.withColumn(column, F.when(F.rand() < random.uniform(0.1, 0.15), None).otherwise(F.col(column)))
     
     # Steady nulls around 10% in PreferredPaymentMethod
-    df = df.withColumn('PreferredPaymentMethod', when(rand() < random.uniform(0.05, 0.09), None).otherwise(col('PreferredPaymentMethod')))
+    df = df.withColumn('PreferredPaymentMethod', F.when(F.rand() < random.uniform(0.05, 0.09), None).otherwise(F.col('PreferredPaymentMethod')))
     
     # 60% zeros in Discount distributed evenly over time
-    df = df.withColumn('Discount', when(rand() < 0.6, lit(0)).otherwise(col('Discount')))
+    df = df.withColumn('Discount', F.when(F.rand() < 0.6, F.lit(0)).otherwise(F.col('Discount')))
     
     # 10% zeros in ProductRating distributed evenly over time
-    df = df.withColumn('ProductRating', when(rand() < 0.1, lit(0)).otherwise(col('ProductRating')))
+    df = df.withColumn('ProductRating', F.when(F.rand() < 0.1, F.lit(0)).otherwise(F.col('ProductRating')))
     
     # Iterate through each campaign start date and apply specific rules
     for start_date in campaign_start_dates:
-        start_date_lit = lit(start_date)
-        campaign_mask = (col('TempDate') >= start_date_lit) & (col('TempDate') < date_add(start_date_lit, 10))
+        start_date_lit = F.lit(start_date)
+        campaign_mask = (F.col('TempDate') >= start_date_lit) & (F.col('TempDate') < date_add(start_date_lit, 10))
         
         # Set NumberOfReviews to 0 during the campaign
-        df = df.withColumn('NumberOfReviews', when(campaign_mask, lit(0)).otherwise(col('NumberOfReviews')))
+        df = df.withColumn('NumberOfReviews', F.when(campaign_mask, F.lit(0)).otherwise(F.col('NumberOfReviews')))
         
         # Set PreferredPaymentMethod to null for 48% during the campaign
-        df = df.withColumn('PreferredPaymentMethod', when(campaign_mask & (rand() < 0.48), None).otherwise(col('PreferredPaymentMethod')))
+        df = df.withColumn('PreferredPaymentMethod', F.when(campaign_mask & (F.rand() < 0.48), None).otherwise(col('PreferredPaymentMethod')))
         
         # Set PaymentMethod to 'Apple Pay' for 80% during the campaign
-        df = df.withColumn('PaymentMethod', when(campaign_mask & (rand() < 0.8), 'Apple Pay').otherwise(col('PaymentMethod')))
+        df = df.withColumn('PaymentMethod', F.when(campaign_mask & (F.rand() < 0.8), 'Apple Pay').otherwise(col('PaymentMethod')))
         
         # Dramatic change in Quantity and TotalPrice for 10 days after each campaign start date
-        df = df.withColumn('Quantity', when(campaign_mask, col('Quantity') * 1.5).otherwise(col('Quantity')))
-        df = df.withColumn('TotalPrice', when(campaign_mask, col('Quantity') * col('UnitPrice')).otherwise(col('TotalPrice')))
+        df = df.withColumn('Quantity', F.when(campaign_mask, F.col('Quantity') * 1.5).otherwise(F.col('Quantity')))
+        df = df.withColumn('TotalPrice', F.when(campaign_mask, F.col('Quantity') * F.col('UnitPrice')).otherwise(F.col('TotalPrice')))
         
         # Set the Campaign_flag for these dates and return
-        return df.withColumn('Campaign_flag', when(campaign_mask, lit(True)).otherwise(col('Campaign_flag')))
+        return df.withColumn('Campaign_flag', F.when(campaign_mask, F.lit(True)).otherwise(F.col('Campaign_flag')))
     
     # After May 2024: Apply changes to WarrantyPeriod and ReturnPolicy
-    may_2024_mask = (col('TempDate').substr(0, 4) == "2024") & (col('TempDate').substr(6, 2) >= "05")
+    may_2024_mask = (F.col('TempDate').substr(0, 4) == "2024") & (F.col('TempDate').substr(6, 2) >= "05")
     
     # Overwrite over 50% of WarrantyPeriod to '15 days'
-    df = df.withColumn('WarrantyPeriod', when(may_2024_mask & (rand() < 0.7), '15 days').otherwise(col('WarrantyPeriod')))
+    df = df.withColumn('WarrantyPeriod', F.when(may_2024_mask & (F.rand() < 0.7), '15 days').otherwise(F.col('WarrantyPeriod')))
     
     # Overwrite over 50% of ReturnPolicy to 'no returns'
-    df = df.withColumn('ReturnPolicy', when(may_2024_mask & (rand() < 0.7), 'no returns').otherwise(col('ReturnPolicy')))
+    df = df.withColumn('ReturnPolicy', F.when(may_2024_mask & (F.rand() < 0.7), 'no returns').otherwise(F.col('ReturnPolicy')))
     
     # Drop the temporary date column
     df = df.drop('TempDate')
@@ -666,15 +666,15 @@ if not data_exists:
     
     # Make sure to convert dates like 'DateOfBirth', 'RegistrationDate', and 'DateAdded' to appropriate formats
     joined_with_issues_df = joined_with_issues_df \
-        .withColumn('DateOfBirth', col('DateOfBirth').cast(DateType())) \
-        .withColumn('RegistrationDate', col('RegistrationDate').cast(DateType())) \
-        .withColumn('DateAdded', col('DateAdded').cast(DateType()))
+        .withColumn('DateOfBirth', F.col('DateOfBirth').cast(DateType())) \
+        .withColumn('RegistrationDate', F.col('RegistrationDate').cast(DateType())) \
+        .withColumn('DateAdded', F.col('DateAdded').cast(DateType()))
 
     # Ensure Wishlist, CartItems, and ProductTags are either arrays or null and Write to Delta as "Silver transaction" table
     joined_with_issues_df = joined_with_issues_df \
-        .withColumn('Wishlist', when(col('Wishlist').isNull(), None).otherwise(col('Wishlist'))) \
-        .withColumn('CartItems', when(col('CartItems').isNull(), None).otherwise(col('CartItems'))) \
-        .withColumn('ProductTags', when(col('ProductTags').isNull(), None).otherwise(col('ProductTags')))
+        .withColumn('Wishlist', F.when(F.col('Wishlist').isNull(), None).otherwise(F.col('Wishlist'))) \
+        .withColumn('CartItems', F.when(F.col('CartItems').isNull(), None).otherwise(F.col('CartItems'))) \
+        .withColumn('ProductTags', F.when(F.col('ProductTags').isNull(), None).otherwise(F.col('ProductTags')))
         
     joined_with_issues_df.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
 
@@ -688,17 +688,16 @@ if not data_exists:
 if not data_exists:
 
     from pyspark.sql import Window
-    from pyspark.sql.functions import avg, count, date_format, desc, row_number, sum
 
     # Create a temporary column for Month from silver table
-    tmp_df = joined_with_issues_df.withColumn("Month", date_format(col("TransactionDate"), "yyyy-MM"))
+    tmp_df = joined_with_issues_df.withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
 
     ## Monthly Sales Summary by Category
     tmp_df \
         .groupBy("Month", "Category") \
         .agg(
-            sum("TotalPrice").alias("TotalSales"),
-            sum("Quantity").alias("TotalQuantitySold")
+            F.sum("TotalPrice").alias("TotalSales"),
+            F.sum("Quantity").alias("TotalQuantitySold")
         ) \
         .orderBy("Month", "Category") \
         .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable(f'gold_monthly_sales')
@@ -707,10 +706,10 @@ if not data_exists:
     tmp_df \
         .groupBy("Month", "ProductID", "ProductName") \
         .agg(
-            sum("TotalPrice").alias("TotalSales")
+            F.sum("TotalPrice").alias("TotalSales")
         ) \
-        .withColumn("Rank", row_number().over(Window.partitionBy("Month").orderBy(desc("TotalSales")))) \
-        .filter(col("Rank") <= 10) \
+        .withColumn("Rank", F.row_number().over(Window.partitionBy("Month").orderBy(F.desc("TotalSales")))) \
+        .filter(F.col("Rank") <= 10) \
         .orderBy("Month", "Rank")\
         .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_top_products')
 
@@ -718,9 +717,9 @@ if not data_exists:
     tmp_df \
         .groupBy("Month", "UserID", "Username") \
         .agg(
-            sum("TotalPrice").alias("TotalPurchaseAmount"),
-            avg("TotalPrice").alias("AveragePurchaseAmount"),
-            count("TransactionID").alias("TotalTransactions")
+            F.sum("TotalPrice").alias("TotalPurchaseAmount"),
+            F.avg("TotalPrice").alias("AveragePurchaseAmount"),
+            F.count("TransactionID").alias("TotalTransactions")
         ) \
         .orderBy("Month", "UserID") \
         .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')

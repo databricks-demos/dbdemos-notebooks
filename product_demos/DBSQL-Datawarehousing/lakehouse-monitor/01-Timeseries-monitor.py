@@ -28,8 +28,6 @@
 # COMMAND ----------
 
 # MAGIC %pip install "databricks-sdk>=0.28.0"
-# MAGIC
-# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -28,7 +28,8 @@ DBDemos.setup_schema(catalog, db, reset_all_data=False)
 
 # COMMAND ----------
 
-data_exists = spark.catalog.tableExists('gold_user_purchase')
+data_exists = spark.catalog.tableExists('gold_user_purchase') and spark.catalog.tableExists('bronze_product') and spark.catalog.tableExists('bronze_user') and spark.catalog.tableExists('bronze_transaction') and spark.catalog.tableExists('gold_payment_method') 
+
 if data_exists:
   print(f'data alread existing in {catalog}.{dbName}. Please drop the schema to re-create them from scratch.')
 

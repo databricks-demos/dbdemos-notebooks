@@ -556,7 +556,7 @@ def inject_issues(df_in, campaign_start_dates):
     # Iterate through each campaign start date and apply specific rules
     for start_date in campaign_start_dates:
         start_date_lit = F.lit(start_date)
-        campaign_mask = (F.col('TempDate') >= start_date_lit) & (F.col('TempDate') < date_add(start_date_lit, 10))
+        campaign_mask = (F.col('TempDate') >= start_date_lit) & (F.col('TempDate') < F.date_add(start_date_lit, 10))
         
         # Set NumberOfReviews to 0 during the campaign
         df = df.withColumn('NumberOfReviews', F.when(campaign_mask, F.lit(0)).otherwise(F.col('NumberOfReviews')))

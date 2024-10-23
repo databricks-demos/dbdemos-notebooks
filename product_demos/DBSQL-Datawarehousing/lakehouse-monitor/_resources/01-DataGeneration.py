@@ -562,10 +562,10 @@ def inject_issues(df_in, campaign_start_dates):
         df = df.withColumn('NumberOfReviews', F.when(campaign_mask, F.lit(0)).otherwise(F.col('NumberOfReviews')))
         
         # Set PreferredPaymentMethod to null for 48% during the campaign
-        df = df.withColumn('PreferredPaymentMethod', F.when(campaign_mask & (F.rand() < 0.48), None).otherwise(col('PreferredPaymentMethod')))
+        df = df.withColumn('PreferredPaymentMethod', F.when(campaign_mask & (F.rand() < 0.48), None).otherwise(F.col('PreferredPaymentMethod')))
         
         # Set PaymentMethod to 'Apple Pay' for 80% during the campaign
-        df = df.withColumn('PaymentMethod', F.when(campaign_mask & (F.rand() < 0.8), 'Apple Pay').otherwise(col('PaymentMethod')))
+        df = df.withColumn('PaymentMethod', F.when(campaign_mask & (F.rand() < 0.8), 'Apple Pay').otherwise(F.col('PaymentMethod')))
         
         # Dramatic change in Quantity and TotalPrice for 10 days after each campaign start date
         df = df.withColumn('Quantity', F.when(campaign_mask, F.col('Quantity') * 1.5).otherwise(F.col('Quantity')))

@@ -107,8 +107,7 @@ display(training_dataset)
 from pyspark.sql.functions import pandas_udf
 import pandas as pd
 
-#base_model_name = "meta-llama/Llama-2-7b-hf"
-base_model_name = "mistralai/Mistral-7B-Instruct-v0.2"
+base_model_name = "meta-llama/Llama-3.2-3B-Instruct"
 
 system_prompt = """You are a highly knowledgeable and professional Databricks Support Agent. Your goal is to assist users with their questions and issues related to Databricks. Answer questions as precisely and accurately as possible, providing clear and concise information. If you do not know the answer, respond with "I don't know." Be polite and professional in your responses. Provide accurate and detailed information related to Databricks. If the question is unclear, ask for clarification.\n"""
 
@@ -169,6 +168,8 @@ def get_current_cluster_id():
 #Let's clean the model name
 registered_model_name = f"{catalog}.{db}." + re.sub(r'[^a-zA-Z0-9]', '_',  base_model_name)
 
+
+
 run = fm.create(
     data_prep_cluster_id=get_current_cluster_id(),  # required if you are using delta tables as training data source. This is the cluster id that we want to use for our data prep job.
     model=base_model_name,  # Here we define what model we used as our baseline
@@ -220,7 +221,7 @@ wait_for_run_to_finish(run)
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-serving_endpoint_name = "dbdemos_llm_fine_tuned"
+serving_endpoint_name = "dbdemos_llm_fine_tuned_llama3p2_3B"
 w = WorkspaceClient()
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,

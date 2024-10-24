@@ -38,7 +38,7 @@ dbutils.library.restartPython()
 # MAGIC ### 1) Establish Baseline
 # MAGIC We will first establish baseline performance using the standard LLM. If the LLM you fine-tune is available as Foundation Model, you can use the API provided by Databricks directly.
 # MAGIC
-# MAGIC Because we fine-tuned on mistral or llama2-7B, we will deploy a Serving endpoint using this model, making sure it scales to zero to avoid costs.
+# MAGIC Because we fine-tuned on llama3.2-3B, we will deploy a Serving endpoint using this model, making sure it scales to zero to avoid costs.
 
 # COMMAND ----------
 
@@ -46,14 +46,14 @@ dbutils.library.restartPython()
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-serving_endpoint_baseline_name = "dbdemos_llm_not_fine_tuned"
+serving_endpoint_baseline_name = "dbdemos_llm_not_fine_tuned_llama3p2_3B"
 w = WorkspaceClient()
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_baseline_name,
     served_entities=[
         ServedEntityInput(
-            entity_name="system.ai.mistral_7b_instruct_v0_2", #Make sure you're using the same base model as the one you're fine-tuning on for relevant evaluation!
-            entity_version=1,
+            entity_name="system.ai.llama_v3_2_3b_instruct", #Make sure you're using the same base model as the one you're fine-tuning on for relevant evaluation!
+            entity_version=2,
             min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
             max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
             scale_to_zero_enabled=True
@@ -89,7 +89,7 @@ display_answer(not_fine_tuned_answer)
 
 # COMMAND ----------
 
-serving_endpoint_ft_name = "dbdemos_llm_fine_tuned"
+serving_endpoint_ft_name = "dbdemos_llm_fine_tuned_llama3p2_3B"
 fine_tuned_answer = client.predict(endpoint=serving_endpoint_ft_name, inputs={"messages": [{"role": "user", "content": question}]})
 display_answer(fine_tuned_answer)
 
@@ -100,7 +100,7 @@ display_answer(fine_tuned_answer)
 # MAGIC
 # MAGIC We'll be using [mlflow.evaluate](https://mlflow.org/docs/latest/llms/llm-evaluate/notebooks/huggingface-evaluation.html?highlight=mlflow%20evaluate%20llm) to see how our model is performing, using what an external LLM as a judge.
 # MAGIC
-# MAGIC The idea is to send our questions + context to the LLM, and then compare its answer with the expected one leveraging an external model (usually stronger). In our case, we'll ask the built-in, serverless DBRX model endpoint to judge the Mistral LLMs answer compared to the ground truth.
+# MAGIC The idea is to send our questions + context to the LLM, and then compare its answer with the expected one leveraging an external model (usually stronger). In our case, we'll ask the built-in, serverless Llama 3.1 405B endpoint to judge the Llama 3.2 3B LLM's answer compared to the ground truth.
 
 # COMMAND ----------
 
@@ -116,7 +116,7 @@ from langchain_core.prompts.chat import ChatPromptTemplate
 import pandas as pd
 
 
-base_model_name = "mistralai/Mistral-7B-Instruct-v0.2"
+base_model_name =  "meta-llama/Llama-3.2-3B-Instruct"
 
 # ----------------------------------------------------------------------------------------------------------------------------------------- #
 # -- Basic chain for the demo. This should instead be your full, real RAG chain (you want to evaluate your LLM on your final chain) ------- #
@@ -135,7 +135,7 @@ def build_chain(llm):
     return ChatPromptTemplate.from_messages(messages) | llm | StrOutputParser()
 # --------------------------------------------------------------------------------------------------- #
 
-def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-dbrx-instruct", run_name="dbdemos_fine_tuning_rag"):
+def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_fine_tuning_rag"):
     #Build the chain. This should be your actual RAG chain, querying your index
     llm = ChatDatabricks(endpoint=llm_endoint_name, temperature=0.1)
     chain = build_chain(llm)
@@ -159,9 +159,9 @@ def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-dbrx-instru
         return results
     
 #Evaluate the base foundation model
-baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-dbrx-instruct", run_name="dbdemos_fine_tuning_rag")
+baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_fine_tuning_rag")
 #Evaluate the fine tuned model
-fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge = "databricks-dbrx-instruct", run_name="dbdemos_fine_tuning_rag")
+fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_fine_tuning_rag")
 
 # COMMAND ----------
 
@@ -185,7 +185,7 @@ fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge 
 # MAGIC %md 
 # MAGIC You can also analyse individual queries and filter on the question with very incorrect answer, and improve your training dataset accordingly.
 # MAGIC
-# MAGIC If you have a bigger dataset, you can also programatically filter on the rows having bad answer, and ask an external model such as DBRX to summarize what is not working to give you insights on your training dataset at scale!
+# MAGIC If you have a bigger dataset, you can also programatically filter on the rows having bad answer, and ask an external model such as a Llama model to summarize what is not working to give you insights on your training dataset at scale!
 
 # COMMAND ----------
 

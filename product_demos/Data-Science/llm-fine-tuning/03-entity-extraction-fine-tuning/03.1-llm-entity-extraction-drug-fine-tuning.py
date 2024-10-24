@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md # Foundation Model fine-tuning: Named Entity Recognition
 # MAGIC
-# MAGIC In this demo, we will focus on Fine Tuning our model for Instruction Fine Tuning, specializing llama2 to extract drug name from text. This process is call NER (Named Entity Recognition)
+# MAGIC In this demo, we will focus on Fine Tuning our model for Instruction Fine Tuning, specializing llama 3.2 3B to extract drug name from text. This process is call NER (Named Entity Recognition)
 # MAGIC
 # MAGIC Fine tuning an open-source model on a medical Named Entity Recognition task will make the model output
 # MAGIC 1. More accurate, and
@@ -72,7 +72,7 @@ You are a medical and pharmaceutical expert. Your task is to identify pharmaceut
 # MAGIC
 # MAGIC Let's start by performing a first entity extraction with our baseline, non fine-tuned model.
 # MAGIC
-# MAGIC We will be using the same endpoint `dbdemos_llm_not_fine_tuned` as in the previous [../02-llm-evaluation]($../02-llm-evaluation) notebook to reduce cost. 
+# MAGIC We will be using the same endpoint `dbdemos_llm_not_fine_tuned_llama3p2_3B` as in the previous [../02-llm-evaluation]($../02-llm-evaluation) notebook to reduce cost. 
 # MAGIC
 # MAGIC **Make sure you run this notebook to setup the endpoint before.**
 
@@ -82,9 +82,10 @@ import mlflow
 from langchain_community.chat_models.databricks import ChatDatabricks
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+import json
 
 # Make sure this model corresponds to the model you used in the ../02-llm-evaluation notebook
-base_model_name = "mistralai/Mistral-7B-Instruct-v0.2"
+base_model_name = "meta-llama/Llama-3.2-3B-Instruct"
 
 input_sentence = "{sentence}"
 
@@ -103,8 +104,7 @@ def extract_entities(df, endpoint_name):
   predictions = chain.with_retry(stop_after_attempt=2) \
                                       .batch(df[["sentence"]].to_dict(orient="records"), config={"max_concurrency": 4})
   # Extract the array from the text. See the ../resource notebook for more details.
-  
-  cleaned_predictions = [extract_json_array(p) for p in predictions]
+  cleaned_predictions = [[x.strip() for x in prediction.strip('[]').split(',')] for prediction in predictions] #[extract_json_array(p) for p in predictions]
   return predictions, cleaned_predictions 
 
 # Taking only a few examples from test set to collect benchmark metrics
@@ -112,14 +112,14 @@ from sklearn.model_selection import train_test_split
 
 df_validation, df_test_small = train_test_split(df_test, test_size=0.2, random_state=42)
 
-# This endpoint is created in the ../02-llm-evaluation notebook. It's the baseline mistral 7b model, not fine tuned.
+# This endpoint is created in the ../02-llm-evaluation notebook. It's the baseline llama 3.2 3B model, not fine tuned.
 # Make sure you run the notebook before to deploy the baseline model first.
-serving_endpoint_baseline_name = "dbdemos_llm_not_fine_tuned"
+serving_endpoint_baseline_name = "dbdemos_llm_not_fine_tuned_llama3p2_3B"
 
 predictions, cleaned_predictions = extract_entities(df_test_small, serving_endpoint_baseline_name)
 df_test_small['baseline_predictions'] = predictions
 df_test_small['baseline_predictions_cleaned'] = cleaned_predictions
-display(df_test_small[["sentence", "baseline_predictions_cleaned", "human_annotated_entities"]])
+display(df_test_small[["sentence", "baseline_predictions", "baseline_predictions_cleaned", "human_annotated_entities"]])
 
 # COMMAND ----------
 
@@ -130,11 +130,6 @@ display(df_test_small[["sentence", "baseline_predictions_cleaned", "human_annota
 # MAGIC ### Precision & recall for entity extraction
 # MAGIC
 # MAGIC We'll benchmark our model by computing its accuracy and recall. Let's compute these value for each sentence in our test dataset.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
 
 # COMMAND ----------
 
@@ -164,9 +159,11 @@ df_test_small[['baseline_precision', 'baseline_recall']].describe()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC In the sample, we see that the baseline LLM generally having a Recall of 0.6936 which means that it successfully identifies about 69.36% of all actual drug names present in the text. This metric is crucial in healthcare and related fields where missing a drug name can lead to incomplete or incorrect information processing. 
+# MAGIC *_NOTE: Results will vary from run to run_
 # MAGIC
-# MAGIC Precision of 70.45% on avg means that the baseline LLM model identifies a token or a sequence of tokens as a drug name, about 70.45% of those identifications are correct.
+# MAGIC In the sample, we see that the baseline LLM generally having a Recall of 0.9652 which means that it successfully identifies about 96.52% of all actual drug names present in the text. This metric is crucial in healthcare and related fields where missing a drug name can lead to incomplete or incorrect information processing. 
+# MAGIC
+# MAGIC Precision of 0.9174 on avg means that the baseline LLM model identifies a token or a sequence of tokens as a drug name, about 91.74% of those identifications are correct.
 
 # COMMAND ----------
 
@@ -256,7 +253,7 @@ display(spark.table("ner_chat_completion_eval_dataset"))
 from databricks.model_training import foundation_model as fm
 
 # Change the model name back to drug_extraction_ft after testing
-registered_model_name = f"{catalog}.{db}.drug_extraction_ft_" + re.sub(r'[^a-zA-Z0-9]', '_',  base_model_name.lower())
+registered_model_name = f"{catalog}.{db}.drug_extraction_ft_meta_llama_llama_3_2_3b_instruct"
 
 run = fm.create(
   data_prep_cluster_id = get_current_cluster_id(),  # Required if you are using delta tables as training data source. This is the cluster id that we want to use for our data prep job. See ./_resources for more details
@@ -297,7 +294,7 @@ wait_for_run_to_finish(run)
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
 
-serving_endpoint_name = "dbdemos_llm_drug_extraction_fine_tuned"
+serving_endpoint_name = "dbdemos_drug_extraction_fine_tuned_03_llama_3_2_3B_Instruct"
 w = WorkspaceClient()
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,
@@ -340,15 +337,14 @@ else:
 
 # Run the predictions against the new finetuned endpoint
 predictions, cleaned_predictions = extract_entities(df_test_small, serving_endpoint_name)
-df_test_small['fine_tuned_predictions'] = predictions
-df_test_small['fine_tuned_predictions_cleaned'] = cleaned_predictions
-display(df_test_small[["sentence", "human_annotated_entities", "baseline_predictions_cleaned", "fine_tuned_predictions_cleaned"]])
+df_test_small['fine_tuned_predictions'] = cleaned_predictions
+display(df_test_small[["sentence", "human_annotated_entities", "baseline_predictions", "baseline_predictions_cleaned", "fine_tuned_predictions"]])
 
 # COMMAND ----------
 
 # Compute precision & recall with the new model
 def precision_recall_series(row):
-  precision, recall = compute_precision_recall(row['fine_tuned_predictions_cleaned'], row['human_annotated_entities'])
+  precision, recall = compute_precision_recall(row['fine_tuned_predictions'], row['human_annotated_entities'])
   return pd.Series([precision, recall], index=['precision', 'recall'])
 
 df_test_small[['fine_tuned_precision', 'fine_tuned_recall']] = df_test_small.apply(precision_recall_series, axis=1)
@@ -358,13 +354,12 @@ df_test_small[['baseline_precision', 'fine_tuned_precision', 'baseline_recall', 
 
 # MAGIC %md 
 # MAGIC ### Measuring token output
-# MAGIC Our first model used to add uncessecary text before/after the results. Not only this makes it harder to analyze and parse, but it's also uncessary tokens we're paying for.
 # MAGIC
 # MAGIC Let's see if our new model behaves as expected.
 
 # COMMAND ----------
 
-df_test_small['baseline_predictions_len'] = df_test_small['baseline_predictions'].apply(lambda x: len(x))
+df_test_small['baseline_predictions_len'] = df_test_small['baseline_predictions_cleaned'].apply(lambda x: len(x))
 df_test_small['fine_tuned_predictions_len'] = df_test_small['fine_tuned_predictions'].apply(lambda x: len(x))
 df_test_small[['baseline_predictions_len', 'fine_tuned_predictions_len']].describe()
 

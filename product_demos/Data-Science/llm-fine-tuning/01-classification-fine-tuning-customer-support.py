@@ -39,7 +39,8 @@
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-0.png?raw=true" width="1200px">
 # MAGIC
-# MAGIC We'll fine tune a small Llama3-7B to improve accuracy while reducing cost. 
+# MAGIC We'll fine tune a small Llama 3.2-3B to improve accuracy while reducing cost.
+# MAGIC - We will compare this to a Llama 3.1-8B baseline model to show how a fine-tuned, smaller model can perform better than a larger one.
 # MAGIC
 # MAGIC To do so, Databricks provides a simple, built-in API to fine tune the model and evaluate its performance. Let's get started!
 # MAGIC
@@ -108,12 +109,20 @@ Based on the above categorize the following issue: \n\n"""
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Lets use the standalone mixtral 8x7b model to test it on a vanilla model first. As you can see, this isn't ideal. It's adding lot of text, and isn't classifying properly our dataset.
+# MAGIC Lets use the standalone llama 3.1 8b model to test it on a vanilla model first. Set up a [provisioned throughput endpoint](https://docs.databricks.com/en/machine-learning/foundation-models/deploy-prov-throughput-foundation-model-apis.html) for llama 3.1 8b by going to unity catalog, (under `system.ai.meta_llama_3_8b_instruct`), clicking "Serve this model" and making the endpoint.
+# MAGIC - Be sure to check the "Scale to zero" field to ensure that the endpoint doesn't continue running when not in use.
+# MAGIC - Give the endpoint a name and reference it below.
+# MAGIC
+# MAGIC As you can see, this isn't ideal. It's adding lot of text, and isn't classifying properly our dataset.
+
+# COMMAND ----------
+
+llama_3_1_8b_endpoint = "<PROVIDE PROVISIONED THROUGHPUT ENDPOINT NAME HERE>"
 
 # COMMAND ----------
 
 spark.sql(f"""SELECT 
-            ai_query("databricks-mixtral-8x7b-instruct", concat("{system_prompt}", description)) AS mixtral_small_classification,
+            ai_query("{llama_3_1_8b_endpoint}", concat("{system_prompt}", description)) AS llama_3_1_8b,
             description
         FROM customer_tickets 
         LIMIT 5""").display()
@@ -178,16 +187,21 @@ spark.table('ticket_priority_training_dataset').display()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Let's fine tune a Llama 3.2-3B model to see how it performs by comparison.
+
+# COMMAND ----------
+
 from databricks.model_training import foundation_model as fm
 import mlflow
 
 mlflow.set_registry_uri("databricks-uc")
 
-base_model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
+base_model_name = "meta-llama/Llama-3.2-3B-Instruct"
 
 #Let's clean the model name
 registered_model_name = f"{catalog}.{db}.classif_" + re.sub(r'[^a-zA-Z0-9]', '_',  base_model_name)
-    
+
 run = fm.create(
     data_prep_cluster_id=get_current_cluster_id(),  
     model=base_model_name,  
@@ -239,7 +253,7 @@ wait_for_run_to_finish(run)
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
 
-serving_endpoint_name = "dbdemos_classification_fine_tuned"
+serving_endpoint_name = "dbdemos_classification_fine_tuned_01_llama_3_2_3B_Instruct"
 w = WorkspaceClient()
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,
@@ -248,7 +262,7 @@ endpoint_config = EndpointCoreConfigInput(
             entity_name=registered_model_name,
             entity_version=get_latest_model_version(registered_model_name),
             min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
-            max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
+            max_provisioned_throughput=1000,# The maximum tokens per second that the endpoint can scale up to. 
             scale_to_zero_enabled=True
         )
     ]
@@ -278,9 +292,9 @@ except:
 
 # COMMAND ----------
 
-df = spark.sql(f"""
+df = spark.sql(f""" 
         SELECT 
-            ai_query("dbdemos_classification_fine_tuned", concat("{system_prompt}", description)) AS fine_tuned_prediction,
+            ai_query("{serving_endpoint_name}", concat("{system_prompt}", description)) AS fine_tuned_prediction,
             description,
             email
         FROM customer_tickets 

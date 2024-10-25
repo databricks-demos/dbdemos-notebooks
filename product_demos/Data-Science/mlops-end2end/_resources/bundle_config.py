@@ -476,11 +476,6 @@
                 "spark.master": "local[*, 4]",
                 "spark.databricks.cluster.profile": "singleNode"
               },
-              "azure_attributes": {
-                "first_on_demand": 1,
-                "availability": "ON_DEMAND_AZURE",
-                "spot_bid_max_price": -1
-              },
               "node_type_id": "Standard_D4ds_v5",
               "custom_tags": {
                 "ResourceClass": "SingleNode"

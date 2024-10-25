@@ -20,9 +20,6 @@
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Implement a Vision Language Model from Scratch", "url": "https://huggingface.co/blog/AviSoori1x/seemore-vision-language-model"}],
   "recommended_items": ["llm-dolly-chatbot", "pandas-on-spark", "mlops-end2end"],
-  "custom_schema_supported": True,
-  "default_catalog": "main",
-  "default_schema": "dbdemos_computer_vision_dl",
   "demo_assets": [],
   "bundle": True,
   "tags": [{"ds": "Data Science"}],
@@ -50,6 +47,14 @@
       "add_cluster_setup_cell": False, 
       "title":  "Computer Vision - Introduction", 
       "description": "Start here to build your Deep Learning pipeline"
+    },
+    {
+      "path": "config", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Configuration file", 
+      "description": "Setup database and schema"
     },
     {
       "path": "01-ingestion-and-ETL", 

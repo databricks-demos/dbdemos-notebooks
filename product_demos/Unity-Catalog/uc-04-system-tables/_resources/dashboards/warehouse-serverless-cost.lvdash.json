@@ -3,7 +3,7 @@
     {
       "name": "015fd821",
       "displayName": "WarehouseCostPerDay",
-      "query": "WITH pricing AS (\n  SELECT\n    p.pricing.effective_list.default AS price,\n    p.price_start_time,\n    p.sku_name,\n    p.currency_code,\n    case when p.sku_name LIKE ('%PRO%') then 'PRO' \n      WHEN p.sku_name LIKE ('%SERVERLESS%') THEN 'SERVERLESS'\n      WHEN p.sku_name LIKE ('PREMIUM_SQL_COMPUTE') THEN 'CLASSIC'\n    END AS warehouse_type,\n    COALESCE(p.price_end_time, NOW()) AS price_end_time\n  FROM\n    system.billing.list_prices p\n),\nwarehouse_creator as\n(SELECT\n  user_identity.email as warehouse_owner,\n  GET_JSON_OBJECT(response.result, '$.id') AS warehouse_id\nFROM\n  system.access.audit\nWHERE action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = 200\n),\n\nusage_with_pricing AS (\n  SELECT\n    u.workspace_id,\n    ifnull(u.usage_metadata.warehouse_id, u.sku_name) warehouse_id,\n    u.sku_name,\n    p.warehouse_type,\n    u.billing_origin_product,\n    -- u.usage_start_time,\n    p.price as price_per_unit,\n    u.usage_date,\n    sum(u.usage_quantity) as dbus,\n    sum(u.usage_quantity) * p.price AS day_dollars\n  FROM\n    system.billing.usage u\n    INNER JOIN pricing p ON p.sku_name = u.sku_name AND u.usage_start_time BETWEEN p.price_start_time AND p.price_end_time\n  WHERE\n    u.billing_origin_product = 'SQL'\n    -- add warehouse_id check as some some records are serverless computes and jobs\n    and u.usage_metadata.warehouse_id is not null\n    -- AND IF(:workspace_id = '<ALL WORKSPACES>', TRUE, u.workspace_id = :workspace_id)\n    AND u.usage_date BETWEEN :param_start_date AND :param_end_date\n  group by all\n),\n-- select * FROM usage_with_pricing\nranked_usage AS (\n  SELECT\n    workspace_id,\n    warehouse_id,\n    usage_date,\n    warehouse_type,\n    price_per_unit,\n    sku_name,\n    dbus, --  warehouse dbu units per day\n    day_dollars, --  warehouse dollars per day\n    sum(day_dollars) over (PARTITION BY warehouse_id) as warehouse_dollars, -- total warehouse spending over the period\n    sum(day_dollars) over (PARTITION BY workspace_id) as workspace_dollars, -- total workspace spending over the period\n    sum(day_dollars) over (PARTITION BY usage_date, workspace_id) as workspace_day_dollars,-- workspace dollars per day\n    -- rank each warehouse cost per day\n    dense_rank() OVER (PARTITION BY usage_date ORDER BY day_dollars DESC) AS warehouse_day_rank,\n    -- rank each workspace cost per day\n    dense_rank() OVER (PARTITION BY usage_date ORDER BY sum(day_dollars) over (PARTITION BY usage_date, workspace_id) DESC) AS workspace_day_rank,\n    -- rank total warehouse cost over the period from param_start_date to param_end_date\n    dense_rank() OVER (ORDER BY sum(day_dollars) over (PARTITION BY warehouse_id)  DESC NULLS LAST) AS warehouse_rank,\n    -- rank total workspace cost over the period from param_start_date to param_end_date\n    dense_rank() OVER (ORDER BY sum(day_dollars) over (PARTITION BY workspace_id)  DESC NULLS LAST) AS workspace_rank\n  FROM\n    usage_with_pricing\n  -- GROUP BY all\n)\n-- select * FROM ranked_usage\n\nSELECT\n  CASE\n    WHEN warehouse_rank <=:TopK THEN u.warehouse_id\n    ELSE 'OTHER'\n  END AS warehouse_topK,\n  CASE\n    WHEN workspace_rank <=:TopK THEN workspace_id\n    ELSE 'OTHER'\n  END AS workspace_topK,\n  CASE\n    WHEN warehouse_day_rank <=:TopK  THEN u.warehouse_id\n    ELSE 'OTHER'\n  END AS warehouse_day_topK,\n  CASE\n    WHEN workspace_day_rank <= :TopK THEN workspace_id\n    ELSE 'OTHER'\n  END AS workspace_day_topK,\n  c.warehouse_owner,\n  u.warehouse_id,\n  workspace_id,\n  usage_date,\n  warehouse_type,\n  price_per_unit,\n  sku_name,\n  dbus,\n  day_dollars\nFROM\n  ranked_usage u\n  LEFT JOIN warehouse_creator c on c.warehouse_id = u.warehouse_id\nGROUP BY all\n\n",
+      "query": "WITH pricing AS (\n  SELECT\n    p.pricing.effective_list.default AS price,\n    p.price_start_time,\n    p.sku_name,\n    p.currency_code,\n    case when p.sku_name LIKE ('%PRO%') then 'PRO' \n      WHEN p.sku_name LIKE ('%SERVERLESS%') THEN 'SERVERLESS'\n      WHEN p.sku_name LIKE ('PREMIUM_SQL_COMPUTE') THEN 'CLASSIC'\n    END AS warehouse_type,\n    COALESCE(p.price_end_time, NOW()) AS price_end_time\n  FROM\n    system.billing.list_prices p\n),\nwarehouse_creator as\n(SELECT\n  user_identity.email as warehouse_owner,\n  GET_JSON_OBJECT(response.result, '$.id') AS warehouse_id\nFROM\n  system.access.audit\nWHERE action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = 200\n),\n\nusage_with_pricing AS (\n  SELECT\n    u.workspace_id,\n    -- u.custom_tags,\n    TRANSFORM(MAP_KEYS(custom_tags),(k, i) -> CONCAT(lower(k), '=', lower(MAP_VALUES(custom_tags) [i]))) AS key_value_tags,\n    ifnull(u.usage_metadata.warehouse_id, u.sku_name) as warehouse_id,\n    u.sku_name,\n    p.warehouse_type,\n    u.billing_origin_product,\n    -- u.usage_start_time,\n    p.price as price_per_unit,\n    u.usage_date,\n    sum(u.usage_quantity) as dbus,\n    sum(u.usage_quantity) * p.price AS day_dollars\n  FROM\n    system.billing.usage u\n    INNER JOIN pricing p ON p.sku_name = u.sku_name AND u.usage_start_time BETWEEN p.price_start_time AND p.price_end_time\n  WHERE\n    u.billing_origin_product = 'SQL'\n    -- add warehouse_id check as some some records are serverless computes and jobs\n    and u.usage_metadata.warehouse_id is not null\n    AND u.usage_date BETWEEN :param_start_date AND :param_end_date\n  group by all\n),\nranked_usage AS (\n  SELECT\n    workspace_id,\n    warehouse_id,\n    key_value_tags,\n    usage_date,\n    warehouse_type,\n    price_per_unit,\n    sku_name,\n    dbus, --  warehouse dbu units per day\n    day_dollars, --  warehouse dollars per day\n    sum(day_dollars) over (PARTITION BY warehouse_id) as warehouse_dollars, -- total warehouse spending over the period\n    sum(day_dollars) over (PARTITION BY workspace_id) as workspace_dollars, -- total workspace spending over the period\n    sum(day_dollars) over (PARTITION BY usage_date, workspace_id) as workspace_day_dollars,-- workspace dollars per day\n    -- rank each warehouse cost per day\n    dense_rank() OVER (PARTITION BY usage_date ORDER BY day_dollars DESC) AS warehouse_day_rank,\n    -- rank each workspace cost per day\n    dense_rank() OVER (PARTITION BY usage_date ORDER BY sum(day_dollars) over (PARTITION BY usage_date, workspace_id) DESC) AS workspace_day_rank,\n    -- rank total warehouse cost over the period from param_start_date to param_end_date\n    dense_rank() OVER (ORDER BY sum(day_dollars) over (PARTITION BY warehouse_id)  DESC NULLS LAST) AS warehouse_rank,\n    -- rank total workspace cost over the period from param_start_date to param_end_date\n    dense_rank() OVER (ORDER BY sum(day_dollars) over (PARTITION BY workspace_id)  DESC NULLS LAST) AS workspace_rank\n  FROM\n    usage_with_pricing\n  WHERE 1=1\n    AND (:workspace_id='All' OR workspace_id = :workspace_id)\n    AND (:warehouse_id='All' OR warehouse_id = :warehouse_id)\n    AND (:tags = 'All' or array_contains(key_value_tags, :tags))\n)\n\nSELECT\n  CASE\n    WHEN warehouse_rank <=:TopK THEN u.warehouse_id\n    ELSE 'OTHER'\n  END AS warehouse_topK,\n  CASE\n    WHEN workspace_rank <=:TopK THEN workspace_id\n    ELSE 'OTHER'\n  END AS workspace_topK,\n  CASE\n    WHEN warehouse_day_rank <=:TopK  THEN u.warehouse_id\n    ELSE 'OTHER'\n  END AS warehouse_day_topK,\n  CASE\n    WHEN workspace_day_rank <= :TopK THEN workspace_id\n    ELSE 'OTHER'\n  END AS workspace_day_topK,\n  u.warehouse_id,\n  workspace_id,\n  u.key_value_tags,\n  c.warehouse_owner,\n  usage_date,\n  warehouse_type,\n  price_per_unit,\n  sku_name,\n  dbus,\n  day_dollars\nFROM\n  ranked_usage u\n  LEFT JOIN warehouse_creator c on c.warehouse_id = u.warehouse_id\nGROUP BY all\n\n",
       "parameters": [
         {
           "displayName": "param_start_date",
@@ -36,6 +36,21 @@
           }
         },
         {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
           "displayName": "TopK",
           "keyword": "TopK",
           "dataType": "STRING",
@@ -49,13 +64,162 @@
               ]
             }
           }
+        },
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "warehouse_id",
+          "keyword": "warehouse_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
         }
       ]
     },
     {
       "name": "c3d23285",
       "displayName": "QueryCost",
-      "query": "-- Statement allocated cost calculated logic is based off DBSQL Warehouse Advisor Observability Dashboard by  Databricks SQL SME group \n-- (https://github.com/CodyAustinDavis/dbsql_sme/tree/main/Observability%20Dashboards%20and%20DBA%20Resources/Observability%20Lakeview%20Dashboard%20Templates/DBSQL%20Warehouse%20Advisor%20With%20Data%20Model)\nwith pricing as (\n    SELECT\n    p.pricing.effective_list.default AS price,\n    p.price_start_time,\n    p.sku_name,\n    p.currency_code,\n    case when p.sku_name LIKE ('%PRO%') then 'PRO' \n      WHEN p.sku_name LIKE ('%SERVERLESS%') THEN 'SERVERLESS'\n      WHEN p.sku_name LIKE ('PREMIUM_SQL_COMPUTE') THEN 'CLASSIC'\n    END AS warehouse_type,\n    COALESCE(p.price_end_time, NOW()) AS price_end_time\n  FROM\n    system.billing.list_prices p\n),\nraw_history as (\n  SELECT\n    workspace_id,\n    statement_id,\n    compute.warehouse_id AS warehouse_id,\n    executed_by,\n    statement_text,\n    COALESCE(read_io_cache_percent, 0) AS read_io_cache_percent,\n    from_result_cache,\n    execution_status,\n    ifnull(query_source.dashboard_id, query_source.legacy_dashboard_id) as dashboard_id,\n    CASE WHEN query_source.job_info.job_id IS NOT NULL THEN 'JOB'\n      WHEN query_source.legacy_dashboard_id IS NOT NULL THEN 'LEGACY DASHBOARD'\n      WHEN query_source.dashboard_id IS NOT NULL THEN 'AI/BI DASHBOARD'\n      WHEN query_source.alert_id IS NOT NULL THEN 'ALERT'\n      WHEN query_source.notebook_id IS NOT NULL THEN 'NOTEBOOK'\n      WHEN query_source.sql_query_id IS NOT NULL THEN 'SQL QUERY'\n      WHEN query_source.genie_space_id IS NOT NULL THEN 'GENIE SPACE'\n      ELSE 'ADHOC'\n      END AS query_source_type,\n    f.statement_type,\n    COALESCE(client_application, 'Unknown') AS client_application,\n    COALESCE(try_divide(total_duration_ms, 1000), 0) AS QueryRuntimeSeconds,\n    COALESCE(try_divide(total_task_duration_ms, 1000), 0) AS CPUTotalExecutionTime,\n    COALESCE(try_divide(execution_duration_ms, 1000), 0) AS ExecutionQueryTime,\n    -- Included in Cost Per Query\n    COALESCE(try_divide(compilation_duration_ms, 1000), 0) AS CompilationQueryTime,\n    -- Included in Cost Per Query\n    COALESCE(\n      try_divide(waiting_at_capacity_duration_ms, 1000),\n      0\n    ) AS QueueQueryTime,\n    COALESCE(\n      try_divide(waiting_for_compute_duration_ms, 1000),\n      0\n    ) AS ComputeStartUpTime,\n    COALESCE(try_divide(result_fetch_duration_ms, 1000), 0) AS ResultFetchTime,\n    -- Metric for query cost allocation - \n    CASE\n      WHEN COALESCE(try_divide(total_task_duration_ms, 1000), 0) = 0 THEN 0 -- exclude metadata operations\n      ELSE COALESCE(try_divide(execution_duration_ms, 1000), 0) + COALESCE(try_divide(compilation_duration_ms, 1000), 0) -- Query total time is compile time + query execution time, excluding Queue & compute start up time\n    END AS TotalResourceTimeUsedForAllocation,\n    start_time,\n    end_time,\n    COALESCE(total_task_duration_ms / total_duration_ms, NULL) AS TotalCPUTime_To_Execution_Time_Ratio,\n    --execution time does seem to vary across query type, using total time to standardize\n    COALESCE(\n      waiting_at_capacity_duration_ms / total_duration_ms,\n      0\n    ) AS ProportionQueueTime\n  FROM\n    system.query.history f\n  WHERE\n    1 = 1\n    AND start_time BETWEEN :param_start_date :: timestamp\n    AND :param_end_date :: timestamp -- TO DO: this technically does not line up with exact warehouse time window - need to split query time as well\n    -- AND query_source.dashboard_id is not null\n    AND statement_type IS NOT NULL\n),\n\nquery_history_agg AS (\n  SELECT\n    *,\n    SUM(TotalResourceTimeUsedForAllocation) OVER (partition by warehouse_id) AS TotalUsedTimeInWarehouse,\n    -- Remove listing commands in time - this are essentially \"free\"\n    SUM(COALESCE(TotalResourceTimeUsedForAllocation, 0)) OVER (PARTITION BY statement_text) AS TotalStatementTextTimeUsed,\n    -- for query level aggregates\n    try_divide(\n      TotalResourceTimeUsedForAllocation,\n      TotalUsedTimeInWarehouse\n    ) AS ProportionOfWarehouseTimeUsedByQuery -- Remove listing commands in time - this are essentially \"free\"\n  FROM\n    raw_history\n),\n-- Warehouse Costs for the same query window\nfiltered_warehouse_usage AS (\n  WITH trimmed_usage AS (\n    SELECT\n      usage_metadata.warehouse_id AS warehouse_id,\n      p.warehouse_type,\n      p.price as warehouse_unit_price,\n      u.sku_name as sku_name,\n      usage_start_time,\n      usage_end_time,\n      usage_quantity AS dbus,\n      -- Start Time Range Trimming\n      timestampdiff(SECOND, usage_start_time, :param_start_date) :: float AS seconds_before_start_range,\n      timestampdiff(SECOND, usage_start_time, usage_end_time) :: float AS full_start_range_length,\n      full_start_range_length - seconds_before_start_range AS seconds_remaining_in_original_start_range,\n      greatest(:param_start_date, usage_start_time) AS trimmed_start_time,\n      -- End Time Range Trimming\n      least(:param_end_date, usage_end_time) AS trimmed_end_time,\n      timestampdiff(SECOND, :param_end_date, usage_end_time) :: float AS seconds_after_end_range,\n      timestampdiff(SECOND, usage_start_time, usage_end_time) :: float AS full_end_range_length,\n      full_end_range_length - seconds_after_end_range AS seconds_remaining_in_original_end_range,\n      -- Calculate trim proportion to multiple DBUs by proportion of the full hour in the active window\n      try_divide(\n        CASE\n          WHEN seconds_before_start_range > 0 THEN (\n            full_start_range_length - seconds_before_start_range\n          )\n          ELSE NULL\n        END,\n        full_start_range_length\n      ) AS StartTrimProportion,\n      try_divide(\n        CASE\n          WHEN seconds_after_end_range > 0 THEN (\n            full_start_range_length - seconds_after_end_range\n          )\n          ELSE NULL\n        END,\n        full_start_range_length\n      ) AS EndTrimProportion,\n      COALESCE(\n        COALESCE(EndTrimProportion, StartTrimProportion),\n        1\n      ) AS TrimProportion\n    FROM\n      system.billing.usage u\n      inner join pricing p on p.sku_name = u.sku_name\n      and u.usage_start_time between p.price_start_time\n      and p.price_end_time\n    WHERE\n      1 = 1\n      and usage_metadata.warehouse_id is not null\n      AND usage_unit = 'DBU'\n      AND (\n        (\n          usage_start_time BETWEEN :param_start_date :: timestamp\n          AND :param_end_date :: timestamp\n        )\n        OR (\n          usage_end_time BETWEEN :param_start_date :: timestamp\n          AND :param_end_date :: timestamp\n        )\n      )\n  )\n  SELECT\n    warehouse_id,\n    warehouse_type,\n    SUM(dbus * TrimProportion) AS Total_Warehouse_Period_DBUs,\n    SUM(dbus * TrimProportion * warehouse_unit_price) AS Total_Warehouse_Period_Dollars\n  FROM\n    trimmed_usage\n  GROUP BY\n    all\n)\nSELECT\n  qh.workspace_id,\n  qh.query_source_type,\n  case when qh.dashboard_id is null then \"OTHERS\" else qh.dashboard_id end as dashboard_id,\n  qh.executed_by,\n  qh.statement_id,\n  qh.warehouse_id,\n  u.warehouse_type,\n  qh.statement_text,\n  qh.QueryRuntimeSeconds,\n  qh.CPUTotalExecutionTime,\n  qh.ExecutionQueryTime,\n  qh.CompilationQueryTime,\n  qh.QueueQueryTime,\n  qh.ComputeStartUpTime,\n  qh.TotalResourceTimeUsedForAllocation,\n  u.Total_Warehouse_Period_Dollars,\n  qh.ProportionOfWarehouseTimeUsedByQuery,\n  (u.Total_Warehouse_Period_Dollars :: float * ProportionOfWarehouseTimeUsedByQuery :: float) AS AllocatedQueryCostByTime\nFROM\n  query_history_agg AS qh\n  LEFT JOIN filtered_warehouse_usage AS u ON u.warehouse_id = qh.warehouse_id\nwhere\n  1 = 1\n  and (u.Total_Warehouse_Period_Dollars :: float * ProportionOfWarehouseTimeUsedByQuery :: float) > 0\norder by (u.Total_Warehouse_Period_Dollars :: float * ProportionOfWarehouseTimeUsedByQuery :: float) desc",
+      "query": "-- Statement allocated cost calculated logic is based off DBSQL Warehouse Advisor Observability Dashboard by  Databricks SQL SME group \n-- (https://github.com/CodyAustinDavis/dbsql_sme/tree/main/Observability%20Dashboards%20and%20DBA%20Resources/Observability%20Lakeview%20Dashboard%20Templates/DBSQL%20Warehouse%20Advisor%20With%20Data%20Model)\nwith pricing as (\n    SELECT\n    p.pricing.effective_list.default AS price,\n    p.price_start_time,\n    p.sku_name,\n    p.currency_code,\n    case when p.sku_name LIKE ('%PRO%') then 'PRO' \n      WHEN p.sku_name LIKE ('%SERVERLESS%') THEN 'SERVERLESS'\n      WHEN p.sku_name LIKE ('PREMIUM_SQL_COMPUTE') THEN 'CLASSIC'\n    END AS warehouse_type,\n    COALESCE(p.price_end_time, NOW()) AS price_end_time\n  FROM\n    system.billing.list_prices p\n),\nraw_history as (\n  SELECT\n    workspace_id,\n    statement_id,\n    compute.warehouse_id AS warehouse_id,\n    executed_by,\n    statement_text,\n    COALESCE(read_io_cache_percent, 0) AS read_io_cache_percent,\n    from_result_cache,\n    execution_status,\n    ifnull(query_source.dashboard_id, query_source.legacy_dashboard_id) as dashboard_id,\n    CASE WHEN query_source.job_info.job_id IS NOT NULL THEN 'JOB'\n      WHEN query_source.legacy_dashboard_id IS NOT NULL THEN 'LEGACY DASHBOARD'\n      WHEN query_source.dashboard_id IS NOT NULL THEN 'AI/BI DASHBOARD'\n      WHEN query_source.alert_id IS NOT NULL THEN 'ALERT'\n      WHEN query_source.notebook_id IS NOT NULL THEN 'NOTEBOOK'\n      WHEN query_source.sql_query_id IS NOT NULL THEN 'SQL QUERY'\n      WHEN query_source.genie_space_id IS NOT NULL THEN 'GENIE SPACE'\n      ELSE 'ADHOC'\n      END AS query_source_type,\n    f.statement_type,\n    COALESCE(client_application, 'Unknown') AS client_application,\n    COALESCE(try_divide(total_duration_ms, 1000), 0) AS QueryRuntimeSeconds,\n    COALESCE(try_divide(total_task_duration_ms, 1000), 0) AS CPUTotalExecutionTime,\n    COALESCE(try_divide(execution_duration_ms, 1000), 0) AS ExecutionQueryTime,\n    -- Included in Cost Per Query\n    COALESCE(try_divide(compilation_duration_ms, 1000), 0) AS CompilationQueryTime,\n    -- Included in Cost Per Query\n    COALESCE(\n      try_divide(waiting_at_capacity_duration_ms, 1000),\n      0\n    ) AS QueueQueryTime,\n    COALESCE(\n      try_divide(waiting_for_compute_duration_ms, 1000),\n      0\n    ) AS ComputeStartUpTime,\n    COALESCE(try_divide(result_fetch_duration_ms, 1000), 0) AS ResultFetchTime,\n    -- Metric for query cost allocation - \n    CASE\n      WHEN COALESCE(try_divide(total_task_duration_ms, 1000), 0) = 0 THEN 0 -- exclude metadata operations\n      ELSE COALESCE(try_divide(execution_duration_ms, 1000), 0) + COALESCE(try_divide(compilation_duration_ms, 1000), 0) -- Query total time is compile time + query execution time, excluding Queue & compute start up time\n    END AS TotalResourceTimeUsedForAllocation,\n    start_time,\n    end_time,\n    COALESCE(total_task_duration_ms / total_duration_ms, NULL) AS TotalCPUTime_To_Execution_Time_Ratio,\n    --execution time does seem to vary across query type, using total time to standardize\n    COALESCE(\n      waiting_at_capacity_duration_ms / total_duration_ms,\n      0\n    ) AS ProportionQueueTime\n  FROM\n    system.query.history f\n  WHERE\n    1 = 1\n    AND start_time BETWEEN :param_start_date :: timestamp\n    AND :param_end_date :: timestamp -- TO DO: this technically does not line up with exact warehouse time window - need to split query time as well\n    -- AND query_source.dashboard_id is not null\n    AND statement_type IS NOT NULL\n    AND (:workspace_id='All' OR workspace_id = :workspace_id)\n    AND (:warehouse_id='All' OR compute.warehouse_id = :warehouse_id)\n),\n\nquery_history_agg AS (\n  SELECT\n    *,\n    SUM(TotalResourceTimeUsedForAllocation) OVER (partition by warehouse_id) AS TotalUsedTimeInWarehouse,\n    -- Remove listing commands in time - this are essentially \"free\"\n    SUM(COALESCE(TotalResourceTimeUsedForAllocation, 0)) OVER (PARTITION BY statement_text) AS TotalStatementTextTimeUsed,\n    -- for query level aggregates\n    try_divide(\n      TotalResourceTimeUsedForAllocation,\n      TotalUsedTimeInWarehouse\n    ) AS ProportionOfWarehouseTimeUsedByQuery -- Remove listing commands in time - this are essentially \"free\"\n  FROM\n    raw_history\n),\n-- Warehouse Costs for the same query window\nfiltered_warehouse_usage AS (\n  WITH trimmed_usage AS (\n    SELECT\n      usage_metadata.warehouse_id AS warehouse_id,\n      p.warehouse_type,\n      p.price as warehouse_unit_price,\n      u.sku_name as sku_name,\n      TRANSFORM(MAP_KEYS(custom_tags),(k, i) -> CONCAT(lower(k), '=', lower(MAP_VALUES(custom_tags) [i]))) AS key_value_tags,\n      usage_start_time,\n      usage_end_time,\n      usage_quantity AS dbus,\n      -- Start Time Range Trimming\n      timestampdiff(SECOND, usage_start_time, :param_start_date) :: float AS seconds_before_start_range,\n      timestampdiff(SECOND, usage_start_time, usage_end_time) :: float AS full_start_range_length,\n      full_start_range_length - seconds_before_start_range AS seconds_remaining_in_original_start_range,\n      greatest(:param_start_date, usage_start_time) AS trimmed_start_time,\n      -- End Time Range Trimming\n      least(:param_end_date, usage_end_time) AS trimmed_end_time,\n      timestampdiff(SECOND, :param_end_date, usage_end_time) :: float AS seconds_after_end_range,\n      timestampdiff(SECOND, usage_start_time, usage_end_time) :: float AS full_end_range_length,\n      full_end_range_length - seconds_after_end_range AS seconds_remaining_in_original_end_range,\n      -- Calculate trim proportion to multiple DBUs by proportion of the full hour in the active window\n      try_divide(\n        CASE\n          WHEN seconds_before_start_range > 0 THEN (\n            full_start_range_length - seconds_before_start_range\n          )\n          ELSE NULL\n        END,\n        full_start_range_length\n      ) AS StartTrimProportion,\n      try_divide(\n        CASE\n          WHEN seconds_after_end_range > 0 THEN (\n            full_start_range_length - seconds_after_end_range\n          )\n          ELSE NULL\n        END,\n        full_start_range_length\n      ) AS EndTrimProportion,\n      COALESCE(\n        COALESCE(EndTrimProportion, StartTrimProportion),\n        1\n      ) AS TrimProportion\n    FROM\n      system.billing.usage u\n      inner join pricing p on p.sku_name = u.sku_name\n      and u.usage_start_time between p.price_start_time\n      and p.price_end_time\n    WHERE\n      1 = 1\n      and usage_metadata.warehouse_id is not null\n      AND usage_unit = 'DBU'\n      AND (\n        (\n          usage_start_time BETWEEN :param_start_date :: timestamp\n          AND :param_end_date :: timestamp\n        )\n        OR (\n          usage_end_time BETWEEN :param_start_date :: timestamp\n          AND :param_end_date :: timestamp\n        )\n      )\n  )\n  SELECT\n    warehouse_id,\n    warehouse_type,\n    key_value_tags,\n    SUM(dbus * TrimProportion) AS Total_Warehouse_Period_DBUs,\n    SUM(dbus * TrimProportion * warehouse_unit_price) AS Total_Warehouse_Period_Dollars\n  FROM\n    trimmed_usage\n  WHERE (:tags = 'All' or array_contains(key_value_tags, :tags))\n  GROUP BY\n    all\n)\nSELECT\n  qh.workspace_id,\n  qh.query_source_type,\n  case when qh.dashboard_id is null then \"OTHERS\" else qh.dashboard_id end as dashboard_id,\n  qh.executed_by,\n  qh.statement_id,\n  qh.warehouse_id,\n  u.warehouse_type,\n  u.key_value_tags,\n  qh.statement_text,\n  qh.QueryRuntimeSeconds,\n  qh.CPUTotalExecutionTime,\n  qh.ExecutionQueryTime,\n  qh.CompilationQueryTime,\n  qh.QueueQueryTime,\n  qh.ComputeStartUpTime,\n  qh.TotalResourceTimeUsedForAllocation,\n  u.Total_Warehouse_Period_Dollars,\n  qh.ProportionOfWarehouseTimeUsedByQuery,\n  (u.Total_Warehouse_Period_Dollars :: float * ProportionOfWarehouseTimeUsedByQuery :: float) AS AllocatedQueryCostByTime\nFROM\n  query_history_agg AS qh\n  LEFT JOIN filtered_warehouse_usage AS u ON u.warehouse_id = qh.warehouse_id\nwhere\n  1 = 1\n  and (u.Total_Warehouse_Period_Dollars :: float * ProportionOfWarehouseTimeUsedByQuery :: float) > 0\norder by (u.Total_Warehouse_Period_Dollars :: float * ProportionOfWarehouseTimeUsedByQuery :: float) desc",
+      "parameters": [
+        {
+          "displayName": "param_start_date",
+          "keyword": "param_start_date",
+          "dataType": "DATETIME",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATETIME",
+              "values": [
+                {
+                  "value": "now-7d/d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "param_end_date",
+          "keyword": "param_end_date",
+          "dataType": "DATETIME",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATETIME",
+              "values": [
+                {
+                  "value": "now-1h/h"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "workspace_id",
+          "keyword": "workspace_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "warehouse_id",
+          "keyword": "warehouse_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "tags",
+          "keyword": "tags",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "All"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2057376e",
+      "displayName": "AllWorkspaces",
+      "query": "select \"All\" as workspace_id\nunion\n(select distinct workspace_id from `system`.billing.usage\nwhere usage_date BETWEEN :param_start_date AND :param_end_date\nand usage_metadata.warehouse_id is not null\n);",
+      "parameters": [
+        {
+          "displayName": "param_start_date",
+          "keyword": "param_start_date",
+          "dataType": "DATETIME",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATETIME",
+              "values": [
+                {
+                  "value": "now-7d/d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "param_end_date",
+          "keyword": "param_end_date",
+          "dataType": "DATETIME",
+          "defaultSelection": {
+            "values": {
+              "dataType": "DATETIME",
+              "values": [
+                {
+                  "value": "now-1h/h"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5eb44a14",
+      "displayName": "AllWarehouses",
+      "query": "select \"All\" as warehouse_id\nunion\n(select distinct usage_metadata.warehouse_id from `system`.billing.usage\nwhere usage_metadata.warehouse_id is not null\nand usage_date BETWEEN :param_start_date AND :param_end_date);",
       "parameters": [
         {
           "displayName": "param_start_date",
@@ -100,7 +264,7 @@
             "name": "a4077e8f",
             "queries": [
               {
-                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_param_start_date",
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf11246abf417646a299895_param_start_date",
                 "query": {
                   "datasetName": "015fd821",
                   "parameters": [
@@ -113,9 +277,35 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_param_start_date",
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf1129fb245f042f6e7f6e9_param_start_date",
                 "query": {
                   "datasetName": "c3d23285",
+                  "parameters": [
+                    {
+                      "name": "param_start_date",
+                      "keyword": "param_start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112b6970266ad9bc82a2d_param_start_date",
+                "query": {
+                  "datasetName": "2057376e",
+                  "parameters": [
+                    {
+                      "name": "param_start_date",
+                      "keyword": "param_start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112c3a4ed4ebf9eccb71e_param_start_date",
+                "query": {
+                  "datasetName": "5eb44a14",
                   "parameters": [
                     {
                       "name": "param_start_date",
@@ -133,22 +323,44 @@
                 "fields": [
                   {
                     "parameterName": "param_start_date",
-                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_param_start_date"
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf11246abf417646a299895_param_start_date"
                   },
                   {
                     "parameterName": "param_start_date",
-                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_param_start_date"
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf1129fb245f042f6e7f6e9_param_start_date"
+                  },
+                  {
+                    "parameterName": "param_start_date",
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112b6970266ad9bc82a2d_param_start_date"
+                  },
+                  {
+                    "parameterName": "param_start_date",
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112c3a4ed4ebf9eccb71e_param_start_date"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Start Date"
+                "title": "Start Date",
+                "showDescription": true,
+                "description": ""
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "DATETIME",
+                    "values": [
+                      {
+                        "value": "now-1M/M"
+                      }
+                    ]
+                  }
+                }
               }
             }
           },
           "position": {
-            "x": 1,
+            "x": 3,
             "y": 4,
             "width": 2,
             "height": 1
@@ -159,7 +371,7 @@
             "name": "35e865b6",
             "queries": [
               {
-                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_param_end_date",
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf11246abf417646a299895_param_end_date",
                 "query": {
                   "datasetName": "015fd821",
                   "parameters": [
@@ -172,9 +384,35 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_param_end_date",
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf1129fb245f042f6e7f6e9_param_end_date",
                 "query": {
                   "datasetName": "c3d23285",
+                  "parameters": [
+                    {
+                      "name": "param_end_date",
+                      "keyword": "param_end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112b6970266ad9bc82a2d_param_end_date",
+                "query": {
+                  "datasetName": "2057376e",
+                  "parameters": [
+                    {
+                      "name": "param_end_date",
+                      "keyword": "param_end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112c3a4ed4ebf9eccb71e_param_end_date",
+                "query": {
+                  "datasetName": "5eb44a14",
                   "parameters": [
                     {
                       "name": "param_end_date",
@@ -192,24 +430,46 @@
                 "fields": [
                   {
                     "parameterName": "param_end_date",
-                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_param_end_date"
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf11246abf417646a299895_param_end_date"
                   },
                   {
                     "parameterName": "param_end_date",
-                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_param_end_date"
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf1129fb245f042f6e7f6e9_param_end_date"
+                  },
+                  {
+                    "parameterName": "param_end_date",
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112b6970266ad9bc82a2d_param_end_date"
+                  },
+                  {
+                    "parameterName": "param_end_date",
+                    "queryName": "parameter_dashboards/01ef9307daed18b19bff2c74ce76f39e/datasets/01ef9307daf112c3a4ed4ebf9eccb71e_param_end_date"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "End Date"
+                "title": "End Date",
+                "showDescription": true,
+                "description": ""
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "DATETIME",
+                    "values": [
+                      {
+                        "value": "now/s"
+                      }
+                    ]
+                  }
+                }
               }
             }
           },
           "position": {
             "x": 3,
-            "y": 4,
-            "width": 3,
+            "y": 5,
+            "width": 2,
             "height": 1
           }
         },
@@ -360,9 +620,9 @@
           },
           "position": {
             "x": 0,
-            "y": 37,
+            "y": 38,
             "width": 6,
-            "height": 10
+            "height": 9
           }
         },
         {
@@ -413,6 +673,10 @@
                     {
                       "name": "statement_text",
                       "expression": "`statement_text`"
+                    },
+                    {
+                      "name": "key_value_tags",
+                      "expression": "`key_value_tags`"
                     }
                   ],
                   "disaggregated": true
@@ -697,6 +961,33 @@
                     "useMonospaceFont": false,
                     "preserveWhitespace": false,
                     "displayName": "statement_text"
+                  },
+                  {
+                    "fieldName": "key_value_tags",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "json",
+                    "visible": true,
+                    "order": 13,
+                    "title": "key_value_tags",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "key_value_tags"
                   }
                 ]
               },
@@ -727,6 +1018,31 @@
                   "preserveWhitespace": false
                 },
                 {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "query_source_type",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 11,
+                  "title": "query_source_type",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
                   "numberFormat": "0.00",
                   "booleanValues": [
                     "false",
@@ -743,7 +1059,7 @@
                   "name": "QueryRuntimeSeconds",
                   "type": "float",
                   "displayAs": "number",
-                  "order": 100007,
+                  "order": 12,
                   "title": "QueryRuntimeSeconds",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -769,7 +1085,7 @@
                   "name": "CPUTotalExecutionTime",
                   "type": "float",
                   "displayAs": "number",
-                  "order": 100008,
+                  "order": 14,
                   "title": "CPUTotalExecutionTime",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -795,7 +1111,7 @@
                   "name": "ExecutionQueryTime",
                   "type": "float",
                   "displayAs": "number",
-                  "order": 100009,
+                  "order": 15,
                   "title": "ExecutionQueryTime",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -821,7 +1137,7 @@
                   "name": "CompilationQueryTime",
                   "type": "float",
                   "displayAs": "number",
-                  "order": 100010,
+                  "order": 16,
                   "title": "CompilationQueryTime",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -847,7 +1163,7 @@
                   "name": "QueueQueryTime",
                   "type": "float",
                   "displayAs": "number",
-                  "order": 100011,
+                  "order": 17,
                   "title": "QueueQueryTime",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -873,35 +1189,10 @@
                   "name": "ComputeStartUpTime",
                   "type": "float",
                   "displayAs": "number",
-                  "order": 100012,
+                  "order": 18,
                   "title": "ComputeStartUpTime",
                   "allowSearch": false,
                   "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "query_source_type",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 100001,
-                  "title": "query_source_type",
-                  "allowSearch": false,
-                  "alignContent": "left",
                   "allowHTML": false,
                   "highlightLinks": false,
                   "useMonospaceFont": false,
@@ -962,7 +1253,9 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "User ID"
+                "title": "User ID",
+                "showDescription": true,
+                "description": "* impact only the views below"
               }
             }
           },
@@ -970,7 +1263,7 @@
             "x": 4,
             "y": 36,
             "width": 2,
-            "height": 1
+            "height": 2
           }
         },
         {
@@ -1043,9 +1336,9 @@
           },
           "position": {
             "x": 0,
-            "y": 5,
+            "y": 6,
             "width": 6,
-            "height": 8
+            "height": 7
           }
         },
         {
@@ -1083,14 +1376,17 @@
                   "scale": {
                     "type": "temporal"
                   },
-                  "displayName": "usage_date"
+                  "axis": {
+                    "title": "Usage Date"
+                  },
+                  "displayName": "Usage Date"
                 },
                 "y": {
                   "fieldName": "sum(day_dollars)",
                   "scale": {
                     "type": "quantitative"
                   },
-                  "displayName": "Sum of day_dollars"
+                  "displayName": "Dollars"
                 },
                 "color": {
                   "fieldName": "warehouse_day_topK",
@@ -1161,6 +1457,10 @@
                     {
                       "name": "day_dollars",
                       "expression": "`day_dollars`"
+                    },
+                    {
+                      "name": "key_value_tags",
+                      "expression": "`key_value_tags`"
                     }
                   ],
                   "disaggregated": true
@@ -1415,6 +1715,33 @@
                     "useMonospaceFont": false,
                     "preserveWhitespace": false,
                     "displayName": "day_dollars"
+                  },
+                  {
+                    "fieldName": "key_value_tags",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "json",
+                    "visible": true,
+                    "order": 13,
+                    "title": "key_value_tags",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "key_value_tags"
                   }
                 ]
               },
@@ -1654,9 +1981,9 @@
                     }
                   },
                   "axis": {
-                    "title": "Workspace ID"
+                    "title": "Usage Date"
                   },
-                  "displayName": "Workspace ID"
+                  "displayName": "Usage Date"
                 },
                 "y": {
                   "fieldName": "sum(day_dollars)",
@@ -1707,7 +2034,7 @@
         {
           "widget": {
             "name": "d107a0c0",
-            "textbox_spec": "## Warehouse Spending by User, Dashboard, and Query"
+            "textbox_spec": "## Warehouse Spending by User, Dashboard, and Query\n\n* The views below rely on the system.query.history table and display data only from the same region as the executing workspace.\n* If data is unavailable for the selected workspace or warehouse, you can copy the dashboard to other workspaces in the same region in your account."
           },
           "position": {
             "x": 0,
@@ -1752,15 +2079,17 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Dashboard ID"
+                "title": "Dashboard ID",
+                "showDescription": true,
+                "description": "* impact only the views below"
               }
             }
           },
           "position": {
-            "x": 2,
+            "x": 0,
             "y": 36,
-            "width": 1,
-            "height": 1
+            "width": 2,
+            "height": 2
           }
         },
         {
@@ -1794,62 +2123,17 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "TopK"
+                "title": "TopK",
+                "showDescription": true,
+                "description": "Limit results to first K"
               }
             }
           },
           "position": {
-            "x": 0,
+            "x": 2,
             "y": 4,
             "width": 1,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "7723e2c1",
-            "queries": [
-              {
-                "name": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_workspace_id",
-                "query": {
-                  "datasetName": "c3d23285",
-                  "fields": [
-                    {
-                      "name": "workspace_id",
-                      "expression": "`workspace_id`"
-                    },
-                    {
-                      "name": "workspace_id_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
-              "encodings": {
-                "fields": [
-                  {
-                    "fieldName": "workspace_id",
-                    "displayName": "workspace_id",
-                    "queryName": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_workspace_id"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Workspace ID"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 36,
-            "width": 1,
-            "height": 1
+            "height": 2
           }
         },
         {
@@ -1945,33 +2229,61 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Query Source Type"
+                "title": "Query Source Type",
+                "showDescription": true,
+                "description": "* impact only the views below"
               }
             }
           },
           "position": {
-            "x": 3,
+            "x": 2,
             "y": 36,
-            "width": 1,
-            "height": 1
+            "width": 2,
+            "height": 2
           }
         },
         {
           "widget": {
-            "name": "f1d6aa9a",
+            "name": "edbc9a7d",
             "queries": [
               {
-                "name": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_warehouse_id",
+                "name": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef90c8087919faa794e9ad8e5557f1_workspace_id",
                 "query": {
-                  "datasetName": "c3d23285",
+                  "datasetName": "2057376e",
                   "fields": [
                     {
-                      "name": "warehouse_id",
-                      "expression": "`warehouse_id`"
+                      "name": "workspace_id",
+                      "expression": "`workspace_id`"
                     },
                     {
-                      "name": "warehouse_id_associativity",
+                      "name": "workspace_id_associativity",
                       "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_workspace_id",
+                "query": {
+                  "datasetName": "015fd821",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_workspace_id",
+                "query": {
+                  "datasetName": "c3d23285",
+                  "parameters": [
+                    {
+                      "name": "workspace_id",
+                      "keyword": "workspace_id"
                     }
                   ],
                   "disaggregated": false
@@ -1984,23 +2296,177 @@
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "warehouse_id",
-                    "displayName": "warehouse_id",
-                    "queryName": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_warehouse_id"
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_workspace_id"
+                  },
+                  {
+                    "parameterName": "workspace_id",
+                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_workspace_id"
+                  },
+                  {
+                    "fieldName": "workspace_id",
+                    "displayName": "workspace_id",
+                    "queryName": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef90c8087919faa794e9ad8e5557f1_workspace_id"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Warehouse ID"
+                "title": "Workspace ID",
+                "showDescription": true,
+                "description": ""
               }
             }
           },
           "position": {
-            "x": 1,
-            "y": 36,
-            "width": 1,
+            "x": 0,
+            "y": 4,
+            "width": 2,
             "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "fb034286",
+            "queries": [
+              {
+                "name": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef90c8a1ca17eb9e7f886b60ee455c_warehouse_id",
+                "query": {
+                  "datasetName": "5eb44a14",
+                  "fields": [
+                    {
+                      "name": "warehouse_id",
+                      "expression": "`warehouse_id`"
+                    },
+                    {
+                      "name": "warehouse_id_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_warehouse_id",
+                "query": {
+                  "datasetName": "015fd821",
+                  "parameters": [
+                    {
+                      "name": "warehouse_id",
+                      "keyword": "warehouse_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_warehouse_id",
+                "query": {
+                  "datasetName": "c3d23285",
+                  "parameters": [
+                    {
+                      "name": "warehouse_id",
+                      "keyword": "warehouse_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "warehouse_id",
+                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_warehouse_id"
+                  },
+                  {
+                    "fieldName": "warehouse_id",
+                    "displayName": "warehouse_id",
+                    "queryName": "dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef90c8a1ca17eb9e7f886b60ee455c_warehouse_id"
+                  },
+                  {
+                    "parameterName": "warehouse_id",
+                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_warehouse_id"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Warehouse Id",
+                "showDescription": true,
+                "description": ""
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "408d73e1",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_tags",
+                "query": {
+                  "datasetName": "015fd821",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_tags",
+                "query": {
+                  "datasetName": "c3d23285",
+                  "parameters": [
+                    {
+                      "name": "tags",
+                      "keyword": "tags"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d1305167aa6b1016c0873e51d_tags"
+                  },
+                  {
+                    "parameterName": "tags",
+                    "queryName": "parameter_dashboards/01ef850d12fe1374ada0321eeb1af24a/datasets/01ef850d13181e85a0612a8c83aedb4c_tags"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Usage tags",
+                "showDescription": true,
+                "description": "Search by \"key=value\" pair, all lowercase."
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 4,
+            "width": 1,
+            "height": 2
           }
         }
       ]

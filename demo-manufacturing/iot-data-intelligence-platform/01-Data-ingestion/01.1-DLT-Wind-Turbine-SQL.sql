@@ -42,7 +42,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Simplify Ingestion and Transformation with Delta Live Tables
 -- MAGIC
--- MAGIC <img style="float: right" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-1.png" />
+-- MAGIC <img style="float: right" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.44.32.png?raw=true" />
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our IOT platform. <br>
 -- MAGIC We'll ingest and clean our raw data sources to prepare the tables required for our BI & ML workload.
@@ -86,7 +86,7 @@
 -- MAGIC
 -- MAGIC ## Delta Lake
 -- MAGIC
--- MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake table. Delta Lake is an open storage framework for reliability and performance.<br>
+-- MAGIC All the tables we'll create in the Data Intelligence Platform will be stored as Delta Lake table. Delta Lake is an open storage framework for reliability and performance.<br>
 -- MAGIC It provides many functionalities (ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)<br>
 -- MAGIC For more details on Delta Lake, run dbdemos.install('delta-lake')
 -- MAGIC
@@ -102,7 +102,7 @@
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our predictive maintenance analysis.
 -- MAGIC
--- MAGIC This information will then be used to build our DBSQL dashboards to track our wind turbine farm status, faulty equipment impact and recommendations to reduce potential downtime.
+-- MAGIC This information will then be used to build our AI/BI dashboards to track our wind turbine farm status, faulty equipment impact and recommendations to reduce potential downtime.
 -- MAGIC
 -- MAGIC ### Dataset:
 -- MAGIC
@@ -207,7 +207,7 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE sensor_hourly (
+CREATE MATERIALIZED VIEW sensor_hourly (
   CONSTRAINT turbine_id_valid EXPECT (turbine_id IS not NULL)  ON VIOLATION DROP ROW,
   CONSTRAINT timestamp_valid EXPECT (hourly_timestamp IS not NULL)  ON VIOLATION DROP ROW
 )
@@ -244,10 +244,10 @@ SELECT turbine_id,
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE turbine_training_dataset 
+CREATE MATERIALIZED VIEW turbine_training_dataset 
 COMMENT "Hourly sensor stats, used to describe signal and detect anomalies"
 AS
-SELECT * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor_hourly m
+SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F) AS sensor_vector, * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor_hourly m
     INNER JOIN LIVE.turbine t USING (turbine_id)
     INNER JOIN LIVE.historical_turbine_status s ON m.turbine_id = s.turbine_id AND from_unixtime(s.start_time) < m.hourly_timestamp AND from_unixtime(s.end_time) > m.hourly_timestamp
 
@@ -270,7 +270,7 @@ SELECT * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor
 -- COMMAND ----------
 
 -- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
-CREATE LIVE TABLE turbine_current_status 
+CREATE MATERIALIZED VIEW turbine_current_status 
 COMMENT "Wind turbine last status based on model prediction"
 AS
 WITH latest_metrics AS (
@@ -294,7 +294,7 @@ SELECT * EXCEPT(m.row_number),
 -- MAGIC
 -- MAGIC Our final dataset includes our ML prediction for our Predictive Maintenance use-case. 
 -- MAGIC
--- MAGIC We are now ready to build our <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">DBSQL Dashboard</a>to track the main KPIs and status of our entire Wind Turbine Farm and build complete <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Predictive maintenance DBSQL Dashboard</a>.
+-- MAGIC We are now ready to build our <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">AI/BI Dashboard</a> to track the main KPIs and status of our entire Wind Turbine Farm and build complete <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Predictive maintenance AI/BI Dashboard</a>.
 -- MAGIC
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-1.png" width="1000px">

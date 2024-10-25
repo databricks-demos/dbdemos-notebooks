@@ -30,7 +30,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # BI & Datawarehousing with Databricks SQL
 -- MAGIC
--- MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-3.png" />
+-- MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.44.07.png?raw=true" />
 -- MAGIC
 -- MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
 -- MAGIC
@@ -127,7 +127,7 @@
 -- MAGIC
 -- MAGIC Turnkey capabilities allow analysts and analytic engineers to easily ingest data from anything like cloud storage to enterprise applications such as Salesforce, Google Analytics, or Marketo using Fivetran. It’s just one click away. 
 -- MAGIC
--- MAGIC Then, simply manage dependencies and transform data in-place with built-in ETL capabilities on the Lakehouse (Delta Live Table), or using your favorite tools like dbt on Databricks SQL for best-in-class performance.
+-- MAGIC Then, simply manage dependencies and transform data in-place with built-in ETL capabilities on the Data Intelligence Platform (Delta Live Table), or using your favorite tools like dbt on Databricks SQL for best-in-class performance.
 -- MAGIC
 -- MAGIC ### Query federation
 -- MAGIC
@@ -147,4 +147,4 @@
 -- MAGIC
 -- MAGIC However, knowing that we have churn isn't enough. We now need to take it to the next level and build a predictive model to determine our customers at risk of churn to be able to increase our revenue.
 -- MAGIC
--- MAGIC Let's see how this can be done with [Databricks Machine Learning notebook]($../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance) | go [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
+-- MAGIC Let's see how this can be done with [Databricks Machine Learning notebook]($../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance) | go [Go back to the introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

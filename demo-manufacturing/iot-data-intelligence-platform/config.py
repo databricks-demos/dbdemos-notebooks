@@ -16,4 +16,13 @@
 catalog = "main__build"
 schema = dbName = db = "dbdemos_iot_platform"
 
+secret_scope_name = "dbdemos"
+secret_key_name = "ai_agent_sp_token"
+
+MODEL_SERVING_ENDPOINT_NAME = "dbdemos_turbine_maintenance_endpoint"
+VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-11"
+FEATURE_SERVING_ENDPOINT_NAME = "turbineSpecEndpoint"
+
 volume_name = "turbine_raw_landing"
+model_name = "dbdemos_turbine_maintenance"
+agent_name = "agent_prescriptive_maintenance"

@@ -79,7 +79,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Implementing a global data governance and security with Unity Catalog
 -- MAGIC
--- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-2.png" />
+-- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.44.20.png?raw=true" />
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
 -- MAGIC

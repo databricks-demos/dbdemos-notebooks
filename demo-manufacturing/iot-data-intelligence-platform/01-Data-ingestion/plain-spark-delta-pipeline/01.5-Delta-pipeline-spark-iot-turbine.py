@@ -229,7 +229,9 @@ display(spark.table("spark_sensor_hourly"))
 
 # COMMAND ----------
 
-turbine = spark.table("spark_turbine")
+turbine = (spark.table("spark_turbine")
+           .selectExpr("turbine_id", "CONCAT(turbine_id, '-', start_time) AS composite_key")
+           .withColumn("sensor_vector", F.array("std_sensor_A", "std_sensor_B", "std_sensor_C", "std_sensor_D", "std_sensor_E", "std_sensor_F")))
 health = spark.table("spark_historical_turbine_status")
 (spark.table("spark_sensor_hourly")
   .join(turbine, ['turbine_id']).drop("row", "_rescued_data")
@@ -343,6 +345,6 @@ spark.sql("DELETE FROM spark_sensor_bronze where turbine_id='"+first_turbine+"'"
 # MAGIC %md
 # MAGIC # Next: secure and share data with Unity Catalog
 # MAGIC
-# MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
+# MAGIC Now that these tables are available in our Data Intelligence Platform, let's review how we can share them with the Data Scientists and Data Analysts teams.
 # MAGIC
-# MAGIC Jump to the [Governance with Unity Catalog notebook]($../../02-Data-governance/02-UC-data-governance-security-iot-turbine) or [Go back to the introduction]($../../00-IOT-wind-turbine-introduction-lakehouse)
+# MAGIC Jump to the [Governance with Unity Catalog notebook]($../../02-Data-governance/02-UC-data-governance-security-iot-turbine) or [Go back to the introduction]($../../00-IOT-wind-turbine-introduction-DI-platform)

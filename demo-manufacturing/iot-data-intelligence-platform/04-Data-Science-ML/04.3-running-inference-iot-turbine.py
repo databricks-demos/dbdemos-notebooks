@@ -148,8 +148,8 @@ def score_model(dataset):
 # MAGIC
 # MAGIC Of course, this churn prediction can be re-used in our dashboard to analyse future churn and measure churn reduction. 
 # MAGIC
-# MAGIC The pipeline created with the Lakehouse will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
+# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC
-# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
+# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance AI/BI dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

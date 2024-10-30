@@ -33,6 +33,22 @@
       "description": "Init data for demo."
     },
     {
+      "path": "_resources/00-init-cookie",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "Setup",
+      "description": "Init data for cookie demo."
+    },
+    {
+      "path": "_resources/00-init-stylist",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "Setup",
+      "description": "Init data for stylist demo."
+    },
+    {
       "path": "config",
       "pre_run": False,
       "publish_on_website": True,
@@ -41,12 +57,20 @@
       "description": "Setup schema and database."
     },
     {
-      "path": "00-AI-function-tools-introduction",
+      "path": "00-stylist-AI-function-tools-introduction",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": True,
       "title":  "AI Function tools",
       "description": "Build your first AI functions & agent system."
+    },
+    {
+      "path": "01-agent-cookie-demo",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": True,
+      "title":  "AI Function tools",
+      "description": "Generate instagram cookie campaign based on your data."
     }
   ],
   "cluster": {

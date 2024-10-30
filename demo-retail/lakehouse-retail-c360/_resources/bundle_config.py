@@ -93,6 +93,14 @@
       "description": "Python DLT pipeline to ingest data & build clean tables."
     },
     {
+      "path": "01-Data-ingestion/01.4-DLT-churn-expectation-dashboard-data-prep", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Alternative: Ingest data with Delta Live Table", 
+      "description": "Python DLT pipeline to ingest data & build clean tables."
+    },
+    {
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn", 
       "pre_run": True, 
       "publish_on_website": True, 

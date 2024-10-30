@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.20.0
+# MAGIC %pip install databricks-sdk==0.20.0 lightgbm==4.2.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

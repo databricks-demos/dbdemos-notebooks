@@ -19,8 +19,6 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.14.3
-# MAGIC
-# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -40,7 +38,6 @@
 
 import mlflow
 import databricks.automl_runtime
-
 
 # Path defined in the init notebook
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
@@ -165,7 +162,6 @@ df_loaded = training_set_specs.load_df().toPandas()
 # COMMAND ----------
 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-
 
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "avg_price_increase", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
@@ -295,7 +291,6 @@ X_val, X_test, y_val, y_test = train_test_split(X_eval, y_eval, test_size=0.5, s
 
 import lightgbm
 from lightgbm import LGBMClassifier
-
 
 help(LGBMClassifier)
 

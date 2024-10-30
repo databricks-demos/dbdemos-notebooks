@@ -38,8 +38,6 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.14.3
-# MAGIC
-# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -143,7 +141,6 @@ except Exception as e:
 
 import os
 
-
 # Create local directory
 local_dir = "/tmp/model_artifacts"
 if not os.path.exists(local_dir):
@@ -207,7 +204,6 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 
 import pyspark.sql.functions as F
 
-
 # Get our validation dataset:
 validation_df = spark.table('advanced_churn_label_table').filter("split='validate'")
 
@@ -223,7 +219,6 @@ def predict_churn(validation_df, model_alias):
 import pandas as pd
 import plotly.express as px
 from sklearn.metrics import confusion_matrix
-
 
 # Note: this is over-simplified and depends on the use-case, but the idea is to evaluate our model against business metrics
 cost_of_customer_churn = 2000 #in dollar

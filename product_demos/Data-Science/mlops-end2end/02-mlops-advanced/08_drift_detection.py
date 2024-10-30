@@ -31,14 +31,9 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install needed package
-# Install Databricks Python SDK
-%pip install -qU "databricks-sdk>=0.28.0"
-
-# Install Databricks Data Generator package
-%pip install -qU dbldatagen
-
-
-dbutils.library.restartPython()
+# MAGIC %pip install -qU "databricks-sdk>=0.28.0"
+# MAGIC %pip install -qU dbldatagen
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 

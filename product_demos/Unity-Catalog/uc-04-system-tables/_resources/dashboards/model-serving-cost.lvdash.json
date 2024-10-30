@@ -1075,7 +1075,7 @@
             "name": "666f144c",
             "queries": [
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_start_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911161aa1c879b4962dbea8_start_date",
                 "query": {
                   "datasetName": "16afdf32",
                   "parameters": [
@@ -1088,7 +1088,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_start_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911168e90bf7c5af93ba40e_start_date",
                 "query": {
                   "datasetName": "e0b182aa",
                   "parameters": [
@@ -1101,7 +1101,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_start_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116a3a85208817d208f3f_start_date",
                 "query": {
                   "datasetName": "64882be7",
                   "parameters": [
@@ -1114,7 +1114,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_start_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116babde875b0c4f227ac_param_start_date",
                 "query": {
                   "datasetName": "b7f9af13",
                   "parameters": [
@@ -1127,7 +1127,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_start_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116d8ae2ec300c1bf39f7_param_start_date",
                 "query": {
                   "datasetName": "a589bd23",
                   "parameters": [
@@ -1147,29 +1147,41 @@
                 "fields": [
                   {
                     "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_start_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911161aa1c879b4962dbea8_start_date"
                   },
                   {
                     "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_start_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911168e90bf7c5af93ba40e_start_date"
                   },
                   {
                     "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_start_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116a3a85208817d208f3f_start_date"
                   },
                   {
                     "parameterName": "param_start_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_start_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116babde875b0c4f227ac_param_start_date"
                   },
                   {
                     "parameterName": "param_start_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_start_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116d8ae2ec300c1bf39f7_param_start_date"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Start date:"
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "DATE",
+                    "values": [
+                      {
+                        "value": "now-1M/M"
+                      }
+                    ]
+                  }
+                }
               }
             }
           },
@@ -1185,7 +1197,7 @@
             "name": "165300fe",
             "queries": [
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_end_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911161aa1c879b4962dbea8_end_date",
                 "query": {
                   "datasetName": "16afdf32",
                   "parameters": [
@@ -1198,7 +1210,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_end_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911168e90bf7c5af93ba40e_end_date",
                 "query": {
                   "datasetName": "e0b182aa",
                   "parameters": [
@@ -1211,7 +1223,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_end_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116a3a85208817d208f3f_end_date",
                 "query": {
                   "datasetName": "64882be7",
                   "parameters": [
@@ -1224,7 +1236,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_end_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116babde875b0c4f227ac_param_end_date",
                 "query": {
                   "datasetName": "b7f9af13",
                   "parameters": [
@@ -1237,7 +1249,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_end_date",
+                "name": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116d8ae2ec300c1bf39f7_param_end_date",
                 "query": {
                   "datasetName": "a589bd23",
                   "parameters": [
@@ -1257,29 +1269,41 @@
                 "fields": [
                   {
                     "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef54da6d3c1e2886a60bfcfcda9e3c_end_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911161aa1c879b4962dbea8_end_date"
                   },
                   {
                     "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e4d0a29178e8d577bda6620b0b3_end_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d911168e90bf7c5af93ba40e_end_date"
                   },
                   {
                     "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e50e98d16f4977503ef1b9f60ac_end_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116a3a85208817d208f3f_end_date"
                   },
                   {
                     "parameterName": "param_end_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5e58180b109c92ebb0673cf651b0_param_end_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116babde875b0c4f227ac_param_end_date"
                   },
                   {
                     "parameterName": "param_end_date",
-                    "queryName": "parameter_dashboards/01ef452883e61ad0968ccc5a909ed7fa/datasets/01ef5edd247b1f44aa0ff7102a120baa_param_end_date"
+                    "queryName": "parameter_dashboards/01ef9307d90d12c384967456cb5f7433/datasets/01ef9307d91116d8ae2ec300c1bf39f7_param_end_date"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "End date:"
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "DATE",
+                    "values": [
+                      {
+                        "value": "now/d"
+                      }
+                    ]
+                  }
+                }
               }
             }
           },

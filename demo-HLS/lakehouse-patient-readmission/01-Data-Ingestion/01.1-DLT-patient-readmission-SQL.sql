@@ -542,7 +542,7 @@ CREATE OR REFRESH LIVE TABLE person AS
   case when upper(p.race) = 'HISPANIC' then 38003563 else 0 end as ETHNICITY_CONCEPT_ID,
   1 as LOCATION_ID,
   0 as PROVIDER_ID,
-  NULL as CARE_SITE_ID,
+  0 as CARE_SITE_ID,
   p.id as PERSON_SOURCE_VALUE,
   p.gender as GENDER_SOURCE_VALUE,
   0 as GENDER_SOURCE_CONCEPT_ID,
@@ -573,13 +573,13 @@ select
   c.stop as CONDITION_END_DATE, 
   c.stop as CONDITION_END_DATETIME, 
   32020 as CONDITION_TYPE_CONCEPT_ID,  
-  null as STOP_REASON,  
+  "" as STOP_REASON,  
   0 as PROVIDER_ID,
   fv.visit_occurrence_id_new AS VISIT_OCCURRENCE_ID, 
   0 as VISIT_DETAIL_ID, 
   c.code as CONDITION_SOURCE_VALUE, 
   coalesce(srctosrcvm.source_concept_id,0) as CONDITION_SOURCE_CONCEPT_ID,  
-  NULL as CONDITION_STATUS_SOURCE_VALUE, 
+  0 as CONDITION_STATUS_SOURCE_VALUE, 
   0 as CONDITION_STATUS_CONCEPT_ID
 from live.conditions c
 inner join live.source_to_standard_vocab_map srctostdvm

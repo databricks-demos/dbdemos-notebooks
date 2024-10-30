@@ -91,7 +91,9 @@ dbutils.widgets.dropdown("reset_all_data", "false", Seq("true", "false"), "Reset
 // COMMAND ----------
 
 // DBTITLE 1,Read messages from Kafka and save them as events_raw
-val kafkaBootstrapServersTLS = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
+//NOTE: the demo runs with Kafka, and dbdemos doesn't publically expose its demo kafka servers. Use your own IPs to run the demo properly
+//val kafkaBootstrapServersTLS = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
+val kafkaBootstrapServersTLS = "<Replace by your own kafka servers>"
 
 val stream = spark
   .readStream

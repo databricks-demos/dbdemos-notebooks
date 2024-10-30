@@ -30,6 +30,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install prophet==1.1.6
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------

@@ -5,7 +5,7 @@
 # MAGIC
 # MAGIC 1. The user bronze table, 
 # MAGIC 2. The product bronze table, 
-# MAGIC 3. The daily transction table
+# MAGIC 3. The daily transaction table
 
 # COMMAND ----------
 
@@ -28,7 +28,8 @@ DBDemos.setup_schema(catalog, db, reset_all_data=False)
 
 # COMMAND ----------
 
-data_exists = spark.catalog.tableExists('gold_user_purchase')
+data_exists = spark.catalog.tableExists('gold_user_purchase') and spark.catalog.tableExists('bronze_product') and spark.catalog.tableExists('bronze_user') and spark.catalog.tableExists('bronze_transaction') and spark.catalog.tableExists('gold_payment_method') 
+
 if data_exists:
   print(f'data alread existing in {catalog}.{dbName}. Please drop the schema to re-create them from scratch.')
 
@@ -70,10 +71,11 @@ if data_exists:
 
 if not data_exists:
 
-    from faker import Faker
     import pandas as pd
     import random
     from datetime import datetime, timedelta
+    from faker import Faker
+    from pyspark.sql.types import StructType, StructField, StringType, DateType, FloatType, BooleanType, ArrayType, IntegerType, TimestampType, DoubleType
 
     # Initialize Faker
     fake = Faker()
@@ -112,12 +114,8 @@ if not data_exists:
         return pd.DataFrame(user_data)
 
     # Generate the user data
-    user_df = generate_user_data(10000)
+    user_pdf = generate_user_data(10000)
 
-
-
-
-    from pyspark.sql.types import StructType, StructField, StringType, DateType, FloatType, BooleanType, ArrayType
     # Convert the Pandas DataFrame to a PySpark DataFrame
     schema = StructType([
         StructField("UserID", StringType(), False),
@@ -144,11 +142,11 @@ if not data_exists:
         StructField("CartItems", ArrayType(StringType()), False)
     ])
 
-    # Create Spark DataFrame
-    spark_user_df = spark.createDataFrame(user_df, schema)
+    # Create Spark DataFrame and Write to Delta
+    user_df = spark.createDataFrame(user_pdf, schema)
 
     # Write the Spark DataFrame to Delta format
-    spark_user_df.write.mode('overwrite').saveAsTable('bronze_user')
+    user_df.write.mode('overwrite').saveAsTable('bronze_user')
 
 # COMMAND ----------
 
@@ -183,8 +181,7 @@ if not data_exists:
 # COMMAND ----------
 
 if not data_exists:
-    from faker import Faker
-    import pandas as pd
+
     import random
 
     # Initialize Faker
@@ -327,13 +324,11 @@ if not data_exists:
         return pd.DataFrame(product_data)
 
     # Generate the product data
-    product_df = generate_product_data(10000)
-
+    product_pdf = generate_product_data(10000)
 
 # COMMAND ----------
 
 if not data_exists:
-    from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, DateType, ArrayType
 
     # Convert the Pandas DataFrame to a PySpark DataFrame
     schema = StructType([
@@ -362,11 +357,9 @@ if not data_exists:
         StructField("ProductTags", ArrayType(StringType()), False)
     ])
 
-    # Create Spark DataFrame
-    spark_product_df = spark.createDataFrame(product_df, schema)
-
-    # Write the Spark DataFrame to Delta format
-    spark_product_df.write.mode('overwrite').saveAsTable('bronze_product')
+    # Create Spark DataFrame & Write to Delta
+    product_df = spark.createDataFrame(product_pdf, schema)
+    product_df.write.mode('overwrite').saveAsTable('bronze_product')
 
 # COMMAND ----------
 
@@ -399,21 +392,19 @@ if not data_exists:
 # COMMAND ----------
 
 if not data_exists:
-    from faker import Faker
-    import pandas as pd
-    import random
+
     from datetime import datetime, timedelta
 
     # Initialize Faker
     fake = Faker()
 
     # Function to generate transaction data
-    def generate_transaction_data(user_df, product_df, start_date, end_date, campaigns={}):
+    def generate_transaction_data(user_pdf_, product_pdf_, start_date_, end_date_, campaigns={}):
         transaction_data = []
         
         # Convert date strings to datetime objects
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        start_date = datetime.strptime(start_date_, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_, "%Y-%m-%d")
         
         # Define seasonality factors
         seasonality_factors = {
@@ -455,8 +446,8 @@ if not data_exists:
             
             # Generate transactions for the day
             for _ in range(daily_transactions):
-                user = user_df.sample(1).iloc[0]
-                product = product_df.sample(1).iloc[0]
+                user = user_pdf_.sample(1).iloc[0]
+                product = product_pdf_.sample(1).iloc[0]
                 quantity = random.randint(1, 5)
                 transaction = {
                     "TransactionID": fake.uuid4(),
@@ -498,12 +489,7 @@ if not data_exists:
     }
 
     # Generate the transaction data
-    transaction_df = generate_transaction_data(user_df, product_df, start_date, end_date, campaigns)
-
-# COMMAND ----------
-
-if not data_exists:
-    from pyspark.sql.types import StructType, StructField, StringType, TimestampType, IntegerType, FloatType
+    transaction_pdf = generate_transaction_data(user_pdf, product_pdf, start_date, end_date, campaigns)
 
     # Convert the Pandas DataFrame to a PySpark DataFrame
     schema = StructType([
@@ -521,116 +507,103 @@ if not data_exists:
         StructField("SpecialInstructions", StringType(), False)
     ])
 
-    # Create Spark DataFrame
-    spark_transaction_df = spark.createDataFrame(transaction_df, schema)
-
-    # Write the Spark DataFrame to Delta format
-    spark_transaction_df.write.mode('overwrite').saveAsTable('bronze_transaction')
-
-    # Join the DataFrames
-    joined_df = transaction_df.merge(user_df, on="UserID", how="left").merge(product_df, on="ProductID", how="left")
+    # Create Spark DataFrame and Write to Delta table
+    transaction_df = spark.createDataFrame(transaction_pdf, schema)
+    transaction_df.write.mode('overwrite').saveAsTable('bronze_transaction')
 
 # COMMAND ----------
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pyspark.sql.functions as F
 import random
 from datetime import datetime
 
-def inject_issues(df, campaign_start_dates):
-    # Convert campaign_start_dates to datetime
-    campaign_start_dates = pd.to_datetime(campaign_start_dates)
+
+if data_exists:
+    user_df = spark.read.table("bronze_user")
+    product_df = spark.read.table("bronze_product")
+    transaction_df = spark.read.table("bronze_transaction")
+
+# Join the DataFrames
+joined_df = (
+    transaction_df
+    .join(user_df, on="UserID", how="left")
+    .join(product_df, on="ProductID", how="left")
+)
+
+def inject_issues(df_in, campaign_start_dates):
+    # Ensure TransactionDate is in the correct format and create 'TempDate'
+    df = df_in.withColumn('TempDate', F.to_date(F.col('TransactionDate')))
     
-    # Ensure TransactionDate is in datetime format
-    df['TransactionDate'] = pd.to_datetime(df['TransactionDate'])
+    # Add the Campaign_flag column, initially set to False
+    df = df.withColumn('Campaign_flag', F.lit(False))
     
-    # Create a temporary date column from TransactionDate
-    df['TempDate'] = pd.to_datetime(df['TransactionDate'].dt.date)
-    
-    # Create a Campaign_flag column
-    df['Campaign_flag'] = False
-    
-    # Nulls spike in PreferredPaymentMethod from 20% to 40% in May 2024
-    # may_2024_mask = (df['TempDate'].dt.year == 2024) & (df['TempDate'].dt.month == 5)
-    # preferred_payment_method_null_indices = df[may_2024_mask].sample(frac=0.48).index
-    # df.loc[preferred_payment_method_null_indices, 'PreferredPaymentMethod'] = np.nan
-    
-    # Steady nulls around 10-15% in specified columns
+    # Steady nulls around 10-15% in specified columns (e.g., ProductTags, ShippingAddress, Wishlist, GiftWrap)
     steady_null_columns = ['ProductTags', 'ShippingAddress', 'Wishlist', 'GiftWrap']
     for column in steady_null_columns:
-        null_indices = df.sample(frac=random.uniform(0.1, 0.15)).index
-        df.loc[null_indices, column] = np.nan
-
-    # Steady nulls around 10% in PreferredPaymentMethod columns
-    steady_null_columns2 = ['PreferredPaymentMethod']
-    for column in steady_null_columns2:
-        null_indices = df.sample(frac=random.uniform(0.05, 0.09)).index
-        df.loc[null_indices, column] = np.nan
+        df = df.withColumn(column, F.when(F.rand() < random.uniform(0.1, 0.15), None).otherwise(F.col(column)))
     
+    # Steady nulls around 10% in PreferredPaymentMethod
+    df = df.withColumn('PreferredPaymentMethod', F.when(F.rand() < random.uniform(0.05, 0.09), None).otherwise(F.col('PreferredPaymentMethod')))
     
     # 60% zeros in Discount distributed evenly over time
-    discount_zero_indices = df.sample(frac=0.6).index
-    df.loc[discount_zero_indices, 'Discount'] = 0
+    df = df.withColumn('Discount', F.when(F.rand() < 0.6, F.lit(0)).otherwise(F.col('Discount')))
     
     # 10% zeros in ProductRating distributed evenly over time
-    product_rating_zero_indices = df.sample(frac=0.1).index
-    df.loc[product_rating_zero_indices, 'ProductRating'] = 0
+    df = df.withColumn('ProductRating', F.when(F.rand() < 0.1, F.lit(0)).otherwise(F.col('ProductRating')))
     
-    # NumberOfReviews drops to 5% in sync with marketing campaigns for 10 days
+    # Iterate through each campaign start date and apply specific rules
     for start_date in campaign_start_dates:
-        campaign_mask = (df['TempDate'] >= start_date) & (df['TempDate'] < start_date + pd.Timedelta(days=10))
-        number_of_reviews_zero_indices_campaign = df[campaign_mask].sample(frac=0.05).index
-        df.loc[number_of_reviews_zero_indices_campaign, 'NumberOfReviews'] = 0
-        preferred_payment_method_null_indices = df[campaign_mask].sample(frac=0.48).index
-        df.loc[preferred_payment_method_null_indices, 'PreferredPaymentMethod'] = np.nan
-        applepay_indices = df[campaign_mask].sample(frac=0.8).index
-        df.loc[applepay_indices, 'PaymentMethod'] = 'Apple Pay'
-    
-    steady_reviews_zero_indices = df[~df.index.isin(number_of_reviews_zero_indices_campaign)].sample(frac=random.uniform(0.2, 0.3)).index
-    df.loc[steady_reviews_zero_indices, 'NumberOfReviews'] = 0
-    
-    # Introduce ApplePay to PaymentMethod after May 2024
-    # applepay_mask = (df['TempDate'].dt.year == 2024) & (df['TempDate'].dt.month >= 5)
-    # applepay_indices = df[applepay_mask].sample(frac=0.8).index
-    # df.loc[applepay_indices, 'PaymentMethod'] = 'Apple Pay'
-    
-    # Overwrite over 50% of WarrantyPeriod to be '15 days' after May 2024
-    warranty_period_mask = (df['TempDate'].dt.year == 2024) & (df['TempDate'].dt.month >= 5)
-    warranty_period_indices = df[warranty_period_mask].sample(frac=0.7).index
-    df.loc[warranty_period_indices, 'WarrantyPeriod'] = '15 days'
-    
-    # Overwrite over 50% of ReturnPolicy to be 'no returns' after May 2024
-    return_policy_mask = (df['TempDate'].dt.year == 2024) & (df['TempDate'].dt.month >= 5)
-    return_policy_indices = df[return_policy_mask].sample(frac=0.7).index
-    df.loc[return_policy_indices, 'ReturnPolicy'] = 'no returns'
-    
-    # Dramatic change in Quantity and TotalPrice for 10 days after each campaign start date
-    for start_date in campaign_start_dates:
-        campaign_effect_mask = (df['TempDate'] >= start_date) & (df['TempDate'] < start_date + pd.Timedelta(days=10))
-        df.loc[campaign_effect_mask, 'Quantity'] = df.loc[campaign_effect_mask, 'Quantity'] * 1.5
-        df.loc[campaign_effect_mask, 'TotalPrice'] = df.loc[campaign_effect_mask, 'Quantity'] * df.loc[campaign_effect_mask, 'UnitPrice']
+        start_date_lit = F.lit(start_date)
+        campaign_mask = (F.col('TempDate') >= start_date_lit) & (F.col('TempDate') < F.date_add(start_date_lit, 10))
         
-        # Set the Campaign_flag for these dates
-        df.loc[campaign_effect_mask, 'Campaign_flag'] = True
+        # Set NumberOfReviews to 0 during the campaign
+        df = df.withColumn('NumberOfReviews', F.when(campaign_mask, F.lit(0)).otherwise(F.col('NumberOfReviews')))
+        
+        # Set PreferredPaymentMethod to null for 48% during the campaign
+        df = df.withColumn('PreferredPaymentMethod', F.when(campaign_mask & (F.rand() < 0.48), None).otherwise(F.col('PreferredPaymentMethod')))
+        
+        # Set PaymentMethod to 'Apple Pay' for 80% during the campaign
+        df = df.withColumn('PaymentMethod', F.when(campaign_mask & (F.rand() < 0.8), 'Apple Pay').otherwise(F.col('PaymentMethod')))
+        
+        # Dramatic change in Quantity and TotalPrice for 10 days after each campaign start date
+        df = df.withColumn('Quantity', F.when(campaign_mask, F.col('Quantity') * 1.5).otherwise(F.col('Quantity')))
+        df = df.withColumn('TotalPrice', F.when(campaign_mask, F.col('Quantity') * F.col('UnitPrice')).otherwise(F.col('TotalPrice')))
+        
+        # Set the Campaign_flag for these dates and return
+        return df.withColumn('Campaign_flag', F.when(campaign_mask, F.lit(True)).otherwise(F.col('Campaign_flag')))
+    
+    # After May 2024: Apply changes to WarrantyPeriod and ReturnPolicy
+    may_2024_mask = (F.col('TempDate').substr(0, 4) == "2024") & (F.col('TempDate').substr(6, 2) >= "05")
+    
+    # Overwrite over 50% of WarrantyPeriod to '15 days'
+    df = df.withColumn('WarrantyPeriod', F.when(may_2024_mask & (F.rand() < 0.7), '15 days').otherwise(F.col('WarrantyPeriod')))
+    
+    # Overwrite over 50% of ReturnPolicy to 'no returns'
+    df = df.withColumn('ReturnPolicy', F.when(may_2024_mask & (F.rand() < 0.7), 'no returns').otherwise(F.col('ReturnPolicy')))
     
     # Drop the temporary date column
-    df.drop(columns=['TempDate'], inplace=True)
+    df = df.drop('TempDate')
     
     return df
 
 if not data_exists:
-    # Example usage
-    campaign_start_dates = [(current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
-    #campaign_start_dates = ["2023-07-15", "2023-11-23", "2024-03-10", (current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
-    joined_df_with_issues = inject_issues(joined_df, campaign_start_dates)
+    # Define current date
+    current_date = datetime.now()
 
+    # Generate campaign start dates as a list
+    campaign_start_dates = [(current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
+
+    # Alternatively, you can use predefined campaign dates (uncomment if needed)
+    # campaign_start_dates = ["2023-07-15", "2023-11-23", "2024-03-10", (current_date - timedelta(days=1)).strftime("%Y-%m-%d")]
+
+    # Apply the inject_issues_spark function to the Spark DataFrame
+    joined_with_issues_df = inject_issues(joined_df, campaign_start_dates)
 
 # COMMAND ----------
 
 if not data_exists:
-    from pyspark.sql.types import (
-        StructType, StructField, StringType, TimestampType, DoubleType, IntegerType, BooleanType
-    )
 
     # Define the schema
     schema = StructType([
@@ -691,22 +664,20 @@ if not data_exists:
         StructField('ProductTags', ArrayType(StringType()), True),
         StructField('Campaign_flag', BooleanType(), True)
     ])
-    # Convert the 'DateOfBirth' column to datetime
-    joined_df_with_issues['DateOfBirth'] = pd.to_datetime(joined_df_with_issues['DateOfBirth'], errors='coerce')
-    joined_df_with_issues['RegistrationDate'] = pd.to_datetime(joined_df_with_issues['RegistrationDate'], errors='coerce')
-    joined_df_with_issues['DateAdded'] = pd.to_datetime(joined_df_with_issues['DateAdded'], errors='coerce')
+    
+    # Make sure to convert dates like 'DateOfBirth', 'RegistrationDate', and 'DateAdded' to appropriate formats
+    joined_with_issues_df = joined_with_issues_df \
+        .withColumn('DateOfBirth', F.col('DateOfBirth').cast(DateType())) \
+        .withColumn('RegistrationDate', F.col('RegistrationDate').cast(DateType())) \
+        .withColumn('DateAdded', F.col('DateAdded').cast(DateType()))
 
-    # Ensure Wishlist, CartItems, and ProductTags columns are lists or null
-    joined_df_with_issues['Wishlist'] = joined_df_with_issues['Wishlist'].apply(lambda x: x if x is None or isinstance(x, list) else [x])
-    joined_df_with_issues['CartItems'] = joined_df_with_issues['CartItems'].apply(lambda x: x if x is None or isinstance(x, list) else [x])
-    joined_df_with_issues['ProductTags'] = joined_df_with_issues['ProductTags'].apply(lambda x: x if x is None or isinstance(x, list) else [x])
-
-
-    # Convert pandas DataFrame to Spark DataFrame with schema
-    spark_joined_df_with_issues = spark.createDataFrame(joined_df_with_issues, schema)
-
-    # Write the Spark DataFrame to Delta format
-    spark_joined_df_with_issues.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
+    # Ensure Wishlist, CartItems, and ProductTags are either arrays or null and Write to Delta as "Silver transaction" table
+    joined_with_issues_df = joined_with_issues_df \
+        .withColumn('Wishlist', F.when(F.col('Wishlist').isNull(), None).otherwise(F.col('Wishlist'))) \
+        .withColumn('CartItems', F.when(F.col('CartItems').isNull(), None).otherwise(F.col('CartItems'))) \
+        .withColumn('ProductTags', F.when(F.col('ProductTags').isNull(), None).otherwise(F.col('ProductTags')))
+        
+    joined_with_issues_df.write.option("mergeSchema", "true").mode('overwrite').saveAsTable('silver_transaction')
 
 # COMMAND ----------
 
@@ -716,50 +687,57 @@ if not data_exists:
 # COMMAND ----------
 
 if not data_exists:
-    from pyspark.sql import functions as F
-    # Create a temporary column for Month
-    spark_joined_df_with_issues = spark_joined_df_with_issues.withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
 
-    # Monthly Sales Summary by Category
-    monthly_sales_summary = spark_joined_df_with_issues \
+    from pyspark.sql import Window
+
+    # Create a temporary column for Month from silver table
+    tmp_df = joined_with_issues_df.withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
+
+    ## Monthly Sales Summary by Category
+    tmp_df \
         .groupBy("Month", "Category") \
         .agg(
             F.sum("TotalPrice").alias("TotalSales"),
             F.sum("Quantity").alias("TotalQuantitySold")
         ) \
-        .orderBy("Month", "Category")
+        .orderBy("Month", "Category") \
+        .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable(f'gold_monthly_sales')
 
-    # Write the Spark DataFrame to Delta format
-    monthly_sales_summary.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable(f'gold_monthly_sales')
-
-# COMMAND ----------
-
-if not data_exists:
-
-    from pyspark.sql import Window
-    # Top 10 Products by Total Sales by Month
-    top_10_products_by_month = spark_joined_df_with_issues \
+    ## Top 10 Products by Total Sales by Month
+    tmp_df \
         .groupBy("Month", "ProductID", "ProductName") \
         .agg(
             F.sum("TotalPrice").alias("TotalSales")
         ) \
         .withColumn("Rank", F.row_number().over(Window.partitionBy("Month").orderBy(F.desc("TotalSales")))) \
         .filter(F.col("Rank") <= 10) \
-        .orderBy("Month", "Rank")
+        .orderBy("Month", "Rank")\
+        .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_top_products')
 
-    # Write the Spark DataFrame to Delta format
-    top_10_products_by_month.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_top_products')
-
-    # User Purchase Behavior by Month
-    user_purchase_behavior_by_month = spark_joined_df_with_issues \
+    ## User Purchase Behavior by Month
+    tmp_df \
         .groupBy("Month", "UserID", "Username") \
         .agg(
             F.sum("TotalPrice").alias("TotalPurchaseAmount"),
             F.avg("TotalPrice").alias("AveragePurchaseAmount"),
             F.count("TransactionID").alias("TotalTransactions")
         ) \
-        .orderBy("Month", "UserID")
+        .orderBy("Month", "UserID") \
+        .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')
 
-    # Write the Spark DataFrame to Delta format
-    user_purchase_behavior_by_month.write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')
+    ## Gold Payment methods
+    joined_with_issues_df \
+        .select(
+            "TransactionID", 
+            "UserID", 
+            "PaymentMethod", 
+            "PreferredPaymentMethod", 
+            "Price", 
+            "Quantity"
+        ) \
+        .orderBy("TransactionID") \
+        .write.mode('overwrite').option("mergeSchema", "true").saveAsTable('gold_payment_method')
+
+# COMMAND ----------
+
 

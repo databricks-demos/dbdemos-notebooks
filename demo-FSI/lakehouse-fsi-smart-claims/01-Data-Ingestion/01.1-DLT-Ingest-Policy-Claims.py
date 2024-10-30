@@ -50,7 +50,7 @@ from pyspark.sql.functions import lit, concat, col
 from pyspark.sql import types as T
 
 catalog = "main"
-db = "fsi_smart_claims"
+db = "dbdemos_fsi_smart_claims"
 volume_name = "volume_claims"
 
 # COMMAND ----------

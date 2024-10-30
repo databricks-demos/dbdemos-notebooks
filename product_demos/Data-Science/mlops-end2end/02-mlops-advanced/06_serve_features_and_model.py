@@ -30,8 +30,6 @@
 # DBTITLE 1,Install Databricks Python SDK [for MLR < 13.3] and MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet mlflow==2.14.3
 # MAGIC %pip install -U databricks-sdk
-# MAGIC
-# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -117,8 +115,6 @@
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
-
-
 # Create workspace client for the Databricks Python SDK
 w = WorkspaceClient()
 
@@ -128,7 +124,6 @@ w = WorkspaceClient()
 from pprint import pprint
 
 try:
-
   online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   
   # Drop existing online feature table
@@ -142,7 +137,6 @@ except Exception as e:
 
 # DBTITLE 1,Create the online table specification
 from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
-
 
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
@@ -165,7 +159,6 @@ w.online_tables.create(
 
 # DBTITLE 1,Check the status of the online table
 from pprint import pprint
-
 
 try:
   online_table_exist = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
@@ -317,7 +310,6 @@ served_model_name =  model_name.split('.')[-1]
 
 from databricks.sdk.service.serving import EndpointCoreConfigInput
 
-
 endpoint_config_dict = {
     "served_models": [
         # Add models to be served to this list
@@ -348,7 +340,6 @@ endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 # COMMAND ----------
 
 from databricks.sdk.service.serving import EndpointTag
-
 
 try:
   # Create and do not wait. Check readiness of endpoint in next cell.
@@ -382,7 +373,6 @@ except Exception as e:
 # COMMAND ----------
 
 from datetime import timedelta
-
 
 # Wait for endpoint to be ready or finish updating
 endpoint = w.serving_endpoints.wait_get_serving_endpoint_not_updating(endpoint_name, timeout=timedelta(minutes=120))
@@ -423,7 +413,6 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models import Model
 
-
 # Setting these variables again in case the user skipped running the cells to deploy the model
 endpoint_name = "advanced_mlops_churn_ep"
 model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
@@ -445,7 +434,6 @@ else:
 
 # DBTITLE 1,Query endpoint
 import time
-
 
 # Wait 60 sec for endpoint so that the endpoint is fully ready to available errors in the next command
 time.sleep(60)

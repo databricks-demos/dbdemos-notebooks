@@ -11,6 +11,7 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_lhm",
+  "serverless_supported": True,
   "title": "Lakehouse Monitoring for Retail Transactions",
   "description": "Monitor your data quality with Lakehouse Monitoring",
   "fullDescription": "Databricks Lakehouse Monitoring allows you to monitor all your data pipelines and ML models – without additional tools and complexity. Integrated into Unity Catalog, teams can track quality alongside governance, building towards the self-serve data platform dream. By continuously assessing the profile of your data, Lakehouse Monitoring allows you to stay ahead of potential issues, ensuring that pipelines run smoothly and ML models remain effective over time.",

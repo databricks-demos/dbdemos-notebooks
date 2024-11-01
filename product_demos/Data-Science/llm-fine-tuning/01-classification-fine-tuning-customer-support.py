@@ -112,12 +112,12 @@ Based on the above categorize the following issue: \n\n"""
 # MAGIC Lets use the standalone llama 3.1 8b model to test it on a vanilla model first. Set up a [provisioned throughput endpoint](https://docs.databricks.com/en/machine-learning/foundation-models/deploy-prov-throughput-foundation-model-apis.html) for llama 3.1 8b by going to unity catalog, (under `system.ai.meta_llama_3_8b_instruct`), clicking "Serve this model" and making the endpoint.
 # MAGIC - Be sure to check the "Scale to zero" field to ensure that the endpoint doesn't continue running when not in use.
 # MAGIC - Give the endpoint a name and reference it below.
-# MAGIC
-# MAGIC As you can see, this isn't ideal. It's adding lot of text, and isn't classifying properly our dataset.
 
 # COMMAND ----------
 
-llama_3_1_8b_endpoint = "<PROVIDE PROVISIONED THROUGHPUT ENDPOINT NAME HERE>"
+# Make sure you put your PROVISIONED THROUGHPUT ENDPOINT NAME HERE.
+# You can also try the foundation model API, however this will be slower: databricks-meta-llama-3-1-70b-instruct
+llama_3_1_8b_endpoint = "databricks-meta-llama-3-1-70b-instruct" #"meta_llama_3_8b_instruct"
 
 # COMMAND ----------
 
@@ -130,7 +130,10 @@ spark.sql(f"""SELECT
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Preparing the Dataset for Chat Completion
+# MAGIC
+# MAGIC As you can see, this isn't ideal. It's adding lot of text, and isn't classifying properly our dataset (resultat might vary depending on the size of the model used).
+# MAGIC
+# MAGIC ## Preparing the Dataset for Chat Completion for Fine Tuning
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-classif-2.png?raw=true" width="700px" style="float: right">
 # MAGIC
@@ -203,7 +206,7 @@ base_model_name = "meta-llama/Llama-3.2-3B-Instruct"
 registered_model_name = f"{catalog}.{db}.classif_" + re.sub(r'[^a-zA-Z0-9]', '_',  base_model_name)
 
 run = fm.create(
-    data_prep_cluster_id=get_current_cluster_id(),  
+    data_prep_cluster_id=get_current_cluster_id(),  #get the current cluster ID, See companion notebook
     model=base_model_name,  
     train_data_path=f'{catalog}.{db}.ticket_priority_training_dataset',
     task_type="CHAT_COMPLETION",  

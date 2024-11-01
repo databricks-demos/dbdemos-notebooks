@@ -160,7 +160,7 @@
     ],
     "init_job": {
         "settings": {
-            "name": "dbdemos_mlops_end2end_init_{{CATALOG}}_{{SCHEMA}}",
+            "name": "dbdemos_mlops_end2end_init_{{CURRENT_USER_NAME}}",
             "email_notifications": {
                 "no_alert_for_skipped_runs": False
             },
@@ -275,9 +275,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -297,9 +297,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -319,9 +319,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -341,9 +341,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -363,9 +363,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -385,9 +385,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -407,9 +407,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -429,9 +429,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             },
@@ -451,9 +451,9 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
-                "no_alert_for_skipped_runs": false,
-                "no_alert_for_canceled_runs": false,
-                "alert_on_last_attempt": false
+                "no_alert_for_skipped_runs": False,
+                "no_alert_for_canceled_runs": False,
+                "alert_on_last_attempt": False
                 },
                 "webhook_notifications": {}
             }
@@ -485,10 +485,10 @@
       },
     "workflows": [{
       "start_on_install": False,
-      "id": "model-dev-job",
+      "id": "retraining-and-deployment-job",
       "definition": { 
         "settings": {
-          "name": "Advanced MLOPS - Model Developement",
+          "name": "Advanced MLOPS - Retraining and Deployment",
           "email_notifications": {
             "no_alert_for_skipped_runs": False
           },
@@ -496,189 +496,6 @@
           "timeout_seconds": 0,
           "max_concurrent_runs": 1,
           "tasks": [
-            {
-              "task_key": "Feature_engineering",
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "model_dev_shared_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            },
-            {
-              "task_key": "Model_training",
-              "depends_on": [
-                {
-                  "task_key": "Feature_engineering"
-                }
-              ],
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "model_dev_shared_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            },
-            {
-              "task_key": "Register_model",
-              "depends_on": [
-                {
-                  "task_key": "Model_training"
-                }
-              ],
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "model_dev_shared_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            },
-            {
-              "task_key": "Challenger_validation",
-              "depends_on": [
-                {
-                  "task_key": "Register_model"
-                }
-              ],
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "model_dev_shared_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            }
-          ],
-          "job_clusters": [
-            {
-              "job_cluster_key": "model_dev_shared_cluster",
-              "new_cluster": {
-                "cluster_name": "",
-                "spark_version": "15.4.x-cpu-ml-scala2.12",
-                "spark_conf": {
-                  "spark.master": "local[*, 4]",
-                  "spark.databricks.cluster.profile": "singleNode"
-                },
-                "custom_tags": {
-                  "ResourceClass": "SingleNode"
-                },
-                "data_security_mode": "SINGLE_USER",
-                "runtime_engine": "STANDARD",
-                "num_workers": 0
-              }
-            }
-          ],
-          "queue": {
-            "enabled": False
-          }
-        }
-      }
-    },
-    {
-      "start_on_install": False,
-      "id": "inference-drift-job",
-      "definition": { 
-        "settings": {
-          "name": "Advanced MLOPS - Batch inference & drift detection",
-          "email_notifications": {
-            "no_alert_for_skipped_runs": False
-          },
-          "webhook_notifications": {},
-          "timeout_seconds": 0,
-          "max_concurrent_runs": 1,
-          "tasks": [
-            {
-              "task_key": "Feature_engineering",
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "mlops_batch_inference_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            },
-            {
-              "task_key": "Batch_inference",
-              "depends_on": [
-                {
-                  "task_key": "Feature_engineering"
-                }
-              ],
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "mlops_batch_inference_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            },
-            {
-              "task_key": "Create_Monitor",
-              "depends_on": [
-                {
-                  "task_key": "Batch_inference"
-                }
-              ],
-              "run_if": "ALL_SUCCESS",
-              "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/07_model_monitoring",
-                "source": "WORKSPACE"
-              },
-              "job_cluster_key": "mlops_batch_inference_cluster",
-              "timeout_seconds": 0,
-              "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
-              "webhook_notifications": {}
-            },
             {
               "task_key": "Drift_detection",
               "depends_on": [
@@ -812,12 +629,12 @@
                 "runtime_engine": "STANDARD",
                 "num_workers": 0
               }
-      }
-    ],
-    "queue": {
-      "enabled": True
-    }
-  }
+            }
+          ],
+          "queue": {
+            "enabled": True
+          }
+        }
       }
     }],
     "cluster": {

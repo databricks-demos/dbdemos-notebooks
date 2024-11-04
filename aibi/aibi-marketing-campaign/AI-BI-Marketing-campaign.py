@@ -88,7 +88,7 @@
 # MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
 # MAGIC
 # MAGIC
-# MAGIC Open the <a dbdemos-dashboard-id="warehouse-serverless-cost" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Campain Marketing Dashboard to analyze & track main KPIs</a>
+# MAGIC Open the <a dbdemos-dashboard-id="web-marketing" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Campain Marketing Dashboard to analyze & track main KPIs</a>
 
 # COMMAND ----------
 

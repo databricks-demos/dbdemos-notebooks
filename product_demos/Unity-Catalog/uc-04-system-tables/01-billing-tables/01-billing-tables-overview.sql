@@ -47,6 +47,15 @@
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC # DBSQL warehouse Tracking Dashboard demo example
+-- MAGIC
+-- MAGIC Dbdemos also installed for you a Warehouse / Serverless dashboard. Use it to track your cost and analyse which warehouse is running, from which Dashboard, which workspace is consuming what.
+-- MAGIC
+-- MAGIC You can access it here: <a dbdemos-dashboard-id="warehouse-serverless-cost" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">SQL Warehouse Endpoint Cost tracking dashboard</a>
+
+-- COMMAND ----------
+
 -- MAGIC %md 
 -- MAGIC *Looking for the notebook used to create the <a dbdemos-dashboard-id="cost-forecasting" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">forecasting dashboard</a>? Jump to the [02-forecast-billing-tables]($./02-forecast-billing-tables) notebook.*
 

@@ -104,7 +104,7 @@
 # MAGIC
 # MAGIC Using Databricks Genie, business users can use plain english to deep dive into the data, making Data Analysis accessible to all.
 # MAGIC
-# MAGIC Open the <a dbdemos-genie-id="marketing-campaign" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Campain Marketing Dashboard to analyze & track main KPIs</a>
+# MAGIC Open the <a dbdemos-genie-id="marketing-campaign" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Campain Marketing Genie space to deep dive into your data</a>
 
 # COMMAND ----------
 

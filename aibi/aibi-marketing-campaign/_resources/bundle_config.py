@@ -27,9 +27,17 @@
   "init_job": {},
   "cluster": {}, 
   "pipelines": [],
-  "dashboards": [{"name": "[dbdemos] Retail Churn Prediction Dashboard",       "id": "web-marketing"}
+  "dashboards": [{"name": "[dbdemos] AI/BI - Marketing Campaign",       "id": "web-marketing"}
                 ],
-  "data_rooms":[
+  "data_folders":[
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/compaigns",              "source_format": "parquet", "target_table_name":"compaigns",              "target_format":"delta"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/contacts",               "source_format": "parquet", "target_table_name":"contacts",               "target_format":"delta"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/events",                 "source_format": "parquet", "target_table_name":"events",                 "target_format":"delta"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/feedbacks",              "source_format": "parquet", "target_table_name":"feedbacks",              "target_format":"delta"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/issues",                 "source_format": "parquet", "target_table_name":"issues",                 "target_format":"delta"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/metrics_daily_rolling",  "source_format": "parquet", "target_table_name":"metrics_daily_rolling",  "target_format":"delta"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/prospects",              "source_format": "parquet", "target_table_name":"prospects",              "target_format":"delta"}  ],
+  "genie_rooms":[
     {"display_name": "DBDemos - AI/BI - Marketing Campaign",
      "id": "marketing-campaign",
      "description": "Analyze your Marketing Campaign effectiveness leveraging AI/BI Dashboard. Deep dive into your data and metrics.",

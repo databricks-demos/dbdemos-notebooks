@@ -12,6 +12,11 @@
 # MAGIC - **Genie** allows business users to converse with their data to ask questions and self-serve their own analytics.
 # MAGIC
 # MAGIC Databricks AI/BI is native to the Databricks Data Intelligence Platform, providing instant insights at massive scale while ensuring unified governance and fine-grained security are maintained across the entire organization.
+# MAGIC
+# MAGIC
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Marketing-Campaign&demo_name=aibi-marketing-campaign&event=VIEW">
 
 # COMMAND ----------
 

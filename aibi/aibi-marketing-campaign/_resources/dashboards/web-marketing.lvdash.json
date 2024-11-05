@@ -3108,7 +3108,7 @@
                 {
                     "widget": {
                         "name": "c9649c42",
-                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_rcg_marketing_email_analysis&demo_name=aibi_rcg_marketing_email_analysis&event=DASHBOARD_VIEW)"
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Marketing-campaign&demo_name=aibi-marketing-campaign&event=DASHBOARD_VIEW)"
                     },
                     "position": {
                         "x": 0,

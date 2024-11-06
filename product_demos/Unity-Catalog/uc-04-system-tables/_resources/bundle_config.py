@@ -138,5 +138,161 @@
                  {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"},
                  {"name": "[dbdemos] System Tables - Databricks Model Serving Endpoint Cost Attribution", "id": "model-serving-cost"},
                  {"name": "[dbdemos] System Tables - Warehouse Monitoring and Cost Attribution", "id": "warehouse-serverless-cost"}
-                 ]
+                 ],
+  "genie_rooms":[
+    {
+        "id": "system-tables",
+        "display_name": "Databricks System Table Genie Space",
+        "description": "Ask questions on your Databricks Usage leveraging built-in system tables",
+        "table_identifiers": [
+            "{{CATALOG}}.{{SCHEMA}}.usage",
+            "{{CATALOG}}.{{SCHEMA}}.audit",
+            "{{CATALOG}}.{{SCHEMA}}.list_prices",
+            "{{CATALOG}}.{{SCHEMA}}.clusters",
+            "{{CATALOG}}.{{SCHEMA}}.warehouse_events",
+            "{{CATALOG}}.{{SCHEMA}}.node_types",
+            "{{CATALOG}}.{{SCHEMA}}.job_run_timeline",
+            "{{CATALOG}}.{{SCHEMA}}.job_task_run_timeline",
+            "{{CATALOG}}.{{SCHEMA}}.job_tasks",
+            "{{CATALOG}}.{{SCHEMA}}.jobs"
+        ],
+        "sql_instructions": [
+            {
+                "title": "What are all of the available SKUs, the current list price for each, and when did the price take effect?",
+                "content": "select\n  sku_name,\n  pricing.default,\n  price_start_time,\n  usage_unit\nfrom\n  system.billing.list_prices\nwhere\n  price_end_time is null -- current price for a sku\norder by\n  sku_name;"
+            },
+            {
+                "title": "What are all of the photon SKUs and their list prices over time?",
+                "content": "select\n  sku_name,\n  pricing.default,\n  price_start_time,\n  price_end_time,\n  usage_unit\nfrom\n  system.billing.list_prices\nwhere\n  upper(sku_name) like '%PHOTON%'\norder by\n  sku_name,\n  price_start_time;"
+            },
+            {
+                "title": "What SKUs have ever had a price change?",
+                "content": "with skus as (\n  select\n    distinct sku_name -- distinct because it might have had multiple price changes\n  from\n    system.billing.list_prices\n  where\n    price_end_time is not null -- sku has had at least one price change\n)\nselect\n  lp.sku_name,\n  pricing.default,\n  price_start_time,\n  price_end_time,\n  usage_unit\nfrom\n  system.billing.list_prices lp\n  inner join skus s on s.sku_name = lp.sku_name\norder by\n  sku_name,\n  price_start_time;"
+            },
+            {
+                "title": "What are the total DBUs used by date and by SKUs for DBSQL for the account (all workspaces)?",
+                "content": "select\n  u.usage_date,\n  u.sku_name,\n  sum(u.usage_quantity) as total_dbus\nfrom\n  system.billing.usage u\nwhere\n  upper(u.sku_name) like '%SQL%'\ngroup by\n  all\norder by\n  total_dbus desc"
+            },
+            {
+                "title": "What is the DBU spend for each workspace by month for DBSQL Serverless?",
+                "content": "select\n  u.workspace_id,\n  date_trunc('month', u.usage_date) as usage_month,\n  sum(u.usage_quantity) as total_dbus\nfrom\n  system.billing.usage u\nwhere\n  upper(u.sku_name) like '%SERVERLESS%'\n  and upper(u.billing_origin_product) like '%SQL%'\ngroup by\n  all\norder by\n  1,\n  2"
+            },
+            {
+                "title": "What are the total DBUs and total dollars (list price) used by date and by SKU for DBSQL for the account (all workspaces)?",
+                "content": "select\n  u.usage_date,\n  u.sku_name,\n  sum(u.usage_quantity) as total_dbus,\n  sum(lp.pricing.default * u.usage_quantity) as list_cost\nfrom\n  system.billing.usage u\n  inner join system.billing.list_prices lp on u.cloud = lp.cloud\n  and u.sku_name = lp.sku_name\n  and u.usage_start_time >= lp.price_start_time\n  and (\n    u.usage_end_time <= lp.price_end_time\n    or lp.price_end_time is null\n  )\nwhere\n  upper(u.billing_origin_product) like '%SQL%'\ngroup by\n  all\norder by\n  total_dbus desc"
+            },
+            {
+                "title": "Group DBUs and total dollars (list price) spent into origin products by date",
+                "content": "SELECT\n  date_trunc ('month', usage_date) as usage_month,\n  billing_origin_product,\n  SUM(usage_quantity) AS total_dbus\nFROM\n  system.billing.usage\nGROUP BY\n  1,\n  2\nORDER BY\n  1,\n  2"
+            },
+            {
+                "title": "Are there any node types that have more than one GPU?",
+                "content": "select\n  node_type,\n  memory_mb,\n  core_count,\n  gpu_count\nfrom\n  system.compute.node_types\nwhere\n  gpu_count >= 2\norder by\n  gpu_count desc,\n  core_count desc"
+            },
+            {
+                "title": "What node type has both the fewest cores and the least amount of memory?",
+                "content": "with min_count as (\n  select\n    min(core_count) as min_cores,\n    min(memory_mb) as min_mb\n  from\n    system.compute.node_types\n)\nselect\n  node_type,\n  m.*\nfrom\n  system.compute.node_types n\n  inner join min_count m on n.memory_mb = m.min_mb\n  and n.core_count = m.min_cores"
+            },
+            {
+                "title": "What are the current value records for all of the clusters in the region?",
+                "content": "SELECT\n  *,\n  ROW_NUMBER() OVER (\n    PARTITION BY cluster_id\n    ORDER BY\n      change_time DESC\n  ) AS row_num\nFROM\n  system.compute.clusters QUALIFY row_num = 1"
+            },
+            {
+                "title": "What clusters currently have autoscaling turned on with the max workers set to a value higher than 50?",
+                "content": "with clusters_current as (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (\n      PARTITION BY cluster_id\n      ORDER BY\n        change_time DESC\n    ) AS row_num\n  FROM\n    system.compute.clusters QUALIFY row_num = 1\n)\nselect\n  *\nfrom\n  clusters_current\nwhere\n  max_autoscale_workers >= 50\n  and delete_time is null"
+            },
+            {
+                "title": "What clusters currently don\u2019t have auto-termination enabled or their auto-termination timeout longer than two hours?",
+                "content": "with clusters_current as (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (\n      PARTITION BY cluster_id\n      ORDER BY\n        change_time DESC\n    ) AS row_num\n  FROM\n    system.compute.clusters QUALIFY row_num = 1\n)\nSELECT\n  *\nFROM\n  clusters_current\nwhere\n  (\n    auto_termination_minutes is null\n    or auto_termination_minutes > 120\n  )\n  and cluster_name not like 'job-%' -- don't want job clusters\n  and delete_time is null"
+            },
+            {
+                "title": "Give a full history of changes made to cluster currently name \u2018xyz\u2019",
+                "content": "select c.*\nfrom system.compute.clusters c\ninner join system_reporting.compute.clusters_current curr using(cluster_id)\nwhere curr.cluster_name = 'xyz'\norder by c.change_date desc, c.change_time desc"
+            },
+            {
+                "title": "what are the current names of all warehouses?",
+                "content": "with data as ( -- get all of the successful creates and edits of warehouses and endpoints\nselect event_time, request_params.name as warehouse_name, from_json(response ['result'], 'Map<STRING, STRING>') [\"id\"] as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = '200'\nunion\nselect event_time, request_params.name as warehouse_name, request_params.id as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('editWarehouse', 'editEndpoint')\nand response.status_code = '200'\n),\ncurrent_data as ( -- get the most recent create or edit of each warehouse or endpoint\n    select *,\n  ROW_NUMBER() OVER (\n    PARTITION BY warehouse_id\n    ORDER BY\n      event_time DESC\n  ) AS row_num\n    from data\n    qualify row_num = 1\n)\nselect * from current_data"
+            },
+            {
+                "title": "Usage by cluster/warehouse name",
+                "content": "with clusters_current as (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (\n      PARTITION BY cluster_id\n      ORDER BY\n        change_time DESC\n    ) AS row_num\n  FROM\n    system.compute.clusters QUALIFY row_num = 1\n),\nwarehouse_data as ( -- get all of the successful creates and edits of warehouses and endpoints\nselect event_time, request_params.name as warehouse_name, from_json(response ['result'], 'Map<STRING, STRING>') [\"id\"] as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = '200'\nunion\nselect event_time, request_params.name as warehouse_name, request_params.id as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('editWarehouse', 'editEndpoint')\nand response.status_code = '200'\n),\nwarehouses as ( -- get the most recent create or edit of each warehouse or endpoint\n    select *,\n  ROW_NUMBER() OVER (\n    PARTITION BY warehouse_id\n    ORDER BY\n      event_time DESC\n  ) AS row_num\n    from warehouse_data\n    qualify row_num = 1\n)\nselect\n  'JOBS' as work_type,\n  u.usage_date,\n  cc.cluster_id as cluster_or_warehouse_id,\n  cc.cluster_name as cluster_or_warehouse_name,\n  sum(u.usage_quantity) as total_dbus,\n  sum(lp.pricing.default * u.usage_quantity) as list_cost\nfrom\n  system.billing.usage u\n  inner join system.billing.list_prices lp on u.cloud = lp.cloud\n  and u.sku_name = lp.sku_name\n  and u.usage_start_time >= lp.price_start_time\n  and (\n    u.usage_end_time <= lp.price_end_time\n    or lp.price_end_time is null\n  )\n  inner join clusters_current cc \n        on u.usage_metadata.cluster_id = cc.cluster_id\nwhere\n  usage_metadata.job_id is not Null\ngroup by\n  all\nunion all\nselect\n  'ALL PURPOSE' as work_type,\n  u.usage_date,\n  cc.cluster_id as cluster_or_warehouse_id,\n  cc.cluster_name as cluster_or_warehouse_name,  \n  sum(u.usage_quantity) as total_dbus,\n  sum(lp.pricing.default * u.usage_quantity) as list_cost\nfrom\n  system.billing.usage u\n  inner join system.billing.list_prices lp on u.cloud = lp.cloud\n  and u.sku_name = lp.sku_name\n  and u.usage_start_time >= lp.price_start_time\n  and (\n    u.usage_end_time <= lp.price_end_time\n    or lp.price_end_time is null\n  )\n  inner join clusters_current cc \n        on u.usage_metadata.cluster_id = cc.cluster_id\nwhere\n  usage_metadata.job_id is Null\n  and usage_metadata.cluster_id is not null\ngroup by\n  all\nunion all\nselect\n  'SQL' as work_type,\n  u.usage_date,\n  w.warehouse_id as cluster_or_warehouse_id,\n  w.warehouse_name as cluster_or_warehouse_name,  \n  sum(u.usage_quantity) as total_dbus,\n  sum(lp.pricing.default * u.usage_quantity) as list_cost\nfrom\n  system.billing.usage u\n  inner join system.billing.list_prices lp on u.cloud = lp.cloud\n  and u.sku_name = lp.sku_name\n  and u.usage_start_time >= lp.price_start_time\n  and (\n    u.usage_end_time <= lp.price_end_time\n    or lp.price_end_time is null\n  )\n  inner join warehouses w \n        on u.usage_metadata.warehouse_id = w.warehouse_id\nwhere\n  usage_metadata.job_id is Null\n  and usage_metadata.cluster_id is null\n  and usage_metadata.warehouse_id is not null\ngroup by\n  all\n"
+            },
+            {
+                "title": "what are the current instance pool settings?",
+                "content": "with data as (\nselect event_time, request_params.instance_pool_name as instance_pool_name, from_json(response ['result'], 'Map<STRING, STRING>') [\"instance_pool_id\"] as instance_pool_id, request_params.max_capacity as max_capacity\nfrom system.access.audit\nwhere service_name = 'instancePools'\nand action_name = 'create'\nunion\nselect event_time, request_params.instance_pool_name as instance_pool_name, request_params.instance_pool_id as instance_pool_id, request_params.max_capacity as max_capacity\nfrom system.access.audit\nwhere service_name = 'instancePools'\nand action_name = 'edit'\n),\ncurrent_data as (\n    select *,\n  ROW_NUMBER() OVER (\n    PARTITION BY instance_pool_id\n    ORDER BY\n      event_time DESC\n  ) AS row_num\n    from data\n    qualify row_num = 1\n)\nselect * except(event_time,row_num) from current_data"
+            },
+            {
+                "title": "what was the result of jobs, how much did they cost and how many dbus did the use?",
+                "content": "with data as (\n  SELECT\n    u.workspace_id,\n    u.usage_metadata.job_id as job_id,\n    usage_metadata.job_run_id as run_id,\n    sum(lp.pricing.default * u.usage_quantity) as list_cost,\n    sum(u.usage_quantity) as dbus\n  FROM\n    system.billing.usage u\n    inner join system.billing.list_prices lp on u.cloud = lp.cloud\n    and u.sku_name = lp.sku_name\n    and u.usage_start_time >= lp.price_start_time\n    and (\n      u.usage_end_time <= lp.price_end_time\n      or lp.price_end_time is null\n    )\n    where u.sku_name like '%JOB%'\n    and usage_metadata.job_id is not null\n    group by all\n),\njob_runs as (\n    select date_trunc('DAY', period_end_time) as run_date, job_id, run_id, result_state \n    from system.lakeflow.job_run_timeline \n    where result_state is not null\n),\nrun_times as (\n    select job_id, run_id, min(period_start_time) as start_time, max(period_end_time) as end_time\n    from system.lakeflow.job_run_timeline\n    group by all\n),\njob_runs_with_times as (\n    select * \n    from job_runs\n    inner join run_times using (job_id, run_id)\n)\nselect  \n    workspace_id, \n    job_id,\n    run_id,\n    result_state,\n    start_time,\n    end_time,\n    list_cost,\n    dbus\nfrom data\ninner join job_runs_with_times using (job_id,run_id)"
+            },
+            {
+                "title": "Get the current job names by job_id",
+                "content": "\nSELECT\n  *,\n  ROW_NUMBER() OVER (\n    PARTITION BY job_id\n    ORDER BY\n      change_time DESC\n  ) AS row_num\nFROM\n  system.lakeflow.jobs QUALIFY row_num = 1"
+            },
+            {
+                "title": "what are the valid job result states?",
+                "content": "select distinct result_state\nfrom system.lakeflow.job_run_timeline\nwhere result_state is not null"
+            },
+            {
+                "title": "what is the current name of a job?",
+                "content": "with raw_data as (\nselect \njob_id,\nname,\ndelete_time,\nrow_number() over (partition by job_id order by change_time desc) as row\nfrom system.lakeflow.jobs\nqualify row = 1\n)\nselect job_id, name\nfrom raw_data\nwhere delete_time is null"
+            },
+            {
+                "title": "get user names and user ids",
+                "content": "with data as (\nselect \nrequest_params.targetUserId as user_id,\nrequest_params.targetUserName as user_name,\nevent_time as change_time\nfrom system.access.audit\nwhere request_params.targetUserId is not null\n)\nselect user_id, \nuser_name,\nrow_number() over (partition by user_id order by change_time desc) as row\nfrom data\nqualify row = 1"
+            },
+            {
+                "title": "What is monthly spend and usage by billing origina product separating serverless from non-serverless? Concatenate the billing origin product with SERVERLESS/NON-SERVERLESS from the sku name.",
+                "content": "SELECT\n  DATE_TRUNC('month', u.usage_date) AS month,\n  CONCAT(\n    u.billing_origin_product,\n    ' ',\n    CASE\n      WHEN UPPER(u.sku_name) LIKE '%SERVERLESS%' THEN 'SERVERLESS'\n      ELSE 'NON-SERVERLESS'\n    END\n  ) AS work_type,\n  ROUND(SUM(u.usage_quantity), 2) AS total_dbus,\n  ROUND(SUM(lp.pricing.default * u.usage_quantity), 2) AS total_spend\nFROM\n  system.billing.usage u\n  INNER JOIN system.billing.list_prices lp ON u.cloud = lp.cloud\n  AND u.sku_name = lp.sku_name\n  AND u.usage_start_time >= lp.price_start_time\n  AND (\n    u.usage_end_time <= lp.price_end_time\n    OR lp.price_end_time IS NULL\n  )\nGROUP BY\n  1,\n  2\nORDER BY\n  1,\n  2"
+            },
+            {
+                "title": "What was the maximum number of clusters for each of my warehouses this year? Show the warehouse id and warehouse name.",
+                "content": "with warehouse_data as ( -- get all of the successful creates and edits of warehouses and endpoints\nselect event_time, request_params.name as warehouse_name, from_json(response ['result'], 'Map<STRING, STRING>') [\"id\"] as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = '200'\nunion\nselect event_time, request_params.name as warehouse_name, request_params.id as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('editWarehouse', 'editEndpoint')\nand response.status_code = '200'\n),\nwarehouses as ( -- get the most recent create or edit of each warehouse or endpoint\n    select *,\n  ROW_NUMBER() OVER (\n    PARTITION BY warehouse_id\n    ORDER BY\n      event_time DESC\n  ) AS row_num\n    from warehouse_data\n    qualify row_num = 1\n)\nSELECT\n  w.warehouse_id,\n  w.warehouse_name,\n  MAX(we.cluster_count) AS max_clusters\nFROM\n  system.compute.warehouse_events we\n  INNER JOIN warehouses w ON we.warehouse_id = w.warehouse_id\nWHERE\n  YEAR(we.event_time) = 2024\nGROUP BY\n  w.warehouse_id,\n  w.warehouse_name\nORDER BY\n  max_clusters DESC"
+            },
+            {
+                "title": "Calculate job run final (non null) result state percentages of total runs by day for August 2024",
+                "content": "WITH daily_totals AS (\n  SELECT\n    DATE_TRUNC('day', period_end_time) AS run_day,\n    COUNT(*) AS total_runs\n  FROM\n    system.lakeflow.job_run_timeline\n  WHERE\n    period_end_time BETWEEN '2024-08-01'\n    AND '2024-08-31'\n    AND result_state IS NOT NULL\n  GROUP BY\n    DATE_TRUNC('day', period_end_time)\n),\nstate_counts AS (\n  SELECT\n    DATE_TRUNC('day', period_end_time) AS run_day,\n    result_state,\n    COUNT(*) AS state_count\n  FROM\n    system.lakeflow.job_run_timeline\n  WHERE\n    period_end_time BETWEEN '2024-08-01'\n    AND '2024-08-31'\n    AND result_state IS NOT NULL\n  GROUP BY\n    DATE_TRUNC('day', period_end_time),\n    result_state\n)\nSELECT\n  sc.run_day,\n  sc.result_state,\n  sc.state_count,\n  ROUND(\n    (sc.state_count :: FLOAT / dt.total_runs :: FLOAT) * 100,\n    2\n  ) AS percentage_of_total_runs\nFROM\n  state_counts sc\n  INNER JOIN daily_totals dt ON sc.run_day = dt.run_day\nORDER BY\n  sc.run_day,\n  sc.result_state"
+            },
+            {
+                "title": "What are the current details for warehouses in the region?",
+                "content": "with warehouses as ( -- get all of the successful creates and edits of warehouses and endpoints\nselect event_time, request_params.name as warehouse_name, from_json(response ['result'], 'Map<STRING, STRING>') [\"id\"] as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = '200'\nunion\nselect event_time, request_params.name as warehouse_name, request_params.id as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('editWarehouse', 'editEndpoint')\nand response.status_code = '200'\n),\nwarehouses_current as ( -- get the most recent create or edit of each warehouse or endpoint\n    select *,\n  ROW_NUMBER() OVER (\n    PARTITION BY warehouse_id\n    ORDER BY\n      event_time DESC\n  ) AS row_num\n    from warehouses\n    qualify row_num = 1\n)\nselect * from warehouses_current"
+            },
+            {
+                "title": "What are the top 15 most expensive sql warehouses, including warehouse name, workspace, and owner. order by DBU and cost descending?",
+                "content": "with warehouse_data as ( -- get all of the successful creates and edits of warehouses and endpoints\nselect event_time, request_params.name as warehouse_name, from_json(response ['result'], 'Map<STRING, STRING>') [\"id\"] as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('createWarehouse', 'createEndpoint')\nand response.status_code = '200'\nunion\nselect event_time, request_params.name as warehouse_name, request_params.id as warehouse_id, user_identity.email as owner, request_params.warehouse_type as warehouse_type, request_params.cluster_size as cluster_size\nfrom system.access.audit\nwhere service_name = 'databrickssql'\nand action_name in ('editWarehouse', 'editEndpoint')\nand response.status_code = '200'\n),\nwarehouses as ( -- get the most recent create or edit of each warehouse or endpoint\n    select *,\n  ROW_NUMBER() OVER (\n    PARTITION BY warehouse_id\n    ORDER BY\n      event_time DESC\n  ) AS row_num\n    from warehouse_data\n    qualify row_num = 1\n)\nSELECT\n  w.warehouse_id,\n  w.warehouse_name,\n  u.workspace_id,\n  w.owner,\n  SUM(u.usage_quantity) AS total_dbus,\n  SUM(lp.pricing.default * u.usage_quantity) AS total_cost\nFROM\n  system.billing.usage u\n  INNER JOIN system.billing.list_prices lp ON u.cloud = lp.cloud\n  AND u.sku_name = lp.sku_name\n  AND u.usage_start_time >= lp.price_start_time\n  AND (\n    u.usage_end_time <= lp.price_end_time\n    OR lp.price_end_time IS NULL\n  )\n  INNER JOIN warehouses w ON u.usage_metadata.warehouse_id = w.warehouse_id\nWHERE\n  UPPER(u.billing_origin_product) LIKE '%SQL%'\nGROUP BY all\nORDER BY\n  total_dbus DESC,\n  total_cost DESC\nLIMIT\n  15"
+            },
+            {
+                "title": "Please identify sources (source name, source id, sku) of DBU usage in the month of August without a Cost_Center or WBS tags order by most usage descending",
+                "content": "WITH clusters_current AS (\n  SELECT\n    cluster_id,\n    cluster_name,\n    ROW_NUMBER() OVER (\n      PARTITION BY cluster_id\n      ORDER BY\n        change_time DESC\n    ) AS row_num\n  FROM\n    system.compute.clusters QUALIFY row_num = 1\n),\nwarehouse_data AS (\n  SELECT\n    event_time,\n    request_params.name AS warehouse_name,\n    from_json(response ['result'], 'Map<STRING, STRING>') ['id'] AS warehouse_id,\n    user_identity.email AS owner,\n    request_params.warehouse_type AS warehouse_type,\n    request_params.cluster_size AS cluster_size\n  FROM\n    system.access.audit\n  WHERE\n    service_name = 'databrickssql'\n    AND action_name IN ('createWarehouse', 'createEndpoint')\n    AND response.status_code = '200'\n  UNION\n  SELECT\n    event_time,\n    request_params.name AS warehouse_name,\n    request_params.id AS warehouse_id,\n    user_identity.email AS owner,\n    request_params.warehouse_type AS warehouse_type,\n    request_params.cluster_size AS cluster_size\n  FROM\n    system.access.audit\n  WHERE\n    service_name = 'databrickssql'\n    AND action_name IN ('editWarehouse', 'editEndpoint')\n    AND response.status_code = '200'\n),\nwarehouses_current AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (\n      PARTITION BY warehouse_id\n      ORDER BY\n        event_time DESC\n    ) AS row_num\n  FROM\n    warehouse_data QUALIFY row_num = 1\n)\nSELECT\n  u.workspace_id,\n  u.sku_name,\n  CASE\n  WHEN u.usage_metadata.dlt_pipeline_id IS NOT NULL AND u.usage_metadata.cluster_id IS NULL then u.usage_metadata.dlt_pipeline_id\n  WHEN cc.cluster_id IS NOT NULL THEN cc.cluster_id\n  WHEN u.usage_metadata.cluster_id IS NOT NULL THEN u.usage_metadata.cluster_id\n  WHEN wc.warehouse_id IS NOT NULL THEN wc.warehouse_id\n  WHEN u.usage_metadata.warehouse_id IS NOT NULL THEN u.usage_metadata.warehouse_id\n  WHEN u.usage_metadata.endpoint_id IS NOT NULL THEN u.usage_metadata.endpoint_id \n  WHEN contains(u.sku_name, 'JOBS_SERVERLESS') and u.usage_metadata.job_run_id IS NOT NULL THEN u.usage_metadata.job_id\n  WHEN contains(u.sku_name, 'ALL_PURPOSE_SERVERLESS') and u.usage_metadata.notebook_id IS NOT NULL THEN u.usage_metadata.notebook_id\n  END as source_id,\n  CASE\n  WHEN u.usage_metadata.dlt_pipeline_id IS NOT NULL then concat('dlt-execution-',u.usage_metadata.dlt_pipeline_id)\n  WHEN cc.cluster_id IS NOT NULL THEN cc.cluster_name\n  WHEN u.usage_metadata.cluster_id IS NOT NULL THEN u.usage_metadata.cluster_id\n  WHEN wc.warehouse_id IS NOT NULL THEN wc.warehouse_name\n  WHEN u.usage_metadata.warehouse_id IS NOT NULL THEN u.usage_metadata.warehouse_id\n  WHEN u.usage_metadata.endpoint_id IS NOT NULL THEN u.usage_metadata.endpoint_name \n  WHEN contains(u.sku_name, 'JOBS_SERVERLESS') and u.usage_metadata.job_run_id IS NOT NULL THEN u.usage_metadata.job_run_id\n  WHEN contains(u.sku_name, 'ALL_PURPOSE_SERVERLESS') and u.usage_metadata.notebook_id IS NOT NULL THEN u.usage_metadata.notebook_path\n  END as source_name,\n  u.billing_origin_product,\n  sum(u.usage_quantity) as total_dbus,\n  sum(lp.pricing.default * u.usage_quantity) as list_cost  \nFROM\n  system.billing.usage u\n  LEFT JOIN clusters_current cc ON u.usage_metadata.cluster_id = cc.cluster_id\n  LEFT JOIN warehouses_current wc ON u.usage_metadata.warehouse_id = wc.warehouse_id\n  inner join system.billing.list_prices lp on u.cloud = lp.cloud\n  and u.sku_name = lp.sku_name\n  and u.usage_start_time >= lp.price_start_time\n  and (\n    u.usage_end_time <= lp.price_end_time\n    or lp.price_end_time is null\n  )  \nWHERE\n  AND u.usage_date >= '2024-08-01'\n  AND u.usage_date <= '2024-08-31'\n  AND u.custom_tags ['Cost_Center'] IS NULL\n  AND u.custom_tags ['WBS'] IS NULL\nGROUP BY all\nORDER BY\n  total_dbus DESC"
+            },
+            {
+                "title": "What is the cost by endpoint for vector search?",
+                "content": "select\n  u.usage_date,\n  u.usage_metadata.endpoint_name,\n  u.usage_metadata.endpoint_id,\n  sum(u.usage_quantity) as total_dbus,\n  sum(lp.pricing.default * u.usage_quantity) as list_cost\nfrom\n  system.billing.usage u\n  inner join system.billing.list_prices lp on u.cloud = lp.cloud\n  and u.sku_name = lp.sku_name\n  and u.usage_start_time >= lp.price_start_time\n  and (\n    u.usage_end_time <= lp.price_end_time\n    or lp.price_end_time is null\n  )\nwhere\n  upper(u.billing_origin_product) like '%VECTOR_SEARCH%'\ngroup by\n  all\norder by\n  total_dbus desc"
+            }
+        ],
+        "instructions": "If a customer asks for a forecast, leverage the SQL function `ai_forecast`.",
+        "curated_questions": [
+            "What is monthly spend and DBUs by serverless and non-serverless work types?",
+            "What is monthly spend and DBUs by serverless and non-serverless work types by workspace?",
+            "What node types have a GPU?",
+            "What are all the current names for all of the clusters and warehouses in the region, ignoring job clusters? Include the cluster owner's name.",
+            "What clusters currently don\u2019t have auto-termination enabled or their auto-termination timeout longer than 1 hour?",
+            "What are all the instance pool names in workspace <#>?",
+            "How much did spend increase month over month in 2024 by origin product?",
+            "What is the most expensive job run on xyz date?",
+            "Calculate job run final result state percentages of total runs by day for <month>",
+            "What are all of the available SKUs, the current list price for each, and when did the price take effect?",
+            "What are all of the photon SKUs and their list prices over time?",
+            "What SKUs have ever had a price change?",
+            "What are the total DBUs used by date and by SKUs for SQL for the account?",
+            "What is the DBU spend for each workspace by month for SQL?",
+            "What are the total DBUs and total dollars (list price) used by date and by SKU for Serverless SQL for all workspaces?",
+            "What are DBUs and dollars grouped by origin product by date?",
+            "What node types have a GPU?",
+            "Are there any node types that have more than one GPU?",
+            "What node type has both the most cores and the most amount of memory?",
+            "What are the current names for all of the clusters in the region?"
+        ]
+    }
+  ]
 }

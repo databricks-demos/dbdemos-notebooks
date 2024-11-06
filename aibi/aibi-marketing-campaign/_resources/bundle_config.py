@@ -12,7 +12,7 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_aibi_cme_marketing_campaign",
-  "description": "Analyze your Marketing Campaign effectiveness leveraging AI/BI Dashboard. Deep dive into your data and metrics, asking plain question through Genie Room.",
+  "description": "Analyze your marketing campaign performance visually with AI/BI Dashboards. Then, utilize Genie to ask questions about your data in your natural language.",
   "bundle": True,
   "notebooks": [
     {
@@ -38,8 +38,9 @@
     {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/metrics_daily_rolling",  "source_format": "parquet", "target_table_name":"metrics_daily_rolling",  "target_format":"delta"},
     {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/prospects",              "source_format": "parquet", "target_table_name":"prospects",              "target_format":"delta"}  ],
   "genie_rooms":[
-    {"display_name": "DBDemos - AI/BI - Marketing Campaign",
+    {
      "id": "marketing-campaign",
+     "display_name": "DBDemos - AI/BI - Marketing Campaign",     
      "description": "Analyze your Marketing Campaign effectiveness leveraging AI/BI Dashboard. Deep dive into your data and metrics.",
      "table_identifiers": ["{{CATALOG}}.{{SCHEMA}}.compaigns",
                            "{{CATALOG}}.{{SCHEMA}}.contacts",

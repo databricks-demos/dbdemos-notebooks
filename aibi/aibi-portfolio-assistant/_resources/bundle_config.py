@@ -35,31 +35,31 @@
   ],
   "data_folders": [
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_portfolio_assistant/news",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/news",
       "source_format": "parquet",
       "target_table_name": "news",
       "target_format": "delta"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_portfolio_assistant/prices",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/prices",
       "source_format": "parquet",
       "target_table_name": "prices",
       "target_format": "delta"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_portfolio_assistant/portfolio",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/portfolio",
       "source_format": "parquet",
       "target_table_name": "portfolio",
       "target_format": "delta"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_portfolio_assistant/fundamentals",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/fundamentals",
       "source_format": "parquet",
       "target_table_name": "fundamentals",
       "target_format": "delta"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_portfolio_assistant/news_ticker",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/news_ticker",
       "source_format": "parquet",
       "target_table_name": "news_ticker",
       "target_format": "delta"
@@ -68,7 +68,7 @@
   "genie_rooms": [
     {
       "display_name": "DBDemos - AI/BI - Portfolio Assistant",
-      "id": "portfolio-assistant-genie",
+      "id": "portfolio-assistant",
       "description": "Easily analyze your portfolio performance and market trends using the GenAI Assistant. Dive into your data and key financial metrics, and ask plain-language questions through Genie to make smarter, data-driven investment decisions.",
       "table_identifiers": [
         "{{CATALOG}}.{{SCHEMA}}.news",

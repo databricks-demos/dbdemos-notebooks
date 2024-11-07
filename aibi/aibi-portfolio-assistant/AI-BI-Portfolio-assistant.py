@@ -110,7 +110,7 @@
 # MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
 # MAGIC
 # MAGIC
-# MAGIC Open the <a dbdemos-dashboard-id="web-marketing" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Campain Marketing Dashboard to analyze & track main KPIs</a>
+# MAGIC Open the <a dbdemos-dashboard-id="portfolio-assistant" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Campain Marketing Dashboard to analyze & track main KPIs</a>
 
 # COMMAND ----------
 
@@ -124,7 +124,7 @@
 # MAGIC
 # MAGIC However, they'll likely have extra questions or followup based on the insight they see in the dashboard, like: "What the heck is wrong with my campaign, anyway?" or "What was the CTR of my campaign last month?"
 # MAGIC
-# MAGIC Open the <a dbdemos-genie-id="marketing-campaign" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Campain Marketing Genie space to deep dive into your data</a>
+# MAGIC Open the <a dbdemos-genie-id="portfolio-assistant" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Campain Marketing Genie space to deep dive into your data</a>
 
 # COMMAND ----------
 

@@ -145,16 +145,16 @@
         "display_name": "Databricks System Table Genie Space",
         "description": "Ask questions on your Databricks Usage leveraging built-in system tables",
         "table_identifiers": [
-            "{{CATALOG}}.{{SCHEMA}}.usage",
-            "{{CATALOG}}.{{SCHEMA}}.audit",
-            "{{CATALOG}}.{{SCHEMA}}.list_prices",
-            "{{CATALOG}}.{{SCHEMA}}.clusters",
-            "{{CATALOG}}.{{SCHEMA}}.warehouse_events",
-            "{{CATALOG}}.{{SCHEMA}}.node_types",
-            "{{CATALOG}}.{{SCHEMA}}.job_run_timeline",
-            "{{CATALOG}}.{{SCHEMA}}.job_task_run_timeline",
-            "{{CATALOG}}.{{SCHEMA}}.job_tasks",
-            "{{CATALOG}}.{{SCHEMA}}.jobs"
+            "system.billing.usage",
+            "system.access.audit",
+            "system.billing.list_prices",
+            "system.compute.clusters",
+            "system.compute.warehouse_events",
+            "system.compute.node_types",
+            "system.lakeflow.job_run_timeline",
+            "system.lakeflow.job_task_run_timeline",
+            "system.lakeflow.job_tasks",
+            "system.lakeflow.jobs"
         ],
         "sql_instructions": [
             {

@@ -9,17 +9,17 @@
   "name": "aibi-portfolio-assistant",
   "category": "AI-BI",
   "title": "AI/BI: AI-Powered Portfolio Assistant",
-  "custom_schema_supported": "true",
+  "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_aibi_fsi_portfolio_assistant",
   "description": "Easily analyze your portfolio performance and market trends using the GenAI Assistant. Dive into your data and key financial metrics, and ask plain-language questions through Genie to make smarter, data-driven investment decisions.",
-  "bundle": "true",
+  "bundle": True,
   "notebooks": [
     {
       "path": "AI-BI-Portfolio-assistant", 
-      "pre_run": "false", 
-      "publish_on_website": "true", 
-      "add_cluster_setup_cell": "false",
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
       "title": "AI BI: Portfolio assistant", 
       "description": "Discover Databricks Intelligence Data Platform capabilities."
     }

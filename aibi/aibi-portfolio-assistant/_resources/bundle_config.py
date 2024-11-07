@@ -54,7 +54,7 @@
         "What is the market sentiment for companies in the retail industry? Visualize as a bar chart",
         "How diversified is my portfolio by market cap? Visualize as a pie chart",
         "What was the top 10 most recent negative event for banking companies in my portfolio",
-        "How has the market sentiment changed by week for my portfolio?",
+        "How has the market sentiment changed by week for my portfolio?"
        ]
     }
   ]

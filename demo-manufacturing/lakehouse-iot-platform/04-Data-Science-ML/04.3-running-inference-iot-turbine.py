@@ -35,7 +35,7 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.20.0
+# MAGIC %pip install databricks-sdk==0.36.0
 # MAGIC %pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 

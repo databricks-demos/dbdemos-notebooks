@@ -6,7 +6,7 @@
 # COMMAND ----------
 
 {
-  "name": "aibi-supply-chain-forecast",
+  "name": "aibi-supply-chain-forecasting",
   "category": "AI-BI",
   "title": "AI/BI: Supply Chain Forecasting",
   "custom_schema_supported": True,

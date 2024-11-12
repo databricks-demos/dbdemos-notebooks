@@ -22,7 +22,7 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.17.0
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.17.2
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -565,6 +565,9 @@ display(Image(filename=eval_roc_curve_path))
 # DBTITLE 1,Let's register a first model version as example
 model_name = "dbdemos_customer_churn"
 
+#Set to true to redeploy your actual model (we skip it by default to make the demo faster)
+force_redeploy = False
+
 #Use Databricks Unity Catalog to save our model
 mlflow.set_registry_uri('databricks-uc')
 client = MlflowClient()
@@ -575,10 +578,13 @@ try:
 except:  
   #Enable Unity Catalog with mlflow registry
   #Add model within our catalog
+  force_redeploy = True
+  
+if force_redeploy:
   latest_model = mlflow.register_model(f'runs:/{mlflow_run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
   # Flag it as Production ready using UC Aliases
   client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
-  set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
+  #set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
 
 # COMMAND ----------
 

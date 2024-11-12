@@ -37,7 +37,7 @@
 # MAGIC
 # MAGIC Here is the application we will implement:
 # MAGIC
-# MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-diagram.png?raw=true" />
+# MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/smart_claims_process.png?raw=true" />
 # MAGIC
 # MAGIC We will consume informations from our main operational system:
 # MAGIC

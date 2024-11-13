@@ -73,19 +73,19 @@
         "sql_instructions": [
           {
             "title": "Average active opportunity size",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM demos_genie.`sales_pipeline`.opportunity WHERE forecastcategory IS NOT NULL) SELECT AVG(`opportunity_amount`) AS `avg(opportunity_amount)` FROM q GROUP BY GROUPING SETS (())"
+            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT AVG(`opportunity_amount`) AS `avg(opportunity_amount)` FROM q GROUP BY GROUPING SETS (())"
           },
           {
             "title": "Distribution of stages across all opportunities",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM demos_genie.`sales_pipeline`.opportunity WHERE forecastcategory IS NOT NULL) SELECT COUNT(`stagename`) AS `count(stagename)`, `stagename` FROM q GROUP BY `stagename`"
+            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT COUNT(`stagename`) AS `count(stagename)`, `stagename` FROM q GROUP BY `stagename`"
           },
           {
             "title": "Pipeline Amount by Region",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM demos_genie.`sales_pipeline`.opportunity WHERE forecastcategory IS NOT NULL) SELECT `region`, SUM(`pipeline_amount`) AS `sum(pipeline_amount)` FROM q GROUP BY `region`"
+            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM .opportunity WHERE forecastcategory IS NOT NULL) SELECT `region`, SUM(`pipeline_amount`) AS `sum(pipeline_amount)` FROM q GROUP BY `region`"
           },
           {
             "title": "Average days to close",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM demos_genie.`sales_pipeline`.opportunity WHERE forecastcategory IS NOT NULL) SELECT AVG(`days_to_close`) AS `avg(days_to_close)` FROM q GROUP BY GROUPING SETS (())"
+            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT AVG(`days_to_close`) AS `avg(days_to_close)` FROM q GROUP BY GROUPING SETS (())"
           }
         ],
         "instructions": "- Financial years run from February through to the end of January the following year.\n- For example deals created in FY24 are createddate >= '2024-02-01' AND createddate < '2025-02-01'\n- Deals closed in FY24 are closedate >= '2024-02-01'  AND closedate < '2025-02-01'\n\n- There are 4 financial quarters every fiscal year. Each quarter is 3 months long. Q1 starts in February and ends in April. Q2 starts in may and ends in July. This quarter is Q2. We are currently in Q2.\n\n- Always round metrics in results to 2 decimal places. For example use ROUND(foo,2) where foo is the metric getting returned.\n\n- When someone asks about europe that means EMEA, america and north america mean AMER.\n\n- When someone asks about top sales performance for sales reps respond with the person who generated the most pipeline across all stages.\n\n- a won sale is one with the stagename \"5. Closed Won\" a lost sale is one with the stagename \"X. Closed Lost\"\n\n- Remember to filter out nulls for forecastcategory\n\n- Remember to use pipeline_amount when asked about pipeline\n- When asked about pipeline start by breaking down totals by region\n\n- include user name when asked about sales reps\n\n \n\n- include account name when asked about a specific account\n",

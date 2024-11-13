@@ -37,25 +37,25 @@
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/accounts",
         "source_format": "parquet",
-        "target_table_name": "demographics",
+        "target_table_name": "accounts",
         "target_format": "delta"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/opportunity",
         "source_format": "parquet",
-        "target_table_name": "exposures",
+        "target_table_name": "opportunity",
         "target_format": "delta"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/user",
         "source_format": "parquet",
-        "target_table_name": "diagnoses",
+        "target_table_name": "user",
         "target_format": "delta"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/opportunityhistory_cube",
         "source_format": "parquet",
-        "target_table_name": "expression_profiles_umap",
+        "target_table_name": "opportunityhistory_cube",
         "target_format": "delta"
       }
     ],

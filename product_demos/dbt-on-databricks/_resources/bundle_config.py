@@ -9,6 +9,9 @@
   "name": "dbt-on-databricks",
   "category": "data-engineering",
   "title": "Orchestrate and run your dbt jobs",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_dbt_retail",
   "description": "Launch your dbt pipelines in production using a SQL Warehouse. Leverage Databricks Workflow (orchestration) and add a dbt task in your transformation pipeline.",
   "fullDescription": "dbt is a popular data framework to transform and load data into your Lakehouse. Databricks makes it very easy to launch production-grade dbt pipeline using your Databricks SQL warehouse.<br/>In this dbt + Databricks demo, we'll cover: <ul><li>How to build a dbt pipeline to ingest our customer datasets. (We'll be building the same pipeline as the one available in the 'lakehouse-retail-c360' demo.)</li><li>How to start your dbt pipeline from your IDEA</li><li>And ultimately how Databricks Workflow can start dbt tasks to orchestrate your production run.</li></ul><br/>Note: this demo will clone for you the repo <a href='https://github.com/databricks-demos/dbt-databricks-c360'>https://github.com/databricks-demos/dbt-databricks-c360</a> in your repo personal folder.",
   "usecase": "Data Engineering",
@@ -32,7 +35,7 @@
   ],
   "repos": [{
             "id": "dbt-databricks-c360",
-            "path": "/Repos/{{CURRENT_USER}}/dbdemos-dbt-databricks-c360",
+            "path": "{{DEMO_FOLDER}}/dbdemos-dbt-databricks-c360",
             "url": "https://github.com/databricks-demos/dbt-databricks-c360",
             "provider": "gitHub",
             "branch": "main"}],
@@ -54,8 +57,12 @@
                 {
                     "task_key": "01-autoloader-data-ingestion",
                     "notebook_task": {
-                        "notebook_path": "/Repos/{{CURRENT_USER}}/dbdemos-dbt-databricks-c360/01-ingest-autoloader/01-data-ingestion",
-                        "source": "WORKSPACE"
+                        "notebook_path": "{{DEMO_FOLDER}}/dbdemos-dbt-databricks-c360/01-load-raw-data/01-load-data",
+                        "source": "WORKSPACE",
+                        "base_parameters": {
+                            "catalog": "{{CATALOG}}",
+                            "schema": "{{SCHEMA}}"
+                        }
                     },
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",
                     "timeout_seconds": 0,
@@ -69,19 +76,20 @@
                         }
                     ],
                     "dbt_task": {
-                        "project_directory": "",
+                        "project_directory": "{{DEMO_FOLDER}}/dbdemos-dbt-databricks-c360",
                         "commands": [
-                            "dbt run --vars '{\"catalog\": \"{{CATALOG}}\", \"schema\":\"{{SCHEMA}}\"}'",
-                            "dbt test --store-failures"
+                            "dbt run",
+                            "dbt test --store-failures --vars '{\"catalog\": \"{{CATALOG}}\", \"schema\":\"{{SCHEMA}}\"}'"
                         ],
-                        "schema": "dbdemos",
                         "warehouse_id": "{{SHARED_WAREHOUSE_ID}}",
-                        "catalog": "dbdemos"
+                        "schema": "{{SCHEMA}}",
+                        "catalog": "{{CATALOG}}",
+                        "source": "WORKSPACE"
                     },
                     "libraries": [
                         {
                             "pypi": {
-                                "package": "dbt-databricks>=1.0.0,<2.0.0"
+                                "package": "dbt-databricks==1.8.7"
                             }
                         }
                     ],
@@ -97,7 +105,7 @@
                         }
                     ],
                     "notebook_task": {
-                        "notebook_path": "/Repos/{{CURRENT_USER}}/dbdemos-dbt-databricks-c360/03-ml-predict-churn/03-churn-prediction",
+                        "notebook_path": "{{DEMO_FOLDER}}/dbdemos-dbt-databricks-c360/03-ml-predict-churn/03-churn-prediction",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",
@@ -109,7 +117,7 @@
                 {
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",
                     "new_cluster": {
-                        "spark_version": "11.3.x-cpu-ml-scala2.12",
+                        "spark_version": "15.4.x-cpu-ml-scala2.12",
                         "spark_conf": {
                             "spark.master": "local[*, 4]",
                             "spark.databricks.cluster.profile": "singleNode"
@@ -126,11 +134,6 @@
                     }
                 }
             ],
-             "git_source": {
-                "git_url": "https://github.com/databricks-demos/dbt-databricks-c360",
-                "git_provider": "gitHub",
-                "git_branch": "main"
-            },
             "format": "MULTI_TASK"
         }
       }

@@ -202,7 +202,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "15.1.x-cpu-ml-scala2.12",
+                    "spark_version": "15.4.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -224,7 +224,7 @@
     }
   },
   "cluster": {
-      "spark_version": "15.1.x-cpu-ml-scala2.12",
+      "spark_version": "15.4.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

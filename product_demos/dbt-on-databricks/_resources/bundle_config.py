@@ -106,7 +106,11 @@
                     ],
                     "notebook_task": {
                         "notebook_path": "{{DEMO_FOLDER}}/dbdemos-dbt-databricks-c360/03-ml-predict-churn/03-churn-prediction",
-                        "source": "WORKSPACE"
+                        "source": "WORKSPACE",
+                        "base_parameters": {
+                            "catalog": "{{CATALOG}}",
+                            "schema": "{{SCHEMA}}"
+                        }
                     },
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",
                     "timeout_seconds": 0,

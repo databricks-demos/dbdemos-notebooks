@@ -14,6 +14,6 @@
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("lakehouse-retail-c360", catalog="..", schema="...")
 
 catalog = "main__build"
-schema = dbName = db = "dbdemos_iot_turbine"
+schema = dbName = db = "dbdemos_iot_platform"
 
 volume_name = "turbine_raw_landing"

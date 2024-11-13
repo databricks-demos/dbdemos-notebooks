@@ -81,7 +81,7 @@
           },
           {
             "title": "Pipeline Amount by Region",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM .opportunity WHERE forecastcategory IS NOT NULL) SELECT `region`, SUM(`pipeline_amount`) AS `sum(pipeline_amount)` FROM q GROUP BY `region`"
+            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT `region`, SUM(`pipeline_amount`) AS `sum(pipeline_amount)` FROM q GROUP BY `region`"
           },
           {
             "title": "Average days to close",

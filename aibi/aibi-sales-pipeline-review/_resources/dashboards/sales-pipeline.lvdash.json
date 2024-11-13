@@ -1,0 +1,1409 @@
+{
+    "datasets": [
+        {
+            "name": "b2b56237",
+            "displayName": "opportunity",
+            "query": "select * from main.dbdemos_aibi_sales_pipeline_review.opportunity"
+        },
+        {
+            "name": "aed85b51",
+            "displayName": "opportunityhistory_cube",
+            "query": "SELECT * FROM main.dbdemos_aibi_sales_pipeline_review.opportunityhistory_cube "
+        },
+        {
+            "name": "268c323c",
+            "displayName": "user",
+            "query": "SELECT \n    u.name,\n    u.title,\n    u.role__c as role,\n    o.opportunityid,\n    o.ownerid,\n    o.stagename,\n    o.accountid,\n    o.account_name,\n    o.forecastcategory,\n    o.description,\n    o.createddate,\n    o.closedate,\n    o.amount\nFROM main.dbdemos_aibi_sales_pipeline_review.opportunity o\nLEFT JOIN main.dbdemos_aibi_sales_pipeline_review.user u on o.ownerid = u.id"
+        }
+    ],
+    "pages": [
+        {
+            "name": "525ad93c",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "94355e53",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "avg(opportunity_amount)",
+                                            "expression": "AVG(`opportunity_amount`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "avg(opportunity_amount)",
+                                    "displayName": "Average opportunity_amount"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Avg active opp size"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 1,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "98fc5504",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "stagename",
+                                            "expression": "`stagename`"
+                                        },
+                                        {
+                                            "name": "sum(days_to_close)",
+                                            "expression": "SUM(`days_to_close`)"
+                                        },
+                                        {
+                                            "name": "daily(createddate)",
+                                            "expression": "DATE_TRUNC(\"DAY\", `createddate`)"
+                                        },
+                                        {
+                                            "name": "annualrevenue",
+                                            "expression": "`annualrevenue`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "scatter",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "daily(createddate)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "axis": {
+                                        "title": "Created date"
+                                    },
+                                    "displayName": "Created date"
+                                },
+                                "y": {
+                                    "fieldName": "annualrevenue",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "Customer annual revenue ($USD)"
+                                    },
+                                    "displayName": "Customer annual revenue ($USD)"
+                                },
+                                "color": {
+                                    "fieldName": "stagename",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "1. Discovery",
+                                                "color": "#22a7f0"
+                                            },
+                                            {
+                                                "value": "2. Demo",
+                                                "color": "#48b5c4"
+                                            },
+                                            {
+                                                "value": "3. Validation",
+                                                "color": "#a6d75b"
+                                            },
+                                            {
+                                                "value": "5. Closed Won",
+                                                "color": "#256894"
+                                            },
+                                            {
+                                                "value": "X. Closed Lost",
+                                                "color": "#1984c5"
+                                            },
+                                            {
+                                                "value": "4. Procure",
+                                                "color": "#ffde7a"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "title": "Stage"
+                                    },
+                                    "displayName": "Stage"
+                                },
+                                "size": {
+                                    "fieldName": "sum(days_to_close)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of days_to_close"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Opportunity stage by customer annual revenue over time"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 9,
+                        "width": 4,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8d44bde1",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "avg(probability_per)",
+                                            "expression": "AVG(`probability_per`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "avg(probability_per)",
+                                    "displayName": "Average probability_per"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Avg probability of close"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 1,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a2abfcc3",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef59bc74f71e75aa11a68be22ce5a3/datasets/01ef59bc74fb1c079c4f967a5beeb1f6_createddate",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "createddate",
+                                            "expression": "`createddate`"
+                                        },
+                                        {
+                                            "name": "createddate_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-range-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "createddate",
+                                        "displayName": "createddate",
+                                        "queryName": "dashboards/01ef59bc74f71e75aa11a68be22ce5a3/datasets/01ef59bc74fb1c079c4f967a5beeb1f6_createddate"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Deals created between"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 1,
+                        "width": 2,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f6efedb0",
+                        "textbox_spec": "# AIBI DBDemos - Sales Pipeline Opportunities Overview"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "b2f57333",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "avg(days_to_close)",
+                                            "expression": "AVG(`days_to_close`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "avg(days_to_close)",
+                                    "displayName": "Average days_to_close"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Avg days to close"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 1,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "11a34937",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "avg(annualrevenue)",
+                                            "expression": "AVG(`annualrevenue`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "avg(annualrevenue)",
+                                    "displayName": "Average annualrevenue"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Avg cust annual rev"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 1,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ab1b6f1a",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "count(stagename)",
+                                            "expression": "COUNT(`stagename`)"
+                                        },
+                                        {
+                                            "name": "stagename",
+                                            "expression": "`stagename`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "count(stagename)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": " "
+                                    },
+                                    "displayName": " "
+                                },
+                                "color": {
+                                    "fieldName": "stagename",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "stagename"
+                                },
+                                "label": {
+                                    "show": true
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Distribution of stages across all opportunities"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 3,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c3d5eb53",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "name",
+                                            "expression": "`name`"
+                                        },
+                                        {
+                                            "name": "opportunityid",
+                                            "expression": "`opportunityid`"
+                                        },
+                                        {
+                                            "name": "ownerid",
+                                            "expression": "`ownerid`"
+                                        },
+                                        {
+                                            "name": "stagename",
+                                            "expression": "`stagename`"
+                                        },
+                                        {
+                                            "name": "accountid",
+                                            "expression": "`accountid`"
+                                        },
+                                        {
+                                            "name": "account_name",
+                                            "expression": "`account_name`"
+                                        },
+                                        {
+                                            "name": "forecastcategory",
+                                            "expression": "`forecastcategory`"
+                                        },
+                                        {
+                                            "name": "description",
+                                            "expression": "`description`"
+                                        },
+                                        {
+                                            "name": "createddate",
+                                            "expression": "`createddate`"
+                                        },
+                                        {
+                                            "name": "closedate",
+                                            "expression": "`closedate`"
+                                        },
+                                        {
+                                            "name": "amount",
+                                            "expression": "`amount`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "table",
+                            "encodings": {
+                                "columns": [
+                                    {
+                                        "fieldName": "name",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100000,
+                                        "title": "name",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "name"
+                                    },
+                                    {
+                                        "fieldName": "opportunityid",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100003,
+                                        "title": "opportunityid",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "opportunityid"
+                                    },
+                                    {
+                                        "fieldName": "ownerid",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100004,
+                                        "title": "ownerid",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "ownerid"
+                                    },
+                                    {
+                                        "fieldName": "stagename",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100005,
+                                        "title": "stagename",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "stagename"
+                                    },
+                                    {
+                                        "fieldName": "accountid",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100006,
+                                        "title": "accountid",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "accountid"
+                                    },
+                                    {
+                                        "fieldName": "account_name",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100007,
+                                        "title": "account_name",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "account_name"
+                                    },
+                                    {
+                                        "fieldName": "forecastcategory",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100008,
+                                        "title": "forecastcategory",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "forecastcategory"
+                                    },
+                                    {
+                                        "fieldName": "description",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100009,
+                                        "title": "description",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "description"
+                                    },
+                                    {
+                                        "fieldName": "createddate",
+                                        "dateTimeFormat": "YYYY-MM-DD",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "date",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100010,
+                                        "title": "createddate",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "createddate"
+                                    },
+                                    {
+                                        "fieldName": "closedate",
+                                        "dateTimeFormat": "YYYY-MM-DD",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "date",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100011,
+                                        "title": "closedate",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "closedate"
+                                    },
+                                    {
+                                        "fieldName": "amount",
+                                        "numberFormat": "0.00",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "float",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100012,
+                                        "title": "amount",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "amount"
+                                    }
+                                ]
+                            },
+                            "invisibleColumns": [
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "days_to_close",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 100000,
+                                    "title": "days_to_close",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "probability_per",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100001,
+                                    "title": "probability_per",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "type",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100006,
+                                    "title": "type",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "leadsource",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100010,
+                                    "title": "leadsource",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "probability",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100013,
+                                    "title": "probability",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "opportunity_amount",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100015,
+                                    "title": "opportunity_amount",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "New_Expansion_Booking_Annual__c",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100016,
+                                    "title": "New_Expansion_Booking_Annual__c",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "New_Expansion_Booking_Annual_Wtd__c",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100017,
+                                    "title": "New_Expansion_Booking_Annual_Wtd__c",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "New_Recurring_Bookings_Manual__c",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100018,
+                                    "title": "New_Recurring_Bookings_Manual__c",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "New_Recurring_Bookings__c",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100019,
+                                    "title": "New_Recurring_Bookings__c",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "business_type__c",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100020,
+                                    "title": "business_type__c",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "industry",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100021,
+                                    "title": "industry",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "a_account_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100022,
+                                    "title": "a_account_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "region_hq__c",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100024,
+                                    "title": "region_hq__c",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "region",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100025,
+                                    "title": "region",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "company_size_segment__c",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100026,
+                                    "title": "company_size_segment__c",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "region_size",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100027,
+                                    "title": "region_size",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "annualrevenue",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 100028,
+                                    "title": "annualrevenue",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
+                            "allowHTMLByDefault": false,
+                            "itemsPerPage": 25,
+                            "paginationSize": "default",
+                            "condensed": true,
+                            "withRowNumber": false,
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Team"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 17,
+                        "width": 6,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "6fecbb04",
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_xindustry_sales_pipeline&demo_name=aibi_xindustry_sales_pipeline&event=DASHBOARD_VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 24,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "134a706f",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "stagename",
+                                            "expression": "`stagename`"
+                                        },
+                                        {
+                                            "name": "region",
+                                            "expression": "`region`"
+                                        },
+                                        {
+                                            "name": "sum(opportunity_amount)",
+                                            "expression": "SUM(`opportunity_amount`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "region",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "sort": {
+                                            "by": "y-reversed"
+                                        }
+                                    },
+                                    "displayName": "region"
+                                },
+                                "y": {
+                                    "fieldName": "sum(opportunity_amount)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of opportunity_amount"
+                                },
+                                "color": {
+                                    "fieldName": "stagename",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "stagename"
+                                },
+                                "label": {
+                                    "show": true
+                                }
+                            },
+                            "frame": {
+                                "title": "Pipeline by Region",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 3,
+                        "width": 4,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "83daddb1",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "b2b56237",
+                                    "fields": [
+                                        {
+                                            "name": "region",
+                                            "expression": "`region`"
+                                        },
+                                        {
+                                            "name": "monthly(closedate)",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `closedate`)"
+                                        },
+                                        {
+                                            "name": "countdistinct(opportunityid)",
+                                            "expression": "COUNT(DISTINCT `opportunityid`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "monthly(closedate)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "closedate"
+                                },
+                                "y": {
+                                    "fieldName": "countdistinct(opportunityid)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Count of Unique opportunityid"
+                                },
+                                "color": {
+                                    "fieldName": "region",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "region"
+                                }
+                            },
+                            "frame": {
+                                "title": "Monthly opportunities over time by region",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 9,
+                        "width": 2,
+                        "height": 8
+                    }
+                }
+            ]
+        }
+    ]
+}

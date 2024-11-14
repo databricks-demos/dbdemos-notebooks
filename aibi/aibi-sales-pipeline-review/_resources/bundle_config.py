@@ -29,7 +29,7 @@
     "pipelines": [],
     "dashboards": [
       {
-        "name": "[dbdemos] AI/BI - Sales Pipeline Review",
+        "name": "[dbdemos] AIBI - Sales Pipeline Review",
         "id": "sales-pipeline"
       }
     ],

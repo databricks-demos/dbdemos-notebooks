@@ -29,7 +29,7 @@
   "pipelines": [],
   "dashboards": [
     {
-      "name": "[dbdemos] AI/BI - Supply Chain Optimization",
+      "name": "[dbdemos] AIBI - Supply Chain Optimization",
       "id": "supply-chain"
     }
   ],

@@ -27,7 +27,7 @@
   "init_job": {},
   "cluster": {}, 
   "pipelines": [],
-  "dashboards": [{"name": "[dbdemos] AI/BI - Marketing Campaign",       "id": "web-marketing"}
+  "dashboards": [{"name": "[dbdemos] AIBI - Marketing Campaign",       "id": "web-marketing"}
                 ],
   "data_folders":[
     {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/compaigns",              "source_format": "parquet", "target_table_name":"compaigns",              "target_format":"delta"},

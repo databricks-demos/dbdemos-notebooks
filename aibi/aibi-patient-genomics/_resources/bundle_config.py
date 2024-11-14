@@ -29,7 +29,7 @@
   "pipelines": [],
   "dashboards": [
     {
-      "name": "[dbdemos] AI/BI - Patient Genomics Review for Precision Oncology",
+      "name": "[dbdemos] AIBI - Patient Genomics Review for Precision Oncology",
       "id": "patient-genomics"
     }
   ],

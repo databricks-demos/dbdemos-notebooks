@@ -29,7 +29,7 @@
   "pipelines": [],
   "dashboards": [
     {
-      "name": "[dbdemos] AI/BI - Portfolio Assistant",
+      "name": "[dbdemos] AIBI - Portfolio Assistant",
       "id": "portfolio-assistant"
     }
   ],

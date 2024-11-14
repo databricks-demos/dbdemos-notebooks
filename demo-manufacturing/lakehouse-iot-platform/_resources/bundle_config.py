@@ -9,7 +9,7 @@
   "name": "lakehouse-iot-platform",
   "category": "lakehouse",
   "custom_schema_supported": True,
-  "default_schema": "dbdemos_iot_turbine",
+  "default_schema": "dbdemos_iot_platform",
   "default_catalog": "main",
   "title": "Lakehouse for IoT & Predictive Maintenance",
   "description": "Detect faulty wind turbine: Ingestion (DLT), BI, Predictive Maintenance (ML), Governance (UC), Orchestration",

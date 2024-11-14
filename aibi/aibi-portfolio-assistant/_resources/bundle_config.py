@@ -86,13 +86,9 @@
       "instructions": "Don't answer questions unrelated to being a portfolio assistant. If a user asks to perform a forecast that we don't have data for, use the ai_forecast() function.",
       "curated_questions": [
         "What are the top 5 companies by market capitalization in our investment portfolio?",
-        "How has the stock price of Apple changed over time?",
-        "Was there a stock split for AAPL in the 2014 2015 timeframe?",
-        "Show me the market volatility for Technology companies during the financial crisis by week",
-        "What is the market sentiment for companies in the retail industry? Visualize as a bar chart",
-        "How diversified is my portfolio by market cap? Visualize as a pie chart",
-        "What was the top 10 most recent negative event for banking companies in my portfolio",
-        "How has the market sentiment changed by week for my portfolio?"
+        "What is the market sentiment for companies in my portfolio in the retail industry? Visualize as a bar chart",
+        "What are my largest holdings in my portfolio with an overall negative market sentiment?",
+        "Was there a stock split for AAPL in the 2014 2015 timeframe?"
       ]
     }
   ]

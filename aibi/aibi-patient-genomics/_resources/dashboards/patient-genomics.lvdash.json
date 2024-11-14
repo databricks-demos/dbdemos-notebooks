@@ -3,22 +3,22 @@
         {
             "name": "60629a6e",
             "displayName": "patient_demographics",
-            "query": "SELECT *, CASE\n    WHEN year_of_death IS NOT NULL THEN FLOOR(DATEDIFF(TO_DATE(year_of_death), TO_DATE(year_of_birth)) / 365)\n    ELSE FLOOR(DATEDIFF(CURRENT_DATE(), TO_DATE(year_of_birth)) / 365)\nEND AS age_in_years\nFROM aibi.dbdemos_aibi_hls_genomics.demographics\nwhere race is NOT NULL"
+            "query": "SELECT *, CASE\n    WHEN year_of_death IS NOT NULL THEN FLOOR(DATEDIFF(TO_DATE(year_of_death), TO_DATE(year_of_birth)) / 365)\n    ELSE FLOOR(DATEDIFF(CURRENT_DATE(), TO_DATE(year_of_birth)) / 365)\nEND AS age_in_years\nFROM main.dbdemos_aibi_hls_genomics.demographics\nwhere race is NOT NULL"
         },
         {
             "name": "49313e57",
             "displayName": "expression_profiles_umap",
-            "query": "\nwith umap_embeddings as (\n    SELECT *, count(*) over (partition by tissue_or_organ_of_origin) as count \n    FROM aibi.dbdemos_aibi_hls_genomics.expression_profiles_umap\n)\nselect * from umap_embeddings\nwhere count> 200"
+            "query": "\nwith umap_embeddings as (\n    SELECT *, count(*) over (partition by tissue_or_organ_of_origin) as count \n    FROM main.dbdemos_aibi_hls_genomics.expression_profiles_umap\n)\nselect * from umap_embeddings\nwhere count> 200"
         },
         {
             "name": "c44f1b7d",
             "displayName": "exposures",
-            "query": "WITH exposure_history AS (\n    SELECT \n        gender,\n        alcohol_history,\n        alcohol_intensity,\n        cigarettes_per_day,\n        COALESCE(years_smoked, 0) AS years_smoked,  -- Replace NULL with 0\n        primary_diagnosis,\n        COUNT(*) OVER (PARTITION BY primary_diagnosis) AS count_diagnosis\n    FROM \n        aibi.dbdemos_aibi_hls_genomics.exposures\n    JOIN \n        aibi.dbdemos_aibi_hls_genomics.diagnoses\n        ON exposures.case_id = diagnoses.case_id\n    JOIN \n        aibi.dbdemos_aibi_hls_genomics.demographics\n        ON demographics.case_id = exposures.case_id\n    WHERE \n        alcohol_history IS NOT NULL \n        AND cigarettes_per_day IS NOT NULL\n) \nSELECT * \nFROM exposure_history\nWHERE count_diagnosis > 20;"
+            "query": "WITH exposure_history AS (\n    SELECT \n        gender,\n        alcohol_history,\n        alcohol_intensity,\n        cigarettes_per_day,\n        COALESCE(years_smoked, 0) AS years_smoked,  -- Replace NULL with 0\n        primary_diagnosis,\n        COUNT(*) OVER (PARTITION BY primary_diagnosis) AS count_diagnosis\n    FROM \n        main.dbdemos_aibi_hls_genomics.exposures\n    JOIN \n        main.dbdemos_aibi_hls_genomics.diagnoses\n        ON exposures.case_id = diagnoses.case_id\n    JOIN \n        main.dbdemos_aibi_hls_genomics.demographics\n        ON demographics.case_id = exposures.case_id\n    WHERE \n        alcohol_history IS NOT NULL \n        AND cigarettes_per_day IS NOT NULL\n) \nSELECT * \nFROM exposure_history\nWHERE count_diagnosis > 20;"
         },
         {
             "name": "4ca282a8",
             "displayName": "diagnoses",
-            "query": "SELECT *, CASE\n    WHEN year_of_death IS NOT NULL THEN FLOOR(DATEDIFF(TO_DATE(year_of_death), TO_DATE(year_of_birth)) / 365)\n    ELSE FLOOR(DATEDIFF(CURRENT_DATE(), TO_DATE(year_of_birth)) / 365)\nEND AS age_in_years\nFROM aibi.dbdemos_aibi_hls_genomics.diagnoses\njoin aibi.dbdemos_aibi_hls_genomics.demographics on diagnoses.case_id = demographics.case_id\n"
+            "query": "SELECT *, CASE\n    WHEN year_of_death IS NOT NULL THEN FLOOR(DATEDIFF(TO_DATE(year_of_death), TO_DATE(year_of_birth)) / 365)\n    ELSE FLOOR(DATEDIFF(CURRENT_DATE(), TO_DATE(year_of_birth)) / 365)\nEND AS age_in_years\nFROM main.dbdemos_aibi_hls_genomics.diagnoses\njoin main.dbdemos_aibi_hls_genomics.demographics on diagnoses.case_id = demographics.case_id\n"
         }
     ],
     "pages": [

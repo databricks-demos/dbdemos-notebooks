@@ -1,0 +1,1972 @@
+{
+    "datasets": [
+        {
+            "name": "60629a6e",
+            "displayName": "patient_demographics",
+            "query": "SELECT *, CASE\n    WHEN year_of_death IS NOT NULL THEN FLOOR(DATEDIFF(TO_DATE(year_of_death), TO_DATE(year_of_birth)) / 365)\n    ELSE FLOOR(DATEDIFF(CURRENT_DATE(), TO_DATE(year_of_birth)) / 365)\nEND AS age_in_years\nFROM main.dbdemos_aibi_hls_genomics.demographics\nwhere race is NOT NULL"
+        },
+        {
+            "name": "49313e57",
+            "displayName": "expression_profiles_umap",
+            "query": "\nwith umap_embeddings as (\n    SELECT *, count(*) over (partition by tissue_or_organ_of_origin) as count \n    FROM main.dbdemos_aibi_hls_genomics.expression_profiles_umap\n)\nselect * from umap_embeddings\nwhere count> 200"
+        },
+        {
+            "name": "c44f1b7d",
+            "displayName": "exposures",
+            "query": "WITH exposure_history AS (\n    SELECT \n        gender,\n        alcohol_history,\n        alcohol_intensity,\n        cigarettes_per_day,\n        COALESCE(years_smoked, 0) AS years_smoked,  -- Replace NULL with 0\n        primary_diagnosis,\n        COUNT(*) OVER (PARTITION BY primary_diagnosis) AS count_diagnosis\n    FROM \n        main.dbdemos_aibi_hls_genomics.exposures\n    JOIN \n        main.dbdemos_aibi_hls_genomics.diagnoses\n        ON exposures.case_id = diagnoses.case_id\n    JOIN \n        main.dbdemos_aibi_hls_genomics.demographics\n        ON demographics.case_id = exposures.case_id\n    WHERE \n        alcohol_history IS NOT NULL \n        AND cigarettes_per_day IS NOT NULL\n) \nSELECT * \nFROM exposure_history\nWHERE count_diagnosis > 20;"
+        },
+        {
+            "name": "4ca282a8",
+            "displayName": "diagnoses",
+            "query": "SELECT *, CASE\n    WHEN year_of_death IS NOT NULL THEN FLOOR(DATEDIFF(TO_DATE(year_of_death), TO_DATE(year_of_birth)) / 365)\n    ELSE FLOOR(DATEDIFF(CURRENT_DATE(), TO_DATE(year_of_birth)) / 365)\nEND AS age_in_years\nFROM main.dbdemos_aibi_hls_genomics.diagnoses\njoin main.dbdemos_aibi_hls_genomics.demographics on diagnoses.case_id = demographics.case_id\n"
+        }
+    ],
+    "pages": [
+        {
+            "name": "e2eb0119",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "5b70d294",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "49313e57",
+                                    "fields": [
+                                        {
+                                            "name": "tissue_or_organ_of_origin",
+                                            "expression": "`tissue_or_organ_of_origin`"
+                                        },
+                                        {
+                                            "name": "c1",
+                                            "expression": "`c1`"
+                                        },
+                                        {
+                                            "name": "c2",
+                                            "expression": "`c2`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "scatter",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "c1",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "x1"
+                                    },
+                                    "displayName": "x1"
+                                },
+                                "y": {
+                                    "fieldName": "c2",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "x2"
+                                    },
+                                    "displayName": "x2"
+                                },
+                                "color": {
+                                    "fieldName": "tissue_or_organ_of_origin",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "legend": {
+                                        "position": "bottom"
+                                    },
+                                    "displayName": "tissue_or_organ_of_origin"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "UMAP Embeddings for Gene Expressions"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 34,
+                        "width": 4,
+                        "height": 10
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ee39e0da",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "primary_diagnosis",
+                                            "expression": "`primary_diagnosis`"
+                                        },
+                                        {
+                                            "name": "tissue_or_organ_of_origin",
+                                            "expression": "`tissue_or_organ_of_origin`"
+                                        },
+                                        {
+                                            "name": "ethnicity",
+                                            "expression": "`ethnicity`"
+                                        },
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "age_in_years",
+                                            "expression": "`age_in_years`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "table",
+                            "encodings": {
+                                "columns": [
+                                    {
+                                        "fieldName": "primary_diagnosis",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100003,
+                                        "title": "primary_diagnosis",
+                                        "allowSearch": true,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "primary_diagnosis"
+                                    },
+                                    {
+                                        "fieldName": "tissue_or_organ_of_origin",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100004,
+                                        "title": "tissue_or_organ_of_origin",
+                                        "allowSearch": true,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "tissue_or_organ_of_origin"
+                                    },
+                                    {
+                                        "fieldName": "ethnicity",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100012,
+                                        "title": "ethnicity",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "ethnicity"
+                                    },
+                                    {
+                                        "fieldName": "gender",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100013,
+                                        "title": "gender",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "gender"
+                                    },
+                                    {
+                                        "fieldName": "age_in_years",
+                                        "numberFormat": "0",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "integer",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100017,
+                                        "title": "age_in_years",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "age_in_years"
+                                    }
+                                ]
+                            },
+                            "invisibleColumns": [
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "case_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100000,
+                                    "title": "case_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "classification_of_tumor",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100001,
+                                    "title": "classification_of_tumor",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "diagnosis_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100002,
+                                    "title": "diagnosis_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "treatments0_therapeutic_agents",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100005,
+                                    "title": "treatments0_therapeutic_agents",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "treatments0_treatment_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100006,
+                                    "title": "treatments0_treatment_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "treatments1_therapeutic_agents",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100007,
+                                    "title": "treatments1_therapeutic_agents",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "treatments1_treatment_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100008,
+                                    "title": "treatments1_treatment_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "dateTimeFormat": "DD/MM/YY HH:mm:ss.SSS",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "treatments1_updated_datetime",
+                                    "type": "datetime",
+                                    "displayAs": "datetime",
+                                    "order": 100009,
+                                    "title": "treatments1_updated_datetime",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "tumor_grade",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100010,
+                                    "title": "tumor_grade",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "file_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100011,
+                                    "title": "file_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "race",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100014,
+                                    "title": "race",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "year_of_birth",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 100015,
+                                    "title": "year_of_birth",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "year_of_death",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 100016,
+                                    "title": "year_of_death",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
+                            "allowHTMLByDefault": false,
+                            "itemsPerPage": 25,
+                            "paginationSize": "default",
+                            "condensed": true,
+                            "withRowNumber": false,
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Diagnoses Table"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 16,
+                        "width": 4,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a408f300",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "bin(age_in_years, binWidth=10)",
+                                            "expression": "BIN_FLOOR(`age_in_years`, 10)"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "histogram",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "bin(age_in_years, binWidth=10)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "Age"
+                                    },
+                                    "displayName": "Age"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "female",
+                                                "color": "#FCA4A1"
+                                            },
+                                            {
+                                                "value": "male",
+                                                "color": "#077A9D"
+                                            },
+                                            {
+                                                "value": null,
+                                                "color": "#00A972"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "position": "right"
+                                    },
+                                    "displayName": "gender"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Diagnosis by age"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 10,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f58fd8df",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "female",
+                                                "color": "#FCA4A1"
+                                            },
+                                            {
+                                                "value": "male",
+                                                "color": "#077A9D"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "position": "right"
+                                    },
+                                    "displayName": "gender"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Gender Distribution"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 16,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "682ba318",
+                        "textbox_spec": "# Patient Diagnoses Overview"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 6,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "1fd7edad",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "alcohol_history",
+                                            "expression": "`alcohol_history`"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "alcohol_history",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "title": "Patient Alcohol History"
+                                    },
+                                    "displayName": "Patient Alcohol History"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "Count"
+                                    },
+                                    "displayName": "Count"
+                                },
+                                "color": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "male",
+                                                "color": "#077A9D"
+                                            },
+                                            {
+                                                "value": "female",
+                                                "color": "#FCA4A1"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "position": "right"
+                                    },
+                                    "displayName": "gender"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Patient Alcohol Consumption"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 25,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "daf7128c",
+                        "textbox_spec": "# DBDemos: Patient Genomics Analysis for Precision Oncology"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 4,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "b2370b01",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3c138ba60fc4c2b07e5c60_primary_diagnosis",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "primary_diagnosis",
+                                            "expression": "`primary_diagnosis`"
+                                        },
+                                        {
+                                            "name": "primary_diagnosis_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "primary_diagnosis",
+                                        "displayName": "primary_diagnosis",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3c138ba60fc4c2b07e5c60_primary_diagnosis"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Primary Diagnosis"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 10,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c6a3abf5",
+                        "textbox_spec": "# Exposures Profile"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 22,
+                        "width": 6,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "4ceab1c0",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "49313e57",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "tissue_or_organ_of_origin",
+                                            "expression": "`tissue_or_organ_of_origin`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "tissue_or_organ_of_origin",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "tissue_or_organ_of_origin"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Tissue or Organ of Origin"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 34,
+                        "width": 2,
+                        "height": 10
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a2358cbd",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3710d0b5b8c50da651e20b_primary_diagnosis",
+                                "query": {
+                                    "datasetName": "49313e57",
+                                    "fields": [
+                                        {
+                                            "name": "primary_diagnosis",
+                                            "expression": "`primary_diagnosis`"
+                                        },
+                                        {
+                                            "name": "primary_diagnosis_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "primary_diagnosis",
+                                        "displayName": "primary_diagnosis",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3710d0b5b8c50da651e20b_primary_diagnosis"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Primary Diagnosis"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 33,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a3eacf35",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3c138ba60fc4c2b07e5c60_tissue_or_organ_of_origin",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "tissue_or_organ_of_origin",
+                                            "expression": "`tissue_or_organ_of_origin`"
+                                        },
+                                        {
+                                            "name": "tissue_or_organ_of_origin_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "tissue_or_organ_of_origin",
+                                        "displayName": "tissue_or_organ_of_origin",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3c138ba60fc4c2b07e5c60_tissue_or_organ_of_origin"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Tissue or Organ of Origin"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 12,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "348000ea",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "count(*)",
+                                    "style": {
+                                        "bold": true,
+                                        "color": "#FB8D3D",
+                                        "rules": [
+                                            {
+                                                "condition": {
+                                                    "operator": ">="
+                                                },
+                                                "color": "#00A972"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "Count of Records"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Number of recorded exposures"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 25,
+                        "width": 1,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f3e0caf2",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b391a7b862fb4ff18b6bc78_primary_diagnosis",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "primary_diagnosis",
+                                            "expression": "`primary_diagnosis`"
+                                        },
+                                        {
+                                            "name": "primary_diagnosis_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "primary_diagnosis",
+                                        "displayName": "primary_diagnosis",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b391a7b862fb4ff18b6bc78_primary_diagnosis"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Diagnosis"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 24,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "33c4431f",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "count(*)",
+                                    "style": {
+                                        "bold": true,
+                                        "color": "#3BD973",
+                                        "rules": [
+                                            {
+                                                "condition": {
+                                                    "operator": ">="
+                                                },
+                                                "color": "#00A972"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "Count of Records"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Number of diagnoses"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 10,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "643909d3",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "race",
+                                            "expression": "`race`"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "race",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "sort": {
+                                            "by": "y-reversed"
+                                        }
+                                    },
+                                    "axis": {
+                                        "hideLabels": true
+                                    },
+                                    "displayName": "race"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative",
+                                        "reverse": false,
+                                        "domain": {
+                                            "min": 0
+                                        }
+                                    },
+                                    "axis": {
+                                        "title": "average age"
+                                    },
+                                    "displayName": "average age"
+                                },
+                                "color": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "female",
+                                                "color": "#FCA4A1"
+                                            },
+                                            {
+                                                "value": "male",
+                                                "color": "#077A9D"
+                                            },
+                                            {
+                                                "value": null,
+                                                "color": "#00A972"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "hideTitle": true,
+                                        "position": "bottom"
+                                    },
+                                    "displayName": "gender"
+                                },
+                                "label": {
+                                    "show": true
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Diagnosis by race"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 10,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "9264f220",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3710d0b5b8c50da651e20b_tissue_or_organ_of_origin",
+                                "query": {
+                                    "datasetName": "49313e57",
+                                    "fields": [
+                                        {
+                                            "name": "tissue_or_organ_of_origin",
+                                            "expression": "`tissue_or_organ_of_origin`"
+                                        },
+                                        {
+                                            "name": "tissue_or_organ_of_origin_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "tissue_or_organ_of_origin",
+                                        "displayName": "tissue_or_organ_of_origin",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3710d0b5b8c50da651e20b_tissue_or_organ_of_origin"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Tissue or Organ of Origin"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 33,
+                        "width": 4,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "d0d1fc62",
+                        "textbox_spec": "# Gene Expression Profile\nbased on [UMAP](https://umap-learn.readthedocs.io/en/latest/) embeddings of gene expressions"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 31,
+                        "width": 6,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "475f2c39",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3c138ba60fc4c2b07e5c60_ethnicity",
+                                "query": {
+                                    "datasetName": "4ca282a8",
+                                    "fields": [
+                                        {
+                                            "name": "ethnicity",
+                                            "expression": "`ethnicity`"
+                                        },
+                                        {
+                                            "name": "ethnicity_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "ethnicity",
+                                        "displayName": "ethnicity",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b3c138ba60fc4c2b07e5c60_ethnicity"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Patient Ethnicity"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 14,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "2506e3a6",
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_hls_tcga&demo_name=aibi_hls_tcga&event=DASHBOARD_VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 44,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "94eeaaf9",
+                        "textbox_spec": "![TCGA](https://www.cancer.gov/ccg/sites/g/files/xnrzdm256/files/styles/cgov_featured/public/cgov_image/media_image/2022-06/TCGA%20people%20and%20layers%20of%20data%20425x319.jpg?h=982f41e1&itok=zkQ_l8-t)\n\nData is prepared using the [TCGA solution accelerator]()"
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 2,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "69b72852",
+                        "textbox_spec": "# Patient Population Overview"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 2,
+                        "width": 4,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "573d56de",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "avg(years_smoked)",
+                                            "expression": "AVG(`years_smoked`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "avg(years_smoked)",
+                                    "style": {
+                                        "rules": [
+                                            {
+                                                "condition": {
+                                                    "operator": ">=",
+                                                    "operand": {
+                                                        "type": "data-value",
+                                                        "value": "30"
+                                                    }
+                                                },
+                                                "color": "#E92828"
+                                            },
+                                            {
+                                                "condition": {
+                                                    "operator": ">=",
+                                                    "operand": {
+                                                        "type": "data-value",
+                                                        "value": "20"
+                                                    }
+                                                },
+                                                "color": "#FB8D3D"
+                                            },
+                                            {
+                                                "condition": {
+                                                    "operator": ">=",
+                                                    "operand": {
+                                                        "type": "data-value",
+                                                        "value": "10"
+                                                    }
+                                                },
+                                                "color": "#a5a900"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "Average years_smoked"
+                                }
+                            },
+                            "frame": {
+                                "title": "Average years patients have  smoked",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 28,
+                        "width": 1,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "88a150bb",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_age_in_years",
+                                "query": {
+                                    "datasetName": "60629a6e",
+                                    "fields": [
+                                        {
+                                            "name": "min(age_in_years)",
+                                            "expression": "MIN(`age_in_years`)"
+                                        },
+                                        {
+                                            "name": "max(age_in_years)",
+                                            "expression": "MAX(`age_in_years`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "range-slider",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "age_in_years",
+                                        "displayName": "age_in_years",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_age_in_years"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": " Patient Age"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8e7cc424",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_gender",
+                                "query": {
+                                    "datasetName": "60629a6e",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "gender_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "gender",
+                                        "displayName": "gender",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_gender"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Patient Gender"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 5,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5de044c3",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "60629a6e",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "count(*)",
+                                    "style": {
+                                        "bold": true,
+                                        "color": "#356AFF"
+                                    },
+                                    "format": {
+                                        "type": "number-plain",
+                                        "abbreviation": "compact",
+                                        "decimalPlaces": {
+                                            "type": "max",
+                                            "places": 2
+                                        }
+                                    },
+                                    "displayName": "Count of Records"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Number of patients"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 4,
+                        "width": 2,
+                        "height": 4
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "36af9872",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_race",
+                                "query": {
+                                    "datasetName": "60629a6e",
+                                    "fields": [
+                                        {
+                                            "name": "race",
+                                            "expression": "`race`"
+                                        },
+                                        {
+                                            "name": "race_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "race",
+                                        "displayName": "race",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_race"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Patient Race"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 6,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c9b5b18d",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_ethnicity",
+                                "query": {
+                                    "datasetName": "60629a6e",
+                                    "fields": [
+                                        {
+                                            "name": "ethnicity",
+                                            "expression": "`ethnicity`"
+                                        },
+                                        {
+                                            "name": "ethnicity_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "ethnicity",
+                                        "displayName": "ethnicity",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b34183e980aeeffa2b3652e_ethnicity"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Patient Ethnicity"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 7,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "020a829a",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "cigarettes_per_day",
+                                            "expression": "`cigarettes_per_day`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "gender"
+                                },
+                                "y": {
+                                    "fieldName": "cigarettes_per_day",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "cigarettes_per_day"
+                                },
+                                "color": {
+                                    "fieldName": "gender",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "female",
+                                                "color": "#FCA4A1"
+                                            },
+                                            {
+                                                "value": "male",
+                                                "color": "#077A9D"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "gender"
+                                }
+                            },
+                            "frame": {
+                                "title": "Cigarettes per Day per gender",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 25,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "996e4d11",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b391a7b862fb4ff18b6bc78_alcohol_history",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "alcohol_history",
+                                            "expression": "`alcohol_history`"
+                                        },
+                                        {
+                                            "name": "alcohol_history_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "alcohol_history",
+                                        "displayName": "alcohol_history",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b391a7b862fb4ff18b6bc78_alcohol_history"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Alcohol use?"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 25,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c1d5048e",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b391a7b862fb4ff18b6bc78_gender",
+                                "query": {
+                                    "datasetName": "c44f1b7d",
+                                    "fields": [
+                                        {
+                                            "name": "gender",
+                                            "expression": "`gender`"
+                                        },
+                                        {
+                                            "name": "gender_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "gender",
+                                        "displayName": "gender",
+                                        "queryName": "dashboards/01ef0981553413f3b9f5b6d7fd515cf2/datasets/01ef09815b391a7b862fb4ff18b6bc78_gender"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Gender"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 27,
+                        "width": 1,
+                        "height": 2
+                    }
+                }
+            ]
+        }
+    ]
+}

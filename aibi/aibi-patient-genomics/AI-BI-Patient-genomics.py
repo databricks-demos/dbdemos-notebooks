@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Databricks AI/BI for Understanding your Sales Pipeline
+# MAGIC # Databricks AI/BI for Genomic Patient Data Review
 # MAGIC
 # MAGIC [Databricks AI/BI](https://www.youtube.com/watch?v=5ctfW6Ac0Ws), the newest addition to the Databricks Intelligence Platform, is a new type of business intelligence product built to democratize analytics and insights for anyone in your organization - technical or nontechnical. 
 # MAGIC
@@ -16,33 +16,33 @@
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Sales-pipeline-review&demo_name=sales-pipeline&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-HLS-patient-genomics&demo_name=patient-genomics&event=VIEW">
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Sales Pipeline Review & Management
+# MAGIC # Genomic Data Review & Management for Precision Oncology
 # MAGIC ---
 # MAGIC
 # MAGIC ## The Challenge
 # MAGIC
-# MAGIC In today’s competitive market, efficiently managing the sales pipeline is crucial across industries. Ineffective sales pipeline management can lead to missed opportunities, inaccurate revenue forecasting, and poor resource allocation. Organizations without a comprehensive data intelligence platform often struggle to consolidate data from multiple sources, deliver real-time insights to stakeholders, and reduce time-to-insights necessary for strategic adjustments in the sales process.
+# MAGIC In modern oncology, effectively managing and analyzing genomic data is essential to advancing personalized medicine. The complexity of cancer genomics, combined with diverse patient information from various sources, often leads to data silos and fragmented insights. Without a robust data intelligence platform, healthcare organizations struggle to consolidate and interpret this information efficiently, delaying critical insights needed for decision-making. This lack of integration hampers efforts to uncover patterns in patient outcomes, understand treatment efficacy, and refine patient stratification strategies, ultimately impacting the quality of care.
 # MAGIC
 # MAGIC ## The Solution
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (or as we call it, AI/BI)** to provide seamless access to your organization's sales data. By integrating data from various CRM, marketing, and transactional sources into a unified environment, Databricks breaks down data silos and offers end-to-end visibility into the entire sales pipeline.
+# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (AIBI)** to streamline the process of integrating and analyzing genomic and patient data, providing a unified environment for precision oncology. By consolidating data into a centralized platform, Databricks breaks down silos and enables a comprehensive view of patient information, supporting enhanced understanding of cancer genomics and patient demographics at scale.
 # MAGIC
-# MAGIC Advanced AI-driven analytics and intuitive BI tools empower both technical and non-technical users to examine sales trends, forecast revenue, and analyze pipeline health through natural language queries. This accessibility accelerates time-to-insights, enhances cross-functional collaboration, and enables leadership to make informed, data-driven decisions to improve sales strategy, close rates, and overall pipeline efficiency.
+# MAGIC With advanced AI-driven analytics and intuitive BI tools, users can explore genomic patterns, track treatment response trends, and conduct population-level analyses through natural language queries. This seamless access to insights accelerates time-to-insight, fosters collaboration between clinical and research teams, and empowers healthcare leaders to make data-driven decisions that improve patient outcomes, optimize treatment strategies, and advance precision oncology.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
-# MAGIC This notebook will guide you, the knowledgeable Databricks aficionado, through deploying a Databricks AI/BI project focused on sales pipeline review and management. Follow the step-by-step process to familiarize yourself with the project. By installing this project, its dashboard and Genie Dataroom are already accessible at **these links**.
+# MAGIC This notebook will guide you, the knowledgeable Databricks user, through deploying a Databricks AIBI project focused on genomic data review and management. Follow the step-by-step process to familiarize yourself with the project. By installing this project, its dashboard and Genie Dataroom are already accessible at **these links**.
 # MAGIC
 # MAGIC In the following sections, this notebook will guide you through at a high level:
 # MAGIC 1. Data Ingestion with **Lakeflow Connect**
 # MAGIC 2. Data Governance and Security with **Unity Catalog**
 # MAGIC 3. Creating Interactive **Dashboards** with Databricks
-# MAGIC 4. Utilizing **Genie** for natural language queries to analyze and review your sales pipeline data, even in complex scenarios
+# MAGIC 4. Utilizing **Genie** for natural language queries to analyze and review genomic data across patient populations
 
 # COMMAND ----------
 
@@ -110,7 +110,7 @@
 # MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
 # MAGIC
 # MAGIC
-# MAGIC Open the <a dbdemos-dashboard-id="sales-pipeline" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Sales Pipeline Dashboard to analyze & track main KPIs</a>
+# MAGIC Open the <a dbdemos-dashboard-id="patient-genomics" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Patient Genomics Dashboard to analyze & track main KPIs</a>
 
 # COMMAND ----------
 
@@ -124,7 +124,7 @@
 # MAGIC
 # MAGIC However, they'll likely have extra questions or followup based on the insight they see in the dashboard, like: "What the heck is wrong with my campaign, anyway?" or "What was the CTR of my campaign last month?"
 # MAGIC
-# MAGIC Open the <a dbdemos-genie-id="sales-pipeline" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Sales Pipeline Genie space to deep dive into your data</a>
+# MAGIC Open the <a dbdemos-genie-id="patient-genomics" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Patient Genomics Genie space to deep dive into your data</a>
 
 # COMMAND ----------
 

@@ -403,22 +403,6 @@
                 },
                 {
                     "widget": {
-                        "name": "b51fbe78",
-                        "spec": {
-                            "version": 2,
-                            "widgetType": "filter-single-select",
-                            "encodings": {}
-                        }
-                    },
-                    "position": {
-                        "x": 2,
-                        "y": 19,
-                        "width": 2,
-                        "height": 1
-                    }
-                },
-                {
-                    "widget": {
                         "name": "6e1d7602",
                         "queries": [
                             {

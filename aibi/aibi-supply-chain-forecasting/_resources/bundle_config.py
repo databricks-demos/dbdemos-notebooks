@@ -25,7 +25,7 @@
     }
   ],
   "init_job": {},
-  "serverless_supported": True,  
+  "serverless_supported": True,
   "cluster": {},
   "pipelines": [],
   "dashboards": [
@@ -107,13 +107,13 @@
           "content": "SELECT SUM(`qty_shipped`) `sum(qty_shipped)`, `product`, `distribution_center` FROM {{CATALOG}}.{{SCHEMA}}.shipment_recommendations GROUP BY `distribution_center`, `product`"
         }
       ],
-      "instructions": "The bill of materials, or BOM, is what documents each part that is required to build products. \nWhen asked about a product you can't easily recognize, use ai_classify to figure out what the user is talking about. For instance, impact_drill_1 can be part of the \"impact drills\" more general category.\nA \"bottleneck\" would be a distribution center where there is a large discrepancy between demand and shipments already. It wouldn't be good to recommend a bottleneck'd distribution center for new products!",
+      "instructions": "The bill of materials, or BOM, is what documents each part that is required to build products.\n\nWhen asked about a product you can't easily recognize, use ai_classify to figure out what the user is talking about. For instance, impact_drill_1 can be part of the 'impact drills' more general category.\n\nA 'bottleneck' would be a distribution center where there is a large discrepancy between demand and shipments already. It wouldn't be good to recommend a bottleneck'd distribution center for new products!",
       "curated_questions": [
-        "Forecasted Demand vs. Actuals",
-        "What was the demand for our products by week in 2023?",
         "What are our top 3 forecasted raw material shortages?",
         "Which plant to distribution center route is running the most product?",
-        "Which distribution center has the highest chance of being a bottleneck?"
+        "Which distribution center has the highest chance of being a bottleneck?",
+        "What was the demand for our products by week in 2023?",
+        "Which distribution center should I use for a new supply of impact drills coming in?"
       ]
     }
   ]

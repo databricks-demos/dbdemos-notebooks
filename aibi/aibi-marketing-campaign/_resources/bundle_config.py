@@ -25,6 +25,7 @@
     }
   ],
   "init_job": {},
+  "serverless_supported": True,
   "cluster": {}, 
   "pipelines": [],
   "dashboards": [{"name": "[dbdemos] AIBI - Marketing Campaign",       "id": "web-marketing"}

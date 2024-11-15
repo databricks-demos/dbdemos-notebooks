@@ -25,6 +25,7 @@
     }
   ],
   "init_job": {},
+  "serverless_supported": True,
   "cluster": {},
   "pipelines": [],
   "dashboards": [

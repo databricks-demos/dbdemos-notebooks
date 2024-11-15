@@ -56,6 +56,13 @@
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC # Workflow and Job Tracking Dashboard
+-- MAGIC
+-- MAGIC Want to Track your job runs and find which job is consuming the most resources? Analyze your Workflow and Job consumption with the <a dbdemos-dashboard-id="worklow-analysis" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Workflow and Job Cost tracking dashboard example</a>
+
+-- COMMAND ----------
+
 -- MAGIC %md 
 -- MAGIC *Looking for the notebook used to create the <a dbdemos-dashboard-id="cost-forecasting" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">forecasting dashboard</a>? Jump to the [02-forecast-billing-tables]($./02-forecast-billing-tables) notebook.*
 

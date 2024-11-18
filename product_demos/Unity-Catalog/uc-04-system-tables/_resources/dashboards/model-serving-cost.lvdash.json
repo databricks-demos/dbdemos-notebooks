@@ -563,7 +563,7 @@
         {
           "widget": {
             "name": "a7c238f5",
-            "textbox_spec": "# [dbdemos] - Databricks Model Serving Endpoint Cost Attribution Dashboard\n\nThis dashboard gives you an overview of your cost for Model Serving Endpoint, and allow you to analyze your current spend. It's using Databricks System table to display price list as $.\n\n*This dashboard is provided for demo/educational purpose, as part of dbdemos, please review the [License](https://github.com/databricks-demos/dbdemos/blob/main/LICENSE) and [Notice](https://github.com/databricks-demos/dbdemos/blob/main/NOTICE) for more details. Please open a github issue for any feedback!*"
+            "textbox_spec": "# [dbdemos] - Databricks Model Serving Endpoint Cost Attribution Dashboard\n\n**Note: Please run the _enable_system_table notebook to enable all the system tables first, including system.access.audit.**\nThis dashboard gives you an overview of your cost for Model Serving Endpoint, and allow you to analyze your current spend. It's using Databricks System table to display price list as $.\n\n*This dashboard is provided for demo/educational purpose, as part of dbdemos, please review the [License](https://github.com/databricks-demos/dbdemos/blob/main/LICENSE) and [Notice](https://github.com/databricks-demos/dbdemos/blob/main/NOTICE) for more details. Please open a github issue for any feedback!*"
           },
           "position": {
             "x": 0,

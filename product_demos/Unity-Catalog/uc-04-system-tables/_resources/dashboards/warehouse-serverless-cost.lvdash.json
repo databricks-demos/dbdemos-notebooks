@@ -476,7 +476,7 @@
         {
           "widget": {
             "name": "461b14bf",
-            "textbox_spec": "#  [dbdemos] Warehouse Spend Monitoring across Workspaces\n1. Which workspaces have the highest warehouse spending per day?\n2. Which warehouses have the highest spending per day across different workspaces?\n3. Who are the users with the highest warehouse spending?\n4. What are the most expensive dashboards across workspaces?\n5. What are the most expensive queries?"
+            "textbox_spec": "#  [dbdemos] Warehouse Spend Monitoring across Workspaces\n**Note: Please run the _enable_system_table notebook to enable all the system tables first, including system.access.audit.**\n1. Which workspaces have the highest warehouse spending per day?\n2. Which warehouses have the highest spending per day across different workspaces?\n3. Who are the users with the highest warehouse spending?\n4. What are the most expensive dashboards across workspaces?\n5. What are the most expensive queries?"
           },
           "position": {
             "x": 0,

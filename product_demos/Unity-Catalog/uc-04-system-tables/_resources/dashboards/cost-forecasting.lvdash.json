@@ -362,7 +362,7 @@
                 {
                     "widget": {
                         "name": "6036d594",
-                        "textbox_spec": "# Cost Governance on Databricks\nUsing System Table data, this dashboard analyzes and monitors historical Databricks usage as well as forecasts future usage.\n\n**If queries don't render, ensure the training notebook was run first on the same schema**.    \nSchedule a daily job to refresh your consumption forecast - see the forecast notebook for more details.\n\n*This dbdemos dashboard is provided for educational/training purposes only. Estimated price lists are used. Not contractual.*"
+                        "textbox_spec": "# Cost Governance on Databricks\n**Note: Make sure you wait for the forecast job to get access to this dashboard**\n Using System Table data, this dashboard analyzes and monitors historical Databricks usage as well as forecasts future usage.\n\n**If queries don't render, ensure the training notebook was run first on the same schema**.    \nSchedule a daily job to refresh your consumption forecast - see the forecast notebook for more details.\n\n*This dbdemos dashboard is provided for educational/training purposes only. Estimated price lists are used. Not contractual.*"
                     },
                     "position": {
                         "x": 0,

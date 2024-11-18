@@ -53,9 +53,7 @@ w = WorkspaceClient()
 
 system_schemas = w.system_schemas.list(metastore_id=metastore_id)
 
-not_enabled = [system_schema for system_schema in system_schemas if system_schema.state.value == 'AVAILABLE']
-print(f"Schemas that are not enabled: {not_enabled}")
-
-for system_schema in not_enabled:
-    print(f'Enabling system schema "{system_schema.schema}"')
-    w.system_schemas.enable(metastore_id=metastore_id, schema_name=system_schema.schema)
+for system_schema in system_schemas:
+    if system_schema.state.value == 'AVAILABLE' and "__internal" not in system_schema.schema:
+        print(f'Enabling system schema "{system_schema.schema}"')
+        w.system_schemas.enable(metastore_id=metastore_id, schema_name=system_schema.schema)

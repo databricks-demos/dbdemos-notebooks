@@ -149,12 +149,15 @@ except:
 # MAGIC All we now have to do is call the API to create a new app and deploy using the `chatbot_app` path:
 
 # COMMAND ----------
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.apps import App, AppResource, AppResourceServingEndpoint, AppResourceServingEndpointServingEndpointPermission, AppDeployment
+
+w = WorkspaceClient()
 
 app_name = "dbdemos-rag-chatbot-app"
 
-#Helper is defined in the _resources/02-lakehouse-app-helpers notebook (temporary helper)
-helper = LakehouseAppHelper()
-app_details = helper.create(app_name, app_description="Your Databricks assistant")
+# _ = w.apps.delete(app_name)
+# _ = w.apps.stop_and_wait(app_name)
 
 # COMMAND ----------
 
@@ -163,24 +166,32 @@ app_details = helper.create(app_name, app_description="Your Databricks assistant
 
 # COMMAND ----------
 
-helper.add_dependencies(
-    app_name=app_name,
-    dependencies=[
-        {
-            "name": "rag-endpoint",
-            "serving_endpoint": {
-                "name": endpoint_name,
-                "permission": "CAN_QUERY",
-            },
-        }
-    ],
-    overwrite=False # if False dependencies will be appended to existing ones
+serving_endpoint = AppResourceServingEndpoint(name=endpoint_name,
+                                              permission=AppResourceServingEndpointServingEndpointPermission.CAN_QUERY
+                                              )
+
+rag_endpoint = AppResource(name="rag-endpoint",
+                           serving_endpoint=serving_endpoint, 
+                           ) 
+
+rag_app = App(name=app_name, 
+              description="Your Databricks assistant", 
+              default_source_code_path=os.path.join(os.getcwd(), 'chatbot_app'),
+              resources=[rag_endpoint]
 )
+
+app_details = w.apps.create_and_wait(app=rag_app)
 
 # COMMAND ----------
 
-helper.deploy(app_name, os.path.join(os.getcwd(), 'chatbot_app'))
-helper.details(app_name)
+deployment = AppDeployment(
+  source_code_path=os.path.join(os.getcwd(), 'chatbot_app')
+)
+
+app_details = w.apps.deploy_and_wait(app_name=app_name, app_deployment=deployment)
+
+# COMMAND ----------
+w.apps.get(name=app_name).url
 
 # COMMAND ----------
 

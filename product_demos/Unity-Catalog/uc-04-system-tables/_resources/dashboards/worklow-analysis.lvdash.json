@@ -209,7 +209,7 @@
         {
           "widget": {
             "name": "461b14bf",
-            "textbox_spec": "#  [dbdemos] Jobs and Workflows Monitoring\n- View key metrics across workspaces, including total jobs executed, DBUs consumed, dollar costs, and average job duration\n- Identify top users and jobs by DBU and dollar consumption\n- Monitor job outcomes with success/failure rates and trigger types for deeper insights\n- Track weekly and daily consumption trends by workspace to manage costs effectively"
+            "textbox_spec": "#  [dbdemos] Jobs and Workflows Monitoring\n**Note: Please run the _enable_system_table notebook to enable all the system tables first. Cluster system table support is being added in dbdemos for serverless, stay tuned.**\n- View key metrics across workspaces, including total jobs executed, DBUs consumed, dollar costs, and average job duration\n- Identify top users and jobs by DBU and dollar consumption\n- Monitor job outcomes with success/failure rates and trigger types for deeper insights\n- Track weekly and daily consumption trends by workspace to manage costs effectively"
           },
           "position": {
             "x": 0,

@@ -21,17 +21,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U mlflow databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U mlflow databricks-sdk==0.38.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-init $reset_all_data=false
-
-# COMMAND ----------
-
-# DBTITLE 1,load lakehouse helpers
-# MAGIC %run ../_resources/02-lakehouse-app-helpers
 
 # COMMAND ----------
 
@@ -149,15 +144,13 @@ except:
 # MAGIC All we now have to do is call the API to create a new app and deploy using the `chatbot_app` path:
 
 # COMMAND ----------
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.apps import App, AppResource, AppResourceServingEndpoint, AppResourceServingEndpointServingEndpointPermission, AppDeployment
 
 w = WorkspaceClient()
 
 app_name = "dbdemos-rag-chatbot-app"
-
-# _ = w.apps.delete(app_name)
-# _ = w.apps.stop_and_wait(app_name)
 
 # COMMAND ----------
 
@@ -170,17 +163,25 @@ serving_endpoint = AppResourceServingEndpoint(name=endpoint_name,
                                               permission=AppResourceServingEndpointServingEndpointPermission.CAN_QUERY
                                               )
 
-rag_endpoint = AppResource(name="rag-endpoint",
-                           serving_endpoint=serving_endpoint, 
-                           ) 
+rag_endpoint = AppResource(name="rag-endpoint", serving_endpoint=serving_endpoint) 
 
 rag_app = App(name=app_name, 
               description="Your Databricks assistant", 
               default_source_code_path=os.path.join(os.getcwd(), 'chatbot_app'),
-              resources=[rag_endpoint]
-)
+              resources=[rag_endpoint])
+try:
+  app_details = w.apps.create_and_wait(app=rag_app)
+  print(app_details)
+except Exception as e:
+  if "already exists" in str(e):
+    print("App already exists, you can deploy it")
+  else:
+    raise e
 
-app_details = w.apps.create_and_wait(app=rag_app)
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC Once the app is created, we can (re)deploy the code as following:
 
 # COMMAND ----------
 
@@ -191,6 +192,8 @@ deployment = AppDeployment(
 app_details = w.apps.deploy_and_wait(app_name=app_name, app_deployment=deployment)
 
 # COMMAND ----------
+
+#Let's access the application
 w.apps.get(name=app_name).url
 
 # COMMAND ----------

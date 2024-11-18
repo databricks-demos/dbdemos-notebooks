@@ -5,4 +5,4 @@ command:
 - '1'
 env:
 - name: MODEL_SERVING_ENDPOINT
-  value: agents_main__build-dbdemos_rag_chatbot-dbdemos_rag_demo
+  value: dbdemos_endpoint_advanced_main__build_rag_chatbot

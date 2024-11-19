@@ -129,14 +129,11 @@ import warnings
 from pypdf import PdfReader
 
 def parse_bytes_pypdf(raw_doc_contents_bytes: bytes):
-    try:
-        pdf = io.BytesIO(raw_doc_contents_bytes)
-        reader = PdfReader(pdf)
-        parsed_content = [page_content.extract_text() for page_content in reader.pages]
-        return "\n".join(parsed_content)
-    except Exception as e:
-        warnings.warn(f"Exception {e} has been thrown during parsing")
-        return None
+    #Note: in production setting you might want to try/catch errors here to handle incorrect pdf/files
+    pdf = io.BytesIO(raw_doc_contents_bytes)
+    reader = PdfReader(pdf)
+    parsed_content = [page_content.extract_text() for page_content in reader.pages]
+    return "\n".join(parsed_content)
 
 # COMMAND ----------
 

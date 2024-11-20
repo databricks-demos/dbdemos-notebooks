@@ -6,8 +6,8 @@
 # COMMAND ----------
 
 {
-  "name": "iot-data-intelligence-platform",
-  "category": "data intelligence platform",
+  "name": "lakehouse-iot-platform",
+  "category": "lakehouse",
   "custom_schema_supported": True,
   "default_schema": "dbdemos_iot_platform",
   "default_catalog": "main",

@@ -22,8 +22,8 @@
 # MAGIC
 # MAGIC Generative AI has the potential to revolutionize the maintenance function addressing these challenges by minimizing equipment downtime and boosting asset productivity. Traditionally, maintenance operations have focused on predictive maintenance, which anticipates equipment failures based on historical trends. Generative AI offers an opportunity to advance from predictive to prescriptive maintenance. Compound AI Systems can support maintenance technicians by identifying faulty equipment and generating prescriptive work orders that outline potential issues and their solutions, based on historical maintenance reports and equipment specifications. This streamlined access to knowledge enhances productivity, enabling less experienced technicians to perform effectively while allowing seasoned professionals to concentrate on more complex problems.
 # MAGIC
-# MAGIC ### The Shift from Models to Compound AI Systems
-# MAGIC The rise of Generative AI is driving a shift from standalone models to Compound AI Systems, as noted by [Zaharia et al. (2024)](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/). Unlike traditional monolithic models, compound AI systems integrate multiple interacting components — retrievers, models, prompts, chains, and external tools — to handle complex AI tasks.  This approach increases control and trust by incorporating functionalities such as output filtering, dynamic routing, and real-time information retrieval. Furthermore, Compound AI Systems are more adaptable to evolving industry trends and organizational needs due to their modular design. Each component in a Compound AI System can operate independently, allowing developers to update or replace individual components without disrupting the entire system. For instance, when a new advanced LLM is released, it can be seamlessly integrated without altering the overall architecture. Similarly, components can be added or removed as organizational requirements evolve.
+# MAGIC ### The Shift from Models to Agent Systems
+# MAGIC The rise of Generative AI is driving a shift from standalone models to agent systems, as noted by [Zaharia et al. (2024)](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/). Unlike traditional monolithic models, agent systems integrate multiple interacting components — retrievers, models, prompts, chains, and external tools — to handle complex AI tasks.  This approach increases control and trust by incorporating functionalities such as output filtering, dynamic routing, and real-time information retrieval. Furthermore, Agent Systems are more adaptable to evolving industry trends and organizational needs due to their modular design. Each component in an agent system can operate independently, allowing developers to update or replace individual components without disrupting the entire system. For instance, when a new advanced LLM is released, it can be seamlessly integrated without altering the overall architecture. Similarly, components can be added or removed as organizational requirements evolve.
 # MAGIC
 # MAGIC <style>
 # MAGIC .right_box{
@@ -290,36 +290,34 @@ index.upsert([row.asDict() for row in df.collect()])
 
 # MAGIC %md
 # MAGIC   
-# MAGIC ####  This demo requires a secret to work:
-# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)). Therefore, we will start by creating a secret scope and put the access token value as secret value. Next, we provide the desired service principal access to the required objects.  <br/>
+# MAGIC ###  This demo requires a secret to work:
+# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).  <br/>
 # MAGIC **Note: if you are using a shared demo workspace and you see that the secret is setup, please don't run these steps and do not override its value**<br/>
-
-# COMMAND ----------
-
-from databricks.sdk import WorkspaceClient
-import databricks.sdk.service.catalog as c
-from databricks.sdk.service import workspace
-
-secret_value = "" # TO DO: fill with your SP access token
-principal_id = "" # TO DO: fill with your Service Principal ID
-
-# Create secret scope and put access token as secret value
-w = WorkspaceClient()
-w.secrets.create_scope(scope=secret_scope_name)
-w.secrets.put_secret(scope=secret_scope_name, key=secret_key_name, string_value=secret_value)
-
-# Add permissions on the catalog, schema, VS index and secret to the service principal
-spark.sql(f'GRANT USAGE ON CATALOG {catalog} TO `{principal_id}`')
-spark.sql(f'GRANT USAGE ON SCHEMA {catalog}.{db} TO `{principal_id}`')
-w.grants.update(c.SecurableType.TABLE, vs_index_fullname, 
-                                changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal=principal_id)])
-w.secrets.put_acl(scope=secret_scope_name, principal=principal_id, permission=workspace.AclPermission.READ)
-
-# COMMAND ----------
-
-# MAGIC %md 
 # MAGIC
-# MAGIC Now that our service principal has access to the rights objects, we can create the Vector Search as Tool function below:
+# MAGIC - You'll need to [setup the Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/install.html) on your laptop or using this cluster terminal: <br/>
+# MAGIC `pip install databricks-cli` <br/>
+# MAGIC - Configure the CLI. You'll need your workspace URL and a PAT token from your profile page<br>
+# MAGIC `databricks configure`
+# MAGIC - Create the dbdemos scope:<br/>
+# MAGIC `databricks secrets create-scope dbdemos`
+# MAGIC - Save your service principal secret. It will be used by the Model Endpoint to autenticate. If this is a demo/test, you can use one of your [PAT token](https://docs.databricks.com/en/dev-tools/auth/pat.html).<br>
+# MAGIC `databricks secrets put-secret --json '{
+# MAGIC   "scope": "dbdemos",
+# MAGIC   "key": "ai_agent_sp_token",
+# MAGIC   "string_value": "<secret>"
+# MAGIC }'`
+# MAGIC
+# MAGIC *Note: Make sure your service principal has access to the Vector Search index:*
+# MAGIC
+# MAGIC ```
+# MAGIC spark.sql('GRANT USAGE ON CATALOG <catalog> TO `<YOUR_SP>`');
+# MAGIC spark.sql('GRANT USAGE ON DATABASE <catalog>.<db> TO `<YOUR_SP>`');
+# MAGIC from databricks.sdk import WorkspaceClient
+# MAGIC import databricks.sdk.service.catalog as c
+# MAGIC WorkspaceClient().grants.update(c.SecurableType.TABLE, <index_name>, 
+# MAGIC                                 changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal="<YOUR_SP>")])
+# MAGIC WorkspaceClient().secrets.put_acl(scope=dbdemos, principal="<YOUR_SP>", permission=workspace.AclPermission.READ)
+# MAGIC   ```
 
 # COMMAND ----------
 
@@ -341,7 +339,7 @@ $$
       
     return formatted_response
   except Exception as e:
-    return f"Error calling the vs index {{e}}"
+    raise e
 $$;""")
 
 # COMMAND ----------
@@ -513,7 +511,7 @@ try:
  )
 
 except Exception as e:
-  print(f"An error occurred: {e}")
+  raise e
 
 # COMMAND ----------
 
@@ -552,7 +550,7 @@ $$
 
     return response.json().get('outputs')[0]
   except Exception as e:
-    return "Error calling the vs index"
+    raise e
 $$;""")
 
 # COMMAND ----------
@@ -602,6 +600,6 @@ $$;""")
 
 # MAGIC %md
 # MAGIC ## What’s next:
-# MAGIC Now that we create the Mosaic AI Tools, We will compose them into a Compound AI System that generates maintenance work orders using the Mosaic AI agent framework.
+# MAGIC Now that we create the Mosaic AI Tools, We will compose them into an agent system that generates maintenance work orders using the Mosaic AI agent framework.
 # MAGIC
 # MAGIC Open the [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-build-agent-iot-turbine-prescriptive-maintenance) notebook to create and deploy the system.

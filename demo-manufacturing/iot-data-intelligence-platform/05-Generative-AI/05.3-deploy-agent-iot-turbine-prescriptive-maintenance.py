@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md-sandbox # Deploying the Compound AI System for Prescriptive Maintenance using the Mosaic AI Agent Framework
+# MAGIC %md-sandbox # Deploying the Agent System for Prescriptive Maintenance using the Mosaic AI Agent Framework
 # MAGIC
 # MAGIC Now that have created the Mosaic AI Tools in Unity Catalog, we will leverage the Mosaic AI Agent Framework to build, deploy and evaluate an AI agent for Prescriptive Maintenance. The Agent Framework comprises a set of tools on Databricks designed to help developers build, deploy, and evaluate production-quality AI agents like Retrieval Augmented Generation (RAG) applications. Moreover, Mosaic AI Agent Evaluation provides a platform to capture and implement human feedback, ground truth, response and request logs, LLM judge feedback, chain traces, and more.
 # MAGIC
@@ -9,7 +9,7 @@
 # MAGIC 3. Registers the agent to Unity Catalog
 # MAGIC 4. Deploys the agent to a Model Serving endpoint
 # MAGIC
-# MAGIC This is an high-level overview of the compound AI system that we will deploy in this demo:
+# MAGIC This is an high-level overview of the agent system that we will deploy in this demo:
 # MAGIC
 # MAGIC <div style="text-align: center;">
 # MAGIC     <img src="https://github.com/Datastohne/demo/blob/main/agent2.png?raw=true" width="900px">
@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow==2.17.0 databricks-agents==0.7.0 databricks-sdk==0.34.0
+# MAGIC %pip install -U -qqqq mlflow==2.17.2 databricks-agents==0.7.0 databricks-sdk==0.34.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -239,17 +239,11 @@ from pyspark.sql.functions import udf, struct, col
 
 df = spark.table(f"{catalog}.{db}.turbine_training_dataset").dropDuplicates(["turbine_id"])[['turbine_id', 'sensor_vector']].limit(200)
 
-# Define schema for agent inputs
-schema = MapType(StringType(), ArrayType(StructType([
-    StructField("role", StringType(), True),
-    StructField("content", StringType(), True)
-])), True)
-
 # Define the UDF to return a struct
 format_inputs_udf = udf(lambda turbine_id, sensor_vector: {'messages':[{
     "role": "user",
     "content": turbine_id + ', ' + str(sensor_vector)
-}]}, schema)
+}]}, "map<string, array<struct<role:string, content:string>>>")
 
 # Apply the UDF to each row
 df = df.withColumn("request", format_inputs_udf(df["turbine_id"], df["sensor_vector"]))
@@ -269,7 +263,7 @@ display(df)
 from concurrent.futures import ThreadPoolExecutor
 
 # Load the mlflow model from UC
-model = mlflow.pyfunc.load_model(f"models:/{UC_MODEL_NAME}/1")
+model = mlflow.pyfunc.load_model(f"models:/{UC_MODEL_NAME}@prod")
 
 # Function to apply model.predict to every row
 def predict_row(row):
@@ -291,8 +285,6 @@ with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers as ne
 
 from pyspark.sql.functions import expr, col
 
-spark.sql(f"DROP TABLE IF EXISTS {catalog}.{db}.work_orders")
-
 # Create new dataframe for work orders with turbine_id's and agent_outputs
 work_orders = spark.createDataFrame(predictions, schema=["turbine_id", "work_order"]).withColumn("work_order", expr("substring(work_order, instr(work_order, 'Turbine Details'), length(work_order))"))
 
@@ -300,7 +292,7 @@ work_orders = spark.createDataFrame(predictions, schema=["turbine_id", "work_ord
 work_orders = work_orders.filter(col("work_order").startswith('Turbine Details'))
 
 # Write out the new work orders as a Delta table to Unity Catalog
-work_orders.write.format("delta").saveAsTable(f"{catalog}.{db}.work_orders")
+work_orders.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.{db}.work_orders")
 
 display(work_orders)
 
@@ -317,7 +309,7 @@ display(work_orders)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Congratulations! You have deployed your first Compound AI System for Prescriptive Maintenance! 
+# MAGIC ## Congratulations! You have deployed your first Agent System for Prescriptive Maintenance! 
 # MAGIC
 # MAGIC We have seen how Databricks Mosaic AI provides all the capabilities needed to move these components to production quickly and cost-effectively, while maintaining complete control and governance:
 # MAGIC - Simplifying model deployment by creating an API endpoint.
@@ -333,7 +325,7 @@ display(work_orders)
 # MAGIC %md
 # MAGIC
 # MAGIC ## Potential next steps:
-# MAGIC Enhance the Compound AI System by incorporating:
+# MAGIC Enhance the Agent System by incorporating:
 # MAGIC - **Automated Technician Assignment for Work Orders:** Automatically asign maintenance work orders to technicians based on availability, distance to turbines and skill set.
 # MAGIC - **Automated Field Service Route Optimization:** optimizes field service routes for technicians to execute the maintenance work orders based on priority levels of work orders, travel time and real-time traffic conditions.
 

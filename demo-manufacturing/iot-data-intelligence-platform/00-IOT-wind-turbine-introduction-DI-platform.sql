@@ -179,7 +179,7 @@
 -- MAGIC
 -- MAGIC <br><br><br>
 -- MAGIC
--- MAGIC The rise of Generative AI enables a shift from Predictive to Prescriptive Maintenance ML Models. By going from ML models to compound AI systems, we can now leverage the predictive model as one of the many components of the AI system. This opens up a whole lot of new opportunities for automation and efficiency gains, which will further increase uptime and minimize costs.
+-- MAGIC The rise of Generative AI enables a shift from Predictive to Prescriptive Maintenance ML Models. By going from ML models to agent systems, we can now leverage the predictive model as one of the many components of the AI system. This opens up a whole lot of new opportunities for automation and efficiency gains, which will further increase uptime and minimize costs.
 -- MAGIC
 -- MAGIC Databricks offers a a set of tools to help developers build, deploy and evaluate production-quality AI agents like Retrievel Augmented Generation (RAG) applications, including a vector database, model serving endpoints, governance, monitoring and evaluation capabilties. 
 -- MAGIC
@@ -188,7 +188,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Let's create our first compound AI system with the [05.1-ai-tools-iot-turbine-prescriptive-maintenance]($./05-Generative-AI/05.1-ai-tools-iot-turbine-prescriptive-maintenance)
+-- MAGIC Let's create our first agent system with the [05.1-ai-tools-iot-turbine-prescriptive-maintenance]($./05-Generative-AI/05.1-ai-tools-iot-turbine-prescriptive-maintenance)
 
 -- COMMAND ----------
 

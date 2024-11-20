@@ -2,8 +2,8 @@ agent_prompt: "Act as an assistant for wind turbine maintenance technicians to g
 llm_endpoint: "databricks-meta-llama-3-1-70b-instruct"
 tools:
   uc_functions:
-    - "demo_catalog_stijn.dbdemos_iot_turbine_build.turbine_maintenance_predictor"
-    - "demo_catalog_stijn.dbdemos_iot_turbine_build.turbine_maintenance_reports_retriever"
-    - "demo_catalog_stijn.dbdemos_iot_turbine_build.turbine_maintenance_reports_retriever_with_secret"
-    - "demo_catalog_stijn.dbdemos_iot_turbine_build.turbine_specifications_retriever"
-    - "demo_catalog_stijn.dbdemos_iot_turbine_build.turbine_specifications_retriever_with_secret"
+    - "main__build.dbdemos_iot_turbine.turbine_maintenance_predictor"
+    - "main__build.dbdemos_iot_turbine.turbine_maintenance_reports_retriever"
+    - "main__build.dbdemos_iot_turbine.turbine_maintenance_reports_retriever_with_secret"
+    - "main__build.dbdemos_iot_turbine.turbine_specifications_retriever"
+    - "main__build.dbdemos_iot_turbine.turbine_specifications_retriever_with_secret"

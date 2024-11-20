@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md-sandbox # Building the Compound AI System for Prescriptive Maintenance using the Mosaic AI Agent Framework
+# MAGIC %md-sandbox # Building the Agent System for Prescriptive Maintenance using the Mosaic AI Agent Framework
 # MAGIC
 # MAGIC Now that have created the Mosaic AI Tools in Unity Catalog, we will leverage the Mosaic AI Agent Framework to build, deploy and evaluate an AI agent for Prescriptive Maintenance. The Agent Framework comprises a set of tools on Databricks designed to help developers build, deploy, and evaluate production-quality AI agents like Retrieval Augmented Generation (RAG) applications. Moreover, Mosaic AI Agent Evaluation provides a platform to capture and implement human feedback, ground truth, response and request logs, LLM judge feedback, chain traces, and more.
 # MAGIC
@@ -7,7 +7,7 @@
 # MAGIC
 # MAGIC  **_NOTE:_**  This notebook uses Pyfunc, however AI Agent Framework is compatible with other agent frameworks like Langchain and LlamaIndex.
 # MAGIC
-# MAGIC Thi is an high-level overview of the compound AI system that we will build in this demo:
+# MAGIC Thi is an high-level overview of the agent system that we will build in this demo:
 # MAGIC
 # MAGIC
 # MAGIC <div style="text-align: center;">
@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow-skinny==2.17.0
+# MAGIC %pip install -U -qqqq mlflow-skinny==2.17.2
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

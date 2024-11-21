@@ -3,7 +3,7 @@
         {
             "name": "39a5402c",
             "displayName": "Support Data",
-            "query": "-- CTE to get the top 5 topics by the number of tickets\nWITH TopTopics AS (\n  SELECT topic\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY topic\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 5\n),\n-- CTE to get the top 4 countries by the number of tickets\nTopCountries AS (\n  SELECT country\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY country\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 4\n)\n\n-- Main query to select data from the technical support dataset\nSELECT *,\n       -- Calculate the resolution time in hours, adding a random adjustment for Tier 2 support level\n       (TIMESTAMPDIFF(MINUTE, created_time, resolution_time) \n              + CASE \n           WHEN support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400)))\n           ELSE 0 \n         END) / 60.0 AS resolution_time\nFROM main.dbdemos_aibi_customer_support.customer_support_review\n-- Filter to include only tickets with top topics\nWHERE topic IN (SELECT topic FROM TopTopics)\n-- Filter to include only tickets from top countries\nAND country IN (SELECT country FROM TopCountries)\n-- Exclude tickets where the resolution time is zero\nAND TIMESTAMPDIFF(MINUTE, created_time, resolution_time) != 0"
+            "query": "-- CTE to get the top 5 topics by the number of tickets\nWITH TopTopics AS (\n  SELECT topic\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY topic\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 5\n),\n-- CTE to get the top 4 countries by the number of tickets\nTopCountries AS (\n  SELECT country\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY country\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 4\n)\n\n-- Main query to select data from the technical support dataset\nSELECT \n       *,\n       -- Calculate the resolution time in hours, adding a random adjustment for Tier 2 support level\n       (TIMESTAMPDIFF(MINUTE, created_time, resolution_time) \n              + CASE \n           WHEN support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400)))\n           ELSE 0 \n         END) / 60.0 AS adjusted_resolution_time\nFROM main.dbdemos_aibi_customer_support.customer_support_review\n-- Filter to include only tickets with top topics\nWHERE topic IN (SELECT topic FROM TopTopics)\n-- Filter to include only tickets from top countries\nAND country IN (SELECT country FROM TopCountries)\n-- Exclude tickets where the resolution time is zero\nAND TIMESTAMPDIFF(MINUTE, created_time, resolution_time) != 0;"
         },
         {
             "name": "916033f4",
@@ -290,24 +290,24 @@
                                             "expression": "`support_level`"
                                         },
                                         {
-                                            "name": "min(resolution_time)",
-                                            "expression": "MIN(`resolution_time`)"
+                                            "name": "min(adjusted_resolution_time)",
+                                            "expression": "MIN(`adjusted_resolution_time`)"
                                         },
                                         {
-                                            "name": "q1(resolution_time)",
-                                            "expression": "PERCENTILE(`resolution_time`, 0.25)"
+                                            "name": "q1(adjusted_resolution_time)",
+                                            "expression": "PERCENTILE(`adjusted_resolution_time`, 0.25)"
                                         },
                                         {
-                                            "name": "median(resolution_time)",
-                                            "expression": "MEDIAN(`resolution_time`)"
+                                            "name": "median(adjusted_resolution_time)",
+                                            "expression": "MEDIAN(`adjusted_resolution_time`)"
                                         },
                                         {
-                                            "name": "q3(resolution_time)",
-                                            "expression": "PERCENTILE(`resolution_time`, 0.75)"
+                                            "name": "q3(adjusted_resolution_time)",
+                                            "expression": "PERCENTILE(`adjusted_resolution_time`, 0.75)"
                                         },
                                         {
-                                            "name": "max(resolution_time)",
-                                            "expression": "MAX(`resolution_time`)"
+                                            "name": "max(adjusted_resolution_time)",
+                                            "expression": "MAX(`adjusted_resolution_time`)"
                                         }
                                     ],
                                     "disaggregated": false
@@ -327,24 +327,24 @@
                                 },
                                 "y": {
                                     "whiskerStart": {
-                                        "fieldName": "min(resolution_time)",
-                                        "displayName": "Minimum resolution_time"
+                                        "fieldName": "min(adjusted_resolution_time)",
+                                        "displayName": "Minimum adjusted_resolution_time"
                                     },
                                     "boxStart": {
-                                        "fieldName": "q1(resolution_time)",
-                                        "displayName": "First Quartile of resolution_time"
+                                        "fieldName": "q1(adjusted_resolution_time)",
+                                        "displayName": "First Quartile of adjusted_resolution_time"
                                     },
                                     "boxMid": {
-                                        "fieldName": "median(resolution_time)",
-                                        "displayName": "Median of resolution_time"
+                                        "fieldName": "median(adjusted_resolution_time)",
+                                        "displayName": "Median of adjusted_resolution_time"
                                     },
                                     "boxEnd": {
-                                        "fieldName": "q3(resolution_time)",
-                                        "displayName": "Third Quartile of resolution_time"
+                                        "fieldName": "q3(adjusted_resolution_time)",
+                                        "displayName": "Third Quartile of adjusted_resolution_time"
                                     },
                                     "whiskerEnd": {
-                                        "fieldName": "max(resolution_time)",
-                                        "displayName": "Maximum resolution_time"
+                                        "fieldName": "max(adjusted_resolution_time)",
+                                        "displayName": "Maximum adjusted_resolution_time"
                                     },
                                     "axis": {
                                         "title": "Resolution Time (Days)"
@@ -764,10 +764,6 @@
                                             "expression": "`sla_for_first_response`"
                                         },
                                         {
-                                            "name": "resolution_time",
-                                            "expression": "`resolution_time`"
-                                        },
-                                        {
                                             "name": "sla_for_resolution",
                                             "expression": "`sla_for_resolution`"
                                         },
@@ -802,6 +798,10 @@
                                         {
                                             "name": "longitude",
                                             "expression": "`longitude`"
+                                        },
+                                        {
+                                            "name": "adjusted_resolution_time",
+                                            "expression": "`adjusted_resolution_time`"
                                         }
                                     ],
                                     "disaggregated": true
@@ -1143,33 +1143,6 @@
                                         "displayName": "sla_for_first_response"
                                     },
                                     {
-                                        "fieldName": "resolution_time",
-                                        "booleanValues": [
-                                            "false",
-                                            "true"
-                                        ],
-                                        "imageUrlTemplate": "{{ @ }}",
-                                        "imageTitleTemplate": "{{ @ }}",
-                                        "imageWidth": "",
-                                        "imageHeight": "",
-                                        "linkUrlTemplate": "{{ @ }}",
-                                        "linkTextTemplate": "{{ @ }}",
-                                        "linkTitleTemplate": "{{ @ }}",
-                                        "linkOpenInNewTab": true,
-                                        "type": "decimal",
-                                        "displayAs": "number",
-                                        "visible": true,
-                                        "order": 100012,
-                                        "title": "resolution_time",
-                                        "allowSearch": false,
-                                        "alignContent": "right",
-                                        "allowHTML": false,
-                                        "highlightLinks": false,
-                                        "useMonospaceFont": false,
-                                        "preserveWhitespace": false,
-                                        "displayName": "resolution_time"
-                                    },
-                                    {
                                         "fieldName": "sla_for_resolution",
                                         "booleanValues": [
                                             "false",
@@ -1416,10 +1389,64 @@
                                         "useMonospaceFont": false,
                                         "preserveWhitespace": false,
                                         "displayName": "longitude"
+                                    },
+                                    {
+                                        "fieldName": "adjusted_resolution_time",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "decimal",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100022,
+                                        "title": "adjusted_resolution_time",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "adjusted_resolution_time"
                                     }
                                 ]
                             },
-                            "invisibleColumns": [],
+                            "invisibleColumns": [
+                                {
+                                    "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "resolution_time",
+                                    "type": "datetime",
+                                    "displayAs": "number",
+                                    "order": 100012,
+                                    "title": "resolution_time",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
                             "allowHTMLByDefault": false,
                             "itemsPerPage": 25,
                             "paginationSize": "default",
@@ -1456,8 +1483,8 @@
                                             "expression": "`support_level`"
                                         },
                                         {
-                                            "name": "avg(resolution_time)",
-                                            "expression": "AVG(`resolution_time`)"
+                                            "name": "avg(adjusted_resolution_time)",
+                                            "expression": "AVG(`adjusted_resolution_time`)"
                                         }
                                     ],
                                     "disaggregated": false
@@ -1476,7 +1503,7 @@
                                     "displayName": "Support Level"
                                 },
                                 "y": {
-                                    "fieldName": "avg(resolution_time)",
+                                    "fieldName": "avg(adjusted_resolution_time)",
                                     "scale": {
                                         "type": "quantitative"
                                     },
@@ -1647,8 +1674,8 @@
                                             "expression": "DATE_TRUNC(\"MONTH\", `created_time`)"
                                         },
                                         {
-                                            "name": "avg(resolution_time)",
-                                            "expression": "AVG(`resolution_time`)"
+                                            "name": "avg(adjusted_resolution_time)",
+                                            "expression": "AVG(`adjusted_resolution_time`)"
                                         }
                                     ],
                                     "disaggregated": false
@@ -1670,7 +1697,7 @@
                                     "displayName": "Ticket Creation Date"
                                 },
                                 "y": {
-                                    "fieldName": "avg(resolution_time)",
+                                    "fieldName": "avg(adjusted_resolution_time)",
                                     "scale": {
                                         "type": "quantitative"
                                     },
@@ -1772,8 +1799,8 @@
                                             "expression": "`country`"
                                         },
                                         {
-                                            "name": "avg(resolution_time)",
-                                            "expression": "AVG(`resolution_time`)"
+                                            "name": "avg(adjusted_resolution_time)",
+                                            "expression": "AVG(`adjusted_resolution_time`)"
                                         }
                                     ],
                                     "cubeGroupingSets": {
@@ -1834,7 +1861,7 @@
                                     "type": "multi-cell",
                                     "fields": [
                                         {
-                                            "fieldName": "avg(resolution_time)",
+                                            "fieldName": "avg(adjusted_resolution_time)",
                                             "cellType": "text",
                                             "style": {
                                                 "type": "color-scale",
@@ -1852,7 +1879,7 @@
                                                     }
                                                 }
                                             },
-                                            "displayName": "Average resolution_time"
+                                            "displayName": "Average adjusted_resolution_time"
                                         }
                                     ]
                                 }

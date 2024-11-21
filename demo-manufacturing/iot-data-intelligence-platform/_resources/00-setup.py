@@ -109,3 +109,16 @@ def wait_for_index_to_be_ready(vsc, vs_endpoint_name, index_name):
     else:
         raise Exception(f'''Error with the index - this shouldn't happen. DLT pipeline might have been killed.\n Please delete it and re-run the previous cell: vsc.delete_index("{index_name}, {vs_endpoint_name}") \nIndex details: {idx}''')
   raise Exception(f"Timeout, your index isn't ready yet: {vsc.get_index(index_name, vs_endpoint_name)}")
+
+# COMMAND ----------
+
+from mlflow import MlflowClient
+
+def get_last_model_version(model_full_name):
+    mlflow_client = MlflowClient(registry_uri="databricks-uc")
+    # Use the MlflowClient to get a list of all versions for the registered model in Unity Catalog
+    all_versions = mlflow_client.search_model_versions(f"name='{model_full_name}'")
+    # Sort the list of versions by version number and get the latest version
+    latest_version = max([int(v.version) for v in all_versions])
+    # Use the MlflowClient to get the latest version of the registered model in Unity Catalog
+    return mlflow_client.get_model_version(model_full_name, str(latest_version)).version

@@ -20,7 +20,7 @@
 # MAGIC   </div>
 # MAGIC </div>
 # MAGIC
-# MAGIC Generative AI has the potential to revolutionize the maintenance function addressing these challenges by minimizing equipment downtime and boosting asset productivity. Traditionally, maintenance operations have focused on predictive maintenance, which anticipates equipment failures based on historical trends. Generative AI offers an opportunity to advance from predictive to prescriptive maintenance. Compound AI Systems can support maintenance technicians by identifying faulty equipment and generating prescriptive work orders that outline potential issues and their solutions, based on historical maintenance reports and equipment specifications. This streamlined access to knowledge enhances productivity, enabling less experienced technicians to perform effectively while allowing seasoned professionals to concentrate on more complex problems.
+# MAGIC Generative AI has the potential to revolutionize the maintenance function addressing these challenges by minimizing equipment downtime and boosting asset productivity. Traditionally, maintenance operations have focused on predictive maintenance, which anticipates equipment failures based on historical trends. Generative AI offers an opportunity to advance from predictive to prescriptive maintenance. Agent Systems can support maintenance technicians by identifying faulty equipment and generating prescriptive work orders that outline potential issues and their solutions, based on historical maintenance reports and equipment specifications. This streamlined access to knowledge enhances productivity, enabling less experienced technicians to perform effectively while allowing seasoned professionals to concentrate on more complex problems.
 # MAGIC
 # MAGIC ### The Shift from Models to Agent Systems
 # MAGIC The rise of Generative AI is driving a shift from standalone models to agent systems, as noted by [Zaharia et al. (2024)](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/). Unlike traditional monolithic models, agent systems integrate multiple interacting components — retrievers, models, prompts, chains, and external tools — to handle complex AI tasks.  This approach increases control and trust by incorporating functionalities such as output filtering, dynamic routing, and real-time information retrieval. Furthermore, Agent Systems are more adaptable to evolving industry trends and organizational needs due to their modular design. Each component in an agent system can operate independently, allowing developers to update or replace individual components without disrupting the entire system. For instance, when a new advanced LLM is released, it can be seamlessly integrated without altering the overall architecture. Similarly, components can be added or removed as organizational requirements evolve.
@@ -55,9 +55,9 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Building Compound AI Systems with Databricks Mosaic AI agent framework
+# MAGIC ## Building Agent Systems with Databricks Mosaic AI agent framework
 # MAGIC
-# MAGIC We will build a Compound AI System designed to generate prescriptive work orders for wind turbine maintenance technicians. This system integrates multiple interacting components to ensure proactive and efficient maintenance, thereby optimizing the overall equipment effectiveness.
+# MAGIC We will build an Agent System designed to generate prescriptive work orders for wind turbine maintenance technicians. This system integrates multiple interacting components to ensure proactive and efficient maintenance, thereby optimizing the overall equipment effectiveness.
 # MAGIC
 # MAGIC Databricks simplifies this by providing a built-in service to:
 # MAGIC
@@ -65,7 +65,7 @@
 # MAGIC - Execute the AI tools in a safe way
 # MAGIC - Use agents to reason about the tools you selected and chain them together to properly answer your question. 
 # MAGIC
-# MAGIC At a high level, here is the AI system we will implement in this demo:
+# MAGIC At a high level, here is the agent system we will implement in this demo:
 # MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Prescriptive%20Maintenance%20Demo%20Overview%20(15).png?raw=true" style="margin-left: 10px"  width="1000px;">
 # MAGIC
 # MAGIC This notebook creates the three Mosaic AI tools and associated Mosaic AI endpoints, which will be composed together into a agent in notebook [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-agent-framework-iot-turbine-prescriptive-maintenance).
@@ -76,7 +76,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install mlflow==2.17.0 databricks-vectorsearch==0.40 databricks-feature-engineering==0.7.0 databricks-sdk==0.34.0
+# MAGIC %pip install mlflow==2.17.2 databricks-vectorsearch==0.40 databricks-feature-engineering==0.7.0 databricks-sdk==0.34.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -91,7 +91,7 @@
 # MAGIC
 # MAGIC <img src="https://github.com/Datastohne/demo/blob/main/model.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC To enable our Compound AI System to predict turbine failtures based on industrial IoT sensor readings, we have to deploy the predictive mainteance model created in [04.1-automl-iot-turbine-predictive-maintenance]($./04.1-automl-iot-turbine-predictive-maintenance) notebook. To so, you can create a Model Serving endpoint from the Catalog Explorer UI, Databricks SDK or Rest API. 
+# MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we have to deploy the predictive mainteance model created in [04.1-automl-iot-turbine-predictive-maintenance]($./04.1-automl-iot-turbine-predictive-maintenance) notebook. To so, you can create a Model Serving endpoint from the Catalog Explorer UI, Databricks SDK or Rest API. 
 # MAGIC
 # MAGIC In this section we:
 # MAGIC 1. Create a `Model Serving Endpoint` using the MLflow Deployments SDK - an API for create, update and deletion tasks.
@@ -116,7 +116,7 @@ endpoint = client.create_endpoint(
             {
                 "name": "ads-entity",
                 "entity_name": f"{catalog}.{db}.{model_name}",
-                "entity_version": "2",
+                "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
                 "workload_size": "Small",
                 "scale_to_zero_enabled": True
             }
@@ -181,7 +181,7 @@ endpoint = client.create_endpoint(
 # MAGIC %md-sandbox
 # MAGIC ## Part 2: Create the Maintenance Report Retriever as a tool to retrieve maintenance reports
 # MAGIC
-# MAGIC To enable our Compound AI System to retrieve relevant historical maintenance reports for turbines predicted to be at risk of failure, we have to index historical maintenance reports into a Vector Search Index. Since our `Turbine Predictor as a tool` requires sensor readings as input, we will use an embedding vector of the sensor readings to retrieve maintenance reports with similar sensor readings. 
+# MAGIC To enable our Agent System to retrieve relevant historical maintenance reports for turbines predicted to be at risk of failure, we have to index historical maintenance reports into a Vector Search Index. Since our `Turbine Predictor as a tool` requires sensor readings as input, we will use an embedding vector of the sensor readings to retrieve maintenance reports with similar sensor readings. 
 # MAGIC
 # MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-06-01%20at%2012.58.23.png?raw=true" style="float: right" width="700px">
 # MAGIC
@@ -339,7 +339,7 @@ $$
       
     return formatted_response
   except Exception as e:
-    raise e
+    raise
 $$;""")
 
 # COMMAND ----------
@@ -379,7 +379,7 @@ $$;""")
 # MAGIC
 # MAGIC <img src="https://github.com/Datastohne/demo/blob/main/feature.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC To enable our Compound AI System to retrieve turbine specifications for turbines predicted t obe faulty, we need to create and serve a feature table through a feature serving endpoint.
+# MAGIC To enable our Agent System to retrieve turbine specifications for turbines predicted t obe faulty, we need to create and serve a feature table through a feature serving endpoint.
 # MAGIC
 # MAGIC Databricks Feature Serving offers a unified interface for serving pre-materialized and on-demand features to models or applications deployed outside Databricks. These endpoints automatically scale to handle real-time traffic, ensuring high availability and low latency.
 # MAGIC
@@ -511,7 +511,7 @@ try:
  )
 
 except Exception as e:
-  raise e
+  raise
 
 # COMMAND ----------
 

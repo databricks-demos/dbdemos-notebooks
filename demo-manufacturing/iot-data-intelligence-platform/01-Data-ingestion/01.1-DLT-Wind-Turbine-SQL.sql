@@ -207,7 +207,7 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_
 
 -- COMMAND ----------
 
-CREATE VIEW sensor_hourly (
+CREATE MATERIALIZED VIEW sensor_hourly (
   CONSTRAINT turbine_id_valid EXPECT (turbine_id IS not NULL)  ON VIOLATION DROP ROW,
   CONSTRAINT timestamp_valid EXPECT (hourly_timestamp IS not NULL)  ON VIOLATION DROP ROW
 )
@@ -244,7 +244,7 @@ SELECT turbine_id,
 
 -- COMMAND ----------
 
-CREATE VIEW turbine_training_dataset 
+CREATE MATERIALIZED VIEW turbine_training_dataset 
 COMMENT "Hourly sensor stats, used to describe signal and detect anomalies"
 AS
 SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F) AS sensor_vector, * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor_hourly m
@@ -270,7 +270,7 @@ SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_senso
 -- COMMAND ----------
 
 -- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
-CREATE VIEW turbine_current_status 
+CREATE MATERIALIZED VIEW turbine_current_status 
 COMMENT "Wind turbine last status based on model prediction"
 AS
 WITH latest_metrics AS (

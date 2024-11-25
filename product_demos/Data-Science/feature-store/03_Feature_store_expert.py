@@ -322,6 +322,7 @@ mlflow.set_registry_uri('databricks-uc')
 # creating sample input to be logged (do not include the live features in the schema as they'll be computed within the model)
 df_sample = training_set_df.limit(10).toPandas()
 x_sample = df_sample.drop(columns=["purchased"])
+dataset = mlflow.data.from_pandas(x_sample)
 
 # getting the model created by AutoML 
 best_model = summary_cl.best_trial.load_model()
@@ -335,6 +336,7 @@ with open(artifacts_path+"model/requirements.txt", 'r') as f:
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model_expert", experiment_id=summary_cl.experiment.experiment_id) as run:
   #Use the feature store client to log our best model
+  mlflow.log_input(dataset, "training")
   fe.log_model(
               model=best_model, # object of your model
               artifact_path="model", #name of the Artifact under MlFlow

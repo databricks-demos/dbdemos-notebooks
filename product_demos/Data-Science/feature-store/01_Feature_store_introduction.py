@@ -306,9 +306,11 @@ x_train, x_val,  y_train, y_val = train_test_split(X_train, Y_train, test_size=0
 mlflow.sklearn.autolog(log_input_examples=True,silent=True)
 model_name = "dbdemos_fs_travel_model"
 model_full_name = f"{catalog}.{db}.{model_name}"
+dataset = mlflow.data.from_pandas(X_train)
 
 with mlflow.start_run(run_name="lightGBM") as run:
   #Define our LGBM model
+  mlflow.log_input(dataset, "training")
   numerical_pipeline = Pipeline(steps=[
     ("converter", FunctionTransformer(lambda df: df.apply(pd.to_numeric, errors="coerce"))),
     ("standardizer", StandardScaler())])

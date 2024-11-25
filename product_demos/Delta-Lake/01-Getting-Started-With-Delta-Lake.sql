@@ -1,9 +1,4 @@
 -- Databricks notebook source
--- MAGIC %python
--- MAGIC dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
--- COMMAND ----------
-
 -- MAGIC %md-sandbox
 -- MAGIC
 -- MAGIC # Getting started with Delta Lake
@@ -20,14 +15,13 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Init the demo data under ${raw_data_location}/user_parquet.
--- MAGIC %run ./_resources/00-setup $reset_all_data=$reset_all_data
+-- MAGIC %run ./_resources/00-setup $reset_all_data=false
 
 -- COMMAND ----------
 
 -- MAGIC %python
 -- MAGIC #For this demo, We'll use a synthetic dataset containing user information, saved under ${raw_data_location}/user_parquet.
--- MAGIC print(f"Our user dataset is stored under raw_data_location={raw_data_location}/user_parquet")
--- MAGIC dbutils.widgets.text("raw_data_location", raw_data_location)
+-- MAGIC print(f"Our user dataset is stored under our Volume={folder}/user_parquet")
 
 -- COMMAND ----------
 
@@ -44,7 +38,7 @@
 CREATE TABLE IF NOT EXISTS user_delta (id BIGINT, creation_date TIMESTAMP, firstname STRING, lastname STRING, email STRING, address STRING, gender INT, age_group INT);
 
 -- Let's load some data in this table
-COPY INTO user_delta FROM '${raw_data_location}/user_parquet' FILEFORMAT = parquet;
+COPY INTO user_delta FROM '/Volumes/main__build/dbdemos_delta_lake/delta_lake_raw_data/user_parquet/' FILEFORMAT = parquet;
 
 SELECT * FROM user_delta;
 
@@ -62,11 +56,11 @@ SELECT * FROM user_delta;
 
 -- DBTITLE 1,Create Delta table using python / Scala API
 -- MAGIC %python
--- MAGIC data_parquet = spark.read.parquet(raw_data_location+"/user_parquet")
+-- MAGIC data_parquet = spark.read.parquet(folder+"/user_parquet")
 -- MAGIC
--- MAGIC data_parquet.write.mode("overwrite").save(raw_data_location+"/user_delta")
+-- MAGIC data_parquet.write.mode("overwrite").saveAsTable('user_delta')
 -- MAGIC
--- MAGIC display(spark.read.load(raw_data_location+"/user_delta"))
+-- MAGIC display(spark.read.table('user_delta'))
 
 -- COMMAND ----------
 
@@ -99,7 +93,10 @@ SELECT * FROM user_delta;
 
 -- COMMAND ----------
 
-select gender, round(avg(age_group),2) from user_delta_readStream group by gender
+-- MAGIC %python 
+-- MAGIC df = spark.sql("select gender, round(avg(age_group),2) from user_delta_readStream group by gender")
+-- MAGIC # checkpointLocation option temporary required for serverless workspaces
+-- MAGIC display(df, checkpointLocation = get_chkp_folder(folder))
 
 -- COMMAND ----------
 
@@ -165,8 +162,7 @@ select * from user_delta where id in (1 ,2, 99999)
 
 -- COMMAND ----------
 
--- MAGIC %sql
--- MAGIC ALTER TABLE user_delta ADD CONSTRAINT id_not_null CHECK (id is not null);
+ALTER TABLE user_delta ADD CONSTRAINT id_not_null CHECK (id is not null);
 
 -- COMMAND ----------
 
@@ -198,8 +194,7 @@ select * from user_delta where id in (1 ,2, 99999)
 
 -- COMMAND ----------
 
--- MAGIC %sql
--- MAGIC DESCRIBE HISTORY user_delta
+DESCRIBE HISTORY user_delta
 
 -- COMMAND ----------
 
@@ -208,15 +203,13 @@ select * from user_delta where id in (1 ,2, 99999)
 
 -- COMMAND ----------
 
--- MAGIC %sql
--- MAGIC -- Note that in our current version, user 99999 exists and we updated user 1 and 2
--- MAGIC SELECT * FROM user_delta WHERE ID IN (1 ,2, 99999);
+-- Note that in our current version, user 99999 exists and we updated user 1 and 2
+SELECT * FROM user_delta WHERE ID IN (1 ,2, 99999);
 
 -- COMMAND ----------
 
--- MAGIC %sql
--- MAGIC -- We can request the table at version 2, before the upsert operation to get the original data:
--- MAGIC SELECT * FROM user_delta VERSION AS OF 2 WHERE ID IN (1 ,2, 99999);
+-- We can request the table at version 2, before the upsert operation to get the original data:
+SELECT * FROM user_delta VERSION AS OF 2 WHERE ID IN (1 ,2, 99999);
 
 -- COMMAND ----------
 
@@ -278,29 +271,28 @@ SELECT * FROM user_delta_clone_deep;
 
 -- COMMAND ----------
 
--- MAGIC %sql 
--- MAGIC CREATE TABLE IF NOT EXISTS user_delta_generated_id (
--- MAGIC   id BIGINT GENERATED ALWAYS AS IDENTITY ( START WITH 10000 INCREMENT BY 1 ), 
--- MAGIC   firstname STRING, 
--- MAGIC   lastname STRING, 
--- MAGIC   email STRING, 
--- MAGIC   address STRING) ;
--- MAGIC
--- MAGIC -- Note that we don't insert data for the id. The engine will handle that for us:
--- MAGIC INSERT INTO user_delta_generated_id (firstname, lastname, email, address) SELECT
--- MAGIC     firstname,
--- MAGIC     lastname,
--- MAGIC     email,
--- MAGIC     address
--- MAGIC   FROM user_delta;
--- MAGIC
--- MAGIC -- The ID is automatically generated!
--- MAGIC SELECT * from user_delta_generated_id;
+CREATE TABLE IF NOT EXISTS user_delta_generated_id (
+  id BIGINT GENERATED ALWAYS AS IDENTITY ( START WITH 10000 INCREMENT BY 1 ), 
+  firstname STRING, 
+  lastname STRING, 
+  email STRING, 
+  address STRING) ;
+
+-- Note that we don't insert data for the id. The engine will handle that for us:
+INSERT INTO user_delta_generated_id (firstname, lastname, email, address) SELECT
+    firstname,
+    lastname,
+    email,
+    address
+  FROM user_delta;
+
+-- The ID is automatically generated!
+SELECT * from user_delta_generated_id;
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC stop_all_streams()
+-- MAGIC DBDemos.stop_all_streams()
 
 -- COMMAND ----------
 

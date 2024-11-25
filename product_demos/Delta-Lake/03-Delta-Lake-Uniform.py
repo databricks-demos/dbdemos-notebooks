@@ -47,16 +47,36 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE user_uniform (
+# MAGIC CREATE OR REPLACE TABLE workspace.default.repro1 (
 # MAGIC     id BIGINT,
 # MAGIC     firstname STRING,
 # MAGIC     lastname STRING,
-# MAGIC     email STRING)
-# MAGIC   TBLPROPERTIES ('delta.universalFormat.enabledFormats' = 'iceberg');
-# MAGIC
+# MAGIC     email STRING
+# MAGIC )
+# MAGIC TBLPROPERTIES (
+# MAGIC     'delta.universalFormat.enabledFormats' = 'iceberg', 
+# MAGIC     'delta.enableIcebergCompatV2' = 'true'
+# MAGIC );
+
+# COMMAND ----------
+
+spark.sql("""
+CREATE OR REPLACE TABLE repro3 (
+    id BIGINT,
+    firstname STRING,
+    lastname STRING,
+    email STRING)
+TBLPROPERTIES (
+    'delta.universalFormat.enabledFormats' = 'iceberg', 
+    'delta.enableIcebergCompatV2' = 'true'
+)""")
+
+# COMMAND ----------
+
+# MAGIC %sql
 # MAGIC INSERT INTO user_uniform SELECT id, firstname, lastname, email FROM user_delta;  
 # MAGIC
-# MAGIC SELECT * FROM user_uniform
+# MAGIC SELECT * FROM user_uniform;
 
 # COMMAND ----------
 
@@ -73,44 +93,51 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM user_uniform;
+# MAGIC SHOW TBLPROPERTIES user_uniform;
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Access your Delta Lake table using Iceberg
+# MAGIC ### Access your Delta Lake table using Iceberg REST Catalog API
 # MAGIC
-# MAGIC Our Delta Lake table is now available by any system reading Iceberg tables, such as native Iceberg reader or Big Query.
+# MAGIC Our Delta Lake table is now available by any system reading Iceberg tables, such as native Iceberg reader or external system like Big Query.
 # MAGIC
-# MAGIC For this demo, let's install python iceberg and access the table directly using Iceberg.
+# MAGIC If you're using an external storage, Databricks expose the table information through:
 
 # COMMAND ----------
 
-# DBTITLE 1,Install python iceberg package 
-# MAGIC %pip install pyiceberg
+from databricks.sdk import WorkspaceClient
+ws = WorkspaceClient() 
+table_info = ws.api_client.do('GET', f'/api/2.1/unity-catalog/tables/{catalog}.{schema}.user_uniform')
+table_info['delta_uniform_iceberg']
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
-# DBTITLE 1,With Uniform, a new /metadata folder is created containing iceberg metadata:
-location = next(filter(lambda d: d['col_name'] == 'Location', spark.sql('describe extended user_uniform').collect()), None)
-#Iceberg metadata folder
-metadata = dbutils.fs.ls(location['data_type']+'/metadata')
-metadata.sort(key=lambda x: x.modificationTime, reverse=True)
-display(metadata)
-json_metadata_file = next(filter(lambda file: file.name.endswith('.json'), metadata))
-print(f'Iceberg json metadata file: {json_metadata_file}')
-
-# COMMAND ----------
-
-# DBTITLE 1,Access our table natively from metadata with iceberg
-from pyiceberg.table import StaticTable
-
-table = StaticTable.from_metadata(json_metadata_file.path)
-table.scan().to_pandas()
+# MAGIC %md
+# MAGIC To read a managed table, you can leverage the Iceberg Catalog:
+# MAGIC
+# MAGIC ```
+# MAGIC curl -X GET -H "Authentication: Bearer $OAUTH_TOKEN" -H "Accept: application/json" \
+# MAGIC https://<workspace-instance>/api/2.1/unity-catalog/iceberg/v1/catalogs/<uc_catalog_name>/namespaces/<uc_schema_name>/tables/<uc_table_name>
+# MAGIC ```
+# MAGIC
+# MAGIC You should then receive a response like this:
+# MAGIC
+# MAGIC ```
+# MAGIC {
+# MAGIC   "metadata-location": "s3://bucket/path/to/iceberg/table/metadata/file",
+# MAGIC   "metadata": <iceberg-table-metadata-json>,
+# MAGIC   "config": {
+# MAGIC     "expires-at-ms": "<epoch-ts-in-millis>",
+# MAGIC     "s3.access-key-id": "<temporary-s3-access-key-id>",
+# MAGIC     "s3.session-token":"<temporary-s3-session-token>",
+# MAGIC     "s3.secret-access-key":"<temporary-secret-access-key>",
+# MAGIC     "client.region":"<aws-bucket-region-for-metadata-location>"
+# MAGIC   }
+# MAGIC }
+# MAGIC ```
+# MAGIC
+# MAGIC For more details, see [the Uniform Documentation](https://docs.databricks.com/en/delta/uniform.html)
 
 # COMMAND ----------
 

@@ -66,11 +66,11 @@ DELETE FROM user_delta WHERE ID > 1000;
 
 -- COMMAND ----------
 
-select * from table_changes("user_delta", 1);
+select * from table_changes("user_delta", 13);
 
 -- COMMAND ----------
 
-select distinct(_change_type) from table_changes("user_delta", 1)
+select distinct(_change_type) from table_changes("user_delta", 13)
 
 -- COMMAND ----------
 
@@ -86,16 +86,16 @@ select distinct(_change_type) from table_changes("user_delta", 1)
 -- MAGIC %python
 -- MAGIC stream = spark.readStream.format("delta") \
 -- MAGIC               .option("readChangeFeed", "true") \
--- MAGIC               .option("startingVersion", 1) \
+-- MAGIC               .option("startingVersion", 13) \
 -- MAGIC               .table("user_delta")
 -- MAGIC
--- MAGIC display(stream)
+-- MAGIC display(stream, checkpointLocation = get_chkp_folder(folder))
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC sleep(30)
--- MAGIC stop_all_streams()
+-- MAGIC time.sleep(30)
+-- MAGIC DBDemos.stop_all_streams()
 
 -- COMMAND ----------
 

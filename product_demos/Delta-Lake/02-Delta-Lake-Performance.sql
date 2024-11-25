@@ -209,32 +209,30 @@ SELECT * FROM user_delta where id = 4 or firstname = 'Quentin';
 
 -- COMMAND ----------
 
--- MAGIC %sql 
--- MAGIC CREATE TABLE IF NOT EXISTS user_delta_partition (
--- MAGIC   id BIGINT GENERATED ALWAYS AS IDENTITY ( START WITH 10000 INCREMENT BY 1 ), 
--- MAGIC   firstname STRING, 
--- MAGIC   lastname STRING, 
--- MAGIC   email STRING, 
--- MAGIC   address STRING, 
--- MAGIC   gender INT, 
--- MAGIC   age_group INT,
--- MAGIC   creation_date timestamp, 
--- MAGIC   creation_day date GENERATED ALWAYS AS ( CAST(creation_date AS DATE) ) )
--- MAGIC PARTITIONED BY (creation_day);
+CREATE TABLE IF NOT EXISTS user_delta_partition (
+  id BIGINT GENERATED ALWAYS AS IDENTITY ( START WITH 10000 INCREMENT BY 1 ), 
+  firstname STRING, 
+  lastname STRING, 
+  email STRING, 
+  address STRING, 
+  gender INT, 
+  age_group INT,
+  creation_date timestamp, 
+  creation_day date GENERATED ALWAYS AS ( CAST(creation_date AS DATE) ) )
+PARTITIONED BY (creation_day);
 
 -- COMMAND ----------
 
--- MAGIC %sql
--- MAGIC -- Note that we don't insert data for the creation_day field or id. The engine will handle that for us:
--- MAGIC INSERT INTO user_delta_partition (firstname, lastname, email, address, gender, age_group, creation_date) SELECT
--- MAGIC   firstname,
--- MAGIC   lastname,
--- MAGIC   email,
--- MAGIC   address,
--- MAGIC   gender,
--- MAGIC   age_group,
--- MAGIC   creation_date
--- MAGIC FROM user_delta;
+-- Note that we don't insert data for the creation_day field or id. The engine will handle that for us:
+INSERT INTO user_delta_partition (firstname, lastname, email, address, gender, age_group, creation_date) SELECT
+  firstname,
+  lastname,
+  email,
+  address,
+  gender,
+  age_group,
+  creation_date
+FROM user_delta;
 
 -- COMMAND ----------
 

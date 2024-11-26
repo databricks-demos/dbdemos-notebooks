@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %pip install mlflow==2.18.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC # Data engineering with Databricks - Building our C360 database
 # MAGIC

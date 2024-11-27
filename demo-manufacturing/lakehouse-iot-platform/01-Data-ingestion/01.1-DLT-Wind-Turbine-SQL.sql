@@ -135,8 +135,7 @@
 
 -- DBTITLE 1,Wind Turbine sensor data
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.parquet('/Volumes/main__build/dbdemos_iot_platform
-/turbine_raw_landing/incoming_data'))
+-- display(spark.read.parquet('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
 
 -- COMMAND ----------
 

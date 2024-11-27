@@ -23,7 +23,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                                                        Stage/version  
 #                                                                                           Model name                          |        
 #                                                                                               |                               |        
-predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_turbine.dbdemos_turbine_maintenance@prod", "string")
+predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string")
 spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # COMMAND ----------

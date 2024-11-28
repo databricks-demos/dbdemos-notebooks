@@ -1,5 +1,5 @@
 # Databricks notebook source
-dbdemos_iot_platformdbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
+dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 
 # COMMAND ----------
 

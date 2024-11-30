@@ -89,7 +89,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's ingest our incoming data using Autoloader (cloudFiles)
-CREATE STREAMING LIVE TABLE customers_cdc 
+CREATE STREAMING TABLE customers_cdc 
 COMMENT "New customer data incrementally ingested from cloud object storage landing zone"
 AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers", "json", map("cloudFiles.inferColumnTypes", "true"));
 
@@ -114,7 +114,7 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/cust
 
 -- DBTITLE 1,Silver Layer - Cleansed Table (Impose Constraints)
 -- this could also be a VIEW
-CREATE STREAMING LIVE TABLE customers_cdc_clean(
+CREATE STREAMING TABLE customers_cdc_clean(
   CONSTRAINT valid_id EXPECT (id IS NOT NULL) ON VIOLATION DROP ROW,
   CONSTRAINT valid_operation EXPECT (operation IN ('APPEND', 'DELETE', 'UPDATE')) ON VIOLATION DROP ROW,
   CONSTRAINT valid_json_schema EXPECT (_rescued_data IS NULL) ON VIOLATION DROP ROW
@@ -139,7 +139,7 @@ FROM STREAM(live.customers_cdc);
 -- COMMAND ----------
 
 -- DBTITLE 1,Create the target customers table 
-CREATE INCREMENTAL LIVE TABLE customers
+CREATE STREAMING TABLE customers
   COMMENT "Clean, materialized customers";
 
 -- COMMAND ----------
@@ -155,7 +155,7 @@ FROM stream(live.customers_cdc_clean)
 
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC ### 4/ Slowly Changing Dimention of type 2 (SCD2)
+-- MAGIC ### 4/ Slowly Changing Dimension of type 2 (SCD2)
 -- MAGIC
 -- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/cdc_dlt/cdc_dlt_pipeline_4.png" width="700" style="float: right" />
 -- MAGIC
@@ -181,7 +181,7 @@ FROM stream(live.customers_cdc_clean)
 -- COMMAND ----------
 
 -- create the table
-CREATE INCREMENTAL LIVE TABLE SCD2_customers
+CREATE STREAMING TABLE SCD2_customers
   COMMENT "Slowly Changing Dimension Type 2 for customers";
 
 -- store all changes as SCD2

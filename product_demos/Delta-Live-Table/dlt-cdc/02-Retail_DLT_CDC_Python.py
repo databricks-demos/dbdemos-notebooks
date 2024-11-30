@@ -149,16 +149,7 @@ def customers_cdc():
 @dlt.expect_or_drop("valid_id", "id IS NOT NULL")
 @dlt.expect_or_drop("valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')")
 def customers_cdc_clean():
-    return dlt.read_stream("customers_cdc").select(
-        "address",
-        "email",
-        "id",
-        "firstname",
-        "lastname",
-        "operation",
-        "operation_date",
-        "_rescued_data",
-    )
+    return dlt.read_stream("customers_cdc").select("address", "email", "id", "firstname", "lastname", "operation", "operation_date", "_rescued_data")
 
 
 # COMMAND ----------

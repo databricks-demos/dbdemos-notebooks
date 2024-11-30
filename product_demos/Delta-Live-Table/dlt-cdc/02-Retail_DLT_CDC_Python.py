@@ -18,13 +18,13 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC ### Capturing CDC  
+# MAGIC ### Capturing CDC
 # MAGIC
 # MAGIC A variety of **CDC tools** are available. One of the open source leader solution is Debezium, but other implementation exists simplifying the datasource, such as Fivetran, Qlik Replicate, Streamset, Talend, Oracle GoldenGate, AWS DMS.
 # MAGIC
-# MAGIC In this demo we are using CDC data coming from an external system like Debezium or DMS. 
+# MAGIC In this demo we are using CDC data coming from an external system like Debezium or DMS.
 # MAGIC
-# MAGIC Debezium takes care of capturing every changed row. It typically sends the history of data changes to Kafka logs or save them as file. To simplify the demo, we'll consider that our external CDC system is up and running and saving the CDC as JSON file in our blob storage (S3, ADLS, GCS). 
+# MAGIC Debezium takes care of capturing every changed row. It typically sends the history of data changes to Kafka logs or save them as file. To simplify the demo, we'll consider that our external CDC system is up and running and saving the CDC as JSON file in our blob storage (S3, ADLS, GCS).
 # MAGIC
 # MAGIC Our job is to CDC informations from the `customer` table (json format), making sure they're correct, and then materializing the customer table in our Lakehouse.
 
@@ -39,7 +39,7 @@
 # MAGIC - Using Autoloader we incrementally load the messages from cloud object storage, and stores the raw messages them in the `customers_cdc`. Autoloader will take care of infering the schema and handling schema evolution for us.
 # MAGIC - Then we'll add a view `customers_cdc_clean` to check the quality of our data, using expectation, and then build dashboards to track data quality. As example the ID should never be null as we'll use it to run our upsert operations.
 # MAGIC - Finally we perform the APPLY CHANGES INTO (doing the upserts) on the cleaned cdc data to apply the changes to the final `customers` table
-# MAGIC - Extra: we'll also see how DLT can simply create Slowly Changing Dimention of type 2 (SCD2) to keep track of all the changes 
+# MAGIC - Extra: we'll also see how DLT can simply create Slowly Changing Dimension of type 2 (SCD2) to keep track of all the changes
 # MAGIC
 # MAGIC Here is the flow we'll implement, consuming CDC data from an external database. Note that the incoming could be any format, including message queue such as Kafka.
 # MAGIC
@@ -66,7 +66,7 @@
 
 # DBTITLE 1,Input data from CDC
 # MAGIC %sql
-# MAGIC -- %python #Uncomment to explore the content 
+# MAGIC -- %python #Uncomment to explore the content
 # MAGIC -- display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers"))
 
 # COMMAND ----------
@@ -103,15 +103,21 @@
 # DBTITLE 1,Let's ingest our incoming data using Autoloader (cloudFiles)
 import dlt
 from pyspark.sql.functions import *
+
+
 ##Create the bronze information table containing the raw JSON data taken from the storage path printed in Cmd5 in 00_Retail_Data_CDC_Generator notebook
-@dlt.create_table(name="customers_cdc",
-                  comment = "New customer data incrementally ingested from cloud object storage landing zone")
+@dlt.create_table(
+    name="customers_cdc",
+    comment="New customer data incrementally ingested from cloud object storage landing zone",
+)
 def customers_cdc():
-  return (
-    spark.readStream.format("cloudFiles")
-      .option("cloudFiles.format", "json")
-      .option("cloudFiles.inferColumnTypes", "true")
-      .load("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers"))
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "json")
+        .option("cloudFiles.inferColumnTypes", "true")
+        .load("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers")
+    )
+
 
 # COMMAND ----------
 
@@ -132,16 +138,28 @@ def customers_cdc():
 
 # COMMAND ----------
 
+
 # DBTITLE 1,Silver Layer - Cleansed Table (Impose Constraints)
-#This could also be a view: create_view
-@dlt.create_table(name="customers_cdc_clean",
-                  comment="Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type")
+# This could also be a view: create_view
+@dlt.create_table(
+    name="customers_cdc_clean",
+    comment="Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type",
+)
 @dlt.expect_or_drop("no_rescued_data", "_rescued_data IS NULL")
 @dlt.expect_or_drop("valid_id", "id IS NOT NULL")
 @dlt.expect_or_drop("valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')")
 def customers_cdc_clean():
-  return dlt.read_stream("customers_cdc") \
-            .select("address", "email", "id", "firstname", "lastname", "operation", "operation_date", "_rescued_data")
+    return dlt.read_stream("customers_cdc").select(
+        "address",
+        "email",
+        "id",
+        "firstname",
+        "lastname",
+        "operation",
+        "operation_date",
+        "_rescued_data",
+    )
+
 
 # COMMAND ----------
 
@@ -158,25 +176,26 @@ def customers_cdc_clean():
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the target customers table 
+# DBTITLE 1,Create the target customers table
 dlt.create_target_table(name="customers", comment="Clean, materialized customers")
 
 # COMMAND ----------
 
 dlt.apply_changes(
-  target = "customers", #The customer table being materilized
-  source = "customers_cdc_clean", #the incoming CDC
-  keys = ["id"], #what we'll be using to match the rows to upsert
-  sequence_by = col("operation_date"), #we deduplicate by operation date getting the most recent value
-  ignore_null_updates = False,
-  apply_as_deletes = expr("operation = 'DELETE'"), #DELETE condition
-  except_column_list = ["operation", "operation_date", "_rescued_data"]) #in addition we drop metadata columns
+    target="customers",  # The customer table being materilized
+    source="customers_cdc_clean",  # the incoming CDC
+    keys=["id"],  # what we'll be using to match the rows to upsert
+    sequence_by=col("operation_date"),  # we deduplicate by operation date getting the most recent value
+    ignore_null_updates=False,
+    apply_as_deletes=expr("operation = 'DELETE'"),  # DELETE condition
+    except_column_list=["operation", "operation_date", "_rescued_data"],
+)  # in addition we drop metadata columns
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ### 4/ Slowly Changing Dimention of type 2 (SCD2)
+# MAGIC ### 4/ Slowly Changing Dimension of type 2 (SCD2)
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/cdc_dlt/cdc_dlt_pipeline_4.png" width="700" style="float: right" />
 # MAGIC
@@ -189,11 +208,11 @@ dlt.apply_changes(
 # MAGIC
 # MAGIC #### SCD2 with DLT
 # MAGIC
-# MAGIC Delta support CDF (Change Data Flow) and `table_change` can be used to query the table modification in a SQL/python. However, CDF main use-case is to capture changes in a pipeline and not create a full view of the table changes from the begining. 
+# MAGIC Delta support CDF (Change Data Flow) and `table_change` can be used to query the table modification in a SQL/python. However, CDF main use-case is to capture changes in a pipeline and not create a full view of the table changes from the begining.
 # MAGIC
-# MAGIC Things get especially complex to implement if you have out of order events. If you need to sequence your changes by a timestamp and receive a modification which happened in the past, then you not only need to append a new entry in your SCD table, but also update the previous entries.  
+# MAGIC Things get especially complex to implement if you have out of order events. If you need to sequence your changes by a timestamp and receive a modification which happened in the past, then you not only need to append a new entry in your SCD table, but also update the previous entries.
 # MAGIC
-# MAGIC Delta Live Table makes all this logic super simple and let you create a separate table containing all the modifications, from the begining of the time. This table can then be used at scale, with specific partitions / zorder columns if required. Out of order fields will be handled out of the box based on the _sequence_by 
+# MAGIC Delta Live Table makes all this logic super simple and let you create a separate table containing all the modifications, from the begining of the time. This table can then be used at scale, with specific partitions / zorder columns if required. Out of order fields will be handled out of the box based on the _sequence_by
 # MAGIC
 # MAGIC To create a SCD2 table, all we have to do is leverage the `APPLY CHANGES` with the extra option: `STORED AS {SCD TYPE 1 | SCD TYPE 2 [WITH {TIMESTAMP|VERSION}}]`
 # MAGIC
@@ -201,24 +220,27 @@ dlt.apply_changes(
 
 # COMMAND ----------
 
-#create the table
-dlt.create_target_table(name="SCD2_customers", comment="Slowly Changing Dimension Type 2 for customers")
+# create the table
+dlt.create_target_table(
+    name="SCD2_customers", comment="Slowly Changing Dimension Type 2 for customers"
+)
 
-#store all changes as SCD2
+# store all changes as SCD2
 dlt.apply_changes(
-  target = "SCD2_customers", 
-  source = "customers_cdc_clean",
-  keys = ["id"], 
-  sequence_by = col("operation_date"),
-  ignore_null_updates = False,
-  apply_as_deletes = expr("operation = 'DELETE'"), 
-  except_column_list = ["operation", "operation_date", "_rescued_data"],
-  stored_as_scd_type = "2") #Enable SCD2 and store individual updates
+    target="SCD2_customers",
+    source="customers_cdc_clean",
+    keys=["id"],
+    sequence_by=col("operation_date"),
+    ignore_null_updates=False,
+    apply_as_deletes=expr("operation = 'DELETE'"),
+    except_column_list=["operation", "operation_date", "_rescued_data"],
+    stored_as_scd_type="2",
+)  # Enable SCD2 and store individual updates
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Conclusion 
+# MAGIC ## Conclusion
 # MAGIC We now have <a dbdemos-pipeline-id="dlt-cdc" href="/#joblist/pipelines/c1ccc647-74e6-4754-9c61-6f2691456a73">our DLT pipeline</a> up & ready! Our `customers` table is materialize and we can start building BI report to analyze and improve our business. It also open the door to Data Science and ML use-cases such as customer churn, segmentation etc.
 
 # COMMAND ----------
@@ -228,7 +250,7 @@ dlt.apply_changes(
 # MAGIC
 # MAGIC <img style="float:right" width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
 # MAGIC
-# MAGIC Delta Live Tables tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
+# MAGIC Delta Live Tables tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required.
 # MAGIC
 # MAGIC This let you build custom dashboards to track those metrics.
 # MAGIC

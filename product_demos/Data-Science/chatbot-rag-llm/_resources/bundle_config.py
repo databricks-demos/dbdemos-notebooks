@@ -11,6 +11,7 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_rag_chatbot",
+  "serverless_supported": True,
   "title": "LLM Chatbot With Retrieval Augmented Generation (RAG) and DBRX",
   "description": "Deploy your Chatbot on Databricks AI with RAG, DBRX, Vector Search & Mosaic AI Agent Evaluation",
   "custom_message": "Looking for production-grade RAG instruction? Start with this demo and checkout <a href=\"https://ai-cookbook.io/\">ai-cookbook.io</a> for more advanced guidance and recommendations!",

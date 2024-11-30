@@ -189,7 +189,7 @@ def historical_txs():
 # MAGIC
 # MAGIC Our last step is to materialize the Gold Layer.
 # MAGIC
-# MAGIC Because these tables will be requested at scale using a SQL Endpoint, we'll add Zorder at the table level to ensure faster queries using `pipelines.autoOptimize.zOrderCols`, and DLT will handle the rest.
+# MAGIC Because these tables will be requested at scale using a SQL Endpoint, we'll add Liquid Clustering at the table level to organize data for faster queries, and DLT will handle the rest.
 
 # COMMAND ----------
 
@@ -197,7 +197,7 @@ def historical_txs():
 # DBTITLE 1,Balance aggregate per cost location
 @dlt.create_table(
     comment="Combines historical and new loan data for unified rollup of loan balances",
-    table_properties={"pipelines.autoOptimize.zOrderCols": "location_code"},
+    cluster_by=["location_code"],
 )
 def total_loan_balances():
     return (

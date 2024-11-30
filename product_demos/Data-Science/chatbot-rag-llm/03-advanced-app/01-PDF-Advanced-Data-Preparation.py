@@ -23,13 +23,17 @@
 # MAGIC
 # MAGIC Lakehouse AI not only provides state of the art solutions to accelerate your AI and LLM projects, but also to accelerate data ingestion and preparation at scale, including unstructured data like PDFs.
 # MAGIC
+# MAGIC <div style="background-color: #d4f8d4; border-radius: 15px; padding: 20px; text-align: center;">
+# MAGIC         Note: Looking for a full, production-grade guide? Make sure you checkout <a target="_blank" href="https://ai-cookbook.io">Databricks ai-cookbook.ai </a>!
+# MAGIC     </div>
+# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=advanced/01-PDF-Advanced-Data-Preparation&demo_name=chatbot-rag-llm&event=VIEW">
 
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries 
-# MAGIC %pip install --quiet -U transformers==4.41.1 pypdf==4.1.0 langchain-text-splitters==0.2.0 databricks-vectorsearch mlflow tiktoken==0.7.0 torch==2.3.0 llama-index==0.10.43
+# MAGIC %pip install -U transformers==4.41.1 pypdf==4.1.0 langchain-text-splitters==0.2.0 databricks-vectorsearch mlflow==2.18.0 tiktoken==0.7.0 torch==2.3.0 llama-index==0.10.43
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -145,7 +149,7 @@ def parse_bytes_pypdf(raw_doc_contents_bytes: bytes):
 # DBTITLE 1,Trying our text extraction function with a single pdf file
 import io
 import re
-with requests.get('https://github.com/databricks-demos/dbdemos-dataset/blob/main/llm/databricks-pdf-documentation/Databricks-Customer-360-ebook-Final.pdf?raw=true') as pdf:
+with requests.get('https://dbdemos-dataset.s3.amazonaws.com/llm/databricks-pdf-documentation/Databricks-Customer-360-ebook-Final.pdf') as pdf:
   doc = parse_bytes_pypdf(pdf.content)  
   print(doc)
 
@@ -163,19 +167,23 @@ from llama_index.core import Document, set_global_tokenizer
 from transformers import AutoTokenizer
 from typing import Iterator
 
-# Reduce the arrow batch size as our PDF can be big in memory
-spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 10)
+# Reduce the arrow batch size as our PDF can be big in memory (classic compute only)
+# spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 10)
 
 @pandas_udf("array<string>")
 def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
     #set llama2 as tokenizer to match our model size (will stay below gte 1024 limit)
     set_global_tokenizer(
-      AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer")
+      AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer", cache_dir="/tmp/hf_cache")
     )
     #Sentence splitter from llama_index to split on sentences
     splitter = SentenceSplitter(chunk_size=500, chunk_overlap=10)
     def extract_and_split(b):
-      txt = parse_bytes_pypdf(b)
+      try:
+        txt = parse_bytes_pypdf(b)
+      except Exception as e:
+        txt = f'__PDF_PARSING_ERROR__ file: {e}'
+        print(txt)
       if txt is None:
         return []
       nodes = splitter.get_nodes_from_documents([Document(text=txt)])
@@ -280,6 +288,7 @@ def get_embedding(contents: pd.Series) -> pd.Series:
 
 (spark.readStream.table('pdf_raw')
       .withColumn("content", F.explode(read_as_chunk("content")))
+      .filter("content not like '__PDF_PARSING_ERROR__%'") #Drop PDF with parsing ERROR (could throw an error instead or properly flag that in a prod setup to avoid silent failures)
       .withColumn("embedding", get_embedding("content"))
       .selectExpr('path as url', 'content', 'embedding')
   .writeStream
@@ -288,7 +297,7 @@ def get_embedding(contents: pd.Series) -> pd.Series:
     .table('databricks_pdf_documentation').awaitTermination())
 
 #Let's also add our documentation web page from the simple demo (make sure you run the quickstart demo first)
-if table_exists(f'{catalog}.{db}.databricks_documentation'):
+if spark.catalog.tableExists(f'{catalog}.{db}.databricks_documentation'):
   (spark.readStream.option("skipChangeCommits", "true").table('databricks_documentation') #skip changes for more stable demo
       .withColumn('embedding', get_embedding("content"))
       .select('url', 'content', 'embedding')

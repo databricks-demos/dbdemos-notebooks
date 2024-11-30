@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-agents mlflow mlflow-skinny databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow==2.18.0 mlflow-skinny==2.18.0 databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -48,7 +48,7 @@
 
 #dbdemos__delete_this_cell
 #force the experiment to the field demos one. Required to launch as a batch
-init_experiment_for_batch("chatbot-rag-llm-advanced", "simple")
+init_experiment_for_batch("chatbot-rag-llm-advanced", "advanced")
 
 # COMMAND ----------
 
@@ -219,10 +219,16 @@ client.set_registered_model_alias(name=MODEL_NAME_FQN, alias="prod", version=mod
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Conclusion
+# MAGIC In a production setup, we would deploy another PROD model endpoint serving using this mode. To keep this demo simple, we will keep our previous endpoint for our next online evaluation step.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next step: track production online inferences with Databricks AI Gateway
 # MAGIC
 # MAGIC Mosaic AI Agent Evaluation makes it easy to evaluate your LLM Models, leveraging custom metrics.
 # MAGIC
 # MAGIC Evaluating your chatbot is key to measure your future version impact, and your Data Intelligence Platform makes it easy leveraging automated Workflow for your MLOps pipelines.
 # MAGIC
-# MAGIC For a production-grade GenAI application, this step should be automated and part as a job, executed everytime the model is changed and benchmarked against previous run to make sure you don't have performance regression.
+# MAGIC Let's now review how to track our production model endpoint, tracking our users question through Databricks AI Gateway: [open 04-Online-Evaluation]($./04-Online-Evaluation)
+# MAGIC

@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny==2.18.0 mlflow==2.18.0 mlflow[gateway]==2.18.0 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -30,7 +30,7 @@
 
 rag_chain_config = {
     "databricks_resources": {
-        "llm_endpoint_name": "databricks-dbrx-instruct",
+        "llm_endpoint_name": "databricks-meta-llama-3-1-70b-instruct",
         "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,
     },
     "input_example": {

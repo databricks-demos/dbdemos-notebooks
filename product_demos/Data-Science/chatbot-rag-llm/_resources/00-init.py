@@ -89,7 +89,7 @@ def use_and_create_db(catalog, dbName, cloud_storage_path = None):
   spark.sql(f"USE CATALOG `{catalog}`")
   spark.sql(f"""create database if not exists `{dbName}` """)
 
-assert catalog not in ['hive_metastore', 'spark_catalog']
+assert catalog not in ['hive_metastore', 'spark_catalog'], "Please use a UC schema"
 #If the catalog is defined, we force it to the given value and throw exception if not.
 if len(catalog) > 0:
   current_catalog = spark.sql("select current_catalog()").collect()[0]['current_catalog()']
@@ -101,12 +101,6 @@ if len(catalog) > 0:
         spark.sql(f"ALTER CATALOG {catalog} OWNER TO `account users`")
   use_and_create_db(catalog, dbName)
 
-if catalog == 'dbdemos':
-  try:
-    spark.sql(f"GRANT CREATE, USAGE on DATABASE {catalog}.{dbName} TO `account users`")
-    spark.sql(f"ALTER SCHEMA {catalog}.{dbName} OWNER TO `account users`")
-  except Exception as e:
-    print("Couldn't grant access to the schema to all users:"+str(e))    
 
 print(f"using catalog.database `{catalog}`.`{dbName}`")
 spark.sql(f"""USE `{catalog}`.`{dbName}`""")    
@@ -326,11 +320,12 @@ def download_databricks_documentation_articles(max_documents=None):
     final_df = df_with_html.withColumn("text", download_web_page_udf("html_content"))
 
     # Select and filter non-null results
-    final_df = final_df.select("url", "text").filter("text IS NOT NULL").cache()
-    if final_df.isEmpty():
-      raise Exception("Dataframe is empty, couldn't download Databricks documentation, please check sitemap status.")
+    final_df = final_df.select("url", "text").filter("text IS NOT NULL")
 
     return final_df
+
+#doc = download_databricks_documentation_articles(100)
+#doc.write.mode('overwrite').saveAsTable('databricks_documentation')
 
 # COMMAND ----------
 
@@ -357,13 +352,3 @@ def cleanup_demo(catalog, db, serving_endpoint_name, vs_index_fullname):
 def pprint(obj):
   import pprint
   pprint.pprint(obj, compact=True, indent=1, width=100)
-
-# COMMAND ----------
-
-#Temp workaround to test if a table exists in shared cluster mode in DBR 14.2 (see SASP-2467)
-def table_exists(table_name):
-    try:
-        spark.table(table_name).isEmpty()
-    except:
-        return False
-    return True

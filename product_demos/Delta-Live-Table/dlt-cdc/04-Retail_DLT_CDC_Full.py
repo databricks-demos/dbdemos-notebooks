@@ -53,9 +53,7 @@ def create_pipeline(table_name):
     )
     @dlt.expect_or_drop("no_rescued_data", "_rescued_data IS NULL")
     @dlt.expect_or_drop("valid_id", "id IS NOT NULL")
-    @dlt.expect_or_drop(
-        "valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')"
-    )
+    @dlt.expect_or_drop("valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')")
     def raw_cdc_clean():
         return dlt.read_stream(table_name + "_cdc")
 
@@ -65,13 +63,11 @@ def create_pipeline(table_name):
         target=table_name,  # The customer table being materilized
         source=table_name + "_cdc_clean",  # the incoming CDC
         keys=["id"],  # what we'll be using to match the rows to upsert
-        sequence_by=col(
-            "operation_date"
-        ),  # we deduplicate by operation date getting the most recent value
+        sequence_by=col("operation_date"),  # we deduplicate by operation date getting the most recent value
         ignore_null_updates=False,
         apply_as_deletes=expr("operation = 'DELETE'"),  # DELETE condition
-        except_column_list=["operation", "operation_date", "_rescued_data"],
-    )  # in addition we drop metadata columns
+        except_column_list=["operation", "operation_date", "_rescued_data"], # in addition we drop metadata columns
+    )
 
 
 for folder in dbutils.fs.ls("/Volumes/main__build/dbdemos_dlt_cdc/raw_data"):

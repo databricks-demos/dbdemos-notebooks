@@ -24,62 +24,76 @@
 
 # COMMAND ----------
 
-#Let's loop over all the folders and dynamically generate our DLT pipeline. 
+# Let's loop over all the folders and dynamically generate our DLT pipeline.
 import dlt
 from pyspark.sql.functions import *
-  
-  
+
+
 def create_pipeline(table_name):
-  print(f"Building DLT CDC pipeline for {table_name}")
-  
-  ##Raw CDC Table
-  #        .option("cloudFiles.maxFilesPerTrigger", "1")
-  @dlt.create_table(name=table_name+"_cdc",
-                    comment = "New "+table_name+" data incrementally ingested from cloud object storage landing zone")
-  def raw_cdc():
-    return (
-      spark.readStream.format("cloudFiles")
-        .option("cloudFiles.format", "json")
-        .option("cloudFiles.inferColumnTypes", "true")
-        .load("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/"+table_name))
-  
-  ##Clean CDC input and track quality with expectations
-  @dlt.create_view(name=table_name+"_cdc_clean",
-                  comment="Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type")
-  @dlt.expect_or_drop("no_rescued_data", "_rescued_data IS NULL")
-  @dlt.expect_or_drop("valid_id", "id IS NOT NULL")
-  @dlt.expect_or_drop("valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')")
-  def raw_cdc_clean():
-    return dlt.read_stream(table_name+"_cdc")
-  
-  
-  ##Materialize the final table
-  dlt.create_target_table(name=table_name, comment="Clean, materialized "+table_name)
-  dlt.apply_changes(target = table_name, #The customer table being materilized
-                    source = table_name+"_cdc_clean", #the incoming CDC
-                    keys = ["id"], #what we'll be using to match the rows to upsert
-                    sequence_by = col("operation_date"), #we deduplicate by operation date getting the most recent value
-                    ignore_null_updates = False,
-                    apply_as_deletes = expr("operation = 'DELETE'"), #DELETE condition
-                    except_column_list = ["operation", "operation_date", "_rescued_data"]) #in addition we drop metadata columns
-  
-  
+    print(f"Building DLT CDC pipeline for {table_name}")
+
+    ##Raw CDC Table
+    # .option("cloudFiles.maxFilesPerTrigger", "1")
+    @dlt.table(
+        name=table_name + "_cdc",
+        comment=f"New {table_name} data incrementally ingested from cloud object storage landing zone",
+    )
+    def raw_cdc():
+        return (
+            spark.readStream.format("cloudFiles")
+            .option("cloudFiles.format", "json")
+            .option("cloudFiles.inferColumnTypes", "true")
+            .load("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/" + table_name)
+        )
+
+    ##Clean CDC input and track quality with expectations
+    @dlt.view(
+        name=table_name + "_cdc_clean",
+        comment="Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type",
+    )
+    @dlt.expect_or_drop("no_rescued_data", "_rescued_data IS NULL")
+    @dlt.expect_or_drop("valid_id", "id IS NOT NULL")
+    @dlt.expect_or_drop(
+        "valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')"
+    )
+    def raw_cdc_clean():
+        return dlt.read_stream(table_name + "_cdc")
+
+    ##Materialize the final table
+    dlt.create_streaming_table(name=table_name, comment="Clean, materialized " + table_name)
+    dlt.apply_changes(
+        target=table_name,  # The customer table being materilized
+        source=table_name + "_cdc_clean",  # the incoming CDC
+        keys=["id"],  # what we'll be using to match the rows to upsert
+        sequence_by=col(
+            "operation_date"
+        ),  # we deduplicate by operation date getting the most recent value
+        ignore_null_updates=False,
+        apply_as_deletes=expr("operation = 'DELETE'"),  # DELETE condition
+        except_column_list=["operation", "operation_date", "_rescued_data"],
+    )  # in addition we drop metadata columns
+
+
 for folder in dbutils.fs.ls("/Volumes/main__build/dbdemos_dlt_cdc/raw_data"):
-  table_name = folder.name[:-1]
-  create_pipeline(table_name)
+    table_name = folder.name[:-1]
+    create_pipeline(table_name)
 
 # COMMAND ----------
 
+
 # DBTITLE 1,Add final layer joining 2 tables
-@dlt.create_table(name="transactions_per_customers",
-                  comment = "table join between users and transactions for further analysis")
+@dlt.table(
+    name="transactions_per_customers",
+    comment="table join between users and transactions for further analysis",
+)
 def raw_cdc():
-  return dlt.read("transactions").join(dlt.read("customers"), ["id"], "left")
+    return dlt.read("transactions").join(dlt.read("customers"), ["id"], "left")
+
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Conclusion 
+# MAGIC ### Conclusion
 # MAGIC We can now scale our CDC pipeline to N tables using python factorization. This gives us infinite possibilities and abstraction level in our DLT pipelines.
 # MAGIC
 # MAGIC DLT handles all the hard work for us so that we can focus on business transformation and drastically accelerate DE team:

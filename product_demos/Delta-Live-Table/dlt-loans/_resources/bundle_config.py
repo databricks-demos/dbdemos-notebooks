@@ -145,7 +145,7 @@
   },
   "cluster": {
     "num_workers": 1,
-    "spark_version": "14.3.x-scala2.12",
+    "spark_version": "15.4.x-scala2.12",
     "spark_conf": {},
     "data_security_mode": "USER_ISOLATION",
     "runtime_engine": "STANDARD"

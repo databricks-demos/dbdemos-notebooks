@@ -25,7 +25,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries 
-# MAGIC %pip install --quiet mlflow==2.14.3 lxml==4.9.3 transformers==4.30.2 langchain==0.2.1 databricks-vectorsearch
+# MAGIC %pip install --quiet mlflow==2.18.0 lxml==4.9.3 transformers==4.30.2 langchain==0.2.1 databricks-vectorsearch
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -53,7 +53,7 @@
 
 # COMMAND ----------
 
-if not table_exists("raw_documentation") or spark.table("raw_documentation").isEmpty():
+if not spark.catalog.tableExists("raw_documentation") or spark.table("raw_documentation").isEmpty():
     # Download Databricks documentation to a DataFrame (see _resources/00-init for more details)
     doc_articles = download_databricks_documentation_articles()
     #Save them as a raw_documentation table
@@ -120,7 +120,7 @@ tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, chunk_size=max_chunk_size, chunk_overlap=50)
 html_splitter = HTMLHeaderTextSplitter(headers_to_split_on=[("h2", "header2")])
 
-# Split on H2, but merge small h2 chunks together to avoid too small. 
+# Split on H2, but merge small h2 chunks together to avoid having too small chunks. 
 def split_html_on_h2(html, min_chunk_size = 20, max_chunk_size=500):
   if not html:
       return []

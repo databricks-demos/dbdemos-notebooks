@@ -106,7 +106,7 @@ from pyspark.sql.functions import *
 
 
 ##Create the bronze information table containing the raw JSON data taken from the storage path printed in Cmd5 in 00_Retail_Data_CDC_Generator notebook
-@dlt.create_table(
+@dlt.table(
     name="customers_cdc",
     comment="New customer data incrementally ingested from cloud object storage landing zone",
 )
@@ -141,7 +141,7 @@ def customers_cdc():
 
 # DBTITLE 1,Silver Layer - Cleansed Table (Impose Constraints)
 # This could also be a view: create_view
-@dlt.create_table(
+@dlt.table(
     name="customers_cdc_clean",
     comment="Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type",
 )
@@ -168,7 +168,7 @@ def customers_cdc_clean():
 # COMMAND ----------
 
 # DBTITLE 1,Create the target customers table
-dlt.create_target_table(name="customers", comment="Clean, materialized customers")
+dlt.create_streaming_table(name="customers", comment="Clean, materialized customers")
 
 # COMMAND ----------
 
@@ -212,7 +212,7 @@ dlt.apply_changes(
 # COMMAND ----------
 
 # create the table
-dlt.create_target_table(
+dlt.create_streaming_table(
     name="SCD2_customers", comment="Slowly Changing Dimension Type 2 for customers"
 )
 

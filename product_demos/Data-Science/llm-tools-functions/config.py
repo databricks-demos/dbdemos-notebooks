@@ -11,6 +11,8 @@
 
 VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"
 
-catalog = "main__build"
+
+#catalog = "main__build"
+catalog = "main_dbdemo_agent"
 dbName = db = "dbdemos_agent_tools"
 volume_name = "dbdemos_agent_volume"

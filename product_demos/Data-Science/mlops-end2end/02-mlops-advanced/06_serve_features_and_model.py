@@ -149,11 +149,11 @@ churn_features_online_store_spec = OnlineTableSpec(
 # COMMAND ----------
 
 # DBTITLE 1,Create the online table
+from databricks.sdk.service.catalog import OnlineTable
+
 # Create the online table
-w.online_tables.create(
-  name=f"{catalog}.{db}.advanced_churn_feature_table_online_table",
-  spec=churn_features_online_store_spec
-)
+online_table = OnlineTable(name=f"{catalog}.{db}.advanced_churn_feature_table_online_table", spec=churn_features_online_store_spec)
+w.online_tables.create_and_wait(table=online_table)
 
 # COMMAND ----------
 

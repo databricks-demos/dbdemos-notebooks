@@ -71,7 +71,7 @@ import dlt
 from pyspark.sql import functions as F
 
 
-@dlt.create_table(
+@dlt.table(
     comment="New raw loan data incrementally ingested from cloud object storage landing zone"
 )
 def raw_txs():
@@ -86,7 +86,7 @@ def raw_txs():
 # COMMAND ----------
 
 
-@dlt.create_table(comment="Lookup mapping for accounting codes")
+@dlt.table(comment="Lookup mapping for accounting codes")
 def ref_accounting_treatment():
     return spark.read.format("delta").load(
         "/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment"
@@ -96,7 +96,7 @@ def ref_accounting_treatment():
 # COMMAND ----------
 
 
-@dlt.create_table(comment="Raw historical transactions")
+@dlt.table(comment="Raw historical transactions")
 def raw_historical_loans():
     return (
         spark.readStream.format("cloudFiles")
@@ -127,7 +127,7 @@ def raw_historical_loans():
 
 
 # DBTITLE 1,enrich transactions with metadata
-@dlt.create_view(comment="Livestream of new transactions")
+@dlt.view(comment="Livestream of new transactions")
 def new_txs():
     txs = dlt.read_stream("raw_txs").alias("txs")
     ref = dlt.read("ref_accounting_treatment").alias("ref")
@@ -140,7 +140,7 @@ def new_txs():
 
 
 # DBTITLE 1,Keep only the proper transactions. Fail if cost center isn't correct, discard the others.
-@dlt.create_table(comment="Livestream of new transactions, cleaned and compliant")
+@dlt.table(comment="Livestream of new transactions, cleaned and compliant")
 @dlt.expect("Payments should be this year", "(next_payment_date > date('2020-12-31'))")
 @dlt.expect_or_drop(
     "Balance should be positive", "(balance > 0 AND arrears_balance > 0)"
@@ -155,7 +155,7 @@ def cleaned_new_txs():
 
 # DBTITLE 1,Let's quarantine the bad transaction for further analysis
 # This is the inverse condition of the above statement to quarantine incorrect data for further analysis.
-@dlt.create_table(comment="Incorrect transactions requiring human analysis")
+@dlt.table(comment="Incorrect transactions requiring human analysis")
 @dlt.expect("Payments should be this year", "(next_payment_date <= date('2020-12-31'))")
 @dlt.expect_or_drop(
     "Balance should be positive", "(balance <= 0 OR arrears_balance <= 0)"
@@ -168,7 +168,7 @@ def quarantine_bad_txs():
 
 
 # DBTITLE 1,Enrich all historical transactions
-@dlt.create_table(comment="Historical loan transactions")
+@dlt.table(comment="Historical loan transactions")
 @dlt.expect("Grade should be valid", "(grade in ('A', 'B', 'C', 'D', 'E', 'F', 'G'))")
 @dlt.expect_or_drop("Recoveries shoud be int", "(CAST(recoveries as INT) IS NOT NULL)")
 def historical_txs():
@@ -195,7 +195,7 @@ def historical_txs():
 
 
 # DBTITLE 1,Balance aggregate per cost location
-@dlt.create_table(
+@dlt.table(
     comment="Combines historical and new loan data for unified rollup of loan balances",
     cluster_by=["location_code"],
 )
@@ -218,7 +218,7 @@ def total_loan_balances():
 
 
 # DBTITLE 1,Balance aggregate per cost center
-@dlt.create_table(
+@dlt.table(
     comment="Live table of new loan balances for consumption by different cost centers"
 )
 def new_loan_balances_by_cost_center():
@@ -233,7 +233,7 @@ def new_loan_balances_by_cost_center():
 
 
 # DBTITLE 1,Balance aggregate per country
-@dlt.create_table(comment="Live table of new loan balances per country")
+@dlt.table(comment="Live table of new loan balances per country")
 def new_loan_balances_by_country():
     return (
         dlt.read("cleaned_new_txs")

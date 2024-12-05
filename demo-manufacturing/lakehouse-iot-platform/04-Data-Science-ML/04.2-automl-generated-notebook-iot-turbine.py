@@ -321,11 +321,12 @@ pipeline_val = Pipeline([
 ])
 pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
+dataset = mlflow.data.from_pandas(X_train)
 
 def objective(params):
   with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run:
     lgbmc_classifier = LGBMClassifier(**params)
-
+    mlflow.log_input(dataset, context="training")
     model = Pipeline([
         ("column_selector", col_selector),
         ("preprocessor", preprocessor),

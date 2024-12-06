@@ -136,24 +136,34 @@ except Exception as e:
 # COMMAND ----------
 
 # DBTITLE 1,Create the online table specification
-from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+from databricks.sdk.service.catalog import (
+    OnlineTable,
+    OnlineTableSpec,
+    OnlineTableSpecTriggeredSchedulingPolicy,
+)
 
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
-  primary_key_columns = ["customer_id"],
-  timeseries_key = "transaction_ts",
-  source_table_full_name = f"{catalog}.{db}.advanced_churn_feature_table",
-  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
+    primary_key_columns=["customer_id"],
+    timeseries_key="transaction_ts",
+    source_table_full_name=f"{catalog}.{db}.advanced_churn_feature_table",
+    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict(
+        {"triggered": "true"}
+    ),
+)
+
+churn_features_online_table = OnlineTable.from_dict(
+    {
+        "name": f"{catalog}.{db}.advanced_churn_feature_table_online_table",
+        "spec": churn_features_online_store_spec.as_dict(),
+    }
 )
 
 # COMMAND ----------
 
 # DBTITLE 1,Create the online table
 # Create the online table
-w.online_tables.create(
-  name=f"{catalog}.{db}.advanced_churn_feature_table_online_table",
-  spec=churn_features_online_store_spec
-)
+w.online_tables.create(table = churn_features_online_table)
 
 # COMMAND ----------
 

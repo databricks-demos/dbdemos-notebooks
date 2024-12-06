@@ -220,7 +220,7 @@ display(features)
 
 # COMMAND ----------
 
-# DBTITLE 1,Starting AutoML run usingDtabricks API
+# DBTITLE 1,Starting AutoML run using Databricks API
 from databricks import automl
 
 xp_path = "/Shared/dbdemos/experiments/lakehouse-fsi-fraud-detection"

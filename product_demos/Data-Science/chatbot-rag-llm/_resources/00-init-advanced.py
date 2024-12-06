@@ -18,6 +18,7 @@ import collections
 import os
  
 def download_file_from_git(dest, owner, repo, path):
+  
     def download_file(url, destination):
       local_filename = url.split('/')[-1]
       # NOTE the stream=True parameter below
@@ -37,6 +38,10 @@ def download_file_from_git(dest, owner, repo, path):
     from concurrent.futures import ThreadPoolExecutor
     files = requests.get(f'https://api.github.com/repos/{owner}/{repo}/contents{path}').json()
     files = [f['download_url'] for f in files if 'NOTICE' not in f['name']]
+    files = [f.replace(
+            "https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/",
+            "https://dbdemos-dataset.s3.amazonaws.com/"
+        ) for f in files]
     def download_to_dest(url):
          download_file(url, dest)
     with ThreadPoolExecutor(max_workers=10) as executor:

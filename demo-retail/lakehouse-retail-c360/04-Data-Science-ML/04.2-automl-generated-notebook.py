@@ -22,7 +22,9 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.17.0
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.17.2
+# MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
+# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 databricks-automl-runtime==0.2.21 holidays==0.45 lightgbm==4.3.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -309,11 +311,12 @@ pipeline_val = Pipeline([
 ])
 pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
+dataset = mlflow.data.from_pandas(X_train)
 
 def objective(params):
   with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run:
     lgbmc_classifier = LGBMClassifier(**params)
-
+    mlflow.log_input(dataset, "training")
     model = Pipeline([
         ("column_selector", col_selector),
         ("preprocessor", preprocessor),
@@ -565,6 +568,9 @@ display(Image(filename=eval_roc_curve_path))
 # DBTITLE 1,Let's register a first model version as example
 model_name = "dbdemos_customer_churn"
 
+#Set to true to redeploy your actual model (we skip it by default to make the demo faster)
+force_redeploy = False
+
 #Use Databricks Unity Catalog to save our model
 mlflow.set_registry_uri('databricks-uc')
 client = MlflowClient()
@@ -575,10 +581,13 @@ try:
 except:  
   #Enable Unity Catalog with mlflow registry
   #Add model within our catalog
+  force_redeploy = True
+  
+if force_redeploy:
   latest_model = mlflow.register_model(f'runs:/{mlflow_run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
   # Flag it as Production ready using UC Aliases
   client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
-  set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
+  #set_model_permission(f"{catalog}.{db}.{model_name}", "ALL_PRIVILEGES", "account users")
 
 # COMMAND ----------
 

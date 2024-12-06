@@ -9,6 +9,10 @@
   "name": "delta-lake",
   "category": "data-engineering",
   "title": "Delta Lake",
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_delta_lake",
+  "serverless_supported": True,
   "description": "Store your table with Delta Lake & discover how Delta Lake can simplify your Data Pipelines.",
   "fullDescription": "Delta Lake is an open format storage layer that delivers reliability, security and performance on your data lake — for both streaming and batch operations. By replacing data silos with a single home for structured, semi-structured and unstructured data, Delta Lake is the foundation of a cost-effective, highly scalable lakehouse.<br /> In this demo, we'll show you how Delta Lake is working and its main capabilities: <ul><li>ACID transactions</li><li>Support for DELETE/UPDATE/MERGE</li><li>Unify batch & streaming</li><li>Time Travel</li><li>Clone zero copy</li><li>Generated partitions</li><li>CDF - Change Data Flow (DBR runtime)</li><li>Blazing-fast queries</li></ul>",
   "usecase": "Data Engineering",
@@ -23,14 +27,6 @@
   "notebooks": [
     {
       "path": "_resources/00-setup", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False, 
-      "title":  "Load data", 
-      "description": "Init load data"
-    },
-    {
-      "path": "_resources/01-load-data", 
       "pre_run": False, 
       "publish_on_website": False, 
       "add_cluster_setup_cell": False, 
@@ -88,7 +84,7 @@
     }    
   ],
   "cluster": {
-      "spark_version": "13.2.x-cpu-ml-scala2.12",
+      "spark_version": "15.4.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

@@ -167,296 +167,251 @@
             "timeout_seconds": 0,
             "max_concurrent_runs": 1,
             "tasks": [
-            {
-                "task_key": "qs_setup",
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/00_mlops_end2end_quickstart_presentation",
+              {
+                  "task_key": "qs_setup",
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/00_mlops_end2end_quickstart_presentation",
+                      "source": "WORKSPACE"
+              },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "qs_feature_engineering",
+                  "depends_on": [
+                      {
+                      "task_key": "qs_setup"
+                      }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/01_feature_engineering",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "qs_training",
+                  "depends_on": [
+                      {
+                      "task_key": "qs_feature_engineering"
+                      }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/02_automl_best_run",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "qs_register_model",
+                  "depends_on": [
+                      {
+                      "task_key": "qs_training"
+                      }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/03_from_notebook_to_models_in_uc",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "qs_batch_inference",
+                  "depends_on": [
+                      {
+                      "task_key": "qs_challenger_validation"
+                      }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/05_batch_inference",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "qs_challenger_validation",
+                  "depends_on": [
+                      {
+                      "task_key": "qs_register_model"
+                      }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/04_challenger_validation",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_setup",
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/00_mlops_end2end_advanced",
                     "source": "WORKSPACE"
-            },
-                "existing_cluster_id": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "qs_feature_engineering",
-                "depends_on": [
-                    {
-                    "task_key": "qs_setup"
-                    }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/01_feature_engineering",
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_feature_engineering",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_setup"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
                     "source": "WORKSPACE"
-                },
-                "existing_cluster_id": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "qs_training",
-                "depends_on": [
-                    {
-                    "task_key": "qs_feature_engineering"
-                    }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/02_automl_best_run",
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_training",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_feature_engineering"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
                     "source": "WORKSPACE"
-                },
-                "existing_cluster_id": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "qs_register_model",
-                "depends_on": [
-                    {
-                    "task_key": "qs_training"
-                    }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/03_from_notebook_to_models_in_uc",
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_register_model",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_training"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
                     "source": "WORKSPACE"
-                },
-                "existing_cluster_id": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "qs_batch_inference",
-                "depends_on": [
-                    {
-                    "task_key": "qs_challenger_validation"
-                    }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/05_batch_inference",
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_validate",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_register_model"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
                     "source": "WORKSPACE"
-                },
-                "existing_cluster_id": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "qs_challenger_validation",
-                "depends_on": [
-                    {
-                    "task_key": "qs_register_model"
-                    }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/04_challenger_validation",
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_batch_inference",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_validate"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",
                     "source": "WORKSPACE"
-                },
-                "existing_cluster_id": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_setup",
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/00_mlops_end2end_advanced",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_feature_engineering",
-                "depends_on": [
-                {
-                    "task_key": "adv_setup"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/01_feature_engineering",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_training",
-                "depends_on": [
-                {
-                    "task_key": "adv_feature_engineering"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_register_model",
-                "depends_on": [
-                {
-                    "task_key": "adv_training"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_validate",
-                "depends_on": [
-                {
-                    "task_key": "adv_register_model"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_batch_inference",
-                "depends_on": [
-                {
-                    "task_key": "adv_validate"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_set_up_monitoring",
-                "depends_on": [
-                {
-                    "task_key": "adv_batch_inference"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/07_model_monitoring",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_detect_drift",
-                "depends_on": [
-                {
-                    "task_key": "adv_set_up_monitoring"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/08_drift_detection",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            },
-            {
-                "task_key": "adv_set_up_serving",
-                "depends_on": [
-                {
-                    "task_key": "adv_batch_inference"
-                }
-                ],
-                "run_if": "ALL_SUCCESS",
-                "notebook_task": {
-                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/06_serve_features_and_model",
-                "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-                },
-                "webhook_notifications": {}
-            }
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_set_up_monitoring",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_batch_inference"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/07_model_monitoring",
+                    "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_detect_drift",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_set_up_monitoring"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/08_drift_detection",
+                    "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              },
+              {
+                  "task_key": "adv_set_up_serving",
+                  "depends_on": [
+                  {
+                      "task_key": "adv_batch_inference"
+                  }
+                  ],
+                  "run_if": "ALL_SUCCESS",
+                  "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/06_serve_features_and_model",
+                    "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "webhook_notifications": {}
+              }
             ],
             "job_clusters": [
                 {
@@ -498,11 +453,6 @@
           "tasks": [
             {
               "task_key": "Drift_detection",
-              "depends_on": [
-                {
-                  "task_key": "Create_Monitor"
-                }
-              ],
               "run_if": "ALL_SUCCESS",
               "notebook_task": {
                 "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/08_drift_detection",
@@ -511,11 +461,6 @@
               "job_cluster_key": "mlops_batch_inference_cluster",
               "timeout_seconds": 0,
               "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
               "webhook_notifications": {}
             },
             {
@@ -533,11 +478,6 @@
               },
               "timeout_seconds": 0,
               "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
               "webhook_notifications": {}
             },
             {
@@ -556,11 +496,6 @@
               "job_cluster_key": "mlops_batch_inference_cluster",
               "timeout_seconds": 0,
               "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
               "webhook_notifications": {}
             },
             {
@@ -578,11 +513,6 @@
               "job_cluster_key": "mlops_batch_inference_cluster",
               "timeout_seconds": 0,
               "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
               "webhook_notifications": {}
             },
             {
@@ -600,11 +530,6 @@
               "job_cluster_key": "mlops_batch_inference_cluster",
               "timeout_seconds": 0,
               "email_notifications": {},
-              "notification_settings": {
-                "no_alert_for_skipped_runs": False,
-                "no_alert_for_canceled_runs": False,
-                "alert_on_last_attempt": False
-              },
               "webhook_notifications": {}
             }
           ],

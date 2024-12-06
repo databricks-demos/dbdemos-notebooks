@@ -68,7 +68,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Capture new incoming transactions
-CREATE STREAMING LIVE TABLE raw_txs
+CREATE STREAMING TABLE raw_txs
   COMMENT "New raw loan data incrementally ingested from cloud object storage landing zone"
 AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions', 'json', map("cloudFiles.inferColumnTypes", "true"))
 
@@ -83,7 +83,7 @@ AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accou
 
 -- DBTITLE 1,Historical transaction from legacy system
 -- as this is only refreshed at a weekly basis, we can lower the interval
-CREATE STREAMING LIVE TABLE raw_historical_loans
+CREATE STREAMING TABLE raw_historical_loans
   TBLPROPERTIES ("pipelines.trigger.interval"="6 hour")
   COMMENT "Raw historical transactions"
 AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans', 'csv', map("cloudFiles.inferColumnTypes", "true"))
@@ -116,7 +116,7 @@ AS SELECT txs.*, ref.accounting_treatment as accounting_treatment FROM stream(LI
 -- COMMAND ----------
 
 -- DBTITLE 1,Keep only the proper transactions. Fail if cost center isn't correct, discard the others.
-CREATE STREAMING LIVE TABLE cleaned_new_txs (
+CREATE STREAMING TABLE cleaned_new_txs (
   CONSTRAINT `Payments should be this year`  EXPECT (next_payment_date > date('2020-12-31')),
   CONSTRAINT `Balance should be positive`    EXPECT (balance > 0 AND arrears_balance > 0) ON VIOLATION DROP ROW,
   CONSTRAINT `Cost center must be specified` EXPECT (cost_center_code IS NOT NULL) ON VIOLATION FAIL UPDATE
@@ -128,7 +128,7 @@ AS SELECT * from STREAM(live.new_txs)
 
 -- DBTITLE 1,Let's quarantine the bad transaction for further analysis
 -- This is the inverse condition of the above statement to quarantine incorrect data for further analysis.
-CREATE STREAMING LIVE TABLE quarantine_bad_txs (
+CREATE STREAMING TABLE quarantine_bad_txs (
   CONSTRAINT `Payments should be this year`  EXPECT (next_payment_date <= date('2020-12-31')),
   CONSTRAINT `Balance should be positive`    EXPECT (balance <= 0 OR arrears_balance <= 0) ON VIOLATION DROP ROW
 )

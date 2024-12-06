@@ -519,11 +519,9 @@ import pyspark.sql.functions as F
 import random
 from datetime import datetime
 
-
-if data_exists:
-    user_df = spark.read.table("bronze_user")
-    product_df = spark.read.table("bronze_product")
-    transaction_df = spark.read.table("bronze_transaction")
+user_df = spark.read.table("bronze_user")
+product_df = spark.read.table("bronze_product")
+transaction_df = spark.read.table("bronze_transaction")
 
 # Join the DataFrames
 joined_df = (
@@ -691,7 +689,7 @@ if not data_exists:
     from pyspark.sql import Window
 
     # Create a temporary column for Month from silver table
-    tmp_df = joined_with_issues_df.withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
+    tmp_df = spark.read.table("silver_transaction").withColumn("Month", F.date_format(F.col("TransactionDate"), "yyyy-MM"))
 
     ## Monthly Sales Summary by Category
     tmp_df \
@@ -726,7 +724,7 @@ if not data_exists:
         .write.mode('overwrite').option("mergeSchema", "true").mode('overwrite').saveAsTable('gold_user_purchase')
 
     ## Gold Payment methods
-    joined_with_issues_df \
+    spark.read.table("silver_transaction") \
         .select(
             "TransactionID", 
             "UserID", 

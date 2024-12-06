@@ -21,17 +21,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U mlflow databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U mlflow databricks-sdk==0.38.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-init $reset_all_data=false
-
-# COMMAND ----------
-
-# DBTITLE 1,load lakehouse helpers
-# MAGIC %run ../_resources/02-lakehouse-app-helpers
 
 # COMMAND ----------
 
@@ -150,11 +145,12 @@ except:
 
 # COMMAND ----------
 
-app_name = "dbdemos-rag-chatbot-app"
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.apps import App, AppResource, AppResourceServingEndpoint, AppResourceServingEndpointServingEndpointPermission, AppDeployment
 
-#Helper is defined in the _resources/02-lakehouse-app-helpers notebook (temporary helper)
-helper = LakehouseAppHelper()
-app_details = helper.create(app_name, app_description="Your Databricks assistant")
+w = WorkspaceClient()
+
+app_name = "dbdemos-rag-chatbot-app"
 
 # COMMAND ----------
 
@@ -163,24 +159,42 @@ app_details = helper.create(app_name, app_description="Your Databricks assistant
 
 # COMMAND ----------
 
-helper.add_dependencies(
-    app_name=app_name,
-    dependencies=[
-        {
-            "name": "rag-endpoint",
-            "serving_endpoint": {
-                "name": endpoint_name,
-                "permission": "CAN_QUERY",
-            },
-        }
-    ],
-    overwrite=False # if False dependencies will be appended to existing ones
-)
+serving_endpoint = AppResourceServingEndpoint(name=endpoint_name,
+                                              permission=AppResourceServingEndpointServingEndpointPermission.CAN_QUERY
+                                              )
+
+rag_endpoint = AppResource(name="rag-endpoint", serving_endpoint=serving_endpoint) 
+
+rag_app = App(name=app_name, 
+              description="Your Databricks assistant", 
+              default_source_code_path=os.path.join(os.getcwd(), 'chatbot_app'),
+              resources=[rag_endpoint])
+try:
+  app_details = w.apps.create_and_wait(app=rag_app)
+  print(app_details)
+except Exception as e:
+  if "already exists" in str(e):
+    print("App already exists, you can deploy it")
+  else:
+    raise e
 
 # COMMAND ----------
 
-helper.deploy(app_name, os.path.join(os.getcwd(), 'chatbot_app'))
-helper.details(app_name)
+# MAGIC %md 
+# MAGIC Once the app is created, we can (re)deploy the code as following:
+
+# COMMAND ----------
+
+deployment = AppDeployment(
+  source_code_path=os.path.join(os.getcwd(), 'chatbot_app')
+)
+
+app_details = w.apps.deploy_and_wait(app_name=app_name, app_deployment=deployment)
+
+# COMMAND ----------
+
+#Let's access the application
+w.apps.get(name=app_name).url
 
 # COMMAND ----------
 

@@ -152,4 +152,4 @@ explain_image(transform(image_bytes), explainer, class_names)
 # MAGIC
 # MAGIC ### Going further
 # MAGIC
-# MAGIC Learn how to implement a Computer Vision model with Databricks and pytorch lightning: [05-ADVANCED-pytorch-training-and-inference]($./05-ADVANCED-pytorch-training-and-inference)
+# MAGIC Learn how to implement a Computer Vision model with Databricks and pytorch lightning, from scratch, offering more control: [05-torch-lightning-training-and-inference]($./05-torch-lightning-training-and-inference) (expert level)

@@ -1,0 +1,657 @@
+{
+    "datasets": [
+        {
+            "name": "65406851",
+            "displayName": "top portfolio",
+            "query": "SELECT\n  p.ticker,\n  p.company_name,\n  f.market_capitalization\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.portfolio p\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.fundamentals f ON p.ticker = f.ticker\nORDER BY\n  f.market_capitalization DESC\nLIMIT\n  5"
+        },
+        {
+            "name": "40364842",
+            "displayName": "ticker over time",
+            "query": "with splits as (\n    select\n      ticker,\n      date as split_date,\n      1/split_factor as adjustment\n      from main.dbdemos_aibi_fsi_portfolio_assistant.prices where split_factor > 1 \n)\n\nselect p.date,\n       p.ticker, \n       p.close,\n       coalesce(\n         exp(\n           sum(ln(s.adjustment)) \n             over (partition by p.ticker\n                       order by p.date desc\n                rows between unbounded preceding\n                         and 1 preceding)\n         ), 1\n       ) * p.close as adjusted_close\n  from main.dbdemos_aibi_fsi_portfolio_assistant.prices p\n       left join splits s \n              on s.ticker = p.ticker \n             and s.split_date = p.date;"
+        },
+        {
+            "name": "3c85b0a3",
+            "displayName": "volatility on crisis",
+            "query": "SELECT\n  date_sub (date, DAYOFWEEK (date) - 1) AS week_start,\n  STDDEV (`return`) AS volatility\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.prices p\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.portfolio po ON p.ticker = po.ticker\nWHERE\n  po.industry = 'Technology'\n  AND date BETWEEN '2007-12-01' AND '2009-06-30'\nGROUP BY\n  week_start\nORDER BY\n  week_start"
+        },
+        {
+            "name": "d23afca8",
+            "displayName": "distinct tickers",
+            "query": "-- SELECT DISTINCT(ticker) FROM main.dbdemos_aibi_fsi_portfolio_assistant.prices\nSELECT date, close, ticker FROM main.dbdemos_aibi_fsi_portfolio_assistant.prices"
+        },
+        {
+            "name": "edb591bb",
+            "displayName": "Top sentiment",
+            "query": "SELECT\n  p.industry,\n  nt.ticker,\n  DATE_FORMAT(n.published_time, 'yyyy-MM-dd') as date,\n  n.market_sentiment,\n  COUNT(*) as sentiment_count\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.news_ticker nt\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.news n ON nt.article_id = n.article_id\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.portfolio p ON nt.ticker = p.ticker\nGROUP BY\n  nt.ticker,\n  date,\n  n.market_sentiment,\n  p.industry"
+        },
+        {
+            "name": "432ab0f7",
+            "displayName": "Market negative event",
+            "query": "SELECT\n  n.article_id,\n  n.title,\n  DATE_FORMAT(n.published_time, 'yyyy-MM-dd') AS published_date,\n  n.source,\n  n.source_url\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.news n\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.news_ticker nt ON n.article_id = nt.article_id\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.portfolio p ON nt.ticker = p.ticker\nWHERE\n   n.sentiment < 0\nORDER BY\n  n.published_time DESC\nLIMIT\n  10"
+        }
+    ],
+    "pages": [
+        {
+            "name": "portfolio-assistant",
+            "displayName": "Portfolio Assistant",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "b04e61f5",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "65406851",
+                                    "fields": [
+                                        {
+                                            "name": "company_name",
+                                            "expression": "`company_name`"
+                                        },
+                                        {
+                                            "name": "sum(market_capitalization)",
+                                            "expression": "SUM(`market_capitalization`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "sum(market_capitalization)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Total capitalization"
+                                },
+                                "color": {
+                                    "fieldName": "company_name",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Company"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Portfolio Top market capitalization"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 12,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "edf7e8ac",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "40364842",
+                                    "fields": [
+                                        {
+                                            "name": "date",
+                                            "expression": "`date`"
+                                        },
+                                        {
+                                            "name": "sum(adjusted_close)",
+                                            "expression": "SUM(`adjusted_close`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "area",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "date",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "fieldName": "sum(adjusted_close)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Adjusted Close Price"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "showDescription": false,
+                                "title": "Ticker evolution"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 1,
+                        "width": 3,
+                        "height": 5
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "385232f6",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "3c85b0a3",
+                                    "fields": [
+                                        {
+                                            "name": "sum(volatility)",
+                                            "expression": "SUM(`volatility`)"
+                                        },
+                                        {
+                                            "name": "weekly(week_start)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `week_start`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "weekly(week_start)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "week_start"
+                                },
+                                "y": {
+                                    "fieldName": "sum(volatility)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sum of volatility"
+                                }
+                            },
+                            "frame": {
+                                "showDescription": false,
+                                "showTitle": true,
+                                "title": "Market volatility over week"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 6,
+                        "width": 3,
+                        "height": 5
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a7d8941c",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0347398319cfb63454b7ce6e067d_ticker",
+                                "query": {
+                                    "datasetName": "40364842",
+                                    "fields": [
+                                        {
+                                            "name": "ticker",
+                                            "expression": "`ticker`"
+                                        },
+                                        {
+                                            "name": "ticker_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "ticker",
+                                        "displayName": "ticker",
+                                        "queryName": "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0347398319cfb63454b7ce6e067d_ticker"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "ticker"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 0,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "01340472",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "edb591bb",
+                                    "fields": [
+                                        {
+                                            "name": "date",
+                                            "expression": "`date`"
+                                        },
+                                        {
+                                            "name": "market_sentiment",
+                                            "expression": "`market_sentiment`"
+                                        },
+                                        {
+                                            "name": "sum(sentiment_count)",
+                                            "expression": "SUM(`sentiment_count`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "date",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "fieldName": "sum(sentiment_count)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Sentiment"
+                                },
+                                "color": {
+                                    "fieldName": "market_sentiment",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "Bearish",
+                                                "color": "#da0000"
+                                            },
+                                            {
+                                                "value": "Bullish",
+                                                "color": "#00bf2e"
+                                            },
+                                            {
+                                                "value": "Neutral",
+                                                "color": "#4b8add"
+                                            },
+                                            {
+                                                "value": "Somewhat-Bearish",
+                                                "color": "#88edb0"
+                                            },
+                                            {
+                                                "value": "Somewhat-Bullish",
+                                                "color": "#e7c38b"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "market_sentiment"
+                                }
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 3,
+                        "width": 3,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "dc5170c1",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0349e5a015d1b32e39f5bad4bed6_industry",
+                                "query": {
+                                    "datasetName": "edb591bb",
+                                    "fields": [
+                                        {
+                                            "name": "industry",
+                                            "expression": "`industry`"
+                                        },
+                                        {
+                                            "name": "industry_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "industry",
+                                        "displayName": "industry",
+                                        "queryName": "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0349e5a015d1b32e39f5bad4bed6_industry"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Industry"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 2,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5622e9cf",
+                        "textbox_spec": "# FSI - Portfolio Manager Demo\n## Market overview"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 3,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "68a51e56",
+                        "textbox_spec": "## Portfolio Analysis"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 11,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "6e1d7602",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "432ab0f7",
+                                    "fields": [
+                                        {
+                                            "name": "published_date",
+                                            "expression": "`published_date`"
+                                        },
+                                        {
+                                            "name": "source",
+                                            "expression": "`source`"
+                                        },
+                                        {
+                                            "name": "title",
+                                            "expression": "`title`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "table",
+                            "encodings": {
+                                "columns": [
+                                    {
+                                        "fieldName": "published_date",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 1,
+                                        "title": "published_date",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "published_date"
+                                    },
+                                    {
+                                        "fieldName": "title",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 2,
+                                        "title": "title",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "title"
+                                    },
+                                    {
+                                        "fieldName": "source",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 3,
+                                        "title": "source",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "source"
+                                    }
+                                ]
+                            },
+                            "invisibleColumns": [
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "article_id",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 0,
+                                    "title": "article_id",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "source_url",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 4,
+                                    "title": "source_url",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
+                            "allowHTMLByDefault": false,
+                            "itemsPerPage": 25,
+                            "paginationSize": "default",
+                            "condensed": true,
+                            "withRowNumber": false,
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Latest negative event impacting our portfolio - Analyzed with DBRX"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 12,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c970acf5",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "40364842",
+                                    "fields": [
+                                        {
+                                            "name": "date",
+                                            "expression": "`date`"
+                                        },
+                                        {
+                                            "name": "adjusted_close",
+                                            "expression": "`adjusted_close`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "area",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "date",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "fieldName": "adjusted_close",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "adjusted_close"
+                                }
+                            },
+                            "frame": {
+                                "title": "Adjusted Close Price Over Time",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 20,
+                        "width": 6,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "695bc00b",
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_fsi_portfolio_manager&demo_name=aibi_fsi_portfolio_manager&event=DASHBOARD_VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 26,
+                        "width": 6,
+                        "height": 1
+                    }
+                }
+            ]
+        }
+    ]
+}

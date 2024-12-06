@@ -1,0 +1,3123 @@
+{
+    "datasets": [
+        {
+            "name": "8ab1ca38",
+            "displayName": "metrics_rolling",
+            "query": "select \n    date,\n      unique_clicks,\n    total_delivered,\n    total_sent,\n    total_opens,\n    total_clicks,\n    total_optouts,\n    total_spam,\n    sum(unique_clicks) OVER (ORDER BY date RANGE BETWEEN 6 PRECEDING AND CURRENT ROW) AS clicks_t7d,\n    sum(total_delivered) OVER (ORDER BY date RANGE BETWEEN 6 PRECEDING AND CURRENT ROW) AS delivered_t7d,\n    sum(unique_clicks) OVER (ORDER BY date RANGE BETWEEN 27 PRECEDING AND CURRENT ROW) AS clicks_t28d,\n    sum(total_delivered) OVER (ORDER BY date RANGE BETWEEN 27 PRECEDING AND CURRENT ROW) AS delivered_t28d,\n    sum(unique_clicks) OVER (ORDER BY date RANGE BETWEEN 90 PRECEDING AND CURRENT ROW) AS clicks_t91d,\n    sum(total_delivered) OVER (ORDER BY date RANGE BETWEEN 90 PRECEDING AND CURRENT ROW) AS delivered_t91d,\n    unique_clicks / total_delivered as ctr,\n    total_delivered / total_sent AS delivery_rate,\n    total_optouts / total_delivered AS optout_rate,\n    total_spam / total_delivered AS spam_rate,\n    clicks_t7d / delivered_t7d as ctr_t7d,\n    clicks_t28d / delivered_t28d as ctr_t28d,\n    clicks_t91d / delivered_t91d as ctr_t91d\n from main.dbdemos_aibi_cme_marketing_campaign.metrics_daily_rolling\nWHERE\n    date >= :start_date AND\n    date <= :end_date",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/d"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "d9196d0a",
+            "displayName": "breakdown",
+            "query": "SELECT \n    e.compaign_id,\n    first(c.campaign_name) as campaign_name,\n    first(c.compaign_description) as compaign_description,\n    first(c.cost) as cost,\n    first(c.start_date) as start_date,\n    first(c.end_date) as end_date,\n    to_timestamp(first(c.start_date)) as _start_date,\n    to_timestamp(first(c.end_date)) as _end_date,\n  SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks,\n    unique_clicks / total_delivered as ctr,\n    format_number(ctr, '##.##%') as ctr_p,\n    total_delivered / total_sent as delivery_rate,\n    format_number(delivery_rate, '##.##%') as delivery_rate_p,\n    total_optouts / total_delivered as optouts_rate,\n    format_number(optouts_rate, '##.##%') as optouts_rate_p,\n    total_spam / total_delivered as spam_rate,\n    format_number(spam_rate, '##.##%') as spam_rate_p,\n    sum(p.employees) as total_employees\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nGROUP BY \n    e.compaign_id\nHAVING\n    _start_date >= :start_date AND\n    _end_date <= :end_date\nORDER BY ctr desc, cost ASC",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/y"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "023bfe11",
+            "displayName": "cta_top20",
+            "query": "WITH CampaignData AS (\n    SELECT \n        e.compaign_id,\n        explode(collect_set(e.metadata.cta)) as cta,\n        to_timestamp(first(c.start_date)) as _start_date,\n        to_timestamp(first(c.end_date)) as _end_date,\n        SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n        count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks\n        \n    FROM \n        main.dbdemos_aibi_cme_marketing_campaign.events e\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\n    GROUP BY \n        e.compaign_id\n)\n\nSELECT sum(unique_clicks) as unique_clicks, cta, compaign_id\nFROM CampaignData\nWHERE \n    _start_date >= :start_date AND\n    _end_date <= :end_date\nGROUP BY cta, compaign_id\nLIMIT 20",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/d"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "09d20820",
+            "displayName": "events_high_ctr",
+            "query": "SELECT \n    e.*,\n    c.*,\n    ct.*,\n    p.*\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nWHERE\n    e.event_type = 'click' AND\n    e.event_date >= :start_date AND\n    e.event_date <= :end_date\n",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/d"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "31bd8516",
+            "displayName": "breakdown_top20",
+            "query": "SELECT \n    e.compaign_id,\n    first(c.campaign_name) as campaign_name,\n    first(c.compaign_description) as compaign_description,\n    first(c.subject_line) as subject_line,\n    first(c.template) as template,\n    first(c.cost) as cost,\n    first(c.start_date) as start_date,\n    first(c.end_date) as end_date,\n    to_timestamp(first(c.start_date)) as _start_date,\n    to_timestamp(first(c.end_date)) as _end_date,\n  SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks,\n    unique_clicks / total_delivered as ctr,\n    format_number(ctr, '##.##%') as ctr_p,\n    total_delivered / total_sent as delivery_rate,\n    format_number(delivery_rate, '##.##%') as delivery_rate_p,\n    total_optouts / total_delivered as optouts_rate,\n    format_number(optouts_rate, '##.##%') as optouts_rate_p,\n    total_spam / total_delivered as spam_rate,\n    format_number(spam_rate, '##.##%') as spam_rate_p,\n    sum(p.employees) as total_employees\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nGROUP BY \n    e.compaign_id\nHAVING\n    _start_date >= :start_date AND\n    _end_date <= :end_date\nORDER BY ctr desc, cost ASC\nLIMIT 20",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/y"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "078f943d",
+            "displayName": "issues",
+            "query": "select * from main.dbdemos_aibi_cme_marketing_campaign.issues"
+        },
+        {
+            "name": "72b7d899",
+            "displayName": "metrics_agg",
+            "query": "SELECT \n    SUM(CASE WHEN event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when event_type = 'click' then contact_id end) as unique_clicks,\n    format_number(unique_clicks / total_delivered, '##.##%') as ctr,\n    format_number(total_delivered / total_sent, '##.##%') as delivery_rate,\n    format_number(total_opens / total_sent, '##.##%') as opens_rate,\n    format_number(total_optouts / total_delivered, '##.##%') as optouts_rate,\n   format_number((total_sent-total_delivered) / total_sent, '##.##%') as bounce_rate,\n    format_number(total_spam / total_delivered, '##.##%') as spam_rate\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events\nWHERE\n    event_date >= :start_date AND\n    event_date <= :end_date",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/d"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "073eed09",
+            "displayName": "events",
+            "query": "SELECT \n    e.*,\n    c.*,\n    ct.*,\n    p.*\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nWHERE\n    e.event_date >= :start_date AND\n    e.event_date <= :end_date\n",
+            "parameters": [
+                {
+                    "displayName": "start_date",
+                    "keyword": "start_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now-1y/y"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "displayName": "end_date",
+                    "keyword": "end_date",
+                    "dataType": "DATE",
+                    "defaultSelection": {
+                        "values": {
+                            "dataType": "DATE",
+                            "values": [
+                                {
+                                    "value": "now/d"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6467b8cb",
+            "displayName": "feedbacks",
+            "query": "select *, ai_analyze_sentiment(feedbacks) as sentiment from main.dbdemos_aibi_cme_marketing_campaign.feedbacks"
+        }
+    ],
+    "pages": [
+        {
+            "name": "23148de6",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "4cdc7665",
+                        "textbox_spec": "# AIBI DBDemos - Analyse your Email Campaigns!\nDatabricks makes it easy to build ultra-personalized email campaign leveraging GenAI, and track their effectiveness!"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 4,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "586acd41",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "device",
+                                            "expression": "`device`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "device",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "device"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Engagment",
+                                "showDescription": true,
+                                "description": "By Device"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 19,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ffcbf8fe",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "fields": [
+                                        {
+                                            "name": "delivery_rate",
+                                            "expression": "`delivery_rate`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "delivery_rate",
+                                    "rowNumber": 0,
+                                    "displayName": "delivery_rate"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Delivery Rate",
+                                "showDescription": true,
+                                "description": "Delivered / Total"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 3,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "d8906dde",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "source",
+                                            "expression": "`source`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "source",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "source"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Clicks"
+                                },
+                                "color": {
+                                    "fieldName": "source",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "legend": {
+                                        "hideTitle": false
+                                    },
+                                    "displayName": "source"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Engagment",
+                                "showDescription": true,
+                                "description": "By Source"
+                            },
+                            "mark": {
+                                "colors": [
+                                    "#077A9D",
+                                    "#FFAB00",
+                                    "#00A972",
+                                    "#FF3621",
+                                    "#8BCAE7",
+                                    "#AB4057",
+                                    "#99DDB4",
+                                    "#FCA4A1",
+                                    "#919191",
+                                    "#BF7080"
+                                ]
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 19,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ce932488",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "31bd8516",
+                                    "fields": [
+                                        {
+                                            "name": "ctr",
+                                            "expression": "`ctr`"
+                                        },
+                                        {
+                                            "name": "template",
+                                            "expression": "`template`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "ctr",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "CTR"
+                                },
+                                "color": {
+                                    "fieldName": "template",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "template"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Top Templates",
+                                "showDescription": true,
+                                "description": "Performance of different email templates"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 6,
+                        "width": 2,
+                        "height": 5
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "593d7a69",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "fields": [
+                                        {
+                                            "name": "spam_rate",
+                                            "expression": "`spam_rate`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "spam_rate",
+                                    "rowNumber": 0,
+                                    "displayName": "spam_rate"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Spam Rate",
+                                "showDescription": true,
+                                "description": "Spam Alerts / Sent"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 3,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "7e464de1",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "6467b8cb",
+                                    "fields": [
+                                        {
+                                            "name": "feedbacks",
+                                            "expression": "`feedbacks`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "table",
+                            "encodings": {
+                                "columns": [
+                                    {
+                                        "fieldName": "feedbacks",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100001,
+                                        "title": "feedbacks",
+                                        "allowSearch": true,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "feedbacks"
+                                    }
+                                ]
+                            },
+                            "invisibleColumns": [
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "compaign_id",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 100000,
+                                    "title": "compaign_id",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "contact_id",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 100002,
+                                    "title": "contact_id",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "sentiment",
+                                    "type": "string",
+                                    "displayAs": "string",
+                                    "order": 100003,
+                                    "title": "sentiment",
+                                    "allowSearch": false,
+                                    "alignContent": "left",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
+                            "allowHTMLByDefault": false,
+                            "itemsPerPage": 25,
+                            "paginationSize": "default",
+                            "condensed": true,
+                            "withRowNumber": true,
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Feedbacks"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 29,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a6534c36",
+                        "textbox_spec": "### Metrics"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 2,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "fff4821a",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "078f943d",
+                                    "fields": [
+                                        {
+                                            "name": "countdistinct(compaign_id)",
+                                            "expression": "COUNT(DISTINCT `compaign_id`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "countdistinct(compaign_id)",
+                                    "displayName": "Count of Unique compaign_id"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "# Impacted Compaigns"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 26,
+                        "width": 1,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "d7b677c6",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "6467b8cb",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "sentiment",
+                                            "expression": "`sentiment`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "histogram",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "sentiment",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true,
+                                        "hideLabels": true
+                                    },
+                                    "displayName": "sentiment"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "sentiment",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "legend": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "sentiment"
+                                },
+                                "label": {
+                                    "show": true
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Sentiment"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 26,
+                        "width": 2,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "a22e72fb",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "31bd8516",
+                                    "fields": [
+                                        {
+                                            "name": "campaign_name",
+                                            "expression": "`campaign_name`"
+                                        },
+                                        {
+                                            "name": "ctr",
+                                            "expression": "`ctr`"
+                                        },
+                                        {
+                                            "name": "sum(cost)",
+                                            "expression": "SUM(`cost`)"
+                                        },
+                                        {
+                                            "name": "weekly(start_date)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `start_date`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "scatter",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "weekly(start_date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Start Date"
+                                },
+                                "y": {
+                                    "fieldName": "ctr",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Click-Through Rate"
+                                },
+                                "color": {
+                                    "fieldName": "campaign_name",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "legend": {
+                                        "hideTitle": false,
+                                        "position": "bottom"
+                                    },
+                                    "displayName": "Compaign "
+                                },
+                                "size": {
+                                    "fieldName": "sum(cost)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Cost $"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Top Performing Campaigns",
+                                "showDescription": true,
+                                "description": "Lowest cost and highest CTR"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 6,
+                        "width": 2,
+                        "height": 12
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "e5f27b88",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_campaign_name",
+                                "query": {
+                                    "datasetName": "d9196d0a",
+                                    "fields": [
+                                        {
+                                            "name": "campaign_name",
+                                            "expression": "`campaign_name`"
+                                        },
+                                        {
+                                            "name": "campaign_name_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "campaign_name",
+                                        "displayName": "campaign_name",
+                                        "queryName": "dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_campaign_name"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Compaigns"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 37,
+                        "width": 4,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8cd5714d",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "fields": [
+                                        {
+                                            "name": "opens_rate",
+                                            "expression": "`opens_rate`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "opens_rate",
+                                    "displayName": "opens_rate"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Open Rate",
+                                "showDescription": true,
+                                "description": "Opened / Sent"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 3,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "79da894c",
+                        "textbox_spec": "### Audience Analysis\n"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 18,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "8c01d29b",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "078f943d",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "count(*)",
+                                    "displayName": "Count of Records"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "# Issues"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 26,
+                        "width": 1,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "e5f26fd5",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "fields": [
+                                        {
+                                            "name": "city",
+                                            "expression": "`city`"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "country",
+                                            "expression": "`country`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "country",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true,
+                                        "hideLabels": false
+                                    },
+                                    "displayName": "country"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true,
+                                        "title": "Compain Events",
+                                        "hideLabels": false
+                                    },
+                                    "displayName": "Clicks"
+                                },
+                                "color": {
+                                    "fieldName": "city",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "city"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Engagement",
+                                "showDescription": true,
+                                "description": "By Location"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 19,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "9617e09d",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "6467b8cb",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "count(*)",
+                                    "displayName": "Count of Records"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "# Feedbacks"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 27,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "31240d5f",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "fields": [
+                                        {
+                                            "name": "sum(unique_clicks)",
+                                            "expression": "SUM(`unique_clicks`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "sum(unique_clicks)",
+                                    "displayName": "Sum of unique_clicks"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Unique Clicks"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 3,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "45120c56",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "d9196d0a",
+                                    "fields": [
+                                        {
+                                            "name": "campaign_name",
+                                            "expression": "`campaign_name`"
+                                        },
+                                        {
+                                            "name": "compaign_description",
+                                            "expression": "`compaign_description`"
+                                        },
+                                        {
+                                            "name": "compaign_id",
+                                            "expression": "`compaign_id`"
+                                        },
+                                        {
+                                            "name": "cost",
+                                            "expression": "`cost`"
+                                        },
+                                        {
+                                            "name": "ctr_p",
+                                            "expression": "`ctr_p`"
+                                        },
+                                        {
+                                            "name": "delivery_rate_p",
+                                            "expression": "`delivery_rate_p`"
+                                        },
+                                        {
+                                            "name": "end_date",
+                                            "expression": "`end_date`"
+                                        },
+                                        {
+                                            "name": "optouts_rate_p",
+                                            "expression": "`optouts_rate_p`"
+                                        },
+                                        {
+                                            "name": "spam_rate_p",
+                                            "expression": "`spam_rate_p`"
+                                        },
+                                        {
+                                            "name": "start_date",
+                                            "expression": "`start_date`"
+                                        },
+                                        {
+                                            "name": "total_sent",
+                                            "expression": "`total_sent`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "table",
+                            "encodings": {
+                                "columns": [
+                                    {
+                                        "fieldName": "compaign_id",
+                                        "numberFormat": "0",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "integer",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 0,
+                                        "title": "ID",
+                                        "allowSearch": true,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "compaign_id"
+                                    },
+                                    {
+                                        "fieldName": "campaign_name",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 1,
+                                        "title": "Campaign Name",
+                                        "allowSearch": true,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "campaign_name"
+                                    },
+                                    {
+                                        "fieldName": "compaign_description",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": false,
+                                        "order": 6,
+                                        "title": "Description",
+                                        "allowSearch": true,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "compaign_description"
+                                    },
+                                    {
+                                        "fieldName": "cost",
+                                        "numberFormat": "0.00 $",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "float",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 7,
+                                        "title": "Cost",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "cellFormat": {
+                                            "default": {
+                                                "foregroundColor": "#356AFF"
+                                            },
+                                            "rules": []
+                                        },
+                                        "displayName": "cost"
+                                    },
+                                    {
+                                        "fieldName": "start_date",
+                                        "dateTimeFormat": "YYYY-MM-DD",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "date",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 8,
+                                        "title": "Start",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "start_date"
+                                    },
+                                    {
+                                        "fieldName": "end_date",
+                                        "dateTimeFormat": "YYYY-MM-DD",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "date",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 9,
+                                        "title": "End",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "end_date"
+                                    },
+                                    {
+                                        "fieldName": "total_sent",
+                                        "numberFormat": "0",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "integer",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 10,
+                                        "title": "Volume",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "total_sent"
+                                    },
+                                    {
+                                        "fieldName": "ctr_p",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 16,
+                                        "title": "CTR",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "cellFormat": {
+                                            "default": {
+                                                "foregroundColor": "#09a941"
+                                            },
+                                            "rules": []
+                                        },
+                                        "displayName": "ctr_p"
+                                    },
+                                    {
+                                        "fieldName": "delivery_rate_p",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 17,
+                                        "title": "Delivery Rate",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "cellFormat": {
+                                            "default": {
+                                                "foregroundColor": "#76b48c"
+                                            },
+                                            "rules": []
+                                        },
+                                        "displayName": "delivery_rate_p"
+                                    },
+                                    {
+                                        "fieldName": "spam_rate_p",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 18,
+                                        "title": "Spam Rate",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "cellFormat": {
+                                            "default": {
+                                                "foregroundColor": "#E92828"
+                                            },
+                                            "rules": []
+                                        },
+                                        "displayName": "spam_rate_p"
+                                    },
+                                    {
+                                        "fieldName": "optouts_rate_p",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 20,
+                                        "title": "Optouts Rate",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "cellFormat": {
+                                            "default": {
+                                                "foregroundColor": "#E92828"
+                                            },
+                                            "rules": []
+                                        },
+                                        "displayName": "optouts_rate_p"
+                                    }
+                                ]
+                            },
+                            "invisibleColumns": [
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "total_delivered",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 2,
+                                    "title": "Total Delivered Emails",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "total_spam",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 3,
+                                    "title": "total_spam",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "total_clicks",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 4,
+                                    "title": "Total Clicks",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "unique_clicks",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 5,
+                                    "title": "unique_clicks",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "ctr",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 11,
+                                    "title": "ctr",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "delivery_rate",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 12,
+                                    "title": "delivery_rate",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "total_opens",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 13,
+                                    "title": "total_opens",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "spam_rate",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 14,
+                                    "title": "spam_rate",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "total_optouts",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 15,
+                                    "title": "total_optouts",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0.00",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "optouts_rate",
+                                    "type": "float",
+                                    "displayAs": "number",
+                                    "order": 19,
+                                    "title": "optouts_rate",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false,
+                                    "cellFormat": {
+                                        "default": {
+                                            "foregroundColor": "#E92828"
+                                        },
+                                        "rules": []
+                                    }
+                                },
+                                {
+                                    "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "_start_date",
+                                    "type": "datetime",
+                                    "displayAs": "datetime",
+                                    "order": 21,
+                                    "title": "_start_date",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "_end_date",
+                                    "type": "datetime",
+                                    "displayAs": "datetime",
+                                    "order": 22,
+                                    "title": "_end_date",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                },
+                                {
+                                    "numberFormat": "0",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "total_employees",
+                                    "type": "integer",
+                                    "displayAs": "number",
+                                    "order": 23,
+                                    "title": "total_employees",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
+                            "allowHTMLByDefault": false,
+                            "itemsPerPage": 50,
+                            "paginationSize": "default",
+                            "condensed": true,
+                            "withRowNumber": false,
+                            "frame": {
+                                "showTitle": false,
+                                "showDescription": true,
+                                "title": "Compaigns",
+                                "description": "Sorted by CTR and Compaign Cost"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 38,
+                        "width": 4,
+                        "height": 17
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f6dd24a8",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "8ab1ca38",
+                                    "fields": [
+                                        {
+                                            "name": "avg(ctr)",
+                                            "expression": "AVG(`ctr`)"
+                                        },
+                                        {
+                                            "name": "avg(ctr_t7d)",
+                                            "expression": "AVG(`ctr_t7d`)"
+                                        },
+                                        {
+                                            "name": "weekly(date)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `date`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "weekly(date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "fields": [
+                                        {
+                                            "fieldName": "avg(ctr_t7d)",
+                                            "displayName": "Average ctr_t7d"
+                                        },
+                                        {
+                                            "fieldName": "avg(ctr)",
+                                            "displayName": "baseline"
+                                        }
+                                    ]
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "7D CTR"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 37,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "415d94d6",
+                        "textbox_spec": "### Comparison and Trends"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 36,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "b5b926ac",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "fields": [
+                                        {
+                                            "name": "optouts_rate",
+                                            "expression": "`optouts_rate`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "optouts_rate",
+                                    "displayName": "optouts_rate"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Churn Rate",
+                                "showDescription": true,
+                                "description": "Unsubscribed / Sent"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 3,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "9cf670dd",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "industry",
+                                            "expression": "`industry`"
+                                        },
+                                        {
+                                            "name": "sum(employees)",
+                                            "expression": "SUM(`employees`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "industry",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideLabels": false,
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "industry"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "sum(employees)",
+                                    "scale": {
+                                        "type": "quantitative",
+                                        "colorRamp": {
+                                            "mode": "scheme",
+                                            "scheme": "blues"
+                                        }
+                                    },
+                                    "legend": {
+                                        "position": "bottom"
+                                    },
+                                    "displayName": "TAM "
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Engagement",
+                                "showDescription": true,
+                                "description": "By Industry"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 19,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "3609000a",
+                        "textbox_spec": "### Campaigns Effectiveness\n"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 5,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "623dffc9",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "8ab1ca38",
+                                    "fields": [
+                                        {
+                                            "name": "avg(ctr)",
+                                            "expression": "AVG(`ctr`)"
+                                        },
+                                        {
+                                            "name": "avg(ctr_t91d)",
+                                            "expression": "AVG(`ctr_t91d`)"
+                                        },
+                                        {
+                                            "name": "weekly(date)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `date`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "weekly(date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "fields": [
+                                        {
+                                            "fieldName": "avg(ctr_t91d)",
+                                            "displayName": "Average ctr_t91d"
+                                        },
+                                        {
+                                            "fieldName": "avg(ctr)",
+                                            "displayName": "baseline"
+                                        }
+                                    ]
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "91D CTR"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 49,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c62b2213",
+                        "queries": [
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03003a2716e498ed1ae72bd05862_end_date",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_end_date",
+                                "query": {
+                                    "datasetName": "d9196d0a",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef0314e8ce1947b0e5621d7b6d5f13_end_date",
+                                "query": {
+                                    "datasetName": "8ab1ca38",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03a2e3fb1aaaa4165f9aaad36450_end_date",
+                                "query": {
+                                    "datasetName": "073eed09",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06a68d201b588544687453191458_end_date",
+                                "query": {
+                                    "datasetName": "31bd8516",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06f8f3d0121cb69e3f790edb7b99_end_date",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06ff65d0105f8d6af6cdd7a9d9dd_end_date",
+                                "query": {
+                                    "datasetName": "023bfe11",
+                                    "parameters": [
+                                        {
+                                            "name": "end_date",
+                                            "keyword": "end_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03003a2716e498ed1ae72bd05862_end_date"
+                                    },
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef0314e8ce1947b0e5621d7b6d5f13_end_date"
+                                    },
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_end_date"
+                                    },
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03a2e3fb1aaaa4165f9aaad36450_end_date"
+                                    },
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06a68d201b588544687453191458_end_date"
+                                    },
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06f8f3d0121cb69e3f790edb7b99_end_date"
+                                    },
+                                    {
+                                        "parameterName": "end_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06ff65d0105f8d6af6cdd7a9d9dd_end_date"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "End"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 1,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "e436047a",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "fields": [
+                                        {
+                                            "name": "ctr",
+                                            "expression": "`ctr`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "ctr",
+                                    "displayName": "ctr"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "CTR",
+                                "showDescription": true,
+                                "description": "Click-Through Rate"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 3,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "2343e43e",
+                        "queries": [
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03003a2716e498ed1ae72bd05862_start_date",
+                                "query": {
+                                    "datasetName": "72b7d899",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_start_date",
+                                "query": {
+                                    "datasetName": "d9196d0a",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef0314e8ce1947b0e5621d7b6d5f13_start_date",
+                                "query": {
+                                    "datasetName": "8ab1ca38",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03a2e3fb1aaaa4165f9aaad36450_start_date",
+                                "query": {
+                                    "datasetName": "073eed09",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06a68d201b588544687453191458_start_date",
+                                "query": {
+                                    "datasetName": "31bd8516",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06f8f3d0121cb69e3f790edb7b99_start_date",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            },
+                            {
+                                "name": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06ff65d0105f8d6af6cdd7a9d9dd_start_date",
+                                "query": {
+                                    "datasetName": "023bfe11",
+                                    "parameters": [
+                                        {
+                                            "name": "start_date",
+                                            "keyword": "start_date"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03003a2716e498ed1ae72bd05862_start_date"
+                                    },
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef0314e8ce1947b0e5621d7b6d5f13_start_date"
+                                    },
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_start_date"
+                                    },
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef03a2e3fb1aaaa4165f9aaad36450_start_date"
+                                    },
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06a68d201b588544687453191458_start_date"
+                                    },
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06f8f3d0121cb69e3f790edb7b99_start_date"
+                                    },
+                                    {
+                                        "parameterName": "start_date",
+                                        "queryName": "parameter_dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef06ff65d0105f8d6af6cdd7a9d9dd_start_date"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Start"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "724cbe52",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "023bfe11",
+                                    "fields": [
+                                        {
+                                            "name": "cta",
+                                            "expression": "`cta`"
+                                        },
+                                        {
+                                            "name": "sum(unique_clicks)",
+                                            "expression": "SUM(`unique_clicks`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "sum(unique_clicks)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "Unique Clicks",
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Unique Clicks"
+                                },
+                                "color": {
+                                    "fieldName": "cta",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Call-to-action type"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Top Call-to-action",
+                                "showDescription": true,
+                                "description": "Buttons or links had the highest click-through rates"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 6,
+                        "width": 2,
+                        "height": 5
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "eab04067",
+                        "textbox_spec": "### Compliance and Legal"
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 25,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "4d01a76f",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "31bd8516",
+                                    "fields": [
+                                        {
+                                            "name": "sum(total_opens)",
+                                            "expression": "SUM(`total_opens`)"
+                                        },
+                                        {
+                                            "name": "ctr",
+                                            "expression": "`ctr`"
+                                        },
+                                        {
+                                            "name": "subject_line",
+                                            "expression": "`subject_line`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "heatmap",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "ctr",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Click-Through Rate"
+                                },
+                                "y": {
+                                    "fieldName": "subject_line",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Subject Line"
+                                },
+                                "color": {
+                                    "fieldName": "sum(total_opens)",
+                                    "scale": {
+                                        "type": "quantitative",
+                                        "colorRamp": {
+                                            "mode": "scheme",
+                                            "scheme": "blues"
+                                        }
+                                    },
+                                    "displayName": "Opens"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Top Subject Lines",
+                                "showDescription": true,
+                                "description": "Subject lines resulted in the highest open rates / clicks"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 11,
+                        "width": 4,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "1bad3397",
+                        "textbox_spec": "### Feedback and Comments"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 25,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "1cf44a20",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "09d20820",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "department",
+                                            "expression": "`department`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pie",
+                            "encodings": {
+                                "angle": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "department",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "department"
+                                },
+                                "label": {
+                                    "show": false
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Engagement",
+                                "showDescription": true,
+                                "description": "By Departement"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 19,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "d9005bf1",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "8ab1ca38",
+                                    "fields": [
+                                        {
+                                            "name": "avg(ctr)",
+                                            "expression": "AVG(`ctr`)"
+                                        },
+                                        {
+                                            "name": "avg(ctr_t28d)",
+                                            "expression": "AVG(`ctr_t28d`)"
+                                        },
+                                        {
+                                            "name": "weekly(date)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `date`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "weekly(date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "date"
+                                },
+                                "y": {
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "fields": [
+                                        {
+                                            "fieldName": "avg(ctr_t28d)",
+                                            "displayName": "Average ctr_t28d"
+                                        },
+                                        {
+                                            "fieldName": "avg(ctr)",
+                                            "displayName": "baseline"
+                                        }
+                                    ]
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "28D CTR"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 43,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "e7d395cd",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "078f943d",
+                                    "fields": [
+                                        {
+                                            "name": "complaint_type",
+                                            "expression": "`complaint_type`"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "histogram",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "complaint_type",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "complaint_type"
+                                },
+                                "y": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "color": {
+                                    "fieldName": "complaint_type",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "[\"GDPR\"]",
+                                                "color": "#FCA4A1"
+                                            },
+                                            {
+                                                "value": "[\"CAN-SPAM Act\"]",
+                                                "color": "#AB4057"
+                                            },
+                                            {
+                                                "value": "[\"Other\"]",
+                                                "color": "#eaeaea"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "complaint_type"
+                                },
+                                "label": {
+                                    "show": true
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Complaints"
+                            },
+                            "mark": {
+                                "colors": [
+                                    "#FFAB00",
+                                    "#FFAB00",
+                                    "#00A972",
+                                    "#FF3621",
+                                    "#8BCAE7",
+                                    "#AB4057",
+                                    "#99DDB4",
+                                    "#FCA4A1",
+                                    "#919191",
+                                    "#BF7080"
+                                ]
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 29,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "d6193401",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef088692f912a6a81cbf1bd27dea0d/datasets/01ef08869313151cb9be1bb4902a83d5_sentiment",
+                                "query": {
+                                    "datasetName": "6467b8cb",
+                                    "fields": [
+                                        {
+                                            "name": "sentiment",
+                                            "expression": "`sentiment`"
+                                        },
+                                        {
+                                            "name": "sentiment_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "sentiment",
+                                        "displayName": "sentiment",
+                                        "queryName": "dashboards/01ef088692f912a6a81cbf1bd27dea0d/datasets/01ef08869313151cb9be1bb4902a83d5_sentiment"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Sentiment"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 26,
+                        "width": 1,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "d060763d",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef088692f912a6a81cbf1bd27dea0d/datasets/01ef0886930a11739cbd370b33c28549_complaint_type",
+                                "query": {
+                                    "datasetName": "078f943d",
+                                    "fields": [
+                                        {
+                                            "name": "complaint_type",
+                                            "expression": "`complaint_type`"
+                                        },
+                                        {
+                                            "name": "complaint_type_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "complaint_type",
+                                        "displayName": "complaint_type",
+                                        "queryName": "dashboards/01ef088692f912a6a81cbf1bd27dea0d/datasets/01ef0886930a11739cbd370b33c28549_complaint_type"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Complaint Type"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 26,
+                        "width": 1,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "c9649c42",
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Marketing-campaign&demo_name=aibi-marketing-campaign&event=DASHBOARD_VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 55,
+                        "width": 6,
+                        "height": 1
+                    }
+                }
+            ]
+        }
+    ]
+}

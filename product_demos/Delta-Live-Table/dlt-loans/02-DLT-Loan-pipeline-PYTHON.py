@@ -7,20 +7,20 @@
 # MAGIC <img style="float:right" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/dlt-golden-demo-loan-1.png" width="700"/>
 # MAGIC
 # MAGIC **Accelerate ETL development** <br/>
-# MAGIC Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance 
+# MAGIC Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance
 # MAGIC
 # MAGIC **Remove operational complexity** <br/>
 # MAGIC By automating complex administrative tasks and gaining broader visibility into pipeline operations
 # MAGIC
 # MAGIC **Trust your data** <br/>
-# MAGIC With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML 
+# MAGIC With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML
 # MAGIC
 # MAGIC **Simplify batch and streaming** <br/>
-# MAGIC With self-optimization and auto-scaling data pipelines for batch or streaming processing 
+# MAGIC With self-optimization and auto-scaling data pipelines for batch or streaming processing
 # MAGIC
 # MAGIC ## Our Delta Live Table pipeline
 # MAGIC
-# MAGIC We'll be using as input a raw dataset containing information on our customers Loan and historical transactions. 
+# MAGIC We'll be using as input a raw dataset containing information on our customers Loan and historical transactions.
 # MAGIC
 # MAGIC Our goal is to ingest this data in near real time and build table for our Analyst team while ensuring data quality.
 # MAGIC
@@ -31,9 +31,9 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
-# MAGIC Our datasets are coming from 3 different systems and saved under a cloud storage folder (S3/ADLS/GCS): 
+# MAGIC Our datasets are coming from 3 different systems and saved under a cloud storage folder (S3/ADLS/GCS):
 # MAGIC
 # MAGIC * `loans/raw_transactions` (loans uploader here in every few minutes)
 # MAGIC * `loans/ref_accounting_treatment` (reference table, mostly static)
@@ -49,20 +49,20 @@
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox 
+# MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Bronze layer: incrementally ingest data leveraging Databricks Autoloader
 # MAGIC
 # MAGIC <img style="float: right; padding-left: 10px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/dlt-golden-demo-loan-2.png" width="600"/>
 # MAGIC
-# MAGIC Our raw data is being sent to a blob storage. 
+# MAGIC Our raw data is being sent to a blob storage.
 # MAGIC
-# MAGIC Autoloader simplify this ingestion, including schema inference, schema evolution while being able to scale to millions of incoming files. 
+# MAGIC Autoloader simplify this ingestion, including schema inference, schema evolution while being able to scale to millions of incoming files.
 # MAGIC
 # MAGIC Autoloader is available in Python using the `cloud_files` format and can be used with a variety of format (json, csv, avro...):
 # MAGIC
 # MAGIC
-# MAGIC #### STREAMING LIVE TABLE 
+# MAGIC #### STREAMING LIVE TABLE
 # MAGIC Defining tables as `STREAMING` will guarantee that you only consume new incoming data. Without `STREAMING`, you will scan and ingest all the data available at once. See the [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-incremental-data.html) for more details
 
 # COMMAND ----------
@@ -70,39 +70,51 @@
 import dlt
 from pyspark.sql import functions as F
 
-@dlt.create_table(comment="New raw loan data incrementally ingested from cloud object storage landing zone")
+
+@dlt.table(
+    comment="New raw loan data incrementally ingested from cloud object storage landing zone"
+)
 def raw_txs():
-  return (
-    spark.readStream.format("cloudFiles")
-      .option("cloudFiles.format", "json")
-      .option("cloudFiles.inferColumnTypes", "true")
-      .load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions"))
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "json")
+        .option("cloudFiles.inferColumnTypes", "true")
+        .load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions")
+    )
+
 
 # COMMAND ----------
 
-@dlt.create_table(comment="Lookup mapping for accounting codes")
+
+@dlt.table(comment="Lookup mapping for accounting codes")
 def ref_accounting_treatment():
-  return spark.read.format("delta").load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment")
+    return spark.read.format("delta").load(
+        "/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment"
+    )
+
 
 # COMMAND ----------
 
-@dlt.create_table(comment="Raw historical transactions")
+
+@dlt.table(comment="Raw historical transactions")
 def raw_historical_loans():
-  return (
-    spark.readStream.format("cloudFiles")
-      .option("cloudFiles.format", "csv")
-      .option("cloudFiles.inferColumnTypes", "true")
-      .load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans"))
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("cloudFiles.inferColumnTypes", "true")
+        .load("/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans")
+    )
+
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox 
+# MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Silver layer: joining tables while ensuring data quality
 # MAGIC
 # MAGIC <img style="float: right; padding-left: 10px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/dlt-golden-demo-loan-3.png" width="600"/>
 # MAGIC
-# MAGIC Once the bronze layer is defined, we'll create the sliver layers by Joining data. Note that bronze tables are referenced using the `LIVE` spacename. 
+# MAGIC Once the bronze layer is defined, we'll create the sliver layers by Joining data. Note that bronze tables are referenced using the `LIVE` spacename.
 # MAGIC
 # MAGIC To consume only increment from the Bronze layer like `BZ_raw_txs`, we'll be using the `read_stream` function: `dlt.read_stream("BZ_raw_txs")`
 # MAGIC
@@ -113,50 +125,63 @@ def raw_historical_loans():
 
 # COMMAND ----------
 
+
 # DBTITLE 1,enrich transactions with metadata
-@dlt.create_view(comment="Livestream of new transactions")
+@dlt.view(comment="Livestream of new transactions")
 def new_txs():
-  txs = dlt.read_stream("raw_txs").alias("txs")
-  ref = dlt.read("ref_accounting_treatment").alias("ref")
-  return (
-    txs.join(ref, F.col("txs.accounting_treatment_id") == F.col("ref.id"), "inner")
-      .selectExpr("txs.*", "ref.accounting_treatment as accounting_treatment"))
+    txs = dlt.read_stream("raw_txs").alias("txs")
+    ref = dlt.read("ref_accounting_treatment").alias("ref")
+    return txs.join(
+        ref, F.col("txs.accounting_treatment_id") == F.col("ref.id"), "inner"
+    ).selectExpr("txs.*", "ref.accounting_treatment as accounting_treatment")
+
 
 # COMMAND ----------
+
 
 # DBTITLE 1,Keep only the proper transactions. Fail if cost center isn't correct, discard the others.
-@dlt.create_table(comment="Livestream of new transactions, cleaned and compliant")
+@dlt.table(comment="Livestream of new transactions, cleaned and compliant")
 @dlt.expect("Payments should be this year", "(next_payment_date > date('2020-12-31'))")
-@dlt.expect_or_drop("Balance should be positive", "(balance > 0 AND arrears_balance > 0)")
+@dlt.expect_or_drop(
+    "Balance should be positive", "(balance > 0 AND arrears_balance > 0)"
+)
 @dlt.expect_or_fail("Cost center must be specified", "(cost_center_code IS NOT NULL)")
 def cleaned_new_txs():
-  return dlt.read_stream("new_txs")
+    return dlt.read_stream("new_txs")
+
 
 # COMMAND ----------
+
 
 # DBTITLE 1,Let's quarantine the bad transaction for further analysis
-#This is the inverse condition of the above statement to quarantine incorrect data for further analysis.
-@dlt.create_table(comment="Incorrect transactions requiring human analysis")
+# This is the inverse condition of the above statement to quarantine incorrect data for further analysis.
+@dlt.table(comment="Incorrect transactions requiring human analysis")
 @dlt.expect("Payments should be this year", "(next_payment_date <= date('2020-12-31'))")
-@dlt.expect_or_drop("Balance should be positive", "(balance <= 0 OR arrears_balance <= 0)")
+@dlt.expect_or_drop(
+    "Balance should be positive", "(balance <= 0 OR arrears_balance <= 0)"
+)
 def quarantine_bad_txs():
-  return dlt.read_stream("new_txs")
+    return dlt.read_stream("new_txs")
+
 
 # COMMAND ----------
 
+
 # DBTITLE 1,Enrich all historical transactions
-@dlt.create_table(comment="Historical loan transactions")
+@dlt.table(comment="Historical loan transactions")
 @dlt.expect("Grade should be valid", "(grade in ('A', 'B', 'C', 'D', 'E', 'F', 'G'))")
 @dlt.expect_or_drop("Recoveries shoud be int", "(CAST(recoveries as INT) IS NOT NULL)")
 def historical_txs():
-  history = dlt.read_stream("raw_historical_loans").alias("l")
-  ref = dlt.read("ref_accounting_treatment").alias("ref")
-  return (history.join(ref, F.col("l.accounting_treatment_id") == F.col("ref.id"), "inner") 
-                 .selectExpr("l.*", "ref.accounting_treatment as accounting_treatment"))
+    history = dlt.read_stream("raw_historical_loans").alias("l")
+    ref = dlt.read("ref_accounting_treatment").alias("ref")
+    return history.join(
+        ref, F.col("l.accounting_treatment_id") == F.col("ref.id"), "inner"
+    ).selectExpr("l.*", "ref.accounting_treatment as accounting_treatment")
+
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox 
+# MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Gold layer
 # MAGIC
@@ -164,51 +189,58 @@ def historical_txs():
 # MAGIC
 # MAGIC Our last step is to materialize the Gold Layer.
 # MAGIC
-# MAGIC Because these tables will be requested at scale using a SQL Endpoint, we'll add Zorder at the table level to ensure faster queries using `pipelines.autoOptimize.zOrderCols`, and DLT will handle the rest.
+# MAGIC Because these tables will be requested at scale using a SQL Endpoint, we'll add Liquid Clustering at the table level to organize data for faster queries, and DLT will handle the rest.
 
 # COMMAND ----------
+
 
 # DBTITLE 1,Balance aggregate per cost location
-@dlt.create_table(
-  comment="Combines historical and new loan data for unified rollup of loan balances",
-  table_properties={"pipelines.autoOptimize.zOrderCols": "location_code"})
+@dlt.table(
+    comment="Combines historical and new loan data for unified rollup of loan balances",
+    cluster_by=["location_code"],
+)
 def total_loan_balances():
-  return (
-    dlt.read("historical_txs")
-      .groupBy("addr_state")
-      .agg(F.sum("revol_bal").alias("bal"))
-      .withColumnRenamed("addr_state", "location_code")
-      .union(
-        dlt.read("cleaned_new_txs")
-          .groupBy("country_code")
-          .agg(F.sum("balance").alias("bal"))
-          .withColumnRenamed("country_code", "location_code")
-      )          
-  )
+    return (
+        dlt.read("historical_txs")
+        .groupBy("addr_state")
+        .agg(F.sum("revol_bal").alias("bal"))
+        .withColumnRenamed("addr_state", "location_code")
+        .union(
+            dlt.read("cleaned_new_txs")
+            .groupBy("country_code")
+            .agg(F.sum("balance").alias("bal"))
+            .withColumnRenamed("country_code", "location_code")
+        )
+    )
+
 
 # COMMAND ----------
+
 
 # DBTITLE 1,Balance aggregate per cost center
-@dlt.create_table(
-  comment="Live table of new loan balances for consumption by different cost centers")
+@dlt.table(
+    comment="Live table of new loan balances for consumption by different cost centers"
+)
 def new_loan_balances_by_cost_center():
-  return (
-    dlt.read("cleaned_new_txs")
-      .groupBy("cost_center_code")
-      .agg(F.sum("balance").alias("sum_balance"))
-  )
+    return (
+        dlt.read("cleaned_new_txs")
+        .groupBy("cost_center_code")
+        .agg(F.sum("balance").alias("sum_balance"))
+    )
+
 
 # COMMAND ----------
 
+
 # DBTITLE 1,Balance aggregate per country
-@dlt.create_table(
-  comment="Live table of new loan balances per country")
+@dlt.table(comment="Live table of new loan balances per country")
 def new_loan_balances_by_country():
-  return (
-    dlt.read("cleaned_new_txs")
-      .groupBy("country_code")
-      .agg(F.sum("count").alias("sum_count"))
-  )
+    return (
+        dlt.read("cleaned_new_txs")
+        .groupBy("country_code")
+        .agg(F.sum("count").alias("sum_count"))
+    )
+
 
 # COMMAND ----------
 
@@ -226,7 +258,7 @@ def new_loan_balances_by_country():
 # MAGIC
 # MAGIC Expectations stats are automatically available as system table.
 # MAGIC
-# MAGIC This information let you monitor your data ingestion quality. 
+# MAGIC This information let you monitor your data ingestion quality.
 # MAGIC
 # MAGIC You can leverage DBSQL to request these table and build custom alerts based on the metrics your business is tracking.
 # MAGIC

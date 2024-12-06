@@ -1,0 +1,496 @@
+{
+    "datasets": [
+        {
+            "name": "67507e3a",
+            "displayName": "Product Demand",
+            "query": "SELECT *\nFROM main.dbdemos_aibi_mfg_supply_chain_optimization.product_demand_historical"
+        },
+        {
+            "name": "a8d6754c",
+            "displayName": "Demand Differences",
+            "query": "WITH demand_differences as (\n    SELECT demand.RAW, SUM(demand.Demand_Raw) as total_demand, SUM(supply.supply) as total_supply, total_supply-total_demand as demand_difference\n    FROM main.dbdemos_aibi_mfg_supply_chain_optimization.raw_material_demand demand\n    LEFT JOIN main.dbdemos_aibi_mfg_supply_chain_optimization.raw_material_supply supply ON demand.RAW=supply.raw\n    GROUP BY demand.RAW\n)\n\nSELECT RAW as raw, total_demand, total_supply, -demand_difference\nFROM demand_differences\nWHERE demand_difference < 0\n"
+        },
+        {
+            "name": "c9095428",
+            "displayName": "Bill of Materials",
+            "query": "SELECT * \nFROM main.dbdemos_aibi_mfg_supply_chain_optimization.bom"
+        },
+        {
+            "name": "69f04843",
+            "displayName": "Shipment Recommendations",
+            "query": "SELECT * \nFROM main.dbdemos_aibi_mfg_supply_chain_optimization.shipment_recommendations"
+        }
+    ],
+    "pages": [
+        {
+            "name": "0b2b4486",
+            "displayName": "New Page",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "f42e91a4",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "67507e3a",
+                                    "fields": [
+                                        {
+                                            "name": "weekly(date)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `date`)"
+                                        },
+                                        {
+                                            "name": "sum(demand)",
+                                            "expression": "SUM(`demand`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "weekly(date)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "Week"
+                                },
+                                "y": {
+                                    "fieldName": "sum(demand)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Total Demand"
+                                }
+                            },
+                            "frame": {
+                                "title": "Product Demand Over Time",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 6,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ae8eb724",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef55ba78251ca9afa541d840417bb2/datasets/01ef6a611a7f1dbfb77c5444cbbc5da0_product",
+                                "query": {
+                                    "datasetName": "67507e3a",
+                                    "fields": [
+                                        {
+                                            "name": "product",
+                                            "expression": "`product`"
+                                        },
+                                        {
+                                            "name": "product_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "product",
+                                        "displayName": "product",
+                                        "queryName": "dashboards/01ef55ba78251ca9afa541d840417bb2/datasets/01ef6a611a7f1dbfb77c5444cbbc5da0_product"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Product"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "279c57b2",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef55ba78251ca9afa541d840417bb2/datasets/01ef6a611a7f1dbfb77c5444cbbc5da0_date",
+                                "query": {
+                                    "datasetName": "67507e3a",
+                                    "fields": [
+                                        {
+                                            "name": "date",
+                                            "expression": "`date`"
+                                        },
+                                        {
+                                            "name": "date_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-range-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "date",
+                                        "displayName": "date",
+                                        "queryName": "dashboards/01ef55ba78251ca9afa541d840417bb2/datasets/01ef6a611a7f1dbfb77c5444cbbc5da0_date"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Date range"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 3,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "3eee5b3c",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "a8d6754c",
+                                    "fields": [
+                                        {
+                                            "name": "raw",
+                                            "expression": "`raw`"
+                                        },
+                                        {
+                                            "name": "sum(total_supply)",
+                                            "expression": "SUM(`total_supply`)"
+                                        },
+                                        {
+                                            "name": "sum((- demand_difference))",
+                                            "expression": "SUM(`(- demand_difference)`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "raw",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Raw Material"
+                                },
+                                "y": {
+                                    "fields": [
+                                        {
+                                            "fieldName": "sum(total_supply)",
+                                            "displayName": "Supply"
+                                        },
+                                        {
+                                            "fieldName": "sum((- demand_difference))",
+                                            "displayName": "Forecasted Shortage"
+                                        }
+                                    ],
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "Quantity"
+                                    }
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Forecasted Raw Material Shortages in our Supply Chain"
+                            },
+                            "mark": {
+                                "colors": [
+                                    "#077A9D",
+                                    "#FF3621",
+                                    "#00A972",
+                                    "#FF3621",
+                                    "#8BCAE7",
+                                    "#AB4057",
+                                    "#99DDB4",
+                                    "#FCA4A1",
+                                    "#919191",
+                                    "#BF7080"
+                                ]
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 3,
+                        "width": 3,
+                        "height": 10
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "7a173e38",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "69f04843",
+                                    "fields": [
+                                        {
+                                            "name": "sum(qty_shipped)",
+                                            "expression": "SUM(`qty_shipped`)"
+                                        },
+                                        {
+                                            "name": "plant",
+                                            "expression": "`plant`"
+                                        },
+                                        {
+                                            "name": "distribution_center",
+                                            "expression": "`distribution_center`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "heatmap",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "plant",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "plant"
+                                },
+                                "y": {
+                                    "fieldName": "distribution_center",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Distribution Center"
+                                },
+                                "color": {
+                                    "fieldName": "sum(qty_shipped)",
+                                    "scale": {
+                                        "type": "quantitative",
+                                        "colorRamp": {
+                                            "mode": "scheme",
+                                            "scheme": "redblue"
+                                        }
+                                    },
+                                    "displayName": "Quantity"
+                                }
+                            },
+                            "frame": {
+                                "title": "Shipment Recommendations: Plant to Distribution Center",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 15,
+                        "width": 2,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "40acedd6",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "69f04843",
+                                    "fields": [
+                                        {
+                                            "name": "sum(qty_shipped)",
+                                            "expression": "SUM(`qty_shipped`)"
+                                        },
+                                        {
+                                            "name": "product",
+                                            "expression": "`product`"
+                                        },
+                                        {
+                                            "name": "distribution_center",
+                                            "expression": "`distribution_center`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "heatmap",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "product",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "product"
+                                },
+                                "y": {
+                                    "fieldName": "distribution_center",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "distribution_center"
+                                },
+                                "color": {
+                                    "fieldName": "sum(qty_shipped)",
+                                    "scale": {
+                                        "type": "quantitative",
+                                        "colorRamp": {
+                                            "mode": "scheme",
+                                            "scheme": "redblue"
+                                        }
+                                    },
+                                    "displayName": "Quantity"
+                                }
+                            },
+                            "frame": {
+                                "title": "Shipment Recommendations: Product by Distribution Center",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 15,
+                        "width": 4,
+                        "height": 8
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "2c3be86c",
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_mfg_demand_forecast&demo_name=aibi_mfg_demand_forecast&event=DASHBOARD_VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 23,
+                        "width": 6,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "229511ac",
+                        "textbox_spec": "# Supply Chains - Product and Materials Demand Forecasting\n---\n_Understand your organization's most crucial supply lines with Databricks Dashboards. Utilize filters to see product demand for different items and stores. Then, observe which raw materials under your management have the projected greatest shortage!_\n\n_Finally, navigate to the bottom of this dashboard to better understand which plants and products are best to prioritize._\n"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 6,
+                        "height": 3
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f9763bf9",
+                        "queries": [
+                            {
+                                "name": "dashboards/01ef55ba78251ca9afa541d840417bb2/datasets/01ef6a611a7f1dbfb77c5444cbbc5da0_store",
+                                "query": {
+                                    "datasetName": "67507e3a",
+                                    "fields": [
+                                        {
+                                            "name": "store",
+                                            "expression": "`store`"
+                                        },
+                                        {
+                                            "name": "store_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-multi-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "store",
+                                        "displayName": "store",
+                                        "queryName": "dashboards/01ef55ba78251ca9afa541d840417bb2/datasets/01ef6a611a7f1dbfb77c5444cbbc5da0_store"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Product Store"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 5,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "4c07fdff",
+                        "textbox_spec": "# Shipment Recommendations\n_Choosing the most efficient supply lines is crucial to ensuring a maximally functional business. Utilizing Databricks Dashboards, below it's easy to highlight which routes may be most efficient for moving product from a plant to a distribution center. Then, see which products Databricks ML recommends shipping based on demand forecasting!_"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 13,
+                        "width": 6,
+                        "height": 2
+                    }
+                }
+            ]
+        }
+    ]
+}

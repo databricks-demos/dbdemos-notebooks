@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init $reset_all_data=true
+# MAGIC %run ./_resources/00-init $reset_all_data=false
 
 # COMMAND ----------
 

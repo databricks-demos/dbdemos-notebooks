@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny mlflow mlflow[gateway] langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny==2.18.0 mlflow==2.18.0 mlflow[gateway]==2.18.0 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -48,7 +48,7 @@
 
 rag_chain_config = {
     "databricks_resources": {
-        "llm_endpoint_name": "databricks-dbrx-instruct",
+        "llm_endpoint_name": "databricks-meta-llama-3-1-70b-instruct",
         "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,
     },
     "input_example": {
@@ -270,10 +270,9 @@ print(f"Share this URL with your stakeholders: {deployment_info.review_app_url}"
 
 # COMMAND ----------
 
-active_deployments = agents.list_deployments()
-active_deployment = next((item for item in active_deployments if item.model_name == MODEL_NAME_FQN), None)
-if active_deployment:
-  print(f"Review App URL: {active_deployment.review_app_url}")
+for deployment in agents.list_deployments():
+  if deployment.model_name == MODEL_NAME_FQN:
+    print(f"Review App URL: {deployment.review_app_url}")    
 
 # COMMAND ----------
 

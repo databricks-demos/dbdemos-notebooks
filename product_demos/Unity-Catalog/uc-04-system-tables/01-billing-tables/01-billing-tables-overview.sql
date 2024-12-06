@@ -34,7 +34,7 @@
 -- MAGIC
 -- MAGIC You can access and install built in $DBU Dashboard as an admin, from the Databricks account console.
 -- MAGIC
--- MAGIC As part of this demo, we also installed this dashboard. You can access it here: <a dbdemos-dashboard-id="account-usage" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Account Usage Cost tracking dashboard</a>
+-- MAGIC As part of this demo, we also installed this dashboard. You can access it here: <a dbdemos-dashboard-id="account-usage" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc2' target="_blank">Account Usage Cost tracking dashboard</a>
 
 -- COMMAND ----------
 
@@ -43,7 +43,23 @@
 -- MAGIC
 -- MAGIC Dbdemos also installed for you a Model Serving endpoint dashboard. Use it to track your Model Serving cost and analyse which endpoint is running.
 -- MAGIC
--- MAGIC You can access it here: <a dbdemos-dashboard-id="model-serving-cost" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Model Serving Endpoint Cost tracking dashboard</a>
+-- MAGIC You can access it here: <a dbdemos-dashboard-id="model-serving-cost" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc3' target="_blank">Model Serving Endpoint Cost tracking dashboard</a>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC # DBSQL warehouse Tracking Dashboard demo example
+-- MAGIC
+-- MAGIC Dbdemos also installed for you a Warehouse / Serverless dashboard. Use it to track your cost and analyse which warehouse is running, from which Dashboard, which workspace is consuming what.
+-- MAGIC
+-- MAGIC You can access it here: <a dbdemos-dashboard-id="warehouse-serverless-cost" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028aa75723cc4' target="_blank">SQL Warehouse Endpoint Cost tracking dashboard</a>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC # Workflow and Job Tracking Dashboard
+-- MAGIC
+-- MAGIC Want to Track your job runs and find which job is consuming the most resources? Analyze your Workflow and Job consumption with the <a dbdemos-dashboard-id="worklow-analysis" href='/sql/dashboardsv3/02ef11cc36721f9e1f2028ee75723cc5' target="_blank">Workflow and Job Cost tracking dashboard example</a>
 
 -- COMMAND ----------
 

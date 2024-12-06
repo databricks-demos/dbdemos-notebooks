@@ -1,9 +1,9 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow to load our model
-# MAGIC %pip install mlflow==2.14.3 importlib-metadata==6.8.0 cloudpickle==2.2.1 zipp==3.16.2
-# MAGIC %pip install category-encoders==2.5.1.post0 cffi==1.15.0 databricks-automl-runtime==0.2.15 defusedxml==0.7.1 holidays==0.18 lightgbm==4.2.0 psutil==5.8.0 scikit-learn==1.1.1 typing-extensions==4.1.1 
+# MAGIC %pip install mlflow==2.17.2 cloudpickle==2.2.1 
+# MAGIC # hardcode the ml 15.4 LTS libraries versions here - should move to env_manager='conda' for prod use-case instead
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
-# MAGIC %pip install --ignore-installed Jinja2==3.1.2 markupsafe==2.1.1
 
 # COMMAND ----------
 
@@ -23,7 +23,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                                                        Stage/version  
 #                                                                                           Model name                          |        
 #                                                                                               |                               |        
-predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_turbine.dbdemos_turbine_maintenance@prod", "string")
+predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string")
 spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # COMMAND ----------

@@ -35,6 +35,10 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.17.2
+
+# COMMAND ----------
+
 # MAGIC %run ../../_resources/00-setup $reset_all_data=$reset_all_data
 
 # COMMAND ----------
@@ -95,13 +99,13 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %sql LIST '/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/incoming_data'
+# MAGIC %sql LIST '/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'
 
 # COMMAND ----------
 
 # DBTITLE 1,Review the raw sensor data received as JSON
 # MAGIC %sql
-# MAGIC SELECT * FROM PARQUET.`/Volumes/main__build/dbdemos_iot_turbine/turbine_raw_landing/incoming_data`
+# MAGIC SELECT * FROM PARQUET.`/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data`
 
 # COMMAND ----------
 
@@ -256,7 +260,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                              Stage/version  
 #                                                                 Model name         |        
 #                                                                     |              |        
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_turbine.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
 columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------

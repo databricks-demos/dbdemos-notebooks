@@ -162,6 +162,8 @@ churn_features_online_table = OnlineTable.from_dict(
 # COMMAND ----------
 
 # DBTITLE 1,Create the online table
+from databricks.sdk.service.catalog import OnlineTable
+
 # Create the online table
 w.online_tables.create(table = churn_features_online_table)
 

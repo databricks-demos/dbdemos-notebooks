@@ -86,7 +86,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0
+# MAGIC %pip install --quiet databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0 mlflow==2.17.2
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -244,7 +244,7 @@ DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC AutoML saved our best model in the MLFlow registry. [Open the dbdemos_turbine_maintenance](#mlflow/models/dbdemos_turbine_maintenance) to explore its artifact and analyze the parameters used, including traceability to the notebook used for its creation.
+# MAGIC AutoML saved our best model in the MLFlow registry. Open the experiment from the AutoML run to explore its artifact and analyze the parameters used, including traceability to the notebook used for its creation.
 # MAGIC
 # MAGIC If we're ready, we can move this model into Production stage in a click, or using the API.
 

@@ -29,30 +29,33 @@
 
 -- COMMAND ----------
 
--- MAGIC %sql 
--- MAGIC DESCRIBE DETAIL user_delta
+-- MAGIC %python
+-- MAGIC spark.table('user_delta').write.mode('overwrite').save(f'/Volumes/{catalog}/{schema}/{volume_name}/user_delta_table')
+
+-- COMMAND ----------
+
+
+DESCRIBE DETAIL `delta`.`/Volumes/main__build/dbdemos_delta_lake/delta_lake_raw_data/user_delta_table`
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Delta is composed of parquet files
 -- MAGIC %python
--- MAGIC folder = spark.sql("DESCRIBE DETAIL user_delta").collect()[0]['location']
--- MAGIC print(folder)
--- MAGIC display(dbutils.fs.ls(folder))
+-- MAGIC delta_folder = spark.sql(f"DESCRIBE DETAIL `delta`.`/Volumes/{catalog}/{schema}/{volume_name}/user_delta_table`").collect()[0]['location']
+-- MAGIC print(delta_folder)
+-- MAGIC display(dbutils.fs.ls(delta_folder))
 
 -- COMMAND ----------
 
 -- DBTITLE 1,And a transactional log
 -- MAGIC %python
--- MAGIC display(dbutils.fs.ls(folder+"/_delta_log"))
+-- MAGIC display(dbutils.fs.ls(delta_folder+"/_delta_log"))
 
 -- COMMAND ----------
 
--- DBTITLE 1,Each log contains parquet files stats for efficient data skipping
 -- MAGIC %python
--- MAGIC with open("/dbfs/"+raw_data_location+"/user_delta/_delta_log/00000000000000000000.json") as f:
--- MAGIC   for l in f.readlines():
--- MAGIC     print(json.dumps(json.loads(l), indent = 2))
+-- MAGIC commit_log = dbutils.fs.head(delta_folder+"/_delta_log/00000000000000000000.json", 10000)
+-- MAGIC print(json.dumps(json.loads(commit_log.split('\n')[0]), indent = 2))
 
 -- COMMAND ----------
 
@@ -65,7 +68,7 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC display(dbutils.fs.ls(folder))
+-- MAGIC display(dbutils.fs.ls(delta_folder))
 
 -- COMMAND ----------
 
@@ -74,16 +77,19 @@
 
 -- COMMAND ----------
 
-OPTIMIZE user_delta;
+OPTIMIZE `delta`.`/Volumes/main__build/dbdemos_delta_lake/delta_lake_raw_data/user_delta_table`;
 -- as we vacuum with 0 hours, we need to remove the safety check:
-set spark.databricks.delta.retentionDurationCheck.enabled = false;
-VACUUM user_delta retain 0 hours;
+
+-- Note: commented out as this option isn't available on serverless compute for now - see ES-1302674
+-- set spark.databricks.delta.retentionDurationCheck.enabled = false;
+
+-- VACUUM `delta`.`/Volumes/main__build/dbdemos_delta_lake/delta_lake_raw_data/user_delta_table` retain 0 hours;
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Only one parquet file remains after the OPTIMIZE+VACUUM operation
 -- MAGIC %python
--- MAGIC display(dbutils.fs.ls(folder))
+-- MAGIC display(dbutils.fs.ls(delta_folder))
 
 -- COMMAND ----------
 

@@ -1,0 +1,2193 @@
+{
+    "datasets": [
+        {
+            "name": "39a5402c",
+            "displayName": "Support Data",
+            "query": "-- CTE to get the top 5 topics by the number of tickets\nWITH TopTopics AS (\n  SELECT topic\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY topic\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 5\n),\n-- CTE to get the top 4 countries by the number of tickets\nTopCountries AS (\n  SELECT country\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY country\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 4\n)\n\n-- Main query to select data from the technical support dataset\nSELECT \n       *,\n       -- Calculate the resolution time in hours, adding a random adjustment for Tier 2 support level\n       (TIMESTAMPDIFF(MINUTE, created_time, resolution_time) \n              + CASE \n           WHEN support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400)))\n           ELSE 0 \n         END) / 60.0 AS adjusted_resolution_time\nFROM main.dbdemos_aibi_customer_support.customer_support_review\n-- Filter to include only tickets with top topics\nWHERE topic IN (SELECT topic FROM TopTopics)\n-- Filter to include only tickets from top countries\nAND country IN (SELECT country FROM TopCountries)\n-- Exclude tickets where the resolution time is zero\nAND TIMESTAMPDIFF(MINUTE, created_time, resolution_time) != 0;"
+        },
+        {
+            "name": "916033f4",
+            "displayName": "Support by Volume",
+            "query": "SELECT country, COUNT(ticket_id) AS support_volume\nFROM main.dbdemos_aibi_customer_support.customer_support_review\nGROUP BY country"
+        },
+        {
+            "name": "44cccafd",
+            "displayName": "Support by Topic",
+            "query": "SELECT topic, COUNT(ticket_id) AS support_volume, \n       (COUNT(ticket_id) * 100.0 / (SELECT COUNT(*) FROM main.dbdemos_aibi_customer_support.customer_support_review)) AS percentage\nFROM main.dbdemos_aibi_customer_support.customer_support_review\nGROUP BY topic"
+        },
+        {
+            "name": "56d2ee72",
+            "displayName": "Counts by Case Status",
+            "query": "SELECT \n  SUM(CASE WHEN status = 'In progress' THEN 1 ELSE 0 END) AS in_progress_tickets,\n  SUM(CASE WHEN status = 'Closed' THEN 1 ELSE 0 END) AS closed_tickets,\n  SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) AS resolved_tickets\nFROM main.dbdemos_aibi_customer_support.customer_support_review"
+        }
+    ],
+    "pages": [
+        {
+            "name": "ab333341",
+            "displayName": "Overview",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "d9616a98",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "country",
+                                            "expression": "`country`"
+                                        },
+                                        {
+                                            "name": "monthly(created_time)",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `created_time`)"
+                                        },
+                                        {
+                                            "name": "count(ticket_id)",
+                                            "expression": "COUNT(`ticket_id`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "area",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "monthly(created_time)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "created_time"
+                                },
+                                "y": {
+                                    "fieldName": "count(ticket_id)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Number of Tickets"
+                                },
+                                "color": {
+                                    "fieldName": "country",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "Italy",
+                                                "color": "#00a5b8"
+                                            },
+                                            {
+                                                "value": "Poland",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "United Kingdom",
+                                                "color": "#83f9be"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "country"
+                                }
+                            },
+                            "frame": {
+                                "title": "Support calls over time by region",
+                                "showTitle": true
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 2,
+                        "width": 5,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "70f0c617",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "56d2ee72",
+                                    "fields": [
+                                        {
+                                            "name": "in_progress_tickets",
+                                            "expression": "`in_progress_tickets`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "in_progress_tickets",
+                                    "style": {
+                                        "rules": [
+                                            {
+                                                "condition": {
+                                                    "operator": ">=",
+                                                    "operand": {
+                                                        "type": "data-value",
+                                                        "value": "200"
+                                                    }
+                                                },
+                                                "color": "#f87d6e"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "in_progress_tickets"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Tickets In Progress",
+                                "showDescription": false
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 2,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "85923910",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "56d2ee72",
+                                    "fields": [
+                                        {
+                                            "name": "closed_tickets",
+                                            "expression": "`closed_tickets`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "closed_tickets",
+                                    "displayName": "closed_tickets"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Closed Tickets",
+                                "showDescription": false,
+                                "description": "Past 30 Days"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 6,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "74250211",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "countdistinct(agent_name)",
+                                            "expression": "COUNT(DISTINCT `agent_name`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "countdistinct(agent_name)",
+                                    "style": {
+                                        "rules": [
+                                            {
+                                                "condition": {
+                                                    "operator": ">=",
+                                                    "operand": {
+                                                        "type": "data-value",
+                                                        "value": "5"
+                                                    }
+                                                },
+                                                "color": "#00A972"
+                                            },
+                                            {
+                                                "condition": {
+                                                    "operator": "<=",
+                                                    "operand": {
+                                                        "type": "data-value",
+                                                        "value": "5"
+                                                    }
+                                                },
+                                                "color": "#a90000"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "Count of Unique agent_name"
+                                },
+                                "target": {
+                                    "fieldName": "count(*)",
+                                    "displayName": "Count of Records"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Support Agents Online",
+                                "showDescription": false,
+                                "description": ""
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 5,
+                        "y": 4,
+                        "width": 1,
+                        "height": 2
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "e5c35a34",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "support_level",
+                                            "expression": "`support_level`"
+                                        },
+                                        {
+                                            "name": "min(adjusted_resolution_time)",
+                                            "expression": "MIN(`adjusted_resolution_time`)"
+                                        },
+                                        {
+                                            "name": "q1(adjusted_resolution_time)",
+                                            "expression": "PERCENTILE(`adjusted_resolution_time`, 0.25)"
+                                        },
+                                        {
+                                            "name": "median(adjusted_resolution_time)",
+                                            "expression": "MEDIAN(`adjusted_resolution_time`)"
+                                        },
+                                        {
+                                            "name": "q3(adjusted_resolution_time)",
+                                            "expression": "PERCENTILE(`adjusted_resolution_time`, 0.75)"
+                                        },
+                                        {
+                                            "name": "max(adjusted_resolution_time)",
+                                            "expression": "MAX(`adjusted_resolution_time`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "box",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "support_level",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Support Level"
+                                },
+                                "y": {
+                                    "whiskerStart": {
+                                        "fieldName": "min(adjusted_resolution_time)",
+                                        "displayName": "Minimum adjusted_resolution_time"
+                                    },
+                                    "boxStart": {
+                                        "fieldName": "q1(adjusted_resolution_time)",
+                                        "displayName": "First Quartile of adjusted_resolution_time"
+                                    },
+                                    "boxMid": {
+                                        "fieldName": "median(adjusted_resolution_time)",
+                                        "displayName": "Median of adjusted_resolution_time"
+                                    },
+                                    "boxEnd": {
+                                        "fieldName": "q3(adjusted_resolution_time)",
+                                        "displayName": "Third Quartile of adjusted_resolution_time"
+                                    },
+                                    "whiskerEnd": {
+                                        "fieldName": "max(adjusted_resolution_time)",
+                                        "displayName": "Maximum adjusted_resolution_time"
+                                    },
+                                    "axis": {
+                                        "title": "Resolution Time (Days)"
+                                    },
+                                    "scale": {
+                                        "type": "quantitative"
+                                    }
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Time to Resolution Distribution"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 1,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "7250fdb5",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_priority",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "priority",
+                                            "expression": "`priority`"
+                                        },
+                                        {
+                                            "name": "priority_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "priority",
+                                        "displayName": "priority",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_priority"
+                                    }
+                                ]
+                            },
+                            "disallowAll": false,
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Ticket Priority"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 1,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ad7f9470",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "source",
+                                            "expression": "`source`"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "combo",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "source",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Conversation Format"
+                                },
+                                "y": {
+                                    "primary": {
+                                        "fields": [
+                                            {
+                                                "fieldName": "count(*)",
+                                                "displayName": "Count of Records"
+                                            }
+                                        ],
+                                        "scale": {
+                                            "type": "quantitative"
+                                        }
+                                    },
+                                    "secondary": {
+                                        "fields": [],
+                                        "scale": {
+                                            "type": "quantitative"
+                                        }
+                                    }
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "# of Agent Interactions By Source"
+                            },
+                            "mark": {
+                                "colors": [
+                                    "#00a5b8",
+                                    "#83f9be",
+                                    "#00A972",
+                                    "#FF3621",
+                                    "#8BCAE7",
+                                    "#AB4057",
+                                    "#99DDB4",
+                                    "#FCA4A1",
+                                    "#919191",
+                                    "#BF7080"
+                                ]
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 8,
+                        "width": 2,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "dd854b1c",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "source",
+                                            "expression": "`source`"
+                                        },
+                                        {
+                                            "name": "count(*)",
+                                            "expression": "COUNT(`*`)"
+                                        },
+                                        {
+                                            "name": "survey_results",
+                                            "expression": "`survey_results`"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "count(*)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Count of Records"
+                                },
+                                "y": {
+                                    "fieldName": "survey_results",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "format": {
+                                        "type": "number-plain",
+                                        "abbreviation": "compact",
+                                        "decimalPlaces": {
+                                            "type": "max",
+                                            "places": 2
+                                        }
+                                    },
+                                    "displayName": "Customer Satisfaction (0-5)"
+                                },
+                                "color": {
+                                    "fieldName": "source",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "Chat",
+                                                "color": "#00a5b8"
+                                            },
+                                            {
+                                                "value": "Email",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "Phone",
+                                                "color": "#83f9be"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "Format"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Customer Satisfication by Conversation Format"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 1,
+                        "y": 8,
+                        "width": 3,
+                        "height": 6
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "326217a0",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_weekly(created_time)",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "weekly(created_time)",
+                                            "expression": "DATE_TRUNC(\"WEEK\", `created_time`)"
+                                        },
+                                        {
+                                            "name": "weekly(created_time)_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-range-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "weekly(created_time)",
+                                        "displayName": "created_time",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_weekly(created_time)"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Ticket Creation"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 1,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "1bc9c30a",
+                        "textbox_spec": "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_xindustry_customer_support&demo_name=aibi_xindustry_customer_support&event=DASHBOARD_VIEW)"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 14,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "ae6f1d7f",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_topic",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "topic",
+                                            "expression": "`topic`"
+                                        },
+                                        {
+                                            "name": "topic_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "topic",
+                                        "displayName": "topic",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_topic"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Ticket Type"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 4,
+                        "y": 1,
+                        "width": 2,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "1c88dca5",
+                        "textbox_spec": "## Customer Support Ticket Trends"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 6,
+                        "height": 1
+                    }
+                }
+            ]
+        },
+        {
+            "name": "65fbd4eb",
+            "displayName": "Resolution Time",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "31d87d0a",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "status",
+                                            "expression": "`status`"
+                                        },
+                                        {
+                                            "name": "ticket_id",
+                                            "expression": "`ticket_id`"
+                                        },
+                                        {
+                                            "name": "priority",
+                                            "expression": "`priority`"
+                                        },
+                                        {
+                                            "name": "source",
+                                            "expression": "`source`"
+                                        },
+                                        {
+                                            "name": "topic",
+                                            "expression": "`topic`"
+                                        },
+                                        {
+                                            "name": "agent_group",
+                                            "expression": "`agent_group`"
+                                        },
+                                        {
+                                            "name": "agent_name",
+                                            "expression": "`agent_name`"
+                                        },
+                                        {
+                                            "name": "created_time",
+                                            "expression": "`created_time`"
+                                        },
+                                        {
+                                            "name": "expected_sla_to_resolve",
+                                            "expression": "`expected_sla_to_resolve`"
+                                        },
+                                        {
+                                            "name": "expected_sla_to_first_response",
+                                            "expression": "`expected_sla_to_first_response`"
+                                        },
+                                        {
+                                            "name": "first_response_time",
+                                            "expression": "`first_response_time`"
+                                        },
+                                        {
+                                            "name": "sla_for_first_response",
+                                            "expression": "`sla_for_first_response`"
+                                        },
+                                        {
+                                            "name": "sla_for_resolution",
+                                            "expression": "`sla_for_resolution`"
+                                        },
+                                        {
+                                            "name": "close_time",
+                                            "expression": "`close_time`"
+                                        },
+                                        {
+                                            "name": "agent_interactions",
+                                            "expression": "`agent_interactions`"
+                                        },
+                                        {
+                                            "name": "survey_results",
+                                            "expression": "`survey_results`"
+                                        },
+                                        {
+                                            "name": "product_group",
+                                            "expression": "`product_group`"
+                                        },
+                                        {
+                                            "name": "support_level",
+                                            "expression": "`support_level`"
+                                        },
+                                        {
+                                            "name": "country",
+                                            "expression": "`country`"
+                                        },
+                                        {
+                                            "name": "latitude",
+                                            "expression": "`latitude`"
+                                        },
+                                        {
+                                            "name": "longitude",
+                                            "expression": "`longitude`"
+                                        },
+                                        {
+                                            "name": "adjusted_resolution_time",
+                                            "expression": "`adjusted_resolution_time`"
+                                        }
+                                    ],
+                                    "disaggregated": true
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 1,
+                            "widgetType": "table",
+                            "encodings": {
+                                "columns": [
+                                    {
+                                        "fieldName": "status",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100000,
+                                        "title": "status",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "status"
+                                    },
+                                    {
+                                        "fieldName": "ticket_id",
+                                        "numberFormat": "0",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "integer",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100001,
+                                        "title": "ticket_id",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "ticket_id"
+                                    },
+                                    {
+                                        "fieldName": "priority",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100002,
+                                        "title": "priority",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "priority"
+                                    },
+                                    {
+                                        "fieldName": "source",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100003,
+                                        "title": "source",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "source"
+                                    },
+                                    {
+                                        "fieldName": "topic",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100004,
+                                        "title": "topic",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "topic"
+                                    },
+                                    {
+                                        "fieldName": "agent_group",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100005,
+                                        "title": "agent_group",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "agent_group"
+                                    },
+                                    {
+                                        "fieldName": "agent_name",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100006,
+                                        "title": "agent_name",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "agent_name"
+                                    },
+                                    {
+                                        "fieldName": "created_time",
+                                        "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "datetime",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100007,
+                                        "title": "created_time",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "created_time"
+                                    },
+                                    {
+                                        "fieldName": "expected_sla_to_resolve",
+                                        "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "datetime",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100008,
+                                        "title": "expected_sla_to_resolve",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "expected_sla_to_resolve"
+                                    },
+                                    {
+                                        "fieldName": "expected_sla_to_first_response",
+                                        "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "datetime",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100009,
+                                        "title": "expected_sla_to_first_response",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "expected_sla_to_first_response"
+                                    },
+                                    {
+                                        "fieldName": "first_response_time",
+                                        "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "datetime",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100010,
+                                        "title": "first_response_time",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "first_response_time"
+                                    },
+                                    {
+                                        "fieldName": "sla_for_first_response",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100011,
+                                        "title": "sla_for_first_response",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "sla_for_first_response"
+                                    },
+                                    {
+                                        "fieldName": "sla_for_resolution",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100013,
+                                        "title": "sla_for_resolution",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "sla_for_resolution"
+                                    },
+                                    {
+                                        "fieldName": "close_time",
+                                        "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "datetime",
+                                        "displayAs": "datetime",
+                                        "visible": true,
+                                        "order": 100014,
+                                        "title": "close_time",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "close_time"
+                                    },
+                                    {
+                                        "fieldName": "agent_interactions",
+                                        "numberFormat": "0.00",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "float",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100015,
+                                        "title": "agent_interactions",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "agent_interactions"
+                                    },
+                                    {
+                                        "fieldName": "survey_results",
+                                        "numberFormat": "0.00",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "float",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100016,
+                                        "title": "survey_results",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "survey_results"
+                                    },
+                                    {
+                                        "fieldName": "product_group",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100017,
+                                        "title": "product_group",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "product_group"
+                                    },
+                                    {
+                                        "fieldName": "support_level",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100018,
+                                        "title": "support_level",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "support_level"
+                                    },
+                                    {
+                                        "fieldName": "country",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "string",
+                                        "displayAs": "string",
+                                        "visible": true,
+                                        "order": 100019,
+                                        "title": "country",
+                                        "allowSearch": false,
+                                        "alignContent": "left",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "country"
+                                    },
+                                    {
+                                        "fieldName": "latitude",
+                                        "numberFormat": "0.00",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "float",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100020,
+                                        "title": "latitude",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "latitude"
+                                    },
+                                    {
+                                        "fieldName": "longitude",
+                                        "numberFormat": "0.00",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "float",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100021,
+                                        "title": "longitude",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "longitude"
+                                    },
+                                    {
+                                        "fieldName": "adjusted_resolution_time",
+                                        "booleanValues": [
+                                            "false",
+                                            "true"
+                                        ],
+                                        "imageUrlTemplate": "{{ @ }}",
+                                        "imageTitleTemplate": "{{ @ }}",
+                                        "imageWidth": "",
+                                        "imageHeight": "",
+                                        "linkUrlTemplate": "{{ @ }}",
+                                        "linkTextTemplate": "{{ @ }}",
+                                        "linkTitleTemplate": "{{ @ }}",
+                                        "linkOpenInNewTab": true,
+                                        "type": "decimal",
+                                        "displayAs": "number",
+                                        "visible": true,
+                                        "order": 100022,
+                                        "title": "adjusted_resolution_time",
+                                        "allowSearch": false,
+                                        "alignContent": "right",
+                                        "allowHTML": false,
+                                        "highlightLinks": false,
+                                        "useMonospaceFont": false,
+                                        "preserveWhitespace": false,
+                                        "displayName": "adjusted_resolution_time"
+                                    }
+                                ]
+                            },
+                            "invisibleColumns": [
+                                {
+                                    "dateTimeFormat": "YYYY-MM-DD HH:mm:ss.SSS",
+                                    "booleanValues": [
+                                        "false",
+                                        "true"
+                                    ],
+                                    "imageUrlTemplate": "{{ @ }}",
+                                    "imageTitleTemplate": "{{ @ }}",
+                                    "imageWidth": "",
+                                    "imageHeight": "",
+                                    "linkUrlTemplate": "{{ @ }}",
+                                    "linkTextTemplate": "{{ @ }}",
+                                    "linkTitleTemplate": "{{ @ }}",
+                                    "linkOpenInNewTab": true,
+                                    "name": "resolution_time",
+                                    "type": "datetime",
+                                    "displayAs": "number",
+                                    "order": 100012,
+                                    "title": "resolution_time",
+                                    "allowSearch": false,
+                                    "alignContent": "right",
+                                    "allowHTML": false,
+                                    "highlightLinks": false,
+                                    "useMonospaceFont": false,
+                                    "preserveWhitespace": false
+                                }
+                            ],
+                            "allowHTMLByDefault": false,
+                            "itemsPerPage": 25,
+                            "paginationSize": "default",
+                            "condensed": true,
+                            "withRowNumber": false,
+                            "frame": {
+                                "showTitle": true,
+                                "title": "All Customer Support Tickets"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 9,
+                        "width": 6,
+                        "height": 9
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "b926bded",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "priority",
+                                            "expression": "`priority`"
+                                        },
+                                        {
+                                            "name": "support_level",
+                                            "expression": "`support_level`"
+                                        },
+                                        {
+                                            "name": "avg(adjusted_resolution_time)",
+                                            "expression": "AVG(`adjusted_resolution_time`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "support_level",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "displayName": "Support Level"
+                                },
+                                "y": {
+                                    "fieldName": "avg(adjusted_resolution_time)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Average Resolution Time"
+                                },
+                                "color": {
+                                    "fieldName": "priority",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "High",
+                                                "color": "#00a5b8"
+                                            },
+                                            {
+                                                "value": "Medium",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "Low",
+                                                "color": "#83f9be"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "position": "right"
+                                    },
+                                    "displayName": "Priority Level"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Average Resolution Time by Support Level & Priority\n"
+                            },
+                            "mark": {
+                                "colors": [
+                                    "#2ad0c2",
+                                    "#FFAB00",
+                                    "#00A972",
+                                    "#FF3621",
+                                    "#8BCAE7",
+                                    "#AB4057",
+                                    "#99DDB4",
+                                    "#FCA4A1",
+                                    "#919191",
+                                    "#BF7080"
+                                ],
+                                "layout": "group"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 2,
+                        "width": 2,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f7f71c30",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_topic",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "topic",
+                                            "expression": "`topic`"
+                                        },
+                                        {
+                                            "name": "topic_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "topic",
+                                        "displayName": "topic",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_topic"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Topic"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 1,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "bbd54ffd",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_created_time",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "created_time",
+                                            "expression": "`created_time`"
+                                        },
+                                        {
+                                            "name": "created_time_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-range-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "created_time",
+                                        "displayName": "created_time",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_created_time"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Created Time"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 1,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "dd438da1",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "product_group",
+                                            "expression": "`product_group`"
+                                        },
+                                        {
+                                            "name": "monthly(created_time)",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `created_time`)"
+                                        },
+                                        {
+                                            "name": "avg(adjusted_resolution_time)",
+                                            "expression": "AVG(`adjusted_resolution_time`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "monthly(created_time)",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "sort": {
+                                            "by": "natural-order"
+                                        }
+                                    },
+                                    "displayName": "Ticket Creation Date"
+                                },
+                                "y": {
+                                    "fieldName": "avg(adjusted_resolution_time)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": " "
+                                    },
+                                    "displayName": " "
+                                },
+                                "color": {
+                                    "fieldName": "product_group",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "SLA Violated",
+                                                "color": "#FF3621"
+                                            },
+                                            {
+                                                "value": "Within SLA",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "Custom software development",
+                                                "color": "#00a5b8"
+                                            },
+                                            {
+                                                "value": "Ready to use Software",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "Training and Consulting Services",
+                                                "color": "#83f9be"
+                                            },
+                                            {
+                                                "value": "Other",
+                                                "color": "#919191"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "position": "right"
+                                    },
+                                    "displayName": "Product Group"
+                                }
+                            },
+                            "frame": {
+                                "title": "Average Resolution Time by Product Group",
+                                "showTitle": true
+                            },
+                            "mark": {
+                                "layout": "group"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 2,
+                        "y": 2,
+                        "width": 4,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "1727c6de",
+                        "textbox_spec": "## Time-to-resolution Analysis"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 6,
+                        "height": 1
+                    }
+                }
+            ]
+        },
+        {
+            "name": "30219d28",
+            "displayName": "Agent Performance",
+            "layout": [
+                {
+                    "widget": {
+                        "name": "2fa56fed",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "agent_group",
+                                            "expression": "`agent_group`"
+                                        },
+                                        {
+                                            "name": "agent_name",
+                                            "expression": "`agent_name`"
+                                        },
+                                        {
+                                            "name": "country",
+                                            "expression": "`country`"
+                                        },
+                                        {
+                                            "name": "avg(adjusted_resolution_time)",
+                                            "expression": "AVG(`adjusted_resolution_time`)"
+                                        }
+                                    ],
+                                    "cubeGroupingSets": {
+                                        "sets": [
+                                            {
+                                                "fieldNames": [
+                                                    "agent_group",
+                                                    "agent_name"
+                                                ]
+                                            },
+                                            {
+                                                "fieldNames": [
+                                                    "country"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "disaggregated": false,
+                                    "orders": [
+                                        {
+                                            "direction": "ASC",
+                                            "expression": "`agent_group`"
+                                        },
+                                        {
+                                            "direction": "ASC",
+                                            "expression": "`agent_name`"
+                                        },
+                                        {
+                                            "direction": "ASC",
+                                            "expression": "`country`"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "pivot",
+                            "encodings": {
+                                "rows": [
+                                    {
+                                        "fieldName": "agent_group",
+                                        "displayName": "Agent Group"
+                                    },
+                                    {
+                                        "fieldName": "agent_name",
+                                        "displayName": "Agent Name"
+                                    }
+                                ],
+                                "columns": [
+                                    {
+                                        "fieldName": "country",
+                                        "displayTotal": true,
+                                        "displayName": "Agent Country"
+                                    }
+                                ],
+                                "cell": {
+                                    "type": "multi-cell",
+                                    "fields": [
+                                        {
+                                            "fieldName": "avg(adjusted_resolution_time)",
+                                            "cellType": "text",
+                                            "style": {
+                                                "type": "color-scale",
+                                                "backgroundColor": {
+                                                    "scale": {
+                                                        "type": "quantitative",
+                                                        "colorRamp": {
+                                                            "mode": "custom-diverging",
+                                                            "colors": {
+                                                                "start": "#83f9be",
+                                                                "mid": "#2ad0c2",
+                                                                "end": "#00a5b8"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "displayName": "Average adjusted_resolution_time"
+                                        }
+                                    ]
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Average resolution time by agent and country"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 2,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5a8e3bac",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "source",
+                                            "expression": "`source`"
+                                        },
+                                        {
+                                            "name": "agent_name",
+                                            "expression": "`agent_name`"
+                                        },
+                                        {
+                                            "name": "sum(agent_interactions)",
+                                            "expression": "SUM(`agent_interactions`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "bar",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "agent_name",
+                                    "scale": {
+                                        "type": "categorical"
+                                    },
+                                    "axis": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Agent Name"
+                                },
+                                "y": {
+                                    "fieldName": "sum(agent_interactions)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Number of Agent Interactions"
+                                },
+                                "color": {
+                                    "fieldName": "source",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "Chat",
+                                                "color": "#00a5b8"
+                                            },
+                                            {
+                                                "value": "Email",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "Phone",
+                                                "color": "#83f9be"
+                                            }
+                                        ]
+                                    },
+                                    "displayName": "source"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Support interactions per agent"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 2,
+                        "width": 3,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "36cbaccf",
+                        "queries": [
+                            {
+                                "name": "main_query",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "agent_name",
+                                            "expression": "`agent_name`"
+                                        },
+                                        {
+                                            "name": "monthly(created_time)",
+                                            "expression": "DATE_TRUNC(\"MONTH\", `created_time`)"
+                                        },
+                                        {
+                                            "name": "sum(agent_interactions)",
+                                            "expression": "SUM(`agent_interactions`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "monthly(created_time)",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "displayName": "Created Time"
+                                },
+                                "y": {
+                                    "fieldName": "sum(agent_interactions)",
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "displayName": "Number of Agent Interactions"
+                                },
+                                "color": {
+                                    "fieldName": "agent_name",
+                                    "scale": {
+                                        "type": "categorical",
+                                        "mappings": [
+                                            {
+                                                "value": "Adolpho Messingham",
+                                                "color": "#00a5b8"
+                                            },
+                                            {
+                                                "value": "Bernard Beckley",
+                                                "color": "#2ad0c2"
+                                            },
+                                            {
+                                                "value": "Connor Danielovitch",
+                                                "color": "#83f9be"
+                                            },
+                                            {
+                                                "value": "Heather Urry",
+                                                "color": "#83c3f9"
+                                            },
+                                            {
+                                                "value": "Kristos Westoll",
+                                                "color": "#91f983"
+                                            },
+                                            {
+                                                "value": "Michele Whyatt",
+                                                "color": "#b683f9"
+                                            },
+                                            {
+                                                "value": "Sheela Cutten",
+                                                "color": "#f983dd"
+                                            },
+                                            {
+                                                "value": "Nicola Wane",
+                                                "color": "#f5f983"
+                                            }
+                                        ]
+                                    },
+                                    "legend": {
+                                        "hideTitle": true
+                                    },
+                                    "displayName": "Agent Name"
+                                }
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Agent interactions per Month"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 9,
+                        "width": 6,
+                        "height": 7
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "726834f6",
+                        "textbox_spec": "## Team Performance Overview"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 6,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "5fff479e",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_created_time",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "created_time",
+                                            "expression": "`created_time`"
+                                        },
+                                        {
+                                            "name": "created_time_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-date-range-picker",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "created_time",
+                                        "displayName": "created_time",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_created_time"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "Created Time"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 1,
+                        "width": 3,
+                        "height": 1
+                    }
+                },
+                {
+                    "widget": {
+                        "name": "f89017f7",
+                        "queries": [
+                            {
+                                "name": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_sla_for_resolution",
+                                "query": {
+                                    "datasetName": "39a5402c",
+                                    "fields": [
+                                        {
+                                            "name": "sla_for_resolution",
+                                            "expression": "`sla_for_resolution`"
+                                        },
+                                        {
+                                            "name": "sla_for_resolution_associativity",
+                                            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                                        }
+                                    ],
+                                    "disaggregated": false
+                                }
+                            }
+                        ],
+                        "spec": {
+                            "version": 2,
+                            "widgetType": "filter-single-select",
+                            "encodings": {
+                                "fields": [
+                                    {
+                                        "fieldName": "sla_for_resolution",
+                                        "displayName": "sla_for_resolution",
+                                        "queryName": "dashboards/01efa5cfc78610b59b7ec91c98323010/datasets/01efa5dd28aa1a95b36d9bcd2d93485b_sla_for_resolution"
+                                    }
+                                ]
+                            },
+                            "frame": {
+                                "showTitle": true,
+                                "title": "SLA Adherence"
+                            }
+                        }
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 1,
+                        "width": 3,
+                        "height": 1
+                    }
+                }
+            ]
+        }
+    ]
+}

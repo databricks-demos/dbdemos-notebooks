@@ -34,6 +34,20 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
+-- MAGIC ## Ask Genie insights on your Databricks usage through system tables
+-- MAGIC
+-- MAGIC <img src="https://www.databricks.com/en-website-assets/static/a79b404a64dd94cb4028d31a8950b9a0/intro-genie-web1_0-1717676868.gif" style="float: right; margin: 10px" width="500px">
+-- MAGIC
+-- MAGIC DBDemos installed a Genie Space for you, ready to answer your System Table questions in plain english!
+-- MAGIC
+-- MAGIC The Genie space is ready with some example / instructions to improve your Q&A experience! <br/>
+-- MAGIC Feel free to open an issue in our [dbdemos git repository](https://github.com/databricks-demos/dbdemos) if you can't find the answer you're looking for, we'll improve it over time!
+-- MAGIC
+-- MAGIC Open the <a dbdemos-genie-id="system-tables" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">System Table Genie space to deep dive into your system table data</a>
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
 -- MAGIC ## System Table Dashboard - Leverage AI with Lakehouse
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/system_tables/dashboard-governance-billing.png?raw=true" width="600px" style="float:right">

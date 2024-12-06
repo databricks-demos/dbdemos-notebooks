@@ -20,7 +20,9 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.20.0 lightgbm==4.2.0
+# MAGIC %pip install mlflow==2.17.2 cloudpickle==2.2.1 databricks-sdk==0.36.0
+# MAGIC # hardcode the ml 15.4 LTS libraries versions here for demo stability
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -319,11 +321,12 @@ pipeline_val = Pipeline([
 ])
 pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
+dataset = mlflow.data.from_pandas(X_train)
 
 def objective(params):
   with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run:
     lgbmc_classifier = LGBMClassifier(**params)
-
+    mlflow.log_input(dataset, context="training")
     model = Pipeline([
         ("column_selector", col_selector),
         ("preprocessor", preprocessor),

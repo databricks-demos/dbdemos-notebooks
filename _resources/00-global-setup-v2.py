@@ -234,7 +234,7 @@ class DBDemos():
         # Calculate the difference in days from the current date
         days_difference = (datetime.now() - date).days
         if days_difference > 30:
-            raise Exception(f"It looks like the last experiment {last_xp} is too old ({days} days). Please re-run the previous notebook to make sure you have the latest version.")
+            raise Exception(f"It looks like the last experiment {last_xp} is too old ({days_difference} days). Please re-run the previous notebook to make sure you have the latest version. Delete the experiment folder if needed to clear history.")
     else:
         raise Exception(f"Invalid experiment format or no experiment available. Please re-run the previous notebook. {last_xp['path']}")
     return last_xp

@@ -11,6 +11,7 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_rag_chatbot",
+  "serverless_supported": True,
   "title": "LLM Chatbot With Retrieval Augmented Generation (RAG) and DBRX",
   "description": "Deploy your Chatbot on Databricks AI with RAG, DBRX, Vector Search & Mosaic AI Agent Evaluation",
   "custom_message": "Looking for production-grade RAG instruction? Start with this demo and checkout <a href=\"https://ai-cookbook.io/\">ai-cookbook.io</a> for more advanced guidance and recommendations!",
@@ -40,14 +41,6 @@
       "add_cluster_setup_cell": False,
       "title":  "Setup",
       "description": "setup for the advanced demo (pdf + ocr setup)."
-    },
-    {
-      "path": "_resources/02-lakehouse-app-helpers",
-      "pre_run": False,
-      "publish_on_website": False,
-      "add_cluster_setup_cell": False,
-      "title":  "Lakehouse app Setup",
-      "description": "Helper for lakehouse apps."
     },
     {
       "path": "00-RAG-LLM-RAG-Introduction",

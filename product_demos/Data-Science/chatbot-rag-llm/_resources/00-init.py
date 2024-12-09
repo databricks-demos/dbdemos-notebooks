@@ -334,6 +334,13 @@ def display_gradio_app(space_name = "databricks-demos-chatbot"):
 
 # COMMAND ----------
 
+#Display a better quota message 
+def display_quota_error(e, ep_name):
+  if "QUOTA_EXCEEDED" in str(e): 
+    displayHTML(f'<div style="background-color: #ffd5b8; border-radius: 15px; padding: 20px;"><h1>Error: Vector search Quota exceeded in endpoint {ep_name}</h1><p>Please select another endpoint in the ../config file (VECTOR_SEARCH_ENDPOINT_NAME="<your-endpoint-name>"), or <a href="/compute/vector-search" target="_blank">open the vector search compute page</a> to cleanup resources.</p></div>')
+
+# COMMAND ----------
+
 # DBTITLE 1,Cleanup utility to remove demo assets
 def cleanup_demo(catalog, db, serving_endpoint_name, vs_index_fullname):
   vsc = VectorSearchClient()

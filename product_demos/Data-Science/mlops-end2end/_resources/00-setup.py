@@ -55,6 +55,9 @@ if is_advanced_mlops_demo:
   xp_path = f"/Users/{current_user}/databricks_automl"
   xp_name = "advanced_mlops_churn_demo_experiment"
 
+  # Create directory in case it doesn't exist
+  dbutils.fs.mkdirs(f'file:/Workspace{xp_path}')
+
 client = MlflowClient()
 
 # COMMAND ----------

@@ -130,20 +130,37 @@ try:
   w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
   print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
 
+  # Wait for deletion to complete
+  while online_table_specs is not None:
+    online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
+
 except Exception as e:
   pprint(e)
 
 # COMMAND ----------
 
 # DBTITLE 1,Create the online table specification
-from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+from databricks.sdk.service.catalog import (
+    OnlineTable,
+    OnlineTableSpec,
+    OnlineTableSpecTriggeredSchedulingPolicy,
+)
 
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
-  primary_key_columns = ["customer_id"],
-  timeseries_key = "transaction_ts",
-  source_table_full_name = f"{catalog}.{db}.advanced_churn_feature_table",
-  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'})
+    primary_key_columns=["customer_id"],
+    timeseries_key="transaction_ts",
+    source_table_full_name=f"{catalog}.{db}.advanced_churn_feature_table",
+    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict(
+        {"triggered": "true"}
+    ),
+)
+
+churn_features_online_table = OnlineTable.from_dict(
+    {
+        "name": f"{catalog}.{db}.advanced_churn_feature_table_online_table",
+        "spec": churn_features_online_store_spec.as_dict(),
+    }
 )
 
 # COMMAND ----------
@@ -152,8 +169,7 @@ churn_features_online_store_spec = OnlineTableSpec(
 from databricks.sdk.service.catalog import OnlineTable
 
 # Create the online table
-online_table = OnlineTable(name=f"{catalog}.{db}.advanced_churn_feature_table_online_table", spec=churn_features_online_store_spec)
-w.online_tables.create_and_wait(table=online_table)
+w.online_tables.create_and_wait(table = churn_features_online_table)
 
 # COMMAND ----------
 
@@ -165,6 +181,26 @@ try:
   pprint(online_table_exist)
 except Exception as e:
   pprint(e)
+
+pprint(online_table_exist.status.detailed_state)
+
+# COMMAND ----------
+
+# DBTITLE 1,Wait for Online Table to be ready
+from pprint import pprint
+
+ready_state = online_table_exist.status.detailed_state.ONLINE_NO_PENDING_UPDATE
+current_state = online_table_exist.status.detailed_state
+
+try:
+  while current_state != ready_state:
+    ol_table_create = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
+    current_state = ol_table_create.status.detailed_state
+except Exception as e:
+  pprint(e)
+
+pprint(current_state)
+print("Online table is ready.")
 
 # COMMAND ----------
 

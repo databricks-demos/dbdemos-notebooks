@@ -357,15 +357,19 @@ vs_index_fullname = f"{catalog}.{db}.databricks_pdf_documentation_self_managed_v
 
 if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
   print(f"Creating index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
-  vsc.create_delta_sync_index(
-    endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
-    index_name=vs_index_fullname,
-    source_table_name=source_table_fullname,
-    pipeline_type="TRIGGERED", #Sync needs to be manually triggered
-    primary_key="id",
-    embedding_dimension=1024, #Match your model embedding size (gte)
-    embedding_vector_column="embedding"
-  )
+  try:
+    vsc.create_delta_sync_index(
+      endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
+      index_name=vs_index_fullname,
+      source_table_name=source_table_fullname,
+      pipeline_type="TRIGGERED", #Sync needs to be manually triggered
+      primary_key="id",
+      embedding_dimension=1024, #Match your model embedding size (gte)
+      embedding_vector_column="embedding"
+    )
+  except Exception as e:
+    display_quota_error(e, VECTOR_SEARCH_ENDPOINT_NAME)
+    raise e
   #Let's wait for the index to be ready and all our embeddings to be created and indexed
   wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 else:

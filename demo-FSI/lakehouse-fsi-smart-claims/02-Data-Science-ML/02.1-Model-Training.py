@@ -224,6 +224,7 @@ from mlflow.models import infer_signature
 
 mlflow.autolog(disable=True)
 with mlflow.start_run(run_name="hugging_face") as run:
+  mlflow.log_input(mlflow.data.from_huggingface(train_ds, "training"))
   def collate_fn(examples):
     pixel_values = torch.stack([e["image"] for e in examples])
     labels = torch.tensor([label2id[e["label"]] for e in examples], dtype=torch.float)

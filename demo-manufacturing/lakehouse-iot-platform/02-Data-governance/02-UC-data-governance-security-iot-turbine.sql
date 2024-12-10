@@ -181,13 +181,13 @@ SHOW TABLES;
 -- DBTITLE 1,Granting access to Analysts & Data Engineers:
 -- Let's grant our ANALYSTS a SELECT permission:
 -- Note: make sure you created an analysts and dataengineers group first.
-GRANT SELECT ON TABLE main__build.dbdemos_iot_turbine.turbine TO `analysts`;
-GRANT SELECT ON TABLE main__build.dbdemos_iot_turbine.sensor_bronze TO `analysts`;
-GRANT SELECT ON TABLE main__build.dbdemos_iot_turbine.sensor_hourly TO `analysts`;
-GRANT SELECT ON TABLE main__build.dbdemos_iot_turbine.historical_turbine_status TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_iot_platform.turbine TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_iot_platform.sensor_bronze TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_iot_platform.sensor_hourly TO `analysts`;
+GRANT SELECT ON TABLE main__build.dbdemos_iot_platform.historical_turbine_status TO `analysts`;
 
 -- We'll grant an extra MODIFY to our Data Engineer
-GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_iot_turbine TO `dataengineers`;
+GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_iot_platform TO `dataengineers`;
 
 -- COMMAND ----------
 

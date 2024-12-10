@@ -286,15 +286,19 @@ vs_index_fullname = f"{catalog}.{db}.databricks_documentation_vs_index"
 
 if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
   print(f"Creating index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
-  vsc.create_delta_sync_index(
-    endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
-    index_name=vs_index_fullname,
-    source_table_name=source_table_fullname,
-    pipeline_type="TRIGGERED",
-    primary_key="id",
-    embedding_source_column='content', #The column containing our text
-    embedding_model_endpoint_name='databricks-gte-large-en' #The embedding endpoint used to create the embeddings
-  )
+  try:
+    vsc.create_delta_sync_index(
+      endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
+      index_name=vs_index_fullname,
+      source_table_name=source_table_fullname,
+      pipeline_type="TRIGGERED",
+      primary_key="id",
+      embedding_source_column='content', #The column containing our text
+      embedding_model_endpoint_name='databricks-gte-large-en' #The embedding endpoint used to create the embeddings
+    )
+  except Exception as e:
+    display_quota_error(e, VECTOR_SEARCH_ENDPOINT_NAME)
+    raise e
   #Let's wait for the index to be ready and all our embeddings to be created and indexed
   wait_for_index_to_be_ready(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 else:

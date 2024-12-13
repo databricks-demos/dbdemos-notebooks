@@ -85,7 +85,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.18.0 databricks-feature-store==0.17.0
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -209,22 +209,33 @@ display(features)
 # MAGIC Click on Start, and Databricks will do the rest.
 # MAGIC
 # MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
+# MAGIC
+# MAGIC <br style="clear: both">
+# MAGIC <div style="background-color:#bde6ff; border-radius:15px; padding: 15px; margin: 15px">Note: Databricks AutoML classification through serverless API is coming soon on dbdemos! If you're using an express workspace, you can skip this step as we provided you with the notebook!</div>
 
 # COMMAND ----------
 
 # DBTITLE 1,We have already started a run for you, you can explore it here:
-from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/lakehouse-retail-c360"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = fs.read_table(f'{catalog}.{db}.churn_user_features'),
-    target_col = "churn",
-    timeout_minutes = 10
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+try:
+    from databricks import automl
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = fs.read_table(f'{catalog}.{db}.churn_user_features'),
+        target_col = "churn",
+        timeout_minutes = 10
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        create_mockup_automl_run_for_dbdemos(f"{xp_path}/{xp_name}", fs.read_table(f'{catalog}.{db}.churn_user_features').toPandas())
+    else:
+        raise e
 
 # COMMAND ----------
 

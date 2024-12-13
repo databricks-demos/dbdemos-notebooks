@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install mlflow==2.18.0
+# MAGIC %pip install mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

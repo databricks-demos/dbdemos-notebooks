@@ -9,6 +9,7 @@
   "name": "lakehouse-retail-c360",
   "category": "lakehouse",
   "title": "Lakehouse for C360: Reducing Customer Churn",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_retail_c360",

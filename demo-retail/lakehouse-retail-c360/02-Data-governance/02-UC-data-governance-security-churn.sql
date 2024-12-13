@@ -173,7 +173,7 @@ SHOW TABLES
 
 -- DBTITLE 1,Granting access to Analysts & Data Engineers:
 -- Let's grant our ANALYSTS a SELECT permission:
--- Note: make sure you created an analysts and dataengineers group first.
+-- Note: make sure you created an analysts and dataengineers group first, using the account console.
 GRANT SELECT ON TABLE churn_users TO `analysts`;
 GRANT SELECT ON TABLE churn_app_events TO `analysts`;
 GRANT SELECT ON TABLE churn_orders TO `analysts`;

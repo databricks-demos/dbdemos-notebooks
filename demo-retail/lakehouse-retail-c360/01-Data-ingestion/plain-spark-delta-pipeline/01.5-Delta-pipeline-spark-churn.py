@@ -1,9 +1,4 @@
 # Databricks notebook source
-# MAGIC %pip install mlflow==2.19.0 databricks-automl-runtime==0.2.21
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC # Ingesting and transforming churn data with Delta Lake and Spark API
 # MAGIC
@@ -34,6 +29,23 @@
 # COMMAND ----------
 
 # MAGIC %run ../../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import os
+import mlflow
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_customer_churn@prod").download_artifacts(artifact_path="requirements.txt") 
+
+#if not os.path.exists(requirements_path):
+#  dbutils.fs.put("file:" + requirements_path, "", True)
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
 
 # COMMAND ----------
 

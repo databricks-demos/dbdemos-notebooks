@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install mlflow==2.19.0
+# MAGIC %pip install mlflow==2.19.0 databricks-automl-runtime==0.2.21
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

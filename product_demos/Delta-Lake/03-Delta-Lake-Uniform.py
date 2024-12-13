@@ -47,29 +47,9 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE workspace.default.repro1 (
-# MAGIC     id BIGINT,
-# MAGIC     firstname STRING,
-# MAGIC     lastname STRING,
-# MAGIC     email STRING
-# MAGIC )
-# MAGIC TBLPROPERTIES (
-# MAGIC     'delta.universalFormat.enabledFormats' = 'iceberg', 
-# MAGIC     'delta.enableIcebergCompatV2' = 'true'
-# MAGIC );
-
-# COMMAND ----------
-
-spark.sql("""
-CREATE OR REPLACE TABLE repro3 (
-    id BIGINT,
-    firstname STRING,
-    lastname STRING,
-    email STRING)
-TBLPROPERTIES (
-    'delta.universalFormat.enabledFormats' = 'iceberg', 
-    'delta.enableIcebergCompatV2' = 'true'
-)""")
+# MAGIC CREATE TABLE IF NOT EXISTS user_uniform ( id BIGINT, firstname STRING, lastname STRING, email STRING)
+# MAGIC     TBLPROPERTIES ('delta.universalFormat.enabledFormats' = 'iceberg', 
+# MAGIC                    'delta.enableIcebergCompatV2' = 'true')
 
 # COMMAND ----------
 

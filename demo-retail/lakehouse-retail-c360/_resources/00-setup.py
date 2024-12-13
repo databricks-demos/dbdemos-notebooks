@@ -17,16 +17,29 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
-import mlflow
-if "evaluate" not in dir(mlflow):
-    raise Exception("ERROR - YOU NEED MLFLOW 2.0 for this demo. Select DBRML 12+")
+# Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
+def create_mockup_automl_run_for_dbdemos(full_xp_path, df):
+    print('Creating mockup automl run...')
+    xp = mlflow.create_experiment(full_xp_path)
+    mlflow.set_experiment(experiment_id=xp)
+    with mlflow.start_run(run_name="DBDemos automl mock autoML run", experiment_id=xp) as run:
+        mlflow.set_tag('mlflow.source.name', 'Notebook: DataExploration')
+        mlflow.log_metric('val_f1_score', 0.81)
+        split_choices = ['train', 'val', 'test']
+        split_probabilities = [0.7, 0.2, 0.1]  # 70% train, 20% val, 10% test
+        # Add a new column with random assignments
+        import numpy as np
+        df['_automl_split_col'] = np.random.choice(split_choices, size=len(df), p=split_probabilities)
+        df.to_parquet('/tmp/dataset.parquet', index=False)
+        mlflow.log_artifact('/tmp/dataset.parquet', artifact_path='data/training_data')
+
+# COMMAND ----------
 
 import json
 from datetime import datetime
 import time
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number, sha1, col, initcap, to_timestamp
-from mlflow import MlflowClient
 
 folder = f"/Volumes/{catalog}/{db}/{volume_name}"
 

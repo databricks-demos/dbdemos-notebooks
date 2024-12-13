@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %pip install mlflow==2.19.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC # Ingesting and transforming churn data with Delta Lake and Spark API
 # MAGIC

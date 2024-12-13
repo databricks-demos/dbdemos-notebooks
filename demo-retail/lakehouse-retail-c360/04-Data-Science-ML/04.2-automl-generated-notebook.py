@@ -22,7 +22,7 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.17.2
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 hyperopt==0.2.7 shap==0.46.0
 # MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
 # MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 databricks-automl-runtime==0.2.21 holidays==0.45 lightgbm==4.3.0
 # MAGIC dbutils.library.restartPython()
@@ -51,7 +51,7 @@ xp = DBDemos.get_last_experiment("lakehouse-retail-c360")
 mlflow.set_experiment(xp["path"])
 
 #Run containing the data analysis notebook to get the data from artifact
-data_run = mlflow.search_runs(filter_string="tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].to_dict()
+data_run = mlflow.search_runs(experiment_ids=[xp['object_id']], filter_string="tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].to_dict()
 
 #get best run id (this notebook)
 df = mlflow.search_runs(filter_string="metrics.val_f1_score < 1")

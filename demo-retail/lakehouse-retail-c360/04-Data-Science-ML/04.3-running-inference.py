@@ -36,16 +36,26 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Load the model dependencies from MLFlow registry
+model_name = "dbdemos_customer_churn"
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import mlflow
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.{model_name}@prod").download_artifacts(artifact_path="requirements.txt") 
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
+
+# COMMAND ----------
+
 # MAGIC %md ### Scaling inferences using Spark 
 # MAGIC We'll first see how it can be loaded as a spark UDF and called directly in a SQL function:
 
 # COMMAND ----------
-
-model_name = "dbdemos_customer_churn"
-
-#Use Databricks Unity Catalog to save our model
-mlflow.set_registry_uri('databricks-uc')   
-
 
 #                                                                                                Alias
 #                                                                                  Model name       |
@@ -58,7 +68,6 @@ spark.udf.register("predict_churn", predict_churn_udf)
 
 # DBTITLE 1,Run inferences
 columns = predict_churn_udf.metadata.get_input_schema().input_names()
-import pyspark.sql.functions as F
 spark.table('churn_features').withColumn("churn_prediction", predict_churn_udf(*columns)).display()
 
 # COMMAND ----------

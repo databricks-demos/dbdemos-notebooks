@@ -40,11 +40,9 @@ mlflow.set_registry_uri("databricks-uc")
 # download model requirement from remote registry
 requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_customer_churn@prod").download_artifacts(artifact_path="requirements.txt") 
 
-#if not os.path.exists(requirements_path):
-#  dbutils.fs.put("file:" + requirements_path, "", True)
-
 # COMMAND ----------
 
+# DBTITLE 1,Pip install requirements
 # MAGIC %pip install -r $requirements_path
 
 # COMMAND ----------

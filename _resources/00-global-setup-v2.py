@@ -238,6 +238,26 @@ class DBDemos():
     else:
         raise Exception(f"Invalid experiment format or no experiment available. Please re-run the previous notebook. {last_xp['path']}")
     return last_xp
+  
+
+
+  # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
+  @staticmethod
+  def create_mockup_automl_run(full_xp_path, df):
+    import mlflow
+    print('Creating mockup automl run...')
+    xp = mlflow.create_experiment(full_xp_path)
+    mlflow.set_experiment(experiment_id=xp)
+    with mlflow.start_run(run_name="DBDemos automl mock autoML run", experiment_id=xp) as run:
+        mlflow.set_tag('mlflow.source.name', 'Notebook: DataExploration')
+        mlflow.log_metric('val_f1_score', 0.81)
+        split_choices = ['train', 'val', 'test']
+        split_probabilities = [0.7, 0.2, 0.1]  # 70% train, 20% val, 10% test
+        # Add a new column with random assignments
+        import numpy as np
+        df['_automl_split_col'] = np.random.choice(split_choices, size=len(df), p=split_probabilities)
+        df.to_parquet('/tmp/dataset.parquet', index=False)
+        mlflow.log_artifact('/tmp/dataset.parquet', artifact_path='data/training_data')
 
 # COMMAND ----------
 

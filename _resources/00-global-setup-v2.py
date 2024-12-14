@@ -239,13 +239,11 @@ class DBDemos():
         raise Exception(f"Invalid experiment format or no experiment available. Please re-run the previous notebook. {last_xp['path']}")
     return last_xp
   
-
-
   # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
   @staticmethod
   def create_mockup_automl_run(full_xp_path, df):
     import mlflow
-    print('Creating mockup automl run...')
+    print("AutoML doesn't seem to be available, creating a mockup automl run instead - automl serverless will be added soon...")
     xp = mlflow.create_experiment(full_xp_path)
     mlflow.set_experiment(experiment_id=xp)
     with mlflow.start_run(run_name="DBDemos automl mock autoML run", experiment_id=xp) as run:

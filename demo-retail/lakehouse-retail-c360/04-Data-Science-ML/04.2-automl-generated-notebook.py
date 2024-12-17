@@ -570,7 +570,7 @@ from mlflow import MlflowClient
 model_name = "dbdemos_customer_churn"
 
 #Set to true to redeploy your actual model (we skip it by default to make the demo faster)
-force_redeploy = False
+force_redeploy = True
 
 #Use Databricks Unity Catalog to save our model
 mlflow.set_registry_uri('databricks-uc')

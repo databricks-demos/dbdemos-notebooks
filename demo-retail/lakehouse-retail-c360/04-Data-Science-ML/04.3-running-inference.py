@@ -14,6 +14,7 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -32,22 +33,17 @@
 # COMMAND ----------
 
 # DBTITLE 1,Load the model dependencies from MLFlow registry
-model_name = "dbdemos_customer_churn"
-
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import mlflow
 # Use the Unity Catalog model registry
 mlflow.set_registry_uri("databricks-uc")
 # download model requirement from remote registry
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.{model_name}@prod").download_artifacts(artifact_path="requirements.txt") 
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_customer_churn@prod").download_artifacts(artifact_path="requirements.txt") 
 
 # COMMAND ----------
 
 # MAGIC %pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -58,6 +54,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.{model_nam
 # COMMAND ----------
 
 import mlflow
+model_name = "dbdemos_customer_churn"
 #                                                                                                Alias
 #                                                                                  Model name       |
 #                                                                                        |          |

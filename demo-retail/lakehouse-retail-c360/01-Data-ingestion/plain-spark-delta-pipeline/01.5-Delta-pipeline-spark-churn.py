@@ -28,6 +28,7 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0
 # MAGIC %run ../../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -45,9 +46,6 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 # DBTITLE 1,Pip install requirements
 # MAGIC %pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %run ../../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------

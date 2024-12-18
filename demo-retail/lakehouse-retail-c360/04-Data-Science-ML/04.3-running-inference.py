@@ -44,6 +44,9 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 
 # MAGIC %pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------

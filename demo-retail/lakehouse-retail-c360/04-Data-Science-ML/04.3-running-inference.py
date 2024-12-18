@@ -57,6 +57,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.{model_nam
 
 # COMMAND ----------
 
+import mlflow
 #                                                                                                Alias
 #                                                                                  Model name       |
 #                                                                                        |          |

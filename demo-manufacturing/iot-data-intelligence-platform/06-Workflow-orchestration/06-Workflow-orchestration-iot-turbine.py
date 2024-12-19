@@ -2,7 +2,7 @@
 # MAGIC %md-sandbox
 # MAGIC # Deploying and orchestrating the full workflow
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 10px" width="300px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-5.png" />
+# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-03%20at%2014.16.23.png?raw=true" />
 # MAGIC
 # MAGIC All our assets are ready. We now need to define when we want our DLT pipeline to kick in and refresh the tables.
 # MAGIC
@@ -28,7 +28,7 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-workflow.png?raw=true" />
 # MAGIC
-# MAGIC With Databricks Lakehouse, no need for external orchestrator. We can use [Workflows](/#job/list) (available on the left menu) to orchestrate our Churn pipeline within a few click.
+# MAGIC With Databricks Data Intelligence Platform, no need for external orchestrator. We can use [Workflows](/#job/list) (available on the left menu) to orchestrate our Churn pipeline within a few click.
 # MAGIC
 # MAGIC
 # MAGIC
@@ -90,6 +90,6 @@
 # MAGIC %md
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Not only Datatabricks Lakehouse let you ingest, analyze and infer churn, it also provides a best-in-class orchestrator to offer your business fresh insight making sure everything works as expected!
+# MAGIC Not only Datatabricks Data Intelligence Platform let you ingest, analyze and infer churn, it also provides a best-in-class orchestrator to offer your business fresh insight making sure everything works as expected!
 # MAGIC
-# MAGIC [Go back to introduction]($../00-churn-introduction-lakehouse)
+# MAGIC [Go back to introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

@@ -79,7 +79,7 @@
 # MAGIC
 # MAGIC ## Step 2: Ensure data governance and security coverage with Databricks Unity Catalog
 # MAGIC
-# MAGIC <img src="https://www.databricks.com/en-website-assets/static/2a17bcb75bcbaf056598082feb010a92/22722.png" style="float: right; margin: 10px" width="500px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_uc.png" style="float: right; margin: 10px" width="500px">
 # MAGIC
 # MAGIC Once your data is ingested and ready-to-go, **Databricks Unity Catalog** provides all the key features to support your business' data governane requirements, _including but not limited to_:
 # MAGIC
@@ -99,7 +99,7 @@
 # MAGIC
 # MAGIC ## Step 3: Utilize Databricks Dashboards to clearly show data trends
 # MAGIC
-# MAGIC <img src="https://www.databricks.com/en-website-assets/static/a8e72bb9749b880d680db024692c062a/ai-bi-value-prop-1-1717716850.gif" style="float: right; margin: 10px" width="500px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
 # MAGIC Your Marketing Campaign data is now available for your Data Analyst to explore and track their main KPIs.
 # MAGIC
@@ -118,7 +118,7 @@
 # MAGIC
 # MAGIC ## Step 4: Create Genie to allow end-users to converse with your data
 # MAGIC
-# MAGIC <img src="https://www.databricks.com/en-website-assets/static/a79b404a64dd94cb4028d31a8950b9a0/intro-genie-web1_0-1717676868.gif" style="float: right; margin: 10px" width="500px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_genie_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
 # MAGIC Our data is now available as a Dashboard that our business users can open.
 # MAGIC

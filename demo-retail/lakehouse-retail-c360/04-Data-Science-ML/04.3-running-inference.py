@@ -15,6 +15,9 @@
 # COMMAND ----------
 
 # MAGIC %pip install mlflow==2.19.0
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------

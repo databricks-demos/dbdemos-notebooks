@@ -216,19 +216,17 @@ display_txt_as_html(relevant_docs)
 # MAGIC %md-sandbox
 # MAGIC You can see in the results that Databricks automatically trace your chain details and you can debug each steps and review the documents retrieved.
 # MAGIC
-# MAGIC ## 2.3/ Building Databricks Chat Model to query Databricks DBRX Instruct foundation model
+# MAGIC ## 2.3/ Building Databricks Chat Model to query our demo's Foundational LLM
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic-chain-3.png?raw=true" style="float: right" width="500px">
 # MAGIC
-# MAGIC Our chatbot will be using Databricks DBRX Instruct foundation model to provide answer.  DBRX Instruct is a general-purpose LLM, built to develop enterprise grade GenAI applications, unlocking your use-cases with capabilities that were previously limited to closed model APIs.
+# MAGIC Our chatbot will be using Meta's Llama open source model. However, it could be utilized with DBRX (_pictured_), or any other LLMs served on Databricks.  
 # MAGIC
-# MAGIC According to our measurements, DBRX surpasses GPT-3.5, and it is competitive with Gemini 1.0 Pro. It is an especially capable code model, rivaling specialized models like CodeLLaMA-70B on programming in addition to its strength as a general-purpose LLM.
+# MAGIC Other types of models that could be utilized include:
 # MAGIC
-# MAGIC *Note: multipe type of endpoint or langchain models can be used:*
-# MAGIC
-# MAGIC - Databricks Foundation models **(what we'll use)**
-# MAGIC - Your fined-tune model
-# MAGIC - An external model provider (such as Azure OpenAI)
+# MAGIC - Databricks Foundation models (_what we will use by default in this demo_)
+# MAGIC - Your organization's custom, fine-tuned model
+# MAGIC - An external model provider (_such as Azure OpenAI_)
 # MAGIC
 
 # COMMAND ----------

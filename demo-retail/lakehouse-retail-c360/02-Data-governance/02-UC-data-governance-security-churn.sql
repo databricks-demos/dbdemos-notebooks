@@ -183,6 +183,37 @@ GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_retail_c360 TO `dataengineers
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC
+-- MAGIC ## PII data masking, row and column-level filtering
+-- MAGIC
+-- MAGIC In the cells below we will demonstrate how to handle sensitive data through column and row masking.
+
+-- COMMAND ----------
+
+-- Let's create a protected table for our demo 
+CREATE OR REPLACE TABLE churn_users_protected AS SELECT * FROM churn_users
+
+-- COMMAND ----------
+
+-- hls_admin group will have access to all data, all other users will see a masked information.
+CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
+   RETURN IF(is_account_group_member('retail_admin'), column_value, "****");
+   
+-- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo
+
+-- Mask all PII information
+ALTER TABLE churn_users_protected ALTER COLUMN email SET MASK simple_mask;
+ALTER TABLE churn_users_protected ALTER COLUMN firstname SET MASK simple_mask;
+ALTER TABLE churn_users_protected ALTER COLUMN lastname SET MASK simple_mask;
+ALTER TABLE churn_users_protected ALTER COLUMN address SET MASK simple_mask;
+
+-- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
+
+SELECT * FROM churn_users_protected
+
+-- COMMAND ----------
+
 -- MAGIC %md-sandbox
 -- MAGIC
 -- MAGIC ## Going further with Data governance & security

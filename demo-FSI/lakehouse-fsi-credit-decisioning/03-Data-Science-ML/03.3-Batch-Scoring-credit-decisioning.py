@@ -18,6 +18,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -41,6 +46,7 @@
 # COMMAND ----------
 
 model_name = "dbdemos_fsi_credit_decisioning"
+import mlflow
 mlflow.set_registry_uri('databricks-uc')
 
 # Load model as a Spark UDF.

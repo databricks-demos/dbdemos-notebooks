@@ -16,21 +16,16 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
-import mlflow
 import time 
 import plotly.express as px
-import shap
 import pandas as pd
 import numpy as np
 from datetime import datetime
 
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-from mlflow.models.model import Model
-from databricks import feature_store
 import pyspark.sql.functions as F
 from pyspark.sql.functions import col
 from datetime import date

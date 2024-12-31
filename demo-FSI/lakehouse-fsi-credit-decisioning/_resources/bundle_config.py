@@ -9,6 +9,7 @@
   "name": "lakehouse-fsi-credit",
   "category": "lakehouse",
   "title": "Lakehouse for Retail Banking: Credit Decisioning",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_fsi_credit_decisioning",

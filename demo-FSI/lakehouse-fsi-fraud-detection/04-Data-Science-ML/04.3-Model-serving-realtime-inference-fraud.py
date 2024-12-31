@@ -97,6 +97,7 @@ except:
 # DBTITLE 1,Running HTTP REST inferences in realtime !
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models.model import Model
+
 p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 

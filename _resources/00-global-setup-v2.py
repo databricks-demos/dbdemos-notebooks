@@ -243,7 +243,12 @@ class DBDemos():
   @staticmethod
   def create_mockup_automl_run(full_xp_path, df):
     import mlflow
+    import os
     print("AutoML doesn't seem to be available, creating a mockup automl run instead - automl serverless will be added soon...")
+    from databricks.sdk import WorkspaceClient
+    # Initialize the WorkspaceClient
+    w = WorkspaceClient()
+    w.workspace.mkdirs(path=os.path.dirname(full_xp_path))
     xp = mlflow.create_experiment(full_xp_path)
     mlflow.set_experiment(experiment_id=xp)
     with mlflow.start_run(run_name="DBDemos automl mock autoML run", experiment_id=xp) as run:

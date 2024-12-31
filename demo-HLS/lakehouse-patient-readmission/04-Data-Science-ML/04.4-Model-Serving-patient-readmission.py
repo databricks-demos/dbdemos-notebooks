@@ -31,7 +31,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we have the latset sdk (used in the helper)
-# MAGIC %pip install databricks-sdk -U
+# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -102,12 +102,14 @@ except:
 
 # COMMAND ----------
 
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+from mlflow.models.model import Model
+
 p = ModelsArtifactRepository(f"models:/{full_model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 
 # COMMAND ----------
 
-import mlflow
 from mlflow import deployments
 deployment_client = mlflow.deployments.get_deploy_client("databricks")
 predictions = deployment_client.predict(endpoint=serving_endpoint_name, inputs=dataset)

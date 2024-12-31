@@ -25,6 +25,8 @@ import os
 import requests
 import timeit
 import time
+from datetime import datetime
+
 
 folders = ["/landing_zone/encounters", "/landing_zone/patients", "/landing_zone/conditions", "/landing_zone/medications", "/landing_zone/immunizations", "/landing_zone/location_ref", "/landing_vocab/CONCEPT", "/landing_vocab/CONCEPT_RELATIONSHIP"]
 
@@ -39,21 +41,14 @@ else:
 
 # COMMAND ----------
 
-import mlflow
 import time 
 import plotly.express as px
-import shap
 import pandas as pd
 import numpy as np
-    
-from databricks.feature_store import FeatureStoreClient
-fs = FeatureStoreClient()
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-from mlflow.models.model import Model
-from databricks import feature_store
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 import pyspark.sql.functions as F

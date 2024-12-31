@@ -16,6 +16,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.19.0 shap==0.46.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -31,6 +36,7 @@ dataset_to_explain.display()
 
 # COMMAND ----------
 
+import mlflow
 #Enable Unity Catalog with mlflow registry
 mlflow.set_registry_uri('databricks-uc')
 client = mlflow.tracking.MlflowClient()
@@ -53,6 +59,7 @@ features = model.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
 
+import shap
 mlflow.autolog(disable=True)
 mlflow.sklearn.autolog(disable=True)
 

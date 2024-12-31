@@ -35,6 +35,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.19.0 databricks-feature-store==0.17.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -77,6 +82,9 @@ pat_features_df.display()
 # COMMAND ----------
 
 # DBTITLE 1,Patient Feature Table
+# Instantiate the Feature Store Client
+from databricks import feature_store
+
 # Instantiate the Feature Store Client
 fs = feature_store.FeatureStoreClient()
 
@@ -274,7 +282,7 @@ training_df = training_set.load_df()
 # COMMAND ----------
 
 # DBTITLE 1,Running our model training from the feature store training set with automl
-from databricks import automl
+#from databricks import automl
 #summary = automl.classify(training_dataset.select(feature_names), target_col="30_DAY_READMISSION", primary_metric="roc_auc", timeout_minutes=6)
 # ...
 # See 04.2-AutoML-patient-admission-risk for more details on how to deploy the AutoML model.

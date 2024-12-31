@@ -200,15 +200,13 @@ CREATE OR REPLACE TABLE churn_users_protected AS SELECT * FROM churn_users
 CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
    RETURN IF(is_account_group_member('retail_admin'), column_value, "****");
    
--- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo
+-- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
 -- Mask all PII information
 ALTER TABLE churn_users_protected ALTER COLUMN email SET MASK simple_mask;
 ALTER TABLE churn_users_protected ALTER COLUMN firstname SET MASK simple_mask;
 ALTER TABLE churn_users_protected ALTER COLUMN lastname SET MASK simple_mask;
 ALTER TABLE churn_users_protected ALTER COLUMN address SET MASK simple_mask;
-
--- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
 SELECT * FROM churn_users_protected
 

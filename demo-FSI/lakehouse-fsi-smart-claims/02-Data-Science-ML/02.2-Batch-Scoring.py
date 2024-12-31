@@ -14,7 +14,29 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup
+
+# COMMAND ----------
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import mlflow
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_claims_damage_level@prod").download_artifacts(artifact_path="requirements.txt") 
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 

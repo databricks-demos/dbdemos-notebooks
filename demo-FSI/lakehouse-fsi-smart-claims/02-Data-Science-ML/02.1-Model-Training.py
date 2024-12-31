@@ -24,7 +24,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.23.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1
+# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.19.0 torchvision==0.20.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -48,7 +48,7 @@ from pyspark.sql.functions import regexp_extract
 training_df = spark.read.format('binaryFile').load(f"/Volumes/{catalog}/{db}/{volume_name}/Images")
 #Extract label from image name
 training_df = training_df.withColumn("label", regexp_extract("path", r"/(\d+)-([a-zA-Z]+)\.png$", 2))
-display(training_df)
+display(training_df.limit(1))
 
 # COMMAND ----------
 
@@ -87,7 +87,7 @@ image_meta = {"spark.contentAnnotation" : '{"mimeType": "image/jpeg"}'}
 
 # COMMAND ----------
 
-display(training_df)
+display(spark.table("training_dataset").limit(10))
 
 # COMMAND ----------
 
@@ -104,12 +104,13 @@ display(training_df)
 
 # COMMAND ----------
 
-# DBTITLE 1,Load the datasets from the Delta table
 from datasets import Dataset
 #Setup the training experiment
-init_experiment_for_batch("lakehouse-fsi-smart-claims", "hf")
+DBDemos.init_experiment_for_batch("lakehouse-fsi-smart-claims", "hf")
 
-dataset = Dataset.from_spark(spark.table("training_dataset"), cache_dir="/dbfs/tmp/hf_cache/train").rename_column("content", "image")
+#Note: from_spark support coming with serverless compute - we'll use from_pandas for this simple demo having a small dataset
+#dataset = Dataset.from_spark(spark.table("training_dataset"), cache_dir="/tmp/hf_cache/train").rename_column("content", "image")
+dataset = Dataset.from_pandas(spark.table("training_dataset").toPandas()).rename_column("content", "image")
 
 splits = dataset.train_test_split(test_size=0.2, seed = 42)
 train_ds = splits['train']
@@ -183,6 +184,7 @@ model = AutoModelForImageClassification.from_pretrained(
 
 model_name = model_checkpoint.split("/")[-1]
 
+from transformers import TrainingArguments
 args = TrainingArguments(
     f"/tmp/huggingface/pcb/{model_name}-finetuned",
     no_cuda=True, #Run on CPU for resnet to make it easier
@@ -196,6 +198,7 @@ args = TrainingArguments(
 # COMMAND ----------
 
 # DBTITLE 1,Model wrapper to package our transform steps with the model
+import mlflow
 # This wrapper adds steps before and after the inference to simplify the model usage
 # Before calling the model: apply the same transform as the training, resizing the image
 # After callint the model: only keeps the main class with the probability as output
@@ -220,7 +223,6 @@ class ModelWrapper(mlflow.pyfunc.PythonModel):
 # DBTITLE 1,Start our Training and log the model to MLFlow
 from transformers import pipeline, DefaultDataCollator, EarlyStoppingCallback
 from mlflow.models import infer_signature
-
 
 mlflow.autolog(disable=True)
 with mlflow.start_run(run_name="hugging_face") as run:

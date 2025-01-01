@@ -31,7 +31,8 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3 faker
+# DBTITLE 1,Original
+# MAGIC %pip install --quiet -U databricks-sdk==0.23.0 databricks-agents langchain-community==0.2.10 langchain-openai==0.1.19 mlflow faker
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -238,8 +239,8 @@
 
 # COMMAND ----------
 
-import mlflow
-mlflow.langchain.autolog(disable=False)
+# import mlflow
+# mlflow.langchain.autolog(disable=False)
 
 # COMMAND ----------
 
@@ -250,20 +251,24 @@ mlflow.langchain.autolog(disable=False)
 
 # COMMAND ----------
 
-from langchain_community.tools.databricks import UCFunctionToolkit
-import pandas as pd
-wh = get_shared_warehouse(name = None) #Get the first shared wh we can. See _resources/01-init for details
-print(f'This demo will be using the wg {wh.name} to execute the functions')
+# from langchain_community.tools.databricks import UCFunctionToolkit
+# import pandas as pd
+# wh = get_shared_warehouse(name = None) #Get the first shared wh we can. See _resources/01-init for details
+# print(f'This demo will be using the wg {wh.name} to execute the functions')
 
-def get_tools():
-    return (
-        UCFunctionToolkit(warehouse_id=wh.id)
-        # Include functions as tools using their qualified names.
-        # You can use "{catalog_name}.{schema_name}.*" to get all functions in a schema.
-        .include(f"{catalog}.{db}.*")
-        .get_tools())
+# def get_tools():
+#     return (
+#         UCFunctionToolkit(warehouse_id=wh.id)
+#         # Include functions as tools using their qualified names.
+#         # You can use "{catalog_name}.{schema_name}.*" to get all functions in a schema.
+#         .include(f"{catalog}.{db}.*")
+#         .get_tools())
 
-display_tools(get_tools()) #display in a table the tools - see _resource/00-init for details
+# display_tools(get_tools()) #display in a table the tools - see _resource/00-init for details
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 
@@ -274,45 +279,45 @@ display_tools(get_tools()) #display in a table the tools - see _resource/00-init
 
 # DBTITLE 1,Create the chat
 
-from langchain_openai import ChatOpenAI
-from databricks.sdk import WorkspaceClient
+# from langchain_openai import ChatOpenAI
+# from databricks.sdk import WorkspaceClient
 
-# Note: langchain_community.chat_models.ChatDatabricks doesn't support create_tool_calling_agent yet - it'll soon be availableK. Let's use ChatOpenAI for now
-llm = ChatOpenAI(
-  base_url=f"{WorkspaceClient().config.host}/serving-endpoints/",
-  api_key=dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get(),
-  model="databricks-meta-llama-3-70b-instruct"
-)
+# # Note: langchain_community.chat_models.ChatDatabricks doesn't support create_tool_calling_agent yet - it'll soon be availableK. Let's use ChatOpenAI for now
+# llm = ChatOpenAI(
+#   base_url=f"{WorkspaceClient().config.host}/serving-endpoints/",
+#   api_key=dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get(),
+#   model="databricks-meta-llama-3-70b-instruct"
+# )
 
 
 # COMMAND ----------
 
 # DBTITLE 1,Define the Prompt
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.chat_models import ChatDatabricks
+# from langchain_core.prompts import ChatPromptTemplate
+# from langchain_community.chat_models import ChatDatabricks
 
-def get_prompt(history = [], prompt = None):
-    if not prompt:
-            prompt = """You are a helpful fashion assistant. Your task is to recommend cothes to the users. You can use the following tools:
-    - Use the convert_inch_to_cm to covert inch to cm if the customer ask for it
-    - Use get_customer_orders to get the list of orders and their status, total amount and number of article. 
-    - Use find_clothes_matching_description to find existing clothes from our internal catalog and suggest article to the customer
-    - Use recommend_outfit if a customer ask you for a style. This function take the weather as parameter. Use the get_weather function first before calling this function to get the current temperature and rain. The current user location is 52.52, 13.41.
+# def get_prompt(history = [], prompt = None):
+#     if not prompt:
+#             prompt = """You are a helpful fashion assistant. Your task is to recommend cothes to the users. You can use the following tools:
+#     - Use the convert_inch_to_cm to covert inch to cm if the customer ask for it
+#     - Use get_customer_orders to get the list of orders and their status, total amount and number of article. 
+#     - Use find_clothes_matching_description to find existing clothes from our internal catalog and suggest article to the customer
+#     - Use recommend_outfit if a customer ask you for a style. This function take the weather as parameter. Use the get_weather function first before calling this function to get the current temperature and rain. The current user location is 52.52, 13.41.
 
-    Make sure to use the appropriate tool for each step and provide a coherent response to the user. Don't mention tools to your users. Only answer what the user is asking for. If the question isn't related to the tools or style/clothe, say you're sorry but can't answer"""
-    return ChatPromptTemplate.from_messages([
-            ("system", prompt),
-            ("human", "{input}"),
-            ("placeholder", "{agent_scratchpad}"),
-    ])
+#     Make sure to use the appropriate tool for each step and provide a coherent response to the user. Don't mention tools to your users. Only answer what the user is asking for. If the question isn't related to the tools or style/clothe, say you're sorry but can't answer"""
+#     return ChatPromptTemplate.from_messages([
+#             ("system", prompt),
+#             ("human", "{input}"),
+#             ("placeholder", "{agent_scratchpad}"),
+#     ])
 
 # COMMAND ----------
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-prompt = get_prompt()
-tools = get_tools()
-agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+# from langchain.agents import AgentExecutor, create_tool_calling_agent
+# prompt = get_prompt()
+# tools = get_tools()
+# agent = create_tool_calling_agent(llm, tools, prompt)
+# agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # COMMAND ----------
 
@@ -322,11 +327,11 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # COMMAND ----------
 
-agent_executor.invoke({"input": "what's 12in in cm?"})
+# agent_executor.invoke({"input": "what is 12 inch in cm?"})
 
 # COMMAND ----------
 
-agent_executor.invoke({"input": "what are my latest orders?"})
+# agent_executor.invoke({"input": "what are my latest orders?"})
 
 # COMMAND ----------
 
@@ -337,17 +342,17 @@ agent_executor.invoke({"input": "what are my latest orders?"})
 
 # COMMAND ----------
 
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-answer = agent_executor.invoke({"input": "I need a dress for an interview I have today. What style would you recommend for today?"})
+# agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+# answer = agent_executor.invoke({"input": "I need a dress for an interview I have today. What style would you recommend for today?"})
 
 # COMMAND ----------
 
-#Note: in a real app, we would include the preview discussion as history to keep the reference.
-answer = agent_executor.invoke({"input": "Can you give me a list of red dresses I can buy?"})
+# #Note: in a real app, we would include the preview discussion as history to keep the reference.
+# answer = agent_executor.invoke({"input": "Can you give me a list of red dresses I can buy?"})
 
 # COMMAND ----------
 
-displayHTML(answer['output'].replace('\n', '<br>'))
+# displayHTML(answer['output'].replace('\n', '<br>'))
 
 # COMMAND ----------
 
@@ -441,13 +446,13 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 
 # COMMAND ----------
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-prompt = get_prompt(prompt="You are an assistant for a python developer. You can run any python code the customer is asking for to output to test and run the code, and display the output. Don't mention you have tools or the tools name. Make sure you send the full python code at once to the function")
-tools = get_tools()
-agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-answer = agent_executor.invoke({"input": "Write me a function that compute fibonacci suite in python, and display its result for 5."})
-displayHTML(answer['output'].replace('\n', '<br>'))
+# from langchain.agents import AgentExecutor, create_tool_calling_agent
+# prompt = get_prompt(prompt="You are an assistant for a python developer. You can run any python code the customer is asking for to output to test and run the code, and display the output. Don't mention you have tools or the tools name. Make sure you send the full python code at once to the function")
+# tools = get_tools()
+# agent = create_tool_calling_agent(llm, tools, prompt)
+# agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+# answer = agent_executor.invoke({"input": "Write me a function that compute fibonacci suite in python, and display its result for 5."})
+# displayHTML(answer['output'].replace('\n', '<br>'))
 
 # COMMAND ----------
 
@@ -459,76 +464,77 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # COMMAND ----------
 
 # DBTITLE 1,Create the chain
-# TODO: write this as a separate file if you want to deploy it properly
-from langchain.schema.runnable import RunnableLambda
-from langchain_core.output_parsers import StrOutputParser
+# # TODO: write this as a separate file if you want to deploy it properly
+# from langchain.schema.runnable import RunnableLambda
+# from langchain_core.output_parsers import StrOutputParser
 
-# Function to extract the user's query
-def extract_user_query_string(chat_messages_array):
-    return chat_messages_array[-1]["content"]
 
-# Wrapping the agent_executor invocation
-def agent_executor_wrapper(input_data):
-    result = agent_executor.invoke({"input": input_data})
-    return result["output"]
+# # Function to extract the user's query
+# def extract_user_query_string(chat_messages_array):
+#     return chat_messages_array[-1]["content"]
 
-# Create the chain using the | operator with StrOutputParser
-chain = (
-    RunnableLambda(lambda data: extract_user_query_string(data["messages"]))  # Extract the user query
-    | RunnableLambda(agent_executor_wrapper)  # Pass the query to the agent executor
-    | StrOutputParser()  # Optionally parse the output to ensure it's a clean string
-)
+# # Wrapping the agent_executor invocation
+# def agent_executor_wrapper(input_data):
+#     result = agent_executor.invoke({"input": input_data})
+#     return result["output"]
+
+# # Create the chain using the | operator with StrOutputParser
+# chain = (
+#     RunnableLambda(lambda data: extract_user_query_string(data["messages"]))  # Extract the user query
+#     | RunnableLambda(agent_executor_wrapper)  # Pass the query to the agent executor
+#     | StrOutputParser()  # Optionally parse the output to ensure it's a clean string
+# )
 
 # COMMAND ----------
 
 # DBTITLE 1,Let's try our chain
-# Example input data
-input_data = {
-    "messages": [
-        {"content": "Write me a function that computes the Fibonacci sequence in Python and displays its result for 5."}
-    ]
-}
-# Run the chain
-answer = chain.invoke(input_data)
-displayHTML(answer.replace('\n', '<br>'))
+# # Example input data
+# input_data = {
+#     "messages": [
+#         {"content": "Write me a function that computes the Fibonacci sequence in Python and displays its result for 5."}
+#     ]
+# }
+# # Run the chain
+# answer = chain.invoke(input_data)
+# displayHTML(answer.replace('\n', '<br>'))
 
 # COMMAND ----------
 
 # DBTITLE 1,Deploy the chain to MLFLow & UC
-def deploy_chain():
-  # For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
-  chain_config = {} # TODO: complete your chain config here
-  # Log the model to MLflow
-  with mlflow.start_run(run_name="basic_rag_bot"):
-    logged_chain_info = mlflow.langchain.log_model(
-            #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
-            lc_model=chain, #TODO: save it as a file instead: os.path.join(os.getcwd(), 'chain.py'),  # Chain code file e.g., /path/to/the/chain.py 
-            model_config=chain_config, # Chain configuration 
-            artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
-            input_example=input_data,
-            example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
-        )
+# def deploy_chain():
+#   # For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
+#   chain_config = {} # TODO: complete your chain config here
+#   # Log the model to MLflow
+#   with mlflow.start_run(run_name="basic_rag_bot"):
+#     logged_chain_info = mlflow.langchain.log_model(
+#             #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
+#             lc_model=chain, #TODO: save it as a file instead: os.path.join(os.getcwd(), 'chain.py'),  # Chain code file e.g., /path/to/the/chain.py 
+#             model_config=chain_config, # Chain configuration 
+#             artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
+#             input_example=input_data,
+#             example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
+#         )
 
-  MODEL_NAME = "tools_agent_demo"
-  MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
-  # Register to UC
-  uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
+#   MODEL_NAME = "tools_agent_demo"
+#   MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
+#   # Register to UC
+#   uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
 
 
-  from databricks import agents
-  # Deploy to enable the Review APP and create an API endpoint
-  # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
-  deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
+#   from databricks import agents
+#   # Deploy to enable the Review APP and create an API endpoint
+#   # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
+#   deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
 
-  instructions_to_reviewer = f"""## Instructions for Testing our Databricks Agent with Compound AI system
+#   instructions_to_reviewer = f"""## Instructions for Testing our Databricks Agent with Compound AI system
 
-  Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
+#   Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
 
-  # Add the user-facing instructions to the Review App
-  agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
+#   # Add the user-facing instructions to the Review App
+#   agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
-# Uncomment to deploy
-#deploy_chain()
+# # Uncomment to deploy
+# #deploy_chain()
 
 # COMMAND ----------
 
@@ -549,3 +555,87 @@ def deploy_chain():
 # MAGIC - More to come!
 # MAGIC
 # MAGIC Stay tuned!
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### New Deployment code added
+
+# COMMAND ----------
+
+# Log the model to MLflow
+import os
+import mlflow
+
+from mlflow.models import ModelConfig
+from mlflow.models.signature import ModelSignature
+from mlflow.models.rag_signatures import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+)
+from mlflow.models.resources import DatabricksFunction, DatabricksServingEndpoint
+from databricks.sdk import WorkspaceClient
+
+w = WorkspaceClient()
+config = ModelConfig(development_config="config.yml")
+resources = [DatabricksServingEndpoint(endpoint_name=config.get("llm_endpoint"))]
+uc_functions_to_expand = config.get("tools").get("uc_functions")
+for func in uc_functions_to_expand:
+    # if the function name is a regex, get all functions in the schema
+    if func.endswith("*"):
+        catalog, schema, _ = func.split(".")
+        expanded_functions = list(
+            w.functions.list(catalog_name=catalog, schema_name=schema)
+        )
+        for expanded_function in expanded_functions:
+            resources.append(
+                DatabricksFunction(function_name=expanded_function.full_name)
+            )
+    # otherwise just add the function
+    else:
+        resources.append(DatabricksFunction(function_name=func))
+
+signature = ModelSignature(ChatCompletionRequest(), ChatCompletionResponse())
+
+input_example = {
+    "messages": [{"role": "user", "content": "find me franchises in the US"}]
+}
+
+with mlflow.start_run():
+    logged_agent_info = mlflow.pyfunc.log_model(
+        "agent",
+        python_model=os.path.join(
+            os.getcwd(),
+            "agent",
+        ),
+        signature=signature,
+        input_example=input_example,
+        model_config="config.yml",
+        resources=resources,
+    )
+
+# COMMAND ----------
+
+mlflow.set_registry_uri("databricks-uc")
+
+# TODO: define the catalog, schema, and model name for your UC model
+
+model_name = "tools_agent_demo"
+UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
+
+# register the model to UC
+uc_registered_model_info = mlflow.register_model(model_uri=logged_agent_info.model_uri, name=UC_MODEL_NAME)
+
+
+
+# COMMAND ----------
+
+from databricks import agents
+
+# Deploy the model to the review app and a model serving endpoint
+agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, tags = {"endpointSource": "playground"})
+
+
+# COMMAND ----------
+
+

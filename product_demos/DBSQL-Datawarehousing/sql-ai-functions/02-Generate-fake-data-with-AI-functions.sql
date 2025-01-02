@@ -32,8 +32,8 @@
 
 -- COMMAND ----------
 
--- as previously, make sure you run this notebook using a SQL Warehouse (not a cluster)
-SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE');
+-- as previously, make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster)
+SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE OR SERVERLESS, not a classic cluster');
 
 USE CATALOG main;
 CREATE SCHEMA IF NOT EXISTS dbdemos_ai_query;

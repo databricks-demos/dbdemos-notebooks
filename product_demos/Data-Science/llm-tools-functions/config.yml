@@ -1,0 +1,6 @@
+agent_prompt: "You are a helpful assistant."
+llm_endpoint: "databricks-meta-llama-3-1-70b-instruct"
+warehouse_id: "893b4474c6828b90"
+tools:
+  uc_functions:
+    - "sarbanimaiti_catalog.dbdemos_agent_tools.*"

@@ -19,13 +19,17 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0 databricks-sdk==0.39.0
+
+# COMMAND ----------
+
 # MAGIC %run ../config
 
 # COMMAND ----------
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import os
 import mlflow
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 mlflow.set_registry_uri('databricks-uc')
 local_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts("") # download model from remote registry
 
@@ -35,7 +39,6 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0
 # MAGIC %pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 

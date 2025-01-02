@@ -86,7 +86,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0 mlflow==2.17.2
+# MAGIC %pip install --quiet databricks-sdk==0.36.0 databricks-feature-engineering==0.7.0 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -240,6 +240,30 @@ automl_run = automl.classify(
 )
 #Make sure all users can access dbdemos shared experiment
 DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+
+# COMMAND ----------
+
+xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
+xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
+try:
+    from databricks import automl
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = training_dataset,
+        target_col = "abnormal_sensor",
+        timeout_minutes = 10
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_dataset.toPandas())
+    else:
+        raise e
 
 # COMMAND ----------
 

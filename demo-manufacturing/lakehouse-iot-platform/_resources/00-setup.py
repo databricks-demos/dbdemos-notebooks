@@ -24,10 +24,6 @@ from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number, sha1, col, initcap, to_timestamp
 import pyspark.sql.functions as F
 from datetime import datetime
-
-import mlflow
-if "evaluate" not in dir(mlflow):
-    raise Exception("ERROR - YOU NEED MLFLOW 2.0 for this demo. Select DBRML 12+")
     
 
 folder = volume_folder

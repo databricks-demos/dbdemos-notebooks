@@ -7,8 +7,8 @@
 
 {
   "name": "sql-ai-functions",
-  "custom_schema_supported": True,
   "serverless_supported": True,
+  "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_ai_query",
   "category": "DBSQL",

@@ -30,20 +30,6 @@
 
 -- COMMAND ----------
 
--- MAGIC %md-sandbox
--- MAGIC ## Cluster setup for UC
--- MAGIC
--- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_assigned.png?raw=true" style="float: right"/>
--- MAGIC
--- MAGIC
--- MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
--- MAGIC
--- MAGIC Go in the compute page, create a new cluster.
--- MAGIC
--- MAGIC Select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC ## Understanding the upgrade process
 -- MAGIC

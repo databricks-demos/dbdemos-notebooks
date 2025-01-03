@@ -39,8 +39,8 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Generate dataset
--- verify that we're running on a SQL Warehouse
-SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE, not a cluster');
+-- Make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster)
+SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE OR SERVERLESS, not a classic cluster');
 
 SELECT ai_gen('Generate a concise, cheerful email title for a summer bike sale with 20% discount');
 

@@ -21,7 +21,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we have the latset sdk (used in the helper)
-# MAGIC %pip install databricks-sdk -U
+# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -94,8 +94,29 @@ feature_names = ['MARITAL_M', 'MARITAL_S', 'RACE_asian', 'RACE_black', 'RACE_haw
 
 # COMMAND ----------
 
-from databricks import automl
-summary = automl.classify(training_dataset.select(feature_names), target_col="30_DAY_READMISSION", primary_metric="roc_auc", timeout_minutes=6)
+import mlflow
+model_name = "dbdemos_hls_patient_readmission"
+xp_path = "/Shared/dbdemos/experiments/lakehouse-patient-admission"
+xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+try:
+    from databricks import automl
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = training_dataset.select(feature_names),
+        target_col = "30_DAY_READMISSION",
+        primary_metric="roc_auc",
+        timeout_minutes = 10
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        automl_run = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_dataset.select(feature_names).toPandas(), model_name = model_name, target_col = "30_DAY_READMISSION")
+    else:
+        raise e
 
 # COMMAND ----------
 
@@ -108,12 +129,10 @@ summary = automl.classify(training_dataset.select(feature_names), target_col="30
 
 # COMMAND ----------
 
-model_name = "dbdemos_hls_patient_readmission"
-
 #Enable Unity Catalog with mlflow registry
 mlflow.set_registry_uri('databricks-uc')
     
-model_registered = mlflow.register_model(f"runs:/{summary.best_trial.mlflow_run_id}/model", f"{catalog}.{db}.{model_name}")
+model_registered = mlflow.register_model(f"runs:/{automl_run.best_trial.mlflow_run_id}/model", f"{catalog}.{db}.{model_name}")
 
 #Move the model in production
 print("registering model version "+model_registered.version+" as production model")

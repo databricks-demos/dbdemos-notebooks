@@ -85,6 +85,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -221,19 +226,26 @@ display(features)
 # COMMAND ----------
 
 # DBTITLE 1,Starting AutoML run using Databricks API
-from databricks import automl
-
 xp_path = "/Shared/dbdemos/experiments/lakehouse-fsi-fraud-detection"
 xp_name = f"automl_fraud_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = features.sample(0.05), #drastically reduce the training size to speedup the demo
-    target_col = "is_fraud",
-    timeout_minutes = 15
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+try:
+    from databricks import automl
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = features.sample(0.05), #drastically reduce the training size to speedup the demo
+        target_col = "is_fraud",
+        timeout_minutes = 15
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", features.sample(0.05).toPandas())
+    else:
+        raise e
 
 # COMMAND ----------
 

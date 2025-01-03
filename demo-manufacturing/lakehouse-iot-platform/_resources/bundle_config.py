@@ -8,6 +8,7 @@
 {
   "name": "lakehouse-iot-platform",
   "category": "lakehouse",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_schema": "dbdemos_iot_platform",
   "default_catalog": "main",

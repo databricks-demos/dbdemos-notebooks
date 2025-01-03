@@ -198,6 +198,50 @@ SHOW GRANT ON turbine
 
 -- MAGIC %md
 -- MAGIC
+-- MAGIC ## Dynamically filtering data base on current user, row and column-level filtering
+-- MAGIC
+-- MAGIC Let's see how Unity Catalog can be used to filter data and return different results based on who is querying it.
+-- MAGIC
+-- MAGIC Let's pretend we're based in Chicago, and we want the `parts` table to only return the parts available in the Chicago location as this is where we operate.
+-- MAGIC
+-- MAGIC We'll add a new table doing a matching between users and the parts locations *(Note: this could also be done with groups)*.
+-- MAGIC
+-- MAGIC You'll be based in Chicago, John in Honolulu and Lea in Denvers:
+
+-- COMMAND ----------
+
+-- create the table matchying the users and the country/location
+CREATE OR REPLACE TABLE parts_users_country_permission (email STRING, country STRING);
+
+INSERT INTO parts_users_country_permission (email, country)
+  VALUES 
+    (current_user(), 'America/Chicago'),
+    ('john@mycompany.com', 'America/Honolulu'),
+    ('lea@mycompany.com', 'America/Denver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Let's create and try our new protected view
+CREATE OR REPLACE VIEW parts_secured AS
+SELECT
+  CASE 
+    WHEN is_account_group_member('iot_admin') THEN EAN  -- allow admin to see all
+    ELSE '***' -- filter other users, they won't be able to see the EAN
+  END as EAN,
+  p.* EXCEPT (EAN)
+FROM parts p 
+INNER JOIN parts_users_country_permission u -- Get the country/location permission table
+  ON p.stock_location = u.country 
+  AND (u.email = current_user() OR is_account_group_member('iot_admin')); --Filter based on the current user, admin also have all permission
+
+
+-- Let's test our secured view. We'll only see the 'America/Chicago' parts, and the EAN will be filtered.
+SELECT * FROM parts_secured;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC
 -- MAGIC ## Sharing data with external organization
 -- MAGIC
 -- MAGIC We've seen how to GRANT access to our tables internally (to any entity within your Databricks account)

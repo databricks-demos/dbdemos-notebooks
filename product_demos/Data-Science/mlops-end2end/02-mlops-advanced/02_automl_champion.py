@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering=0.8.0 lightgbm=4.5.0 pyarrow==14.0.0 hyperopt shap
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -37,8 +37,6 @@
 # COMMAND ----------
 
 import mlflow
-import databricks.automl_runtime
-
 # Path defined in the init notebook
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
 print(f"Set experiment to: {xp_name}")
@@ -161,12 +159,14 @@ df_loaded = training_set_specs.load_df().toPandas()
 
 # COMMAND ----------
 
-from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-
+try: 
+    from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
+except Exception as e:
+    print("AutoML through Serverless is coming soon. Currently, we will use utils in the setup. ")
+    
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "avg_price_increase", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
 col_selector = ColumnSelector(supported_cols)
-
 # COMMAND ----------
 
 # MAGIC %md
@@ -237,10 +237,13 @@ numerical_transformers = [("numerical", numerical_pipeline, ["monthly_charges", 
 
 # COMMAND ----------
 
-from databricks.automl_runtime.sklearn import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+try: 
+    from databricks.automl_runtime.sklearn import OneHotEncoder
+except Exception as e:
+    print("AutoML through Serverless is coming soon. Instead, we will use some util functions that replicate this library. ")
 
 
 one_hot_imputers = []
@@ -250,7 +253,6 @@ one_hot_pipeline = Pipeline(steps=[
 ])
 
 categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["contract", "device_protection", "internet_service", "multiple_lines", "online_backup", "online_security", "payment_method", "streaming_movies", "streaming_tv", "tech_support"])]
-
 # COMMAND ----------
 
 from sklearn.compose import ColumnTransformer

@@ -23,7 +23,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
-# MAGIC %pip install -qU "databricks-sdk>=0.28.0"
+# MAGIC %pip install -qU "databricks-sdk>=0.28.0" mlflow=2.19
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

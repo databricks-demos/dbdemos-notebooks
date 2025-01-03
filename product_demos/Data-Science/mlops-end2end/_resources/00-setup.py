@@ -56,7 +56,11 @@ if is_advanced_mlops_demo:
   xp_name = "advanced_mlops_churn_demo_experiment"
 
   # Create directory in case it doesn't exist
-  dbutils.fs.mkdirs(f'file:/Workspace{xp_path}')
+  try: 
+    dbutils.fs.mkdirs(f'file:/Workspace{xp_path}')
+  except:
+    import os 
+    os.makedirs(f'/Workspace{xp_path}', exist_ok=True)  
 
 client = MlflowClient()
 
@@ -237,7 +241,11 @@ from pyspark.sql.functions import col
 import mlflow
 
 import databricks
-from databricks import automl
+try: 
+  from databricks import automl
+except Exception as e:
+  if "ImportError: cannot import name 'automl' from 'databricks'" in str(e):  
+    print("AutoML is classification through Serverless is coming soon. If you are using an express workspace, we will use a provided notebook. ")  
 from datetime import datetime
 
 def get_automl_run(name):
@@ -291,3 +299,7 @@ def display_automl_churn_link():
 
 def get_automl_churn_run(): 
   return get_automl_run_or_start("churn_auto_ml", "field_demos_customer_churn", spark.table("churn_features"), "churn", 5)
+
+# COMMAND ----------
+
+# MAGIC %run ./automl_helpers

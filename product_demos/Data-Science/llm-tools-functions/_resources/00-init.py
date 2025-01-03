@@ -28,26 +28,34 @@ from databricks.sdk import WorkspaceClient
 def get_shared_warehouse(name=None):
     w = WorkspaceClient()
     warehouses = w.warehouses.list()
-    for wh in warehouses:
-        if wh.name == name:
-            return wh
-    for wh in warehouses:
-        if wh.name.lower() == "shared endpoint":
-            return wh
-    for wh in warehouses:
-        if wh.name.lower() == "dbdemos-shared-endpoint":
-            return wh
-    #Try to fallback to an existing shared endpoint.
-    for wh in warehouses:
-        if "shared" in wh.name.lower():
-            return wh
-    for wh in warehouses:
-        if "dbdemos" in wh.name.lower():
-            return wh
-    for wh in warehouses:
-        if wh.num_clusters > 0:
-            return wh
-    raise Exception("Couldn't find any Warehouse to use. Please create a wh first to run the demo and add the id here, or pass a name as parameter to the get_shared_warehouse(name='xxx') function")
+
+    # Check for warehouse by exact name (if provided)
+    if name:
+        for wh in warehouses:
+            if wh.name == name:
+                return wh
+
+    # Define fallback priorities
+    fallback_priorities = [
+        lambda wh: wh.name.lower() == "serverless starter warehouse",
+        lambda wh: wh.name.lower() == "shared endpoint",
+        lambda wh: wh.name.lower() == "dbdemos-shared-endpoint",
+        lambda wh: "shared" in wh.name.lower(),
+        lambda wh: "dbdemos" in wh.name.lower(),
+        lambda wh: wh.num_clusters > 0,
+    ]
+
+    # Try each fallback condition in order
+    for condition in fallback_priorities:
+        for wh in warehouses:
+            if condition(wh):
+                return wh
+
+    # Raise an exception if no warehouse is found
+    raise Exception(
+        "Couldn't find any Warehouse to use. Please create one first or pass "
+        "a specific name as a parameter to the get_shared_warehouse(name='xxx') function."
+    )
 
 
 def display_tools(tools):

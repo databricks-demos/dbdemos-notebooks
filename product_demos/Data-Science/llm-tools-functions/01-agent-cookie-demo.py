@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install -U databricks-sdk==0.23.0 langchain-community==0.2.16 langchain-openai==0.1.19 mlflow==2.17.0
+# MAGIC %pip install -U databricks-sdk==0.39.0 langchain-community==0.2.16 langchain-openai==0.1.19 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -275,7 +275,7 @@ answer=agent_str.invoke({"messages": "Help me write an instagram message for the
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### That's it! our 
+# MAGIC ### That's it! Our super customized review is ready:
 
 # COMMAND ----------
 

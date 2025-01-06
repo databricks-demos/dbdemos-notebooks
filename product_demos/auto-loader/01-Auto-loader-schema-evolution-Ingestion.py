@@ -53,7 +53,7 @@ bronzeDF = (spark.readStream \
                 .option("cloudFiles.maxFilesPerTrigger", "1")  #demo only, remove in real stream
                 .schema("address string, creation_date string, firstname string, lastname string, id bigint")
                 .load(volume_folder+'/user_json'))
-display(bronzeDF)
+display(bronzeDF, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -78,7 +78,7 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.schemaLocation", volume_folder+'/inferred_schema')
                 .option("cloudFiles.inferColumnTypes", "true")
                 .load(volume_folder+'/user_json'))
-display(bronzeDF)
+display(bronzeDF, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -96,7 +96,7 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.inferColumnTypes", "true")
                 .option("cloudFiles.schemaHints", "id bigint")
                 .load(volume_folder+'/user_json'))
-display(bronzeDF)
+display(bronzeDF, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -113,7 +113,7 @@ def get_stream():
                 .option("cloudFiles.inferColumnTypes", "true")
                 .option("cloudFiles.schemaHints", "id bigint")
                 .load(volume_folder+'/user_json'))
-display(get_stream())
+display(get_stream(), checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -123,14 +123,16 @@ display(get_stream())
 # COMMAND ----------
 
 # DBTITLE 1,Adding an incorrect field ("id" as string instead of bigint)
-incorrect_data = spark.read.json(sc.parallelize(['{"email":"quentin.ambard@databricks.com", "firstname":"Quentin", "id": "456455", "lastname":"Ambard"}']))
-incorrect_data.write.format("json").mode("append").save(volume_folder+"/user_json")
+from pyspark.sql import Row
+data = [Row(email="quentin.ambard@databricks.com", firstname="Quentin", id="456455", lastname="Ambard")]
+incorrect_data = spark.createDataFrame(data)
+incorrect_data.write.format("json").mode("append").save(volume_folder + "/user_json")
 
 # COMMAND ----------
 
 wait_for_rescued_data()
 # Start the stream and filter on on the rescue column to see how the incorrect data is captured
-display(get_stream().filter("_rescued_data is not null"))
+display(get_stream().filter("_rescued_data is not null"), checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -148,21 +150,22 @@ display(get_stream().filter("_rescued_data is not null"))
 # DBTITLE 1,Adding a row with an extra column ("new_column":"test new column value")
 # Stop all the existing streams
 DBDemos.stop_all_streams()
+
 # Add 'new_column'
-row = '{"email":"quentin.ambard@databricks.com", "firstname":"Quentin", "id":456454, "lastname":"Ambard", "new_column":"test new column value"}'
-new_row = spark.read.json(sc.parallelize([row]))
-new_row.write.format("json").mode("append").save(volume_folder+"/user_json")
+data = [Row(email="quentin.ambard@databricks.com", firstname="Quentin", id=456454, lastname="Ambard", new_column="test new column value")]
+new_row = spark.createDataFrame(data)
+new_row.write.format("json").mode("append").save(volume_folder + "/user_json")
 
 # COMMAND ----------
 
 # Existing stream wil fail with: org.apache.spark.sql.catalyst.util.UnknownFieldException: Encountered unknown field(s) during parsing: {"new_column":"test new column value"}
-# UNCOMMENT_FOR_DEMO display(get_stream())
+# UNCOMMENT_FOR_DEMO display(get_stream(), checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
 # We just have to restart it to capture the new data. Let's filter on the new column to make sure we have the proper row 
 # (re-run the cell)
-# UNCOMMENT_FOR_DEMO display(get_stream().filter('new_column is not null'))
+# UNCOMMENT_FOR_DEMO display(get_stream().filter('new_column is not null'), checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -231,9 +234,11 @@ def start_stream_restart_on_schema_evolution():
       return q
     except BaseException as e:
       #Adding a new column will trigger an UnknownFieldException. In this case we just restart the stream:
-      if not ('UnknownFieldException' in str(e.stackTrace)):
+      if not ('UnknownFieldException' in str(e)):
         raise e
-        
+
+#Note: serverless doesn't support timeless streaming. See https://docs.databricks.com/en/compute/serverless/limitations.html#streaming
+# You can use the writeStream.trigger(availableNow=True) option instead
 #start_stream_restart_on_schema_evolution()
 
 # COMMAND ----------

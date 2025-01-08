@@ -50,7 +50,7 @@ stream
   .dropDuplicates("event_id")
   .writeStream
   .trigger(Trigger.ProcessingTime("20 seconds"))
-  .option("checkpointLocation", s"$cloudStoragePath/checkpoints/silver")
+  .option("checkpointLocation", s"$volumeFolder/checkpoints/silver")
   .option("mergeSchema", "true")
   .table("events")
 
@@ -91,7 +91,6 @@ spark.readStream.table("events").createOrReplaceTempView("events_stream")
 // MAGIC WITH event_monitoring AS
 // MAGIC   (SELECT WINDOW(event_datetime, "10 seconds") w, count(*) c, platform FROM events_stream WHERE CAST(event_datetime as INT) > CAST(CURRENT_TIMESTAMP() as INT)-120 GROUP BY w, platform)
 // MAGIC SELECT w.*, c, platform FROM event_monitoring 
-// MAGIC ORDER BY START DESC
 
 // COMMAND ----------
 

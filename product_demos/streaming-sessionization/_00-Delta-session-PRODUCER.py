@@ -15,16 +15,42 @@ dbutils.widgets.text("produce_time_sec", "600", "How long we'll produce data (se
 
 # COMMAND ----------
 
-# MAGIC %pip install faker kafka-python
+# MAGIC %pip install faker confluent-kafka
 
 # COMMAND ----------
 
-# NOTE: the demo runs with Kafka, and dbdemos doesn't publically expose its demo kafka servers. Use your own IPs to run the demo properly
-#kafka_bootstrap_servers_tls = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
-kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
+from confluent_kafka import Producer
+import json
+import random
 
-from kafka import KafkaProducer
-producer = KafkaProducer(security_protocol="SSL", bootstrap_servers=kafka_bootstrap_servers_tls.split(","), value_serializer=lambda x: x.encode('utf-8'))
+#kafka_bootstrap_servers_tls = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
+kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
+# Also make sure to have the proper instance profile to allow the access if you're on AWS.
+
+conf = {
+    'bootstrap.servers': kafka_bootstrap_servers_tls}
+
+producer = Producer(conf)
+
+def delivery_report(err, msg):
+    """Callback for delivery reports."""
+    if err is not None:
+        print(f"Message delivery failed: {err}")
+    else:
+        print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
+
+def send_message(event, topic = 'dbdemos-sessions'):
+    event_json = json.dumps(event)
+    producer.produce(topic, value=event_json, callback=delivery_report)
+    producer.poll(0)  # Trigger delivery report callbacks
+
+    # Simulate duplicate events to test deduplication
+    if random.uniform(0, 1) > 0.96:
+        producer.produce(topic, value=event_json, callback=delivery_report)
+        producer.poll(0)
+    producer.flush()
+
+#send_message({"test": "toto"},  'test')
 
 # COMMAND ----------
 
@@ -55,14 +81,6 @@ print(create_event(str(uuid.uuid4()), int(time.time())))
 
 # COMMAND ----------
 
-def sendMessage(event): 
-  event = json.dumps(event)
-  producer.send('dbdemos-sessions', value=event)
-  #print(event)
-  #Simulate duplicate events to drop the duplication
-  if random.uniform(0, 1) > 0.96:
-    producer.send('dbdemos-sessions', value=event)
-
 users = {}
 #How long it'll produce messages
 produce_time_sec = int(dbutils.widgets.get("produce_time_sec"))
@@ -83,7 +101,7 @@ for _ in range(produce_time_sec):
       #10% chance to click on something
       if (randrange(100) > 80):
         event = create_event(id, now)
-        sendMessage(event)
+        send_message(event)
         #print(f"User {id} sent event {event}")
         
   #Re-create new users
@@ -97,5 +115,6 @@ for _ in range(produce_time_sec):
     #print(f"User {user_id} created")
   time.sleep(1)
 
-print("closed")
 
+# Ensure all messages are delivered before exiting
+producer.flush()

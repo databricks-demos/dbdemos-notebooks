@@ -34,6 +34,14 @@
       "description": "Init load data"
     },
     {
+      "path": "config", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Config", 
+      "description": "Setup schema and catalog name"
+    },
+    {
       "path": "00-Delta-Lake-Introduction", 
       "pre_run": True, 
       "publish_on_website": True, 

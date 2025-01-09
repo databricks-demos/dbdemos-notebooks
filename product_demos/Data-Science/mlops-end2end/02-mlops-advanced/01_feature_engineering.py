@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering=0.8.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -96,8 +96,10 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   data_psdf = dataDF.pandas_api()
 
   # Convert some columns
-  data_psdf["senior_citizen"] = data_psdf["senior_citizen"].map({1 : "Yes", 0 : "No"})
-  data_psdf = data_psdf.astype({"total_charges": "double", "senior_citizen": "string"})
+  data_psdf = data_psdf.astype({"senior_citizen": "string"})
+  data_psdf["senior_citizen"] = data_psdf["senior_citizen"].map({"1" : "Yes", "0" : "No"})
+
+  data_psdf["total_charges"] = data_psdf["total_charges"].apply(lambda x: float(x) if x.strip() else 0)
 
   # Fill some missing numerical values with 0
   data_psdf = data_psdf.fillna({"tenure": 0.0})
@@ -110,7 +112,6 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
   return data_cleanDF
-
 # COMMAND ----------
 
 # MAGIC %md-sandbox

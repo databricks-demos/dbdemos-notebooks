@@ -55,11 +55,15 @@
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00_mlops_end2end_quickstart_presentation&demo_name=mlops-end2end&event=VIEW">
 
+ # COMMAND ----------
+ 
+# MAGIC %pip install mlflow==2.19
+
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=true $adv_mlops=true
-
-# COMMAND ----------
+ 
+ # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Customer churn detection

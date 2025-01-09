@@ -8,6 +8,7 @@
 {
   "name": "uc-02-external-location",
   "category": "governance",
+  "serverless_supported": True,
   "title": "Access data on External Location",
   "description": "Discover how you can secure files/table in external location (cloud storage like S3/ADLS/GCS) with simple GRANT command.",
     "fullDescription": "Unity Catalog is a unified governance solution for all data and AI assets including files, tables, machine learning models and dashboards in your lakehouse on any cloud.<br/>In this demo, we'll show how Unity Catalog can be used to secure External Locations. <br/>External locations are cloud blob storages (S3,GCS,ADLS) that required to be accessed in a secured fashion.<br/>Unity catalog let you create CREDENTIAL objects to secure such access. You can then define who has access to the EXTERNAL LOCATION leveraging these CREDENTIALS.<br/>Once setup, your Analyst will be able to process and analyze any files stored in cloud storages.",

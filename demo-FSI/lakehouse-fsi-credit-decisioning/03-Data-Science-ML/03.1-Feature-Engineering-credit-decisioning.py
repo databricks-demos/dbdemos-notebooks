@@ -37,6 +37,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -154,6 +159,7 @@ display(feature_df)
 
 # COMMAND ----------
 
+from databricks import feature_store
 fs = feature_store.FeatureStoreClient()
 
 # Drop the fs table if it was already existing to cleanup the demo state

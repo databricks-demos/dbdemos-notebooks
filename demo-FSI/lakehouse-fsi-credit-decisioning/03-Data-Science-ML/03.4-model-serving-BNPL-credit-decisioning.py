@@ -46,11 +46,17 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
 # DBTITLE 1,Make sure our last model version is deployed in production in our registry
+import mlflow
 model_name = "dbdemos_fsi_credit_decisioning"
 mlflow.set_registry_uri('databricks-uc')
 
@@ -105,6 +111,9 @@ else:
 # MAGIC Now that the model is deployed, let's test it with information for a customer trying to temporarily increase their credit limits or obtain a micro-loan at the point-of-sale.
 
 # COMMAND ----------
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+from mlflow.models.model import Model
 
 p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("") 
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}

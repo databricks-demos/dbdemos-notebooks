@@ -8,6 +8,7 @@
 {
   "name": "lakehouse-monitoring",
   "category": "DBSQL",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_lhm",

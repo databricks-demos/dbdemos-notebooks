@@ -23,7 +23,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Stream and clean the raw events
-wait_for_table("events_raw") #Wait until the previous table is created to avoid error if all notebooks are started at once
+DBDemos.wait_for_table("events_raw") #Wait until the previous table is created to avoid error if all notebooks are started at once
 
 #For the sake of the example we'll get the schema from a json row. In a real deployment we could query a schema registry.
 row_example = """{"user_id": "5ee7ba5f-77b2-47e4-8061-dd89f19626f3", "platform": "other", "event_id": "03c3d410-f01f-4f51-8ee0-7fab9be96855", "event_date": 1669301257, "action": "view", "uri": "https://databricks.com/home.htm"}"""
@@ -38,7 +38,7 @@ stream = (spark
              # Drop null events
              .where("event_id is not null and user_id is not null and event_date is not null")
              .withColumn('event_datetime', F.to_timestamp(F.from_unixtime(col("event_date")))))
-display(stream)
+display(stream, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -47,11 +47,12 @@ display(stream)
   .dropDuplicates(['event_id'])
   .writeStream
     .trigger(processingTime="20 seconds")
-    .option("checkpointLocation", cloud_storage_path+"/checkpoints/silver")
+    #.trigger(availableNow=True) --use this for serverless
+    .option("checkpointLocation", volume_folder+"/checkpoints/silver")
     .option("mergeSchema", "true")
     .table('events'))
 
-wait_for_table("events")
+DBDemos.wait_for_table("events")
 
 # COMMAND ----------
 
@@ -83,12 +84,13 @@ spark.readStream.table("events").createOrReplaceTempView("events_stream")
 # COMMAND ----------
 
 # DBTITLE 1,Let's monitor our events from the last minutes with a window function
-# MAGIC %sql
-# MAGIC -- Visualization: bar plot with X=start Y=count (SUM, group by platform)
-# MAGIC WITH event_monitoring AS
-# MAGIC   (SELECT WINDOW(event_datetime, "10 seconds") w, count(*) c, platform FROM events_stream WHERE CAST(event_datetime as INT) > CAST(CURRENT_TIMESTAMP() as INT)-120 GROUP BY w, platform)
-# MAGIC SELECT w.*, c, platform FROM event_monitoring 
-# MAGIC ORDER BY START DESC
+# Visualization: bar plot with X=start Y=count (SUM, group by platform)
+df = spark.sql('''
+WITH event_monitoring AS
+  (SELECT WINDOW(event_datetime, "10 seconds") w, count(*) c, platform FROM events_stream WHERE CAST(event_datetime as INT) > CAST(CURRENT_TIMESTAMP() as INT)-120 GROUP BY w, platform)
+SELECT w.*, c, platform FROM event_monitoring ''')
+
+display(df, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -104,7 +106,7 @@ spark.readStream.table("events").createOrReplaceTempView("events_stream")
 # COMMAND ----------
 
 # DBTITLE 1,Stop all the streams 
-stop_all_streams(sleep_time=120)
+DBDemos.stop_all_streams(sleep_time=120)
 
 # COMMAND ----------
 

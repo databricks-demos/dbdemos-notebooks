@@ -5,11 +5,15 @@
 
 # COMMAND ----------
 
-{
+{ 
   "name": "delta-sharing-airlines",
   "category": "governance",
   "title": "Delta Sharing - Airlines",
   "description": "Share your data to external organization using Delta Sharing.",
+  "serverless_supported": False,
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_sharing_airlinedata",
   "fullDescription": "Databricks Delta Sharing provides an open solution to securely share live data from your lakehouse to any computing platform.<br/>In this demo, we'll cover Delta Sharing main capabilities:<ul><li>Open cross-platform sharing: Avoid vendor lock-in, and easily share existing data in Delta Lake and Apache Parquet formats to any data platform.</li><li>Share live data with no replication: Share live data across data platforms, clouds or regions without replicating or copying it to another system.</li><li>Centralized governance: Centrally manage, govern, audit and track usage of the shared data on one platform.</li></ul>",
   "usecase": "Data Governance",
   "products": ["Delta Sharing", "Unity Catalog"],

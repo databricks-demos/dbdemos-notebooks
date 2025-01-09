@@ -75,7 +75,7 @@ AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw
 -- COMMAND ----------
 
 -- DBTITLE 1,Reference table - metadata (small & almost static)
-CREATE LIVE TABLE ref_accounting_treatment
+CREATE MATERIALIZED VIEW ref_accounting_treatment
   COMMENT "Lookup mapping for accounting codes"
 AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment`
 
@@ -138,7 +138,7 @@ AS SELECT * from STREAM(live.new_txs)
 -- COMMAND ----------
 
 -- DBTITLE 1,Enrich all historical transactions
-CREATE LIVE TABLE historical_txs
+CREATE MATERIALIZED VIEW historical_txs
   COMMENT "Historical loan transactions"
 AS SELECT l.*, ref.accounting_treatment as accounting_treatment FROM LIVE.raw_historical_loans l
   INNER JOIN LIVE.ref_accounting_treatment ref ON l.accounting_treatment_id = ref.id
@@ -158,7 +158,7 @@ AS SELECT l.*, ref.accounting_treatment as accounting_treatment FROM LIVE.raw_hi
 -- COMMAND ----------
 
 -- DBTITLE 1,Balance aggregate per cost location
-CREATE LIVE TABLE total_loan_balances
+CREATE MATERIALIZED VIEW total_loan_balances
   COMMENT "Combines historical and new loan data for unified rollup of loan balances"
   TBLPROPERTIES ("pipelines.autoOptimize.zOrderCols" = "location_code")
 AS SELECT sum(revol_bal)  AS bal, addr_state   AS location_code FROM live.historical_txs  GROUP BY addr_state
@@ -167,7 +167,7 @@ AS SELECT sum(revol_bal)  AS bal, addr_state   AS location_code FROM live.histor
 -- COMMAND ----------
 
 -- DBTITLE 1,Balance aggregate per cost center
-CREATE LIVE TABLE new_loan_balances_by_cost_center
+CREATE MATERIALIZED VIEW new_loan_balances_by_cost_center
   COMMENT "Live table of new loan balances for consumption by different cost centers"
 AS SELECT sum(balance) as sum_balance, cost_center_code FROM live.cleaned_new_txs
   GROUP BY cost_center_code
@@ -175,7 +175,7 @@ AS SELECT sum(balance) as sum_balance, cost_center_code FROM live.cleaned_new_tx
 -- COMMAND ----------
 
 -- DBTITLE 1,Balance aggregate per country
-CREATE LIVE TABLE new_loan_balances_by_country
+CREATE MATERIALIZED VIEW new_loan_balances_by_country
   COMMENT "Live table of new loan balances per country"
 AS SELECT sum(count) as sum_count, country_code FROM live.cleaned_new_txs GROUP BY country_code
 

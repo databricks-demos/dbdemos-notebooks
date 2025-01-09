@@ -31,7 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.14.3 faker
+# MAGIC %pip install  databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.19.0 faker==33.1.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -239,7 +239,7 @@
 # COMMAND ----------
 
 import mlflow
-mlflow.langchain.autolog(disable=False)
+mlflow.langchain.autolog()
 
 # COMMAND ----------
 
@@ -322,6 +322,8 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # COMMAND ----------
 
+#make sure our log is enabled to properly display and trace the call chain 
+mlflow.langchain.autolog()
 agent_executor.invoke({"input": "what's 12in in cm?"})
 
 # COMMAND ----------
@@ -423,30 +425,43 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC CREATE OR REPLACE FUNCTION execute_python_code(python_code STRING)
 # MAGIC RETURNS STRING
 # MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Run any python code and returns the output'
+# MAGIC COMMENT "Run python code. The code should end with a return statement and this function will return it as a string. Only send valid python to this function. Here is an exampe of python code input: 'def square_function(number):\\n  return number*number\\n\\nreturn square_function(3)'"
 # MAGIC AS
 # MAGIC $$
-# MAGIC   import traceback
-# MAGIC   try:
-# MAGIC       import re
-# MAGIC       python_code = re.sub(r"^\s*```(?:python)?|```\s*$", "", python_code).strip()
-# MAGIC       result = eval(python_code, globals())
-# MAGIC       return str(result)
-# MAGIC   except Exception as ex:
-# MAGIC       return traceback.format_exc()
+# MAGIC     import traceback
+# MAGIC     try:
+# MAGIC         import re
+# MAGIC         # Remove code block markers (e.g., ```python) and strip whitespace```
+# MAGIC         python_code = re.sub(r"^\s*```(?:python)?|```\s*$", "", python_code).strip()
+# MAGIC         # Unescape any escaped newline characters
+# MAGIC         python_code = python_code.replace("\\n", "\n")
+# MAGIC         # Properly indent the code for wrapping
+# MAGIC         indented_code = "\n    ".join(python_code.split("\n"))
+# MAGIC         # Define a wrapper function to execute the code
+# MAGIC         exec_globals = {}
+# MAGIC         exec_locals = {}
+# MAGIC         wrapper_code = "def _temp_function():\n    "+indented_code
+# MAGIC         exec(wrapper_code, exec_globals, exec_locals)
+# MAGIC         # Execute the wrapped function and return its output
+# MAGIC         result = exec_locals["_temp_function"]()
+# MAGIC         return result
+# MAGIC     except Exception as ex:
+# MAGIC         return traceback.format_exc()
 # MAGIC $$;
 # MAGIC -- let's test our function:
 # MAGIC
-# MAGIC SELECT execute_python_code("'Hello Word! '* 3") as result;
+# MAGIC SELECT execute_python_code("return 'Hello Word! '* 3") as result;
 
 # COMMAND ----------
 
 from langchain.agents import AgentExecutor, create_tool_calling_agent
-prompt = get_prompt(prompt="You are an assistant for a python developer. You can run any python code the customer is asking for to output to test and run the code, and display the output. Don't mention you have tools or the tools name. Make sure you send the full python code at once to the function")
+prompt = get_prompt(prompt="You are an assistant for a python developer. Internally, you have a tool named execute_python_code that can generate and run python code to help answering what the customer is asking. input: valid python code as a string. output: the result of the return value from the code execution. Don't mention you have tools or the tools name. Make sure you send the full python code at once to the function and that the code has a return statement at the end to capture the result. Don't print anything in the code you write, return the result you need as final instruction. Make sure the python code is valid. Only send python. Here is an example: 'def square_function(number):\\n  return number*number\\n\\nreturn square_function(3)'")
 tools = get_tools()
 agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-answer = agent_executor.invoke({"input": "Write me a function that compute fibonacci suite in python, and display its result for 5."})
+
+#Let's print the answer! Note that the LLM often makes a few error, but then analyze it and self-correct.
+answer = agent_executor.invoke({"input": "What's the result of the fibonacci suite? Display its result for 5."})
 displayHTML(answer['output'].replace('\n', '<br>'))
 
 # COMMAND ----------
@@ -485,7 +500,7 @@ chain = (
 # Example input data
 input_data = {
     "messages": [
-        {"content": "Write me a function that computes the Fibonacci sequence in Python and displays its result for 5."}
+        {"content": "Write a function that computes the Fibonacci sequence in Python and displays its result for 5."}
     ]
 }
 # Run the chain
@@ -528,6 +543,8 @@ def deploy_chain():
   agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
 
 # Uncomment to deploy
+# Note: we know this part might not work as expected, we're working on updating the demo, stay tuned.
+# For more example on how to deploy a chain, check example in dbdemos.install('llm-rag-chatbot')
 #deploy_chain()
 
 # COMMAND ----------

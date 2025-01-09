@@ -61,6 +61,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 
 import mlflow
 model_name = "dbdemos_customer_churn"
+mlflow.set_registry_uri("databricks-uc")
 #                                                                                                Alias
 #                                                                                  Model name       |
 #                                                                                        |          |

@@ -8,6 +8,7 @@
 {
   "name": "llm-tools-functions",
   "category": "data-science",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_ai_function_calling",

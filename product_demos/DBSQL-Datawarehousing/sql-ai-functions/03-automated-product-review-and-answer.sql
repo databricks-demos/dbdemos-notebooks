@@ -19,8 +19,8 @@
 
 -- COMMAND ----------
 
--- as previously, make sure you run this notebook using a SQL Warehouse (not a cluster)
-SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE');
+-- as previously, make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster)
+SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE OR SERVERLESS, not a classic cluster');
 
 USE CATALOG main;
 USE SCHEMA dbdemos_ai_query;
@@ -155,7 +155,7 @@ SELECT * FROM reviews_answer
 -- MAGIC Open the <a dbdemos-dashboard-id="customer-review-analysis" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Customer review analysis dashboard</a> to have a complete view of your customers, products and reviews.
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-function-dashboard.png" width="1200">
-
+-- MAGIC
 
 -- COMMAND ----------
 

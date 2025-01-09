@@ -1,8 +1,4 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC # Ingesting and transforming IOT sensors from Wind Turbinge using Delta Lake and Spark API
 # MAGIC
@@ -35,11 +31,11 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.17.2
+# MAGIC %pip install mlflow==2.19.0
 
 # COMMAND ----------
 
-# MAGIC %run ../../_resources/00-setup $reset_all_data=$reset_all_data
+# MAGIC %run ../../_resources/00-setup
 
 # COMMAND ----------
 
@@ -318,7 +314,6 @@ spark.sql("DELETE FROM spark_sensor_bronze where turbine_id='"+first_turbine+"'"
 # MAGIC %sql
 # MAGIC --Note: can be turned on by default or for all the database
 # MAGIC ALTER TABLE spark_turbine                  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
-# MAGIC ALTER TABLE spark_current_turbine_metrics  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
 # MAGIC ALTER TABLE spark_sensor_bronze            SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
 # MAGIC ALTER TABLE spark_current_turbine_metrics  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
 

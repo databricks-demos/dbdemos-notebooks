@@ -23,6 +23,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -94,8 +99,12 @@ w.serving_endpoints.update_config_and_wait(name=serving_endpoint_name, served_en
 
 # COMMAND ----------
 
-mlflow.set_registry_uri('databricks-uc') 
-p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("") 
+import mlflow
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+from mlflow.models.model import Model
+
+mlflow.set_registry_uri('databricks-uc')
+p = ModelsArtifactRepository(f"models:/{model_name}@prod").download_artifacts("")
 dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orient='split')}
 
 # COMMAND ----------

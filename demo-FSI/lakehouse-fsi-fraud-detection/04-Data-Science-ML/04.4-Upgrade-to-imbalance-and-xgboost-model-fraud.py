@@ -22,6 +22,13 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 hyperopt==0.2.7 shap==0.46.0
+# MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
+# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.45 lightgbm==4.3.0 lightgbm==4.3.0 xgboost==2.1.3
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -198,7 +205,7 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
 
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
-split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
+split_val_df = df_loaded.loc[df_loaded[split_col].isin(["val", "validate"])]
 split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
 # Separate target column from features and drop _automl_split_col_0000
@@ -290,7 +297,7 @@ def objective(params):
         log_input_examples=True,
         silent=True)
 
-    model.fit(X_train, y_train, classifier__early_stopping_rounds=5, classifier__verbose=False, classifier__eval_set=[(X_val_processed,y_val_processed)], classifier__sample_weight=classes_weights)
+    model.fit(X_train, y_train, classifier__verbose=False, classifier__eval_set=[(X_val_processed,y_val_processed)], classifier__sample_weight=classes_weights)
 
     
     # Log metrics for the training set

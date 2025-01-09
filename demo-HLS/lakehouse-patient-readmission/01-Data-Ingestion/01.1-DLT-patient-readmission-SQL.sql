@@ -125,32 +125,32 @@
 
 -- Databricks Auto Loader cloud_files will incrementally load new files, infering the column types and handling schema evolution for us.
 -- data could be from any source: csv, json, parquet...
-CREATE OR REFRESH STREAMING LIVE TABLE encounters
+CREATE OR REFRESH STREAMING TABLE encounters
   AS SELECT * EXCEPT(START, STOP), to_timestamp(START) as START, to_timestamp(STOP) as STOP
       FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/encounters", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
-CREATE OR REFRESH STREAMING LIVE TABLE patients
+CREATE OR REFRESH STREAMING TABLE patients
   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/patients", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
-CREATE OR REFRESH STREAMING LIVE TABLE conditions
+CREATE OR REFRESH STREAMING TABLE conditions
   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/conditions", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
-CREATE OR REFRESH STREAMING LIVE TABLE medications
+CREATE OR REFRESH STREAMING TABLE medications
   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/medications", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
-CREATE OR REFRESH STREAMING LIVE TABLE immunizations
+CREATE OR REFRESH STREAMING TABLE immunizations
   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/immunizations", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
-CREATE OR REFRESH STREAMING LIVE TABLE concept
+CREATE OR REFRESH STREAMING TABLE concept
   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
-CREATE OR REFRESH STREAMING LIVE TABLE concept_relationship
+CREATE OR REFRESH STREAMING TABLE concept_relationship
   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT_RELATIONSHIP", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
@@ -345,7 +345,7 @@ GROUP BY
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE  assign_all_visit_ids AS
+CREATE OR REFRESH MATERIALIZED VIEW assign_all_visit_ids AS
 SELECT
   E.id AS encounter_id,
   E.patient as person_source_value,
@@ -391,7 +391,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE all_visits
+CREATE OR REFRESH MATERIALIZED VIEW all_visits AS
 SELECT
   *, ROW_NUMBER() OVER(ORDER BY patient) as visit_occurrence_id
 FROM
@@ -410,7 +410,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE final_visit_ids AS 
+CREATE OR REFRESH MATERIALIZED VIEW final_visit_ids AS 
 SELECT encounter_id, VISIT_OCCURRENCE_ID_NEW
 FROM(
 	SELECT *, ROW_NUMBER () OVER (PARTITION BY encounter_id ORDER BY PRIORITY) AS RN
@@ -454,7 +454,7 @@ WHERE RN=1;
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE source_to_standard_vocab_map (
+CREATE OR REFRESH MATERIALIZED VIEW source_to_standard_vocab_map (
   CONSTRAINT source_concept_valid_id EXPECT (SOURCE_CONCEPT_ID IS NOT NULL) ON VIOLATION DROP ROW
   )
   AS SELECT
@@ -489,7 +489,7 @@ CREATE OR REFRESH LIVE TABLE source_to_standard_vocab_map (
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE source_to_source_vocab_map AS 
+CREATE OR REFRESH MATERIALIZED VIEW source_to_source_vocab_map AS 
   SELECT
     c.concept_code AS SOURCE_CODE,
     c.concept_id AS SOURCE_CONCEPT_ID,
@@ -530,7 +530,7 @@ CREATE OR REFRESH LIVE TABLE source_to_source_vocab_map AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE person AS
+CREATE OR REFRESH MATERIALIZED VIEW person AS
   SELECT
   ROW_NUMBER() OVER(ORDER BY p.id) as PERSON_ID,
   case upper(p.gender) when 'M' then 8507 when 'F' then 8532 end as GENDER_CONCEPT_ID,
@@ -563,7 +563,7 @@ where
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE condition_occurrence AS 
+CREATE OR REFRESH MATERIALIZED VIEW condition_occurrence AS 
 select
   row_number() over(order by p.person_id) as CONDITION_OCCURRENCE_ID, 
   p.person_id as PERSON_ID,
@@ -603,7 +603,7 @@ inner join live.person p
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE drug_exposure AS 
+CREATE OR REFRESH MATERIALIZED VIEW drug_exposure AS 
   SELECT row_number() over(order by person_id) AS drug_exposure_id, 
   *
   FROM (

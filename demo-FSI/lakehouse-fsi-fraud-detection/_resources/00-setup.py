@@ -55,13 +55,9 @@ if reset_all_data or data_missing:
 
 # COMMAND ----------
 
-import mlflow
-from databricks.feature_store import FeatureStoreClient
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-from mlflow.models.model import Model
 
 # Helper function
 def get_latest_model_version(model_name):

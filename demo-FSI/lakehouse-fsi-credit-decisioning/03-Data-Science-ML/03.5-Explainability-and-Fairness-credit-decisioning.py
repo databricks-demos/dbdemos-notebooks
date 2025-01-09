@@ -25,8 +25,8 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet shap==0.46.0
-# MAGIC dbutils.library.restartPython() 
+# MAGIC %pip install --quiet shap==0.46.0 mlflow==2.19.0 scikit-learn==1.3.0
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -61,6 +61,7 @@ display(df)
 # COMMAND ----------
 
 model_name = "dbdemos_fsi_credit_decisioning"
+import mlflow
 mlflow.set_registry_uri('databricks-uc')
 
 model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@prod")
@@ -93,6 +94,7 @@ banked_df = df[df.defaulted!=2].toPandas() # Features for rest of the customers
 mlflow.autolog(disable=True)
 mlflow.sklearn.autolog(disable=True)
 
+import shap
 train_sample = banked_df[features].sample(n=np.minimum(100, banked_df.shape[0]), random_state=42)
 underbanked_sample = underbanked_df.sample(n=np.minimum(100, underbanked_df.shape[0]), random_state=42)
 

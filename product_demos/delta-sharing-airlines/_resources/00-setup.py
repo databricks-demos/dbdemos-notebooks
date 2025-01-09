@@ -4,19 +4,36 @@
 
 # COMMAND ----------
 
-import urllib.request
-
-dbName = "dbdemos_sharing_airlinedata"
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
-def cleanup_catalog(catalog):
-  if current_user_no_at in catalog:
-    spark.sql(f"drop catalog {catalog} cascade")
-    
+# COMMAND ----------
+
+catalog = "main__build"
+schema = dbName = db = "dbdemos_sharing_airlinedata"
+
+volume_name = "raw_data"
+
+# COMMAND ----------
+
+# MAGIC %run ../../../_resources/00-global-setup-v2
+
+# COMMAND ----------
+
+DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
+volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
+
+# COMMAND ----------
+
+# DBTITLE 1,Use Catalog Created
 def download_recipient_credential(recipient, location):
   sql(f"""DROP RECIPIENT {recipient}""")
   sql(f"""CREATE RECIPIENT {recipient}""")
+  if recipient == 'dbdemos_americanairlines_recipient':
+      sql('''ALTER RECIPIENT dbdemos_southwestairlines_recipient SET PROPERTIES ('carrier_id' = 'WN');''')
+  else:
+      sql('''ALTER RECIPIENT dbdemos_southwestairlines_recipient SET PROPERTIES ('carrier_id' = 'AA');''')
+      
   df = sql(f"""DESCRIBE RECIPIENT {recipient}""")
   if 'info_name' in df.columns:
     link = df.where("info_name = 'activation_link'").collect()[0]['info_value']
@@ -25,71 +42,29 @@ def download_recipient_credential(recipient, location):
   if link is not None:
     link = link.replace('delta_sharing/retrieve_config.html?','api/2.0/unity-catalog/public/data_sharing_activation/')
     urllib.request.urlretrieve(link, f"/tmp/{recipient}.share")
-    dbutils.fs.mv(f"file:/tmp/{recipient}.share", location)
-    print(f"Your file was downloaded to: {location}")
+    import shutil
+    shutil.copy(f"/tmp/{recipient}.share", location)
+    print(f"Your file was downloaded for the demo to: {location} - BE CAREFUL PROTECT THIS FILE")
 
 # COMMAND ----------
 
-import re
-current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-if current_user.rfind('@') > 0:
-  current_user_no_at = current_user[:current_user.rfind('@')]
-else:
-  current_user_no_at = current_user
-current_user_no_at = re.sub(r'\W+', '_', current_user_no_at)
+#Try to delete all shares and recipients + any credential remaining
+def cleanup_demo():
+    def try_safe(func):
+        try:
+            func()
+        except Exception as e:
+            print(f'Cleanup error: {e}')
 
-catalog = "uc_demos_"+current_user_no_at
-
-if reset_all_data:
-  pass 
-  #TODO to be uncomented after ownership is fixed
-  #cleanup_catalog(catalog)
-  #spark.sql("DROP SHARE IF EXISTS americanairlines;")
-  #spark.sql("DROP SHARE IF EXISTS southwestairlines;")
-  #spark.sql("DROP RECIPIENT IF EXISTS southwestairlines_recipient")
-  #spark.sql("DROP RECIPIENT IF EXISTS americanairlines_recipient")
-  
-catalog_exists = False
-for r in spark.sql("SHOW CATALOGS").collect():
-    if r['catalog'] == catalog:
-        catalog_exists = True
-
-#As admin don't have permission by default, let's do that only if the catalog doesn't exist        
-if not catalog_exists:
-    spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog}")
-    spark.sql(f"GRANT CREATE, USAGE on CATALOG {catalog} TO `account users`")
-    
-
- 
-    
-min_required_version = "11.2"
-version_tag = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")
-version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
-assert version_search, f"The Databricks version can't be extracted from {version_tag}, shouldn't happen, please correct the regex"
-current_version = float(version_search.group(1))
-assert float(current_version) >= float(min_required_version), f'The Databricks version of the cluster must be >= {min_required_version}. Current version detected: {current_version}'
+    try_safe(lambda: dbutils.fs.rm('/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/southwestairlines.share'))
+    try_safe(lambda: dbutils.fs.rm('/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/americanairlines.share'))
+    try_safe(lambda: spark.sql('DROP RECIPIENT  dbdemos_southwestairlines_recipient'))
+    try_safe(lambda: spark.sql('DROP RECIPIENT  dbdemos_americanairlines_recipient'))
+    try_safe(lambda: spark.sql('DROP SHARE  dbdemos_americanairlines'))
+    try_safe(lambda: spark.sql('DROP SHARE  dbdemos_southwestairlines'))
 
 # COMMAND ----------
 
-# DBTITLE 1,Use Catalog Created
-print(f"USING CATALOG {catalog}")
-spark.sql(f"USE CATALOG {catalog}")
-
-# COMMAND ----------
-
-#create the schema and set permission only if it doesn't exists (to avoid permission error)
-if dbName not in [r.name for r in spark.catalog.listDatabases()]:
-    spark.sql(f"""CREATE SCHEMA IF NOT EXISTS {dbName} COMMENT "all flight data recieved from partnered airlines and augmented with tripactions platform" """)
-    spark.sql(f"""GRANT USAGE, CREATE ON SCHEMA {dbName} TO `account users`""")
-
-# COMMAND ----------
-
-def table_exists(tb):
-    try:
-        return spark._jsparkSession.catalog().tableExists(f'{dbName}.{tb}')
-    except:
-        return False
-  
 def get_codes():
     return  ["04Q,Tradewind Aviation",
     "05Q,Comlux Aviation, AG",
@@ -1750,7 +1725,7 @@ from pyspark.sql.functions import *
 
 def init_data():
     print("Initializing data, the first run can take a few min to load and optimize all data...")
-    if not table_exists("flights"):
+    if not spark.catalog.tableExists("flights"):
         print("Loading database flights...")
         initial_df = (spark.read.option("header", "true").option("inferSchema", "true").csv("dbfs:/databricks-datasets/airlines/part-00000"))
         df_schema = initial_df.schema
@@ -1759,27 +1734,27 @@ def init_data():
         newColumns = df.withColumn("DateString",concat(col("Year"),lit("-"),concat(col("Month"), lit("-"), col("DayofMonth")))).filter(col("Year").isNotNull())
         airlineDataTemp = newColumns.withColumn("Date", date_format(col("DateString"), "yyyy-MM-dd")).drop(col("DateString"))
         airlineDataTemp.write.partitionBy("Year", "UniqueCarrier").mode('overwrite').saveAsTable(f"{dbName}.flights")
-        spark.sql(f"""GRANT SELECT, MODIFY ON TABLE {dbName}.flights TO `account users`""")
+        #spark.sql(f"""GRANT SELECT, MODIFY ON TABLE {dbName}.flights TO `account users`""")
         spark.sql(f"""ALTER TABLE {dbName}.flights OWNER TO `account users`""")
         #spark.sql("OPTIMIZE airlinedata.flights")
 
-    if not table_exists("lookupcodes"):
+    if not spark.catalog.tableExists("lookupcodes"):
         print("Loading database lookupcodes...")
         codes = get_codes()
         codes_tuple = [((c.split(",")[0], c.split(",")[1])) for c in codes]
         deptColumns = ["dept_name","dept_id"]
         df_codes = spark.createDataFrame(data=codes_tuple, schema = ["UniqueCode", "Description"])
         df_codes.write.mode('overwrite').saveAsTable(f"{dbName}.lookupcodes")
-        spark.sql(f"""GRANT SELECT, MODIFY ON TABLE {dbName}.lookupcodes TO `account users`""")
-        spark.sql(f"""ALTER TABLE {dbName}.flights OWNER TO `account users`""")
+        #spark.sql(f"""GRANT SELECT, MODIFY ON TABLE {dbName}.lookupcodes TO `account users`""")
+        #spark.sql(f"""ALTER TABLE {dbName}.flights OWNER TO `account users`""")
         spark.sql(f"OPTIMIZE {dbName}.lookupcodes")
 
-    if not table_exists("airports"):
+    if not spark.catalog.tableExists("airports"):
         print("Loading database airports...")
-        airportsna = sqlContext.read.format("com.databricks.spark.csv").options(header='true', inferschema='true', delimiter='\t').load("/databricks-datasets/flights/airport-codes-na.txt")
+        airportsna = spark.read.format("com.databricks.spark.csv").options(header='true', inferschema='true', delimiter='\t').load("/databricks-datasets/flights/airport-codes-na.txt")
         airportsna.write.mode('overwrite').saveAsTable(f"{dbName}.airports")
-        spark.sql(f"""GRANT SELECT, MODIFY ON TABLE {dbName}.airports TO `account users`""")
-        spark.sql(f"""ALTER TABLE {dbName}.airports OWNER TO `account users`""")
+        #spark.sql(f"""GRANT SELECT, MODIFY ON TABLE {dbName}.airports TO `account users`""")
+        #spark.sql(f"""ALTER TABLE {dbName}.airports OWNER TO `account users`""")
         spark.sql(f"OPTIMIZE {dbName}.airports")
     
     

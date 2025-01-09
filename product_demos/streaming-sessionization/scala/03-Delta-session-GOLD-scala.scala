@@ -33,18 +33,25 @@
 
 import java.sql.Timestamp
 
-waitForTable("events") // Wait until the previous table is created to avoid error if all notebooks are started at once
-
 //Event (from the silver table)
-case class ClickEvent(user_id: String, event_id: String, event_datetime: Timestamp, event_date: Long, platform: String, action: String, uri: String)
+case class ClickEvent(
+  user_id: String,
+  event_id: String,
+  event_datetime: Timestamp,
+  event_date: Long,
+  platform: String,
+  action: String,
+  uri: String
+) extends Serializable
+
 //Session (from the gold table)
 case class UserSession(
-  user_id: String, 
-  var click_count: Integer = 0, 
-  var start_time: Timestamp = Timestamp.valueOf("9999-12-31 23:59:29"), 
-  var end_time: Timestamp = new Timestamp(0L), 
-  var status: String = "online"
-)
+  user_id: String,
+  click_count: Int = 0,
+  start_time: Timestamp = Timestamp.valueOf("9999-12-31 23:59:29"),
+  end_time: Timestamp = new Timestamp(0L),
+  status: String = "online"
+) extends Serializable
 
 // COMMAND ----------
 
@@ -52,6 +59,7 @@ case class UserSession(
 // MAGIC The function `updateState` will be called for each user with a list of events for this user.
 
 // COMMAND ----------
+
 
 import org.apache.spark.sql.streaming.{ GroupState, GroupStateTimeout, OutputMode }
 
@@ -65,24 +73,20 @@ def updateState(user_id: String, events: Iterator[ClickEvent], state: GroupState
     Iterator(curState)
   } else {
     val updatedState = events.foldLeft(curState){ updateStateWithEvent }
-    updatedState.status = "offline" // next iteration will be a timeout or restart
-    state.update(updatedState)
+    val updatedStateOff = updatedState.copy(status = "offline")  // next iteration will be a timeout or restart
+    state.update(updatedStateOff)
     state.setTimeoutTimestamp(MaxSessionDuration)
-    Iterator(updatedState)
+    Iterator(updatedStateOff)
   }
 }
 
 def updateStateWithEvent(state: UserSession, input: ClickEvent): UserSession = {
-  state.status = "online"
-  state.click_count += 1
-  //Update then begining and end of our session
-  if (input.event_datetime.after(state.end_time)) {
-    state.end_time = input.event_datetime
-  }
-  if (input.event_datetime.before(state.start_time)) {
-    state.start_time = input.event_datetime
-  }
-  state
+  state.copy(
+    status = "online",
+    click_count = state.click_count + 1,
+    start_time = if (input.event_datetime.before(state.start_time)) input.event_datetime else state.start_time,
+    end_time = if (input.event_datetime.after(state.end_time)) input.event_datetime else state.end_time
+  )
 }
 
 val sessions = spark
@@ -130,7 +134,7 @@ def updateSessions(df: DataFrame, epochId: Long): Unit = {
 
 sessions
   .writeStream
-  .option("checkpointLocation", s"$cloudStoragePath/checkpoints/sessions")
+  .option("checkpointLocation", s"$volumeFolder/checkpoints/sessions")
   .foreachBatch(updateSessions _)
   .start()
 

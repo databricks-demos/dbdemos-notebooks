@@ -8,6 +8,7 @@
 {
   "name": "pandas-on-spark",
   "category": "data-science",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_schema": "dbdemos_pandas_on_spark",
   "default_catalog": "main",

@@ -20,6 +20,15 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
+import time
+def get_chkp_folder():
+    import random
+    import string
+    randomCar = ''.join(random.choices(string.ascii_letters + string.digits, k=8))  # 
+    return volume_folder+'/checkpoint/streams/'+randomCar
+
+# COMMAND ----------
+
 from time import sleep
 
 if reset_all_data or DBDemos.is_folder_empty(volume_folder+"/user_json"):

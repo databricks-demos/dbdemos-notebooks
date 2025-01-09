@@ -9,6 +9,7 @@
   "name": "dlt-cdc",
   "category": "data-engineering",
   "title": "CDC pipeline with Delta Live Table.",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_dlt_cdc",

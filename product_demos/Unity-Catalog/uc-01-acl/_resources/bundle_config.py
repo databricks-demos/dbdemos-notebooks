@@ -8,6 +8,7 @@
 {
   "name": "uc-01-acl",
   "category": "governance",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_schema": "uc_acl",
   "default_catalog": "main",

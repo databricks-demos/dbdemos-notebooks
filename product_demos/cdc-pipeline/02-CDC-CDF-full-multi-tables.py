@@ -63,6 +63,7 @@ display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
 
+# DBTITLE 1,let's reset all checkpoints
 dbutils.fs.rm(f"{raw_data_location}/cdc_full", True)
 
 # COMMAND ----------
@@ -79,10 +80,11 @@ def update_bronze_layer(path, bronze_table):
           .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
           .option("cloudFiles.inferColumnTypes", "true")
           .load(path)
-       .withColumn("file_name", F.input_file_name())
+       .withColumn("file_name", col("_metadata.file_path"))
        .writeStream
           .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{bronze_table}")
           .option("mergeSchema", "true")
+          #.trigger(processingTime='10 seconds')
           .trigger(availableNow=True)
           .table(bronze_table).awaitTermination())
 
@@ -93,7 +95,7 @@ def update_bronze_layer(path, bronze_table):
 def update_silver_layer(bronze_table, silver_table):
   print(f"ingesting {bronze_table} update and materializing silver layer using a MERGE statement...")
   #First create the silver table if it doesn't exists:
-  if not spark._jsparkSession.catalog().tableExists(silver_table):
+  if not spark.catalog.tableExists(silver_table):
     print(f"Table {silver_table} doesn't exist, creating it using the same schema as the bronze one...")
     spark.read.table(bronze_table).drop("operation", "operation_date", "_rescued_data", "file_name").write.saveAsTable(silver_table)
 
@@ -119,8 +121,9 @@ def update_silver_layer(bronze_table, silver_table):
        .writeStream
          .foreachBatch(merge_stream)
          .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{silver_table}")
-         .trigger(availableNow=True)
-       .start().awaitTermination())
+          #.trigger(processingTime='10 seconds')
+          .trigger(availableNow=True)
+          .start().awaitTermination())
 
 # COMMAND ----------
 
@@ -149,7 +152,7 @@ def refresh_cdc_table(table):
     raise e
   
 #Enable Schema evolution during merges (to capture new columns)  
-spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+#spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
 
 #iterate over all the tables folders
 tables = [table_path.name[:-1] for table_path in dbutils.fs.ls(base_folder)]

@@ -200,13 +200,22 @@ CREATE OR REPLACE TABLE churn_users_protected AS SELECT * FROM churn_users
 CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
    RETURN IF(is_account_group_member('retail_admin'), column_value, "****");
    
--- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
-
 -- Mask all PII information
 ALTER TABLE churn_users_protected ALTER COLUMN email SET MASK simple_mask;
 ALTER TABLE churn_users_protected ALTER COLUMN firstname SET MASK simple_mask;
 ALTER TABLE churn_users_protected ALTER COLUMN lastname SET MASK simple_mask;
 ALTER TABLE churn_users_protected ALTER COLUMN address SET MASK simple_mask;
+
+-- Apply row filter based on the country
+CREATE OR REPLACE FUNCTION country_filter(country_param STRING) 
+RETURN 
+  is_account_group_member('retail_admin') or  -- retail_admin can access all regions (you could do that with another table)
+  country_param like "US%";                   -- non retail_admin's can only access regions containing US
+
+ALTER TABLE churn_users_protected SET ROW FILTER country_filter ON (country);
+
+-- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
+-- ALTER FUNCTION country_filter OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
 SELECT * FROM churn_users_protected
 

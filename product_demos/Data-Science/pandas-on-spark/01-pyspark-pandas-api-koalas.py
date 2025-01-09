@@ -94,6 +94,7 @@ users["age_group"].value_counts(dropna=False).sort_values()
 # DBTITLE 1,Import pandas SQL, and run any SQL referencing the pandas dataframe by name:
 from pyspark.pandas import sql
 age_group = 2
+#Note: this might not work as expected on serverless compute - stay tune as we're workign on it
 sql("""SELECT age_group, COUNT(*) AS customer_per_segment FROM {users} 
         where age_group > {age_group}
       GROUP BY age_group ORDER BY age_group """, users=users, age_group=age_group)

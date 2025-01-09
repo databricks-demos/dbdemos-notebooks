@@ -27,6 +27,7 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # DBTITLE 1,Use Catalog Created
 def download_recipient_credential(recipient, location):
+  import urllib.request
   sql(f"""DROP RECIPIENT {recipient}""")
   sql(f"""CREATE RECIPIENT {recipient}""")
   if recipient == 'dbdemos_americanairlines_recipient':

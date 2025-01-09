@@ -412,7 +412,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE VIEW customer_gold_secured AS
+CREATE OR REPLACE LIVE VIEW customer_gold_secured AS
 SELECT
   c.* EXCEPT (first_name),
   CASE

@@ -241,8 +241,6 @@ from pyspark.sql.functions import col
 import mlflow
 
 import databricks
-try: 
-  from databricks import automl
 except Exception as e:
   if "ImportError: cannot import name 'automl' from 'databricks'" in str(e):  
     print("AutoML is classification through Serverless is coming soon. If you are using an express workspace, we will use a provided notebook. ")  

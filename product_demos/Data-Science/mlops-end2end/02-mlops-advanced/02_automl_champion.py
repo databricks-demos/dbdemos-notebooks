@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering=0.8.0 lightgbm=4.5.0 pyarrow==14.0.0 hyperopt shap
+# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering=0.8.0 lightgbm=4.5.0 pyarrow==14.0.0 databricks-automl-runtime==0.2.21 hyperopt shap
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -159,10 +159,7 @@ df_loaded = training_set_specs.load_df().toPandas()
 
 # COMMAND ----------
 
-try: 
-    from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-except Exception as e:
-    print("AutoML through Serverless is coming soon. Currently, we will use utils in the setup. ")
+from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
     
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "avg_price_increase", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
@@ -240,10 +237,7 @@ numerical_transformers = [("numerical", numerical_pipeline, ["monthly_charges", 
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-try: 
-    from databricks.automl_runtime.sklearn import OneHotEncoder
-except Exception as e:
-    print("AutoML through Serverless is coming soon. Instead, we will use some util functions that replicate this library. ")
+from databricks.automl_runtime.sklearn import OneHotEncoder
 
 
 one_hot_imputers = []

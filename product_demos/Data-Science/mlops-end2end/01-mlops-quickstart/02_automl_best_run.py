@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 hyperopt shap lightgbm
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 hyperopt shap lightgbm
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -110,11 +110,8 @@ display(df_loaded.head(5))
 # MAGIC `[]` are dropped in the pipelines. See the Alerts tab of the AutoML Experiment page for details on why these columns are dropped.
 
 # COMMAND ----------
-
-try: 
-    from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-except Exception as e:
-    print("AutoML through Serverless is coming soon. Currently, we will use utils in the setup. ")
+ 
+from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
 
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
@@ -192,12 +189,9 @@ numerical_transformers = [("numerical", numerical_pipeline, ["monthly_charges", 
 
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-try: 
-    from databricks.automl_runtime.sklearn import OneHotEncoder
-except Exception as e:
-    print("AutoML through Serverless is coming soon. Instead, we will use some util functions that replicate this library. ")
-    
+from sklearn.pipeline import Pipeline 
+from databricks.automl_runtime.sklearn import OneHotEncoder
+
 one_hot_imputers = []
 one_hot_pipeline = Pipeline(steps=[
     ("imputers", ColumnTransformer(one_hot_imputers, remainder="passthrough")),

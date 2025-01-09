@@ -227,7 +227,7 @@ except Exception as e:
     if "cannot import name 'automl'" in str(e):
         # Note: cannot import name 'automl' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
         # adding a temporary workaround to make sure this works well for now -- ignore this for classic run
-        create_mockup_automl_run_for_dbdemos(f"{xp_path}/{xp_name}", churn_features.toPandas()) 
+        DBDemos.create_mockup_automl_run_for_dbdemos(f"{xp_path}/{xp_name}", churn_features.toPandas()) 
     else: 
         raise e
     

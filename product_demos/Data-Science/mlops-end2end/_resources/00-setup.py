@@ -293,7 +293,3 @@ def display_automl_churn_link():
 
 def get_automl_churn_run(): 
   return get_automl_run_or_start("churn_auto_ml", "field_demos_customer_churn", spark.table("churn_features"), "churn", 5)
-
-# COMMAND ----------
-
-# MAGIC %run ./automl_helpers

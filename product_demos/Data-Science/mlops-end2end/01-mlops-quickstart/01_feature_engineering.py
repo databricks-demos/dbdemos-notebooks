@@ -101,6 +101,7 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 
   # Return the cleaned Spark dataframe
   return data_psdf.to_spark()
+
 # COMMAND ----------
 
 # MAGIC %md-sandbox
@@ -202,7 +203,7 @@ spark.sql(f"""COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The feat
 # DBTITLE 1,Run 'baseline' autoML experiment in the back-ground
 from datetime import datetime
 
-xp_path = "/Shared/dbdemos/experiments/mlops" # make sure this folder exists
+xp_path = "/Shared/dbdemos/experiments/mlops"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 
 churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})

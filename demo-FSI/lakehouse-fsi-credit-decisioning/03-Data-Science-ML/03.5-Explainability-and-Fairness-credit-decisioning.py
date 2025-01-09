@@ -94,6 +94,7 @@ banked_df = df[df.defaulted!=2].toPandas() # Features for rest of the customers
 mlflow.autolog(disable=True)
 mlflow.sklearn.autolog(disable=True)
 
+import shap
 train_sample = banked_df[features].sample(n=np.minimum(100, banked_df.shape[0]), random_state=42)
 underbanked_sample = underbanked_df.sample(n=np.minimum(100, underbanked_df.shape[0]), random_state=42)
 

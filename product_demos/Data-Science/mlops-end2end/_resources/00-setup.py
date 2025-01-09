@@ -239,11 +239,7 @@ except:
 from pyspark.sql.functions import col
 #from databricks.feature_store import FeatureStoreClient
 import mlflow
-
 import databricks
-except Exception as e:
-  if "ImportError: cannot import name 'automl' from 'databricks'" in str(e):  
-    print("AutoML is classification through Serverless is coming soon. If you are using an express workspace, we will use a provided notebook. ")  
 from datetime import datetime
 
 def get_automl_run(name):

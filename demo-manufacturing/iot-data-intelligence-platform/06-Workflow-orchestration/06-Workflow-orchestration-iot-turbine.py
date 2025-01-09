@@ -2,7 +2,7 @@
 # MAGIC %md-sandbox
 # MAGIC # Deploying and orchestrating the full workflow
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-03%20at%2014.16.23.png?raw=true" />
+# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_5.png" />
 # MAGIC
 # MAGIC All our assets are ready. We now need to define when we want our DLT pipeline to kick in and refresh the tables.
 # MAGIC

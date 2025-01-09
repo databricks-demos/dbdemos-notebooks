@@ -30,7 +30,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # BI & Datawarehousing with Databricks SQL
 -- MAGIC
--- MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.44.07.png?raw=true" />
+-- MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_alice.png" />
 -- MAGIC
 -- MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
 -- MAGIC

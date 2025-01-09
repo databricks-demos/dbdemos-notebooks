@@ -19,27 +19,25 @@
 # MAGIC   height: 35px}
 # MAGIC </style>
 # MAGIC <link href='https://fonts.googleapis.com/css?family=DM Sans' rel='stylesheet'>
-# MAGIC <div style="font-family: 'DM Sans'">
-# MAGIC   <div style="width: 500px; color: #1b3139; margin-left: 50px; float: left">
-# MAGIC     <div style="color: #ff5f46; font-size:80px">90%</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
+# MAGIC <div style="font-family: 'DM Sans'; display: flex; align-items: flex-start;">
+# MAGIC   <!-- Left Section -->
+# MAGIC   <div style="width: 50%; color: #1b3139; padding-right: 20px;">
+# MAGIC     <div style="color: #ff5f46; font-size:80px;">90%</div>
+# MAGIC     <div style="font-size:30px; margin-top: -20px; line-height: 30px;">
 # MAGIC       Enterprise applications will be AI-augmented by 2025 —IDC
 # MAGIC     </div>
-# MAGIC     <div style="color: #ff5f46; font-size:80px">$10T+</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
+# MAGIC     <div style="color: #ff5f46; font-size:80px;">$10T+</div>
+# MAGIC     <div style="font-size:30px; margin-top: -20px; line-height: 30px;">
 # MAGIC        Projected business value creation by AI in 2030 —PWC
 # MAGIC     </div>
 # MAGIC   </div>
-# MAGIC </div>
 # MAGIC
-# MAGIC
-# MAGIC
-# MAGIC   <div class="right_box">
-# MAGIC       But—huge challenges getting ML to work at scale!<br/><br/>
-# MAGIC       Most ML projects still fail before getting to production
+# MAGIC   <!-- Right Section -->
+# MAGIC   <div class="right_box", style="width: 50%; color: red; font-size: 30px; line-height: 1.5; padding-left: 20px;">
+# MAGIC     But—huge challenges getting ML to work at scale!<br/><br/>
+# MAGIC     In fact, most ML projects still fail before getting to production
 # MAGIC   </div>
-# MAGIC   
-# MAGIC <br style="clear: both">
+# MAGIC </div>
 # MAGIC
 # MAGIC ## Machine learning is data + transforms.
 # MAGIC
@@ -48,9 +46,9 @@
 # MAGIC Stepping back, all pipelines are data + code.
 # MAGIC
 # MAGIC
-# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.43.52.png?raw=true" />
+# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_marc.png" />
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/ds.png" style="float: left;" width="80px"> 
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/marc.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Marc, as a Data Scientist, needs a data + ML platform accelerating all the ML & DS steps:</h3>
 # MAGIC
 # MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">

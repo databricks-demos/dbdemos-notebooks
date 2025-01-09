@@ -21,7 +21,7 @@
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC
--- MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
+-- MAGIC ## <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
 -- MAGIC
 -- MAGIC
 -- MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>
@@ -42,7 +42,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Simplify Ingestion and Transformation with Delta Live Tables
 -- MAGIC
--- MAGIC <img style="float: right" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.44.32.png?raw=true" />
+-- MAGIC <img style="float: right" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_john.png" />
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our IOT platform. <br>
 -- MAGIC We'll ingest and clean our raw data sources to prepare the tables required for our BI & ML workload.

@@ -36,9 +36,9 @@
 # MAGIC </style>
 # MAGIC
 # MAGIC
-# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2014.43.40.png?raw=true" />
+# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_liza.png" />
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cdo.png?raw=true" style="float: left;" width="80px"> 
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/liza.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Liza, as a Generative AI engineer, needs a data + AI platform accelerating all the GenAI steps:</h3>
 # MAGIC <br>
 # MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">
@@ -66,7 +66,7 @@
 # MAGIC - Use agents to reason about the tools you selected and chain them together to properly answer your question. 
 # MAGIC
 # MAGIC At a high level, here is the agent system we will implement in this demo:
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Prescriptive%20Maintenance%20Demo%20Overview%20(15).png?raw=true" style="margin-left: 10px"  width="1000px;">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_7.png" style="margin-left: 05%"  width="1000px;">
 # MAGIC
 # MAGIC This notebook creates the three Mosaic AI tools and associated Mosaic AI endpoints, which will be composed together into a agent in notebook [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-agent-framework-iot-turbine-prescriptive-maintenance).
 # MAGIC 1. **Turbine predictor** which uses a Model Serving endpoint to predict turbines at risk of failure.
@@ -89,7 +89,7 @@
 # MAGIC %md-sandbox
 # MAGIC ## Part 1: Create the Turbine Predictor as a tool to predict turbine failure
 # MAGIC
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/model.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_2.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
 # MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we have to deploy the predictive mainteance model created in [04.1-automl-iot-turbine-predictive-maintenance]($./04.1-automl-iot-turbine-predictive-maintenance) notebook. To so, you can create a Model Serving endpoint from the Catalog Explorer UI, Databricks SDK or Rest API. 
 # MAGIC
@@ -212,7 +212,7 @@ display(df)
 # MAGIC %md-sandbox
 # MAGIC ### Creating the Vector Search endpoint
 # MAGIC
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/vector.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_4.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
 # MAGIC Direct Vector Access Index supports direct read and write of vectors and metadata. The user is responsible for updating this table using the REST API or the Python SDK. This type of index cannot be created using the UI. You must use the REST API or the SDK.
 # MAGIC
@@ -377,7 +377,7 @@ $$;""")
 # MAGIC %md-sandbox
 # MAGIC ## Part 3: Create the Turbine Specifications Retriever as a tool to retrieve turbine specifications
 # MAGIC
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/feature.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_3.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
 # MAGIC To enable our Agent System to retrieve turbine specifications for turbines predicted t obe faulty, we need to create and serve a feature table through a feature serving endpoint.
 # MAGIC

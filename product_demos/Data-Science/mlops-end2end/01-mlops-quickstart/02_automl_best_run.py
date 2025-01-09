@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 hyperopt shap lightgbm
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 holidays=0.64 category_encoders=2.7.0 hyperopt=0.2.7 shap=0.46.0 lightgbm=4.5.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

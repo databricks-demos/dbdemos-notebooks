@@ -9,6 +9,7 @@
   "name": "lakehouse-hls-readmission",
   "category": "lakehouse",
   "title": "Lakehouse for HLS: Patient readmission",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_hls_readmission",

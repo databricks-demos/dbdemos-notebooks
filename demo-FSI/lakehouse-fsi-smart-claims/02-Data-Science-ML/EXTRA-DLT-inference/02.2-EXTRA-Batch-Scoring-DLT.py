@@ -14,8 +14,8 @@ import dlt
 from pyspark.sql import functions as F
 from pyspark.sql.functions import lit, concat, col
 
-catalog = "main"
-db = "fsi_smart_claims"
+catalog = "main__build"
+schema = dbName = db = "dbdemos_fsi_smart_claims"
 volume_name = "volume_claims"
 
 # COMMAND ----------

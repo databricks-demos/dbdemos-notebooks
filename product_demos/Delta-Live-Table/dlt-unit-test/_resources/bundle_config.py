@@ -9,9 +9,10 @@
   "name": "dlt-unit-test",
   "category": "data-engineering",
   "title": "Unit Testing Delta Live Table (DLT) for production-grade pipelines",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
-  "default_schema": "&",
+  "default_schema": "dbdemos_dlt_unit_test",
   "description": "Deploy robust Delta Live Table pipelines with unit tests leveraging expectation.",
   "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Delta Live Table let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your DLT pipeline and make it composable, easily switching input data with your test data.",
   "usecase": "Data Engineering",
@@ -106,7 +107,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "14.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.4.x-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"

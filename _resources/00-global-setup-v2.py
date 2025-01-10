@@ -239,23 +239,79 @@ class DBDemos():
         raise Exception(f"Invalid experiment format or no experiment available. Please re-run the previous notebook. {last_xp['path']}")
     return last_xp
   
+
+  @staticmethod
+  def wait_for_table(table_name, timeout_duration=120):
+    import time
+    i = 0
+    while not spark.catalog.tableExists(table_name) or spark.table(table_name).count() == 0:
+      time.sleep(1)
+      if i > timeout_duration:
+        raise Exception(f"couldn't find table {table_name} or table is empty. Do you have data being generated to be consumed?")
+      i += 1
+
+
   # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
   @staticmethod
-  def create_mockup_automl_run(full_xp_path, df):
+  def create_mockup_automl_run(full_xp_path, df, model_name=None, target_col=None):
     import mlflow
+    import os
     print("AutoML doesn't seem to be available, creating a mockup automl run instead - automl serverless will be added soon...")
+    from databricks.sdk import WorkspaceClient
+    # Initialize the WorkspaceClient
+    w = WorkspaceClient()
+    w.workspace.mkdirs(path=os.path.dirname(full_xp_path))
     xp = mlflow.create_experiment(full_xp_path)
     mlflow.set_experiment(experiment_id=xp)
     with mlflow.start_run(run_name="DBDemos automl mock autoML run", experiment_id=xp) as run:
         mlflow.set_tag('mlflow.source.name', 'Notebook: DataExploration')
         mlflow.log_metric('val_f1_score', 0.81)
+        
         split_choices = ['train', 'val', 'test']
         split_probabilities = [0.7, 0.2, 0.1]  # 70% train, 20% val, 10% test
         # Add a new column with random assignments
         import numpy as np
         df['_automl_split_col'] = np.random.choice(split_choices, size=len(df), p=split_probabilities)
-        df.to_parquet('/tmp/dataset.parquet', index=False)
-        mlflow.log_artifact('/tmp/dataset.parquet', artifact_path='data/training_data')
+        import uuid
+        import os
+        random_path = f"/tmp/{uuid.uuid4().hex}/dataset.parquet"
+        os.makedirs(os.path.dirname(random_path), exist_ok=True)
+        df.to_parquet(random_path, index=False)
+        mlflow.log_artifact(random_path, artifact_path='data/training_data')
+        
+        if model_name is not None and target_col is not None:
+            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.metrics import f1_score
+            
+            # Split the data based on _automl_split_col
+            train_df = df[df['_automl_split_col'] == 'train']
+            val_df = df[df['_automl_split_col'] == 'val']
+            
+            # Prepare training and validation datasets
+            X_train = train_df.drop(columns=['_automl_split_col', target_col], errors='ignore')
+            y_train = train_df[target_col]
+            X_val = val_df.drop(columns=['_automl_split_col', target_col], errors='ignore')
+            y_val = val_df[target_col]
+            
+            # Train RandomForest model
+            model = RandomForestClassifier(random_state=42)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_val)
+            val_f1 = f1_score(y_val, y_pred, average='weighted')
+            
+            # Log model and metric to MLflow
+            mlflow.log_metric('val_f1_score', val_f1)
+            mlflow.sklearn.log_model(model, artifact_path="model", input_example=X_train.iloc[[0]])
+
+        class BestTrial:
+            def __init__(self, mlflow_run_id):
+                self.mlflow_run_id = mlflow_run_id
+        
+        class AutoMLRun:
+            def __init__(self, best_trial_mlflow_run_id):
+                self.best_trial = BestTrial(best_trial_mlflow_run_id)
+        
+        return AutoMLRun(run.info.run_id)
 
 # COMMAND ----------
 

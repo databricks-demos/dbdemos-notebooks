@@ -138,8 +138,8 @@ def customers_cdc():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Silver Layer - Cleansed Table (Impose Constraints)
+
 # This could also be a view: create_view
 @dlt.table(
     name="customers_cdc_clean",

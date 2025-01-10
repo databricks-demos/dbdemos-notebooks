@@ -19,13 +19,17 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0 databricks-sdk==0.39.0
+
+# COMMAND ----------
+
 # MAGIC %run ../config
 
 # COMMAND ----------
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import os
 import mlflow
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 mlflow.set_registry_uri('databricks-uc')
 local_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts("") # download model from remote registry
 
@@ -35,7 +39,6 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0
 # MAGIC %pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
@@ -148,8 +151,8 @@ def score_model(dataset):
 # MAGIC
 # MAGIC Of course, this churn prediction can be re-used in our dashboard to analyse future churn and measure churn reduction. 
 # MAGIC
-# MAGIC The pipeline created with the Lakehouse will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
+# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC
-# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
+# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance AI/BI dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

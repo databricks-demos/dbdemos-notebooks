@@ -125,8 +125,8 @@ def raw_historical_loans():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,enrich transactions with metadata
+
 @dlt.view(comment="Livestream of new transactions")
 def new_txs():
     txs = dlt.read_stream("raw_txs").alias("txs")
@@ -138,8 +138,8 @@ def new_txs():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Keep only the proper transactions. Fail if cost center isn't correct, discard the others.
+
 @dlt.table(comment="Livestream of new transactions, cleaned and compliant")
 @dlt.expect("Payments should be this year", "(next_payment_date > date('2020-12-31'))")
 @dlt.expect_or_drop(
@@ -152,8 +152,8 @@ def cleaned_new_txs():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Let's quarantine the bad transaction for further analysis
+
 # This is the inverse condition of the above statement to quarantine incorrect data for further analysis.
 @dlt.table(comment="Incorrect transactions requiring human analysis")
 @dlt.expect("Payments should be this year", "(next_payment_date <= date('2020-12-31'))")
@@ -166,8 +166,8 @@ def quarantine_bad_txs():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Enrich all historical transactions
+
 @dlt.table(comment="Historical loan transactions")
 @dlt.expect("Grade should be valid", "(grade in ('A', 'B', 'C', 'D', 'E', 'F', 'G'))")
 @dlt.expect_or_drop("Recoveries shoud be int", "(CAST(recoveries as INT) IS NOT NULL)")
@@ -193,8 +193,8 @@ def historical_txs():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Balance aggregate per cost location
+
 @dlt.table(
     comment="Combines historical and new loan data for unified rollup of loan balances",
     cluster_by=["location_code"],
@@ -216,8 +216,8 @@ def total_loan_balances():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Balance aggregate per cost center
+
 @dlt.table(
     comment="Live table of new loan balances for consumption by different cost centers"
 )
@@ -231,8 +231,8 @@ def new_loan_balances_by_cost_center():
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Balance aggregate per country
+
 @dlt.table(comment="Live table of new loan balances per country")
 def new_loan_balances_by_country():
     return (

@@ -14,7 +14,7 @@ def getActiveStreams(startWith: String = ""): Seq[StreamingQuery] = {
 }
 
 def stopAllStreams(startWith:String = "", sleepTime:Int = 0): Unit = {
-  Thread.sleep(sleepTime)
+  Thread.sleep(sleepTime * 1000) // sleepTime is in seconds, converting to milliseconds
   val streams = getActiveStreams(startWith)
   if (streams.nonEmpty) {
       println(s"Stopping ${streams.length} streams")
@@ -46,19 +46,27 @@ def waitForTable(tableName: String, timeoutDuration: Int = 120): Unit = {
 
 // COMMAND ----------
 
-val currentUser = dbutils.notebook.getContext.tags("user")
-val currentUserNoAt = currentUser.split("@").head.replaceAll("\\W+", "_")
-val dbPrefix = dbutils.widgets.get("db_prefix")
+val catalog = "main__build"
+val db = "dbdemos_streaming_sessionization"
+val dbName = db
+val schema = db
 
-val dbName = s"${dbPrefix}_$currentUserNoAt"
-var cloudStoragePath = s"/Users/$currentUser/demos/$dbPrefix/scala"
+val volumeName = "raw_data"
+
+val rootVolumeFolder = s"/Volumes/$catalog/$db/$volumeName"
 
 // COMMAND ----------
 
 import org.apache.spark.sql.functions._
 
-cloudStoragePath = s"$cloudStoragePath/sessions"
+// Assuming volumeFolder is already defined
+val volumeFolder = s"$rootVolumeFolder/scala_sessions"
 
-// Reduce parallelism as we have just a few messages being produced
-spark.conf.set("spark.default.parallelism", "12")
-spark.conf.set("spark.sql.shuffle.partitions", "12")
+try {
+  // Deliberate error: assigning to an undeclared variable
+  spark.conf.set("spark.default.parallelism", "12")
+  spark.conf.set("spark.sql.shuffle.partitions", "12")
+} catch {
+  case e: Exception => 
+    println(s"An error occurred: ${e.getMessage} (conf not available in serverless)")
+}

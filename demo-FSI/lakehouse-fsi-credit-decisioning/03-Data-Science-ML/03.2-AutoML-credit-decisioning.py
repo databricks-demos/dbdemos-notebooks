@@ -70,6 +70,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0 scikit-learn==1.3.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -93,6 +98,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Loading the training dataset from the Databricks Feature Store
+from databricks import feature_store
 fs = feature_store.FeatureStoreClient()
 features_set = fs.read_table(name=f"{catalog}.{db}.credit_decisioning_features")
 display(features_set)
@@ -174,18 +180,27 @@ px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='
 
 # COMMAND ----------
 
-from databricks import automl
+model_name = "dbdemos_fsi_credit_decisioning"
 xp_path = "/Shared/dbdemos/experiments/lakehouse-fsi-credit-decisioning"
 xp_name = f"automl_credit_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = train_df.sample(0.1),
-    target_col = "defaulted",
-    timeout_minutes = 10
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+try:
+    from databricks import automl
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = train_df.sample(0.1),
+        target_col = "defaulted",
+        timeout_minutes = 10
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        automl_run = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", train_df.sample(0.1).toPandas(), model_name=model_name, target_col="defaulted")
+    else:
+        raise e
 
 # COMMAND ----------
 
@@ -200,6 +215,7 @@ DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
 model_name = "dbdemos_fsi_credit_decisioning"
 from mlflow import MlflowClient
+import mlflow
 
 #Use Databricks Unity Catalog to save our model
 mlflow.set_registry_uri('databricks-uc')

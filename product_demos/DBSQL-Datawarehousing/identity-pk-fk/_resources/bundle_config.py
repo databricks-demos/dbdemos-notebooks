@@ -8,6 +8,10 @@
 {
   "name": "identity-pk-fk",
   "category": "DBSQL",
+  "serverless_supported": True,
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_pk_fk",
   "title": "Data Warehousing with Identity, Primary Key & Foreign Key",
   "description": "Define your schema with auto incremental column and Primary + Foreign Key. Ideal for Data Warehouse & BI support!",
   "fullDescription": "To simplify SQL operations and support migrations from on-prem and alternative warehouse, Databricks Lakehouse now provide convenient ways to build Entity Relationship Diagrams that are simple to maintain and evolve. In this demo, we'll cover:<ul><li>The ability to automatically generate auto-incrementing identify columns. Just insert data and the engine will automatically increment the ID.</li><li>Support for defining primary key</li><li>Support for defining foreign key constraints.</li></ul>Databricks Lakehouse is the best Datawarehouse!",

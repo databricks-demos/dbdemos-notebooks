@@ -9,6 +9,7 @@
   "name": "dlt-loans",
   "category": "data-engineering",
   "title": "Full Delta Live Tables Pipeline - Loan",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_dlt_loan",
@@ -122,7 +123,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "15.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.4.x-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"

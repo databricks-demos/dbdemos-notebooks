@@ -78,9 +78,10 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
                 .load(raw_data_location+'/user_csv'))
 
-(bronzeDF.withColumn("file_name", F.input_file_name()).writeStream
+(bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
         .trigger(processingTime='10 seconds')
+        #.trigger(availableNow=True) --use this trigger on serverless
         .table("clients_cdc"))
 
 time.sleep(20)
@@ -120,7 +121,7 @@ def merge_stream(df, i):
   df.createOrReplaceTempView("clients_cdc_microbatch")
   #First we need to dedup the incoming data based on ID (we can have multiple update of the same row in our incoming data)
   #Then we run the merge (upsert or delete). We could do it with a window and filter on rank() == 1 too
-  df._jdf.sparkSession().sql("""MERGE INTO retail_client_silver target
+  df.sparkSession.sql("""MERGE INTO retail_client_silver target
                                 USING
                                 (select id, name, address, email, operation from 
                                   (SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY operation_date DESC) as rank from clients_cdc_microbatch) 
@@ -131,13 +132,14 @@ def merge_stream(df, i):
                                 WHEN MATCHED AND source.operation != 'DELETE' THEN UPDATE SET *
                                 WHEN NOT MATCHED AND source.operation != 'DELETE' THEN INSERT *""")
   
-spark.readStream \
-       .table("clients_cdc") \
-     .writeStream \
-       .foreachBatch(merge_stream) \
-       .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc") \
-       .trigger(processingTime='10 seconds') \
-     .start()
+(spark.readStream
+       .table("clients_cdc")
+     .writeStream
+       .foreachBatch(merge_stream)
+       .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
+       .trigger(processingTime='10 seconds')
+       #.trigger(availableNow=True) --use this trigger on serverless
+     .start())
 
 time.sleep(20)
 
@@ -281,6 +283,9 @@ def upsertToDelta(data, batchId):
        .withColumn("gold_data", lit("Delta CDF is Awesome"))
       .writeStream
         .foreachBatch(upsertToDelta)
+        .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
+        .trigger(processingTime='10 seconds')
+        #.trigger(availableNow=True) --use this trigger on serverless
       .start())
 
 time.sleep(20)

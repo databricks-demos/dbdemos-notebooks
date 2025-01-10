@@ -27,21 +27,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Cluster setup for UC
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_assigned.png?raw=true" style="float: right"/>
-# MAGIC
-# MAGIC
-# MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
-# MAGIC
-# MAGIC Go in the compute page, create a new cluster.
-# MAGIC
-# MAGIC Select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
-
-# COMMAND ----------
-
-# MAGIC %run ./_resources/00-setup $catalog=dbdemos
+# MAGIC %run ./_resources/00-setup
 
 # COMMAND ----------
 
@@ -62,10 +48,10 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS uc_lineage.menu (recipe_id INT, app string, main string, desert string);
-# MAGIC DELETE from uc_lineage.menu ;
+# MAGIC CREATE TABLE IF NOT EXISTS menu (recipe_id INT, app string, main string, desert string);
+# MAGIC DELETE from menu ;
 # MAGIC
-# MAGIC INSERT INTO uc_lineage.menu 
+# MAGIC INSERT INTO menu 
 # MAGIC     (recipe_id, app, main, desert) 
 # MAGIC VALUES 
 # MAGIC     (1,"Ceviche", "Tacos", "Flan"),
@@ -81,8 +67,8 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS uc_lineage.dinner 
-# MAGIC   AS SELECT recipe_id, concat(app," + ", main," + ",desert) as full_menu FROM uc_lineage.menu
+# MAGIC CREATE TABLE IF NOT EXISTS dinner 
+# MAGIC   AS SELECT recipe_id, concat(app," + ", main," + ",desert) as full_menu FROM menu
 
 # COMMAND ----------
 
@@ -99,13 +85,13 @@
 
 df = spark.range(3).withColumn("price", F.round(10*F.rand(seed=42),2)).withColumnRenamed("id", "recipe_id")
 
-df.write.mode("overwrite").saveAsTable("uc_lineage.price")
+df.write.mode("overwrite").saveAsTable("price")
 
-dinner = spark.read.table("uc_lineage.dinner")
-price = spark.read.table("uc_lineage.price")
+dinner = spark.read.table("dinner")
+price = spark.read.table("price")
 
 dinner_price = dinner.join(price, on="recipe_id")
-dinner_price.write.mode("overwrite").saveAsTable("uc_lineage.dinner_price")
+dinner_price.write.mode("overwrite").saveAsTable("dinner_price")
 
 
 # COMMAND ----------

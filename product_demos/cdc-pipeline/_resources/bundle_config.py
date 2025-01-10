@@ -8,6 +8,7 @@
 {
   "name": "cdc-pipeline",
   "category": "data-engineering",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_cdc_pipeline",

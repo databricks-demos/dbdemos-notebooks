@@ -211,7 +211,7 @@ SELECT * FROM fact_sales
 -- COMMAND ----------
 
 -- DBTITLE 1,Clean Up
--- MAGIC %python spark.sql(f"DROP DATABASE {catalog}.{database} CASCADE")
+-- %python spark.sql(f"DROP DATABASE {catalog}.{db} CASCADE")
 
 -- COMMAND ----------
 

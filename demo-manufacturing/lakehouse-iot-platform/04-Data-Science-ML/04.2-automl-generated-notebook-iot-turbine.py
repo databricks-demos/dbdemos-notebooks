@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC All the code below has been automatically generated. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
 # MAGIC
-# MAGIC This saves Datascientists hours of developement and allow team to quickly bootstrap and validate new project.
+# MAGIC This saves Data scientists hours of development and allows teams to quickly bootstrap and validate new project.
 # MAGIC
 # MAGIC *Make sure you run the previous notebook to be able to access the data.*
 # MAGIC
@@ -20,9 +20,9 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.17.2 cloudpickle==2.2.1 databricks-sdk==0.36.0
+# MAGIC %pip install mlflow==2.19.0 cloudpickle==2.2.1 databricks-sdk==0.36.0
 # MAGIC # hardcode the ml 15.4 LTS libraries versions here for demo stability
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1 shap==0.46.0 hyperopt==0.2.7
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -19,6 +19,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install mlflow==2.19.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -38,6 +43,7 @@
 
 # COMMAND ----------
 
+import mlflow
 #Make sure we use Mlflow with UC registry
 mlflow.set_registry_uri('databricks-uc')
 # Load model as a Spark UDF.

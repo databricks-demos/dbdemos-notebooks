@@ -1,31 +1,31 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Accessing the data as a Consumer
-# MAGIC 
+# MAGIC
 # MAGIC In the previous notebook, we shared our data and granted read access to our RECIPIENT.
-# MAGIC 
+# MAGIC
 # MAGIC Let's now see how external consumers can directly access the data.
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/delta-sharing/resources/images/delta-sharing-flow.png" width="900px"/>
-# MAGIC 
+# MAGIC
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fdelta_sharing%2Fnotebook_consumer%2Faccess&dt=FEATURE_DELTA_SHARING">
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## Delta Sharing Credentials
-# MAGIC 
+# MAGIC
 # MAGIC When a new Recipient entity is created for a Delta Share an activation link for that recipient will be generated. That URL will lead to a website for data recipients to download a credential file that contains a long-term access token for that recipient. Following the link will be take the recipient to an activation page that looks similar to this:
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/kanonymity_share_activation.png" width=600>
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC From this site the .share credential file can be downloaded by the recipient. This file contains the information and authorization token needed to access the Share. The contents of the file will look similar to the following example.
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/delta_sharing_cred_file_3.png" width="800">
-# MAGIC 
+# MAGIC
 # MAGIC Due to the sensitive nature of the token, be sure to save it in a secure location and be careful when visualising or displaying the contents. 
 
 # COMMAND ----------
@@ -33,9 +33,9 @@
 # DBTITLE 0,Let's Start With the Vast and Trusted Python Developers as Consumers
 # MAGIC %md
 # MAGIC # Accessing the data using plain Python
-# MAGIC 
+# MAGIC
 # MAGIC `delta-sharing` is available as a python package that can be installed via pip. <br>
-# MAGIC 
+# MAGIC
 # MAGIC This simplifies the consumer side integration; anyone who can run python can consume shared data via SharingClient object. <br>
 
 # COMMAND ----------
@@ -49,7 +49,7 @@ import delta_sharing
 # Southwest Airlines
 # In the previous notebook, we saved the credential file under dbfs:/FileStore/southwestairlines.share
 # Let's re-use it directly to access our data. If you get access error, please re-run the previous notebook
-americanairlines_profile = '/dbfs/FileStore/americanairlines.share'
+americanairlines_profile = '/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/americanairlines.share'
 
 # Create a SharingClient
 client = delta_sharing.SharingClient(americanairlines_profile)
@@ -60,7 +60,7 @@ client.list_all_tables()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC It is possible to iterate through the list to view all of the tables along with their corresponding schemas and shares. <br>
 # MAGIC The share file can be stored on a remote storage.
 
@@ -89,7 +89,7 @@ for share in shares:
 
 # COMMAND ----------
 
-table_url = f"{americanairlines_profile}#americanairlines.dbdemos_sharing_airlinedata.lookupcodes"
+table_url = f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.lookupcodes"
 
 # Use delta sharing client to load data
 flights_df = delta_sharing.load_as_pandas(table_url)
@@ -115,7 +115,7 @@ flights_df.head(10)
 
 # COMMAND ----------
 
-spark_flights_df = delta_sharing.load_as_spark("/FileStore/americanairlines.share#americanairlines.dbdemos_sharing_airlinedata.2008_flights")
+spark_flights_df = delta_sharing.load_as_spark(f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.flights_protected")
 
 from pyspark.sql.functions import sum, col, count
 
@@ -132,7 +132,7 @@ display(spark_flights_df.
 
 # COMMAND ----------
 
-spark_flights_df = spark.read.format('deltaSharing').load("/FileStore/americanairlines.share#americanairlines.dbdemos_sharing_airlinedata.2008_flights")
+spark_flights_df = spark.read.format('deltaSharing').load(f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.lookupcodes")
 
 display(spark_flights_df.
         where('cancelled = 1').
@@ -144,9 +144,9 @@ display(spark_flights_df.
 
 # MAGIC %md
 # MAGIC # Query your Delta Sharing table using plain SQL with Databricks!
-# MAGIC 
+# MAGIC
 # MAGIC As a Databricks user, you can experience Delta Sharing using plain SQL directly in your notebook, making data access even easier.
-# MAGIC 
+# MAGIC
 # MAGIC It's then super simple to do any kind of queries using the remote table, including joining a Delta Sharing table with a local one or any other operation.
 
 # COMMAND ----------
@@ -159,51 +159,52 @@ display(spark_flights_df.
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DROP TABLE IF EXISTS delta_sharing_demo_flights;
-# MAGIC CREATE TABLE IF NOT EXISTS delta_sharing_demo_flights
+# MAGIC DROP TABLE IF EXISTS dbdemos_delta_sharing_demo_flights;
+# MAGIC CREATE TABLE IF NOT EXISTS dbdemos_delta_sharing_demo_flights
 # MAGIC     USING deltaSharing
-# MAGIC     LOCATION "dbfs:/FileStore/americanairlines.share#americanairlines.dbdemos_sharing_airlinedata.2008_flights";
+# MAGIC     LOCATION "/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/americanairlines.share#dbdemos_americanairlines.dbdemos_sharing_airlinedata.flights_protected";
 
 # COMMAND ----------
 
-# MAGIC %sql select * from delta_sharing_demo_flights
+# MAGIC %sql select * from dbdemos_delta_sharing_demo_flights
 
 # COMMAND ----------
 
 # DBTITLE 1,Make sure you delete your demo catalog at the end of the demo
-#cleanup_catalog(catalog)
+#CLEANUP THE DEMO FOR FRESH START, delete all share and recipient created
+#cleanup_demo()
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC # Integration with external tools such as Power BI
-# MAGIC 
+# MAGIC
 # MAGIC Delta Sharing is natively integrated with many tools outside of Databricks. 
-# MAGIC 
+# MAGIC
 # MAGIC As example, users can natively access a Delta Sharing table within powerBI directly:
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC 
+# MAGIC
 # MAGIC <iframe width="560" height="315" src="https://www.youtube.com/embed/vZ1jcDh_tsw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC 
+# MAGIC
 # MAGIC # Conclusion
 # MAGIC To recap, Delta Sharing is a cloud and platform agnostic solution to share your data with external consumer. 
-# MAGIC 
+# MAGIC
 # MAGIC It's simple (pure SQL), open (can be used on any system) and scalable.
-# MAGIC 
+# MAGIC
 # MAGIC All recipients can access your data, using Databricks or any other system on any Cloud.
-# MAGIC 
+# MAGIC
 # MAGIC Delta Sharing enable critical use cases around Data Sharing and Data Marketplace. 
-# MAGIC 
+# MAGIC
 # MAGIC When combined with Databricks Unity catalog, it's the perfect too to accelerate your Datamesh deployment and improve your data governance.
-# MAGIC 
+# MAGIC
 # MAGIC Next: Discover how to easily [Share data within Databricks with Unity Catalog]($./04-share-data-within-databricks)
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC [Back to Overview]($./01-Delta-Sharing-presentation)

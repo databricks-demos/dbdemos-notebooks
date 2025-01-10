@@ -9,6 +9,7 @@
   "name": "lakehouse-fsi-fraud",
   "category": "lakehouse",
   "title": "Retail Banking - Fraud Detection",
+  "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_fsi_fraud_detection",

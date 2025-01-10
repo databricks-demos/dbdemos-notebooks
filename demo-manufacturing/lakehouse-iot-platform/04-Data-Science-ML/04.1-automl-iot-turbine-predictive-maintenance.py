@@ -19,27 +19,25 @@
 # MAGIC   height: 35px}
 # MAGIC </style>
 # MAGIC <link href='https://fonts.googleapis.com/css?family=DM Sans' rel='stylesheet'>
-# MAGIC <div style="font-family: 'DM Sans'">
-# MAGIC   <div style="width: 500px; color: #1b3139; margin-left: 50px; float: left">
-# MAGIC     <div style="color: #ff5f46; font-size:80px">90%</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
+# MAGIC <div style="font-family: 'DM Sans'; display: flex; align-items: flex-start;">
+# MAGIC   <!-- Left Section -->
+# MAGIC   <div style="width: 50%; color: #1b3139; padding-right: 20px;">
+# MAGIC     <div style="color: #ff5f46; font-size:80px;">90%</div>
+# MAGIC     <div style="font-size:30px; margin-top: -20px; line-height: 30px;">
 # MAGIC       Enterprise applications will be AI-augmented by 2025 —IDC
 # MAGIC     </div>
-# MAGIC     <div style="color: #ff5f46; font-size:80px">$10T+</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
+# MAGIC     <div style="color: #ff5f46; font-size:80px;">$10T+</div>
+# MAGIC     <div style="font-size:30px; margin-top: -20px; line-height: 30px;">
 # MAGIC        Projected business value creation by AI in 2030 —PWC
 # MAGIC     </div>
 # MAGIC   </div>
-# MAGIC </div>
 # MAGIC
-# MAGIC
-# MAGIC
-# MAGIC   <div class="right_box">
-# MAGIC       But—huge challenges getting ML to work at scale!<br/><br/>
-# MAGIC       Most ML projects still fail before getting to production
+# MAGIC   <!-- Right Section -->
+# MAGIC   <div class="right_box", style="width: 50%; color: red; font-size: 30px; line-height: 1.5; padding-left: 20px;">
+# MAGIC     But—huge challenges getting ML to work at scale!<br/><br/>
+# MAGIC     In fact, most ML projects still fail before getting to production
 # MAGIC   </div>
-# MAGIC   
-# MAGIC <br style="clear: both">
+# MAGIC </div>
 # MAGIC
 # MAGIC ## Machine learning is data + transforms.
 # MAGIC
@@ -48,9 +46,9 @@
 # MAGIC Stepping back, all pipelines are data + code.
 # MAGIC
 # MAGIC
-# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-4.png" />
+# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_marc.png" />
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/ds.png" style="float: left;" width="80px"> 
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/marc.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Marc, as a Data Scientist, needs a data + ML platform accelerating all the ML & DS steps:</h3>
 # MAGIC
 # MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">
@@ -62,7 +60,7 @@
 # MAGIC <div class="badge_b"><div class="badge">6</div> Monitoring</div>
 # MAGIC </div>
 # MAGIC
-# MAGIC **Marc needs A Lakehouse**. Let's see how we can deploy a Predictive Maintenance model in production within the Lakehouse
+# MAGIC **Marc needs a Data Intelligence Platform**. Let's see how we can deploy a Predictive Maintenance model in production with Databricks.
 
 # COMMAND ----------
 
@@ -86,7 +84,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.29.0 databricks-feature-engineering==0.6.0 mlflow==2.17.2
+# MAGIC %pip install --quiet databricks-sdk==0.36.0 databricks-feature-engineering==0.7.0 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -145,7 +143,7 @@ g.map_lower(sns.kdeplot).map_diag(sns.kdeplot, lw=3).map_upper(sns.regplot).add_
  # Convert to pandas (koalas)
 dataset = turbine_dataset.pandas_api()
 # Drop columns we don't want to use in our model
-dataset = dataset.drop(columns=['end_time', 'start_time', '_rescued_data', 'country', 'lat', 'long', 'damaged'])
+dataset = dataset[['turbine_id', 'hourly_timestamp', 'std_sensor_A', 'std_sensor_B','std_sensor_C', 'std_sensor_D','std_sensor_E', 'std_sensor_F', 'abnormal_sensor']]
 # Drop missing values
 dataset = dataset.dropna()   
 dataset.describe()
@@ -182,10 +180,10 @@ churn_feature_table = fe.create_table(
   name=f'{catalog}.{db}.turbine_hourly_features',
   primary_keys=['turbine_id','hourly_timestamp'],
   schema=dataset.spark.schema(),
-  description='These features are derived from the turbine_training_dataset table in the lakehouse.  We made some basic transformations and removed NA value.'
+  description='These features are derived from the turbine_training_dataset table in the data intelligence platform.  We made some basic transformations and removed NA value.'
 )
 
-fe.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.turbine_hourly_features')
+fe.write_table(df=dataset.drop_duplicates(subset=['turbine_id', 'hourly_timestamp']).to_spark(), name=f'{catalog}.{db}.turbine_hourly_features')
 features = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features')
 display(features)
 
@@ -230,7 +228,7 @@ from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 
-training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
+training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id', 'hourly_timestamp').sample(0.1) #Reduce the dataset size to speedup the demo
 automl_run = automl.classify(
     experiment_name = xp_name,
     experiment_dir = xp_path,
@@ -243,10 +241,46 @@ DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 
+xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
+xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
+try:
+    from databricks import automl
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = training_dataset,
+        target_col = "abnormal_sensor",
+        timeout_minutes = 10
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_dataset.toPandas())
+    else:
+        raise e
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC AutoML saved our best model in the MLFlow registry. Open the experiment from the AutoML run to explore its artifact and analyze the parameters used, including traceability to the notebook used for its creation.
 # MAGIC
-# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API.
+# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API. Let' register the model to Unity Catalog and move it to production:
+
+# COMMAND ----------
+
+from mlflow import MlflowClient
+
+# retrieve best model trial run
+trial_id = automl_run.best_trial.mlflow_run_id
+model_uri = "runs:/{}/model".format(automl_run.best_trial.mlflow_run_id)
+#Use Databricks Unity Catalog to save our model
+latest_model = mlflow.register_model(model_uri, f"{catalog}.{db}.{model_name}")
+# Flag it as Production ready using UC Aliases
+MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
 
 # COMMAND ----------
 
@@ -260,11 +294,11 @@ DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 # MAGIC
 # MAGIC These predictions can be re-used in our dashboard to not only measure equipment failure probability, but take action to schedule maintenance and ajust spare part stock accordingly. 
 # MAGIC
-# MAGIC The pipeline created with the Lakehouse will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $Million / month!
+# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $Million / month!
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC
-# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
+# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-DI-platform)
 # MAGIC
 # MAGIC #### More advanced model deployment (batch or serverless realtime)
 # MAGIC

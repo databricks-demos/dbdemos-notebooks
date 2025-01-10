@@ -26,11 +26,11 @@
 -- MAGIC         <strong>Team A</strong>
 -- MAGIC       </div>
 -- MAGIC       <div style="font-size: 13px">
--- MAGIC         <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/da.png" style="" width="60px"> <br/>
+-- MAGIC         <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/alice.png" style="" width="60px"> <br/>
 -- MAGIC         Data Analysts<br/>
--- MAGIC         <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/ds.png" style="" width="60px"> <br/>
+-- MAGIC         <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/marc.png" style="" width="60px"> <br/>
 -- MAGIC         Data Scientists<br/>
--- MAGIC         <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="" width="60px"> <br/>
+-- MAGIC         <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="" width="60px"> <br/>
 -- MAGIC         Data Engineers
 -- MAGIC       </div>
 -- MAGIC     </div>
@@ -53,7 +53,7 @@
 -- MAGIC   </div>
 -- MAGIC   
 -- MAGIC   <div class="box" style="width:550px; float: left">
--- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/gov.png" style="float: left; margin-right: 10px;" width="80px"> 
+-- MAGIC     <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/emily.png" style="float: left; margin-right: 10px;" width="80px"> 
 -- MAGIC     <div style="float: left; font-size: 26px; margin-top: 0px; line-height: 17px;"><strong>Emily</strong> <br />Governance and Security</div>
 -- MAGIC     <div style="font-size: 18px; clear: left; padding-top: 10px">
 -- MAGIC       <ul style="line-height: 2px;">
@@ -79,7 +79,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Implementing a global data governance and security with Unity Catalog
 -- MAGIC
--- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-2.png" />
+-- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_emily.png" />
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
 -- MAGIC
@@ -193,6 +193,50 @@ GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_iot_platform TO `dataengineer
 
 -- DBTITLE 1,Review grant
 SHOW GRANT ON turbine
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC
+-- MAGIC ## Dynamically filtering data base on current user, row and column-level filtering
+-- MAGIC
+-- MAGIC Let's see how Unity Catalog can be used to filter data and return different results based on who is querying it.
+-- MAGIC
+-- MAGIC Let's pretend we're based in Chicago, and we want the `parts` table to only return the parts available in the Chicago location as this is where we operate.
+-- MAGIC
+-- MAGIC We'll add a new table doing a matching between users and the parts locations *(Note: this could also be done with groups)*.
+-- MAGIC
+-- MAGIC You'll be based in Chicago, John in Honolulu and Lea in Denvers:
+
+-- COMMAND ----------
+
+-- create the table matchying the users and the country/location
+CREATE OR REPLACE TABLE parts_users_country_permission (email STRING, country STRING);
+
+INSERT INTO parts_users_country_permission (email, country)
+  VALUES 
+    (current_user(), 'America/Chicago'),
+    ('john@mycompany.com', 'America/Honolulu'),
+    ('lea@mycompany.com', 'America/Denver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Let's create and try our new protected view
+CREATE OR REPLACE VIEW parts_secured AS
+SELECT
+  CASE 
+    WHEN is_account_group_member('iot_admin') THEN EAN  -- allow admin to see all
+    ELSE '***' -- filter other users, they won't be able to see the EAN
+  END as EAN,
+  p.* EXCEPT (EAN)
+FROM parts p 
+INNER JOIN parts_users_country_permission u -- Get the country/location permission table
+  ON p.stock_location = u.country 
+  AND (u.email = current_user() OR is_account_group_member('iot_admin')); --Filter based on the current user, admin also have all permission
+
+
+-- Let's test our secured view. We'll only see the 'America/Chicago' parts, and the EAN will be filtered.
+SELECT * FROM parts_secured;
 
 -- COMMAND ----------
 

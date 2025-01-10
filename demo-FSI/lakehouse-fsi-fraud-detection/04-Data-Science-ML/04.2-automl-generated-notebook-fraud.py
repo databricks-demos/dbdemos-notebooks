@@ -23,6 +23,13 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 hyperopt==0.2.7 shap==0.46.0
+# MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
+# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.45 lightgbm==4.3.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -247,7 +254,7 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # AutoML completed train - validation - test split internally and used _automl_split_col_0000 to specify the set
 split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
-split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
+split_val_df = df_loaded.loc[df_loaded[split_col].isin(["val", "validate"])]
 split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
 # Separate target column from features and drop _automl_split_col_0000
@@ -284,6 +291,10 @@ help(LGBMClassifier)
 # MAGIC this function once (`max_evals=1` in the `hyperopt.fmin` invocation) with fixed hyperparameters, but
 # MAGIC hyperparameters can be tuned by modifying `space`, defined below. `hyperopt.fmin` will then use this
 # MAGIC function's return value to search the space to minimize the loss.
+
+# COMMAND ----------
+
+X_train
 
 # COMMAND ----------
 

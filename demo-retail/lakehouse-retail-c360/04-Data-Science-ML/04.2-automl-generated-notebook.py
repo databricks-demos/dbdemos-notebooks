@@ -258,7 +258,7 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
 
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
-split_val_df = df_loaded.loc[df_loaded[split_col] == "val"]
+split_val_df = df_loaded.loc[df_loaded[split_col].isin(["val", "validate"])]
 split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
 # Separate target column from features and drop _automl_split_col_xxx

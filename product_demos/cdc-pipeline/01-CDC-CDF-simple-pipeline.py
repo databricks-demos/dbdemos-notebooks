@@ -121,7 +121,7 @@ def merge_stream(df, i):
   df.createOrReplaceTempView("clients_cdc_microbatch")
   #First we need to dedup the incoming data based on ID (we can have multiple update of the same row in our incoming data)
   #Then we run the merge (upsert or delete). We could do it with a window and filter on rank() == 1 too
-  df.sparkSession().sql("""MERGE INTO retail_client_silver target
+  df.sparkSession.sql("""MERGE INTO retail_client_silver target
                                 USING
                                 (select id, name, address, email, operation from 
                                   (SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY operation_date DESC) as rank from clients_cdc_microbatch) 

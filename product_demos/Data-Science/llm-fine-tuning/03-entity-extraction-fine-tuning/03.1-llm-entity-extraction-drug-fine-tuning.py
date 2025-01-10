@@ -11,8 +11,8 @@
 
 # DBTITLE 1,Library installs
 # Let's start by installing our dependencies
-%pip install databricks-genai==1.0.2 langchain-community==0.2.0 transformers==4.31.0
-%pip install databricks-sdk==0.27.1
+%pip install databricks-genai==1.1.4 mlflow==2.16.2 langchain-community==0.2.0 transformers==4.31.0 datasets==2.16.1 huggingface-hub==0.27.1
+%pip install databricks-sdk==0.40.0
 
 dbutils.library.restartPython()
 
@@ -253,7 +253,7 @@ display(spark.table("ner_chat_completion_eval_dataset"))
 from databricks.model_training import foundation_model as fm
 
 # Change the model name back to drug_extraction_ft after testing
-registered_model_name = f"{catalog}.{db}.drug_extraction_ft_meta_llama_llama_3_2_3b_instruct"
+registered_model_name = f"{catalog}.{db}.drug_extraction_ft_meta_llama_3_2_3b_instruct"
 
 run = fm.create(
   data_prep_cluster_id = get_current_cluster_id(),  # Required if you are using delta tables as training data source. This is the cluster id that we want to use for our data prep job. See ./_resources for more details
@@ -292,10 +292,19 @@ wait_for_run_to_finish(run)
 
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AiGatewayConfig, AiGatewayInferenceTableConfig
 
 serving_endpoint_name = "dbdemos_drug_extraction_fine_tuned_03_llama_3_2_3B_Instruct"
 w = WorkspaceClient()
+# Create the AI Gateway configuration
+ai_gateway_config = AiGatewayConfig(
+    inference_table_config=AiGatewayInferenceTableConfig(
+        enabled=True,
+        catalog_name=catalog,
+        schema_name=db,
+        table_name_prefix="fine_tuned_drug_extraction_llm_inference"
+    )
+)
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,
     served_entities=[
@@ -306,8 +315,7 @@ endpoint_config = EndpointCoreConfigInput(
             max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
             scale_to_zero_enabled=True
         )
-    ],
-    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fine_tuned_drug_extraction_llm_inference")
+    ]
 )
 
 force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
@@ -316,7 +324,7 @@ existing_endpoint = next(
 )
 if existing_endpoint == None:
     print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
-    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
+    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config, ai_gateway=ai_gateway_config)
 else:
   print(f"endpoint {serving_endpoint_name} already exist...")
   if force_update:

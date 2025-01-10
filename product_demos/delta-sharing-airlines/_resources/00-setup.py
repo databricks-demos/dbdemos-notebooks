@@ -27,6 +27,7 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # DBTITLE 1,Use Catalog Created
 def download_recipient_credential(recipient, location):
+  import urllib.request
   sql(f"""DROP RECIPIENT {recipient}""")
   sql(f"""CREATE RECIPIENT {recipient}""")
   if recipient == 'dbdemos_americanairlines_recipient':
@@ -43,7 +44,10 @@ def download_recipient_credential(recipient, location):
     link = link.replace('delta_sharing/retrieve_config.html?','api/2.0/unity-catalog/public/data_sharing_activation/')
     urllib.request.urlretrieve(link, f"/tmp/{recipient}.share")
     import shutil
-    shutil.copy(f"/tmp/{recipient}.share", location)
+    try:
+        dbutils.fs.mv(f"file:/tmp/{recipient}.share", location)
+    except:
+        shutil.copy(f"/tmp/{recipient}.share", location)
     print(f"Your file was downloaded for the demo to: {location} - BE CAREFUL PROTECT THIS FILE")
 
 # COMMAND ----------

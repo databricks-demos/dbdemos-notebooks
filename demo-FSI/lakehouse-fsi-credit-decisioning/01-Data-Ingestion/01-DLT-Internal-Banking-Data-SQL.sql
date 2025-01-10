@@ -101,7 +101,7 @@
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE credit_bureau_bronze AS
+CREATE OR REFRESH STREAMING TABLE credit_bureau_bronze AS
   SELECT * FROM
     cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/credit_bureau', 'json',
                  map('header', 'true', 
@@ -118,7 +118,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE credit_bureau_bronze AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE customer_bronze AS
+CREATE OR REFRESH STREAMING TABLE customer_bronze AS
   SELECT * FROM
     cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/customer', 'csv',
                  map('header', 'true', 
@@ -136,7 +136,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE customer_bronze AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE relationship_bronze AS
+CREATE OR REFRESH STREAMING TABLE relationship_bronze AS
   SELECT * FROM
     cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/relationship', 'csv',
                  map('header', 'true', 
@@ -151,7 +151,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE relationship_bronze AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE account_bronze AS
+CREATE OR REFRESH STREAMING TABLE account_bronze AS
   SELECT * FROM
     cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/account', 'csv',
                  map('header', 'true', 
@@ -168,7 +168,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE account_bronze AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE fund_trans_bronze AS
+CREATE OR REFRESH STREAMING TABLE fund_trans_bronze AS
   SELECT * FROM
     cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/fund_trans', 'json',
                 map('inferSchema', 'true', 
@@ -184,7 +184,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE fund_trans_bronze AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE telco_bronze AS
+CREATE OR REFRESH STREAMING TABLE telco_bronze AS
   SELECT * FROM
     cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/telco', 'json',
                  map('inferSchema', 'true',
@@ -213,7 +213,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE telco_bronze AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE fund_trans_silver AS
+CREATE OR REFRESH MATERIALIZED VIEW fund_trans_silver AS
   SELECT
     payer_account.cust_id payer_cust_id,
     payee_account.cust_id payee_cust_id,
@@ -231,7 +231,7 @@ CREATE OR REFRESH LIVE TABLE fund_trans_silver AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE customer_silver AS
+CREATE OR REFRESH MATERIALIZED VIEW customer_silver AS
   SELECT
     * EXCEPT (dob, customer._rescued_data, relationship._rescued_data, relationship.id, relationship.operation),
     year(dob) AS birth_year
@@ -247,7 +247,7 @@ CREATE OR REFRESH LIVE TABLE customer_silver AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE account_silver AS
+CREATE OR REFRESH MATERIALIZED VIEW account_silver AS
   WITH cust_acc AS (
       SELECT cust_id, count(1) num_accs, avg(balance) avg_balance 
         FROM live.account_bronze
@@ -284,7 +284,7 @@ CREATE OR REFRESH LIVE TABLE account_silver AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE credit_bureau_gold
+CREATE OR REFRESH MATERIALIZED VIEW credit_bureau_gold
   (CONSTRAINT CustomerID_not_null EXPECT (CUST_ID IS NOT NULL) ON VIOLATION DROP ROW)
 AS
   SELECT * FROM live.credit_bureau_bronze
@@ -299,7 +299,7 @@ AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE fund_trans_gold AS (
+CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
   WITH 12m_payer AS (SELECT
                       payer_cust_id,
                       COUNT(DISTINCT payer_cust_id) dist_payer_cnt_12m,
@@ -373,7 +373,7 @@ CREATE OR REFRESH LIVE TABLE fund_trans_gold AS (
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE telco_gold AS
+CREATE OR REFRESH MATERIALIZED VIEW telco_gold AS
 SELECT
   customer.id cust_id,
   telco.*
@@ -391,7 +391,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE customer_gold AS
+CREATE OR REFRESH MATERIALIZED VIEW customer_gold AS
 SELECT
   customer.*,
   account.avg_balance,
@@ -412,7 +412,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE LIVE VIEW customer_gold_secured AS
+CREATE OR REPLACE LIVE VIEW customer_gold_secured AS
 SELECT
   c.* EXCEPT (first_name),
   CASE

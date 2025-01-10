@@ -23,8 +23,8 @@ from confluent_kafka import Producer
 import json
 import random
 
-#kafka_bootstrap_servers_tls = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
-kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
+kafka_bootstrap_servers_tls = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
+#kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
 # Also make sure to have the proper instance profile to allow the access if you're on AWS.
 
 conf = {

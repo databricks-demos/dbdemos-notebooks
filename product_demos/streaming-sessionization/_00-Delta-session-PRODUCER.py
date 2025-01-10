@@ -1,5 +1,5 @@
 # Databricks notebook source
-dbutils.widgets.text("produce_time_sec", "600", "How long we'll produce data (sec)")
+dbutils.widgets.text("produce_time_sec", "300", "How long we'll produce data (sec)")
 
 # COMMAND ----------
 

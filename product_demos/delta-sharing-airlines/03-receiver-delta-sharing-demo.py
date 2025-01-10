@@ -132,7 +132,7 @@ display(spark_flights_df.
 
 # COMMAND ----------
 
-spark_flights_df = spark.read.format('deltaSharing').load(f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.lookupcodes")
+spark_flights_df = spark.read.format('deltaSharing').load(f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.flights_protected")
 
 display(spark_flights_df.
         where('cancelled = 1').

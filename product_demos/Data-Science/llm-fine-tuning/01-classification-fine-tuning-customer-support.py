@@ -52,8 +52,8 @@
 # COMMAND ----------
 
 # Let's start by installing our libraries
-%pip install --quiet databricks-genai==1.0.8 mlflow==2.14.2
-%pip install --quiet databricks-sdk==0.29.0
+%pip install --quiet databricks-genai==1.1.4 mlflow==2.16.2
+%pip install --quiet databricks-sdk==0.39.0
 dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -205,17 +205,6 @@ base_model_name = "meta-llama/Llama-3.2-3B-Instruct"
 #Let's clean the model name
 registered_model_name = f"{catalog}.{db}.classif_" + re.sub(r'[^a-zA-Z0-9]', '_',  base_model_name)
 
-run = fm.create(
-    data_prep_cluster_id=get_current_cluster_id(),  #get the current cluster ID, See companion notebook
-    model=base_model_name,  
-    train_data_path=f'{catalog}.{db}.ticket_priority_training_dataset',
-    task_type="CHAT_COMPLETION",  
-    training_duration="10ep",  #opnly 10 epochs for the demo
-    register_to=registered_model_name,
-    learning_rate="5e-7",
-)
-
-print(run)
 
 # COMMAND ----------
 

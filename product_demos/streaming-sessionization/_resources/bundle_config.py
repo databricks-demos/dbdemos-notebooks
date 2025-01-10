@@ -111,5 +111,18 @@
       "depends_on_previous": False,
       "parameters": {"reset_all_data": "false", "produce_time_sec": "300"}
     }
-  ]
+  ],
+  "cluster": {
+      "spark_version": "15.4.x-scala2.12",
+      "spark_conf": {
+        "spark.master": "local[*]",
+        "spark.databricks.cluster.profile": "singleNode"
+    },
+    "custom_tags": {
+        "ResourceClass": "SingleNode"
+    },
+    "num_workers": 0,
+    "single_user_name": "{{CURRENT_USER}}",
+    "data_security_mode": "SINGLE_USER"
+  }
 }

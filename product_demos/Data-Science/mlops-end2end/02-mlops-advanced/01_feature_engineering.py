@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering=0.8.0
+# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering==0.8.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -112,6 +112,7 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
   return data_cleanDF
+
 # COMMAND ----------
 
 # MAGIC %md-sandbox

@@ -668,7 +668,7 @@ SHOW TABLES IN hive_metastore.dbdemos_uc_database_to_upgrade;
 -- MAGIC     return (database_name, database_name), [], []
 -- MAGIC   else:
 -- MAGIC     print(f'moving database hive_metastore.{database_name} to UC dbdemos.{database_name} ...')
--- MAGIC     return upgrade_database_advanced(database_to_upgrade = database_name, catalog_destination = catalog, database_destination = database_name, 
+-- MAGIC     return upgrade_database_advanced(database_to_upgrade = database_name, catalog_destination = catalog, database_destination = dbName, 
 -- MAGIC                                     continue_on_exception = False, checkpoint_location = f"{folder}/checkpoint/", force_table_optimization = True,
 -- MAGIC                                     table_owner_to = 'account users',    table_privilege = 'ALL PRIVILEGES',    table_privilege_principal = 'account users',
 -- MAGIC                                     database_owner_to = 'account users', database_privilege = 'ALL PRIVILEGES', database_privilege_principal = 'account users')

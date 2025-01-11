@@ -22,6 +22,7 @@ DBDemos.setup_schema(catalog, db, False, volume_name)
 
 folder = f"/Volumes/{catalog}/{db}/{volume_name}"
 spark.sql(f'drop database if exists hive_metastore.dbdemos_uc_database_to_upgrade cascade')
+spark.sql(f'drop table if exists {db}.transactions')
 #fix a bug from legacy version
 
 print("generating the data...")

@@ -92,7 +92,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,We'll upgrade our tables to dbdemos catalog
-SHOW TABLES;
+SHOW TABLES in hive_metastore.dbdemos_uc_database_to_upgrade;
 
 -- COMMAND ----------
 
@@ -376,7 +376,7 @@ SHOW TABLES IN hive_metastore.dbdemos_uc_database_to_upgrade;
 -- MAGIC   upgrade_views(full_table_name_source, database_to_upgrade, catalog_destination, database_destination, views, table_owner_to, table_privilege, table_privilege_principal)
 -- MAGIC   
 -- MAGIC #let's migrate the table and ensure all users will be able to use them for our demo
--- MAGIC upgrade_database(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = catalog, database_destination= db, 
+-- MAGIC upgrade_database(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = catalog, database_destination= dbName, 
 -- MAGIC                  table_owner_to = 'account users',    table_privilege = 'ALL PRIVILEGES',    table_privilege_principal = 'account users',
 -- MAGIC                  database_owner_to = 'account users', database_privilege = 'ALL PRIVILEGES', database_privilege_principal = 'account users')
 
@@ -384,7 +384,7 @@ SHOW TABLES IN hive_metastore.dbdemos_uc_database_to_upgrade;
 
 -- MAGIC %python
 -- MAGIC #-- That's it, our external table, managed table and view have been upgdraded to UC:
--- MAGIC display(spark.sql(f'SHOW TABLES IN {db}'))
+-- MAGIC display(spark.sql(f'SHOW TABLES IN {dbName}'))
 
 -- COMMAND ----------
 
@@ -424,7 +424,7 @@ SHOW TABLES IN hive_metastore.dbdemos_uc_database_to_upgrade;
 
 -- DBTITLE 1,Cleanup for a fresh upgrade
 -- MAGIC %python
--- MAGIC spark.sql(f'DROP DATABASE IF EXISTS {catalog}.{db} CASCADE')
+-- MAGIC spark.sql(f'DROP DATABASE IF EXISTS {catalog}.{dbName} CASCADE')
 
 -- COMMAND ----------
 
@@ -688,7 +688,7 @@ SHOW TABLES IN hive_metastore.dbdemos_uc_database_to_upgrade;
 -- MAGIC   #remove me for real run, this limit to 1 database to avoid doing a real migration in our demo env
 -- MAGIC   if database_name == "dbdemos_uc_database_to_upgrade":
 -- MAGIC     print(f'moving views hive_metastore.{database_name} to UC dbdemos.{database_name} ...')
--- MAGIC     upgrade_database_views_advanced(database_to_upgrade = database_name, catalog_destination = catalog, database_destination = database_name, 
+-- MAGIC     upgrade_database_views_advanced(database_to_upgrade = database_name, catalog_destination = catalog, database_destination = dbName, 
 -- MAGIC                                     databases_upgraded = databases_upgraded, continue_on_exception = False, 
 -- MAGIC                                     owner_to = 'account users', privilege = 'ALL PRIVILEGES', privilege_principal = 'account users')
 -- MAGIC with ThreadPoolExecutor(max_workers=3) as executor:

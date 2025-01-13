@@ -1,5 +1,7 @@
 # Databricks notebook source
-# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.17.0
+
+# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.39.0 mlflow==2.19.0 
+
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

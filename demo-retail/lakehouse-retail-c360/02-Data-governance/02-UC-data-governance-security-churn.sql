@@ -191,8 +191,8 @@ GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_retail_c360 TO `dataengineers
 
 -- COMMAND ----------
 
--- Let's create a protected table for our demo 
-CREATE OR REPLACE TABLE churn_users_protected AS SELECT * FROM churn_users
+DROP TABLE churn_users_protected;
+CREATE OR REPLACE TABLE churn_users_protected AS SELECT * FROM churn_users;
 
 -- COMMAND ----------
 

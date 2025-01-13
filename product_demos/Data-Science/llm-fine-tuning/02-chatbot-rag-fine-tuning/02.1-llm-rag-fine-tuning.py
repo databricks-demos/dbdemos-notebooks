@@ -26,10 +26,9 @@
 
 # COMMAND ----------
 
-# Let's start by installing our products
-%pip install databricks-genai==1.0.2
-%pip install databricks-sdk==0.27.1
-%pip install "mlflow==2.12.2"
+# Let's start by installing our libraries
+%pip install --quiet databricks-genai==1.1.4 mlflow==2.16.2
+%pip install --quiet databricks-sdk==0.40.0
 dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -217,37 +216,56 @@ wait_for_run_to_finish(run)
 
 # COMMAND ----------
 
-
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
+from databricks.sdk.service.serving import (
+    ServedEntityInput,
+    EndpointCoreConfigInput,
+    AiGatewayConfig,
+    AiGatewayInferenceTableConfig
+)
 
 serving_endpoint_name = "dbdemos_llm_fine_tuned_llama3p2_3B"
 w = WorkspaceClient()
+
+# Create the AI Gateway configuration
+ai_gateway_config = AiGatewayConfig(
+    inference_table_config=AiGatewayInferenceTableConfig(
+        enabled=True,
+        catalog_name=catalog,
+        schema_name=db,
+        table_name_prefix="fine_tuned_llm_inference"
+    )
+)
+
 endpoint_config = EndpointCoreConfigInput(
     name=serving_endpoint_name,
     served_entities=[
         ServedEntityInput(
             entity_name=registered_model_name,
             entity_version=get_latest_model_version(registered_model_name),
-            min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
-            max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
+            min_provisioned_throughput=0,
+            max_provisioned_throughput=100,
             scale_to_zero_enabled=True
         )
-    ],
-    auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fine_tuned_llm_inference" )
+    ]
 )
 
-force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+force_update = False
 existing_endpoint = next(
     (e for e in w.serving_endpoints.list() if e.name == serving_endpoint_name), None
 )
-if existing_endpoint == None:
+
+if existing_endpoint is None:
     print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
-    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
+    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config, ai_gateway=ai_gateway_config)
 else:
-  print(f"endpoint {serving_endpoint_name} already exist...")
-  if force_update:
-    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+    print(f"Endpoint {serving_endpoint_name} already exists...")
+    if force_update:
+        w.serving_endpoints.update_config_and_wait(
+            served_entities=endpoint_config.served_entities,
+            name=serving_endpoint_name
+        )
+
 
 # COMMAND ----------
 

@@ -92,7 +92,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,We'll upgrade our tables to dbdemos catalog
-SHOW TABLES;
+SHOW TABLES in hive_metastore.dbdemos_uc_database_to_upgrade;
 
 -- COMMAND ----------
 
@@ -169,23 +169,25 @@ CREATE EXTERNAL LOCATION IF NOT EXISTS `field_demos_external_location_uc_upgrade
   COMMENT 'External Location of our legacy external tables' ;
 
 -- let's make everyone owner for the demo to be able to change the permissions easily. DO NOT do that for real usage.
-ALTER EXTERNAL LOCATION `field_demos_external_location_uc_upgrade`  OWNER TO `account users`;
+-- ALTER EXTERNAL LOCATION `field_demos_external_location_uc_upgrade`  OWNER TO `account users`;
 -- Note: do not grant read files to any users as this will bypass the UC security.
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create the new table in the UC, pointing to the same underlying data
-CREATE DATABASE IF NOT EXISTS database_upgraded_on_uc;
-
--- We can now create a link to existing reusing the same LOCATION as our legacy table:
-CREATE TABLE IF NOT EXISTS database_upgraded_on_uc.transactions LIKE hive_metastore.dbdemos_uc_database_to_upgrade.transactions COPY LOCATION ;
--- for the demo only, let's make sure all users have access to the created UC table to be able to change files on the external location.
-ALTER TABLE database_upgraded_on_uc.transactions OWNER TO `account users`;
+-- MAGIC %python 
+-- MAGIC spark.sql(f'CREATE DATABASE IF NOT EXISTS {db}')
+-- MAGIC spark.sql(f'USE DATABASE {db}')
+-- MAGIC
+-- MAGIC #-- We can now create a link to existing reusing the same LOCATION as our legacy table:
+-- MAGIC spark.sql(f'CREATE TABLE IF NOT EXISTS {db}.transactions LIKE hive_metastore.dbdemos_uc_database_to_upgrade.transactions COPY LOCATION')
+-- MAGIC #-- for the demo only, let's make sure all users have access to the created UC table to be able to change files on the external location.
+-- MAGIC #spark.sql(f'ALTER TABLE {db}.transactions OWNER TO `account users`')
 
 -- COMMAND ----------
 
 -- That's it! our table has been upgraded without cloning the actual data (just metadata creation)
-SELECT * FROM database_upgraded_on_uc.transactions ;
+SELECT * FROM transactions ;
 
 --Note: Once your upgrade is completed your can delete the legacy table: DROP TABLE hive_metastore.dbdemos_uc_database_to_upgrade.users
 --Note: Make sure you remove any other direct file access you might have to your external location (other than the UC credential, like custom Instance profile or Service Principal)
@@ -242,7 +244,8 @@ SHOW TABLES IN hive_metastore.dbdemos_uc_database_to_upgrade;
 -- COMMAND ----------
 
 -- DBTITLE 1,Cleanup our UC for a fresh upgrade
-DROP DATABASE IF EXISTS main.dbdemos_upgraded_on_uc CASCADE
+-- MAGIC %python
+-- MAGIC spark.sql(f'DROP DATABASE IF EXISTS {catalog}.{db} CASCADE')
 
 -- COMMAND ----------
 
@@ -373,14 +376,15 @@ DROP DATABASE IF EXISTS main.dbdemos_upgraded_on_uc CASCADE
 -- MAGIC   upgrade_views(full_table_name_source, database_to_upgrade, catalog_destination, database_destination, views, table_owner_to, table_privilege, table_privilege_principal)
 -- MAGIC   
 -- MAGIC #let's migrate the table and ensure all users will be able to use them for our demo
--- MAGIC upgrade_database(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = "dbdemos", database_destination= 'database_upgraded_on_uc', 
+-- MAGIC upgrade_database(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = catalog, database_destination= dbName, 
 -- MAGIC                  table_owner_to = 'account users',    table_privilege = 'ALL PRIVILEGES',    table_privilege_principal = 'account users',
 -- MAGIC                  database_owner_to = 'account users', database_privilege = 'ALL PRIVILEGES', database_privilege_principal = 'account users')
 
 -- COMMAND ----------
 
--- That's it, our external table, managed table and view have been upgdraded to UC:
-SHOW TABLES IN database_upgraded_on_uc;
+-- MAGIC %python
+-- MAGIC #-- That's it, our external table, managed table and view have been upgdraded to UC:
+-- MAGIC display(spark.sql(f'SHOW TABLES IN {dbName}'))
 
 -- COMMAND ----------
 
@@ -392,7 +396,7 @@ SHOW TABLES IN database_upgraded_on_uc;
 -- MAGIC def parallel_migrate(database_name):
 -- MAGIC   print(f'moving database hive_metastore.{database_name} to UC dbdemos.{database_name} ...')
 -- MAGIC   #PLEASE DO NOT RUN this in our env as it'll actually move all the database.
--- MAGIC   #migrate_database(database_name, "dbdemos") , ...optional: add table owners and permission option here...
+-- MAGIC   #migrate_database(database_name, catalog) , ...optional: add table owners and permission option here...
 -- MAGIC   
 -- MAGIC print('moving all databases to the UC:')
 -- MAGIC databases = [row['databaseName'] for row in spark.sql(f"SHOW DATABASES IN hive_metastore").collect()]
@@ -420,8 +424,7 @@ SHOW TABLES IN database_upgraded_on_uc;
 
 -- DBTITLE 1,Cleanup for a fresh upgrade
 -- MAGIC %python
--- MAGIC spark.sql(f'DROP DATABASE IF EXISTS dbdemos.database_upgraded_on_uc CASCADE')
--- MAGIC dbutils.fs.rm("/dbdemos/uc/upgrade/checkpoint/", True)
+-- MAGIC spark.sql(f'DROP DATABASE IF EXISTS {catalog}.{dbName} CASCADE')
 
 -- COMMAND ----------
 
@@ -547,8 +550,8 @@ SHOW TABLES IN database_upgraded_on_uc;
 -- MAGIC         view_definition = properties[0]['data_type']
 -- MAGIC         #Try to replace all view definition with the one being merged on the new catalog
 -- MAGIC         view_definition = re.sub(rf"(`?hive_metastore`?\.`?{database_to_upgrade}`?)", f"`{catalog_destination}`.`{database_destination}`", view_definition)
--- MAGIC         for db_source, db_destibation in databases_upgraded:
--- MAGIC           view_definition = re.sub(rf"(`?hive_metastore`?\.`?{db_source}`?)", f"`{catalog_destination}`.`{db_destibation}`", view_definition)
+-- MAGIC         for db_source, db_destination in databases_upgraded:
+-- MAGIC           view_definition = re.sub(rf"(`?hive_metastore`?\.`?{db_source}`?)", f"`{catalog_destination}`.`{db_destination}`", view_definition)
 -- MAGIC         print(f"creating view {table_name} as {view_definition}")
 -- MAGIC         spark.sql(f"CREATE OR REPLACE VIEW `{catalog_destination}`.`{database_destination}`.`{table_name}` AS {view_definition}")
 -- MAGIC         if owner_to is not None:
@@ -624,15 +627,15 @@ SHOW TABLES IN database_upgraded_on_uc;
 -- MAGIC #---------------------------------------------------#
 -- MAGIC databases_upgraded = []
 -- MAGIC #First migrate all the tables
--- MAGIC db, tables_migrated, errors = upgrade_database_advanced(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = "dbdemos", database_destination = 'database_upgraded_on_uc', 
--- MAGIC                                   continue_on_exception = False, checkpoint_location = "/dbdemos/uc/upgrade/checkpoint/", force_table_optimization = True,
+-- MAGIC db, tables_migrated, errors = upgrade_database_advanced(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = catalog, database_destination = dbName, 
+-- MAGIC                                   continue_on_exception = False, checkpoint_location = f"{folder}/checkpoint/", force_table_optimization = True,
 -- MAGIC                                   table_owner_to = 'account users',    table_privilege = 'ALL PRIVILEGES',    table_privilege_principal = 'account users',
 -- MAGIC                                   database_owner_to = 'account users', database_privilege = 'ALL PRIVILEGES', database_privilege_principal = 'account users')
 -- MAGIC databases_upgraded.append(db)
 -- MAGIC assert len(errors) == 0 , "something is wrong, please check error message" 
 -- MAGIC print(databases_upgraded)
 -- MAGIC #Once all tables have been created, loop over the views (we need table to be upgraded first as the view depend of them, potentially cross-database)
--- MAGIC upgrade_database_views_advanced(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = "dbdemos", database_destination = 'database_upgraded_on_uc', 
+-- MAGIC upgrade_database_views_advanced(database_to_upgrade = 'dbdemos_uc_database_to_upgrade', catalog_destination = catalog, database_destination = dbName, 
 -- MAGIC                                 databases_upgraded = databases_upgraded, continue_on_exception = False, 
 -- MAGIC                                 owner_to = 'account users', privilege = 'ALL PRIVILEGES', privilege_principal = 'account users')
 
@@ -645,8 +648,7 @@ SHOW TABLES IN database_upgraded_on_uc;
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC spark.sql(f'DROP DATABASE IF EXISTS dbdemos.database_upgraded_on_uc CASCADE')
--- MAGIC dbutils.fs.rm("/dbdemos/uc/upgrade/checkpoint/", True)
+-- MAGIC spark.sql(f'DROP DATABASE IF EXISTS {catalog}.{dbName} CASCADE')
 
 -- COMMAND ----------
 
@@ -666,8 +668,8 @@ SHOW TABLES IN database_upgraded_on_uc;
 -- MAGIC     return (database_name, database_name), [], []
 -- MAGIC   else:
 -- MAGIC     print(f'moving database hive_metastore.{database_name} to UC dbdemos.{database_name} ...')
--- MAGIC     return upgrade_database_advanced(database_to_upgrade = database_name, catalog_destination = "dbdemos", database_destination = database_name, 
--- MAGIC                                     continue_on_exception = False, checkpoint_location = "/dbdemos/uc/upgrade/checkpoint/", force_table_optimization = True,
+-- MAGIC     return upgrade_database_advanced(database_to_upgrade = database_name, catalog_destination = catalog, database_destination = dbName, 
+-- MAGIC                                     continue_on_exception = False, checkpoint_location = f"{folder}/checkpoint/", force_table_optimization = True,
 -- MAGIC                                     table_owner_to = 'account users',    table_privilege = 'ALL PRIVILEGES',    table_privilege_principal = 'account users',
 -- MAGIC                                     database_owner_to = 'account users', database_privilege = 'ALL PRIVILEGES', database_privilege_principal = 'account users')
 -- MAGIC
@@ -686,7 +688,7 @@ SHOW TABLES IN database_upgraded_on_uc;
 -- MAGIC   #remove me for real run, this limit to 1 database to avoid doing a real migration in our demo env
 -- MAGIC   if database_name == "dbdemos_uc_database_to_upgrade":
 -- MAGIC     print(f'moving views hive_metastore.{database_name} to UC dbdemos.{database_name} ...')
--- MAGIC     upgrade_database_views_advanced(database_to_upgrade = database_name, catalog_destination = "dbdemos", database_destination = database_name, 
+-- MAGIC     upgrade_database_views_advanced(database_to_upgrade = database_name, catalog_destination = catalog, database_destination = dbName, 
 -- MAGIC                                     databases_upgraded = databases_upgraded, continue_on_exception = False, 
 -- MAGIC                                     owner_to = 'account users', privilege = 'ALL PRIVILEGES', privilege_principal = 'account users')
 -- MAGIC with ThreadPoolExecutor(max_workers=3) as executor:

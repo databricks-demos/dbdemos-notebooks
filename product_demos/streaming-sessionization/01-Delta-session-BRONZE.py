@@ -96,8 +96,8 @@ dbutils.fs.rm(volume_folder+"/checkpoints", True)
 
 # DBTITLE 1,Read messages from Kafka and save them as events_raw
 # NOTE: the demo runs with Kafka, and dbdemos doesn't publically expose its demo kafka servers. Use your own IPs to run the demo properly
-#kafka_bootstrap_servers_tls = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
-kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
+kafka_bootstrap_servers_tls = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
+#kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
 # Also make sure to have the proper instance profile to allow the access if you're on AWS.
 
 stream = (spark

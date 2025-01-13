@@ -66,6 +66,7 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
+import mlflow
 mlflow.set_registry_uri('databricks-uc')
 #                                                                                                   Stage/version
 #                                                                                 Model name              |

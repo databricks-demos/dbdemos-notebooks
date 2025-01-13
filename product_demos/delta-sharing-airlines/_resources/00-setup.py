@@ -31,9 +31,9 @@ def download_recipient_credential(recipient, location):
   sql(f"""DROP RECIPIENT {recipient}""")
   sql(f"""CREATE RECIPIENT {recipient}""")
   if recipient == 'dbdemos_americanairlines_recipient':
-      sql('''ALTER RECIPIENT dbdemos_southwestairlines_recipient SET PROPERTIES ('carrier_id' = 'WN');''')
+      sql('''ALTER RECIPIENT dbdemos_americanairlines_recipient SET PROPERTIES ('carrier_id' = 'AA');''')
   else:
-      sql('''ALTER RECIPIENT dbdemos_southwestairlines_recipient SET PROPERTIES ('carrier_id' = 'AA');''')
+      sql('''ALTER RECIPIENT dbdemos_southwestairlines_recipient SET PROPERTIES ('carrier_id' = 'WN');''')
       
   df = sql(f"""DESCRIBE RECIPIENT {recipient}""")
   if 'info_name' in df.columns:

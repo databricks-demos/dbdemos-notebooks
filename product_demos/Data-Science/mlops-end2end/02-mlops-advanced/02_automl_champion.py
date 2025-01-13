@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering=0.8.0 lightgbm=4.5.0 pyarrow==14.0.0 databricks-automl-runtime==0.2.21 hyperopt shap
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 hyperopt==0.2.7 shap==0.46.0 lightgbm==4.5.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -164,6 +164,7 @@ from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "avg_price_increase", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
 col_selector = ColumnSelector(supported_cols)
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -247,6 +248,7 @@ one_hot_pipeline = Pipeline(steps=[
 ])
 
 categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["contract", "device_protection", "internet_service", "multiple_lines", "online_backup", "online_security", "payment_method", "streaming_movies", "streaming_tv", "tech_support"])]
+
 # COMMAND ----------
 
 from sklearn.compose import ColumnTransformer

@@ -52,8 +52,8 @@
 # COMMAND ----------
 
 # Let's start by installing our libraries
-%pip install --quiet databricks-genai==1.0.8 mlflow==2.14.2
-%pip install --quiet databricks-sdk==0.29.0
+%pip install --quiet databricks-genai==1.1.4 mlflow==2.16.2
+%pip install --quiet databricks-sdk==0.39.0
 dbutils.library.restartPython()
 
 # COMMAND ----------

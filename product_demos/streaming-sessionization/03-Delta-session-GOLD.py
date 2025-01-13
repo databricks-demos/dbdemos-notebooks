@@ -81,7 +81,7 @@ sessions = spark.readStream.table("events").groupBy(F.col("user_id")).applyInPan
     "append",
     GroupStateTimeout.ProcessingTimeTimeout)
 
-display(sessions, checkpointLocation = get_chkp_folder()))
+display(sessions, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 

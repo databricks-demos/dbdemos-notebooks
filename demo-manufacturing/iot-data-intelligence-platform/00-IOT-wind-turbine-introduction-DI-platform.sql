@@ -53,7 +53,7 @@
 -- MAGIC At a very high level, this is the flow we will implement:
 -- MAGIC
 -- MAGIC <div style="text-align: center;">
--- MAGIC     <img src="https://github.com/Datastohne/demo/blob/main/Prescriptive%20Maintenance%20Demo%20Overview%20(26).png?raw=true" width="1000px">
+-- MAGIC     <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_overview.png" width="1000px">
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC 1. Ingest and create our IoT database and tables which are easily queriable via SQL.

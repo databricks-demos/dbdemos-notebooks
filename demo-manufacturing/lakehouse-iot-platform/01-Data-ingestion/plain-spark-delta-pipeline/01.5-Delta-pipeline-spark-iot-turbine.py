@@ -39,6 +39,26 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Load the version from our mlflow run
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import os
+import mlflow
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts(artifact_path="requirements.txt") 
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC ## Building a Spark Data pipeline with Delta Lake
 # MAGIC
@@ -225,9 +245,7 @@ display(spark.table("spark_sensor_hourly"))
 
 # COMMAND ----------
 
-turbine = (spark.table("spark_turbine")
-           .selectExpr("turbine_id", "CONCAT(turbine_id, '-', start_time) AS composite_key")
-           .withColumn("sensor_vector", F.array("std_sensor_A", "std_sensor_B", "std_sensor_C", "std_sensor_D", "std_sensor_E", "std_sensor_F")))
+turbine = spark.table("spark_turbine")
 health = spark.table("spark_historical_turbine_status")
 (spark.table("spark_sensor_hourly")
   .join(turbine, ['turbine_id']).drop("row", "_rescued_data")
@@ -255,10 +273,10 @@ display(spark.table("spark_turbine_training_dataset"))
 #Note: ideally we should download and install the model libraries with the model requirements.txt and PIP. See 04.3-running-inference for an example
 import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                              Stage/version  
-#                                                                 Model name         |        
-#                                                                     |              |        
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
+#                                                                                                                       Stage/version  
+#                                                                                                       Model name         |        
+#                                                                                                           |              |        
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
 columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
@@ -285,7 +303,7 @@ w = Window.partitionBy("turbine_id").orderBy(col("hourly_timestamp").desc())
 # COMMAND ----------
 
 # DBTITLE 1,We just realised we have to delete bad entry for a specific turbine
-spark.sql("DELETE FROM spark_sensor_bronze where turbine_id='"+first_turbine+"'")
+spark.sql(f"DELETE FROM spark_sensor_bronze where turbine_id='{first_turbine}'")
 
 # COMMAND ----------
 
@@ -340,6 +358,6 @@ spark.sql("DELETE FROM spark_sensor_bronze where turbine_id='"+first_turbine+"'"
 # MAGIC %md
 # MAGIC # Next: secure and share data with Unity Catalog
 # MAGIC
-# MAGIC Now that these tables are available in our Data Intelligence Platform, let's review how we can share them with the Data Scientists and Data Analysts teams.
+# MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 # MAGIC
-# MAGIC Jump to the [Governance with Unity Catalog notebook]($../../02-Data-governance/02-UC-data-governance-security-iot-turbine) or [Go back to the introduction]($../../00-IOT-wind-turbine-introduction-DI-platform)
+# MAGIC Jump to the [Governance with Unity Catalog notebook]($../../02-Data-governance/02-UC-data-governance-security-iot-turbine) or [Go back to the introduction]($../../00-IOT-wind-turbine-introduction-lakehouse)

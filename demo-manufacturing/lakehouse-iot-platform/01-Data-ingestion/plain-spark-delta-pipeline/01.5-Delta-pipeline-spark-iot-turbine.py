@@ -2,7 +2,7 @@
 # MAGIC %md-sandbox
 # MAGIC # Ingesting and transforming IOT sensors from Wind Turbinge using Delta Lake and Spark API
 # MAGIC
-# MAGIC <img style="float: right" width="300px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-2.png" />
+# MAGIC <img style="float: right" width="300px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.15.png?raw=true" />
 # MAGIC
 # MAGIC In this notebook, we'll show you an alternative to Delta Live Table: building an ingestion pipeline with the Spark API.
 # MAGIC

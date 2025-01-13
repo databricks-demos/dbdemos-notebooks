@@ -114,22 +114,29 @@ from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInference
 print(f"Creating monitor for inference table {catalog}.{db}.advanced_churn_inference_table")
 w = WorkspaceClient()
 
-info = w.quality_monitors.create(
-  table_name=f"{catalog}.{db}.advanced_churn_inference_table",
-  inference_log=MonitorInferenceLog(
-        problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
-        prediction_col="prediction",
-        timestamp_col="inference_timestamp",
-        granularities=["1 day"],
-        model_id_col="model_version",
-        label_col="churn", # optional
-  ),
-  assets_dir=f"{os.getcwd()}/monitoring", # Change this to another folder of choice if needed
-  output_schema_name=f"{catalog}.{db}",
-  baseline_table_name=f"{catalog}.{db}.advanced_churn_baseline",
-  slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
-  custom_metrics=expected_loss_metric
-)
+try:
+  info = w.quality_monitors.create(
+    table_name=f"{catalog}.{db}.advanced_churn_inference_table",
+    inference_log=MonitorInferenceLog(
+            problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
+            prediction_col="prediction",
+            timestamp_col="inference_timestamp",
+            granularities=["1 day"],
+            model_id_col="model_version",
+            label_col="churn", # optional
+    ),
+    assets_dir=f"{os.getcwd()}/monitoring", # Change this to another folder of choice if needed
+    output_schema_name=f"{catalog}.{db}",
+    baseline_table_name=f"{catalog}.{db}.advanced_churn_baseline",
+    slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
+    custom_metrics=expected_loss_metric)
+  
+except Exception as lhm_exception:
+  if "already exist" in str(lhm_exception):
+    print(f"Monitor for {catalog}.{db}.advanced_churn_inference_table already exists, retrieving monitor info:")
+    info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
+  else:
+    raise lhm_exception
 
 # COMMAND ----------
 

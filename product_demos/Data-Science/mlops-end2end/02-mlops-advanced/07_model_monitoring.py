@@ -160,12 +160,19 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.advanced_churn_inference_table").refreshes
-assert(len(refreshes) > 0)
+def get_refreshes():
+  return w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.advanced_churn_inference_table").refreshes
+
+refreshes = get_refreshes()
+if len(refreshes) == 0:
+  w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
+  time.sleep(5)
+  refreshes = get_refreshes()
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
   run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table", refresh_id=run_info.refresh_id)
+  print(f"waiting for refresh to complete {run_info.state}...")
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"

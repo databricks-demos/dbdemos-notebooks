@@ -70,11 +70,10 @@ display(dbutils.fs.ls("s3a://databricks-field-eng-audit-logs/raw-audit-logs/"))
 
 # COMMAND ----------
 
-# MAGIC %python
-# MAGIC print(f"Using catalog {catalog}")
-# MAGIC checkpoint_location = "/dbdemos/uc/audit_log"
-# MAGIC spark.sql(f'USE CATALOG {catalog}');
-# MAGIC spark.sql('CREATE DATABASE IF NOT EXISTS audit_log');
+print(f"Using catalog {catalog}")
+checkpoint_location = "/dbdemos/uc/audit_log"
+spark.sql(f'USE CATALOG {catalog}');
+spark.sql('CREATE DATABASE IF NOT EXISTS audit_log');
 
 # COMMAND ----------
 

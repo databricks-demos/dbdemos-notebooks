@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC All the code below has been automatically generated. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
 # MAGIC
-# MAGIC This saves Datascientists hours of developement and allow team to quickly bootstrap and validate new project.
+# MAGIC This saves Data scientists hours of development and allows teams to quickly bootstrap and validate new project.
 # MAGIC
 # MAGIC *Make sure you run the previous notebook to be able to access the data.*
 # MAGIC

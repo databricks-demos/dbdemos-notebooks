@@ -1,6 +1,5 @@
 # Databricks notebook source
 # MAGIC
-# MAGIC
 # MAGIC %md 
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo

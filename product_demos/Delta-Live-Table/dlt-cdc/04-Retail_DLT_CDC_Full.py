@@ -76,8 +76,8 @@ for folder in dbutils.fs.ls("/Volumes/main__build/dbdemos_dlt_cdc/raw_data"):
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Add final layer joining 2 tables
+
 @dlt.table(
     name="transactions_per_customers",
     comment="table join between users and transactions for further analysis",

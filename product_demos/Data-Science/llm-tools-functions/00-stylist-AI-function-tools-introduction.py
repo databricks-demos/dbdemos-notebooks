@@ -450,7 +450,7 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC $$;
 # MAGIC -- let's test our function:
 # MAGIC
-# MAGIC SELECT execute_python_code("return 'Hello Word! '* 3") as result;
+# MAGIC SELECT execute_python_code("return 'Hello World! '* 3") as result;
 
 # COMMAND ----------
 

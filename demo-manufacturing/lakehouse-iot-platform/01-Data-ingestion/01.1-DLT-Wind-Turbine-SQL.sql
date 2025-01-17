@@ -128,14 +128,14 @@
 
 -- DBTITLE 1,Wind Turbine metadata:
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.json('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/turbine'))
--- display(spark.read.json('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
+-- display(spark.read.json('/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine'))
+-- display(spark.read.json('/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Wind Turbine sensor data
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.parquet('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
+-- display(spark.read.parquet('/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
 
 -- COMMAND ----------
 
@@ -166,7 +166,7 @@ CREATE STREAMING TABLE turbine (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine details, with location, wind turbine model type etc"
-AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -176,7 +176,7 @@ CREATE STREAMING TABLE sensor_bronze (
   CONSTRAINT correct_energy EXPECT (energy IS NOT NULL and energy > 0) ON VIOLATION DROP ROW
 )
 COMMENT "Raw sensor data coming from json files ingested in incremental with Auto Loader: vibration, energy produced etc. 1 point every X sec per sensor."
-AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -185,13 +185,13 @@ CREATE STREAMING TABLE historical_turbine_status (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine status to be used as label in our predictive maintenance model (to know which turbine is potentially faulty)"
-AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
 CREATE STREAMING TABLE parts 
 COMMENT "Turbine parts from our manufacturing system"
-AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 

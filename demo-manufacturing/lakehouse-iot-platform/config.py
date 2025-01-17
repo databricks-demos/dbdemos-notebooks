@@ -13,7 +13,7 @@
 #Note: we do not recommend to change the catalog here as it won't impact all the demo resources such as DLT pipeline and Dashboards.
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("lakehouse-retail-c360", catalog="..", schema="...")
 
-catalog = "main"
+catalog = "main_build"
 schema = dbName = db = "dbdemos_iot_platform"
 
 secret_scope_name = "dbdemos"

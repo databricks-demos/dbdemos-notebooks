@@ -114,22 +114,29 @@ from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInference
 print(f"Creating monitor for inference table {catalog}.{db}.advanced_churn_inference_table")
 w = WorkspaceClient()
 
-info = w.quality_monitors.create(
-  table_name=f"{catalog}.{db}.advanced_churn_inference_table",
-  inference_log=MonitorInferenceLog(
-        problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
-        prediction_col="prediction",
-        timestamp_col="inference_timestamp",
-        granularities=["1 day"],
-        model_id_col="model_version",
-        label_col="churn", # optional
-  ),
-  assets_dir=f"{os.getcwd()}/monitoring", # Change this to another folder of choice if needed
-  output_schema_name=f"{catalog}.{db}",
-  baseline_table_name=f"{catalog}.{db}.advanced_churn_baseline",
-  slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
-  custom_metrics=expected_loss_metric
-)
+try:
+  info = w.quality_monitors.create(
+    table_name=f"{catalog}.{db}.advanced_churn_inference_table",
+    inference_log=MonitorInferenceLog(
+            problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
+            prediction_col="prediction",
+            timestamp_col="inference_timestamp",
+            granularities=["1 day"],
+            model_id_col="model_version",
+            label_col="churn", # optional
+    ),
+    assets_dir=f"{os.getcwd()}/monitoring", # Change this to another folder of choice if needed
+    output_schema_name=f"{catalog}.{db}",
+    baseline_table_name=f"{catalog}.{db}.advanced_churn_baseline",
+    slicing_exprs=["senior_citizen='Yes'", "contract"], # Slicing dimension
+    custom_metrics=expected_loss_metric)
+  
+except Exception as lhm_exception:
+  if "already exist" in str(lhm_exception):
+    print(f"Monitor for {catalog}.{db}.advanced_churn_inference_table already exists, retrieving monitor info:")
+    info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
+  else:
+    raise lhm_exception
 
 # COMMAND ----------
 
@@ -153,12 +160,19 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.advanced_churn_inference_table").refreshes
-assert(len(refreshes) > 0)
+def get_refreshes():
+  return w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.advanced_churn_inference_table").refreshes
+
+refreshes = get_refreshes()
+if len(refreshes) == 0:
+  w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
+  time.sleep(5)
+  refreshes = get_refreshes()
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
   run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table", refresh_id=run_info.refresh_id)
+  print(f"waiting for refresh to complete {run_info.state}...")
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"

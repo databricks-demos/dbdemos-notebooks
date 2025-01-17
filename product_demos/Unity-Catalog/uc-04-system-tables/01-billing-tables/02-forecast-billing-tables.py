@@ -30,14 +30,6 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install prophet==1.1.6
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC ## A note on pricing tables
 # MAGIC Note that Pricing tables (containing the price information in `$` for each SKU) is available as a system table.
@@ -53,12 +45,215 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Leveraging Databricks AI_FORECAST function
+# MAGIC
+# MAGIC Databricks provides a built-in AI Forecast capability. See the [AI_FORECAST documentation](https://docs.databricks.com/en/sql/language-manual/functions/ai_forecast.html) for more details.
+# MAGIC
+# MAGIC **Note that this might require the preview to be enabled to your workspace. If the preview isn't enable, we show you how to do the forecast below using prophet in python.**
+# MAGIC
+# MAGIC **Make sure you run these next cells using a SQL WAREHOUSE as compute, not a classic cluster as the AI_FORECAST preview is only available in serverless for now.**
+# MAGIC
+# MAGIC *Note: If the `AI_FORECAST` isn't yet available in your workspace, you can skip to the next section where we show you how to do the same in python.*
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC select * from system.billing.usage u
 # MAGIC   inner join system.billing.list_prices lp on u.cloud = lp.cloud and
 # MAGIC     u.sku_name = lp.sku_name and
 # MAGIC     u.usage_start_time >= lp.price_start_time and
 # MAGIC     (u.usage_end_time <= lp.price_end_time or lp.price_end_time is null)
+
+# COMMAND ----------
+
+# DBTITLE 1,Create the view, grouping by type of DBUs
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TEMPORARY VIEW data_to_predict AS (
+# MAGIC WITH 
+# MAGIC -- Classify SKU types and calculate usage metrics
+# MAGIC classified_data AS (
+# MAGIC     SELECT 
+# MAGIC         u.workspace_id, 
+# MAGIC         u.usage_date AS ds, 
+# MAGIC         CASE
+# MAGIC             WHEN u.sku_name LIKE '%ALL_PURPOSE%' THEN 'ALL_PURPOSE'
+# MAGIC             WHEN u.sku_name LIKE '%JOBS%' THEN 'JOBS'
+# MAGIC             WHEN u.sku_name LIKE '%DLT%' THEN 'DLT'
+# MAGIC             WHEN u.sku_name LIKE '%SQL%' THEN 'SQL'
+# MAGIC             WHEN u.sku_name LIKE '%INFERENCE%' THEN 'MODEL_INFERENCE'
+# MAGIC             ELSE 'OTHER'
+# MAGIC         END AS sku,
+# MAGIC         CAST(u.usage_quantity AS DOUBLE) AS dbus, 
+# MAGIC         CAST(lp.pricing.default * u.usage_quantity AS DOUBLE) AS cost_at_list_price
+# MAGIC     FROM 
+# MAGIC         system.billing.usage u
+# MAGIC     INNER JOIN 
+# MAGIC         system.billing.list_prices lp 
+# MAGIC     ON 
+# MAGIC         u.cloud = lp.cloud 
+# MAGIC         AND u.sku_name = lp.sku_name 
+# MAGIC         AND u.usage_start_time >= lp.price_start_time 
+# MAGIC         AND (u.usage_end_time <= lp.price_end_time OR lp.price_end_time IS NULL)
+# MAGIC     WHERE 
+# MAGIC         u.usage_unit = 'DBU'
+# MAGIC ),
+# MAGIC -- Aggregate data by day, SKU, and workspace
+# MAGIC daily_data AS (
+# MAGIC     SELECT 
+# MAGIC         ds,
+# MAGIC         sku,
+# MAGIC         workspace_id,
+# MAGIC         SUM(dbus) AS dbus,
+# MAGIC         SUM(cost_at_list_price) AS cost_at_list_price
+# MAGIC     FROM 
+# MAGIC         classified_data
+# MAGIC     GROUP BY 
+# MAGIC         ds, sku, workspace_id
+# MAGIC ),
+# MAGIC -- Generate totals: workspace, SKU, and global
+# MAGIC workspace_totals AS (
+# MAGIC     SELECT ds, 'ALL' AS sku, workspace_id, SUM(dbus) AS dbus, SUM(cost_at_list_price) AS cost_at_list_price
+# MAGIC     FROM daily_data
+# MAGIC     GROUP BY ds, workspace_id
+# MAGIC ),
+# MAGIC sku_totals AS (
+# MAGIC     SELECT ds, sku, 'ALL' AS workspace_id, SUM(dbus) AS dbus, SUM(cost_at_list_price) AS cost_at_list_price
+# MAGIC     FROM daily_data
+# MAGIC     GROUP BY ds, sku
+# MAGIC ),
+# MAGIC global_totals AS (
+# MAGIC     SELECT ds, 'ALL' AS sku, 'ALL' AS workspace_id, SUM(dbus) AS dbus, SUM(cost_at_list_price) AS cost_at_list_price
+# MAGIC     FROM daily_data
+# MAGIC     GROUP BY ds
+# MAGIC ),
+# MAGIC -- Filter for active workspaces
+# MAGIC active_workspaces AS (
+# MAGIC     SELECT DISTINCT workspace_id
+# MAGIC     FROM daily_data
+# MAGIC     WHERE ds >= CURRENT_DATE - INTERVAL 7 DAYS
+# MAGIC ),
+# MAGIC -- Combine all data into a single dataset
+# MAGIC combined_data AS (
+# MAGIC     SELECT * FROM daily_data WHERE workspace_id IN (SELECT workspace_id FROM active_workspaces)
+# MAGIC     UNION ALL
+# MAGIC     SELECT * FROM workspace_totals WHERE workspace_id IN (SELECT workspace_id FROM active_workspaces)
+# MAGIC     UNION ALL
+# MAGIC     SELECT * FROM sku_totals
+# MAGIC     UNION ALL
+# MAGIC     SELECT * FROM global_totals
+# MAGIC )
+# MAGIC -- Add the MAX computation after the UNION (we use it as cap in our forecast)
+# MAGIC SELECT 
+# MAGIC     *,
+# MAGIC     MAX(cost_at_list_price) OVER (PARTITION BY sku, workspace_id) AS max_cost_at_list_price
+# MAGIC FROM combined_data
+# MAGIC );
+# MAGIC
+# MAGIC SELECT * FROM data_to_predict ORDER BY sku, workspace_id, ds;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Let's now leverage the `AI_FORECAST` function to forecast the future pricing fur each sku/workspace id.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DROP TABLE IF EXISTS main.dbdemos_billing_forecast.billing_forecast;
+# MAGIC CREATE TABLE main.dbdemos_billing_forecast.billing_forecast AS 
+# MAGIC WITH data_to_predict_with_params AS (
+# MAGIC   SELECT 
+# MAGIC     '{"global_floor": 0, "min_changepoint_samples": 30, "global_cap": ' || (max_cost_at_list_price * 5) || '}' AS parameters,
+# MAGIC     ds, 
+# MAGIC     cost_at_list_price, 
+# MAGIC     sku, 
+# MAGIC     workspace_id
+# MAGIC   FROM data_to_predict
+# MAGIC )
+# MAGIC SELECT 
+# MAGIC   *, 
+# MAGIC   current_date() as training_date
+# MAGIC FROM ai_forecast(
+# MAGIC   TABLE(data_to_predict_with_params),
+# MAGIC   horizon => (SELECT MAX(ds) + INTERVAL 120 DAYS FROM data_to_predict),
+# MAGIC   time_col => 'ds',
+# MAGIC   value_col => 'cost_at_list_price',
+# MAGIC   prediction_interval_width => 0.8,
+# MAGIC   frequency => 'D',
+# MAGIC   group_col => ARRAY('sku', 'workspace_id'),
+# MAGIC   parameters => 'parameters'
+# MAGIC );
+
+# COMMAND ----------
+
+# DBTITLE 1,Our forecast are ready!
+# MAGIC %sql 
+# MAGIC select * from main.dbdemos_billing_forecast.billing_forecast
+
+# COMMAND ----------
+
+# DBTITLE 1,Merge forecast data and history in a single table
+# MAGIC %sql
+# MAGIC DROP TABLE IF EXISTS main.dbdemos_billing_forecast.detailed_billing_forecast;
+# MAGIC CREATE OR REPLACE TABLE main.dbdemos_billing_forecast.detailed_billing_forecast AS 
+# MAGIC   WITH forecast_data as (
+# MAGIC     SELECT 
+# MAGIC       NULL as training_date, 
+# MAGIC       ds, 
+# MAGIC       sku, 
+# MAGIC       workspace_id, 
+# MAGIC       cost_at_list_price as past_list_cost, 
+# MAGIC       NULL as cost_at_list_price_forecast, 
+# MAGIC       NULL as cost_at_list_price_upper, 
+# MAGIC       NULL as cost_at_list_price_lower 
+# MAGIC       FROM data_to_predict 
+# MAGIC         UNION 
+# MAGIC     SELECT 
+# MAGIC       training_date,
+# MAGIC       ds, 
+# MAGIC       sku, 
+# MAGIC       workspace_id, 
+# MAGIC       NULL as past_list_cost, 
+# MAGIC       GREATEST(0, cost_at_list_price_forecast), 
+# MAGIC       GREATEST(0, cost_at_list_price_upper), 
+# MAGIC       GREATEST(0, cost_at_list_price_lower) 
+# MAGIC       FROM  main.dbdemos_billing_forecast.billing_forecast)
+# MAGIC
+# MAGIC     SELECT * EXCEPT(ds), 
+# MAGIC       ds as date,
+# MAGIC       past_list_cost is null as is_prediction,
+# MAGIC       coalesce(past_list_cost, cost_at_list_price_forecast) as list_cost,
+# MAGIC       avg(coalesce(past_list_cost, cost_at_list_price_forecast)) OVER (PARTITION BY sku, workspace_id ORDER BY ds ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS list_cost_ma,
+# MAGIC       avg(cost_at_list_price_forecast) OVER (PARTITION BY sku, workspace_id ORDER BY ds ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS forecast_list_cost_ma, 
+# MAGIC       avg(cost_at_list_price_lower) OVER (PARTITION BY sku, workspace_id ORDER BY ds ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS forecast_list_cost_lower_ma,
+# MAGIC       avg(cost_at_list_price_upper) OVER (PARTITION BY sku, workspace_id ORDER BY ds ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS forecast_list_cost_upper_ma
+# MAGIC     from forecast_data
+# MAGIC     ORDER BY sku, workspace_id, ds;
+# MAGIC
+# MAGIC SELECT * FROM main.dbdemos_billing_forecast.detailed_billing_forecast;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from main.dbdemos_billing_forecast.billing_forecast
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Manual AI Forecast leveraging Prophet and pandas UDF with spark
+# MAGIC
+# MAGIC If the AI_FORECAST function isn't available yet in your workspace, you can do the prediction manually in python with prophet.
+# MAGIC
+# MAGIC **Note: if you already ran the AI_FORECAST function, you can skip these next steps** 
+
+# COMMAND ----------
+
+# MAGIC %pip install prophet==1.1.6
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -123,6 +318,7 @@ def generate_forecast(history_pd, display_graph = True):
 
         # make predictions
         future_pd = model.make_future_dataframe(periods=forecast_periods, freq=forecast_frequency, include_history=include_history)
+        future_pd['floor'] = 0  # Set the floor for future predictions
         forecast_pd = model.predict(future_pd)
 
         if display_graph:
@@ -146,8 +342,9 @@ def generate_forecast(history_pd, display_graph = True):
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC DROP TABLE IF EXISTS billing_forecast_manual;
 # MAGIC -- create the billing forecast table:
-# MAGIC CREATE TABLE IF NOT EXISTS billing_forecast (ds DATE, yhat DOUBLE, yhat_upper DOUBLE, yhat_lower DOUBLE, y DOUBLE, dbus DOUBLE, sku STRING, workspace_id STRING, training_date DATE);
+# MAGIC CREATE TABLE IF NOT EXISTS billing_forecast_manual (ds DATE, yhat DOUBLE, yhat_upper DOUBLE, yhat_lower DOUBLE, y DOUBLE, dbus DOUBLE, sku STRING, workspace_id STRING, training_date DATE);
 
 # COMMAND ----------
 
@@ -158,7 +355,7 @@ global_forecast = data_to_predict_daily.groupBy(col("ds")).agg(sum('cost_at_list
                                        .withColumn('workspace_id', lit('ALL')).toPandas()
 global_forecast = generate_forecast(global_forecast)
 spark.createDataFrame(global_forecast).withColumn('training_date', current_date()) \
-                                      .write.mode('overwrite').option("mergeSchema", "true").saveAsTable("billing_forecast")
+                                      .write.mode('overwrite').option("mergeSchema", "true").saveAsTable("billing_forecast_manual")
 
 # COMMAND ----------
 
@@ -182,52 +379,45 @@ results = (
     .withColumn('training_date', current_date()))
 
 #Save back to tables to our final table that we'll be using in our dashboard
-results.write.mode('append').saveAsTable("billing_forecast")
+results.write.mode('append').saveAsTable("billing_forecast_manual")
 
 # COMMAND ----------
 
 # DBTITLE 1,Our forecasting data is ready
 # MAGIC %sql 
-# MAGIC select * from billing_forecast
+# MAGIC select * from billing_forecast_manual
 
 # COMMAND ----------
 
 # DBTITLE 1,Create a view on top to simplify access
 # MAGIC %sql
-# MAGIC create or replace view detailed_billing_forecast as with forecasts as (
+# MAGIC create or replace view detailed_billing_forecast_manual as 
+# MAGIC with forecasts as (
 # MAGIC   select
 # MAGIC     f.ds as date,
 # MAGIC     f.workspace_id,
 # MAGIC     f.sku,
-# MAGIC     f.dbus,
 # MAGIC     f.y,
 # MAGIC     GREATEST(0, f.yhat) as yhat,
 # MAGIC     GREATEST(0, f.yhat_lower) as yhat_lower,
 # MAGIC     GREATEST(0, f.yhat_upper) as yhat_upper,
-# MAGIC     f.y > f.yhat_upper as upper_anomaly_alert,
-# MAGIC     f.y < f.yhat_lower as lower_anomaly_alert,
-# MAGIC     f.y >= f.yhat_lower AND f.y <= f.yhat_upper as on_trend,
 # MAGIC     f.training_date
-# MAGIC   from billing_forecast f
+# MAGIC   from main.dbdemos_billing_forecast.billing_forecast_manual f
 # MAGIC )
 # MAGIC select
 # MAGIC   `date`,
 # MAGIC   workspace_id,
-# MAGIC   dbus,
 # MAGIC   sku,
 # MAGIC   y as past_list_cost, -- real
 # MAGIC   y is null as is_prediction ,
 # MAGIC   coalesce(y, yhat) as list_cost, -- contains real and forecast
-# MAGIC   yhat as forecast_list_cost,  -- forecast
-# MAGIC   yhat_lower as forecast_list_cost_lower,
-# MAGIC   yhat_upper as forecast_list_cost_upper,
+# MAGIC   yhat as cost_at_list_price_forecast,  -- forecast
+# MAGIC   yhat_lower as cost_at_list_price_lower,
+# MAGIC   yhat_upper as cost_at_list_price_upper,
 # MAGIC   -- smooth upper and lower bands for better visualization
 # MAGIC   avg(yhat) OVER (PARTITION BY sku, workspace_id ORDER BY date ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS forecast_list_cost_ma, 
 # MAGIC   avg(yhat_lower) OVER (PARTITION BY sku, workspace_id ORDER BY date ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS forecast_list_cost_upper_ma,
 # MAGIC   avg(yhat_upper) OVER (PARTITION BY sku, workspace_id ORDER BY date ROWS BETWEEN 7 PRECEDING AND 7 FOLLOWING) AS forecast_list_cost_lower_ma,
-# MAGIC   upper_anomaly_alert,
-# MAGIC   lower_anomaly_alert,
-# MAGIC   on_trend,
 # MAGIC   training_date
 # MAGIC from
 # MAGIC   forecasts;
@@ -235,7 +425,7 @@ results.write.mode('append').saveAsTable("billing_forecast")
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC select * from detailed_billing_forecast  where sku = 'ALL' limit 100
+# MAGIC select * from detailed_billing_forecast_manual  where sku = 'ALL' limit 100
 
 # COMMAND ----------
 
@@ -258,44 +448,32 @@ results.write.mode('append').saveAsTable("billing_forecast")
 # DBTITLE 1,Forecast consumption for all SKU in all our workspaces
 import plotly.graph_objects as go
 
-df = spark.table('detailed_billing_forecast').where("sku = 'ALL' and workspace_id='ALL'").toPandas()
+df = spark.table('detailed_billing_forecast_manual').where("sku = 'ALL' and workspace_id='ALL'").toPandas()
 #Remove the last point as the day isn't completed (not relevant)
 df.at[df['past_list_cost'].last_valid_index(), 'past_list_cost'] = None
 
 # Create traces
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=df['date'], y=df['past_list_cost'][:-4], name='actual usage'))
-fig.add_trace(go.Scatter(x=df['date'], y=df['forecast_list_cost'], name='forecast cost (pricing list)'))
-fig.add_trace(go.Scatter(x=df['date'], y=df['forecast_list_cost_upper'], name='forecast cost up', line = dict(color='grey', width=1, dash='dot')))
-fig.add_trace(go.Scatter(x=df['date'], y=df['forecast_list_cost_lower'], name='forecast cost low', line = dict(color='grey', width=1, dash='dot')))
+fig.add_trace(go.Scatter(x=df['date'], y=df['cost_at_list_price_forecast'], name='forecast cost (pricing list)'))
+fig.add_trace(go.Scatter(x=df['date'], y=df['cost_at_list_price_upper'], name='forecast cost up', line = dict(color='grey', width=1, dash='dot')))
+fig.add_trace(go.Scatter(x=df['date'], y=df['cost_at_list_price_lower'], name='forecast cost low', line = dict(color='grey', width=1, dash='dot')))
 
 # COMMAND ----------
 
 # DBTITLE 1,Detailed view for each SKU
 import plotly.express as px
-df = spark.table('detailed_billing_forecast').where("workspace_id='ALL'").groupBy('sku', 'date').agg(sum('list_cost').alias('list_cost')).orderBy('date').toPandas()
+df = spark.table('detailed_billing_forecast_manual').where("workspace_id='ALL'").groupBy('sku', 'date').agg(sum('list_cost').alias('list_cost')).orderBy('date').toPandas()
 px.line(df, x="date", y="list_cost", color='sku')
 
 # COMMAND ----------
 
 # DBTITLE 1,Top 5 workspaces view
 #Focus on the ALL PURPOSE dbu
-df = spark.table('detailed_billing_forecast').where("sku = 'ALL_PURPOSE' and workspace_id != 'ALL'")
+df = spark.table('detailed_billing_forecast_manual').where("sku = 'ALL_PURPOSE' and workspace_id != 'ALL'")
 #Get the top 5 worpskaces consuming the most
 top_workspace = df.groupBy('workspace_id').agg(sum('list_cost').alias('list_cost')).orderBy(col('list_cost').desc()).limit(5)
 workspace_id = [r['workspace_id'] for r in top_workspace.collect()]
 #Group consumption per workspace
 df = df.where(col('workspace_id').isin(workspace_id)).groupBy('workspace_id', 'date').agg(sum('list_cost').alias('list_cost')).orderBy('date').toPandas()
 px.bar(df, x="date", y="list_cost", color="workspace_id", title="Long-Form Input")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Anomaly Alert Creation
-# MAGIC
-# MAGIC Using Databricks SQL Alerts, users are able to create a system that will automatically detect when actual usage goes out of the expected bounds. In our scenario we will be alerted if the usage goes above or below the lower and upper bounds of the forecast. In our forecasting algorithm we generate the following columns:  
-# MAGIC - `upper_anomaly_alert`: True if actual amount is greater than the upper bound. 
-# MAGIC - `lower_anomaly_alert`: True if actual amount is less than the lower bound. 
-# MAGIC - `on_trend`: True if `upper_anomaly_alert` or `lower_anomaly_alert` is True. 
-# MAGIC
-# MAGIC Please see the output forecast output dataset below. 

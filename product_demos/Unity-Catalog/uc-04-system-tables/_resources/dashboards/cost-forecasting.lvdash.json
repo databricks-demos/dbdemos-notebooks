@@ -490,21 +490,34 @@
                         "name": "a0790b29",
                         "queries": [
                             {
-                                "name": "fa5e750849ff468db88fbd66d74c166a",
+                                "name": "main_query",
                                 "query": {
                                     "datasetName": "f5bd44c1",
+                                    "fields": [
+                                        {
+                                            "name": "sum(list_cost)",
+                                            "expression": "`sum(list_cost)`"
+                                        }
+                                    ],
                                     "disaggregated": true
                                 }
                             }
                         ],
                         "spec": {
-                            "version": 0,
-                            "viz_spec": {
-                                "display_name": "$DBUs spent this month",
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "sum(list_cost)",
+                                    "rowNumber": 1,
+                                    "displayName": "sum(list_cost)"
+                                }
+                            },
+                            "frame": {
+                                "title": "$DBUs spent this month",
+                                "showTitle": true,
                                 "description": "Beginning of the month to date",
-                                "viz_type": "COUNTER",
-                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 1, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringPrefix\": \"$\"}",
-                                "query_name": "fa5e750849ff468db88fbd66d74c166a"
+                                "showDescription": true
                             }
                         }
                     },
@@ -520,21 +533,34 @@
                         "name": "192a5ced",
                         "queries": [
                             {
-                                "name": "fa5e750849ff468db88fbd66d74c166a",
+                                "name": "main_query",
                                 "query": {
                                     "datasetName": "f5bd44c1",
+                                    "fields": [
+                                        {
+                                            "name": "sum(list_cost)",
+                                            "expression": "`sum(list_cost)`"
+                                        }
+                                    ],
                                     "disaggregated": true
                                 }
                             }
                         ],
                         "spec": {
-                            "version": 0,
-                            "viz_spec": {
-                                "display_name": "$DBUs monthly spend",
+                            "version": 2,
+                            "widgetType": "counter",
+                            "encodings": {
+                                "value": {
+                                    "fieldName": "sum(list_cost)",
+                                    "rowNumber": 2,
+                                    "displayName": "sum(list_cost)"
+                                }
+                            },
+                            "frame": {
+                                "title": "$DBUs monthly spend",
+                                "showTitle": true,
                                 "description": "Last full month",
-                                "viz_type": "COUNTER",
-                                "serialized_options": "{\"counterLabel\": \"\", \"counterColName\": \"sum(list_cost)\", \"rowNumber\": 2, \"targetRowNumber\": 1, \"stringDecimal\": 0, \"stringDecChar\": \".\", \"stringThouSep\": \",\", \"tooltipFormat\": \"0,0.000\", \"condensed\": true, \"withRowNumber\": true, \"stringPrefix\": \"$\"}",
-                                "query_name": "fa5e750849ff468db88fbd66d74c166a"
+                                "showDescription": true
                             }
                         }
                     },
@@ -850,8 +876,8 @@
                                             "expression": "`sku`"
                                         },
                                         {
-                                            "name": "monthly(date)",
-                                            "expression": "DATE_TRUNC(\"MONTH\", `date`)"
+                                            "name": "daily(date)",
+                                            "expression": "DATE_TRUNC(\"DAY\", `date`)"
                                         },
                                         {
                                             "name": "sum(cum_list_cost)",
@@ -867,7 +893,7 @@
                             "widgetType": "bar",
                             "encodings": {
                                 "x": {
-                                    "fieldName": "monthly(date)",
+                                    "fieldName": "daily(date)",
                                     "scale": {
                                         "type": "temporal"
                                     },
@@ -915,8 +941,8 @@
                                             "expression": "`sku`"
                                         },
                                         {
-                                            "name": "monthly(date)",
-                                            "expression": "DATE_TRUNC(\"MONTH\", `date`)"
+                                            "name": "daily(date)",
+                                            "expression": "DATE_TRUNC(\"DAY\", `date`)"
                                         },
                                         {
                                             "name": "sum(list_cost)",
@@ -932,7 +958,7 @@
                             "widgetType": "bar",
                             "encodings": {
                                 "x": {
-                                    "fieldName": "monthly(date)",
+                                    "fieldName": "daily(date)",
                                     "scale": {
                                         "type": "temporal"
                                     },
@@ -1001,7 +1027,7 @@
                         "name": "8fb0681b",
                         "queries": [
                             {
-                                "name": "1e4310a7d83b414c8604b30dc4fa00b8",
+                                "name": "main_query",
                                 "query": {
                                     "datasetName": "60a64743",
                                     "fields": [
@@ -1010,20 +1036,20 @@
                                             "expression": "`date`"
                                         },
                                         {
-                                            "name": "column_fc16c2d0112762",
-                                            "expression": "SUM(`list_cost`)"
+                                            "name": "sum(list_cost_ma)",
+                                            "expression": "SUM(`list_cost_ma`)"
                                         },
                                         {
-                                            "name": "column_fc16c2d0112930",
-                                            "expression": "SUM(`past_list_cost`)"
+                                            "name": "sum(forecast_list_cost_lower_ma)",
+                                            "expression": "SUM(`forecast_list_cost_lower_ma`)"
                                         },
                                         {
-                                            "name": "column_fc16c2d0112932",
+                                            "name": "sum(forecast_list_cost_upper_ma)",
                                             "expression": "SUM(`forecast_list_cost_upper_ma`)"
                                         },
                                         {
-                                            "name": "column_b1c4f1653426",
-                                            "expression": "SUM(`forecast_list_cost_lower_ma`)"
+                                            "name": "sum(past_list_cost)",
+                                            "expression": "SUM(`past_list_cost`)"
                                         }
                                     ],
                                     "disaggregated": false
@@ -1031,13 +1057,63 @@
                             }
                         ],
                         "spec": {
-                            "version": 0,
-                            "viz_spec": {
-                                "display_name": "Forecast $DBUs for selected date, Workspace and SKU",
-                                "description": "",
-                                "viz_type": "CHART",
-                                "serialized_options": "{\"version\": 2, \"globalSeriesType\": \"line\", \"sortX\": true, \"sortY\": true, \"legend\": {\"traceorder\": \"normal\", \"enabled\": false}, \"xAxis\": {\"type\": \"-\", \"labels\": {\"enabled\": true}, \"title\": {\"text\": \"Date\"}}, \"yAxis\": [{\"type\": \"-\", \"title\": {\"text\": \"Dollars ($)\"}}, {\"type\": \"-\", \"opposite\": true}], \"alignYAxesAtZero\": true, \"error_y\": {\"type\": \"data\", \"visible\": true}, \"series\": {\"stacking\": null, \"error_y\": {\"type\": \"data\", \"visible\": true}}, \"seriesOptions\": {\"column_fc16c2d0112760\": {\"yAxis\": 0, \"type\": \"line\"}, \"column_fc16c2d0112762\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate List Cost\", \"color\": \"#FFAB00\"}, \"column_fc16c2d0112928\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate Forecast List Cost\"}, \"column_fc16c2d0112930\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate Forecast List Cost Lower\", \"color\": \"#077A9D\"}, \"column_fc16c2d0112932\": {\"yAxis\": 0, \"type\": \"line\", \"name\": \"Approximate Forecast List Cost Upper\", \"color\": \"#919191\"}, \"column_b1c4f1653426\": {\"yAxis\": 0, \"type\": \"line\", \"color\": \"#919191\"}}, \"valuesOptions\": {}, \"direction\": {\"type\": \"counterclockwise\"}, \"sizemode\": \"diameter\", \"coefficient\": 1, \"numberFormat\": \"0,0[.]00000\", \"percentFormat\": \"0[.]00%\", \"textFormat\": \"\", \"missingValuesAsZero\": false, \"useAggregationsUi\": true, \"swappedAxes\": false, \"dateTimeFormat\": \"YYYY-MM-DD HH:mm:ss\", \"showDataLabels\": false, \"columnConfigurationMap\": {\"x\": {\"column\": \"date\", \"id\": \"column_fc16c2d0112758\"}, \"y\": [{\"id\": \"column_fc16c2d0112762\", \"column\": \"list_cost\", \"transform\": \"SUM\"}, {\"id\": \"column_fc16c2d0112930\", \"column\": \"past_list_cost\", \"transform\": \"SUM\"}, {\"id\": \"column_fc16c2d0112932\", \"column\": \"forecast_list_cost_upper_ma\", \"transform\": \"SUM\"}, {\"id\": \"column_b1c4f1653426\", \"column\": \"forecast_list_cost_lower_ma\", \"transform\": \"SUM\"}]}, \"isAggregationOn\": true, \"condensed\": true, \"withRowNumber\": true}",
-                                "query_name": "1e4310a7d83b414c8604b30dc4fa00b8"
+                            "version": 3,
+                            "widgetType": "line",
+                            "encodings": {
+                                "x": {
+                                    "fieldName": "date",
+                                    "scale": {
+                                        "type": "temporal"
+                                    },
+                                    "axis": {
+                                        "title": "Date"
+                                    },
+                                    "displayName": "Date"
+                                },
+                                "y": {
+                                    "fields": [
+                                        {
+                                            "fieldName": "sum(list_cost_ma)",
+                                            "displayName": "Approximate List Cost"
+                                        },
+                                        {
+                                            "fieldName": "sum(forecast_list_cost_lower_ma)",
+                                            "displayName": "Sum of forecast_list_cost_lower_ma"
+                                        },
+                                        {
+                                            "fieldName": "sum(forecast_list_cost_upper_ma)",
+                                            "displayName": "Sum of forecast_list_cost_upper_ma"
+                                        },
+                                        {
+                                            "fieldName": "sum(past_list_cost)",
+                                            "displayName": "Sum of past_list_cost"
+                                        }
+                                    ],
+                                    "scale": {
+                                        "type": "quantitative"
+                                    },
+                                    "axis": {
+                                        "title": "Dollars ($)"
+                                    }
+                                },
+                                "color": {
+                                    "legend": {
+                                        "hide": true
+                                    }
+                                }
+                            },
+                            "frame": {
+                                "title": "Forecast $DBUs for selected date, Workspace and SKU",
+                                "showTitle": true
+                            },
+                            "mark": {
+                                "colors": [
+                                    "#FFAB00",
+                                    "#919191",
+                                    "#00A972",
+                                    "#077A9D"
+                                ],
+                                "layout": "layer"
                             }
                         }
                     },

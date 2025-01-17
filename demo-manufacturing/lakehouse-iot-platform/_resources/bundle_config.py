@@ -207,6 +207,21 @@
                   ]
             },
             {
+                "task_key": "deploy_best_model",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.2-automl-generated-notebook-iot-turbine",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "create_feature_and_automl_run"
+                      }
+                  ]
+            },
+            {
                 "task_key": "deploy_endpoint",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.3-running-inference-iot-turbine",
@@ -217,7 +232,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "create_feature_and_automl_run"
+                          "task_key": "deploy_best_model"
                       }
                   ]
             }

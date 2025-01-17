@@ -2,13 +2,12 @@
 -- MAGIC %md-sandbox
 -- MAGIC # IoT Platform with Databricks Intelligence Data Platform - Ingesting real-time Industrial Sensor Data for Prescriptive Maintenance
 -- MAGIC
--- MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.54.51.png?raw=true " style="float: left; margin-right: 30px" width="600px" />
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_0.png" style="float: left; margin-right: 30px" width="600px" />
 -- MAGIC
 -- MAGIC <br/>
 -- MAGIC
 -- MAGIC ## What is The Databricks Intelligence Data Platform for IoT & Manufacturing?
--- MAGIC The Databricks Data Intelligence Platform for Manufacturing is the only enterprise data platform that can unleash the full value of manufacturing data to deliver intelligent manufacturing networks, differentiated customer experiences, smarter products and sustainable businesses. It offers an unmatched scale advantage that enables data teams to be more productive and innovative, regardless of data type, sources or workloads. With Databricks, manufacturers are empowered with real-time insights to make critical decisions that reduce cost, boost industrial productivity, improve customer responsiveness and accelerate innovation. The Databricks Data Intelligence Platform for Manufacturing brings together disparate data sources, paired with best-in-class data and AI processing capabilities, and surrounds this with an ecosystem of manufacturing-specific Solution Accelerators and partners. Manufacturers can take advantage of the full power of all their data and deliver powerful real-time decisions. 
--- MAGIC
+-- MAGIC The Databricks Data Intelligence Platform for Manufacturing unlocks the full value of manufacturing data, enabling intelligent networks, enhanced customer experiences, smarter products, and sustainable businesses. It empowers data teams with unmatched scalability, real-time insights, and innovative capabilities across all data types and sources. Manufacturers benefit from reduced costs, increased productivity, improved customer responsiveness, and accelerated innovation. The platform integrates diverse data sources with top-tier AI processing and offers manufacturing-specific Solution Accelerators and partners for powerful real-time decision-making.
 -- MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Intelligence%20Engine.png?raw=true " style="float: left; margin-right: 30px" width="200px" />
 -- MAGIC
 -- MAGIC **Intelligent**
@@ -32,7 +31,7 @@
 -- MAGIC
 -- MAGIC Being able to collect and centralize industrial equipment information in real time is critical in the energy space. When a wind turbine is down, it is not generating power which leads to poor customer service and lost revenue. Data is the key to unlock critical capabilities such as energy optimization, anomaly detection, and/or predictive maintenance. The rapid rise of Generative AI provides the opportunity to revolutionize maintenance by not only predicting when equipment is likely to fail, but also generating prescriptive maintenance actions to prevent failurs before they arise and optimize equipment performance. This enables a shift from predictive to prescriptive maintenance. <br/> 
 -- MAGIC
--- MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-10-01%20at%2010.23.40.png?raw=true" width="700px" style="float:right; margin-left: 20px"/>
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/prescriptive_maintenance.png" width="700px" style="float:right; margin-left: 20px"/>
 -- MAGIC
 -- MAGIC Prescriptive maintenance examples include:
 -- MAGIC
@@ -44,16 +43,16 @@
 -- MAGIC
 -- MAGIC ### What we'll build
 -- MAGIC
--- MAGIC In this demo, we'll build a end-to-end IoT platform, collecting data from multiple sources in real time. 
+-- MAGIC In this demo, we'll build an end-to-end IoT platform to collect real-time data from multiple sources.
 -- MAGIC
--- MAGIC Based on this information, we will build a predictive model that predicts wind turbine failure (predictive maintenance). Next, we will leverage this predictive model as AI tool in an AI system that will generate maintenance work orders (prescriptive maintenance), based on similar historical maintenance reports and turbine specifications. This way our maintenance teams can proactively address potential failures before they arise, to reduce downtime and increase Overall Equipment Effectiveness (OEE).
+-- MAGIC We'll create a predictive model to forecast wind turbine failures and use it to generate maintenance work orders, reducing downtime and increasing Overall Equipment Effectiveness (OEE).
 -- MAGIC
--- MAGIC In addition, the business requested a dashboard that would allow their Turbine Maintenance group to monitor the turbines, identify the ones at risk of failure and browse through the generated maintenance work orders. This will also allow us to track our ROI and ensure we reach our productivity goals over the year.
+-- MAGIC Additionally, we'll develop a dashboard for the Turbine Maintenance team to monitor turbines, identify those at risk, and review maintenance work orders, ensuring we meet our productivity goals.
 -- MAGIC
 -- MAGIC At a very high level, this is the flow we will implement:
 -- MAGIC
 -- MAGIC <div style="text-align: center;">
--- MAGIC     <img src="https://github.com/Datastohne/demo/blob/main/Prescriptive%20Maintenance%20Demo%20Overview%20(26).png?raw=true" width="1000px">
+-- MAGIC     <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_overview.png" width="1000px">
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC 1. Ingest and create our IoT database and tables which are easily queriable via SQL.
@@ -81,7 +80,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 1/ Ingesting and Preparing the Data (Data Engineering)
 -- MAGIC
--- MAGIC <img style="float: left; margin-right: 20px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.15.png?raw=true" />
+-- MAGIC <img style="float: left; margin-right: 20px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_1.png" />
 -- MAGIC
 -- MAGIC
 -- MAGIC <br/>
@@ -113,7 +112,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 2/ Securing Data & Governance (Unity Catalog)
 -- MAGIC
--- MAGIC <img width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.03.png?raw=true"  style="float: left; margin-right: 10px"/>
+-- MAGIC <img width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_2.png"  style="float: left; margin-right: 10px"/>
 -- MAGIC
 -- MAGIC <br/><br/><br/>
 -- MAGIC <div style="padding-left: 420px">
@@ -137,7 +136,7 @@
 -- MAGIC
 -- MAGIC <img width="300px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-1.png"  style="float: right; margin: 100px 0px 10px;"/>
 -- MAGIC
--- MAGIC <img width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.27.png?raw=true"  style="float: left; margin-right: 10px"/>
+-- MAGIC <img width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_2.png"  style="float: left; margin-right: 10px"/>
 -- MAGIC  
 -- MAGIC <br><br><br>
 -- MAGIC Our datasets are now properly ingested, secured, are of high quality and easily discoverable within our organization.
@@ -156,7 +155,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 4/ Predict Failure with Data Science & Auto-ML
 -- MAGIC
--- MAGIC <img width="500px" style="float: left; margin-right: 10px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.35.png?raw=true" />
+-- MAGIC <img width="500px" style="float: left; margin-right: 10px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform3.png" />
 -- MAGIC
 -- MAGIC <br><br><br>
 -- MAGIC Being able to run analysis on our historical data provided the team with a lot of insights to drive our business. We can now better understand the impact of downtime and see which turbines are currently down in our near real-time dashboard.
@@ -175,7 +174,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 5/ Generate Maintenance Work Orders with Generative AI
 -- MAGIC
--- MAGIC <img width="500px" style="float: left; margin-right: 10px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.44.png?raw=true" />
+-- MAGIC <img width="500px" style="float: left; margin-right: 10px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_4.png" />
 -- MAGIC
 -- MAGIC <br><br><br>
 -- MAGIC
@@ -218,7 +217,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 6/ Deploying and Orchestrating the Full Workflow
 -- MAGIC
--- MAGIC <img style="float: left; margin-right: 10px" width="500px" src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-27%20at%2015.55.52.png?raw=true" />
+-- MAGIC <img style="float: left; margin-right: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_5.png" />
 -- MAGIC
 -- MAGIC <br><br><br>
 -- MAGIC While our data pipeline is almost completed, we're missing one last step: orchestrating the full workflow in production.

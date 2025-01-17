@@ -25,4 +25,4 @@ FEATURE_SERVING_ENDPOINT_NAME = "dbdemos_iot_turbine_feature_endpoint"
 
 volume_name = "turbine_raw_landing"
 model_name = "dbdemos_turbine_maintenance"
-agent_name = "dbdemois_agent_prescriptive_maintenance"
+agent_name = "dbdemos_agent_prescriptive_maintenance"

@@ -7,7 +7,7 @@
 # MAGIC Manufacturers face labor shortages, supply chain disruptions, and rising costs, making efficient maintenance essential. Despite investments in maintenance programs, many struggle to boost asset productivity due to technician shortages and poor knowledge-sharing systems. This leads to knowledge loss and operational inefficiencies.
 # MAGIC
 # MAGIC <div style="font-family: 'DM Sans';">
-# MAGIC   <div style="width: 400px; color: #1b3139; margin-left: 50px; float: left;">
+# MAGIC   <div style="width: 400px; color: #1b3139; margin-left: 50px; margin-right: 50px; float: left;">
 # MAGIC     <div style="color: #ff5f46; font-size:50px;">73%</div>
 # MAGIC     <div style="font-size:25px; margin-top: -20px; line-height: 30px;">
 # MAGIC       of manufacturers struggle to recruit maintenance technicians — McKinsey (2023)
@@ -20,19 +20,17 @@
 # MAGIC </div>
 # MAGIC
 # MAGIC Generative AI can transform maintenance by reducing downtime and improving productivity. While predictive maintenance anticipates failures, Generative AI enables prescriptive maintenance. Using historical data, AI systems can identify issues, generate solutions, and assist technicians, allowing junior staff to perform effectively and freeing experts for complex tasks.
+# MAGIC <br><br>
 # MAGIC
-# MAGIC ---
-# MAGIC
-# MAGIC ## From Models to Agent Systems
+# MAGIC ### From Models to Agent Systems
 # MAGIC Generative AI is moving from standalone models to modular agent systems ([Zaharia et al., 2024](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/)). These systems integrate retrievers, models, prompts, and tools to handle complex tasks. Their modular design allows seamless upgrades (e.g., integrating a new LLM) and adaptation to changing needs.
 # MAGIC
-# MAGIC ---
-# MAGIC
+# MAGIC <br><br>
 # MAGIC <img style="float: right; margin-top: 10px;" width="700px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_liza.png" />
 # MAGIC
 # MAGIC
 # MAGIC <br>
-# MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left; padding-top: 10px; ">
+# MAGIC <div style="font-size: 19px; margin-left: 0px; clear: left; padding-top: 10px; ">
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/liza.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px;">Liza, a Generative AI engineer, uses the Databricks Intelligence Platform to:</h3>
 # MAGIC <ul style="list-style: none; padding: 0; margin-left: 05%;">

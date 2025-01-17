@@ -21,7 +21,7 @@
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC
--- MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
+-- MAGIC ## <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
 -- MAGIC
 -- MAGIC
 -- MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>
@@ -42,7 +42,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Simplify Ingestion and Transformation with Delta Live Tables
 -- MAGIC
--- MAGIC <img style="float: right" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-1.png" />
+-- MAGIC <img style="float: right" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_john.png" />
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our IOT platform. <br>
 -- MAGIC We'll ingest and clean our raw data sources to prepare the tables required for our BI & ML workload.
@@ -86,7 +86,7 @@
 -- MAGIC
 -- MAGIC ## Delta Lake
 -- MAGIC
--- MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake table. Delta Lake is an open storage framework for reliability and performance.<br>
+-- MAGIC All the tables we'll create in the Data Intelligence Platform will be stored as Delta Lake table. Delta Lake is an open storage framework for reliability and performance.<br>
 -- MAGIC It provides many functionalities (ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)<br>
 -- MAGIC For more details on Delta Lake, run dbdemos.install('delta-lake')
 -- MAGIC
@@ -102,7 +102,7 @@
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our predictive maintenance analysis.
 -- MAGIC
--- MAGIC This information will then be used to build our DBSQL dashboards to track our wind turbine farm status, faulty equipment impact and recommendations to reduce potential downtime.
+-- MAGIC This information will then be used to build our AI/BI dashboards to track our wind turbine farm status, faulty equipment impact and recommendations to reduce potential downtime.
 -- MAGIC
 -- MAGIC ### Dataset:
 -- MAGIC
@@ -128,14 +128,14 @@
 
 -- DBTITLE 1,Wind Turbine metadata:
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.json('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/turbine'))
--- display(spark.read.json('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
+-- display(spark.read.json('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/turbine'))
+-- display(spark.read.json('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Wind Turbine sensor data
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.parquet('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
+-- display(spark.read.parquet('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
 
 -- COMMAND ----------
 
@@ -166,7 +166,7 @@ CREATE STREAMING TABLE turbine (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine details, with location, wind turbine model type etc"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -176,7 +176,7 @@ CREATE STREAMING TABLE sensor_bronze (
   CONSTRAINT correct_energy EXPECT (energy IS NOT NULL and energy > 0) ON VIOLATION DROP ROW
 )
 COMMENT "Raw sensor data coming from json files ingested in incremental with Auto Loader: vibration, energy produced etc. 1 point every X sec per sensor."
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -185,13 +185,13 @@ CREATE STREAMING TABLE historical_turbine_status (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine status to be used as label in our predictive maintenance model (to know which turbine is potentially faulty)"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
 CREATE STREAMING TABLE parts 
 COMMENT "Turbine parts from our manufacturing system"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -247,7 +247,7 @@ SELECT turbine_id,
 CREATE MATERIALIZED VIEW turbine_training_dataset 
 COMMENT "Hourly sensor stats, used to describe signal and detect anomalies"
 AS
-SELECT * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor_hourly m
+SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F) AS sensor_vector, * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor_hourly m
     INNER JOIN LIVE.turbine t USING (turbine_id)
     INNER JOIN LIVE.historical_turbine_status s ON m.turbine_id = s.turbine_id AND from_unixtime(s.start_time) < m.hourly_timestamp AND from_unixtime(s.end_time) > m.hourly_timestamp
 
@@ -269,18 +269,45 @@ SELECT * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor
 
 -- COMMAND ----------
 
--- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
-CREATE MATERIALIZED VIEW turbine_current_status 
-COMMENT "Wind turbine last status based on model prediction"
+-- DBTITLE 1,Let's create an intermediate feature table
+-- specify all the field to enforce the primary key
+CREATE MATERIALIZED VIEW turbine_current_features
+ (
+    turbine_id STRING NOT NULL,
+    hourly_timestamp TIMESTAMP,
+    avg_energy DOUBLE,
+    std_sensor_A DOUBLE,
+    std_sensor_B DOUBLE,
+    std_sensor_C DOUBLE,
+    std_sensor_D DOUBLE,
+    std_sensor_E DOUBLE,
+    std_sensor_F DOUBLE,
+    country STRING,
+    lat STRING,
+    location STRING,
+    long STRING,
+    model STRING,
+    state STRING,
+   CONSTRAINT turbine_current_features_pk PRIMARY KEY (turbine_id))
+COMMENT "Wind turbine features based on model prediction"
 AS
 WITH latest_metrics AS (
   SELECT *, ROW_NUMBER() OVER(PARTITION BY turbine_id, hourly_timestamp ORDER BY hourly_timestamp DESC) AS row_number FROM LIVE.sensor_hourly
 )
-SELECT * EXCEPT(m.row_number), 
-    predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, percentiles_sensor_A, percentiles_sensor_B, percentiles_sensor_C, percentiles_sensor_D, percentiles_sensor_E, percentiles_sensor_F, location, model, state) as prediction 
-  FROM latest_metrics m
+SELECT * EXCEPT(m.row_number,_rescued_data, percentiles_sensor_A,percentiles_sensor_B, percentiles_sensor_C, percentiles_sensor_D, percentiles_sensor_E, percentiles_sensor_F) 
+FROM latest_metrics m
    INNER JOIN LIVE.turbine t USING (turbine_id)
-   WHERE m.row_number=1
+   WHERE m.row_number=1 and turbine_id is not null
+
+-- COMMAND ----------
+
+-- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
+CREATE MATERIALIZED VIEW turbine_current_status 
+COMMENT "Wind turbine last status based on model prediction"
+AS
+SELECT *, 
+    predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, location, model, state) as prediction 
+  FROM LIVE.turbine_current_features
 
 -- COMMAND ----------
 
@@ -294,7 +321,7 @@ SELECT * EXCEPT(m.row_number),
 -- MAGIC
 -- MAGIC Our final dataset includes our ML prediction for our Predictive Maintenance use-case. 
 -- MAGIC
--- MAGIC We are now ready to build our <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">DBSQL Dashboard</a>to track the main KPIs and status of our entire Wind Turbine Farm and build complete <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Predictive maintenance DBSQL Dashboard</a>.
+-- MAGIC We are now ready to build our <a dbdemos-dashboard-id="turbine-analysis" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">AI/BI Dashboard</a> to track the main KPIs and status of our entire Wind Turbine Farm and build complete <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Predictive maintenance AI/BI Dashboard</a>.
 -- MAGIC
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-1.png" width="1000px">

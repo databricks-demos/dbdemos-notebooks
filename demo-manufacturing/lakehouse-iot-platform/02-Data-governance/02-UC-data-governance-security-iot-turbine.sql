@@ -26,11 +26,11 @@
 -- MAGIC         <strong>Team A</strong>
 -- MAGIC       </div>
 -- MAGIC       <div style="font-size: 13px">
--- MAGIC         <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/da.png" style="" width="60px"> <br/>
+-- MAGIC         <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/alice.png" style="" width="60px"> <br/>
 -- MAGIC         Data Analysts<br/>
--- MAGIC         <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/ds.png" style="" width="60px"> <br/>
+-- MAGIC         <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/marc.png" style="" width="60px"> <br/>
 -- MAGIC         Data Scientists<br/>
--- MAGIC         <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="" width="60px"> <br/>
+-- MAGIC         <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="" width="60px"> <br/>
 -- MAGIC         Data Engineers
 -- MAGIC       </div>
 -- MAGIC     </div>
@@ -53,7 +53,7 @@
 -- MAGIC   </div>
 -- MAGIC   
 -- MAGIC   <div class="box" style="width:550px; float: left">
--- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/gov.png" style="float: left; margin-right: 10px;" width="80px"> 
+-- MAGIC     <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/emily.png" style="float: left; margin-right: 10px;" width="80px"> 
 -- MAGIC     <div style="float: left; font-size: 26px; margin-top: 0px; line-height: 17px;"><strong>Emily</strong> <br />Governance and Security</div>
 -- MAGIC     <div style="font-size: 18px; clear: left; padding-top: 10px">
 -- MAGIC       <ul style="line-height: 2px;">
@@ -79,7 +79,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Implementing a global data governance and security with Unity Catalog
 -- MAGIC
--- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-2.png" />
+-- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_emily.png" />
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
 -- MAGIC

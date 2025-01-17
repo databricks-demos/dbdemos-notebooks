@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC All the code below has been automatically generated. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
 # MAGIC
-# MAGIC This saves Datascientists hours of developement and allow team to quickly bootstrap and validate new project.
+# MAGIC This saves Data scientists hours of development and allows teams to quickly bootstrap and validate new project.
 # MAGIC
 # MAGIC *Make sure you run the previous notebook to be able to access the data.*
 # MAGIC
@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.19.0 cloudpickle==2.2.1 databricks-sdk==0.36.0
+# MAGIC %pip install mlflow==2.19.0 cloudpickle==2.2.1 databricks-sdk==0.40.0
 # MAGIC # hardcode the ml 15.4 LTS libraries versions here for demo stability
 # MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1 shap==0.46.0 hyperopt==0.2.7
 # MAGIC dbutils.library.restartPython()
@@ -75,7 +75,6 @@ import pandas as pd
 input_temp_dir = os.path.join(os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8])
 os.makedirs(input_temp_dir)
 
-
 # Download the artifact and read it into a pandas DataFrame
 input_client = MlflowClient()
 input_data_path = input_client.download_artifacts(data_run["run_id"], "data", input_temp_dir)
@@ -101,7 +100,7 @@ df_loaded.head(5)
 # COMMAND ----------
 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-supported_cols = ["percentiles_sensor_F", "std_sensor_B", "std_sensor_A", "location", "avg_energy", "std_sensor_E", "state", "std_sensor_C", "std_sensor_F", "percentiles_sensor_E", "percentiles_sensor_D", "percentiles_sensor_A", "std_sensor_D", "hourly_timestamp", "percentiles_sensor_C", "percentiles_sensor_B"]
+supported_cols = ["hourly_timestamp", "avg_energy", "std_sensor_A", "std_sensor_B", "std_sensor_C", "std_sensor_D", "std_sensor_E", "std_sensor_F", "location", "model", "state"]
 col_selector = ColumnSelector(supported_cols)
 
 # COMMAND ----------
@@ -178,7 +177,6 @@ numerical_pipeline = Pipeline(steps=[
     ("imputers", ColumnTransformer(num_imputers)),
     ("standardizer", StandardScaler()),
 ])
-
 numerical_transformers = [("numerical", numerical_pipeline, ["std_sensor_B", "std_sensor_A", "avg_energy", "std_sensor_E", "std_sensor_C", "std_sensor_F", "std_sensor_D"])]
 
 # COMMAND ----------
@@ -211,32 +209,9 @@ categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["location", "s
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ### Array columns
-
-# COMMAND ----------
-
-import numpy as np
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer, StandardScaler
-
-def concat_arrays(df):
-    """Concatenate all the array columns (if more than one) into a single numpy array."""
-    return np.array([np.concatenate(row) for row in df.values])
-
-
-array_pipeline = Pipeline(steps=[
-    ("concat", FunctionTransformer(concat_arrays)),
-    ("standardize", StandardScaler()),
-])
-
-array_transformers = [["array", array_pipeline, ["percentiles_sensor_F", "percentiles_sensor_E", "percentiles_sensor_D", "percentiles_sensor_A", "percentiles_sensor_C", "percentiles_sensor_B"]]]
-
-# COMMAND ----------
-
 from sklearn.compose import ColumnTransformer
 
-transformers = datetime_transformers + numerical_transformers + categorical_one_hot_transformers + array_transformers
+transformers = datetime_transformers + numerical_transformers + categorical_one_hot_transformers 
 
 preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_threshold=1)
 

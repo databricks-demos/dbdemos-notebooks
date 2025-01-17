@@ -124,7 +124,7 @@
 # MAGIC %sql
 # MAGIC DROP FUNCTION IF EXISTS turbine_maintenance_predictor;
 # MAGIC
-# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_predictor(hourly_timestamp TIMESTAMP, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, location STRING, model STRING, state STRING, composite_key STRING, maintenance_report STRING)
+# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_predictor(hourly_timestamp TIMESTAMP, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, location STRING, model STRING, state STRING, composite_key STRING)
 # MAGIC RETURNS STRING
 # MAGIC LANGUAGE SQL
 # MAGIC COMMENT 'This tool predicts whether or not a turbine is faulty to facilitate proactive maintenance'
@@ -144,8 +144,7 @@
 # MAGIC             'location', location,
 # MAGIC             'model', model,
 # MAGIC             'state', state,
-# MAGIC             'composite_key', composite_key,
-# MAGIC             'maintenance_report', maintenance_report
+# MAGIC             'composite_key', composite_key
 # MAGIC         ),
 # MAGIC         'STRING'
 # MAGIC     )
@@ -171,8 +170,7 @@
 # MAGIC     'Lexington',                                  -- location
 # MAGIC     'EpicWind',                                   -- model
 # MAGIC     'America/New_York',                           -- state
-# MAGIC     '00f27248-1f4f-e174-432c-53bd2a9158df-1736868963', -- composite_key
-# MAGIC     'N/A'                                         -- maintenance_report
+# MAGIC     '00f27248-1f4f-e174-432c-53bd2a9158df-1736868963' -- composite_key
 # MAGIC ) AS prediction
 
 # COMMAND ----------

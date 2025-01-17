@@ -128,14 +128,14 @@
 
 -- DBTITLE 1,Wind Turbine metadata:
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.json('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/turbine'))
--- display(spark.read.json('/Volumes/main_build_cal/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
+-- display(spark.read.json('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/turbine'))
+-- display(spark.read.json('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Wind Turbine sensor data
 -- %python #uncomment to scan the data from the notebook
--- display(spark.read.parquet('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
+-- display(spark.read.parquet('/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/incoming_data'))
 
 -- COMMAND ----------
 

@@ -3,27 +3,33 @@
 # MAGIC
 # MAGIC Now that have created the Mosaic AI Tools in Unity Catalog, we will leverage the Mosaic AI Agent Framework to build, deploy and evaluate an AI agent for Prescriptive Maintenance. The Agent Framework comprises a set of tools on Databricks designed to help developers build, deploy, and evaluate production-quality AI agents like Retrieval Augmented Generation (RAG) applications. Moreover, Mosaic AI Agent Evaluation provides a platform to capture and implement human feedback, ground truth, response and request logs, LLM judge feedback, chain traces, and more.
 # MAGIC
+# MAGIC <div style="float: right; margin-left: 20px; margin-bottom: 40px;">
+# MAGIC     <img src="https://github.com/Datastohne/demo/blob/main/agent2.png?raw=true" width="900px">
+# MAGIC </div>
+# MAGIC
 # MAGIC This notebook uses Mosaic AI Agent Framework ([AWS](https://docs.databricks.com/en/generative-ai/retrieval-augmented-generation.html) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/generative-ai/retrieval-augmented-generation)) to deploy the prescriptive maintenance agent defined in [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-build-agent-iot-turbine-prescriptive-maintenance) notebook. This notebook does the following:
 # MAGIC 1. Logs the agent to MLflow
 # MAGIC 2. Evaluate the agent with Agent Evaluation
 # MAGIC 3. Registers the agent to Unity Catalog
 # MAGIC 4. Deploys the agent to a Model Serving endpoint
 # MAGIC
+# MAGIC
 # MAGIC This is an high-level overview of the agent system that we will deploy in this demo:
 # MAGIC
-# MAGIC <div style="text-align: center;">
-# MAGIC     <img src="https://github.com/Datastohne/demo/blob/main/agent2.png?raw=true" width="900px">
-# MAGIC </div>
 # MAGIC
 # MAGIC The resulting prescriptive maintenance agent is able to perform a variety of prescriptive actions to augment maintenance technicians, including:
 # MAGIC - Predicting turbine failure
 # MAGIC - Retrieving specification information about turbines
 # MAGIC - Generating maintenance work orders using past maintenance reports
 # MAGIC - Answering follow-up questions about work orders
+# MAGIC
+# MAGIC #### Next steps
+# MAGIC
+# MAGIC After your agent is deployed, you can chat with it in AI playground to perform additional checks, share it with SMEs in your organization for feedback, or embed it in a production application. See docs ([AWS](https://docs.databricks.com/en/generative-ai/deploy-agent.html) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/generative-ai/deploy-agent)) for details
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow==2.17.2 databricks-agents==0.7.0 databricks-sdk==0.34.0
+# MAGIC %pip install -U -qqqq databricks-agents mlflow langchain==0.2.16 langgraph-checkpoint==1.0.12  langchain_core langchain-community==0.2.16 langgraph==0.2.16 pydantic langchain_databricks
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -42,52 +48,29 @@
 import os
 import mlflow
 
-from mlflow.models import ModelConfig
-from mlflow.models.signature import ModelSignature
-from mlflow.models.rag_signatures import (
-    ChatCompletionRequest,
-    ChatCompletionResponse,
-)
-from mlflow.models.resources import DatabricksFunction, DatabricksServingEndpoint
-from databricks.sdk import WorkspaceClient
-
-w = WorkspaceClient()
-config = ModelConfig(development_config="config.yml")
-resources = [DatabricksServingEndpoint(endpoint_name=config.get("llm_endpoint")),
-             DatabricksServingEndpoint(endpoint_name=MODEL_SERVING_ENDPOINT_NAME)]
-uc_functions_to_expand = config.get("tools").get("uc_functions")
-for func in uc_functions_to_expand:
-    # if the function name is a regex, get all functions in the schema
-    if func.endswith("*"):
-        catalog, schema, _ = func.split(".")
-        expanded_functions = list(
-            w.functions.list(catalog_name=catalog, schema_name=schema)
-        )
-        for expanded_function in expanded_functions:
-            resources.append(
-                DatabricksFunction(function_name=expanded_function.full_name)
-            )
-    # otherwise just add the function
-    else:
-        resources.append(DatabricksFunction(function_name=func))
-
-signature = ModelSignature(ChatCompletionRequest(), ChatCompletionResponse())
-
 input_example = {
-    "messages": [{"role": "user", "content": "Turbine ID = 5ef39b37-7f89-b8c2-aff1-5e4c0453377d, Sensor Readings = (0.9901583695625525,2.2170412500371417,3.2607344819672837,2.3033028001321516,2.4663900152731313,4.575124113082638)"}]
+    "messages": [{"role": "user", "content": "Fetch me information and readings for turbine 004a641f-e9e5-9fff-d421-1bf88319420b. Give me maintenance recommendation based on existing reports"}]
 }
 
+assert os.path.exists('config.yml'), "Make sure you run the notebook 05.2 first to create the yaml file required in the demo deployment"
+
 with mlflow.start_run():
-    logged_agent_info = mlflow.pyfunc.log_model(
-        "05.2-build-agent-iot-turbine-prescriptive-maintenance",
-        python_model=os.path.join(
+    logged_agent_info = mlflow.langchain.log_model(
+        lc_model=os.path.join(
             os.getcwd(),
             "05.2-build-agent-iot-turbine-prescriptive-maintenance",
         ),
-        signature=signature,
-        input_example=input_example,
+        pip_requirements=[
+            "langchain==0.2.16",
+            "langchain-community==0.2.16",
+            "langgraph-checkpoint==1.0.12",
+            "langgraph==0.2.16",
+            "pydantic",
+            "langchain_databricks", # used for the retriever tool
+        ],
         model_config="config.yml",
-        resources=resources,
+        artifact_path="05.2-build-agent-iot-turbine-prescriptive-maintenance",
+        input_example=input_example,
     )
 
 # COMMAND ----------
@@ -107,15 +90,31 @@ eval_examples = [
             "messages": [
                 {
                     "role": "system",
-                    "content": "Act as an assistant for wind turbine maintenance technicians to generate work orders and answer follow-up questions.\nThese are the tools you can use to answer questions:\n- Turbine_predictor: takes as input sensor_readings and predicts whether or not a turbine is at risk of failure. If turbine is predicted to be ‘ok’, end the chain and return ’N/A’.\n- Turbine_maintenance_reports_retriever: takes sensor_readings as input and retrieves historical maintenance reports with similar sensor_readings.\n- Turbine_specifications_retriever: takes turbine_id as input and retrieves turbine specifications.\n\nIf both turbine_id and sensor_readings are provided as input, generate work order with the following template:\n\nTurbine Details:\n - Turbine ID: [Turbine ID]\n - Model: [Model]\n - Location: [Location]\n - State: [State]\n - Country: [Country]\n - Lat: [Lat]\n - Long: [Long]\n\nIdentified Issue: [Identified issue based on sensor readings]\nRoot Causes: [Historical root causes for similar issues]\n\nTasks:\n1. [Task 1] (Parts: [Parts], Tools: [Tools], Time: [Time])\n<add more if needed>\n\nPriority: [Priority level]\nDeadline: [Deadline]"
+                    "content": """Act as an assistant for wind turbine maintenance technicians.\n
+                                These are the tools you can use to answer questions:
+                                \n- turbine_maintenance_predictor: takes as input sensor_readings and predicts whether or not a turbine is at risk of failure.
+                                \n- turbine_maintenance_reports_predictor: takes sensor_readings as input and retrieves historical maintenance reports with similar sensor_readings. Critical for prescriptive maintenance.
+                                \n- turbine_specifications_retriever: takes turbine_id as input and retrieves turbine specifications.
+                                
+
+                                \nIf a user gives you a turbine ID, first look up that turbine's information with turbine_specifications_retriever. 
+                                \nIf a user asks for recommendations on how to do maintenance on a turbine, use the turbine reading and search for similar reports matching the turbine readings using the  turbine_maintenance_reports_predictor. Use the report retrived from other turbines to understand what could be happening and suggest maintenance recommendation.
+                                """
                 },
                 {
                     "role": "user",
-                    "content": "Turbine ID = 5ef39b37-7f89-b8c2-aff1-5e4c0453377d, Sensor Readings = (0.9901583695625525,2.2170412500371417,3.2607344819672837,2.3033028001321516,2.4663900152731313,4.575124113082638)"
+                    "content": "Fetch me information and readings for turbine 004a641f-e9e5-9fff-d421-1bf88319420b. Give me maintenance recommendation based on existing reports"
                 }
             ]
         },
-        "expected_response": None
+        "expected_response": """Based on the turbine specifications and maintenance reports, it appears that the turbine 004a641f-e9e5-9fff-d421-1bf88319420b may be experiencing issues with its pitch system, gearbox, or blades. The reports suggest that the turbine may be experiencing pitch system misalignment, high gearbox temperature, or blade delamination.
+To address these issues, it is recommended to conduct comprehensive diagnostic tests of the pitch system, inspect the gearbox internals, and perform non-destructive testing on the blades. Additionally, regular maintenance procedures such as lubrication of moving parts, inspection of hydraulic lines, and vibration analysis can help prevent future malfunctions.
+Specifically, the recommended solutions include:
+Conducting comprehensive diagnostic tests of the pitch system and repairing or replacing faulty components
+Inspecting the gearbox internals and replacing worn-out bearings, realigning gear meshes, and replenishing gearbox oil
+Conducting non-destructive testing on the blades and repairing delaminated sections using composite patching materials or adhesive bonding techniques
+Implementing regular maintenance procedures such as lubrication, inspection, and vibration analysis to prevent future issues.
+It is also important to monitor the turbine's condition regularly and perform preventative maintenance to address any emerging issues promptly."""
     }
 ]
 
@@ -162,11 +161,8 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_agent_info.mod
 
 from databricks import agents
 
-#Define environment variables
-env_vars = {"DATABRICKS_TOKEN": f"{{{{secrets/{secret_scope_name}/{secret_key_name}}}}}"}
-
 # Deploy the model to the review app and a model serving endpoint
-deployment = agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, environment_vars = env_vars)
+agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, tags = {"endpointSource": "playground"})
 
 # COMMAND ----------
 
@@ -181,21 +177,9 @@ deployment = agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, envi
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import workspace
-
-principal_id = "" # TO DO: fill with system service principal ID from the agent model serving endpoint
-
-# Add read permission on the secret to the service principal
-WorkspaceClient().secrets.put_acl(
-    scope=secret_scope_name, 
-    principal=principal_id, 
-    permission=workspace.AclPermission.READ
-)
-
-# COMMAND ----------
-
 # MAGIC %md
+# MAGIC # Examples in Databricks AI Playground
+# MAGIC
 # MAGIC Now you can chat with it in AI playground to perform additional checks, share it with SMEs in your organization for feedback, or embed it in a production application. See docs ([AWS](https://docs.databricks.com/en/generative-ai/deploy-agent.html) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/generative-ai/deploy-agent)) for detail. Please find below some examples questions the prescriptive maintenance agent can answer.
 # MAGIC
 # MAGIC ---
@@ -224,87 +208,6 @@ WorkspaceClient().secrets.put_acl(
 # MAGIC <div style="text-align: center;">
 # MAGIC     <img src="https://github.com/Datastohne/demo/blob/main/follow-up%20question.gif?raw=true" width="600px">
 # MAGIC </div>
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC ## Generating the work orders in batch mode
-# MAGIC To automate the work order generation process, we will invoke the prescriptive maintenance agent in batch mode, while leveraging the parallelization benefits of Spark. Next, we will write out the resulting work orders in a UC-managed Delta table, which can be leveraged in an AI/BI dashboard to discover an overview of the generated work orders. Additionally, the work orders can be synchronized to work order management systems to assign them directly to field service engineers (for simplicity out of scope for this demo). Let's first load the 'new' input data we want to feed into the AI system and format properly in a way the agent expects. For simplicity of this demo, we use the training set to generate work orders.
-# MAGIC
-
-# COMMAND ----------
-
-from pyspark.sql.types import StructType, StructField, StringType, ArrayType, MapType
-from pyspark.sql.functions import udf, struct, col
-
-df = spark.table(f"{catalog}.{db}.turbine_training_dataset").dropDuplicates(["turbine_id"])[['turbine_id', 'sensor_vector']].limit(200)
-
-# Define the UDF to return a struct
-format_inputs_udf = udf(lambda turbine_id, sensor_vector: {'messages':[{
-    "role": "user",
-    "content": turbine_id + ', ' + str(sensor_vector)
-}]}, "map<string, array<struct<role:string, content:string>>>")
-
-# Apply the UDF to each row
-df = df.withColumn("request", format_inputs_udf(df["turbine_id"], df["sensor_vector"]))
-
-# Display the input dataset
-display(df)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Invoke the agent in batch
-# MAGIC
-# MAGIC Next, we can invoke our agent in parallel, to accelerate the generation of work orders.
-
-# COMMAND ----------
-
-from concurrent.futures import ThreadPoolExecutor
-
-# Load the mlflow model from UC
-model = mlflow.pyfunc.load_model(f"models:/{UC_MODEL_NAME}@prod")
-
-# Function to apply model.predict to every row
-def predict_row(row):
-    turbine_id, request = row['turbine_id'], row['request']
-    response = model.predict(request)
-    return turbine_id, response['choices'][0]['message']['content']
-
-# Use ThreadPoolExecutor to apply the predict_row function to each row
-with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers as needed
-    predictions = list(executor.map(predict_row, df.select("turbine_id", "request").rdd.map(lambda row: row.asDict()).collect()))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Write out the work orders as Delta table in Unity Catalog
-# MAGIC The final step is to write out the create work orders to Unity catalog. We will only write out the outputs that are predicted to be faulty, because only for them the agent generates work orders. Note that the final number of generated work orders is indeed lower than the total number of turbines.
-
-# COMMAND ----------
-
-from pyspark.sql.functions import expr, col
-
-# Create new dataframe for work orders with turbine_id's and agent_outputs
-work_orders = spark.createDataFrame(predictions, schema=["turbine_id", "work_order"]).withColumn("work_order", expr("substring(work_order, instr(work_order, 'Turbine Details'), length(work_order))"))
-
-# Keep only records that are predicted to be faulty and filter out the ones that are predicted to be 'ok'
-work_orders = work_orders.filter(col("work_order").startswith('Turbine Details'))
-
-# Write out the new work orders as a Delta table to Unity Catalog
-work_orders.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.{db}.work_orders")
-
-display(work_orders)
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC ## Discover the work orders in the AI/BI Dashboard
-# MAGIC Finally, the Delta table with the work orders in Unity Catalog can be leveraged in the AI/BI dashboard to browse through the generated work orders.
-# MAGIC
-# MAGIC <br>
-# MAGIC
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Dashboard.png?raw=true" style="float: right; width: 50px; margin-left: 10px">
 
 # COMMAND ----------
 

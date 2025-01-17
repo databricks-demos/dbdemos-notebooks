@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %pip install mlflow
+
+# COMMAND ----------
+
 # MAGIC %run ../config
 
 # COMMAND ----------
@@ -122,3 +126,39 @@ def get_last_model_version(model_full_name):
     latest_version = max([int(v.version) for v in all_versions])
     # Use the MlflowClient to get the latest version of the registered model in Unity Catalog
     return mlflow_client.get_model_version(model_full_name, str(latest_version)).version
+
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+
+def get_shared_warehouse(name=None):
+    w = WorkspaceClient()
+    warehouses = w.warehouses.list()
+
+    # Check for warehouse by exact name (if provided)
+    if name:
+        for wh in warehouses:
+            if wh.name == name:
+                return wh
+
+    # Define fallback priorities
+    fallback_priorities = [
+        lambda wh: wh.name.lower() == "serverless starter warehouse",
+        lambda wh: wh.name.lower() == "shared endpoint",
+        lambda wh: wh.name.lower() == "dbdemos-shared-endpoint",
+        lambda wh: "shared" in wh.name.lower(),
+        lambda wh: "dbdemos" in wh.name.lower(),
+        lambda wh: wh.num_clusters > 0,
+    ]
+
+    # Try each fallback condition in order
+    for condition in fallback_priorities:
+        for wh in warehouses:
+            if condition(wh):
+                return wh
+
+    # Raise an exception if no warehouse is found
+    raise Exception(
+        "Couldn't find any Warehouse to use. Please create one first or pass "
+        "a specific name as a parameter to the get_shared_warehouse(name='xxx') function."
+    )

@@ -129,7 +129,7 @@
 -- DBTITLE 1,Wind Turbine metadata:
 -- %python #uncomment to scan the data from the notebook
 -- display(spark.read.json('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/turbine'))
--- display(spark.read.json('/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
+-- display(spark.read.json('/Volumes/main_build_cal/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status')) #Historical turbine status analyzed
 
 -- COMMAND ----------
 
@@ -166,7 +166,7 @@ CREATE STREAMING TABLE turbine (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine details, with location, wind turbine model type etc"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -176,7 +176,7 @@ CREATE STREAMING TABLE sensor_bronze (
   CONSTRAINT correct_energy EXPECT (energy IS NOT NULL and energy > 0) ON VIOLATION DROP ROW
 )
 COMMENT "Raw sensor data coming from json files ingested in incremental with Auto Loader: vibration, energy produced etc. 1 point every X sec per sensor."
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -185,13 +185,13 @@ CREATE STREAMING TABLE historical_turbine_status (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine status to be used as label in our predictive maintenance model (to know which turbine is potentially faulty)"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
 CREATE STREAMING TABLE parts 
 COMMENT "Turbine parts from our manufacturing system"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT * FROM cloud_files("/Volumes/main/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
 
 -- COMMAND ----------
 
@@ -269,18 +269,45 @@ SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_senso
 
 -- COMMAND ----------
 
--- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
-CREATE MATERIALIZED VIEW turbine_current_status 
-COMMENT "Wind turbine last status based on model prediction"
+-- DBTITLE 1,Let's create an intermediate feature table
+-- specify all the field to enforce the primary key
+CREATE MATERIALIZED VIEW turbine_current_features
+ (
+    turbine_id STRING NOT NULL,
+    hourly_timestamp TIMESTAMP,
+    avg_energy DOUBLE,
+    std_sensor_A DOUBLE,
+    std_sensor_B DOUBLE,
+    std_sensor_C DOUBLE,
+    std_sensor_D DOUBLE,
+    std_sensor_E DOUBLE,
+    std_sensor_F DOUBLE,
+    country STRING,
+    lat STRING,
+    location STRING,
+    long STRING,
+    model STRING,
+    state STRING,
+   CONSTRAINT turbine_current_features_pk PRIMARY KEY (turbine_id))
+COMMENT "Wind turbine features based on model prediction"
 AS
 WITH latest_metrics AS (
   SELECT *, ROW_NUMBER() OVER(PARTITION BY turbine_id, hourly_timestamp ORDER BY hourly_timestamp DESC) AS row_number FROM LIVE.sensor_hourly
 )
-SELECT * EXCEPT(m.row_number), 
-    predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, percentiles_sensor_A, percentiles_sensor_B, percentiles_sensor_C, percentiles_sensor_D, percentiles_sensor_E, percentiles_sensor_F, location, model, state) as prediction 
-  FROM latest_metrics m
+SELECT * EXCEPT(m.row_number,_rescued_data, percentiles_sensor_A,percentiles_sensor_B, percentiles_sensor_C, percentiles_sensor_D, percentiles_sensor_E, percentiles_sensor_F) 
+FROM latest_metrics m
    INNER JOIN LIVE.turbine t USING (turbine_id)
-   WHERE m.row_number=1
+   WHERE m.row_number=1 and turbine_id is not null
+
+-- COMMAND ----------
+
+-- Note: The AI model predict_maintenance is loaded from the 01.2-DLT-Wind-Turbine-SQL-UDF notebook
+CREATE MATERIALIZED VIEW turbine_current_status 
+COMMENT "Wind turbine last status based on model prediction"
+AS
+SELECT *, 
+    predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, location, model, state) as prediction 
+  FROM LIVE.turbine_current_features
 
 -- COMMAND ----------
 

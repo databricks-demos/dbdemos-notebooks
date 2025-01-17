@@ -3,54 +3,67 @@
 # MAGIC
 # MAGIC # Generative AI with Databricks
 # MAGIC
-# MAGIC ## Generative AI enables a shift from Predictive to Prescriptive Maintenance
-# MAGIC Today manufacturers are operating in a challenging environment, including labor shortages, supply chain disruptions and rising raw material prices. To increase asset productivity and reduce costs, the performance of the maintenance function is vital for long-term success. However, according to a recent [McKinsey survey](https://www.mckinsey.com/industries/electric-power-and-natural-gas/our-insights/maintenance-and-operations-is-asset-productivity-broken), many manufacturers are struggling to increase asset productivity, even though investing in maintenance transformation programs. These challenges arise due to labor shortage of maintenance technicians, which is amplified by a lack of knowledge sharing systems between technicians. Therefore, it's hard to learn from past maintenance operations with a significant risk of knowledge loss.
+# MAGIC ## From Predictive to Prescriptive Maintenance
+# MAGIC Manufacturers face labor shortages, supply chain disruptions, and rising costs, making efficient maintenance essential. Despite investments in maintenance programs, many struggle to boost asset productivity due to technician shortages and poor knowledge-sharing systems. This leads to knowledge loss and operational inefficiencies.
 # MAGIC
-# MAGIC
-# MAGIC <div style="font-family: 'DM Sans'">
-# MAGIC   <div style="width: 500px; color: #1b3139; margin-left: 50px; float: left">
-# MAGIC     <div style="color: #ff5f46; font-size:80px">73%</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
-# MAGIC       of manufacturers have difficulty to recruit new maintenance technicians — Mckinsey survey (2023) 
+# MAGIC <div style="font-family: 'DM Sans';">
+# MAGIC   <div style="width: 400px; color: #1b3139; margin-left: 50px; float: left;">
+# MAGIC     <div style="color: #ff5f46; font-size:50px;">73%</div>
+# MAGIC     <div style="font-size:25px; margin-top: -20px; line-height: 30px;">
+# MAGIC       of manufacturers struggle to recruit maintenance technicians — McKinsey (2023)
 # MAGIC     </div>
-# MAGIC     <div style="color: #ff5f46; font-size:80px">55%</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
-# MAGIC        of manufacturers have formal systems to ensure knowledge is shared between technicians - Mckinsey survey (2023)
+# MAGIC     <div style="color: #ff5f46; font-size:50px;">55%</div>
+# MAGIC     <div style="font-size:25px; margin-top: -20px; line-height: 30px;">
+# MAGIC       of manufacturers lack formal knowledge-sharing systems — McKinsey (2023)
 # MAGIC     </div>
 # MAGIC   </div>
 # MAGIC </div>
 # MAGIC
-# MAGIC Generative AI has the potential to revolutionize the maintenance function addressing these challenges by minimizing equipment downtime and boosting asset productivity. Traditionally, maintenance operations have focused on predictive maintenance, which anticipates equipment failures based on historical trends. Generative AI offers an opportunity to advance from predictive to prescriptive maintenance. Agent Systems can support maintenance technicians by identifying faulty equipment and generating prescriptive work orders that outline potential issues and their solutions, based on historical maintenance reports and equipment specifications. This streamlined access to knowledge enhances productivity, enabling less experienced technicians to perform effectively while allowing seasoned professionals to concentrate on more complex problems.
+# MAGIC Generative AI can transform maintenance by reducing downtime and improving productivity. While predictive maintenance anticipates failures, Generative AI enables prescriptive maintenance. Using historical data, AI systems can identify issues, generate solutions, and assist technicians, allowing junior staff to perform effectively and freeing experts for complex tasks.
 # MAGIC
-# MAGIC ### The Shift from Models to Agent Systems
-# MAGIC The rise of Generative AI is driving a shift from standalone models to agent systems, as noted by [Zaharia et al. (2024)](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/). Unlike traditional monolithic models, agent systems integrate multiple interacting components — retrievers, models, prompts, chains, and external tools — to handle complex AI tasks.  This approach increases control and trust by incorporating functionalities such as output filtering, dynamic routing, and real-time information retrieval. Furthermore, Agent Systems are more adaptable to evolving industry trends and organizational needs due to their modular design. Each component in an agent system can operate independently, allowing developers to update or replace individual components without disrupting the entire system. For instance, when a new advanced LLM is released, it can be seamlessly integrated without altering the overall architecture. Similarly, components can be added or removed as organizational requirements evolve.
+# MAGIC ---
 # MAGIC
-# MAGIC <style>
-# MAGIC .right_box{
-# MAGIC   margin: 30px; box-shadow: 10px -10px #CCC; width:650px;height:300px; background-color: #1b3139ff; box-shadow:  0 0 10px  rgba(0,0,0,0.6);
-# MAGIC   border-radius:25px;font-size: 35px; float: left; padding: 20px; color: #f9f7f4; }
-# MAGIC .badge {
-# MAGIC   clear: left; float: left; height: 30px; width: 30px;  display: table-cell; vertical-align: middle; border-radius: 50%; background: #fcba33ff; text-align: center; color: white; margin-right: 10px}
-# MAGIC .badge_b { 
-# MAGIC   height: 35px}
-# MAGIC </style>
+# MAGIC ## From Models to Agent Systems
+# MAGIC Generative AI is moving from standalone models to modular agent systems ([Zaharia et al., 2024](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/)). These systems integrate retrievers, models, prompts, and tools to handle complex tasks. Their modular design allows seamless upgrades (e.g., integrating a new LLM) and adaptation to changing needs.
+# MAGIC
+# MAGIC ---
+# MAGIC
+# MAGIC <img style="float: right; margin-top: 10px;" width="700px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_liza.png" />
 # MAGIC
 # MAGIC
-# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_liza.png" />
-# MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/liza.png" style="float: left;" width="80px"> 
-# MAGIC <h3 style="padding: 10px 0px 0px 5px">Liza, as a Generative AI engineer, needs a data + AI platform accelerating all the GenAI steps:</h3>
 # MAGIC <br>
-# MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">
-# MAGIC <div class="badge_b"><div class="badge">1</div> Build Data Pipeline supporting real time </div>
-# MAGIC <div class="badge_b"><div class="badge">2</div> Retrieve vectors & features</div>
-# MAGIC <div class="badge_b"><div class="badge">3</div> Create AI agent tools</div>
-# MAGIC <div class="badge_b"><div class="badge">4</div> Build & deploy agent</div>
-# MAGIC <div class="badge_b"><div class="badge">5</div> Deploy agent (batch or realtime)</div>
-# MAGIC <div class="badge_b"><div class="badge">6</div> Evaluate agent </div>
+# MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left; padding-top: 10px; ">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/liza.png" style="float: left;" width="80px"> 
+# MAGIC <h3 style="padding: 10px 0px 0px 5px;">Liza, a Generative AI engineer, uses the Databricks Intelligence Platform to:</h3>
+# MAGIC <ul style="list-style: none; padding: 0; margin-left: 05%;">
+# MAGIC   <li style="margin-bottom: 10px; display: flex; align-items: center;">
+# MAGIC     <div class="badge" style="height: 30px; width: 30px; border-radius: 50%; background: #fcba33; color: white; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px;">1</div>
+# MAGIC     Build real-time data pipelines
+# MAGIC   </li>
+# MAGIC   <li style="margin-bottom: 10px; display: flex; align-items: center;">
+# MAGIC     <div class="badge" style="height: 30px; width: 30px; border-radius: 50%; background: #fcba33; color: white; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px;">2</div>
+# MAGIC     Retrieve vectors & features
+# MAGIC   </li>
+# MAGIC   <li style="margin-bottom: 10px; display: flex; align-items: center;">
+# MAGIC     <div class="badge" style="height: 30px; width: 30px; border-radius: 50%; background: #fcba33; color: white; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px;">3</div>
+# MAGIC     Create AI agent tools
+# MAGIC   </li>
+# MAGIC   <li style="margin-bottom: 10px; display: flex; align-items: center;">
+# MAGIC     <div class="badge" style="height: 30px; width: 30px; border-radius: 50%; background: #fcba33; color: white; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px;">4</div>
+# MAGIC     Build & deploy agents
+# MAGIC   </li>
+# MAGIC   <li style="margin-bottom: 10px; display: flex; align-items: center;">
+# MAGIC     <div class="badge" style="height: 30px; width: 30px; border-radius: 50%; background: #fcba33; color: white; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px;">5</div>
+# MAGIC     Operate in batch or real-time
+# MAGIC   </li>
+# MAGIC   <li style="display: flex; align-items: center;">
+# MAGIC     <div class="badge" style="height: 30px; width: 30px; border-radius: 50%; background: #fcba33; color: white; text-align: center; line-height: 30px; font-weight: bold; margin-right: 10px;">6</div>
+# MAGIC     Evaluate agent performance
+# MAGIC   </li>
+# MAGIC </ul>
 # MAGIC </div>
 # MAGIC
-# MAGIC **Liza needs a Data Intelligence Platform**. Let's see how we can deploy a Prescriptive Maintenance agent in production with Databricks.
+# MAGIC **Databricks empowers Liza with a Data + AI platform for Prescriptive Maintenance.** Let’s explore how to deploy this in production.
 
 # COMMAND ----------
 
@@ -76,7 +89,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install mlflow==2.17.2 databricks-vectorsearch==0.40 databricks-feature-engineering==0.7.0 databricks-sdk==0.34.0
+# MAGIC %pip install mlflow==2.19.0 databricks-vectorsearch==0.40 databricks-feature-engineering==0.8.0 databricks-sdk==0.40.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -91,76 +104,48 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_2.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we have to deploy the predictive mainteance model created in [04.1-automl-iot-turbine-predictive-maintenance]($./04.1-automl-iot-turbine-predictive-maintenance) notebook. To so, you can create a Model Serving endpoint from the Catalog Explorer UI, Databricks SDK or Rest API. 
+# MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we will rely on the model we deployed previously in the  [04.1-automl-iot-turbine-predictive-maintenance]($./04.3-running-inference-iot-turbine) notebook. 
 # MAGIC
-# MAGIC In this section we:
-# MAGIC 1. Create a `Model Serving Endpoint` using the MLflow Deployments SDK - an API for create, update and deletion tasks.
-# MAGIC 2. Create a `Model Serving as tool` using a UC functions tools.
-# MAGIC 3. Query the `Model Serving as tool` to test it.
+# MAGIC **Make sure you run this notebook to create the model serving endpoint!**
 # MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md Let's start by creating a Model Serving endpoint using the MLflow Deployments SDK: 
-
-# COMMAND ----------
-
-# DBTITLE 1,deploy_endpoint_iot_turbine_model
-from mlflow.deployments import get_deploy_client
-
-client = get_deploy_client("databricks")
-endpoint = client.create_endpoint(
-    name=MODEL_SERVING_ENDPOINT_NAME,
-    config={
-        "served_entities": [
-            {
-                "name": "ads-entity",
-                "entity_name": f"{catalog}.{db}.{model_name}",
-                "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
-                "workload_size": "Small",
-                "scale_to_zero_enabled": True
-            }
-        ]
-        }
-)
-
-# COMMAND ----------
-
-# MAGIC %md You can now view the status of the Feature Serving Endpoint in the table on the **Serving endpoints** page. Click **Serving** in the sidebar to display the page.
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC ### Using the Model Serving as tool to predict faulty turbines
-# MAGIC Next, let's define the turbine predictor tool function our LLM agent will be able to execute. AI agents use [AI Agent Tools](https://docs.databricks.com/en/generative-ai/create-log-agent.html#create-ai-agent-tools) to perform actions besides language generation, for example to retrieve structured or unstructured data, execute code, or talk to remote services (e.g. send an email or Slack message). These functions can contain any logic, from simple SQL to advanced python. Below we wrap the model serving endpoint in a SQL function using '[ai_query function](https://docs.databricks.com/en/sql/language-manual/functions/ai_query.html)'.
+# MAGIC Let's define the turbine predictor tool function our LLM agent will be able to execute. 
+# MAGIC
+# MAGIC AI agents use [AI Agent Tools](https://docs.databricks.com/en/generative-ai/create-log-agent.html#create-ai-agent-tools) to perform actions besides language generation, for example to retrieve structured or unstructured data, execute code, or talk to remote services (e.g. send an email or Slack message). 
+# MAGIC
+# MAGIC These functions can contain any logic, from simple SQL to advanced python. Below we wrap the model serving endpoint in a SQL function using '[ai_query function](https://docs.databricks.com/en/sql/language-manual/functions/ai_query.html)'.
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DROP FUNCTION IF EXISTS turbine_maintenance_predictor; 
+# MAGIC DROP FUNCTION IF EXISTS turbine_maintenance_predictor;
 # MAGIC
-# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_predictor(
-# MAGIC     std_sensor_A FLOAT,
-# MAGIC     std_sensor_B FLOAT,
-# MAGIC     std_sensor_C FLOAT,
-# MAGIC     std_sensor_D FLOAT,
-# MAGIC     std_sensor_E FLOAT,
-# MAGIC     std_sensor_F FLOAT
-# MAGIC )
+# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_predictor(hourly_timestamp TIMESTAMP, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, location STRING, model STRING, state STRING, composite_key STRING, maintenance_report STRING)
 # MAGIC RETURNS STRING
 # MAGIC LANGUAGE SQL
 # MAGIC COMMENT 'This tool predicts whether or not a turbine is faulty to facilitate proactive maintenance'
 # MAGIC RETURN
 # MAGIC (
 # MAGIC     SELECT ai_query(
-# MAGIC         'dbdemos_turbine_maintenance_endpoint', 
+# MAGIC         'dbdemos_iot_turbine_model_endpoint', 
 # MAGIC         named_struct(
-# MAGIC             "std_sensor_A", std_sensor_A,
-# MAGIC             "std_sensor_B", std_sensor_B,
-# MAGIC             "std_sensor_C", std_sensor_C,
-# MAGIC             "std_sensor_D", std_sensor_D,
-# MAGIC             "std_sensor_E", std_sensor_E,
-# MAGIC             "std_sensor_F", std_sensor_F
+# MAGIC             'hourly_timestamp', hourly_timestamp,
+# MAGIC             'avg_energy', avg_energy,
+# MAGIC             'std_sensor_A', std_sensor_A,
+# MAGIC             'std_sensor_B', std_sensor_B,
+# MAGIC             'std_sensor_C', std_sensor_C,
+# MAGIC             'std_sensor_D', std_sensor_D,
+# MAGIC             'std_sensor_E', std_sensor_E,
+# MAGIC             'std_sensor_F', std_sensor_F,
+# MAGIC             'location', location,
+# MAGIC             'model', model,
+# MAGIC             'state', state,
+# MAGIC             'composite_key', composite_key,
+# MAGIC             'maintenance_report', maintenance_report
 # MAGIC         ),
 # MAGIC         'STRING'
 # MAGIC     )
@@ -169,12 +154,26 @@ endpoint = client.create_endpoint(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Now we can query our turbine predictor tool function:
+# MAGIC Now we can test out our function below:
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT turbine_maintenance_predictor(0.9901583695625525,2.2170412500371417,3.2607344819672837,2.3033028001321516,2.4663900152731313,4.575124113082638) AS prediction
+# MAGIC SELECT turbine_maintenance_predictor(
+# MAGIC     TIMESTAMP '2025-01-14T16:00:00.000+00:00',    -- hourly_timestamp
+# MAGIC     0.9000803742589635,                           -- avg_energy
+# MAGIC     2.2081154200781867,                           -- std_sensor_A
+# MAGIC     2.6012126574143823,                           -- std_sensor_B
+# MAGIC     2.1075958066966423,                           -- std_sensor_C
+# MAGIC     2.2081154200781867,                           -- std_sensor_D
+# MAGIC     2.6012126574143823,                           -- std_sensor_E
+# MAGIC     2.1075958066966423,                           -- std_sensor_F
+# MAGIC     'Lexington',                                  -- location
+# MAGIC     'EpicWind',                                   -- model
+# MAGIC     'America/New_York',                           -- state
+# MAGIC     '00f27248-1f4f-e174-432c-53bd2a9158df-1736868963', -- composite_key
+# MAGIC     'N/A'                                         -- maintenance_report
+# MAGIC ) AS prediction
 
 # COMMAND ----------
 
@@ -204,8 +203,13 @@ endpoint = client.create_endpoint(
 # COMMAND ----------
 
 # Read our dataset into a DataFrame
-df = spark.read.table("turbine_training_dataset").dropDuplicates(["turbine_id"]).select("composite_key", "sensor_vector", "maintenance_report")
-display(df)
+(spark.read.table("turbine_training_dataset").dropDuplicates(["turbine_id"])
+  .select("composite_key", "sensor_vector", "maintenance_report", "abnormal_sensor").filter("maintenance_report is not null")
+  .write.mode('overwrite').saveAsTable("turbine_sensor_reports"))
+spark.sql('ALTER TABLE turbine_sensor_reports SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
+
+display(spark.table("turbine_sensor_reports"))
+
 
 # COMMAND ----------
 
@@ -243,127 +247,53 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 # MAGIC You can view your endpoint on the [Vector Search Endpoints UI](#/setting/clusters/vector-search). Click on the endpoint name to see all indexes that are served by the endpoint.
 # MAGIC
 # MAGIC
-# MAGIC ### Creating the Direct Vector Search Index
+# MAGIC ### Creating the Vector Search Index
 # MAGIC
-# MAGIC All we now have to do is to as Databricks to create the index. 
-# MAGIC The following example creates a Direct Vector Access Index.
-# MAGIC
+# MAGIC All we now have to do is to as Databricks to create the index on top of our table. The Delta Table will automatically be synched with the index.
 
 # COMMAND ----------
 
-# DBTITLE 1,Creating Index for Turbine Training Dataset
 import databricks.sdk.service.catalog as c
 
 # Where we want to store our index
-vs_index_fullname = f"{catalog}.{db}.turbine_maintenance_reports_vs_index"
+vs_index_fullname = f"{catalog}.{db}.turbine_sensor_reports_vs_index"
 
 if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
   print(f"Creating index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
-  index = vsc.create_direct_access_index(
+  index = vsc.create_delta_sync_index(
     endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
+    source_table_name=f"{catalog}.{db}.turbine_sensor_reports",
     index_name=vs_index_fullname,
+    pipeline_type="TRIGGERED",
     primary_key='composite_key',
     embedding_dimension=6,
-    embedding_vector_column="sensor_vector",
-    schema = {field.name: field.dataType.simpleString() for field in df.schema.fields}
+    embedding_vector_column="sensor_vector"
   )
+else:
+  print(f"Grabbing existing index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
+  index = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname)
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC You can use the Python SDK or the REST API to insert, update, or delete data from a Direct Vector Access Index. The Direct Vector Index expects a JSON structure compatible as input.
+# MAGIC %md-sandbox
+# MAGIC ### Define Maintenance Report Retriever function
+# MAGIC Below, we utilize the _VECTOR\_SEARCH_ SQL function from Databricks to easily set up our maintenance reports retriever function. Our agent will utilize this function in the subsequent steps!
 
 # COMMAND ----------
 
-# DBTITLE 1,Upserting a Dictionary List
-# Only insert records that have maintenance reports
-df = df.filter("maintenance_report != 'N/A'").limit(200)
-index.upsert([row.asDict() for row in df.collect()])
+spark.sql("DROP FUNCTION IF EXISTS turbine_maintenance_reports_retriever")
+spark.sql(f"""
+CREATE OR REPLACE FUNCTION turbine_maintenance_reports_retriever(sensor_reading_array ARRAY<DOUBLE>)
+RETURNS ARRAY<STRING>
+LANGUAGE SQL
+RETURN (
+  SELECT collect_list(maintenance_report) FROM VECTOR_SEARCH(index => 'cal_test_iot_jan_seventeenth.dbdemos_iot_platform.turbine_sensor_reports_vs_index', query_vector => sensor_reading_array, num_results => 3) ) """)
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC ### Using the Maintenance Report Retriever as tool to retrieve maintenance reports
-# MAGIC Now we can define the maintencance report retriever tool function our LLM agent will be able to execute. Delta Sync Indexes in Databricks can be queried from SQL using the [vector_search function](https://docs.databricks.com/en/sql/language-manual/functions/vector_search.html). Since, this is not (yet) supported for Direct Vector Access Indexes, we will wrap the Vector Search API in a UC tool function.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC   
-# MAGIC ###  This demo requires a secret to work:
-# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).  <br/>
-# MAGIC **Note: if you are using a shared demo workspace and you see that the secret is setup, please don't run these steps and do not override its value**<br/>
-# MAGIC
-# MAGIC - You'll need to [setup the Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/install.html) on your laptop or using this cluster terminal: <br/>
-# MAGIC `pip install databricks-cli` <br/>
-# MAGIC - Configure the CLI. You'll need your workspace URL and a PAT token from your profile page<br>
-# MAGIC `databricks configure`
-# MAGIC - Create the dbdemos scope:<br/>
-# MAGIC `databricks secrets create-scope dbdemos`
-# MAGIC - Save your service principal secret. It will be used by the Model Endpoint to autenticate. If this is a demo/test, you can use one of your [PAT token](https://docs.databricks.com/en/dev-tools/auth/pat.html).<br>
-# MAGIC `databricks secrets put-secret --json '{
-# MAGIC   "scope": "dbdemos",
-# MAGIC   "key": "ai_agent_sp_token",
-# MAGIC   "string_value": "<secret>"
-# MAGIC }'`
-# MAGIC
-# MAGIC *Note: Make sure your service principal has access to the Vector Search index:*
-# MAGIC
-# MAGIC ```
-# MAGIC spark.sql('GRANT USAGE ON CATALOG <catalog> TO `<YOUR_SP>`');
-# MAGIC spark.sql('GRANT USAGE ON DATABASE <catalog>.<db> TO `<YOUR_SP>`');
-# MAGIC from databricks.sdk import WorkspaceClient
-# MAGIC import databricks.sdk.service.catalog as c
-# MAGIC WorkspaceClient().grants.update(c.SecurableType.TABLE, <index_name>, 
-# MAGIC                                 changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal="<YOUR_SP>")])
-# MAGIC WorkspaceClient().secrets.put_acl(scope=dbdemos, principal="<YOUR_SP>", permission=workspace.AclPermission.READ)
-# MAGIC   ```
-
-# COMMAND ----------
-
-host = w.config.host
-spark.sql(f"""DROP FUNCTION IF EXISTS {catalog}.{db}.turbine_maintenance_reports_retriever_with_secret;""")
-spark.sql(f"""
-CREATE OR REPLACE FUNCTION {catalog}.{db}.turbine_maintenance_reports_retriever_with_secret(search_vector ARRAY<DOUBLE>, databricks_token STRING)
-RETURNS ARRAY<STRING>
-LANGUAGE PYTHON
-AS
-$$
-  try:
-    import requests
-    headers = {{"Authorization": "Bearer "+databricks_token}}
-    #Call our vector search endpoint via simple SQL statement
-    response = requests.post("{host}/api/2.0/vector-search/indexes/{catalog}.{db}.turbine_maintenance_reports_vs_index/query", json ={{"columns":["maintenance_report"],"query_vector":list(search_vector), "num_results":3}}, headers=headers)
-    
-    formatted_response = [item[0] for item in response.json().get('result', {{}}).get('data_array', [])]
-      
-    return formatted_response
-  except Exception as e:
-    raise
-$$;""")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT turbine_maintenance_reports_retriever_with_secret(
-# MAGIC     ARRAY(0.9901583695625525,2.2170412500371417,3.2607344819672837,2.3033028001321516,2.4663900152731313,4.575124113082638), 
-# MAGIC   secret('dbdemos', 'ai_agent_sp_token')
-# MAGIC ) AS reports
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC DROP FUNCTION IF EXISTS turbine_maintenance_reports_retriever;
-# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_reports_retriever (search_vector ARRAY<DOUBLE>)
-# MAGIC RETURNS ARRAY<STRING>
-# MAGIC LANGUAGE SQL
-# MAGIC COMMENT 'This tool returns historical maintenance reports from turbines that had similar sensor readings as input sensor readings.'
-# MAGIC RETURN SELECT turbine_maintenance_reports_retriever_with_secret(search_vector, secret('dbdemos', 'ai_agent_sp_token'));
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Now we can query our turbine maintenance reports retriever tool function:
+# MAGIC Now we can now use our function in SQL, and it'll be available to our tool
 
 # COMMAND ----------
 
@@ -379,56 +309,59 @@ $$;""")
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_3.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC To enable our Agent System to retrieve turbine specifications for turbines predicted t obe faulty, we need to create and serve a feature table through a feature serving endpoint.
+# MAGIC To enable our Agent System to retrieve turbine specifications for turbines predicted to be faulty, we need to serve the DLT `turbine_current_features` feature table through a feature serving endpoint.
 # MAGIC
 # MAGIC Databricks Feature Serving offers a unified interface for serving pre-materialized and on-demand features to models or applications deployed outside Databricks. These endpoints automatically scale to handle real-time traffic, ensuring high availability and low latency.
 # MAGIC
 # MAGIC This part illustrates how to:
-# MAGIC 1. Create a `Feature Table` in Unity Catalog 
-# MAGIC 2. Create a `FeatureSpec`. A `FeatureSpec` defines a set of features (prematerialized and on-demand) that are served together. 
-# MAGIC 3. Create an `Online Table` from a Delta Table.
-# MAGIC 4. Serve the features. To serve features, you create a Feature Serving endpoint with the `FeatureSpec`.
-# MAGIC 5. Create a `Feature Serving as tool` using UC tool functions.
-# MAGIC 6. Query a `Feature Serving as tool` using SQL.
+# MAGIC 1. Create a `FeatureSpec`. A `FeatureSpec` defines a set of features (prematerialized and on-demand) that are served together. 
+# MAGIC 2. Create an `Online Table` from a Delta Table.
+# MAGIC 3. Serve the features. To serve features, you create a Feature Serving endpoint with the `FeatureSpec`.
+# MAGIC 4. Create a `Feature Serving as tool` using UC tool functions.
+# MAGIC 5. Query a `Feature Serving as tool` using SQL.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC   
+# MAGIC ###  This demo requires a secret to work:
+# MAGIC Your Tool will need a secret to authenticate against the online table we create (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).  <br/>
+# MAGIC **Note: if you are using a shared demo workspace and you see that the secret is setup, please don't run these steps and do not override its value**<br/>
+# MAGIC
+# MAGIC - You'll need to [setup the Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/install.html) on your laptop or using this cluster terminal: <br/>
+# MAGIC `pip install databricks-cli` <br/>
+# MAGIC - Configure the CLI. You'll need your workspace URL and a PAT token from your profile page<br>
+# MAGIC `databricks configure`
+# MAGIC - Create the dbdemos scope:<br/>
+# MAGIC `databricks secrets create-scope --scope dbdemos`
+# MAGIC - Save your service principal secret. It will be used by the Model Endpoint to autenticate. If this is a demo/test, you can use one of your [PAT token](https://docs.databricks.com/en/dev-tools/auth/pat.html).<br>
+# MAGIC `databricks secrets put-secret <SCOPE_GOES_HERE> <KEY_GOES_HERE> --string-value 
+# MAGIC <SECRET_GOES_HERE>'`
+# MAGIC
+# MAGIC *Note: Make sure your service principal has access to the Vector Search index:*
+# MAGIC
+# MAGIC ```
+# MAGIC spark.sql('GRANT USAGE ON CATALOG <catalog> TO `<YOUR_SP>`');
+# MAGIC spark.sql('GRANT USAGE ON DATABASE <catalog>.<db> TO `<YOUR_SP>`');
+# MAGIC from databricks.sdk import WorkspaceClient
+# MAGIC import databricks.sdk.service.catalog as c
+# MAGIC WorkspaceClient().grants.update(c.SecurableType.TABLE, <index_name>, 
+# MAGIC                                 changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal="<YOUR_SP>")])
+# MAGIC WorkspaceClient().secrets.put_acl(scope=dbdemos, principal="<YOUR_SP>", permission=workspace.AclPermission.READ)
+# MAGIC   ```
 
 # COMMAND ----------
 
 # MAGIC %md ### Set up a Feature Table
-# MAGIC The first step to create a Feature Serving endpoint is to create a feature table in Unity Catalog using the FeatureEngineeringClient. You can use `fe.create_table` without providing a dataframe, and then later populate the feature table using `fe.write_table`.
-
-# COMMAND ----------
-
-# DBTITLE 1,Creating Wind Turbine Specifications Feature Table
-from databricks.feature_engineering import FeatureEngineeringClient
-
-fe = FeatureEngineeringClient()
-
-df = spark.table("turbine").filter("turbine_id IS NOT NULL")
-
-# Create a new feature table for storing wind turbine specifications
-feature_table = fe.create_table(
-  name=f"{catalog}.{db}.turbine_specifications",
-  primary_keys=['turbine_id'],
-  schema=df.schema,
-  description='wind turbine specification features')
-
-# Write the synthetic wind turbine data into the feature table
-fe.write_table(
-  name=f"{catalog}.{db}.turbine_specifications",
-  df = df,
-  mode = 'merge'
-)
+# MAGIC
+# MAGIC We'll use the table `turbine_current_features` we created in our DLT pipeline as our feature store.
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC ### What's required for our Feature Serving endpoint
 # MAGIC
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-05-30%20at%2018.43.46.png?raw=true" style="float: right" width="800px">
-# MAGIC
-# MAGIC To deploy a Feature Serving endpoint, you need to create a **FeatureSpec**: a chain of user-defined:
-# MAGIC - Feature Retrievals (known as **FeatureLookUps**)
-# MAGIC - Feature Transformations (known as **FeatureFunctions**)
+# MAGIC To deploy a Feature Serving endpoint, you need to create a **FeatureSpec**.
 # MAGIC
 # MAGIC FeatureSpecs are stored in and mananged by Unity Catalog and appear in the Catalog Explorer.
 # MAGIC
@@ -450,41 +383,48 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import *
 import mlflow
 
-workspace = WorkspaceClient()
-
-online_table_name = f"{catalog}.{db}.turbine_specifications_online"
+w = WorkspaceClient()
+online_table_name = f"{catalog}.{db}.turbine_current_features_online"
 
 spec = OnlineTableSpec(
-  primary_key_columns = ["turbine_id"],
-  source_table_full_name = f"{catalog}.{db}.turbine_specifications",
-  run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}),
-  perform_full_copy=True)
+    primary_key_columns=["turbine_id"],
+    source_table_full_name=f"{catalog}.{db}.turbine_current_features",
+    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}),
+    perform_full_copy=True
+)
 
 try:
-  online_table_pipeline = workspace.online_tables.create(name=online_table_name, spec=spec)
+    online_table_pipeline = w.online_tables.create(table=OnlineTable(name=online_table_name, spec=spec))
 except Exception as e:
-  if "already exists" in str(e):
-    pass
-  else:
-    raise e
+    if "already exists" in str(e):
+        pass
+    else:
+        raise e
 
-pprint(workspace.online_tables.get(online_table_name))
+pprint(w.online_tables.get(online_table_name))
 
 # COMMAND ----------
 
 # DBTITLE 1,Catalog Turbine Specifications
 from databricks.feature_engineering import FeatureLookup
+from databricks.feature_engineering import FeatureEngineeringClient
+
+fe = FeatureEngineeringClient()
 
 features = [FeatureLookup(
-    table_name=f"{catalog}.{db}.turbine_specifications",
+    table_name=f"{catalog}.{db}.turbine_current_features",
     lookup_key=["turbine_id"]
   )]
 
 # Create a `FeatureSpec` in Unity Catalog
-fe.create_feature_spec(
-  name=f"{catalog}.{db}.turbine_feature_spec",
-  features=features,
-)
+try:
+  fe.create_feature_spec(name=f"{catalog}.{db}.turbine_features_spec", features=features)
+except Exception as e:
+  if "already exists" in str(e):
+    print(f"FeatureSpec {catalog}.{db}.turbine_features_spec already exists. Skipping execution")
+  else:
+    print(f"An error occurred: {e}")
+    raise e
 
 # COMMAND ----------
 
@@ -497,21 +437,24 @@ fe.create_feature_spec(
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 
 try:
- status = workspace.serving_endpoints.create_and_wait(
+ status = w.serving_endpoints.create_and_wait(
    name=FEATURE_SERVING_ENDPOINT_NAME,
    config = EndpointCoreConfigInput(
      served_entities=[
        ServedEntityInput(
-         entity_name=f"{catalog}.{db}.turbine_feature_spec",
+         entity_name=f"{catalog}.{db}.turbine_features_spec",
          scale_to_zero_enabled=True,
          workload_size="Small"
        )
      ]
-   )
+   ) 
  )
 
 except Exception as e:
-  raise
+  if "already exists" in str(e):
+    print(f"Serving endpoint {FEATURE_SERVING_ENDPOINT_NAME} already exists. Skipping execution")
+  else:
+    raise e
 
 # COMMAND ----------
 
@@ -525,20 +468,13 @@ except Exception as e:
 
 # COMMAND ----------
 
+host = WorkspaceClient().config.host
+
 spark.sql(f"""DROP FUNCTION IF EXISTS {catalog}.{db}.turbine_specifications_retriever_with_secret;""")
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {catalog}.{db}.turbine_specifications_retriever_with_secret(
   turbine_id STRING, databricks_token STRING)
-RETURNS STRUCT<
-country STRING, 
-    lat STRING, 
-    location STRING, 
-    long STRING, 
-    model STRING, 
-    state STRING, 
-    turbine_id STRING, 
-    _rescued_data STRING
->
+RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
 LANGUAGE PYTHON
 AS
 $$
@@ -546,8 +482,7 @@ $$
     import requests
     headers = {{"Authorization": "Bearer " + databricks_token}}
     #Call our vector search endpoint via simple SQL statement
-    response = requests.post("{host}/serving-endpoints/turbineSpecEndpoint/invocations", json = {{"dataframe_records": [{{"turbine_id": turbine_id}}]}}, headers=headers)
-
+    response = requests.post("{host}/serving-endpoints/dbdemos_iot_turbine_feature_endpoint/invocations", json = {{"dataframe_records": [{{"turbine_id": turbine_id}}]}}, headers=headers)
     return response.json().get('outputs')[0]
   except Exception as e:
     raise e
@@ -555,28 +490,14 @@ $$;""")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT turbine_specifications_retriever_with_secret('25b2116a-ae6c-ff55-ce0c-3f08e12656f1',  secret('dbdemos', 'ai_agent_sp_token')
-# MAGIC ) AS turbine_specifications
-
-# COMMAND ----------
-
+# DBTITLE 1,Add the wrapper
 # MAGIC %sql
 # MAGIC DROP FUNCTION IF EXISTS turbine_specifications_retriever;
 # MAGIC CREATE OR REPLACE FUNCTION turbine_specifications_retriever (turbine_id STRING)
-# MAGIC RETURNS STRUCT<
-# MAGIC     country STRING, 
-# MAGIC         lat STRING, 
-# MAGIC         location STRING, 
-# MAGIC         long STRING, 
-# MAGIC         model STRING, 
-# MAGIC         state STRING, 
-# MAGIC         turbine_id STRING, 
-# MAGIC         _rescued_data STRING
-# MAGIC     >
+# MAGIC   RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
 # MAGIC LANGUAGE SQL
 # MAGIC COMMENT 'This tool returns turbine specifications based on the turbine_id.'
-# MAGIC RETURN SELECT turbine_specifications_retriever_with_secret(turbine_id,  secret('dbdemos', 'ai_agent_sp_token'));
+# MAGIC   RETURN SELECT turbine_specifications_retriever_with_secret(turbine_id, secret('dbdemos', 'ai_agent_sp_token'));
 
 # COMMAND ----------
 

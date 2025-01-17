@@ -84,7 +84,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.36.0 databricks-feature-engineering==0.7.0 mlflow==2.19.0
+# MAGIC %pip install --quiet databricks-sdk==0.40.0 databricks-feature-engineering==0.8.0 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -104,9 +104,13 @@
 def plot(sensor_report):
   turbine_id = spark.table('turbine_training_dataset').where(f"abnormal_sensor = '{sensor_report}' ").limit(1).collect()[0]['turbine_id']
   #Let's explore a bit our datasets with pandas on spark.
-  df = spark.table('sensor_bronze').where(f"turbine_id == '{turbine_id}' ").orderBy('timestamp').pandas_api()
+  df = spark.table('sensor_bronze').where(f"turbine_id == '{turbine_id}' ").orderBy('timestamp').limit(500).pandas_api()
   df.plot(x="timestamp", y=["sensor_B"], kind="line", title=f'Sensor report: {sensor_report}').show()
 plot('ok')
+
+# COMMAND ----------
+
+
 plot('sensor_B')
 
 # COMMAND ----------
@@ -142,11 +146,30 @@ g.map_lower(sns.kdeplot).map_diag(sns.kdeplot, lw=3).map_upper(sns.regplot).add_
 # DBTITLE 1,Custom pandas transformation / code on top of your entire dataset (koalas)
  # Convert to pandas (koalas)
 dataset = turbine_dataset.pandas_api()
-# Drop columns we don't want to use in our model
-dataset = dataset[['turbine_id', 'hourly_timestamp', 'std_sensor_A', 'std_sensor_B','std_sensor_C', 'std_sensor_D','std_sensor_E', 'std_sensor_F', 'abnormal_sensor']]
+
+# Select the columns we would like to use as ML Model features. #Note: we removed percentiles_sensor_A/B/C.. feature to make the demo easier
+columns = [
+    "turbine_id",
+    "hourly_timestamp",
+    "avg_energy",
+    "std_sensor_A",
+    "std_sensor_B",
+    "std_sensor_C",
+    "std_sensor_D",
+    "std_sensor_E",
+    "std_sensor_F",
+    "location",
+    "model",
+    "state",
+    "composite_key",
+    "abnormal_sensor",
+    "maintenance_report"
+]
+dataset = dataset[columns]
+
 # Drop missing values
 dataset = dataset.dropna()   
-dataset.describe()
+display(dataset)
 
 # COMMAND ----------
 
@@ -223,24 +246,6 @@ display(features)
 
 # COMMAND ----------
 
-# DBTITLE 1,We have already started a run for you, you can explore it here:
-from databricks import automl
-xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
-xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-
-training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id', 'hourly_timestamp').sample(0.1) #Reduce the dataset size to speedup the demo
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = training_dataset,
-    target_col = "abnormal_sensor",
-    timeout_minutes = 10
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
-
-# COMMAND ----------
-
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
@@ -268,19 +273,25 @@ except Exception as e:
 # MAGIC %md
 # MAGIC AutoML saved our best model in the MLFlow registry. Open the experiment from the AutoML run to explore its artifact and analyze the parameters used, including traceability to the notebook used for its creation.
 # MAGIC
-# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API. Let' register the model to Unity Catalog and move it to production:
+# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API. Let' register the model to Unity Catalog and move it to production.
+# MAGIC
+# MAGIC You can programatically get the last best run from your automl training:
+# MAGIC ```
+# MAGIC from mlflow import MlflowClient
+# MAGIC
+# MAGIC # retrieve best model trial run
+# MAGIC trial_id = automl_run.best_trial.mlflow_run_id
+# MAGIC model_uri = "runs:/{}/model".format(automl_run.best_trial.mlflow_run_id)
+# MAGIC #Use Databricks Unity Catalog to save our model
+# MAGIC latest_model = mlflow.register_model(model_uri, f"{catalog}.{db}.{model_name}")
+# MAGIC # Flag it as Production ready using UC Aliases
+# MAGIC MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+# MAGIC ```
 
 # COMMAND ----------
 
-from mlflow import MlflowClient
-
-# retrieve best model trial run
-trial_id = automl_run.best_trial.mlflow_run_id
-model_uri = "runs:/{}/model".format(automl_run.best_trial.mlflow_run_id)
-#Use Databricks Unity Catalog to save our model
-latest_model = mlflow.register_model(model_uri, f"{catalog}.{db}.{model_name}")
-# Flag it as Production ready using UC Aliases
-MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+# DBTITLE 1,Let's run and deploy our model using the best run!
+# MAGIC %run ./04.2-automl-generated-notebook-iot-turbine
 
 # COMMAND ----------
 
@@ -292,9 +303,9 @@ MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", a
 # MAGIC
 # MAGIC #### Adjust spare stock based on predictive maintenance result
 # MAGIC
-# MAGIC These predictions can be re-used in our dashboard to not only measure equipment failure probability, but take action to schedule maintenance and ajust spare part stock accordingly. 
+# MAGIC These predictions can be re-used in our dashboard to not only measure equipment failure probability, but also to take action to schedule maintenance and ajust spare part stock accordingly. 
 # MAGIC
-# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $Million / month!
+# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: in the few hours that it took to set this pipeline up we are effectively saving our organization MILLIONS of dollars by month!
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC

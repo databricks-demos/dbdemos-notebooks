@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.40.0 mlflow==2.19.0 scikit-learn==1.3.0 cloudpickle==2.2.1 
+# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.40.0 mlflow==2.19.0 cloudpickle==2.2.1 
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -162,8 +162,7 @@ columns = [
     "model",
     "state",
     "composite_key",
-    "abnormal_sensor",
-    "maintenance_report"
+    "abnormal_sensor"
 ]
 dataset = dataset[columns]
 

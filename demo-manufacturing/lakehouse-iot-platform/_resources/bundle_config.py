@@ -126,14 +126,6 @@
       "description": "Once your model is deployed, run low latency inferences."
     },
     {
-      "path": "05-Generative-AI/config", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Agent configuration file", 
-      "description": "Define configuration information about your agent including tool definitions."
-    },
-    {
       "path": "05-Generative-AI/05.1-ai-tools-iot-turbine-prescriptive-maintenance", 
       "pre_run": True, 
       "publish_on_website": True, 
@@ -211,6 +203,21 @@
                 "depends_on": [
                       {
                           "task_key": "start_dlt_pipeline"
+                      }
+                  ]
+            },
+            {
+                "task_key": "deploy_endpoint",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.3-running-inference-iot-turbine",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "create_feature_and_automl_run"
                       }
                   ]
             }

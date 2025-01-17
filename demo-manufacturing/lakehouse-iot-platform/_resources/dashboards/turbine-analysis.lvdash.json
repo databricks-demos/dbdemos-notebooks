@@ -3,12 +3,12 @@
     {
       "name": "8b43b1f7",
       "displayName": "IOT platform - turbine sensors",
-      "query": "SELECT * FROM `main__build`.`dbdemos_iot_platform`.sensor_bronze;"
+      "query": "SELECT * FROM `main`.`dbdemos_iot_platform`.sensor_bronze;"
     },
     {
       "name": "abee8d55",
       "displayName": "IOT platform - turbine status",
-      "query": "select *, CASE WHEN prediction = 'ok' THEN 'Healthy' ELSE CONCAT('Faulty (', prediction, ')') END as status \n  from `main__build`.`dbdemos_iot_platform`.turbine_current_status"
+      "query": "select *, CASE WHEN prediction = 'ok' THEN 'Healthy' ELSE CONCAT('Faulty (', prediction, ')') END as status \n  from `main`.`dbdemos_iot_platform`.turbine_current_status"
     }
   ],
   "pages": [

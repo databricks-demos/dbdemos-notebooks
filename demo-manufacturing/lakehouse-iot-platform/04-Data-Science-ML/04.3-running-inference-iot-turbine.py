@@ -66,6 +66,7 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
+import mlflow
 mlflow.set_registry_uri('databricks-uc')
 #                                                                                                   Stage/version
 #                                                                                 Model name              |
@@ -79,6 +80,12 @@ spark.udf.register("predict_maintenance", predict_maintenance)
 # DBTITLE 1,Run inferences
 columns = predict_maintenance.metadata.get_input_schema().input_names()
 spark.table('turbine_hourly_features').withColumn("dbdemos_turbine_maintenance", predict_maintenance(*columns)).display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Or in SQL directly
+# MAGIC %sql
+# MAGIC SELECT turbine_id, predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, location, model, state) as prediction FROM turbine_hourly_features
 
 # COMMAND ----------
 

@@ -100,7 +100,7 @@ df_loaded.head(5)
 # COMMAND ----------
 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-supported_cols = ["std_sensor_B", "std_sensor_A", "location", "avg_energy", "std_sensor_E", "state", "std_sensor_C", "std_sensor_F", "std_sensor_D", "hourly_timestamp"]
+supported_cols = ["hourly_timestamp", "avg_energy", "std_sensor_A", "std_sensor_B", "std_sensor_C", "std_sensor_D", "std_sensor_E", "std_sensor_F", "location", "model", "state"]
 col_selector = ColumnSelector(supported_cols)
 
 # COMMAND ----------
@@ -177,7 +177,6 @@ numerical_pipeline = Pipeline(steps=[
     ("imputers", ColumnTransformer(num_imputers)),
     ("standardizer", StandardScaler()),
 ])
-
 numerical_transformers = [("numerical", numerical_pipeline, ["std_sensor_B", "std_sensor_A", "avg_energy", "std_sensor_E", "std_sensor_C", "std_sensor_F", "std_sensor_D"])]
 
 # COMMAND ----------

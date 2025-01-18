@@ -115,25 +115,6 @@ display(df)
 
 # COMMAND ----------
 
-dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPandas()
-dataset
-
-# COMMAND ----------
-
-# DBTITLE 1,Call the REST API deployed using standard python
-from mlflow import deployments
-
-model_endpoint_name = "dbdemos_turbine_maintenance"
-
-def score_model(dataset):
-  client = mlflow.deployments.get_deploy_client("databricks")
-  predictions = client.predict(endpoint=model_endpoint_name, inputs=dataset.to_dict(orient='split'))
-
-#Deploy your model and uncomment to run your inferences live!
-#score_model(dataset)
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Real time model inference
 # MAGIC
@@ -168,9 +149,26 @@ except Exception as e:
     else:
         raise e
 
+while client.get_endpoint(MODEL_SERVING_ENDPOINT_NAME)['state']['config_update'] == 'IN_PROGRESS':
+    time.sleep(10)
+
 # COMMAND ----------
 
 # MAGIC %md You can now view the status of the Feature Serving Endpoint in the table on the **Serving endpoints** page. Click **Serving** in the sidebar to display the page.
+
+# COMMAND ----------
+
+# DBTITLE 1,Call the REST API deployed using standard python
+from mlflow import deployments
+
+
+def score_model(dataset):
+  client = mlflow.deployments.get_deploy_client("databricks")
+  predictions = client.predict(endpoint=MODEL_SERVING_ENDPOINT_NAME, inputs=dataset.to_dict(orient='split'))
+
+dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPandas()
+#Deploy your model and uncomment to run your inferences live!
+#score_model(dataset)
 
 # COMMAND ----------
 

@@ -19,8 +19,8 @@ schema = dbName = db = "dbdemos_iot_platform"
 secret_scope_name = "dbdemos"
 secret_key_name = "ai_agent_sp_token"
 
-MODEL_SERVING_ENDPOINT_NAME   = "dbdemos_vs_endpoint"
-VECTOR_SEARCH_ENDPOINT_NAME   = "dbdemos_iot_turbine_vector_endpoint"
+MODEL_SERVING_ENDPOINT_NAME   = "dbdemos_iot_turbine_vector_endpoint"
+VECTOR_SEARCH_ENDPOINT_NAME   = "dbdemos_vs_endpoint"
 FEATURE_SERVING_ENDPOINT_NAME = "dbdemos_iot_turbine_feature_endpoint"
 
 volume_name = "turbine_raw_landing"

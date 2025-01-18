@@ -161,7 +161,6 @@ columns = [
     "location",
     "model",
     "state",
-    "composite_key",
     "abnormal_sensor"
 ]
 dataset = dataset[columns]

@@ -110,7 +110,6 @@ plot('ok')
 
 # COMMAND ----------
 
-
 plot('sensor_B')
 
 # COMMAND ----------

@@ -115,13 +115,13 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_tu
 
 # COMMAND ----------
 
-# MAGIC %sql LIST '/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'
+# MAGIC %sql LIST '/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'
 
 # COMMAND ----------
 
 # DBTITLE 1,Review the raw sensor data received as JSON
 # MAGIC %sql
-# MAGIC SELECT * FROM PARQUET.`/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data`
+# MAGIC SELECT * FROM PARQUET.`/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data`
 
 # COMMAND ----------
 

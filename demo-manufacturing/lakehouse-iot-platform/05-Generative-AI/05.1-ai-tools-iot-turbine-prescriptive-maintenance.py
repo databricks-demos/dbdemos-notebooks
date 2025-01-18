@@ -141,9 +141,7 @@
 # MAGIC             'std_sensor_F', std_sensor_F,
 # MAGIC             'location', location,
 # MAGIC             'model', model,
-# MAGIC             'state', state,
-# MAGIC             'composite_key', composite_key
-# MAGIC         ),
+# MAGIC             'state', state        ),
 # MAGIC         'STRING'
 # MAGIC     )
 # MAGIC );
@@ -167,8 +165,7 @@
 # MAGIC     2.1075958066966423,                           -- std_sensor_F
 # MAGIC     'Lexington',                                  -- location
 # MAGIC     'EpicWind',                                   -- model
-# MAGIC     'America/New_York',                           -- state
-# MAGIC     '00f27248-1f4f-e174-432c-53bd2a9158df-1736868963' -- composite_key
+# MAGIC     'America/New_York'                           -- state
 # MAGIC ) AS prediction
 
 # COMMAND ----------

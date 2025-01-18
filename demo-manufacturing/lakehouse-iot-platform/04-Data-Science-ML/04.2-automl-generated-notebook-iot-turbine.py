@@ -205,7 +205,7 @@ one_hot_pipeline = Pipeline(steps=[
     ("one_hot_encoder", OneHotEncoder(handle_unknown="ignore")),
 ])
 
-categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["location", "state"])]
+categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["location", "state", "model"])]
 
 # COMMAND ----------
 

@@ -122,14 +122,14 @@
 # MAGIC %sql
 # MAGIC DROP FUNCTION IF EXISTS turbine_maintenance_predictor;
 # MAGIC
-# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_predictor(hourly_timestamp TIMESTAMP, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, location STRING, model STRING, state STRING, composite_key STRING)
+# MAGIC CREATE OR REPLACE FUNCTION turbine_maintenance_predictor(hourly_timestamp TIMESTAMP, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, location STRING, model STRING, state STRING)
 # MAGIC RETURNS STRING
 # MAGIC LANGUAGE SQL
 # MAGIC COMMENT 'This tool predicts whether or not a turbine is faulty to facilitate proactive maintenance'
 # MAGIC RETURN
 # MAGIC (
 # MAGIC     SELECT ai_query(
-# MAGIC         'dbdemos_iot_turbine_model_endpoint', 
+# MAGIC         'dbdemos_iot_turbine_prediction_endpoint', 
 # MAGIC         named_struct(
 # MAGIC             'hourly_timestamp', hourly_timestamp,
 # MAGIC             'avg_energy', avg_energy,
@@ -280,7 +280,7 @@ CREATE OR REPLACE FUNCTION turbine_maintenance_reports_retriever(sensor_reading_
 RETURNS ARRAY<STRING>
 LANGUAGE SQL
 RETURN (
-  SELECT collect_list(maintenance_report) FROM VECTOR_SEARCH(index => 'cal_test_iot_jan_seventeenth.dbdemos_iot_platform.turbine_sensor_reports_vs_index', query_vector => sensor_reading_array, num_results => 3) ) """)
+  SELECT collect_list(maintenance_report) FROM VECTOR_SEARCH(index => '{catalog}.{schema}.turbine_sensor_reports_vs_index', query_vector => sensor_reading_array, num_results => 3) ) """)
 
 # COMMAND ----------
 

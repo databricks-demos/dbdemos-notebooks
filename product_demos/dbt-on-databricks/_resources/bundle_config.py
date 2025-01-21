@@ -89,9 +89,7 @@
                     "libraries": [
                         {
                             "pypi": {
-                                "package": "dbt-databricks==1.8.7",
-                                "package": "databricks-sdk==0.41.0"
-                            }
+                                "package": "dbt-databricks==1.8.7"                            }
                         }
                     ],
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",
@@ -113,6 +111,13 @@
                             "schema": "{{SCHEMA}}"
                         }
                     },
+                    "libraries": [
+                        {
+                            "pypi": {
+                                "package": "databricks-sdk==0.41.0"
+                            }
+                        }
+                    ],
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",
                     "timeout_seconds": 0,
                     "email_notifications": {}

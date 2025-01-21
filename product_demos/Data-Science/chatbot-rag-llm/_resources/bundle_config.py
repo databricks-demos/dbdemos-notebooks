@@ -71,7 +71,6 @@
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
-      "depends_on_previous": False,
       "title":  "Data preparation for chatbot", 
       "description": "Prepare doc chunks and build your Vector Search Index"
     },

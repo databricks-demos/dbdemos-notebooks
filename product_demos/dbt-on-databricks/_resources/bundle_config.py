@@ -89,7 +89,8 @@
                     "libraries": [
                         {
                             "pypi": {
-                                "package": "dbt-databricks==1.8.7"
+                                "package": "dbt-databricks==1.8.7",
+                                "package": "databricks-sdk==0.41.0"
                             }
                         }
                     ],

@@ -15,6 +15,12 @@
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC -- NOTE: make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster).
+# MAGIC SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE OR SERVERLESS, not a classic cluster');
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC ## Note: refresh your forecast data every day
 # MAGIC

@@ -23,7 +23,7 @@
 # MAGIC - To view lineage, users must have the SELECT privilege on the table
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=00-UC-lineage&demo_name=uc-03-UC-lineage&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=00-UC-lineage&demo_name=uc-03-UC-lineage&event=VIEW">
 
 # COMMAND ----------
 

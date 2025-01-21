@@ -20,7 +20,7 @@
 -- MAGIC Let's see how this can be done with the Unity Catalog
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=00-UC-Table-ACL&demo_name=uc-01-acl&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=00-UC-Table-ACL&demo_name=uc-01-acl&event=VIEW">
 
 -- COMMAND ----------
 
@@ -64,10 +64,12 @@
 
 -- COMMAND ----------
 
--- The demo will create and use the catalog defined:
-CREATE CATALOG IF NOT EXISTS main;
--- Make it default for future usage (we won't have to specify it)
-USE CATALOG main;
+-- MAGIC %python
+-- MAGIC #The demo will create and use the catalog defined:
+-- MAGIC # see the catalog value in the ./config file
+-- MAGIC spark.sql(f'CREATE CATALOG IF NOT EXISTS {catalog}');
+-- MAGIC #Make it default for future usage (we won't have to specify it)
+-- MAGIC spark.sql(f'USE CATALOG main');
 
 -- COMMAND ----------
 
@@ -87,8 +89,10 @@ SELECT CURRENT_CATALOG();
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS uc_acl;
-USE SCHEMA uc_acl;
+-- MAGIC %python
+-- MAGIC # see schema value in the ./config file
+-- MAGIC spark.sql(f'CREATE SCHEMA IF NOT EXISTS {schema}');
+-- MAGIC spark.sql(f'USE SCHEMA {schema}');
 
 -- COMMAND ----------
 
@@ -115,8 +119,8 @@ CREATE TABLE IF NOT EXISTS customers (
   email STRING,
   address STRING,
   gender DOUBLE,
-  age_group DOUBLE); ; 
-GRANT SELECT, MODIFY on TABLE customers TO `account users`;  -- for the demo only, allow all users to edit the table - don't do that in production!
+  age_group DOUBLE);
+-- GRANT SELECT, MODIFY on TABLE customers TO `account users`;  -- for the demo only, allow all users to edit the table - don't do that in production!
 
 -- COMMAND ----------
 
@@ -146,7 +150,7 @@ SELECT * FROM  customers
 -- COMMAND ----------
 
 -- Let's grant all users a SELECT
-GRANT SELECT ON TABLE customers TO `account users`;
+-- GRANT SELECT ON TABLE customers TO `account users`; -- skip it for the demo, uncomment to make it available to all users!
 
 -- We'll grant an extra MODIFY to our Data Engineer
 -- Note: make sure you created the dataengineers group first as an account admin!

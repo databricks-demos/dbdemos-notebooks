@@ -10,8 +10,8 @@
   "category": "governance",
   "serverless_supported": True,
   "custom_schema_supported": True,
-  "default_schema": "uc_acl",
   "default_catalog": "main",
+  "default_schema": "dbdemos_uc_01_acl",
   "title": "Table ACL & Row + Column Level security with UC",
   "description": "Discover how to GRANT permission on your table with Unity Catalog and implement fined grained control such as data masking at column level or filter rows based on each user.",
   "fullDescription": "Unity Catalog is a unified governance solution for all data and AI assets including files, tables, machine learning models and dashboards in your lakehouse on any cloud.<br/>In this demo, we’ll show how Unity Catalog can be used to secure your table and grant ACL on tables. We’ll also see how Unity Catalog can provide dynamic data masking on columns leveraging SQL functions, and filter rows based on the current user. This will allow you to hide or anonymize  data based on each user permissions, from a simple condition based on GROUP or more advanced control.",
@@ -34,13 +34,20 @@
       "description": "Init data for demo."
     },
     {
+      "path": "config", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Configuration", 
+      "description": "Setup your catalog and schema for the demo."
+    },
+    {
       "path": "00-UC-Table-ACL", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Table ACL with UC", 
-      "description": "Secure table access with GRANT command.",
-      "parameters": {"catalog": "dbdemos"}
+      "description": "Secure table access with GRANT command."
     },
     {
       "path": "01-Row-Column-access-control", 
@@ -48,8 +55,7 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Row-level & and Column level masking", 
-      "description": "Use SQL functions to filter your data on row and column level.",
-      "parameters": {"catalog": "dbdemos"}
+      "description": "Use SQL functions to filter your data on row and column level."
     },
     {
       "path": "02-[legacy]-UC-Dynamic-view", 
@@ -57,8 +63,7 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Legacy Dynamic views", 
-      "description": "Create dynamic views with UC for finer access control (legacy).",
-      "parameters": {"catalog": "dbdemos"}
+      "description": "Create dynamic views with UC for finer access control (legacy)."
     }
   ],
   "cluster": {
@@ -66,7 +71,7 @@
         "min_workers": 1,
         "max_workers": 1
     },
-    "spark_version": "13.1.x-scala2.12",
+    "spark_version": "15.4.x-scala2.12",
     "data_security_mode": "USER_ISOLATION"
   }
 }

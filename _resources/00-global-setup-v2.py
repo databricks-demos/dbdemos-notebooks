@@ -124,7 +124,7 @@ class DBDemos():
     def download_to_dest(url):
       try:
         #Temporary fix to avoid hitting github limits - Swap github to our S3 bucket to download files
-        s3url = url.replace("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/", "https://notebooks.databricks.com/demos/dbdemos-dataset/")
+        s3url = url.replace("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/", "https://dbdemos-dataset.s3.amazonaws.com/")
         download_file(s3url, dest)
       except:
         download_file(url, dest)

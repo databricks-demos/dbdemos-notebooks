@@ -11,7 +11,7 @@
 # MAGIC This give you capabilities to ensure a full data governance, storing your main tables in the managed catalog/storage while ensuring secure access for for specific cloud storage.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=AWS-Securing-data-on-external-locations&demo_name=uc-02-external-location&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=AWS-Securing-data-on-external-locations&demo_name=uc-02-external-location&event=VIEW">
 
 # COMMAND ----------
 

@@ -62,7 +62,7 @@ dbutils.widgets.text("external_bucket_url", external_bucket_url)
 
 # MAGIC %sql
 # MAGIC -- For our demo, let's make sure all users can alter this storage credential:
-# MAGIC ALTER STORAGE CREDENTIAL `field_demos_credential`  OWNER TO `account users`;
+# MAGIC -- ALTER STORAGE CREDENTIAL `field_demos_credential`  OWNER TO `account users`;
 
 # COMMAND ----------
 

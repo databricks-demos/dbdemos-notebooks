@@ -15,12 +15,6 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- NOTE: make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster).
-# MAGIC SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE TO RUN THE NEXT CELLS HAVING THE AI_FORECAST FUNCTION, not a classic cluster');
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC ## Note: refresh your forecast data every day
 # MAGIC
@@ -61,6 +55,12 @@
 # MAGIC **Make sure you run these next cells using a SQL WAREHOUSE as compute, not a classic cluster as the AI_FORECAST preview is only available in serverless for now.**
 # MAGIC
 # MAGIC *Note: If the `AI_FORECAST` isn't yet available in your workspace, you can skip to the next section where we show you how to do the same in python.*
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC -- NOTE: make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster).
+# MAGIC SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE TO RUN THE NEXT CELLS HAVING THE AI_FORECAST FUNCTION, not a classic cluster');
 
 # COMMAND ----------
 

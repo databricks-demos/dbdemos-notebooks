@@ -18,7 +18,7 @@
       {"title": "Databricks Unity Catalog: Fine grained Governance", "url": "https://www.databricks.com/blog/2021/05/26/introducing-databricks-unity-catalog-fine-grained-governance-for-data-and-ai-on-the-lakehouse.html"}],
   "recommended_items": ["uc-01-acl", "uc-02-external-location", "uc-03-data-lineage"],
   "demo_assets": [],
-  "bundle": True,
+  "bundle": False,
   "tags": [{"uc": "Unity Catalog"}],
   "notebooks": [
      {

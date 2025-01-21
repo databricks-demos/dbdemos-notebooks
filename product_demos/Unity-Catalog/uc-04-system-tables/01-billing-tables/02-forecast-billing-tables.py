@@ -59,6 +59,12 @@
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC -- NOTE: make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster).
+# MAGIC SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE TO RUN THE NEXT CELLS HAVING THE AI_FORECAST FUNCTION, not a classic cluster');
+
+# COMMAND ----------
+
+# MAGIC %sql
 # MAGIC select * from system.billing.usage u
 # MAGIC   inner join system.billing.list_prices lp on u.cloud = lp.cloud and
 # MAGIC     u.sku_name = lp.sku_name and

@@ -89,7 +89,7 @@
                     "libraries": [
                         {
                             "pypi": {
-                                "package": "dbt-databricks==1.8.7"                            }
+                                "package": "dbt-databricks==1.8.7"
                         }
                     ],
                     "job_cluster_key": "dbdemos-dbt-workflow-cluster",

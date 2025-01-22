@@ -40,7 +40,7 @@
         {
             "name": "d9196d0a",
             "displayName": "breakdown",
-            "query": "SELECT \n    e.compaign_id,\n    first(c.campaign_name) as campaign_name,\n    first(c.compaign_description) as compaign_description,\n    first(c.cost) as cost,\n    first(c.start_date) as start_date,\n    first(c.end_date) as end_date,\n    to_timestamp(first(c.start_date)) as _start_date,\n    to_timestamp(first(c.end_date)) as _end_date,\n  SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks,\n    unique_clicks / total_delivered as ctr,\n    format_number(ctr, '##.##%') as ctr_p,\n    total_delivered / total_sent as delivery_rate,\n    format_number(delivery_rate, '##.##%') as delivery_rate_p,\n    total_optouts / total_delivered as optouts_rate,\n    format_number(optouts_rate, '##.##%') as optouts_rate_p,\n    total_spam / total_delivered as spam_rate,\n    format_number(spam_rate, '##.##%') as spam_rate_p,\n    sum(p.employees) as total_employees\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nGROUP BY \n    e.compaign_id\nHAVING\n    _start_date >= :start_date AND\n    _end_date <= :end_date\nORDER BY ctr desc, cost ASC",
+            "query": "SELECT \n    e.campaign_id,\n    first(c.campaign_name) as campaign_name,\n    first(c.campaign_description) as campaign_description,\n    first(c.cost) as cost,\n    first(c.start_date) as start_date,\n    first(c.end_date) as end_date,\n    to_timestamp(first(c.start_date)) as _start_date,\n    to_timestamp(first(c.end_date)) as _end_date,\n  SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks,\n    unique_clicks / total_delivered as ctr,\n    format_number(ctr, '##.##%') as ctr_p,\n    total_delivered / total_sent as delivery_rate,\n    format_number(delivery_rate, '##.##%') as delivery_rate_p,\n    total_optouts / total_delivered as optouts_rate,\n    format_number(optouts_rate, '##.##%') as optouts_rate_p,\n    total_spam / total_delivered as spam_rate,\n    format_number(spam_rate, '##.##%') as spam_rate_p,\n    sum(p.employees) as total_employees\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.campaigns c on e.campaign_id = c.campaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nGROUP BY \n    e.campaign_id\nHAVING\n    _start_date >= :start_date AND\n    _end_date <= :end_date\nORDER BY ctr desc, cost ASC",
             "parameters": [
                 {
                     "displayName": "start_date",
@@ -77,7 +77,7 @@
         {
             "name": "023bfe11",
             "displayName": "cta_top20",
-            "query": "WITH CampaignData AS (\n    SELECT \n        e.compaign_id,\n        explode(collect_set(e.metadata.cta)) as cta,\n        to_timestamp(first(c.start_date)) as _start_date,\n        to_timestamp(first(c.end_date)) as _end_date,\n        SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n        count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks\n        \n    FROM \n        main.dbdemos_aibi_cme_marketing_campaign.events e\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\n    GROUP BY \n        e.compaign_id\n)\n\nSELECT sum(unique_clicks) as unique_clicks, cta, compaign_id\nFROM CampaignData\nWHERE \n    _start_date >= :start_date AND\n    _end_date <= :end_date\nGROUP BY cta, compaign_id\nLIMIT 20",
+            "query": "WITH CampaignData AS (\n    SELECT \n        e.campaign_id,\n        explode(collect_set(e.metadata.cta)) as cta,\n        to_timestamp(first(c.start_date)) as _start_date,\n        to_timestamp(first(c.end_date)) as _end_date,\n        SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n        count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks\n        \n    FROM \n        main.dbdemos_aibi_cme_marketing_campaign.events e\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.campaigns c on e.campaign_id = c.campaign_id\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\n    INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\n    GROUP BY \n        e.campaign_id\n)\n\nSELECT sum(unique_clicks) as unique_clicks, cta, campaign_id\nFROM CampaignData\nWHERE \n    _start_date >= :start_date AND\n    _end_date <= :end_date\nGROUP BY cta, campaign_id\nLIMIT 20",
             "parameters": [
                 {
                     "displayName": "start_date",
@@ -114,7 +114,7 @@
         {
             "name": "09d20820",
             "displayName": "events_high_ctr",
-            "query": "SELECT \n    e.*,\n    c.*,\n    ct.*,\n    p.*\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nWHERE\n    e.event_type = 'click' AND\n    e.event_date >= :start_date AND\n    e.event_date <= :end_date\n",
+            "query": "SELECT \n    e.*,\n    c.*,\n    ct.*,\n    p.*\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.campaigns c on e.campaign_id = c.campaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nWHERE\n    e.event_type = 'click' AND\n    e.event_date >= :start_date AND\n    e.event_date <= :end_date\n",
             "parameters": [
                 {
                     "displayName": "start_date",
@@ -151,7 +151,7 @@
         {
             "name": "31bd8516",
             "displayName": "breakdown_top20",
-            "query": "SELECT \n    e.compaign_id,\n    first(c.campaign_name) as campaign_name,\n    first(c.compaign_description) as compaign_description,\n    first(c.subject_line) as subject_line,\n    first(c.template) as template,\n    first(c.cost) as cost,\n    first(c.start_date) as start_date,\n    first(c.end_date) as end_date,\n    to_timestamp(first(c.start_date)) as _start_date,\n    to_timestamp(first(c.end_date)) as _end_date,\n  SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks,\n    unique_clicks / total_delivered as ctr,\n    format_number(ctr, '##.##%') as ctr_p,\n    total_delivered / total_sent as delivery_rate,\n    format_number(delivery_rate, '##.##%') as delivery_rate_p,\n    total_optouts / total_delivered as optouts_rate,\n    format_number(optouts_rate, '##.##%') as optouts_rate_p,\n    total_spam / total_delivered as spam_rate,\n    format_number(spam_rate, '##.##%') as spam_rate_p,\n    sum(p.employees) as total_employees\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nGROUP BY \n    e.compaign_id\nHAVING\n    _start_date >= :start_date AND\n    _end_date <= :end_date\nORDER BY ctr desc, cost ASC\nLIMIT 20",
+            "query": "SELECT \n    e.campaign_id,\n    first(c.campaign_name) as campaign_name,\n    first(c.campaign_description) as campaign_description,\n    first(c.subject_line) as subject_line,\n    first(c.template) as template,\n    first(c.cost) as cost,\n    first(c.start_date) as start_date,\n    first(c.end_date) as end_date,\n    to_timestamp(first(c.start_date)) as _start_date,\n    to_timestamp(first(c.end_date)) as _end_date,\n  SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n    SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered,\n    SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam,\n    SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens,\n    SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts,\n    SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks,\n    count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks,\n    unique_clicks / total_delivered as ctr,\n    format_number(ctr, '##.##%') as ctr_p,\n    total_delivered / total_sent as delivery_rate,\n    format_number(delivery_rate, '##.##%') as delivery_rate_p,\n    total_optouts / total_delivered as optouts_rate,\n    format_number(optouts_rate, '##.##%') as optouts_rate_p,\n    total_spam / total_delivered as spam_rate,\n    format_number(spam_rate, '##.##%') as spam_rate_p,\n    sum(p.employees) as total_employees\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.campaigns c on e.campaign_id = c.campaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nGROUP BY \n    e.campaign_id\nHAVING\n    _start_date >= :start_date AND\n    _end_date <= :end_date\nORDER BY ctr desc, cost ASC\nLIMIT 20",
             "parameters": [
                 {
                     "displayName": "start_date",
@@ -230,7 +230,7 @@
         {
             "name": "073eed09",
             "displayName": "events",
-            "query": "SELECT \n    e.*,\n    c.*,\n    ct.*,\n    p.*\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.compaigns c on e.compaign_id = c.compaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nWHERE\n    e.event_date >= :start_date AND\n    e.event_date <= :end_date\n",
+            "query": "SELECT \n    e.*,\n    c.*,\n    ct.*,\n    p.*\nFROM \n    main.dbdemos_aibi_cme_marketing_campaign.events e\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.campaigns c on e.campaign_id = c.campaign_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.contacts ct on e.contact_id = ct.contact_id\nINNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\nWHERE\n    e.event_date >= :start_date AND\n    e.event_date <= :end_date\n",
             "parameters": [
                 {
                     "displayName": "start_date",
@@ -653,11 +653,11 @@
                                     "linkTextTemplate": "{{ @ }}",
                                     "linkTitleTemplate": "{{ @ }}",
                                     "linkOpenInNewTab": true,
-                                    "name": "compaign_id",
+                                    "name": "campaign_id",
                                     "type": "integer",
                                     "displayAs": "number",
                                     "order": 100000,
-                                    "title": "compaign_id",
+                                    "title": "campaign_id",
                                     "allowSearch": false,
                                     "alignContent": "right",
                                     "allowHTML": false,
@@ -757,8 +757,8 @@
                                     "datasetName": "078f943d",
                                     "fields": [
                                         {
-                                            "name": "countdistinct(compaign_id)",
-                                            "expression": "COUNT(DISTINCT `compaign_id`)"
+                                            "name": "countdistinct(campaign_id)",
+                                            "expression": "COUNT(DISTINCT `campaign_id`)"
                                         }
                                     ],
                                     "disaggregated": false
@@ -770,13 +770,13 @@
                             "widgetType": "counter",
                             "encodings": {
                                 "value": {
-                                    "fieldName": "countdistinct(compaign_id)",
-                                    "displayName": "Count of Unique compaign_id"
+                                    "fieldName": "countdistinct(campaign_id)",
+                                    "displayName": "Count of Unique campaign_id"
                                 }
                             },
                             "frame": {
                                 "showTitle": true,
-                                "title": "# Impacted Compaigns"
+                                "title": "# Impacted campaigns"
                             }
                         }
                     },
@@ -921,7 +921,7 @@
                                         "hideTitle": false,
                                         "position": "bottom"
                                     },
-                                    "displayName": "Compaign "
+                                    "displayName": "campaign "
                                 },
                                 "size": {
                                     "fieldName": "sum(cost)",
@@ -985,7 +985,7 @@
                             },
                             "frame": {
                                 "showTitle": true,
-                                "title": "Compaigns"
+                                "title": "campaigns"
                             }
                         }
                     },
@@ -1263,12 +1263,12 @@
                                             "expression": "`campaign_name`"
                                         },
                                         {
-                                            "name": "compaign_description",
-                                            "expression": "`compaign_description`"
+                                            "name": "campaign_description",
+                                            "expression": "`campaign_description`"
                                         },
                                         {
-                                            "name": "compaign_id",
-                                            "expression": "`compaign_id`"
+                                            "name": "campaign_id",
+                                            "expression": "`campaign_id`"
                                         },
                                         {
                                             "name": "cost",
@@ -1313,7 +1313,7 @@
                             "encodings": {
                                 "columns": [
                                     {
-                                        "fieldName": "compaign_id",
+                                        "fieldName": "campaign_id",
                                         "numberFormat": "0",
                                         "booleanValues": [
                                             "false",
@@ -1338,7 +1338,7 @@
                                         "highlightLinks": false,
                                         "useMonospaceFont": false,
                                         "preserveWhitespace": false,
-                                        "displayName": "compaign_id"
+                                        "displayName": "campaign_id"
                                     },
                                     {
                                         "fieldName": "campaign_name",
@@ -1368,7 +1368,7 @@
                                         "displayName": "campaign_name"
                                     },
                                     {
-                                        "fieldName": "compaign_description",
+                                        "fieldName": "campaign_description",
                                         "booleanValues": [
                                             "false",
                                             "true"
@@ -1392,7 +1392,7 @@
                                         "highlightLinks": false,
                                         "useMonospaceFont": false,
                                         "preserveWhitespace": false,
-                                        "displayName": "compaign_description"
+                                        "displayName": "campaign_description"
                                     },
                                     {
                                         "fieldName": "cost",
@@ -2000,8 +2000,8 @@
                             "frame": {
                                 "showTitle": false,
                                 "showDescription": true,
-                                "title": "Compaigns",
-                                "description": "Sorted by CTR and Compaign Cost"
+                                "title": "campaigns",
+                                "description": "Sorted by CTR and campaign Cost"
                             }
                         }
                     },

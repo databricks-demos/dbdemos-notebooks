@@ -31,12 +31,12 @@
   "dashboards": [{"name": "[dbdemos] AIBI - Marketing Campaign",       "id": "web-marketing"}
                 ],
   "data_folders":[
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_campaigns",              "source_format": "parquet", "target_volume_folder":"raw_campaigns",              "target_format":"delta"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_contacts",               "source_format": "parquet", "target_volume_folder":"raw_contacts",               "target_format":"delta"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_events",                 "source_format": "parquet", "target_volume_folder":"raw_events",                 "target_format":"delta"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_feedbacks",              "source_format": "parquet", "target_volume_folder":"raw_feedbacks",              "target_format":"delta"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_issues",                 "source_format": "parquet", "target_volume_folder":"raw_issues",                 "target_format":"delta"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_prospects",              "source_format": "parquet", "target_volume_folder":"raw_prospects",              "target_format":"delta"}  ],
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_campaigns",              "source_format": "parquet", "target_volume_folder":"raw_campaigns",              "target_format":"parquet"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_contacts",               "source_format": "parquet", "target_volume_folder":"raw_contacts",               "target_format":"parquet"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_events",                 "source_format": "parquet", "target_volume_folder":"raw_events",                 "target_format":"parquet"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_feedbacks",              "source_format": "parquet", "target_volume_folder":"raw_feedbacks",              "target_format":"parquet"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_issues",                 "source_format": "parquet", "target_volume_folder":"raw_issues",                 "target_format":"parquet"},
+    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_data/raw_prospects",              "source_format": "parquet", "target_volume_folder":"raw_prospects",              "target_format":"parquet"}  ],
   "sql_queries": [
       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_campaigns TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for campaigns created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/raw_data/raw_campaigns', format => 'parquet', pathGlobFilter => '*.parquet')",
       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_contacts TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for contacts created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/raw_data/raw_contacts', format => 'parquet', pathGlobFilter => '*.parquet')",

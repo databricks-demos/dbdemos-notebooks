@@ -23,8 +23,7 @@ llm_config:
   - chat_history
   - question
 retriever_config:
-  chunk_template: 'Passage: {chunk_text}
-    '
+  chunk_template: 'Passage: {chunk_text}'
   data_pipeline_tag: poc
   parameters:
     k: 5

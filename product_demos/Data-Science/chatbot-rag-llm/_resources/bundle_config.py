@@ -60,7 +60,7 @@
     },
     {
       "path": "01-first-step/chain", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "Langchain chain", 

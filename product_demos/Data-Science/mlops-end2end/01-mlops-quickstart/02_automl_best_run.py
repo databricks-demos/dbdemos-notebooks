@@ -531,4 +531,4 @@ display(Image(filename=eval_pr_curve_path))
 # MAGIC %md
 # MAGIC ### Automate model promotion validation
 # MAGIC
-# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_models_in _uc)
+# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_models_in_uc)

@@ -300,13 +300,15 @@ AS
 -- COMMAND ----------
 
 CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
-  WITH 12m_payer AS (SELECT
+  WITH 
+    max_date AS (SELECT max(datetime) AS max_date FROM live.fund_trans_silver),
+    12m_payer AS (SELECT
                       payer_cust_id,
                       COUNT(DISTINCT payer_cust_id) dist_payer_cnt_12m,
                       COUNT(1) sent_txn_cnt_12m,
                       SUM(txn_amt) sent_txn_amt_12m,
                       AVG(txn_amt) sent_amt_avg_12m
-                    FROM live.fund_trans_silver WHERE cast(datetime AS date) >= cast('2022-01-01' AS date)
+                    FROM live.fund_trans_silver WHERE cast(datetime AS date) >= date_add(MONTH, -12, (SELECT CAST(max_date AS date) FROM max_date))
                     GROUP BY payer_cust_id),
       12m_payee AS (SELECT
                         payee_cust_id,
@@ -314,7 +316,7 @@ CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
                         COUNT(1) rcvd_txn_cnt_12m,
                         SUM(txn_amt) rcvd_txn_amt_12m,
                         AVG(txn_amt) rcvd_amt_avg_12m
-                      FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= CAST('2022-01-01' AS date)
+                      FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -12, (SELECT CAST(max_date AS date) FROM max_date))
                       GROUP BY payee_cust_id),
       6m_payer AS (SELECT
                     payer_cust_id,
@@ -322,7 +324,7 @@ CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
                     COUNT(1) sent_txn_cnt_6m,
                     SUM(txn_amt) sent_txn_amt_6m,
                     AVG(txn_amt) sent_amt_avg_6m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= CAST('2022-07-01' AS date)
+                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -6, (SELECT CAST(max_date AS date) FROM max_date))
                   GROUP BY payer_cust_id),
       6m_payee AS (SELECT
                     payee_cust_id,
@@ -330,7 +332,7 @@ CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
                     COUNT(1) rcvd_txn_cnt_6m,
                     SUM(txn_amt) rcvd_txn_amt_6m,
                     AVG(txn_amt) rcvd_amt_avg_6m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= CAST('2022-07-01' AS date)
+                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -6, (SELECT CAST(max_date AS date) FROM max_date))
                   GROUP BY payee_cust_id),
       3m_payer AS (SELECT
                     payer_cust_id,
@@ -338,7 +340,7 @@ CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
                     COUNT(1) sent_txn_cnt_3m,
                     SUM(txn_amt) sent_txn_amt_3m,
                     AVG(txn_amt) sent_amt_avg_3m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= CAST('2022-07-01' AS date)
+                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -3, (SELECT CAST(max_date AS date) FROM max_date))
                   GROUP BY payer_cust_id),
       3m_payee AS (SELECT
                     payee_cust_id,
@@ -346,7 +348,7 @@ CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
                     COUNT(1) rcvd_txn_cnt_3m,
                     SUM(txn_amt) rcvd_txn_amt_3m,
                     AVG(txn_amt) rcvd_amt_avg_3m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= CAST('2022-07-01' AS date)
+                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -3, (SELECT CAST(max_date AS date) FROM max_date))
                   GROUP BY payee_cust_id)        
   SELECT c.cust_id, 
     12m_payer.* EXCEPT (payer_cust_id),

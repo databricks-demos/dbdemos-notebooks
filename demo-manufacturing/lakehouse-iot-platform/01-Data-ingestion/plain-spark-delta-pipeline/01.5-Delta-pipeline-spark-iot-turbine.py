@@ -31,7 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.19.0
+# MAGIC %pip install mlflow==2.20.0
 
 # COMMAND ----------
 

@@ -33,7 +33,7 @@
     {
       "name": "03d81d62",
       "displayName": "IOT platform Wind Turbines",
-      "query": "select * from `main`.`dbdemos_iot_platform`.turbine_current_status;"
+      "query": "select  * except (lat, long), \n  cast(lat as double) as lat, \n  cast(long as double) as long\n  from `main`.`dbdemos_iot_platform`.turbine_current_status;"
     }
   ],
   "pages": [
@@ -107,31 +107,27 @@
                       "expression": "`lat`"
                     },
                     {
-                      "name": "location",
-                      "expression": "`location`"
+                      "name": "long",
+                      "expression": "`long`"
                     }
                   ],
-                  "disaggregated": false
+                  "disaggregated": true
                 }
               }
             ],
             "spec": {
-              "version": 3,
-              "widgetType": "scatter",
+              "version": 2,
+              "widgetType": "symbol-map",
               "encodings": {
-                "x": {
-                  "fieldName": "location",
-                  "scale": {
-                    "type": "categorical"
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "lat",
+                    "displayName": "lat"
                   },
-                  "displayName": "location"
-                },
-                "y": {
-                  "fieldName": "lat",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "lat"
+                  "longitude": {
+                    "fieldName": "long",
+                    "displayName": "long"
+                  }
                 }
               },
               "frame": {

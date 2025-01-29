@@ -8,7 +8,7 @@
     {
       "name": "abee8d55",
       "displayName": "IOT platform - turbine status",
-      "query": "select *, CASE WHEN prediction = 'ok' THEN 'Healthy' ELSE CONCAT('Faulty (', prediction, ')') END as status \n  from `main`.`dbdemos_iot_platform`.turbine_current_status"
+      "query": "select * except (lat, long), \n  cast(lat as double) as lat, \n  cast(long as double) as long, \n  CASE WHEN prediction = 'ok' THEN 'Healthy' ELSE CONCAT('Faulty (', prediction, ')') END as status \n  from `main`.`dbdemos_iot_platform`.turbine_current_status"
     }
   ],
   "pages": [
@@ -607,35 +607,31 @@
                   "datasetName": "abee8d55",
                   "fields": [
                     {
-                      "name": "countdistinct(lat)",
-                      "expression": "COUNT(DISTINCT `lat`)"
+                      "name": "lat",
+                      "expression": "`lat`"
                     },
                     {
                       "name": "long",
                       "expression": "`long`"
                     }
                   ],
-                  "disaggregated": false
+                  "disaggregated": true
                 }
               }
             ],
             "spec": {
-              "version": 3,
-              "widgetType": "scatter",
+              "version": 2,
+              "widgetType": "symbol-map",
               "encodings": {
-                "x": {
-                  "fieldName": "countdistinct(lat)",
-                  "scale": {
-                    "type": "quantitative"
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "lat",
+                    "displayName": "lat"
                   },
-                  "displayName": "Count of Unique lat"
-                },
-                "y": {
-                  "fieldName": "long",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "long"
+                  "longitude": {
+                    "fieldName": "long",
+                    "displayName": "long"
+                  }
                 }
               },
               "frame": {
@@ -758,7 +754,7 @@
             "name": "55251e89",
             "queries": [
               {
-                "name": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b801250bb8dcda70aa16856_turbine_id",
+                "name": "dashboards/01efddee0f161c29b8f86b1072ece975/datasets/01efddee0f1711f0848ccde248d2f65a_turbine_id",
                 "query": {
                   "datasetName": "8b43b1f7",
                   "fields": [
@@ -775,7 +771,7 @@
                 }
               },
               {
-                "name": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b8219b99dedc8d20c6e5a68_turbine_id",
+                "name": "dashboards/01efddee0f161c29b8f86b1072ece975/datasets/01efddee0f17123bb1058c9ab8ed3545_turbine_id",
                 "query": {
                   "datasetName": "abee8d55",
                   "fields": [
@@ -800,12 +796,12 @@
                   {
                     "fieldName": "turbine_id",
                     "displayName": "turbine_id",
-                    "queryName": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b801250bb8dcda70aa16856_turbine_id"
+                    "queryName": "dashboards/01efddee0f161c29b8f86b1072ece975/datasets/01efddee0f1711f0848ccde248d2f65a_turbine_id"
                   },
                   {
                     "fieldName": "turbine_id",
                     "displayName": "turbine_id",
-                    "queryName": "dashboards/01ef06563b7d14eb9a04e8ee788d4ba6/datasets/01ef06563b8219b99dedc8d20c6e5a68_turbine_id"
+                    "queryName": "dashboards/01efddee0f161c29b8f86b1072ece975/datasets/01efddee0f17123bb1058c9ab8ed3545_turbine_id"
                   }
                 ]
               },
@@ -813,6 +809,18 @@
               "frame": {
                 "title": "Turbine id",
                 "showTitle": true
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "STRING",
+                    "values": [
+                      {
+                        "value": "004a641f-e9e5-9fff-d421-1bf88319420b"
+                      }
+                    ]
+                  }
+                }
               }
             }
           },

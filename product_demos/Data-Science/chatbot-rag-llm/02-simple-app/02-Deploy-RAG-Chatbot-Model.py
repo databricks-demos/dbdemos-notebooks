@@ -42,7 +42,7 @@
 # MAGIC %md-sandbox
 # MAGIC ### Building our Chain
 # MAGIC
-# MAGIC In this example, we'll assume you already have a basic understanding of langchain. Check our [previous notebook](../00-first-step/01-First-Step-RAG-On-Databricks) to take it one step at a time!
+# MAGIC In this example, we'll assume you already have a basic understanding of langchain. Check our [previous notebook]($../00-first-step/01-First-Step-RAG-On-Databricks) to take it one step at a time!
 
 # COMMAND ----------
 

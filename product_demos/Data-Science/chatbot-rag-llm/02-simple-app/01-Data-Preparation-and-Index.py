@@ -234,7 +234,7 @@ print(embeddings)
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-data-prep-3.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC With Managed embeddings, Databricks will automatically compte the embeddings for us. This is the easier mode to get started with Databricks.
+# MAGIC With Managed embeddings, Databricks will automatically compute the embeddings for us. This is the easier mode to get started with Databricks.
 # MAGIC
 # MAGIC A vector search index uses a **Vector search endpoint** to serve the embeddings (you can think about it as your Vector Search API endpoint).
 # MAGIC

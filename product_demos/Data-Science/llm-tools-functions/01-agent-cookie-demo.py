@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install -U databricks-sdk==0.41.0 langchain-community==0.2.16 langchain-openai==0.1.19 mlflow==2.20.0
+# MAGIC %pip install -U databricks-sdk==0.41.0 langchain-community==0.2.16 langchain-openai==0.1.19 mlflow==2.20.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

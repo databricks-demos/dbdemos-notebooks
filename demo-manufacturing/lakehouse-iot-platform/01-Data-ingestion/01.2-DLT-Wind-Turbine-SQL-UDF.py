@@ -1,6 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow to load our model
-# MAGIC %pip install mlflow==2.20.0 cloudpickle==2.2.1 
+# MAGIC %pip install mlflow==2.20.1 cloudpickle==2.2.1 
 # MAGIC # hardcode the ml 15.4 LTS libraries versions here - should move to env_manager='conda' for prod use-case instead
 # MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only

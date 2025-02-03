@@ -29,7 +29,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq databricks-agents==0.15.0 mlflow==2.20.0 langchain==0.2.16 langgraph-checkpoint==1.0.12  langchain_core langchain-community==0.2.16 langgraph==0.2.16 pydantic langchain_databricks
+# MAGIC %pip install -U -qqqq databricks-agents==0.15.0 mlflow==2.20.1 langchain==0.2.16 langgraph-checkpoint==1.0.12  langchain_core langchain-community==0.2.16 langgraph==0.2.16 pydantic langchain_databricks
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -3,7 +3,7 @@
 # MAGIC
 # MAGIC # Monitoring your chatbot behavior over time!
 # MAGIC
-# MAGIC <img src="https://docs.databricks.com/en/_images/online-monitoring-dashboard.gif" style="float:right" width="750px" />
+# MAGIC <!-- <img src="https://docs.databricks.com/en/_images/online-monitoring-dashboard.gif" style="float:right" width="750px" /> -->
 # MAGIC
 # MAGIC In the previous notebook, we have investigated the evaluation input to create an evaluation dataset and benchmark newer version against it.
 # MAGIC
@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -qqq databricks-agents==0.15.0 mlflow[databricks]==2.20.0 databricks-sdk==0.40.0 mlflow==2.20.1
+# MAGIC %pip install --quiet -U databricks-agents==0.15.0 mlflow[databricks]==2.20.1 databricks-sdk==0.40.0 mlflow==2.20.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

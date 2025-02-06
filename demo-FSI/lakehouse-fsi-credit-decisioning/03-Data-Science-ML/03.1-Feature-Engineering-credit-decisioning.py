@@ -162,8 +162,8 @@ display(feature_df)
 from databricks import feature_store
 fs = feature_store.FeatureStoreClient()
 
-# Uncomment the following line if you encounter an error where the Feature Table already exists on your schema!
-# drop_fs_table(f"{catalog}.{db}.credit_decisioning_features")
+# Drop the fs table if it was already existing to cleanup the demo state
+drop_fs_table(f"{catalog}.{db}.credit_decisioning_features")
   
 fs.create_table(
     name=f"{catalog}.{db}.credit_decisioning_features",

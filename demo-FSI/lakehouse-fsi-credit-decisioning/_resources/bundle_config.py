@@ -457,31 +457,5 @@
       }
     }
   ],
-  "dashboards": [{"name": "[dbdemos] FSI Credit Decisioning Analysis",       "id": "credit-decisioning"}],
-  "genie_rooms": [
-      {
-          "id": "fsi-credit-decisioning",
-          "display_name": "DBDemos - FSI - Credit Decisioning",
-          "description": "",
-          "table_identifiers": [
-              "{{CATALOG}}.{{SCHEMA}}.customer_gold",
-              "{{CATALOG}}.{{SCHEMA}}.credit_bureau_gold",
-              "{{CATALOG}}.{{SCHEMA}}.shap_explanation",
-              "{{CATALOG}}.{{SCHEMA}}.feature_definitions",
-              "{{CATALOG}}.{{SCHEMA}}.funds_trans_silver"
-          ],
-          "sql_instructions": [
-              {
-                  "title": "monthly trend on fund transfers",
-                  "content": "SELECT month, total_amount, ROUND(total_amount - LAG(total_amount) OVER (ORDER BY month), 2) AS diff, ROUND((total_amount - LAG(total_amount) OVER (ORDER BY month)) / LAG(total_amount) OVER (ORDER BY month) * 100, 2) AS change_pct FROM (SELECT month, SUM(txn_amt) AS total_amount FROM (SELECT DISTINCT payer_acc_id, payee_cust_id, txn_amt, date_trunc('month', datetime) AS month FROM {{CATALOG}}.{{SCHEMA}}.fund_trans_silver) GROUP BY month ORDER BY month)"
-              }
-          ],
-          "curated_questions": [
-              "Display important factors for credit worthiness and aggregated stats on 6-month totals for the underbanked population",
-              "Show credit decisions and distribution of approved customers vs unapproved customers.",
-              "Show the trend on fund transfers over time",
-              "Summarize my customers"
-          ]
-      }
-  ]
+  "dashboards": [{"name": "[dbdemos] FSI Credit Decisioning Analysis",       "id": "credit-decisioning"}]
 }

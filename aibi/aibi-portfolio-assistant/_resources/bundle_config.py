@@ -36,35 +36,58 @@
   ],
   "data_folders": [
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/news",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/raw_news",
       "source_format": "parquet",
-      "target_table_name": "news",
-      "target_format": "delta"
+      "target_volume_folder": "raw_news",
+      "target_format": "parquet"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/prices",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/raw_prices",
       "source_format": "parquet",
-      "target_table_name": "prices",
-      "target_format": "delta"
+      "target_volume_folder": "raw_prices",
+      "target_format": "parquet"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/portfolio",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/raw_portfolio",
       "source_format": "parquet",
-      "target_table_name": "portfolio",
-      "target_format": "delta"
+      "target_volume_folder": "raw_portfolio",
+      "target_format": "parquet"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/fundamentals",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/raw_fundamentals",
       "source_format": "parquet",
-      "target_table_name": "fundamentals",
-      "target_format": "delta"
+      "target_volume_folder": "raw_fundamentals",
+      "target_format": "parquet"
     },
     {
-      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/news_ticker",
+      "source_folder": "aibi/dbdemos_aibi_fsi_cap_markets/raw_news_ticker",
       "source_format": "parquet",
-      "target_table_name": "news_ticker",
-      "target_format": "delta"
+      "target_volume_folder": "raw_news_ticker",
+      "target_format": "parquet"
     }
+  ],
+  "sql_queries": [
+      [
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_fundamentals TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for fundamentals created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_fundamentals', format => 'parquet', pathGlobFilter => '*.parquet')",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_news TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for news created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_news', format => 'parquet', pathGlobFilter => '*.parquet')",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_news_ticker TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for news ticker created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_news_ticker', format => 'parquet', pathGlobFilter => '*.parquet')",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_portfolio TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for portfolio created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_portfolio', format => 'parquet', pathGlobFilter => '*.parquet')",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_prices TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for prices created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_prices', format => 'parquet', pathGlobFilter => '*.parquet')"
+      ],
+      [
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_fundamentals COMMENT 'Cleaned version of the raw fundamentals table' AS SELECT Ticker, MarketCapitalization, OutstandingShares FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_fundamentals WHERE Ticker IS NOT NULL AND MarketCapitalization IS NOT NULL AND OutstandingShares IS NOT NULL",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_news COMMENT 'Cleaned version of the raw news table' AS SELECT ArticleId, PublishedTime, Source, SourceUrl, Title, Sentiment, MarketSentiment FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_news WHERE ArticleId IS NOT NULL AND PublishedTime IS NOT NULL AND Source IS NOT NULL AND SourceUrl IS NOT NULL AND Title IS NOT NULL AND Sentiment IS NOT NULL AND MarketSentiment IS NOT NULL",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_news_ticker COMMENT 'Cleaned version of the raw news ticker table' AS SELECT Ticker, ArticleIds FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_news_ticker WHERE size(ArticleIds) > 0",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_portfolio COMMENT 'Cleaned version of the raw portfolio table' AS SELECT Ticker, CompanyName, CompanyDescription, CompanyWebsite, CompanyLogo, Industry FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_portfolio WHERE Ticker IS NOT NULL AND CompanyName IS NOT NULL AND CompanyDescription IS NOT NULL AND CompanyWebsite IS NOT NULL AND CompanyLogo IS NOT NULL AND Industry IS NOT NULL",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_prices COMMENT 'Cleaned version of the raw prices table' AS SELECT Ticker, Date, Open, High, Low, Close, AdjustedClose, Return, Volume, SplitFactor FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_prices WHERE Ticker IS NOT NULL AND Date IS NOT NULL AND Open IS NOT NULL AND High IS NOT NULL AND Low IS NOT NULL AND Close IS NOT NULL AND AdjustedClose IS NOT NULL AND Volume IS NOT NULL AND SplitFactor IS NOT NULL"
+      ],
+      [
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.fundamentals AS SELECT Ticker AS ticker, MarketCapitalization AS market_capitalization, OutstandingShares AS outstanding_shares FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_fundamentals",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.news AS SELECT ArticleId AS article_id, PublishedTime AS published_time, Source AS source, SourceUrl AS source_url, Title AS title, Sentiment AS sentiment, MarketSentiment AS market_sentiment FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_news",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.news_ticker AS SELECT Ticker AS ticker, explode(ArticleIds) AS article_id FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_news_ticker",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.portfolio AS SELECT Ticker AS ticker, CompanyName AS company_name, CompanyDescription AS company_description, CompanyWebsite AS company_website, CompanyLogo AS company_logo, Industry AS industry FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_portfolio",
+          "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prices AS SELECT Ticker AS ticker, CAST(Date AS DATE) AS date, Open AS open, High AS high, Low AS low, Close AS close, AdjustedClose AS adjusted_close, Return AS return, Volume AS volume, SplitFactor AS split_factor FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_prices"
+      ]
   ],
   "genie_rooms": [
     {

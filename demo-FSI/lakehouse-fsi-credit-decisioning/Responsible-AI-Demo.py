@@ -2,7 +2,8 @@
 # MAGIC %md-sandbox
 # MAGIC # Data Intelligence Platform for Financial Services - Serving the Underbanked population with the Databricks Lakehouse
 # MAGIC <br />
-# MAGIC <img src="https://raw.githubusercontent.com/borisbanushev/CAPM_Databricks/main/lakehouseDAIWTusecases.jpg" style="float: left; margin-right: 30px" width="650px" />
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_0.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 # MAGIC
 # MAGIC ## What is The Databricks Data Intelligence Platform for Financial Services?
 # MAGIC

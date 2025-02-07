@@ -2,7 +2,9 @@
 # MAGIC %md-sandbox
 # MAGIC # Use the production model to batch score credit worthiness
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-ml-experiment.png" style="float: right" width="600px">
+# MAGIC
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_6.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 # MAGIC
 # MAGIC
 # MAGIC Databricks AutoML runs experiments across a grid and creates many models and metrics to determine the best models among all trials. This is a glass-box approach to create a baseline model, meaning we have all the code artifacts and experiments available afterwards. 

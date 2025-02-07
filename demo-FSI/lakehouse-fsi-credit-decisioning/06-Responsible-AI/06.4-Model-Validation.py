@@ -22,6 +22,14 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_4.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
+
+# COMMAND ----------
+
 # MAGIC %pip install --quiet shap==0.46.0
 # MAGIC dbutils.library.restartPython() 
 

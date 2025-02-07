@@ -4,6 +4,18 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC
+# MAGIC
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_5.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Identify the current champion and challenger models
 # MAGIC
 # MAGIC If there is a model already in production, we define it as the current `champion model`. The model in staging is defined as the `challenger model`.

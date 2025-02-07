@@ -5,6 +5,14 @@
 
 # MAGIC %md
 # MAGIC
+# MAGIC
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_2.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
 # MAGIC # Building our Features for Credit Default risks
 # MAGIC
 # MAGIC To build our model predicting credit default risks, we'll need a buch of features. To improve our governance and centralize our data for multiple ML project, we can save our ML features using a Feature Store.

@@ -1,5 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC
+# MAGIC
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_7.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Lakehouse monitoring
 # MAGIC
 # MAGIC **User requirements**

@@ -6,7 +6,11 @@
 # MAGIC In Databricks, machine learning is not a separate product or service that needs to be "connected" to the data. The Lakehouse being a single, unified product, machine learning in Databricks "sits" on top of the data, so challenges like inability to discover and access data no longer exist.
 # MAGIC
 # MAGIC <br />
-# MAGIC <img src="https://raw.githubusercontent.com/borisbanushev/CAPM_Databricks/main/MLontheLakehouse.png" width="1300px" />
+# MAGIC %md
+# MAGIC
+# MAGIC
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_3.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------
 

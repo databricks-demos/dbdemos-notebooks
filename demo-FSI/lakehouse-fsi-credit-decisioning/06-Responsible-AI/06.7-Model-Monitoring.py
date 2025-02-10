@@ -1,25 +1,27 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
+# MAGIC # Model Monitoring
+# MAGIC
+# MAGIC In this notebook, we focus on **Lakehouse monitoring** to ensure the ongoing reliability, fairness, and performance of our credit scoring model. A critical aspect of **Responsible AI** is maintaining trust and effectiveness over time, which requires systematic tracking of model behavior, detecting data drift, and recalibrating models as necessary.
+# MAGIC
+# MAGIC ### Why Model Monitoring Matters
+# MAGIC Machine learning models are exposed to evolving real-world conditions, such as economic shifts and changes in customer behavior. If left unmonitored, models can degrade in accuracy, introduce unintended biases, or fail regulatory compliance. **Databricks’ Lakehouse architecture** provides a unified approach to monitoring both data and models, ensuring end-to-end traceability and governance. 
+# MAGIC
+# MAGIC ### Key Components of Model Monitoring
+# MAGIC We will leverage Databricks’ built-in monitoring capabilities to:
+# MAGIC
+# MAGIC 1. **Detect Data Drift:** Continuously track statistical distributions of input features and predictions, identifying shifts that could impact model reliability.
+# MAGIC 2. **Monitor Model Performance Decay:** Compare real-world outcomes against model predictions to detect degrading performance.
+# MAGIC 3. **Ensure Fairness and Bias Control:** Check if fairness metrics remain within acceptable thresholds to prevent unintended discrimination.
+# MAGIC 4. **Trigger Recalibration Workflows:** Automate retraining and redeployment when model effectiveness declines, ensuring continuous improvement.
+# MAGIC 5. **Generate Alerts and Reports:** Notify stakeholders when significant changes occur, maintaining transparency and accountability.
+# MAGIC
+# MAGIC By embedding monitoring within the **Databricks Data Intelligence Platform**, we create a scalable and responsible approach to lifecycle management, aligning with regulatory requirements while ensuring that credit decisions remain fair, accurate, and explainable.
+# MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_7.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # Lakehouse monitoring
-# MAGIC
-# MAGIC **User requirements**
-# MAGIC - You must have access to run commands on a cluster with access to Unity Catalog.
-# MAGIC - You must have `USE CATALOG` privilege on at least one catalog, and you must have `USE SCHEMA` privileges on at least one schema. This notebook creates tables in the `main.default` schema. If you do not have the required privileges on the `main.default` schema, you must edit the notebook to change the default catalog and schema to ones that you do have privileges on.
-# MAGIC
-# MAGIC **System requirements:**
-# MAGIC - Unity-Catalog enabled workspace.
-# MAGIC - Databricks Runtime 12.2 LTS ML or above.
-# MAGIC - Single-User/Assigned cluster (Preferred if you want to run the notebook as is to train the model and create the tables)
-# MAGIC
-# MAGIC This notebook illustrates how to train and deploy a classification model and monitor its corresponding batch inference table.
 
 # COMMAND ----------
 
@@ -33,21 +35,9 @@
 
 # COMMAND ----------
 
-TABLE_NAME = f"{catalog}.{db}.credit_decisioning_inferencelogs"
-BASELINE_TABLE = f"{catalog}.{db}.credit_decisioning_baseline_predictions"
-MODEL_NAME = f"{model_name}" # Name of (registered) model in mlflow registry
-TIMESTAMP_COL = "timestamp"
-MODEL_ID_COL = "model_id" # Name of column to use as model identifier (here we'll use the model_name+version)
-PREDICTION_COL = "prediction"  # What to name predictions in the generated tables
-LABEL_COL = "defaulted" # Name of ground-truth labels column
-ID_COL = "cust_id"
-new_model_version = 1
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Background
-# MAGIC The following are required to create an inference log monitor:
+# MAGIC The following are required to create an inference log monitor with [Lakehouse Monitoring](https://www.databricks.com/product/machine-learning/lakehouse-monitoring):
 # MAGIC - A Delta table in Unity Catalog that you own.
 # MAGIC - The data can be batch scored data or inference logs. The following columns are required:  
 # MAGIC   - `timestamp` (TimeStamp): Used for windowing and aggregation when calculating metrics
@@ -63,6 +53,18 @@ new_model_version = 1
 # MAGIC - The baseline table must use the same column names as the monitored table, and must also have a `model_version` column.
 # MAGIC
 # MAGIC Databricks recommends enabling Delta's Change-Data-Feed ([AWS](https://docs.databricks.com/delta/delta-change-data-feed.html#enable-change-data-feed)|[Azure](https://learn.microsoft.com/azure/databricks/delta/delta-change-data-feed#enable-change-data-feed)) table property for better metric computation performance for all monitored tables, including the baseline table. This notebook shows how to enable Change Data Feed when you create the Delta table.
+
+# COMMAND ----------
+
+TABLE_NAME = f"{catalog}.{db}.credit_decisioning_inferencelogs"
+BASELINE_TABLE = f"{catalog}.{db}.credit_decisioning_baseline_predictions"
+MODEL_NAME = f"{model_name}" # Name of (registered) model in mlflow registry
+TIMESTAMP_COL = "timestamp"
+MODEL_ID_COL = "model_id" # Name of column to use as model identifier (here we'll use the model_name+version)
+PREDICTION_COL = "prediction"  # What to name predictions in the generated tables
+LABEL_COL = "defaulted" # Name of ground-truth labels column
+ID_COL = "cust_id"
+new_model_version = 1
 
 # COMMAND ----------
 
@@ -342,4 +344,16 @@ display(fb_metrics_df)
 
 # COMMAND ----------
 
-
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC ## Conclusion
+# MAGIC
+# MAGIC With this **Model Monitoring** notebook, we complete our end-to-end journey of building a **Responsible Credit Scoring Model** on the Databricks Data Intelligence Platform. Our approach ensures that the credit decisioning process is:
+# MAGIC
+# MAGIC - **Transparent:** Through explainability and bias monitoring at every stage.
+# MAGIC - **Effective:** By continuously evaluating model performance and recalibrating as needed.
+# MAGIC - **Reliable:** Through proactive drift detection, compliance validation, and automated retraining.
+# MAGIC
+# MAGIC By leveraging **Databricks Data Intelligence Platform**, we demonstrate how Responsible AI is more than just a compliance requirement—it is a fundamental pillar for building **trustworthy and value-driven machine learning solutions**. This monitoring framework ensures that our model remains **fair, accountable, and high-performing**, delivering long-term value to both the bank and its customers.
+# MAGIC
+# MAGIC With this, we conclude our **Responsible AI demo**. Thank you for exploring this journey with us!

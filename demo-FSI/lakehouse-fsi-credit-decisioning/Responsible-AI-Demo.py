@@ -13,7 +13,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC # Core challenges in responsible AI: Trust, Security, and Governance
+# MAGIC # Core Challenges in Responsible AI: Trust, Security, and Governance
 # MAGIC
 # MAGIC <br />
 # MAGIC
@@ -51,9 +51,9 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### High-Quality
+# MAGIC ### Quality
 # MAGIC
-# MAGIC <img src="https://www.databricks.com/sites/default/files/inline-images/Lineage-ML_0.png?v=1722259413" width="800px" style="float: right; border: 20px solid white;">
+# MAGIC <img src="https://www.databricks.com/sites/default/files/inline-images/Lineage-ML_0.png?v=1722259413" width="800px" style="float: right; border: 20px solid white;"/>
 # MAGIC
 # MAGIC Quality in AI begins with trustworthy data and transparent models. Databricks empowers teams to track data lineage with Unity Catalog, ensuring that every transformation—from raw input to trained model—is documented. This visibility helps prevent issues like training data poisoning and facilitates reproducible pipelines.
 # MAGIC
@@ -62,7 +62,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Safe
+# MAGIC ### Security
 # MAGIC
 # MAGIC Ensuring AI safety and security involves robust controls and proactive threat mitigation. The [Databricks AI Security Framework (DASF)](https://www.databricks.com/resources/whitepaper/databricks-ai-security-framework-dasf) identifies potential risks across each AI component, offering actionable recommendations to safeguard data and models. Through Lakehouse Monitoring, teams can continuously track model performance, detect bias, and identify threats in real time.
 # MAGIC
@@ -75,9 +75,9 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ### Well-Governed
+# MAGIC ### Governance
 # MAGIC
-# MAGIC <img src="https://www.databricks.com/sites/default/files/inline-images/UC-Graphic-2x.png?v=1722319673" width="480px" style="float: right; border: 20px solid white;">
+# MAGIC <img src="https://www.databricks.com/sites/default/files/inline-images/UC-Graphic-2x.png?v=1722319673" width="480px" style="float: right; border: 20px solid white;"/>
 # MAGIC
 # MAGIC Effective governance ensures that AI initiatives remain both compliant and transparent. At the heart of this approach is Unity Catalog, which unifies the governance of all data and AI assets—including tables, files, models, and AI tools—within a single platform.
 # MAGIC
@@ -149,7 +149,7 @@
 # MAGIC </div>
 # MAGIC
 # MAGIC <center><img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_0.png?raw=true" 
-# MAGIC      style="width: 80%; height: auto; display: block; margin: 0;" /></center>
+# MAGIC      style="width: 1200px; height: auto; display: block; margin: 0;" /></center>
 # MAGIC
 # MAGIC With this approach, we can confidently meet regulatory and ethical benchmarks while improving organizational outcomes—demonstrating that Responsible AI is not just about checking boxes but about building trust and value across the entire ML lifecycle.
 # MAGIC
@@ -158,17 +158,13 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC # Next steps:
+# MAGIC # Next steps
 # MAGIC Below is a concise overview of each notebook’s role in the Responsible AI pipeline, as depicted in the architecture diagram. Together, they illustrate how Databricks supports transparency (explainability), effectiveness (model performance and bias control), and reliability (ongoing monitoring) throughout the model lifecycle.
 # MAGIC
-# MAGIC * [06.1-Exploratory-Analysis]($./03-Data-Science-ML/03.1-Feature-Engineering-credit-decisioning): Examines data distributions and identifies biases or anomalies, providing transparency early in the lifecycle. Sets the stage for responsible feature selection and model design.
-# MAGIC * [06.2-Feature-Updates]($./03-Data-Science-ML/03.2-AutoML-credit-decisioning): Continuously ingests new data, refreshes features, and logs transformations, ensuring model effectiveness. Maintains transparency around feature lineage for compliance and traceability.
-# MAGIC * [06.3-Model-Training]($./03-Data-Science-ML/03.3-Batch-Scoring-credit-decisioning): Trains, evaluates, and documents candidate models, tracking performance and fairness metrics. Stores artifacts for reproducibility, aligning with responsible AI goals.
-# MAGIC * [06.4-Model-Validation]($./03-Data-Science-ML/03.4-model-serving-BNPL-credit-decisioning): Performs compliance checks, pre-deployment tests, and fairness evaluations. Verifies reliability and transparency standards before the model progresses to production.
-# MAGIC * [06.5-Model-Integration]($./03-Data-Science-ML/03.5-Explainability-and-Fairness-credit-decisioning): Compares champion and challenger models, enabling human oversight for final selection. Deploys the chosen pipeline responsibly, ensuring accountability at each handoff.
-# MAGIC * [06.6-Model-Inference]($./03-Data-Science-ML/03.4-model-serving-BNPL-credit-decisioning): Executes batch or real-time predictions using the deployed model, applying filtering rules. Ensures outputs remain consistent and explainable for responsible decision-making.
-# MAGIC * [06.7-Model-Monitoring]($./03-Data-Science-ML/03.5-Explainability-and-Fairness-credit-decisioning): Continuously tracks data drift, prediction stability, and performance degradation. Generates alerts for timely retraining, preserving reliability and trustworthiness across the model’s lifecycle.
-
-# COMMAND ----------
-
-
+# MAGIC * [06.1-Exploratory-Analysis]($./06-Responsible-AI/06.1-Exploratory-Analysis): Examines data distributions and identifies biases or anomalies, providing transparency early in the lifecycle. Sets the stage for responsible feature selection and model design.
+# MAGIC * [06.2-Feature-Updates]($./06-Responsible-AI/06.2-Feature-Updates): Continuously ingests new data, refreshes features, and logs transformations, ensuring model effectiveness. Maintains transparency around feature lineage for compliance and traceability.
+# MAGIC * [06.3-Model-Training]($./06-Responsible-AI/06.3-Model-Training): Trains, evaluates, and documents candidate models, tracking performance and fairness metrics. Stores artifacts for reproducibility, aligning with responsible AI goals.
+# MAGIC * [06.4-Model-Validation]($./06-Responsible-AI/06.4-Model-Validation): Performs compliance checks, pre-deployment tests, and fairness evaluations. Verifies reliability and transparency standards before the model progresses to production.
+# MAGIC * [06.5-Model-Integration]($./06-Responsible-AI/06.5-Model-Integration): Compares champion and challenger models, enabling human oversight for final selection. Deploys the chosen pipeline responsibly, ensuring accountability at each handoff.
+# MAGIC * [06.6-Model-Inference]($./06-Responsible-AI/06.6-Model-Inference): Executes batch or real-time predictions using the deployed model, applying filtering rules. Ensures outputs remain consistent and explainable for responsible decision-making.
+# MAGIC * [06.7-Model-Monitoring]($./06-Responsible-AI/06.7-Model-Monitoring): Continuously tracks data drift, prediction stability, and performance degradation. Generates alerts for timely retraining, preserving reliability and trustworthiness across the model’s lifecycle.

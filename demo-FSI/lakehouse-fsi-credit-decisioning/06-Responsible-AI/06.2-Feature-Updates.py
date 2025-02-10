@@ -1,13 +1,18 @@
 # Databricks notebook source
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
+# MAGIC # Feature Updates
+# MAGIC
+# MAGIC In responsible credit scoring, ensuring that machine learning models operate on high-quality and up-to-date data is essential. Continuous feature updates play a crucial role in maintaining model accuracy, fairness, and regulatory compliance. By centralizing feature management, we can improve governance, enforce lineage tracking, and ensure consistency across multiple ML projects.
+# MAGIC
+# MAGIC This notebook focuses on the ingestion, transformation, and tracking of features within the Databricks Feature Store. We ensure that every update is logged for traceability and that feature engineering practices align with Responsible AI principles. With transparent feature updates, we enhance the model’s effectiveness while meeting compliance standards.
 # MAGIC
 # MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_2.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -15,7 +20,13 @@
 # MAGIC
 # MAGIC # Building our Features for Credit Default risks
 # MAGIC
-# MAGIC To build our model predicting credit default risks, we'll need a buch of features. To improve our governance and centralize our data for multiple ML project, we can save our ML features using a Feature Store.
+# MAGIC To build our model predicting credit default risks, we need a comprehensive set of features that capture various aspects of customer behavior, financial activity, and risk indicators. Our primary data sources include:
+# MAGIC
+# MAGIC - `customer_gold`: Contains aggregated customer demographic, behavioral, and credit history attributes.
+# MAGIC - `telco_gold`: Includes telecommunications data, such as call patterns and payment behaviors.
+# MAGIC - `fund_trans_gold`: Provides insights into customer fund movements, transaction behaviors, and cash flow trends.
+# MAGIC
+# MAGIC To improve governance and centralize feature management for multiple machine learning projects, we leverage the Databricks Feature Store. 
 
 # COMMAND ----------
 
@@ -62,8 +73,6 @@ display(feature_df)
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC # Databricks Feature Store
-# MAGIC
-# MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/mlops-end2end-flow-feature-store.png" style="float:right" width="650" />
 # MAGIC
 # MAGIC Once our features are ready, we'll save them in Databricks Feature Store. 
 # MAGIC
@@ -143,3 +152,16 @@ table_name = "credit_decisioning_features"
 table_description = spark.sql(f"DESCRIBE TABLE EXTENDED {table_name}").filter("col_name = 'Comment'").select("data_type").collect()[0][0]
 
 column_descriptions = spark.sql(f"DESCRIBE TABLE EXTENDED {table_name}").filter("col_name != ''").select("col_name", "comment").collect()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ## Next Steps
+# MAGIC
+# MAGIC With our feature set prepared and stored, the next step is model training. In the [06.3-Model-Training]($./06-Responsible-AI/06.3-Model-Training) notebook, we will:
+# MAGIC - Train multiple candidate models using the engineered features.
+# MAGIC - Evaluate models based on fairness, accuracy, and stability metrics.
+# MAGIC - Log model artifacts, ensuring full reproducibility.
+# MAGIC
+# MAGIC By maintaining transparency and governance throughout feature updates and model training, we lay the foundation for responsible credit decisioning and robust AI deployment.

@@ -1,12 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC # Data-centric Machine Learning
+# MAGIC # Model Training
 # MAGIC
 # MAGIC In Databricks, machine learning is not a separate product or service that needs to be "connected" to the data. The Lakehouse being a single, unified product, machine learning in Databricks "sits" on top of the data, so challenges like inability to discover and access data no longer exist.
-# MAGIC
-# MAGIC <br />
-# MAGIC %md
 # MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_3.png?raw=true" 
@@ -20,18 +17,14 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # Credit Scoring default prediction
+# MAGIC ## Building a Responsible Credit Scoring Model
 # MAGIC
+# MAGIC With our credit decisioning data prepared, we can now leverage it to build a predictive model assessing customer creditworthiness. Our approach will emphasize transparency, fairness, and governance at every step.
 # MAGIC
-# MAGIC
-# MAGIC ## Single click deployment with AutoML
-# MAGIC
-# MAGIC
-# MAGIC Let's see how we can now leverage the credit decisioning data to build a model predicting and explaining customer creditworthiness.
-# MAGIC
-# MAGIC We'll start by retrieving our data from the feature store and creating our training dataset.
-# MAGIC
-# MAGIC We'll then use Databricks AutoML to automatically build our model.
+# MAGIC Steps in Model Training:
+# MAGIC - **Retrieve Data from the Feature Store:** We begin by accessing the curated and validated features stored in the Databricks Feature Store. This ensures consistency, traceability, and compliance with feature engineering best practices.
+# MAGIC - **Create the Training Dataset:** We assemble a well-balanced training dataset by selecting relevant features and handling missing or biased data points.
+# MAGIC - **Leverage Databricks AutoML:** To streamline model development, we use Databricks AutoML to automatically build and evaluate multiple models. This step ensures we select the most effective model while adhering to Responsible AI principles.
 
 # COMMAND ----------
 
@@ -112,8 +105,6 @@ px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='
 # MAGIC
 # MAGIC <br style="clear: both">
 # MAGIC
-# MAGIC <img style="float: right" width="600" src="https://raw.githubusercontent.com/borisbanushev/CAPM_Databricks/main/MLFlowAutoML.png"/>
-# MAGIC
 # MAGIC ### Using Databricks Auto ML with our Credit Scoring dataset
 # MAGIC
 # MAGIC AutoML is available in the "Machine Learning" space. All we have to do is start a new AutoML Experiments and select the feature table we just created (`creditdecisioning_features`)
@@ -166,4 +157,24 @@ client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="No
 
 # COMMAND ----------
 
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC ## Generate Model Documentation
+# MAGIC
+# MAGIC <img src="https://www.databricks.com/sites/default/files/2023-06/model-risk-management-with-ey-inbody.png?v=1738330714" width="480px"  style="float: right; border: 10px solid white;"/>
+# MAGIC
+# MAGIC Once we have trained the model, we generate comprehensive model documentation using [Databricks' solutions accelerator](https://www.databricks.com/solutions/accelerators/model-risk-management-with-ey). This step is critical for maintaining compliance, governance, and transparency in financial services.
+# MAGIC
+# MAGIC #### Benefits of Automated Model Documentation:
+# MAGIC
+# MAGIC - Streamlined Model Governance: Automatically generate structured documentation for both machine learning and non-machine learning models, ensuring regulatory alignment.
+# MAGIC - Integrated Data Visualization & Reporting: Provide insights into model performance with built-in dashboards and visual analytics.
+# MAGIC - Risk Identification for Banking Models: Help model validation teams detect and mitigate risks associated with incorrect or misused models in financial decisioning.
+# MAGIC - Foundations for Explainable AI: Enhance trust by making every stage of the model lifecycle transparent, accelerating model validation and deployment processes.
 
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next Steps
+# MAGIC
+# MAGIC With our model trained and documented, the next step is validation. In the [06.4-Model-Validation]($./06-Responsible-AI/06.4-Model-Validation) notebook, we will conduct compliance checks, pre-deployment tests, and fairness evaluations. This ensures that our model meets regulatory requirements and maintains transparency before it is deployed into production.

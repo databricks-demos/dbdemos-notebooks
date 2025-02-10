@@ -1,17 +1,21 @@
 # Databricks notebook source
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
+# MAGIC # Model Integration
+# MAGIC
+# MAGIC In this notebook, we implement the champion-challenger framework to ensure that only the most effective and responsible model is deployed to production. This approach allows us to:
+# MAGIC - Compare the current production model (champion model) with a newly trained model (challenger model).
+# MAGIC - Incorporate human oversight to validate the challenger model before deployment.
+# MAGIC - Maintain full traceability and accountability at each stage of model deployment.
+# MAGIC
+# MAGIC By following this structured integration process, we ensure that model transitions are transparent, fair, and aligned with Responsible AI principles.
 # MAGIC
 # MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_5.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------
 
-
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -46,7 +50,7 @@ if champion_model_info is not None:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Deploying our model in production
+# MAGIC ## Champion-Challenger testing
 # MAGIC
 # MAGIC If `staging model` is the new `champion model`, we deploy that in prodcution and archive the exsiting `production model`. Otheriwse, we archive the `staging model` and make no changes to the production model.
 # MAGIC
@@ -87,15 +91,10 @@ else:
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Our model predicting default risks is now deployed in production
+# MAGIC ## Next Steps
 # MAGIC
 # MAGIC
-# MAGIC So far we have:
-# MAGIC * ingested all required data in a single source of truth,
-# MAGIC * properly secured all data (including granting granular access controls, masked PII data, applied column level filtering),
-# MAGIC * enhanced that data through feature engineering,
-# MAGIC * used MLFlow AutoML to track experiments and build a machine learning model,
-# MAGIC * registered the model.
+# MAGIC Once the champion model is confirmed, we proceed to [06.6-Model-Inference]($./06-Responsible-AI/06.6-Model-Inference), where the deployed model is used for batch or real-time inference and predictions are logged for explainability and transparency. This ensures that model outputs are reliable, ethical, and aligned with regulatory standards, closing the loop on Responsible AI implementation.
 
 # COMMAND ----------
 

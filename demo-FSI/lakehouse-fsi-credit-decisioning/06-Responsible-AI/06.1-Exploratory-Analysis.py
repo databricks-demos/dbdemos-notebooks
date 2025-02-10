@@ -1,8 +1,4 @@
 # Databricks notebook source
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC # Exploratory Analysis
 
@@ -10,14 +6,30 @@
 
 # MAGIC %md
 # MAGIC
+# MAGIC Data exploration is a critical first step in building a Responsible AI solution, as it helps ensure transparency, fairness, and reliability from the outset. In this notebook, we will analyze our dataset within the Databricks Data Intelligence Platform to detect biases, anomalies, and data drift. This process lays the foundation for responsible feature engineering and model development. Human validation remains an essential part of this step, ensuring that data-driven insights align with domain knowledge and ethical considerations.
+# MAGIC
+# MAGIC By leveraging Databricks’ unified data and AI capabilities, we can conduct secure and scalable exploratory data analysis (EDA), assess data distributions, and validate class representation before moving forward with model development.
 # MAGIC
 # MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_1.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------
 
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Security and Table Access Controls
+# MAGIC
+# MAGIC Before proceeding with data exploration, it is crucial to implement security and access controls to ensure data integrity and compliance. Proper security measures help:
+# MAGIC
+# MAGIC - Protect sensitive financial and customer data, preventing unauthorized access and ensuring regulatory adherence.
+# MAGIC - Ensure data consistency, so analysts work with validated and high-quality data without discrepancies.
+# MAGIC - Avoid data leakage risks, preventing the unintentional exposure of confidential information that could lead to compliance violations.
+# MAGIC - Facilitate accountability, ensuring that any modifications or transformations are logged and traceable.
+# MAGIC
+# MAGIC By establishing a secure data foundation, we ensure that subsequent analysis and modeling steps are performed responsibly, with complete confidence in data integrity and compliance.
 # MAGIC
 # MAGIC Table Access Control (TAC) in Databricks lets administrators manage access to specific tables and columns, controlling permissions like read, write, or modify. Integrated with Unity Catalog, it allows fine-grained security to protect sensitive data and ensure only authorized users have access. This feature enhances data governance, compliance, and secure collaboration across the platform.
 # MAGIC
@@ -35,13 +47,25 @@
 # MAGIC
 # MAGIC ## Exploratory Data Analysis
 # MAGIC
-# MAGIC The first step as Data Scientist is to explore and understand the data. [Databricks Notebooks](https://docs.databricks.com/en/notebooks/index.html) offer native data quality profiling and dashboarding capabilities that allow users to easily assess and visualize the quality of their data. Built-in tools enable automatic data profiling, checking for issues like missing values, outliers, or inconsistencies, and generating insights in an interactive format. Users can then create dashboards to monitor and track data quality metrics in real-time, helping teams identify and address issues quickly, ensuring reliable, high-quality data for analysis and decision-making.
+# MAGIC The first step as Data Scientist is to explore and understand the data. [Databricks Notebooks](https://docs.databricks.com/en/notebooks/index.html) offer native data quality profiling and dashboarding capabilities that allow users to easily assess and visualize the quality of their data. Built-in tools allows us to:
+# MAGIC - Identify missing values and potential data quality issues.
+# MAGIC - Detect outliers and anomalies that may skew model predictions.
+# MAGIC - Assess statistical distributions of key features to uncover potential biases.
+# MAGIC
+# MAGIC Databricks enables scalable EDA through interactive notebooks, where we can visualize distributions, perform statistical tests, and generate summary reports seamlessly.
 
 # COMMAND ----------
 
 # DBTITLE 1,Use SQL to explore your data
 # MAGIC %sql
 # MAGIC SELECT * FROM customer_gold
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC While Databricks provides built-in data profiling tools, additional Python libraries such as Plotly and Seaborn can be used to enhance analysis. These libraries allow for more interactive and customizable visualizations, helping uncover hidden patterns in the data. 
+# MAGIC
+# MAGIC Using these additional libraries in combination with Databricks' built-in capabilities ensures a more comprehensive data exploration process, leading to better insights for responsible model development.
 
 # COMMAND ----------
 
@@ -71,4 +95,13 @@ px.pie(data_frame=data, names="gender", values="count", color="gender", title="P
 
 # COMMAND ----------
 
-
+# MAGIC %md
+# MAGIC
+# MAGIC ## Next Steps
+# MAGIC
+# MAGIC After completing exploratory analysis, we proceed to [06.2-Feature-Updates]($./06-Responsible-AI/06.2-Feature-Updates), where we:
+# MAGIC - Continuously ingest new data to keep features relevant and up to date.
+# MAGIC - Apply responsible transformations while maintaining full lineage and compliance.
+# MAGIC - Log feature changes to ensure transparency in model evolution.
+# MAGIC
+# MAGIC By systematically updating features, we reinforce responsible AI practices and enhance our credit scoring model’s fairness, reliability, and effectiveness.

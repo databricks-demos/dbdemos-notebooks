@@ -3,30 +3,23 @@
 # MAGIC
 # MAGIC # Model Validation
 # MAGIC
-# MAGIC Machine learning (ML) models are increasingly being used in credit decisioning to automate lending processes, reduce costs, and improve accuracy. 
+# MAGIC Model validation is a critical step in ensuring the compliance, fairness, and reliability of our credit scoring model before deployment. This notebook performs key pre-deployment tests and compliance checks to align with Responsible AI principles. Specifically, we:
 # MAGIC
-# MAGIC As ML models become more complex and data-driven, their decision-making processes can become opaque, making it challenging to understand how decisions are made, and to ensure that they are fair and non-discriminatory. 
+# MAGIC - Validate model fairness for new credit customers.
+# MAGIC - Analyze feature importance and model behavior using Shapley values.
+# MAGIC - Log custom metrics for auditing and transparency.
+# MAGIC - Ensure compliance with regulatory fairness constraints.
+# MAGIC - Register the validated model in the Unity Catalog and transition it to the appropriate stage.
 # MAGIC
-# MAGIC Therefore, it is essential to develop techniques that enable model explainability and fairness in credit decisioning to ensure that the use of ML does not perpetuate existing biases or discrimination. 
-# MAGIC
-# MAGIC In this context, explainability refers to the ability to understand how an ML model is making its decisions, while fairness refers to ensuring that the model is not discriminating against certain groups of people. 
-# MAGIC
-# MAGIC ## Ensuring model fairness for new credit customers
-# MAGIC
-# MAGIC In this example, we'll make sure that our model behaves as expected and is fair for our new customers.
-# MAGIC
-# MAGIC We'll select our existing customers not having credit (We'll flag them as `defaulted = 2`) and make sure that our model is fair and behave the same among different group of the population.
-# MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F03-Data-Science-ML%2F03.5-Explainability-and-Fairness-credit-decisioning&demo_name=lakehouse-fsi-credit&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-fsi-credit%2F03-Data-Science-ML%2F03.5-Explainability-and-Fairness-credit-decisioning&version=1">
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_4.png?raw=true" 
+# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
 # MAGIC
-# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_4.png?raw=true" 
-# MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
+# MAGIC
 
 # COMMAND ----------
 
@@ -41,16 +34,16 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC Here we are merging several PII columns (hence we read from the ```customer_silver``` table) with the model prediction output table for visualizing them on the dashboard for end user consumption
+# MAGIC ## Load Data
+# MAGIC
+# MAGIC To validate our model, we first load the necessary data from `credit_decisioning_features` and `credit_bureau_gold` tables. These datasets provide customer financial and credit bureau insights necessary for validation.
 
 # COMMAND ----------
 
 feature_df = spark.table("credit_decisioning_features")
 credit_bureau_label = spark.table("credit_bureau_gold")
-customer_df = spark.table(f"customer_silver").select("cust_id", "gender", "first_name", "last_name", "email", "mobile_phone")
                    
-df = (feature_df.join(customer_df, "cust_id", how="left")
-               .join(credit_bureau_label, "cust_id", how="left")
+df = (feature_df.join(credit_bureau_label, "cust_id", how="left")
                .withColumn("defaulted", F.when(col("CREDIT_DAY_OVERDUE").isNull(), 2)
                                          .when(col("CREDIT_DAY_OVERDUE") > 60, 1)
                                          .otherwise(0))
@@ -61,7 +54,9 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Load Model from the registry
+# MAGIC ## Load model
+# MAGIC
+# MAGIC We retrieve our trained model from the Unity Catalog model registry
 
 # COMMAND ----------
 
@@ -71,6 +66,16 @@ mlflow.set_registry_uri('databricks-uc')
 
 model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@none")
 features = model.metadata.get_input_schema().input_names()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ## Ensuring model fairness for new credit customers
+# MAGIC
+# MAGIC In this example, we'll make sure that our model behaves as expected and is fair for our new customers.
+# MAGIC
+# MAGIC We'll select our existing customers not having credit (We'll flag them as `defaulted = 2`) and make sure that our model is fair and behave the same among different group of the population.
 
 # COMMAND ----------
 
@@ -165,7 +170,7 @@ shap.group_difference_plot(shap_df[['age_shap', 'tenure_months_shap']].to_numpy(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Logging custom metrics with **MLflow**
+# MAGIC ## Logging custom metrics/artifacts with **MLflow**
 
 # COMMAND ----------
 
@@ -183,27 +188,6 @@ with mlflow.start_run(run_id=model_version_info.run_id):
     mean_shap_female = np.mean(shap_values[gender_array == 0])
     mean_difference = mean_shap_male - mean_shap_female
     mlflow.log_metric("shap_demo_parity_diff_wm", mean_shap_male - mean_shap_female)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ## Store Data (into Delta format) for Downstream Usage
-# MAGIC
-# MAGIC Since we want to add the Explainability and Fairness assessment in the business dashboards, we will persist this data into Delta format and query it later.
-
-# COMMAND ----------
-
-#Let's load the underlying model to get the proba
-skmodel = mlflow.sklearn.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@none")
-underbanked_sample['default_prob'] = skmodel.predict_proba(underbanked_sample[features])[:,1]
-underbanked_sample['prediction'] = skmodel.predict(underbanked_sample[features])
-final_df = pd.concat([underbanked_sample.reset_index(), shap_df], axis=1)
-
-final_df = spark.createDataFrame(final_df).withColumn("default_prob", col("default_prob").cast('double'))
-display(final_df)
-final_df.drop('CREDIT_CURRENCY', '_rescued_data', 'index') \
-        .write.mode("overwrite").option('OverwriteSchema', True).saveAsTable(f"shap_explanation")
 
 # COMMAND ----------
 
@@ -262,4 +246,28 @@ if compliance_checks_passed:
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC ## Store Data (into Delta format) for Downstream Usage
+# MAGIC
+# MAGIC Finally, we store the validated dataset in Delta format for auditing and future reference
 
+# COMMAND ----------
+
+#Let's load the underlying model to get the proba
+skmodel = mlflow.sklearn.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@none")
+underbanked_sample['default_prob'] = skmodel.predict_proba(underbanked_sample[features])[:,1]
+underbanked_sample['prediction'] = skmodel.predict(underbanked_sample[features])
+final_df = pd.concat([underbanked_sample.reset_index(), shap_df], axis=1)
+
+final_df = spark.createDataFrame(final_df).withColumn("default_prob", col("default_prob").cast('double'))
+display(final_df)
+final_df.drop('CREDIT_CURRENCY', '_rescued_data', 'index') \
+        .write.mode("overwrite").option('OverwriteSchema', True).saveAsTable(f"shap_explanation")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next Steps
+# MAGIC
+# MAGIC In the next step [06.5-Model-Integration]($./06-Responsible-AI/06.5-Model-Integration), we will compare champion and challenger models, enabling human oversight for final selection. The selected model will then be deployed responsibly, ensuring traceability and accountability at each decision point.

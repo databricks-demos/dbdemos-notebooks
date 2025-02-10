@@ -244,7 +244,7 @@
                         "min_workers": 2,
                         "max_workers": 10
                     },
-                    "spark_version": "15.3.x-cpu-ml-scala2.12",
+                    "spark_version": "15.4.x-cpu-ml-scala2.12",
                     "custom_tags": {
                         "ResourceClass": "SingleNode"
                     },
@@ -266,7 +266,7 @@
             "min_workers": 2,
             "max_workers": 10
         },
-        "spark_version": "15.3.x-cpu-ml-scala2.12",
+        "spark_version": "15.4.x-cpu-ml-scala2.12",
         "single_user_name": "{{CURRENT_USER}}",
         "data_security_mode": "SINGLE_USER",
         "runtime_engine": "STANDARD"
@@ -438,7 +438,7 @@
                             "min_workers": 2,
                             "max_workers": 10
                         },
-                        "spark_version": "15.3.x-cpu-ml-scala2.12",
+                        "spark_version": "15.4.x-cpu-ml-scala2.12",
                         "custom_tags": {
                             "ResourceClass": "SingleNode"
                         },

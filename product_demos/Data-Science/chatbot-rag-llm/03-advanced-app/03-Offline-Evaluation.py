@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-agents==0.15.0 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
+# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.15.0 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

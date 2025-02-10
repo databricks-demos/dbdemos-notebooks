@@ -146,6 +146,7 @@ train_df = undersampled_df.unionAll(oversampled_df).drop('cust_id').na.fill(0)
 
 # Save it as a table to be able to select it with the AutoML UI
 train_df.write.mode('overwrite').saveAsTable('credit_risk_train_df')
+train_df = spark.table('credit_risk_train_df')
 
 # Visualize the credit default ratio
 px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='defaulted', title='Credit default ratio')

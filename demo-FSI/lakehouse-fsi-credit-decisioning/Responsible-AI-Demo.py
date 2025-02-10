@@ -51,7 +51,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Quality
+# MAGIC ### 1-Quality
 # MAGIC
 # MAGIC <img src="https://www.databricks.com/sites/default/files/inline-images/Lineage-ML_0.png?v=1722259413" width="800px" style="float: right; border: 20px solid white;"/>
 # MAGIC
@@ -62,7 +62,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Security
+# MAGIC ### 2-Security
 # MAGIC
 # MAGIC Ensuring AI safety and security involves robust controls and proactive threat mitigation. The [Databricks AI Security Framework (DASF)](https://www.databricks.com/resources/whitepaper/databricks-ai-security-framework-dasf) identifies potential risks across each AI component, offering actionable recommendations to safeguard data and models. Through Lakehouse Monitoring, teams can continuously track model performance, detect bias, and identify threats in real time.
 # MAGIC
@@ -75,7 +75,7 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ### Governance
+# MAGIC ### 3-Governance
 # MAGIC
 # MAGIC <img src="https://www.databricks.com/sites/default/files/inline-images/UC-Graphic-2x.png?v=1722319673" width="480px" style="float: right; border: 20px solid white;"/>
 # MAGIC

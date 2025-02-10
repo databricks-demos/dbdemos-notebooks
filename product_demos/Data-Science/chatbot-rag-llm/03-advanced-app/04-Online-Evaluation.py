@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-agents==0.15.0 mlflow[databricks]==2.20.1 databricks-sdk==0.40.0 mlflow==2.20.1
+# MAGIC %pip install --quiet -U databricks-agents==0.15.0 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

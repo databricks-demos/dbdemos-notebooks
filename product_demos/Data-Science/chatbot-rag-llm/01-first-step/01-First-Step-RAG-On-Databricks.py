@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.15.0 mlflow-skinny==2.20.1 mlflow==2.20.1 mlflow[gateway]==2.20.1 databricks-vectorsearch==0.44 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 bs4==0.0.2
+# MAGIC %pip install -U --quiet databricks-agents==0.15.0 mlflow[gateway]==2.20.1 databricks-vectorsearch==0.44 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 bs4==0.0.2 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

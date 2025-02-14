@@ -474,8 +474,8 @@ if not data_exists:
     # Set the current date
     current_date = datetime.now()
 
-    # Calculate the start date (1.5 years ago)
-    start_date = (current_date - timedelta(days=365 * 1.5)).strftime("%Y-%m-%d")
+    # Calculate the start date (30 days from now)
+    start_date = (current_date - timedelta(days=30)).strftime("%Y-%m-%d")
 
     # Set the end date to today
     end_date = current_date.strftime("%Y-%m-%d")
@@ -572,14 +572,14 @@ def inject_issues(df_in, campaign_start_dates):
         # Set the Campaign_flag for these dates and return
         return df.withColumn('Campaign_flag', F.when(campaign_mask, F.lit(True)).otherwise(F.col('Campaign_flag')))
     
-    # After May 2024: Apply changes to WarrantyPeriod and ReturnPolicy
-    may_2024_mask = (F.col('TempDate').substr(0, 4) == "2024") & (F.col('TempDate').substr(6, 2) >= "05")
+    # After 20 days: Apply changes to WarrantyPeriod and ReturnPolicy
+    last_20_days_mask = (F.col('TempDate').substr(0, 4) == "2024") & (F.col('TempDate').substr(6, 2) >= "05")
     
     # Overwrite over 50% of WarrantyPeriod to '15 days'
-    df = df.withColumn('WarrantyPeriod', F.when(may_2024_mask & (F.rand() < 0.7), '15 days').otherwise(F.col('WarrantyPeriod')))
+    df = df.withColumn('WarrantyPeriod', F.when(last_20_days_mask & (F.rand() < 0.7), '15 days').otherwise(F.col('WarrantyPeriod')))
     
     # Overwrite over 50% of ReturnPolicy to 'no returns'
-    df = df.withColumn('ReturnPolicy', F.when(may_2024_mask & (F.rand() < 0.7), 'no returns').otherwise(F.col('ReturnPolicy')))
+    df = df.withColumn('ReturnPolicy', F.when(last_20_days_mask & (F.rand() < 0.7), 'no returns').otherwise(F.col('ReturnPolicy')))
     
     # Drop the temporary date column
     df = df.drop('TempDate')

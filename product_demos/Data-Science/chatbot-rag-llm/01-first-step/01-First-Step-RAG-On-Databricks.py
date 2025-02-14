@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.36.0 databricks-agents mlflow-skinny==2.18.0 mlflow==2.18.0 mlflow[gateway]==2.18.0 databricks-vectorsearch langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4
+# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.15.0 mlflow[databricks]==2.20.1 databricks-vectorsearch==0.44 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 bs4==0.0.2 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -336,6 +336,9 @@ with mlflow.start_run(run_name="basic_rag_bot"):
           model_config=chain_config, # Chain configuration 
           artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
           input_example=input_example,
+          pip_requirements=[
+            "mlflow", "cloudpickle", "databricks-connect", "databricks-vectorsearch", "google-cloud-storage", "ipykernel", 
+            "langchain-community", "langchain", "numpy", "pandas","pyarrow", "pydantic", "pyspark"], #Note: pip requirements added as a temporary wokaround waiting for mlflow 2.20 to be released.
           example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
       )
 
@@ -448,7 +451,7 @@ with mlflow.start_run(run_id=logged_chain_info.run_id):
 # MAGIC
 # MAGIC This example was a simple demo. In the next set of notebooks, we'll go into more details and review how to prepare and split your documents, while working with more production-grade chain.
 # MAGIC
-# MAGIC We will also see how to deploy your [first Lakehouse Application](../02-simple-app/03-Deploy-Frontend-Lakehouse-App) to deploy the Assistant to your end-users!
+# MAGIC We will also see how to deploy your [first Lakehouse Application]($../02-simple-app/03-Deploy-Frontend-Lakehouse-App) to deploy the Assistant to your end-users!
 # MAGIC
-# MAGIC Open the [../02-simple-app/01-Data-Preparation-and-Index](../02-simple-app/01-Data-Preparation-and-Index) Notebook!
+# MAGIC Open the [../02-simple-app/01-Data-Preparation-and-Index]($../02-simple-app/01-Data-Preparation-and-Index) Notebook!
 # MAGIC

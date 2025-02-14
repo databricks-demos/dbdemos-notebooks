@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 hyperopt==0.2.7 shap==0.46.0 lightgbm==4.5.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -37,8 +37,6 @@
 # COMMAND ----------
 
 import mlflow
-import databricks.automl_runtime
-
 # Path defined in the init notebook
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
 print(f"Set experiment to: {xp_name}")
@@ -162,7 +160,7 @@ df_loaded = training_set_specs.load_df().toPandas()
 # COMMAND ----------
 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-
+    
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "avg_price_increase", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
 col_selector = ColumnSelector(supported_cols)
@@ -237,10 +235,10 @@ numerical_transformers = [("numerical", numerical_pipeline, ["monthly_charges", 
 
 # COMMAND ----------
 
-from databricks.automl_runtime.sklearn import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+from databricks.automl_runtime.sklearn import OneHotEncoder
 
 
 one_hot_imputers = []

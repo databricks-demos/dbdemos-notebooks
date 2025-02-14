@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.14.3
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 hyperopt==0.2.7 shap==0.46.0 lightgbm==4.5.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -35,7 +35,6 @@
 # COMMAND ----------
 
 import mlflow
-import databricks.automl_runtime
 
 #Added for the demo purpose
 xp = mlflow.search_experiments(filter_string=f"name LIKE '/Shared/dbdemos/experiments/mlops%'", order_by=["last_update_time DESC"])[0]
@@ -112,11 +111,13 @@ display(df_loaded.head(5))
 
 # COMMAND ----------
 
+ 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
 
 supported_cols = ["online_backup", "internet_service", "payment_method", "multiple_lines", "paperless_billing", "partner", "tech_support", "tenure", "contract", "phone_service", "streaming_movies", "dependents", "senior_citizen", "num_optional_services", "device_protection", "monthly_charges", "total_charges", "streaming_tv", "gender", "online_security"]
 
 col_selector = ColumnSelector(supported_cols)
+
 
 # COMMAND ----------
 
@@ -187,13 +188,12 @@ numerical_transformers = [("numerical", numerical_pipeline, ["monthly_charges", 
 
 # COMMAND ----------
 
-from databricks.automl_runtime.sklearn import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline 
+from databricks.automl_runtime.sklearn import OneHotEncoder
 
 one_hot_imputers = []
-
 one_hot_pipeline = Pipeline(steps=[
     ("imputers", ColumnTransformer(one_hot_imputers, remainder="passthrough")),
     ("one_hot_encoder", OneHotEncoder(handle_unknown="indicator")),
@@ -531,4 +531,4 @@ display(Image(filename=eval_pr_curve_path))
 # MAGIC %md
 # MAGIC ### Automate model promotion validation
 # MAGIC
-# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_models_in _uc)
+# MAGIC Next step: [Search runs and trigger model promotion validation]($./03_from_notebook_to_models_in_uc)

@@ -132,7 +132,7 @@ display(spark_flights_df.
 
 # COMMAND ----------
 
-spark_flights_df = spark.read.format('deltaSharing').load(f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.lookupcodes")
+spark_flights_df = spark.read.format('deltaSharing').load(f"{americanairlines_profile}#dbdemos_americanairlines.dbdemos_sharing_airlinedata.flights_protected")
 
 display(spark_flights_df.
         where('cancelled = 1').
@@ -160,13 +160,14 @@ display(spark_flights_df.
 
 # MAGIC %sql
 # MAGIC DROP TABLE IF EXISTS dbdemos_delta_sharing_demo_flights;
-# MAGIC CREATE TABLE IF NOT EXISTS dbdemos_delta_sharing_demo_flights
-# MAGIC     USING deltaSharing
-# MAGIC     LOCATION "/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/americanairlines.share#dbdemos_americanairlines.dbdemos_sharing_airlinedata.flights_protected";
+# MAGIC -- CREATE TABLE IF NOT EXISTS dbdemos_delta_sharing_demo_flights
+# MAGIC --     USING deltaSharing
+# MAGIC --     LOCATION "/<ADD YOUR PATH>>americanairlines.share#dbdemos_americanairlines.dbdemos_sharing_airlinedata.flights_protected";
 
 # COMMAND ----------
 
-# MAGIC %sql select * from dbdemos_delta_sharing_demo_flights
+# MAGIC %sql 
+# MAGIC -- select * from dbdemos_delta_sharing_demo_flights
 
 # COMMAND ----------
 

@@ -24,7 +24,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.19.0 torchvision==0.20.1
+# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.19.0 torchvision==0.20.1 deepspeed==0.14.4
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

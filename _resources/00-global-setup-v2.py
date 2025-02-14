@@ -124,7 +124,7 @@ class DBDemos():
     def download_to_dest(url):
       try:
         #Temporary fix to avoid hitting github limits - Swap github to our S3 bucket to download files
-        s3url = url.replace("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/", "https://notebooks.databricks.com/demos/dbdemos-dataset/")
+        s3url = url.replace("https://raw.githubusercontent.com/databricks-demos/dbdemos-dataset/main/", "https://dbdemos-dataset.s3.amazonaws.com/")
         download_file(s3url, dest)
       except:
         download_file(url, dest)
@@ -239,6 +239,18 @@ class DBDemos():
         raise Exception(f"Invalid experiment format or no experiment available. Please re-run the previous notebook. {last_xp['path']}")
     return last_xp
   
+
+  @staticmethod
+  def wait_for_table(table_name, timeout_duration=120):
+    import time
+    i = 0
+    while not spark.catalog.tableExists(table_name) or spark.table(table_name).count() == 0:
+      time.sleep(1)
+      if i > timeout_duration:
+        raise Exception(f"couldn't find table {table_name} or table is empty. Do you have data being generated to be consumed?")
+      i += 1
+
+
   # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
   @staticmethod
   def create_mockup_automl_run(full_xp_path, df, model_name=None, target_col=None):

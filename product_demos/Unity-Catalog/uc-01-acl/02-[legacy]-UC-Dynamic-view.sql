@@ -19,7 +19,7 @@
 -- MAGIC See the [documentation](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#dynamic-view-functions) for more details.
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=02-[legacy]-UC-Dynamic-view&demo_name=uc-01-acl&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=02-[legacy]-UC-Dynamic-view&demo_name=uc-01-acl&event=VIEW">
 
 -- COMMAND ----------
 
@@ -45,15 +45,6 @@
 -- MAGIC Databricks has 2 functions: `current_user()` and `is_account_group_member()`.
 -- MAGIC
 -- MAGIC Theses functions can be used to dynamically get the user running the query and knowing if the user is member of a give group.
-
--- COMMAND ----------
-
--- The demo will create and use the catalog defined:
-CREATE CATALOG IF NOT EXISTS main;
-CREATE SCHEMA IF NOT EXISTS uc_acl;
--- Make it default for future usage (we won't have to specify it)
-USE CATALOG main;
-USE SCHEMA uc_acl;
 
 -- COMMAND ----------
 

@@ -7,8 +7,8 @@
         },
         {
             "name": "aed85b51",
-            "displayName": "opportunityhistory_cube",
-            "query": "SELECT * FROM main.dbdemos_aibi_sales_pipeline_review.opportunityhistory_cube "
+            "displayName": "opportunity_history",
+            "query": "SELECT * FROM main.dbdemos_aibi_sales_pipeline_review.opportunity_history "
         },
         {
             "name": "268c323c",

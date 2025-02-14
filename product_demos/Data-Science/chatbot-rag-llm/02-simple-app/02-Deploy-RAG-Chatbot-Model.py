@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-agents mlflow-skinny==2.18.0 mlflow==2.18.0 mlflow[gateway]==2.18.0 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch databricks-sdk==0.23.0
+# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.15.0 mlflow[databricks]==2.20.1 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch==0.44 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -42,7 +42,7 @@
 # MAGIC %md-sandbox
 # MAGIC ### Building our Chain
 # MAGIC
-# MAGIC In this example, we'll assume you already have a basic understanding of langchain. Check our [previous notebook](../00-first-step/01-First-Step-RAG-On-Databricks) to take it one step at a time!
+# MAGIC In this example, we'll assume you already have a basic understanding of langchain. Check our [previous notebook]($../00-first-step/01-First-Step-RAG-On-Databricks) to take it one step at a time!
 
 # COMMAND ----------
 

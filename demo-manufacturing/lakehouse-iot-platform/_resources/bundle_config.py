@@ -12,10 +12,10 @@
   "custom_schema_supported": True,
   "default_schema": "dbdemos_iot_platform",
   "default_catalog": "main",
-  "title": "Lakehouse for IoT & Predictive Maintenance",
-  "description": "Detect faulty wind turbine: Ingestion (DLT), BI, Predictive Maintenance (ML), Governance (UC), Orchestration",
-    "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an IOT platform for predictive maintenance, ingesting sensor data from our wind turbine farm in realtime. We'll be able to deliver data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest data from external systems in streaming (sensors/ERP and then transform it using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security</li><li>Leverage Databricks SQL and the warehouse endpoints to build dashboards to analyze the ingested data and our wind farm productivity</li><li>Build a Machine Learning model with Databricks AutoML to detect faulty wind turbines and trigger predictive maintenance operations</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
-  "usecase": "Lakehouse Platform",
+  "title": "Data Intelligence Platform for IoT & Prescriptive Maintenance",
+  "description": "Detect faulty wind turbine and generate work orders: Ingestion (DLT), BI, Predictive Maintenance (ML), Prescriptive Maintenance (GenAI), Governance (UC), Orchestration",
+    "fullDescription": "The Databricks Data Intelligence Platform allows your entire organization to use data and AI. It’s built on a lakehouse to provide an open, unified foundation for all data and governance, and is powered by a Data Intelligence Engine that understands the uniqueness of your data. In this demo, we'll show you how to build an IOT platform for prescriptive maintenance, ingesting sensor data from our wind turbine farm in realtime. We'll be able to deliver data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end data intelligence platform: <ul><li>Ingest data from external systems in streaming (sensors/ERP and then transform it using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security</li><li>Leverage Databricks SQL and the warehouse endpoints to build dashboards to analyze the ingested data and our wind farm productivity</li><li>Build a Machine Learning model with Databricks AutoML to detect faulty wind turbines and trigger predictive maintenance operations</li><li Build an AI agent with the Mosaic AI Agent Framework to generate prescriptive work orders for wind turbines detected to be faulty</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "usecase": "Data Intelligence Platform",
   "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
@@ -53,16 +53,16 @@
       "description": "Define the database and volume folder."
     },
     {
-      "path": "00-IOT-wind-turbine-introduction-lakehouse", 
+      "path": "00-IOT-wind-turbine-introduction-DI-platform", 
       "pre_run": False,
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Lakehouse - IOT Platform introduction", 
-      "description": "Start here to explore the Lakehouse."
+      "title":  "Data Intelligence Platform - IOT Platform introduction", 
+      "description": "Start here to explore the Data Intelligence Platform."
     },
     {
       "path": "01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Ingest data with Delta Live Table", 
@@ -126,7 +126,31 @@
       "description": "Once your model is deployed, run low latency inferences."
     },
     {
-      "path": "05-Workflow-orchestration/05-Workflow-orchestration-iot-turbine", 
+      "path": "05-Generative-AI/05.1-ai-tools-iot-turbine-prescriptive-maintenance", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True,
+      "title":  "Build AI agent tools with UC functions", 
+      "description": "Use tools to enable the AI agent to perform actions besides language generation."
+    },
+    {
+      "path": "05-Generative-AI/05.2-build-agent-iot-turbine-prescriptive-maintenance", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True,
+      "title":  "Build the AI agent using this driver notebook.", 
+      "description": "Build an AI agent using the Mosaic AI Agent Framework."
+    },
+    {
+      "path": "05-Generative-AI/05.3-deploy-agent-iot-turbine-prescriptive-maintenance", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True,
+      "title":  "Deploy AI agent and invoke it in a batch or real-time.", 
+      "description": "Deploy an AI agent using the Mosaic AI Agent Framework."
+    },
+    {
+      "path": "06-Workflow-orchestration/06-Workflow-orchestration-iot-turbine", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -136,7 +160,7 @@
   ],
   "init_job": {
     "settings": {
-        "name": "dbdemos_lakehouse_iot_turbine_init_{{CURRENT_USER_NAME}}",
+        "name": "dbdemos_data_intelligence_platform_iot_turbine_init_{{CURRENT_USER_NAME}}",
         "email_notifications": {
             "no_alert_for_skipped_runs": False
         },
@@ -183,18 +207,32 @@
                   ]
             },
             {
-                "task_key": "register_ml_model",
+                "task_key": "deploy_best_model",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.2-automl-generated-notebook-iot-turbine",
                     "source": "WORKSPACE"
                 },
-                "base_parameters": {"shap_enabled": "false"},
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "depends_on": [
                       {
                           "task_key": "create_feature_and_automl_run"
+                      }
+                  ]
+            },
+            {
+                "task_key": "deploy_endpoint",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.3-running-inference-iot-turbine",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "deploy_best_model"
                       }
                   ]
             }
@@ -248,7 +286,7 @@
                 "autoscale": {
                     "min_workers": 1,
                     "max_workers": 2,
-                    "mode": "LEGACY"
+                    "mode": "ENHANCED"
                 }
             }
         ],

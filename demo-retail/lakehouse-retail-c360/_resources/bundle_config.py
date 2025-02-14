@@ -71,7 +71,7 @@
     },
     {
       "path": "01-Data-ingestion/01.1-DLT-churn-SQL", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Ingest data with Delta Live Table", 

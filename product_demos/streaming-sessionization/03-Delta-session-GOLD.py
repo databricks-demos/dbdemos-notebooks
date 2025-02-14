@@ -33,7 +33,7 @@
 from typing import Tuple, Iterator
 from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
 
-wait_for_table("events") #Wait until the previous table is created to avoid error if all notebooks are started at once
+DBDemos.wait_for_table("events") #Wait until the previous table is created to avoid error if all notebooks are started at once
 
 
 #If we don't have activity after 30sec, close the session
@@ -81,7 +81,7 @@ sessions = spark.readStream.table("events").groupBy(F.col("user_id")).applyInPan
     "append",
     GroupStateTimeout.ProcessingTimeTimeout)
 
-display(sessions)
+display(sessions, checkpointLocation = get_chkp_folder())
 
 # COMMAND ----------
 
@@ -114,11 +114,11 @@ def upsert_sessions(df, epoch_id):
   .execute())
   
 (sessions.writeStream
-  .option("checkpointLocation", cloud_storage_path+"/checkpoints/sessions")
+  .option("checkpointLocation", volume_folder+"/checkpoints/sessions")
   .foreachBatch(upsert_sessions)
   .start())
 
-wait_for_table("sessions")
+DBDemos.wait_for_table("sessions")
 
 # COMMAND ----------
 
@@ -131,7 +131,7 @@ wait_for_table("sessions")
 # COMMAND ----------
 
 # DBTITLE 1,Stop all the streams 
-stop_all_streams(sleep_time=120)
+DBDemos.stop_all_streams(sleep_time=120)
 
 # COMMAND ----------
 

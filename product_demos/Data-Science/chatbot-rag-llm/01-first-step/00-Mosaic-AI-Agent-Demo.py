@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.36.0 databricks-agents mlflow-skinny==2.18.0 mlflow==2.18.0 mlflow[gateway]==2.18.0 databricks-vectorsearch langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4
+# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.15.0 mlflow[databricks]==2.20.1 databricks-vectorsearch==0.44 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -282,7 +282,7 @@ with mlflow.start_run(run_id=logged_chain_info.run_id):
 # MAGIC
 # MAGIC This example was a simple demo. In the next set of notebooks, we'll go into more details and review how to prepare and split your documents, while working with more production-grade chain.
 # MAGIC
-# MAGIC We will also see how to deploy your [first Lakehouse Application](../02-simple-app/03-Deploy-Frontend-Lakehouse-App) to deploy the Assistant to your end-users!
+# MAGIC We will also see how to deploy your [first Lakehouse Application]($../02-simple-app/03-Deploy-Frontend-Lakehouse-App) to deploy the Assistant to your end-users!
 # MAGIC
-# MAGIC Open the [../02-simple-app/01-Data-Preparation-and-Index](../02-simple-app/01-Data-Preparation-and-Index) Notebook!
+# MAGIC Open the [../02-simple-app/01-Data-Preparation-and-Index]($../02-simple-app/01-Data-Preparation-and-Index) Notebook!
 # MAGIC

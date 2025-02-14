@@ -31,11 +31,31 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.19.0
+# MAGIC %pip install mlflow==2.20.1
 
 # COMMAND ----------
 
 # MAGIC %run ../../_resources/00-setup
+
+# COMMAND ----------
+
+# DBTITLE 1,Load the version from our mlflow run
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import os
+import mlflow
+# Use the Unity Catalog model registry
+mlflow.set_registry_uri("databricks-uc")
+# download model requirement from remote registry
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts(artifact_path="requirements.txt") 
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -95,13 +115,13 @@
 
 # COMMAND ----------
 
-# MAGIC %sql LIST '/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'
+# MAGIC %sql LIST '/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data'
 
 # COMMAND ----------
 
 # DBTITLE 1,Review the raw sensor data received as JSON
 # MAGIC %sql
-# MAGIC SELECT * FROM PARQUET.`/Volumes/main__build/dbdemos_iot_platform/turbine_raw_landing/incoming_data`
+# MAGIC SELECT * FROM PARQUET.`/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data`
 
 # COMMAND ----------
 
@@ -253,10 +273,10 @@ display(spark.table("spark_turbine_training_dataset"))
 #Note: ideally we should download and install the model libraries with the model requirements.txt and PIP. See 04.3-running-inference for an example
 import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                              Stage/version  
-#                                                                 Model name         |        
-#                                                                     |              |        
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
+#                                                                                                                       Stage/version  
+#                                                                                                       Model name         |        
+#                                                                                                           |              |        
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
 columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
@@ -283,7 +303,7 @@ w = Window.partitionBy("turbine_id").orderBy(col("hourly_timestamp").desc())
 # COMMAND ----------
 
 # DBTITLE 1,We just realised we have to delete bad entry for a specific turbine
-spark.sql("DELETE FROM spark_sensor_bronze where turbine_id='"+first_turbine+"'")
+spark.sql(f"DELETE FROM spark_sensor_bronze where turbine_id='{first_turbine}'")
 
 # COMMAND ----------
 

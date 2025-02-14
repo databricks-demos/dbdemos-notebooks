@@ -1,8 +1,4 @@
 # Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC # Streaming on Databricks with Spark and Delta Lake
@@ -65,7 +61,7 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-setup $reset_all_data=$reset_all_data
+# MAGIC %run ./_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -94,21 +90,26 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
+dbutils.fs.rm(volume_folder+"/checkpoints", True)
+
+# COMMAND ----------
+
 # DBTITLE 1,Read messages from Kafka and save them as events_raw
 # NOTE: the demo runs with Kafka, and dbdemos doesn't publically expose its demo kafka servers. Use your own IPs to run the demo properly
-#kafka_bootstrap_servers_tls = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
-kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
+kafka_bootstrap_servers_tls = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
+#kafka_bootstrap_servers_tls = "<Replace by your own kafka servers>"
+# Also make sure to have the proper instance profile to allow the access if you're on AWS.
 
 stream = (spark
     .readStream
        #=== Configurations for Kafka streams ===
       .format("kafka")
       .option("kafka.bootstrap.servers", kafka_bootstrap_servers_tls) 
-      .option("kafka.security.protocol", "SSL")
+      .option("kafka.security.protocol", "PLAINTEXT") #SSL
       .option("subscribe", "dbdemos-sessions") #kafka topic
       .option("startingOffsets", "latest") #Consume messages from the end
       .option("maxOffsetsPerTrigger", "10000") # Control ingestion rate - backpressure
-      .option("ignoreChanges", "true")
+      #.option("ignoreChanges", "true")
     .load()
     .withColumn('key', col('key').cast('string'))
     .withColumn('value', col('value').cast('string'))
@@ -116,12 +117,13 @@ stream = (spark
        # === Write to the delta table ===
       .format("delta")
       .trigger(processingTime="20 seconds")
-      .option("checkpointLocation", cloud_storage_path+"/checkpoints/bronze")
+      #.trigger(availableNow=True) --use this for serverless
+      .option("checkpointLocation", volume_folder+"/checkpoints/bronze")
       .option("mergeSchema", "true")
       .outputMode("append")
       .table("events_raw"))
 
-wait_for_table("events_raw")
+DBDemos.wait_for_table("events_raw")
 
 # COMMAND ----------
 
@@ -161,7 +163,7 @@ wait_for_table("events_raw")
 # COMMAND ----------
 
 # DBTITLE 1,Stop all the streams 
-stop_all_streams(sleep_time=120)
+DBDemos.stop_all_streams(sleep_time=120)
 
 # COMMAND ----------
 

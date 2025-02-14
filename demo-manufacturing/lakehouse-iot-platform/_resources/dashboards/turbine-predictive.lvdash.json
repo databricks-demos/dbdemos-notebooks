@@ -3,37 +3,37 @@
     {
       "name": "3c6bfbe2",
       "displayName": "IOT platform Wind Turbines faulty parts count",
-      "query": "select type, count(*) faulty_equipment_count from (select turbine_id, state, country, prediction as fault, model, lat, long \nfrom `main__build`.`dbdemos_iot_platform`.turbine_current_status  where prediction != 'ok' limit 18) as t\nleft join `main__build`.`dbdemos_iot_platform`.parts p on t.state=p.stock_location\nwhere stock_available = 0 \ngroup by type\norder by faulty_equipment_count desc"
+      "query": "select type, count(*) faulty_equipment_count from (select turbine_id, state, country, prediction as fault, model, lat, long \nfrom `main`.`dbdemos_iot_platform`.turbine_current_status  where prediction != 'ok' limit 18) as t\nleft join `main`.`dbdemos_iot_platform`.parts p on t.state=p.stock_location\nwhere stock_available = 0 \ngroup by type\norder by faulty_equipment_count desc"
     },
     {
       "name": "a80f9a9e",
       "displayName": "IOT platform Wind Turbines stats faulty",
-      "query": "with test as (select status, sum(avg_energy) as energy_produced, avg(avg_energy) as avg_energy, count(*)/10 as count from \n(select *, case when prediction == 'ok' then 'ok' else 'faulty' end as status from `main__build`.`dbdemos_iot_platform`.turbine_current_status ) \ngroup by status)\n\nselect *, avg_energy/other_status_avg_energy*10 as efficiency_loss from (select *, LAG(avg_energy, -1) OVER (ORDER BY status) as other_status_avg_energy from test)\n\n-- , LAG(avg_energy) OVER (ORDER BY status) as other_status_avg_energy, other_status_avg_energy/avg_energy "
+      "query": "with test as (select status, sum(avg_energy) as energy_produced, avg(avg_energy) as avg_energy, count(*)/10 as count from \n(select *, case when prediction == 'ok' then 'ok' else 'faulty' end as status from `main`.`dbdemos_iot_platform`.turbine_current_status ) \ngroup by status)\n\nselect *, avg_energy/other_status_avg_energy*10 as efficiency_loss from (select *, LAG(avg_energy, -1) OVER (ORDER BY status) as other_status_avg_energy from test)\n\n-- , LAG(avg_energy) OVER (ORDER BY status) as other_status_avg_energy, other_status_avg_energy/avg_energy "
     },
     {
       "name": "c94d0002",
       "displayName": "IOT platform Wind Turbines stats",
-      "query": "select sum(avg_energy) as energy_produced, sum(avg_energy) * 110 as revenue_per_hour from `main__build`.`dbdemos_iot_platform`.turbine_current_status "
+      "query": "select sum(avg_energy) as energy_produced, sum(avg_energy) * 110 as revenue_per_hour from `main`.`dbdemos_iot_platform`.turbine_current_status "
     },
     {
       "name": "3beb98f7",
       "displayName": "IOT platform Wind Turbines faulty parts",
-      "query": "select EAN, type, approvisioning_estimated_days, state, count(*) c from (select turbine_id, state, country, prediction as fault, model, lat, long \nfrom `main__build`.`dbdemos_iot_platform`.turbine_current_status where prediction != 'ok' limit 18) as t\nleft join `main__build`.`dbdemos_iot_platform`.parts p on t.state=p.stock_location\nwhere stock_available = 0 \ngroup by EAN, type, approvisioning_estimated_days, state\norder by c desc"
+      "query": "select EAN, type, approvisioning_estimated_days, state, count(*) c from (select turbine_id, state, country, prediction as fault, model, lat, long \nfrom `main`.`dbdemos_iot_platform`.turbine_current_status where prediction != 'ok' limit 18) as t\nleft join `main`.`dbdemos_iot_platform`.parts p on t.state=p.stock_location\nwhere stock_available = 0 \ngroup by EAN, type, approvisioning_estimated_days, state\norder by c desc"
     },
     {
       "name": "59e42cd7",
       "displayName": "IOT platform Wind Turbines faulty",
-      "query": "select turbine_id, prediction as fault, model, state, lat, long, country from `main__build`.`dbdemos_iot_platform`.turbine_current_status where prediction != 'ok' limit 18"
+      "query": "select turbine_id, prediction as fault, model, state, lat, long, country from `main`.`dbdemos_iot_platform`.turbine_current_status where prediction != 'ok' limit 18"
     },
     {
       "name": "0759c8c5",
       "displayName": "Turbine power prediction",
-      "query": "select *, current_timestamp() + interval '1 hour' * h as time from ( select *, hour as h from `main__build`.`dbdemos_iot_platform`.turbine_power_prediction);"
+      "query": "select *, current_timestamp() + interval '1 hour' * h as time from ( select *, hour as h from `main`.`dbdemos_iot_platform`.turbine_power_prediction);"
     },
     {
       "name": "03d81d62",
       "displayName": "IOT platform Wind Turbines",
-      "query": "select * from `main__build`.`dbdemos_iot_platform`.turbine_current_status;"
+      "query": "select  * except (lat, long), \n  cast(lat as double) as lat, \n  cast(long as double) as long\n  from `main`.`dbdemos_iot_platform`.turbine_current_status;"
     }
   ],
   "pages": [
@@ -107,31 +107,27 @@
                       "expression": "`lat`"
                     },
                     {
-                      "name": "location",
-                      "expression": "`location`"
+                      "name": "long",
+                      "expression": "`long`"
                     }
                   ],
-                  "disaggregated": false
+                  "disaggregated": true
                 }
               }
             ],
             "spec": {
-              "version": 3,
-              "widgetType": "scatter",
+              "version": 2,
+              "widgetType": "symbol-map",
               "encodings": {
-                "x": {
-                  "fieldName": "location",
-                  "scale": {
-                    "type": "categorical"
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "lat",
+                    "displayName": "lat"
                   },
-                  "displayName": "location"
-                },
-                "y": {
-                  "fieldName": "lat",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "lat"
+                  "longitude": {
+                    "fieldName": "long",
+                    "displayName": "long"
+                  }
                 }
               },
               "frame": {

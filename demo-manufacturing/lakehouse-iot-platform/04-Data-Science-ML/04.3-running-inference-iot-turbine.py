@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.19.0 databricks-sdk==0.39.0
+# MAGIC %pip install mlflow==2.20.1 databricks-sdk==0.40.0
 
 # COMMAND ----------
 
@@ -66,6 +66,7 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
+import mlflow
 mlflow.set_registry_uri('databricks-uc')
 #                                                                                                   Stage/version
 #                                                                                 Model name              |
@@ -84,7 +85,7 @@ spark.table('turbine_hourly_features').withColumn("dbdemos_turbine_maintenance",
 
 # DBTITLE 1,Or in SQL directly
 # MAGIC %sql
-# MAGIC SELECT turbine_id, predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, percentiles_sensor_A, percentiles_sensor_B, percentiles_sensor_C, percentiles_sensor_D, percentiles_sensor_E, percentiles_sensor_F, location, model, state) as prediction FROM turbine_hourly_features
+# MAGIC SELECT turbine_id, predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, location, model, state) as prediction FROM turbine_hourly_features
 
 # COMMAND ----------
 
@@ -114,20 +115,58 @@ display(df)
 
 # COMMAND ----------
 
-dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPandas()
-dataset
+# MAGIC %md
+# MAGIC ## Real time model inference
+# MAGIC
+# MAGIC Let's now deploy our model behind a realtime model serving endpoint.
+# MAGIC
+# MAGIC We'll then use this endpoint in our GenAI Agentic demo to be able to fetch a turbine status in realtime
+# MAGIC
+
+# COMMAND ----------
+
+from mlflow.deployments import get_deploy_client
+
+client = get_deploy_client("databricks")
+try:
+    endpoint = client.create_endpoint(
+        name=MODEL_SERVING_ENDPOINT_NAME,
+        config={
+            "served_entities": [
+                {
+                    "name": "iot-maintenance-serving-endpoint",
+                    "entity_name": f"{catalog}.{db}.{model_name}",
+                    "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
+                    "workload_size": "Small",
+                    "scale_to_zero_enabled": True
+                }
+            ]
+        }
+    )
+except Exception as e:
+    if "already exists" in str(e):
+        print(f"Endpoint {catalog}.{db}.{MODEL_SERVING_ENDPOINT_NAME} already exists. Skipping creation.")
+    else:
+        raise e
+
+while client.get_endpoint(MODEL_SERVING_ENDPOINT_NAME)['state']['config_update'] == 'IN_PROGRESS':
+    time.sleep(10)
+
+# COMMAND ----------
+
+# MAGIC %md You can now view the status of the Feature Serving Endpoint in the table on the **Serving endpoints** page. Click **Serving** in the sidebar to display the page.
 
 # COMMAND ----------
 
 # DBTITLE 1,Call the REST API deployed using standard python
 from mlflow import deployments
 
-model_endpoint_name = "dbdemos_turbine_maintenance"
 
 def score_model(dataset):
   client = mlflow.deployments.get_deploy_client("databricks")
-  predictions = client.predict(endpoint=model_endpoint_name, inputs=dataset.to_dict(orient='split'))
+  predictions = client.predict(endpoint=MODEL_SERVING_ENDPOINT_NAME, inputs=dataset.to_dict(orient='split'))
 
+dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPandas()
 #Deploy your model and uncomment to run your inferences live!
 #score_model(dataset)
 
@@ -151,8 +190,8 @@ def score_model(dataset):
 # MAGIC
 # MAGIC Of course, this churn prediction can be re-used in our dashboard to analyse future churn and measure churn reduction. 
 # MAGIC
-# MAGIC The pipeline created with the Lakehouse will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
+# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC
-# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
+# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance AI/BI dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

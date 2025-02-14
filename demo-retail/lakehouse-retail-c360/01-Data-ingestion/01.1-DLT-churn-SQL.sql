@@ -255,7 +255,7 @@ from STREAM(live.churn_orders_bronze)
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE churn_features
+CREATE OR REFRESH MATERIALIZED VIEW churn_features
 COMMENT "Final user table with all information for Analysis / ML"
 AS 
   WITH 
@@ -306,7 +306,7 @@ AS
 -- COMMAND ----------
 
 -- DBTITLE 1,Call our model and predict churn in our pipeline
-CREATE LIVE TABLE churn_prediction 
+CREATE OR REFRESH MATERIALIZED VIEW churn_prediction 
 COMMENT "Customer at risk of churn"
   AS SELECT predict_churn(struct(user_id, 1 as age_group, canal, country, gender, order_count, total_amount, total_item, last_transaction, platform, event_count, session_count, days_since_creation, days_since_last_activity, days_last_event)) as churn_prediction, * FROM live.churn_features
 

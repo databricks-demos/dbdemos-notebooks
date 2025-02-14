@@ -56,7 +56,11 @@ if is_advanced_mlops_demo:
   xp_name = "advanced_mlops_churn_demo_experiment"
 
   # Create directory in case it doesn't exist
-  dbutils.fs.mkdirs(f'file:/Workspace{xp_path}')
+  try: 
+    dbutils.fs.mkdirs(f'file:/Workspace{xp_path}')
+  except:
+    import os 
+    os.makedirs(f'/Workspace{xp_path}', exist_ok=True)  
 
 client = MlflowClient()
 
@@ -235,9 +239,7 @@ except:
 from pyspark.sql.functions import col
 #from databricks.feature_store import FeatureStoreClient
 import mlflow
-
 import databricks
-from databricks import automl
 from datetime import datetime
 
 def get_automl_run(name):

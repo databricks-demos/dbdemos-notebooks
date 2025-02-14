@@ -36,30 +36,58 @@
     ],
     "data_folders": [
       {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/accounts",
+        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_accounts",
         "source_format": "parquet",
-        "target_table_name": "accounts",
+        "target_volume_folder": "raw_accounts",
         "target_format": "delta"
       },
       {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/opportunity",
+        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_opportunity",
         "source_format": "parquet",
-        "target_table_name": "opportunity",
+        "target_volume_folder": "raw_opportunity",
         "target_format": "delta"
       },
       {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/user",
+        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_user",
         "source_format": "parquet",
-        "target_table_name": "user",
+        "target_volume_folder": "raw_user",
         "target_format": "delta"
       },
       {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/opportunityhistory_cube",
+        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_dim_country",
         "source_format": "parquet",
-        "target_table_name": "opportunityhistory_cube",
+        "target_volume_folder": "raw_dim_country",
+        "target_format": "delta"
+      },
+      {
+        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_employee_hierarchy",
+        "source_format": "parquet",
+        "target_volume_folder": "raw_employee_hierarchy",
         "target_format": "delta"
       }
     ],
+    "sql_queries": [
+      ["CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_accounts TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the bronze table for accounts created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_accounts', format => 'parquet', pathGlobFilter => '*.parquet')",
+       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_opportunity TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the bronze table for opportunity created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_opportunity', format => 'parquet', pathGlobFilter => '*.parquet')",
+       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_user TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the bronze table for user created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_user', format => 'parquet', pathGlobFilter => '*.parquet')",
+       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.dim_country TBLPROPERTIES ( delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the reference table for countries created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_dim_country', format => 'parquet', pathGlobFilter => '*.parquet')",
+       "CREATE TABLE IF NOT EXISTS `{{CATALOG}}`.`{{SCHEMA}}`.employee_hierarchy TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the employee hierarchy table created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_employee_hierarchy', format => 'parquet', pathGlobFilter => '*.parquet')"
+       ]
+      ,
+      ["CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_accounts COMMENT 'Cleaned version of the raw accounts table' AS SELECT AccountId,  AccountName,  AccountIndustry,  AccountType,  AccountHQCountry,  AccountCountry,  NumberOfEmployees,  AnnualRevenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_accounts WHERE AccountId IS NOT NULL AND AccountName IS NOT NULL AND AccountIndustry IS NOT NULL AND NumberOfEmployees > 0",
+      "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_opportunity COMMENT 'Cleaned version of the raw opportunity table' AS SELECT  OpportunityId,  OpportunityType,  OpportunityName,  OpportunityDescription,  AccountId,  AgeInDays,  Amount,  OpportunityAmount,  CloseDate,  CreatedDate,  LeadSource,  OwnerId,  Probability,  StageName,  ForecastCategory,  NewExpansionBookingAnnual,  NewExpansionBookingAnnualWtd,  NewRecurringBookingsManual,  NewRecurringBookings,  BusinessType FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_opportunity WHERE OpportunityId IS NOT NULL AND OpportunityType IS NOT NULL AND AccountId IS NOT NULL AND AgeInDays IS NOT NULL AND AgeInDays > 0 AND CloseDate >= CreatedDate AND OwnerId IS NOT NULL AND Probability IS NOT NULL AND Probability >= 0 AND Probability <= 1 AND StageName IS NOT NULL",
+      "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_user COMMENT 'Cleaned version of the raw user table' AS SELECT UserId,  UserName,  UserTitle,  UserRole,  UserSegment,  UserRegion FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_user WHERE UserId IS NOT NULL AND UserName IS NOT NULL AND UserTitle IS NOT NULL AND UserRole IS NOT NULL"
+       ],
+      [
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.accounts AS SELECT  AccountId AS id,  AccountName AS name,  AccountIndustry AS industry,  AccountType AS type,  hq_c.region AS region_hq__c,  c.region AS region__c,  CASE    WHEN NumberOfEmployees <= 100 THEN 'SMB' WHEN NumberOfEmployees BETWEEN 101 AND 1000 THEN 'MM'    ELSE 'ENT'  END AS company_size_segment__c,  AnnualRevenue AS annualrevenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_accounts acc JOIN `{{CATALOG}}`.`{{SCHEMA}}`.dim_country hq_c ON acc.AccountHQCountry = hq_c.country JOIN `{{CATALOG}}`.`{{SCHEMA}}`.dim_country c ON acc.AccountCountry = c.country"
+      ],
+      [
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.opportunity AS SELECT OpportunityId AS opportunityid,  OpportunityType AS type,  OpportunityName AS name,  OpportunityDescription AS description,  AccountId AS accountid,  AgeInDays AS days_to_close,  Amount AS amount,  OpportunityAmount AS opportunity_amount,  CloseDate AS closedate,  CreatedDate AS createddate,  LeadSource AS leadsource,  OwnerId AS ownerid,  Probability AS probability,  Probability * 100 AS probability_per, StageName AS stagename,  ForecastCategory AS forecastcategory,  NewExpansionBookingAnnual AS New_Expansion_Booking_Annual__c,  NewExpansionBookingAnnualWtd AS New_Expansion_Booking_Annual_Wtd__c,  NewRecurringBookingsManual AS New_Recurring_Bookings_Manual__c,  NewRecurringBookings AS New_Recurring_Bookings__c,  BusinessType AS business_type__c,  a.industry AS industry,  a.name AS account_name,  a.region_hq__c AS region_hq__c,  a.region__c AS region,  a.company_size_segment__c,  CONCAT(a.region__c, '-', a.company_size_segment__c) AS region_size,  a.annualrevenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_opportunity o JOIN `{{CATALOG}}`.`{{SCHEMA}}`.accounts a ON o.AccountId = a.id"
+      ],
+      ["CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.opportunity_history AS SELECT createddate AS CreatedDate,  stagename AS DealStage,  region AS Region,  SUM(amount) AS SumDealAmount FROM `{{CATALOG}}`.`{{SCHEMA}}`.opportunity GROUP BY createddate, stagename, region",
+       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.user AS SELECT UserId AS id, UserName AS name,  UserTitle AS title,  e.managerid AS managerid,  UserRole AS role__c,  UserSegment AS segment__c,  UserRegion AS region__c FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_user u LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.employee_hierarchy e ON u.UserId = e.id"]
+    ]
+    ,
     "genie_rooms": [
       {
         "id": "sales-pipeline",
@@ -68,7 +96,7 @@
         "table_identifiers": [
           "{{CATALOG}}.{{SCHEMA}}.accounts",
           "{{CATALOG}}.{{SCHEMA}}.opportunity",
-          "{{CATALOG}}.{{SCHEMA}}.opportunityhistory_cube",
+          "{{CATALOG}}.{{SCHEMA}}.opportunity_history",
           "{{CATALOG}}.{{SCHEMA}}.user"
         ],
         "sql_instructions": [

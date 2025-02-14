@@ -31,7 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install  databricks-sdk==0.23.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.19.0 faker==33.1.0
+# MAGIC %pip install databricks-sdk==0.41.0 langchain-community==0.2.10 langchain-openai==0.1.19 mlflow==2.20.1 faker==33.1.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -450,7 +450,7 @@ displayHTML(answer['output'].replace('\n', '<br>'))
 # MAGIC $$;
 # MAGIC -- let's test our function:
 # MAGIC
-# MAGIC SELECT execute_python_code("return 'Hello Word! '* 3") as result;
+# MAGIC SELECT execute_python_code("return 'Hello World! '* 3") as result;
 
 # COMMAND ----------
 
@@ -509,43 +509,14 @@ displayHTML(answer.replace('\n', '<br>'))
 
 # COMMAND ----------
 
-# DBTITLE 1,Deploy the chain to MLFLow & UC
-def deploy_chain():
-  # For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
-  chain_config = {} # TODO: complete your chain config here
-  # Log the model to MLflow
-  with mlflow.start_run(run_name="basic_rag_bot"):
-    logged_chain_info = mlflow.langchain.log_model(
-            #Note: In classical ML, MLflow works by serializing the model object.  In generative AI, chains often include Python packages that do not serialize.  Here, we use MLflow's new code-based logging, where we saved our chain under the chain notebook and will use this code instead of trying to serialize the object.
-            lc_model=chain, #TODO: save it as a file instead: os.path.join(os.getcwd(), 'chain.py'),  # Chain code file e.g., /path/to/the/chain.py 
-            model_config=chain_config, # Chain configuration 
-            artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
-            input_example=input_data,
-            example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
-        )
-
-  MODEL_NAME = "tools_agent_demo"
-  MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
-  # Register to UC
-  uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
-
-
-  from databricks import agents
-  # Deploy to enable the Review APP and create an API endpoint
-  # Note: scaling down to zero will provide unexpected behavior for the chat app. Set it to false for a prod-ready application.
-  deployment_info = agents.deploy(MODEL_NAME_FQN, model_version=uc_registered_model_info.version, scale_to_zero=True)
-
-  instructions_to_reviewer = f"""## Instructions for Testing our Databricks Agent with Compound AI system
-
-  Your inputs are invaluable for the development team. By providing detailed feedback and corrections, you help us fix issues and improve the overall quality of the application. We rely on your expertise to identify any gaps or areas needing enhancement."""
-
-  # Add the user-facing instructions to the Review App
-  agents.set_review_instructions(MODEL_NAME_FQN, instructions_to_reviewer)
-
-# Uncomment to deploy
-# Note: we know this part might not work as expected, we're working on updating the demo, stay tuned.
-# For more example on how to deploy a chain, check example in dbdemos.install('llm-rag-chatbot')
-#deploy_chain()
+# MAGIC %md
+# MAGIC ## Deploying the agent as a model serving endpoint
+# MAGIC
+# MAGIC Databricks automatically generates all the required notebooks and setup for you to deploy these agents!
+# MAGIC
+# MAGIC To deploy them with the latest configuration, open [Databricks Playground ](/ml/playground), select the tools you want to use and click on the "Export Notebook" button on the top!
+# MAGIC
+# MAGIC This will generate notebooks pre-configured for you, including the review application to start testing and collecting your new model!
 
 # COMMAND ----------
 

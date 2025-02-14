@@ -1,8 +1,4 @@
 // Databricks notebook source
-dbutils.widgets.dropdown("reset_all_data", "false", Seq("true", "false"), "Reset all data")
-
-// COMMAND ----------
-
 // MAGIC %md-sandbox
 // MAGIC
 // MAGIC # Streaming on Databricks with Spark and Delta Lake - Scala version
@@ -60,7 +56,7 @@ dbutils.widgets.dropdown("reset_all_data", "false", Seq("true", "false"), "Reset
 
 // COMMAND ----------
 
-// MAGIC %run ../_resources/00-setup-scala $reset_all_data=$reset_all_data
+// MAGIC %run ../_resources/00-setup-scala $reset_all_data=false
 
 // COMMAND ----------
 
@@ -92,15 +88,15 @@ dbutils.widgets.dropdown("reset_all_data", "false", Seq("true", "false"), "Reset
 
 // DBTITLE 1,Read messages from Kafka and save them as events_raw
 //NOTE: the demo runs with Kafka, and dbdemos doesn't publically expose its demo kafka servers. Use your own IPs to run the demo properly
-//val kafkaBootstrapServersTLS = "b-1.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-3.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094,b-2.oetrta.kpgu3r.c1.kafka.us-west-2.amazonaws.com:9094"
-val kafkaBootstrapServersTLS = "<Replace by your own kafka servers>"
+val kafkaBootstrapServersTLS = "b-1.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-2.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092,b-3.oneenvkafka.fso631.c14.kafka.us-west-2.amazonaws.com:9092"
+//val kafkaBootstrapServersTLS = "<Replace by your own kafka servers>"
 
 val stream = spark
   .readStream
   // === Configurations for Kafka streams ===
   .format("kafka")
   .option("kafka.bootstrap.servers", kafkaBootstrapServersTLS) 
-  .option("kafka.security.protocol", "SSL")
+  .option("kafka.security.protocol", "PLAINTEXT") //SSL
   .option("subscribe", "dbdemos-sessions") // kafka topic
   .option("startingOffsets", "latest") // Consume messages from the end
   .option("maxOffsetsPerTrigger", "10000") // Control ingestion rate - backpressure
@@ -112,7 +108,7 @@ val stream = spark
   // === Write to the delta table ===
   .format("delta")
   .trigger(Trigger.ProcessingTime("20 seconds"))
-  .option("checkpointLocation", s"$cloudStoragePath/checkpoints/bronze")
+  .option("checkpointLocation", s"$volumeFolder/checkpoints/bronze")
   .option("mergeSchema", "true")
   .outputMode("append")
   .table("events_raw")

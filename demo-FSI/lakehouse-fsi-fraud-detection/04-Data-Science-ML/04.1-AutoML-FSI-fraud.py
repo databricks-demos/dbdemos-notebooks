@@ -233,9 +233,9 @@ try:
     automl_run = automl.classify(
         experiment_name = xp_name,
         experiment_dir = xp_path,
-        dataset = features.sample(0.05), #drastically reduce the training size to speedup the demo
+        dataset = features.sample(0.02), #drastically reduce the training size to speedup the demo
         target_col = "is_fraud",
-        timeout_minutes = 15
+        timeout_minutes = 20
     )
     #Make sure all users can access dbdemos shared experiment
     DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
@@ -243,7 +243,7 @@ except Exception as e:
     if "cannot import name 'automl'" in str(e):
         # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
         # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
-        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", features.sample(0.05).toPandas())
+        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", features.sample(0.02).toPandas())
     else:
         raise e
 

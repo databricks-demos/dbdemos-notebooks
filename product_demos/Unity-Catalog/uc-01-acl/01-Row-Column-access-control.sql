@@ -24,7 +24,7 @@
 -- MAGIC Similarly, column-level access control helps you mask or anonymise the data that is in certain columns of your table, depending on the user or service principal that is trying to access it. This is typically used to mask or remove sensitive PII informations from your end users (email, SSN...).
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-Row-Column-access-control&demo_name=uc-01-acl&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=01-Row-Column-access-control&demo_name=uc-01-acl&event=VIEW">
 
 -- COMMAND ----------
 
@@ -48,15 +48,6 @@
 
 -- COMMAND ----------
 
--- The demo will create and use the catalog defined:
-CREATE CATALOG IF NOT EXISTS main;
-CREATE SCHEMA IF NOT EXISTS uc_acl;
--- Make it default for future usage (we won't have to specify it)
-USE CATALOG main;
-USE SCHEMA uc_acl;
-
--- COMMAND ----------
-
 -- MAGIC %md 
 -- MAGIC ### 1.2 This demo uses groups to showcase fine grained access control.
 -- MAGIC
@@ -67,6 +58,10 @@ USE SCHEMA uc_acl;
 -- MAGIC If you are not a member of these groups, add yourself (or ask an admin) via workspace admin console:
 -- MAGIC
 -- MAGIC __Workspace settings / Identity and access / Groups__
+
+-- COMMAND ----------
+
+-- MAGIC %run ./_resources/00-setup
 
 -- COMMAND ----------
 

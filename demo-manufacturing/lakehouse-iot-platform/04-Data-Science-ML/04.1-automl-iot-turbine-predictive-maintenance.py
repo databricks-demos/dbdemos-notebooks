@@ -19,27 +19,25 @@
 # MAGIC   height: 35px}
 # MAGIC </style>
 # MAGIC <link href='https://fonts.googleapis.com/css?family=DM Sans' rel='stylesheet'>
-# MAGIC <div style="font-family: 'DM Sans'">
-# MAGIC   <div style="width: 500px; color: #1b3139; margin-left: 50px; float: left">
-# MAGIC     <div style="color: #ff5f46; font-size:80px">90%</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
+# MAGIC <div style="font-family: 'DM Sans'; display: flex; align-items: flex-start;">
+# MAGIC   <!-- Left Section -->
+# MAGIC   <div style="width: 50%; color: #1b3139; padding-right: 20px;">
+# MAGIC     <div style="color: #ff5f46; font-size:80px;">90%</div>
+# MAGIC     <div style="font-size:30px; margin-top: -20px; line-height: 30px;">
 # MAGIC       Enterprise applications will be AI-augmented by 2025 —IDC
 # MAGIC     </div>
-# MAGIC     <div style="color: #ff5f46; font-size:80px">$10T+</div>
-# MAGIC     <div style="font-size:30px;  margin-top: -20px; line-height: 30px;">
+# MAGIC     <div style="color: #ff5f46; font-size:80px;">$10T+</div>
+# MAGIC     <div style="font-size:30px; margin-top: -20px; line-height: 30px;">
 # MAGIC        Projected business value creation by AI in 2030 —PWC
 # MAGIC     </div>
 # MAGIC   </div>
-# MAGIC </div>
 # MAGIC
-# MAGIC
-# MAGIC
-# MAGIC   <div class="right_box">
-# MAGIC       But—huge challenges getting ML to work at scale!<br/><br/>
-# MAGIC       Most ML projects still fail before getting to production
+# MAGIC   <!-- Right Section -->
+# MAGIC   <div class="right_box", style="width: 50%; color: red; font-size: 30px; line-height: 1.5; padding-left: 20px;">
+# MAGIC     But—huge challenges getting ML to work at scale!<br/><br/>
+# MAGIC     In fact, most ML projects still fail before getting to production
 # MAGIC   </div>
-# MAGIC   
-# MAGIC <br style="clear: both">
+# MAGIC </div>
 # MAGIC
 # MAGIC ## Machine learning is data + transforms.
 # MAGIC
@@ -48,9 +46,9 @@
 # MAGIC Stepping back, all pipelines are data + code.
 # MAGIC
 # MAGIC
-# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-maintenance-4.png" />
+# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_marc.png" />
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/ds.png" style="float: left;" width="80px"> 
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/marc.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Marc, as a Data Scientist, needs a data + ML platform accelerating all the ML & DS steps:</h3>
 # MAGIC
 # MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">
@@ -62,7 +60,7 @@
 # MAGIC <div class="badge_b"><div class="badge">6</div> Monitoring</div>
 # MAGIC </div>
 # MAGIC
-# MAGIC **Marc needs A Lakehouse**. Let's see how we can deploy a Predictive Maintenance model in production within the Lakehouse
+# MAGIC **Marc needs a Data Intelligence Platform**. Let's see how we can deploy a Predictive Maintenance model in production with Databricks.
 
 # COMMAND ----------
 
@@ -86,7 +84,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.36.0 databricks-feature-engineering==0.7.0 mlflow==2.19.0
+# MAGIC %pip install --quiet databricks-sdk==0.40.0 databricks-feature-engineering==0.8.0 mlflow==2.20.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -106,9 +104,12 @@
 def plot(sensor_report):
   turbine_id = spark.table('turbine_training_dataset').where(f"abnormal_sensor = '{sensor_report}' ").limit(1).collect()[0]['turbine_id']
   #Let's explore a bit our datasets with pandas on spark.
-  df = spark.table('sensor_bronze').where(f"turbine_id == '{turbine_id}' ").orderBy('timestamp').pandas_api()
+  df = spark.table('sensor_bronze').where(f"turbine_id == '{turbine_id}' ").orderBy('timestamp').limit(500).pandas_api()
   df.plot(x="timestamp", y=["sensor_B"], kind="line", title=f'Sensor report: {sensor_report}').show()
 plot('ok')
+
+# COMMAND ----------
+
 plot('sensor_B')
 
 # COMMAND ----------
@@ -144,11 +145,28 @@ g.map_lower(sns.kdeplot).map_diag(sns.kdeplot, lw=3).map_upper(sns.regplot).add_
 # DBTITLE 1,Custom pandas transformation / code on top of your entire dataset (koalas)
  # Convert to pandas (koalas)
 dataset = turbine_dataset.pandas_api()
-# Drop columns we don't want to use in our model
-dataset = dataset.drop(columns=['end_time', 'start_time', '_rescued_data', 'country', 'lat', 'long', 'damaged'])
+
+# Select the columns we would like to use as ML Model features. #Note: we removed percentiles_sensor_A/B/C.. feature to make the demo easier
+columns = [
+    "turbine_id",
+    "hourly_timestamp",
+    "avg_energy",
+    "std_sensor_A",
+    "std_sensor_B",
+    "std_sensor_C",
+    "std_sensor_D",
+    "std_sensor_E",
+    "std_sensor_F",
+    "location",
+    "model",
+    "state",
+    "abnormal_sensor"
+]
+dataset = dataset[columns]
+
 # Drop missing values
 dataset = dataset.dropna()   
-dataset.describe()
+display(dataset)
 
 # COMMAND ----------
 
@@ -182,10 +200,10 @@ churn_feature_table = fe.create_table(
   name=f'{catalog}.{db}.turbine_hourly_features',
   primary_keys=['turbine_id','hourly_timestamp'],
   schema=dataset.spark.schema(),
-  description='These features are derived from the turbine_training_dataset table in the lakehouse.  We made some basic transformations and removed NA value.'
+  description='These features are derived from the turbine_training_dataset table in the data intelligence platform.  We made some basic transformations and removed NA value.'
 )
 
-fe.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.turbine_hourly_features')
+fe.write_table(df=dataset.drop_duplicates(subset=['turbine_id', 'hourly_timestamp']).to_spark(), name=f'{catalog}.{db}.turbine_hourly_features')
 features = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features')
 display(features)
 
@@ -225,24 +243,6 @@ display(features)
 
 # COMMAND ----------
 
-# DBTITLE 1,We have already started a run for you, you can explore it here:
-from databricks import automl
-xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
-xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-
-training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = training_dataset,
-    target_col = "abnormal_sensor",
-    timeout_minutes = 10
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
-
-# COMMAND ----------
-
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
@@ -270,28 +270,27 @@ except Exception as e:
 # MAGIC %md
 # MAGIC AutoML saved our best model in the MLFlow registry. Open the experiment from the AutoML run to explore its artifact and analyze the parameters used, including traceability to the notebook used for its creation.
 # MAGIC
-# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API.
+# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API. Let' register the model to Unity Catalog and move it to production.
+# MAGIC
+# MAGIC You can programatically get the last best run from your automl training:
+# MAGIC ```
+# MAGIC from mlflow import MlflowClient
+# MAGIC
+# MAGIC # retrieve best model trial run
+# MAGIC trial_id = automl_run.best_trial.mlflow_run_id
+# MAGIC model_uri = "runs:/{}/model".format(automl_run.best_trial.mlflow_run_id)
+# MAGIC #Use Databricks Unity Catalog to save our model
+# MAGIC latest_model = mlflow.register_model(model_uri, f"{catalog}.{db}.{model_name}")
+# MAGIC # Flag it as Production ready using UC Aliases
+# MAGIC MlflowClient().set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+# MAGIC ```
 
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ### The model generated by AutoML is ready to be used in our DLT pipeline to detect Wind Turbine requiring potential maintenance.
 # MAGIC
-# MAGIC Our Data Engineer can now easily retrive the model `dbdemos_turbine_maintenance` from our Auto ML run and detect anomalies within our Delta Live Table Pipeline.<br>
-# MAGIC Re-open the DLT pipeline to see how this is done.
+# MAGIC ### Next step: Explore the best notebook generated by Databricks AutoML and deploy our model in the registry!
 # MAGIC
-# MAGIC #### Adjust spare stock based on predictive maintenance result
+# MAGIC Databricks AutoML generate state of the art notebooks for you to deploy your models!
 # MAGIC
-# MAGIC These predictions can be re-used in our dashboard to not only measure equipment failure probability, but take action to schedule maintenance and ajust spare part stock accordingly. 
-# MAGIC
-# MAGIC The pipeline created with the Lakehouse will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $Million / month!
-# MAGIC
-# MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
-# MAGIC
-# MAGIC <a dbdemos-dashboard-id="turbine-predictive" href="/sql/dashboardsv3/01ef3a4263bc1180931f6ae733179956">Open the Predictive Maintenance DBSQL dashboard</a> | [Go back to the introduction]($../00-IOT-wind-turbine-introduction-lakehouse)
-# MAGIC
-# MAGIC #### More advanced model deployment (batch or serverless realtime)
-# MAGIC
-# MAGIC We can also use the model `dbdemos_turbine_maintenance` and run our predict in a standalone batch or realtime inferences! 
-# MAGIC
-# MAGIC Next step:  [Explore the generated Auto-ML notebook]($./04.2-automl-generated-notebook-iot-turbine) and [Run inferences in production]($./04.3-running-inference-iot-turbine)
+# MAGIC Open [the generated Auto-ML notebook]($./04.2-automl-generated-notebook-iot-turbine) and deploy this model in production.

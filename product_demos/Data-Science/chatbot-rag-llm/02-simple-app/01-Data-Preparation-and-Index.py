@@ -24,8 +24,8 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install required external libraries 
-# MAGIC %pip install --quiet mlflow==2.18.0 lxml==4.9.3 transformers==4.30.2 langchain==0.2.1 databricks-vectorsearch
+# DBTITLE 1,Install required external libraries
+# MAGIC %pip install --quiet mlflow[databricks]==2.20.1 lxml==4.9.3 transformers==4.30.2 langchain==0.2.1 databricks-vectorsearch==0.44 bs4==0.0.2
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -234,7 +234,7 @@ print(embeddings)
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/llm-rag-data-prep-3.png?raw=true" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC With Managed embeddings, Databricks will automatically compte the embeddings for us. This is the easier mode to get started with Databricks.
+# MAGIC With Managed embeddings, Databricks will automatically compute the embeddings for us. This is the easier mode to get started with Databricks.
 # MAGIC
 # MAGIC A vector search index uses a **Vector search endpoint** to serve the embeddings (you can think about it as your Vector Search API endpoint).
 # MAGIC

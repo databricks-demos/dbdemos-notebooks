@@ -129,19 +129,26 @@ training_dataset = credit_bureau_label.join(features_set, "cust_id", "inner")
 
 # COMMAND ----------
 
+# Enable remote filtering to avoid self-join issues
+spark.conf.set("spark.databricks.remoteFiltering.blockSelfJoins", "false")
+
 major_df = training_dataset.filter(col("defaulted") == 0)
 minor_df = training_dataset.filter(col("defaulted") == 1)
 
-# duplicate the minority rows
+# Duplicate the minority rows
 oversampled_df = minor_df.union(minor_df)
 
-# downsample majority rows
-undersampled_df = major_df.sample(oversampled_df.count()/major_df.count()*3, 42)
+# Downsample majority rows
+undersampled_df = major_df.sample(oversampled_df.count() / major_df.count() * 3, 42)
 
-# combine both oversampled minority rows and undersampled majority rows, this will improve our balance while preseving enough information.
+# Combine both oversampled minority rows and undersampled majority rows
 train_df = undersampled_df.unionAll(oversampled_df).drop('cust_id').na.fill(0)
-# Save it as a table to be able to select it with the AutoML UI.
+
+# Save it as a table to be able to select it with the AutoML UI
 train_df.write.mode('overwrite').saveAsTable('credit_risk_train_df')
+train_df = spark.table('credit_risk_train_df')
+
+# Visualize the credit default ratio
 px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='defaulted', title='Credit default ratio')
 
 # COMMAND ----------

@@ -11,7 +11,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python sdk
-# MAGIC %pip install --quiet mlflow==2.14.3
+# MAGIC %pip install --quiet mlflow==2.19
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -79,10 +79,12 @@ def clean_churn_features(dataDF: DataFrame) -> DataFrame:
 
   # Convert to pandas on spark dataframe
   data_psdf = dataDF.pandas_api()
-
   # Convert some columns
-  data_psdf["senior_citizen"] = data_psdf["senior_citizen"].map({1 : "Yes", 0 : "No"})
-  data_psdf = data_psdf.astype({"total_charges": "double", "senior_citizen": "string"})
+  data_psdf = data_psdf.astype({"senior_citizen": "string"})
+  data_psdf["senior_citizen"] = data_psdf["senior_citizen"].map({"1" : "Yes", "0" : "No"})
+
+  data_psdf["total_charges"] = data_psdf["total_charges"].apply(lambda x: float(x) if x.strip() else 0)
+
 
   # Fill some missing numerical values with 0
   data_psdf = data_psdf.fillna({"tenure": 0.0})
@@ -199,27 +201,37 @@ spark.sql(f"""COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The feat
 # COMMAND ----------
 
 # DBTITLE 1,Run 'baseline' autoML experiment in the back-ground
-from databricks import automl
 from datetime import datetime
 
 xp_path = "/Shared/dbdemos/experiments/mlops"
 xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 
-# Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
 churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
+try: 
+    from databricks import automl 
 
-automl_run = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = churn_features,
-    target_col = "churn",
-    split_col = "split", #This required DBRML 15.3+
-    timeout_minutes = 10,
-    exclude_cols ='customer_id'
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+    # Add/Force semantic data types for specific colums (to facilitate autoML and make sure it doesn't interpret it as categorical)
 
+    automl_run = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = churn_features,
+        target_col = "churn",
+        split_col = "split", #This required DBRML 15.3+
+        timeout_minutes = 10,
+        exclude_cols ='customer_id'
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+
+except Exception as e: 
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # adding a temporary workaround to make sure this works well for now -- ignore this for classic run
+        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", churn_features.toPandas()) 
+    else: 
+        raise e
+    
 # COMMAND ----------
 
 # MAGIC %md

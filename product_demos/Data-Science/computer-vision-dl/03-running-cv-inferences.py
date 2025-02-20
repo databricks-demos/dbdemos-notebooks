@@ -32,6 +32,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.20.2
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # DBTITLE 1,Init the demo
 # MAGIC %run ./_resources/00-init $reset_all_data=false
 
@@ -64,9 +69,7 @@ import torch
 #Make sure to leverage the GPU when available
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
-pipeline = mlflow.transformers.load_model(
-  MODEL_URI, 
-  device=device.index)
+pipeline = mlflow.transformers.load_model(MODEL_URI, device=device.index)
 
 # COMMAND ----------
 
@@ -112,7 +115,10 @@ import torch
 from typing import Iterator
 
 #Only batch the inferences in our udf by 1000 as images can take some memory
-spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 1000)
+try:
+  spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 1000)
+except:
+  pass
 
 @pandas_udf("struct<score: float, label: string>")
 def detect_damaged_pcb(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
@@ -124,7 +130,7 @@ def detect_damaged_pcb(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFram
 
 # COMMAND ----------
 
-display(df.select('filename', 'content').withColumn("prediction", detect_damaged_pcb("content")))
+display(df.limit(3).select('filename', 'content').withColumn("prediction", detect_damaged_pcb("content")))
 
 # COMMAND ----------
 
@@ -166,24 +172,13 @@ class RealtimeCVModelWrapper(mlflow.pyfunc.PythonModel):
 
 # COMMAND ----------
 
-import os
-
-# Make sure we use the CPU as we will use a serverless CPU-based endpoint later
-# See https://github.com/mlflow/mlflow/issues/12871
-os.environ["MLFLOW_HUGGINGFACE_USE_DEVICE_MAP"] = "false"
-
-# COMMAND ----------
-
 # DBTITLE 1,Load our image-based model, wrap it as base64-based, and test it
 def to_base64(b):
   return base64.b64encode(b).decode("ascii")
 
 
 # Build our final hugging face pipeline by loading the model from the registry
-pipeline_cpu = mlflow.transformers.load_model(
-  MODEL_URI, 
-  return_type="pipeline", 
-  device=torch.device("cpu"))
+pipeline_cpu = mlflow.transformers.load_model(MODEL_URI, return_type="pipeline", device=torch.device("cpu"))
 
 # Wrap our model as a PyFuncModel so that it can be used as a realtime serving endpoint
 rt_model = RealtimeCVModelWrapper(pipeline_cpu)

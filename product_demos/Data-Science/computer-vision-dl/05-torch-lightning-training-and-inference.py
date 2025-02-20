@@ -8,6 +8,11 @@
 # MAGIC
 # MAGIC This notebook is more advanced as the Hugging Face one, but gives you more control over the training.
 # MAGIC
+# MAGIC %md-sandbox
+# MAGIC <div style="background-color: #d9f0ff; border-radius: 10px; padding: 15px; margin: 10px 0; font-family: Arial, sans-serif;">
+# MAGIC   <strong>Note:</strong> This advanced deep learning content has been tailored to work on GPUs using Databricks Classic compute (not serverless). <br/>
+# MAGIC   We'll revisit this content soon to support the serverless AI runtime - stay tuned.
+# MAGIC </div>
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcomputer-vision-dl%2Flightning&dt=ML">
@@ -15,7 +20,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Setup - Install deltatorch  & lightning
-# MAGIC %pip install pytorch-lightning git+https://github.com/delta-incubator/deltatorch.git
+# MAGIC %pip install pytorch-lightning==2.5.0 git+https://github.com/delta-incubator/deltatorch.git databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4 evaluate==0.4.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -54,8 +59,11 @@ train, test = training_df.randomSplit([0.7, 0.3], seed=42)
 # Note that for deltatorch to be able to split and distribute the data, we're adding an extra incremental id column.
 w = Window().orderBy(rand())
 
-train.withColumn("id", row_number().over(w)).write.mode("overwrite").save("/tmp/dbdemos/pcb_torch_delta/train")
-test.withColumn("id", row_number().over(w)).write.mode("overwrite").save("/tmp/dbdemos/pcb_torch_delta/test")
+train_path = f"/Volumes/{catalog}/{db}/{volume_name}/pcb_torch_delta/train"
+test_path = f"/Volumes/{catalog}/{db}/{volume_name}/pcb_torch_delta/test"
+
+train.withColumn("id", row_number().over(w)).write.mode("overwrite").save(train_path)
+test.withColumn("id", row_number().over(w)).write.mode("overwrite").save(test_path)
 
 # COMMAND ----------
 
@@ -235,7 +243,7 @@ xp = DBDemos.init_experiment_for_batch("computer-vision-dl", "pcb_torch")
 db_host = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
 db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
 
-ckpt_path = f"/dbfs/dbdemos/cv_torch/checkpoints"
+ckpt_path = f"/Volumes/{catalog}/{db}/{volume_name}/cv_torch/checkpoints"
 
 def train_model(dm, num_gpus=1, single_node=True):
     # We put them into these environment variables as this is where mlflow will look by default
@@ -328,9 +336,7 @@ def train_model(dm, num_gpus=1, single_node=True):
 
 # COMMAND ----------
 
-delta_dataloader = DeltaDataModule(
-  "/dbfs/tmp/dbdemos/pcb_torch_delta/train", 
-  "/dbfs/tmp/dbdemos/pcb_torch_delta/test")
+delta_dataloader = DeltaDataModule(train_path, test_path)
 
 # COMMAND ----------
 

@@ -29,6 +29,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4 evaluate==0.4.3
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # DBTITLE 1,Demo Initialization
 # MAGIC %run ./_resources/00-init $reset_all_data=false
 
@@ -55,7 +60,9 @@ display(df.limit(10))
 # DBTITLE 1,Create the transformer dataset from a spark dataframe (Delta Table)   
 from datasets import Dataset
 
-dataset = Dataset.from_spark(df).rename_column("content", "image")
+#Note: from_spark support coming with serverless compute - we'll use from_pandas for this simple demo having a small dataset
+#dataset = Dataset.from_spark(df), cache_dir="/tmp/hf_cache/train").rename_column("content", "image")
+dataset = Dataset.from_pandas(df.toPandas()).rename_column("content", "image")
 
 splits = dataset.train_test_split(test_size=0.2, seed = 42)
 train_ds = splits['train']
@@ -85,7 +92,9 @@ model_checkpoint = "google/vit-base-patch16-224"
 
 #Check GPU availability
 if not torch.cuda.is_available(): # is gpu
-  raise Exception("Please use a GPU-cluster for model training, CPU instances will be too slow")
+  #Use a smaller model for cpu demo
+  model_checkpoint = "WinKawaks/vit-tiny-patch16-224" 
+  print("Please use a GPU-cluster for model training, CPU instances will be too slow. In serverless, open the Environement tab and select a GPU (might require a preview).")
 
 # COMMAND ----------
 
@@ -162,18 +171,19 @@ model = AutoModelForImageClassification.from_pretrained(
 
 # DBTITLE 1,Training parameters
 model_name = model_checkpoint.split("/")[-1]
-batch_size = 32 # batch size for training and evaluation
+batch_size = 32  # batch size for training and evaluation
 
 args = TrainingArguments(
     f"/tmp/huggingface/pcb/{model_name}-finetuned-leaf",
     remove_unused_columns=False,
-    evaluation_strategy = "epoch",
-    save_strategy = "epoch",
+    evaluation_strategy="epoch",
+    save_strategy="epoch",
     learning_rate=5e-5,
     per_device_train_batch_size=batch_size,
     gradient_accumulation_steps=1,
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=20,
+    no_cuda=not torch.cuda.is_available(),  # Run on CPU for resnet to make it easier
+    num_train_epochs=20, 
     warmup_ratio=0.1,
     logging_steps=10,
     load_best_model_at_end=True,

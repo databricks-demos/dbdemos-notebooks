@@ -111,24 +111,23 @@ display(spark.table("raw_documentation").limit(2))
 # COMMAND ----------
 
 # DBTITLE 1,Splitting our html pages in smaller chunks
-from langchain.text_splitter import HTMLHeaderTextSplitter, RecursiveCharacterTextSplitter
+from langchain.text_splitter import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from transformers import AutoTokenizer, OpenAIGPTTokenizer
 
 max_chunk_size = 500
 
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, chunk_size=max_chunk_size, chunk_overlap=50)
-html_splitter = HTMLHeaderTextSplitter(headers_to_split_on=[("h2", "header2")])
+md_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[("##", "header2")])
 
 # Split on H2, but merge small h2 chunks together to avoid having too small chunks. 
 def split_html_on_h2(html, min_chunk_size = 20, max_chunk_size=500):
   if not html:
       return []
-  h2_chunks = html_splitter.split_text(html)
   chunks = []
   previous_chunk = ""
   # Merge chunks together to add text before h2 and avoid too small docs.
-  for c in h2_chunks:
+  for c in md_splitter.split_text(html):
     # Concat the h2 (note: we could remove the previous chunk to avoid duplicate h2)
     content = c.metadata.get('header2', "") + "\n" + c.page_content
     if len(tokenizer.encode(previous_chunk + content)) <= max_chunk_size/2:

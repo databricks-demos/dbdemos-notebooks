@@ -25,7 +25,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install --quiet mlflow[databricks]==2.20.1 lxml==4.9.3 transformers==4.30.2 langchain==0.2.1 databricks-vectorsearch==0.44 bs4==0.0.2 markdownify==0.14.1
+# MAGIC %pip install --quiet mlflow[databricks]==2.20.2 lxml==4.9.3 transformers==4.49.0 langchain==0.3.19 databricks-vectorsearch==0.49 bs4==0.0.2 markdownify==0.14.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

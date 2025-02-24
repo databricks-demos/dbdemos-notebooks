@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # Order is important here. Install MLflow last.
-%pip install textstat==0.7.3 databricks-genai==1.1.7 openai==1.30.1 langchain==0.3.19 langchain-community==0.2.0 langchain_text_splitters==0.2.0 markdown==3.6
+%pip install textstat==0.7.3 databricks-genai==1.1.7 openai==1.30.1 langchain==0.3.19 langchain-community==0.3.18 langchain_text_splitters==0.3.6 markdown==3.6
 %pip install databricks-sdk==0.27.1
 %pip install "transformers==4.49.0" "mlflow==2.12.2"
 dbutils.library.restartPython()

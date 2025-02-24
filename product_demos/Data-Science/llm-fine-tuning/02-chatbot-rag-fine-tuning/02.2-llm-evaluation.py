@@ -55,7 +55,7 @@ endpoint_config = EndpointCoreConfigInput(
             entity_name="system.ai.llama_v3_2_3b_instruct", #Make sure you're using the same base model as the one you're fine-tuning on for relevant evaluation!
             entity_version=2,
             min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
-            max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
+            max_provisioned_throughput=10900,# The maximum tokens per second that the endpoint can scale up to.
             scale_to_zero_enabled=True
         )
     ]

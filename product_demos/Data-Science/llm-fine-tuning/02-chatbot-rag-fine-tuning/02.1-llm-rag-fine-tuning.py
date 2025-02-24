@@ -244,7 +244,7 @@ endpoint_config = EndpointCoreConfigInput(
             entity_name=registered_model_name,
             entity_version=get_latest_model_version(registered_model_name),
             min_provisioned_throughput=0,
-            max_provisioned_throughput=100,
+            max_provisioned_throughput=10900,
             scale_to_zero_enabled=True
         )
     ]

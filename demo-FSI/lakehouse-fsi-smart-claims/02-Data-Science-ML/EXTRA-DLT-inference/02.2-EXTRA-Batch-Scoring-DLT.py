@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install mlflow==2.20.2 transformers==4.49.0 torch==1.13.1 torchvision==0.14.1 accelerate==0.20.3 importlib-metadata==6.8.0  zipp==3.16.2 Pillow==9.2.0 filelock==3.6.0
+# MAGIC %pip install mlflow==2.20.2 transformers==4.49.0 torch==1.13.1 torchvision==0.20.1 accelerate==1.4.0 importlib-metadata==6.8.0  zipp==3.16.2 Pillow==9.2.0 filelock==3.6.0
 
 # COMMAND ----------
 

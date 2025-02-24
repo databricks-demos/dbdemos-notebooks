@@ -332,9 +332,6 @@ with mlflow.start_run(run_name="basic_rag_bot"):
           model_config=chain_config, # Chain configuration 
           artifact_path="chain", # Required by MLflow, the chain's code/config are saved in this directory
           input_example=input_example,
-          pip_requirements=[
-            "mlflow", "cloudpickle", "databricks-connect", "databricks-vectorsearch", "google-cloud-storage", "ipykernel", 
-            "langchain-community", "langchain", "numpy", "pandas","pyarrow", "pydantic", "pyspark"], #Note: pip requirements added as a temporary wokaround waiting for mlflow 2.20 to be released.
           example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema,
           # Specify resources for automatic authentication passthrough
           resources=[

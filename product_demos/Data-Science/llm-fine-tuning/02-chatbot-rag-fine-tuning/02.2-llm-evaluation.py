@@ -137,12 +137,14 @@ def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-meta-llama-
     llm = ChatDatabricks(endpoint=llm_endoint_name, temperature=0.1)
     chain = build_chain(llm)
     #For each entry, call the endpoint
+    print(f'getting predictions for {llm_endoint_name}')
     eval_dataset["prediction"] = chain.with_retry(stop_after_attempt=2) \
                                       .batch(eval_dataset[["context", "question"]].to_dict(orient="records"), config={"max_concurrency": 4})
 
     #starts an mlflow run to evaluate the model
-    with mlflow.start_run(run_name="eval_"+llm_endoint_name) as run:
+    with mlflow.start_run(run_name=run_name) as run:
         eval_df = eval_dataset.reset_index(drop=True).rename(columns={"question": "inputs"})
+        print('Evaluating RAG...')
         results = mlflow.evaluate(
             data=eval_df,
             targets="answer",
@@ -156,9 +158,9 @@ def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-meta-llama-
         return results
     
 #Evaluate the base foundation model
-baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_fine_tuning_rag")
+baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_llm_not_fine_tuned")
 #Evaluate the fine tuned model
-fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_fine_tuning_rag")
+fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_llm_fine_tuned")
 
 # COMMAND ----------
 
@@ -170,8 +172,8 @@ fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge 
 # MAGIC
 # MAGIC You can now open the experiment and compare the 2 runs:
 # MAGIC
-# MAGIC * `eval_dbdemos_llm_not_fine_tuned` against the baseline model
-# MAGIC * `eval_dbdemos_llm_fine_tuned` on your baseline model
+# MAGIC * `dbdemos_llm_not_fine_tuned` against the baseline model
+# MAGIC * `dbdemos_llm_fine_tuned` on your baseline model
 # MAGIC
 # MAGIC Here is an example. As you can see, our metrics got improved on the fine tuning model!
 # MAGIC

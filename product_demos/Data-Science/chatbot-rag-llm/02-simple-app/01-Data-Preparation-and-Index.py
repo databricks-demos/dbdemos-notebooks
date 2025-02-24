@@ -123,11 +123,10 @@ md_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[("##", "header2")]
 
 # Split on H2, but merge small h2 chunks together to avoid having too small chunks. 
 def split_html_on_h2(html, min_chunk_size=20, max_chunk_size=500):
-    def remove_base64_images(html):
-        return re.sub(r'data:image\/[a-zA-Z]+;base64,[^\s"]+', '', html)
     if not html:
         return []
-    html = remove_base64_images(html)
+    #removes b64 images captured in the md    
+    html = re.sub(r'data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=\n]+', '', html, flags=re.MULTILINE)
     chunks = []
     previous_chunk = ""
     for c in md_splitter.split_text(html):

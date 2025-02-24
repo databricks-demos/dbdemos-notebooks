@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.16.0 mlflow[databricks]==2.20.2 databricks-vectorsearch==0.49 langchain==0.3.19 langchain_core==0.3.37 bs4==0.0.2 markdownify==0.14.1 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
+# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.16.0 databricks-langchain==0.3.0 mlflow[databricks]==2.20.2 databricks-vectorsearch==0.49 langchain==0.3.19 langchain_core==0.3.37 bs4==0.0.2 markdownify==0.14.1 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -178,8 +178,12 @@ chain_config = {
 
 # COMMAND ----------
 
+model_config.get("vector_search_index")
+
+# COMMAND ----------
+
 from databricks.vector_search.client import VectorSearchClient
-from langchain_community.vectorstores import DatabricksVectorSearch
+from databricks_langchain.vectorstores import DatabricksVectorSearch
 from langchain.schema.runnable import RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 
@@ -190,15 +194,10 @@ mlflow.langchain.autolog()
 model_config = mlflow.models.ModelConfig(development_config=chain_config)
 
 ## Turn the Vector Search index into a LangChain retriever
-vs_client = VectorSearchClient(disable_notice=True)
-vs_index = vs_client.get_index(
-    endpoint_name=model_config.get("vector_search_endpoint_name"),
-    index_name=model_config.get("vector_search_index"),
-)
 vector_search_as_retriever = DatabricksVectorSearch(
-    vs_index,
-    text_column="content",
-        columns=["id", "content", "url"],
+    endpoint=model_config.get("vector_search_endpoint_name"),
+    index_name=model_config.get("vector_search_index"),
+    columns=["id", "content", "url"],
 ).as_retriever(search_kwargs={"k": 3})
 
 # Method to format the docs returned by the retriever into the prompt (keep only the text from chunks)
@@ -232,7 +231,7 @@ display_txt_as_html(relevant_docs)
 # COMMAND ----------
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.chat_models import ChatDatabricks
+from databricks_langchain.chat_models import ChatDatabricks
 from operator import itemgetter
 
 prompt = ChatPromptTemplate.from_messages(
@@ -328,6 +327,7 @@ init_experiment_for_batch("chatbot-rag-llm-first-step", "simple")
 # COMMAND ----------
 
 # DBTITLE 1,Deploy the chain in Unity Catalog
+from mlflow.models.resources import DatabricksVectorSearchIndex, DatabricksServingEndpoint
 # Log the model to MLflow
 with mlflow.start_run(run_name="basic_rag_bot"):
   logged_chain_info = mlflow.langchain.log_model(
@@ -339,7 +339,12 @@ with mlflow.start_run(run_name="basic_rag_bot"):
           pip_requirements=[
             "mlflow", "cloudpickle", "databricks-connect", "databricks-vectorsearch", "google-cloud-storage", "ipykernel", 
             "langchain-community", "langchain", "numpy", "pandas","pyarrow", "pydantic", "pyspark"], #Note: pip requirements added as a temporary wokaround waiting for mlflow 2.20 to be released.
-          example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema
+          example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema,
+          # Specify resources for automatic authentication passthrough
+          resources=[
+            DatabricksVectorSearchIndex(index_name=model_config.get("vector_search_index")),
+            DatabricksServingEndpoint(endpoint_name=model_config.get("llm_model_serving_endpoint_name"))
+          ]
       )
 
 MODEL_NAME = "basic_rag_demo"

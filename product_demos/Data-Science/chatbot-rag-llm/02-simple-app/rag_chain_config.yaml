@@ -3,7 +3,7 @@ databricks_resources:
   vector_search_endpoint_name: dbdemos_vs_endpoint
 input_example:
   messages:
-  - content: Sample user question
+  - content: What is Apache Spark?
     role: user
 llm_config:
   llm_parameters:
@@ -23,7 +23,9 @@ llm_config:
   - chat_history
   - question
 retriever_config:
-  chunk_template: 'Passage: {chunk_text}'
+  chunk_template: 'Passage: {chunk_text}
+
+    '
   data_pipeline_tag: poc
   parameters:
     k: 5

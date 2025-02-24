@@ -1,12 +1,12 @@
-from langchain_community.embeddings import DatabricksEmbeddings
+from databricks_langchain.embeddings import DatabricksEmbeddings
 from operator import itemgetter
 import mlflow
 import os
 
 from databricks.vector_search.client import VectorSearchClient
 
-from langchain_community.chat_models import ChatDatabricks
-from langchain_community.vectorstores import DatabricksVectorSearch
+from databricks_langchain.chat_models import ChatDatabricks
+from databricks_langchain.vectorstores import DatabricksVectorSearch
 
 from langchain_core.runnables import RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
@@ -36,19 +36,14 @@ databricks_resources = model_config.get("databricks_resources")
 retriever_config = model_config.get("retriever_config")
 llm_config = model_config.get("llm_config")
 
-# Connect to the Vector Search Index
-vs_client = VectorSearchClient(disable_notice=True)
-vs_index = vs_client.get_index(
-    endpoint_name=databricks_resources.get("vector_search_endpoint_name"),
-    index_name=retriever_config.get("vector_search_index"),
-)
 vector_search_schema = retriever_config.get("schema")
 
 embedding_model = DatabricksEmbeddings(endpoint=retriever_config.get("embedding_model"))
 
 # Turn the Vector Search index into a LangChain retriever
 vector_search_as_retriever = DatabricksVectorSearch(
-    vs_index,
+    endpoint=databricks_resources.get("vector_search_endpoint_name"),
+    index_name=retriever_config.get("vector_search_index"),
     text_column=vector_search_schema.get("chunk_text"),
     embedding=embedding_model, 
     columns=[

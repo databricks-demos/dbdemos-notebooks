@@ -178,10 +178,6 @@ chain_config = {
 
 # COMMAND ----------
 
-model_config.get("vector_search_index")
-
-# COMMAND ----------
-
 from databricks.vector_search.client import VectorSearchClient
 from databricks_langchain.vectorstores import DatabricksVectorSearch
 from langchain.schema.runnable import RunnableLambda

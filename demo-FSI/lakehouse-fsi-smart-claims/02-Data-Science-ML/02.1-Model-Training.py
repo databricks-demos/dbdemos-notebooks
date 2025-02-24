@@ -284,7 +284,7 @@ client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="pr
 predict_damage_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod")
 columns = predict_damage_udf.metadata.get_input_schema().input_names()
 #Run the inferences
-spark.table('training_dataset').withColumn("damage_prediction", predict_damage_udf(*columns)).write.saveAsTable('damage_predictions')
+spark.table('training_dataset').withColumn("damage_prediction", predict_damage_udf(*columns)).write.mode('overwrite').saveAsTable('damage_predictions')
 predictions = spark.table('damage_predictions')
 display(predictions)
 

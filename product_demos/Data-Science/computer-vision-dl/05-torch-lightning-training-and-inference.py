@@ -20,7 +20,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Setup - Install deltatorch  & lightning
-# MAGIC %pip install pytorch-lightning==2.5.0 git+https://github.com/delta-incubator/deltatorch.git databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.49.0 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4 evaluate==0.4.3
+# MAGIC %pip install pytorch-lightning==2.5.0 git+https://github.com/delta-incubator/deltatorch.git databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.49.0 tf-keras==2.17.0 accelerate==1.4.0 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4 evaluate==0.4.3
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

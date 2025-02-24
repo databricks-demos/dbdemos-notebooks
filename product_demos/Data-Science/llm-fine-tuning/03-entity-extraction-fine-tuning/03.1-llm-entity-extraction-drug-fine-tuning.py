@@ -11,9 +11,7 @@
 
 # DBTITLE 1,Library installs
 # Let's start by installing our dependencies
-%pip install databricks-genai==1.1.7 mlflow==2.16.2 langchain-community==0.3.18 transformers==4.49.0 datasets==3.3.2 huggingface-hub==0.27.1
-%pip install databricks-sdk==0.40.0
-
+%pip install databricks-genai==1.1.7 mlflow==2.19.0 langchain-community==0.3.18 transformers==4.49.0 datasets==3.2.0 huggingface-hub==0.27.1 databricks-sdk==0.40.0
 dbutils.library.restartPython()
 
 # COMMAND ----------

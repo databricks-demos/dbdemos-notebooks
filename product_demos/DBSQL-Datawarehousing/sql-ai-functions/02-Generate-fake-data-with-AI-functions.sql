@@ -76,22 +76,7 @@ CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING, response_format STRING)
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL Analyst simply use the wrapper
-SELECT ASK_LLM_MODEL
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-("Generate a short product review for a red dress. The customer is very happy with the article.", "{'type': 'string'}")
+SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The customer is very happy with the article.", "{'type': 'string'}")
 
 -- COMMAND ----------
 

@@ -186,6 +186,15 @@ SELECT review_id,
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ### Extra: Create an Production Ready Pipeline using Delta Live Table
+-- MAGIC
+-- MAGIC We can turn the steps in this notebook into a production ready Delta Live Table pipeline with AI SQL Functions
+-- MAGIC
+-- MAGIC Open [04-create-end-to-end-DLT-workflow]($./04-create-end-to-end-DLT-workflow) for more details.
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ## You're now ready to process your text using external LLM models!
 -- MAGIC
 -- MAGIC We've seen that the lakehouse provide advanced AI capabilities, not only you can leverage external LLM APIs, but you can also build your own LLM with Databricks GenAI applications!
@@ -200,7 +209,11 @@ SELECT review_id,
 -- MAGIC
 -- MAGIC This demo was using one Databricks Foundation Model (pricing token-based).
 -- MAGIC
--- MAGIC Your model endpoint can also be setup to use an external model such as OpenAI. Open [04-Extra-setup-external-model-OpenAI]($./04-Extra-setup-external-model-OpenAI) for more details.
+-- MAGIC Your model endpoint can also be setup to use an external model such as OpenAI. Open [05-Extra-setup-external-model-OpenAI]($./05-Extra-setup-external-model-OpenAI) for more details.
 -- MAGIC
 -- MAGIC
 -- MAGIC Go back to [the introduction]($./00-SQL-AI-Functions-Introduction)
+
+-- COMMAND ----------
+
+

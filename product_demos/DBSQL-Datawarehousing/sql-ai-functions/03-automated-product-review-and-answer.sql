@@ -29,7 +29,7 @@ USE SCHEMA dbdemos_ai_query;
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC ## Simplifying AI function access for SQL users (*CHANGE THIS IMAGE)
+-- MAGIC ## Simplifying AI function access for SQL users
 -- MAGIC
 -- MAGIC As reminder, `ai_query` signature is the following:
 -- MAGIC

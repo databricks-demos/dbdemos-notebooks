@@ -14,7 +14,7 @@ set variable (br_table, si_table, gd_table) = (select catalog_nm || '.' || schem
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC **Config/Log table**
+-- MAGIC **Log table**
 
 -- COMMAND ----------
 
@@ -35,6 +35,8 @@ order by data_source, id, CHANGEDONDATE
 
 -- MAGIC %md
 -- MAGIC **Patient Integration table**
+-- MAGIC
+-- MAGIC The integration process filters out records where the **Id is NULL or CHANGEDONDATE is NULL**.  These and other business errors can be part of the exception logging process.
 
 -- COMMAND ----------
 

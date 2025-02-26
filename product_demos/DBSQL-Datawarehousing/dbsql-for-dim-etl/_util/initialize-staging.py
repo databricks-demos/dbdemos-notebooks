@@ -34,8 +34,8 @@ def get_file(file_name, entity_name):
     import requests
 
     owner = "shyamraodb"
-    repo = "star-schema-elt"
-    path = "seed"
+    repo = "dbdemos-notebooks"
+    path = "product_demos/DBSQL-Datawarehousing/dbsql-for-dim-etl/_data"
 
     files = requests.get(f'https://api.github.com/repos/{owner}/{repo}/contents/{path}').json()
 

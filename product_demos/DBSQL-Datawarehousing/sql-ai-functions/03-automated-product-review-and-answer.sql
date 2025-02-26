@@ -99,7 +99,7 @@ CREATE OR REPLACE FUNCTION ANNOTATE_REVIEW(review STRING)
             "followup_reason": <reason for followup>
         }
         
-        Review:', review)),
+        Review:', review), "{'type': 'json_object'}"),
       "STRUCT<product_name: STRING, entity_sentiment: STRING, followup: STRING, followup_reason: STRING>")
 
 -- ALTER FUNCTION ANNOTATE_REVIEW OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
@@ -110,7 +110,7 @@ CREATE OR REPLACE FUNCTION ANNOTATE_REVIEW(review STRING)
 CREATE OR REPLACE TABLE reviews_annotated as 
     SELECT * EXCEPT (review_annotated), review_annotated.* FROM (
       SELECT *, ANNOTATE_REVIEW(review) AS review_annotated
-        FROM fake_reviews LIMIT 10)
+        FROM fake_reviews)
     INNER JOIN fake_customers using (customer_id)
 
 -- COMMAND ----------
@@ -119,13 +119,13 @@ SELECT * FROM reviews_annotated
 
 -- COMMAND ----------
 
-CREATE OR REPLACE FUNCTION GENERATE_RESPONSE(firstname STRING, lastname STRING, article_this_year INT, product STRING, reason STRING)
+CREATE OR REPLACE FUNCTION GENERATE_RESPONSE(firstname STRING, lastname STRING, order_count INT, product_name STRING, reason STRING)
   RETURNS STRING
   RETURN ASK_LLM_MODEL(
-    CONCAT("Our customer named ", firstname, " ", lastname, " who ordered ", article_this_year, " articles this year was unhappy about ", product, 
-    "specifically due to ", reason, ". Provide an empathetic message I can send to my customer 
+    CONCAT("Our customer named ", firstname, " ", lastname, " who ordered ", order_count, " ", product_name, " was unhappy about ", product_name, "specifically due to ", reason, ". Provide an empathetic message I can send to my customer 
     including the offer to have a call with the relevant product manager to leave feedback. I want to win back their 
-    favour and I do not want the customer to churn")
+    favour and I do not want the customer to churn"), 
+    "{'type': 'text'}"
   );
 -- ALTER FUNCTION GENERATE_RESPONSE OWNER TO `account users`; -- for the demo only, make sure other users can access your function
 
@@ -137,9 +137,8 @@ SELECT GENERATE_RESPONSE("Quentin", "Ambard", 235, "Country Choice Snacking Cook
 
 CREATE OR REPLACE TABLE reviews_answer as 
     SELECT *,
-      GENERATE_RESPONSE(firstname, lastname, order_count, product_name, followup_reason) AS response_draft
+      generate_response(firstname, lastname, order_count, product_name, followup_reason) AS response_draft
     FROM reviews_annotated where followup='Y'
-    LIMIT 10
 
 -- COMMAND ----------
 

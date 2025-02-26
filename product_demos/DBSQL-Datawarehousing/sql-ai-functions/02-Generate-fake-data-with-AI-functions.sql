@@ -6,7 +6,7 @@
 -- MAGIC
 -- MAGIC The sample data will mimics customer reviews for grocery products submitted to an e-commerce website.
 -- MAGIC
--- MAGIC ## Working with `AI_QUERY` function
+-- MAGIC ## Working with [`AI_QUERY`](https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query) function
 -- MAGIC
 -- MAGIC Our function signature is the following:
 -- MAGIC
@@ -15,12 +15,14 @@
 -- MAGIC SELECT ai_query(endpointName, request, returnType) for custom model serving endpoint. 
 -- MAGIC ```
 -- MAGIC
--- MAGIC `AI_QUERY` will send the prompt to the remote model configured and retrive the result as SQL.
+-- MAGIC `AI_QUERY` will send the prompt to the remote model configured and retrive the result as SQL. 
+-- MAGIC
+-- MAGIC In addition, we use the optional `responseFormat` argument with `AI_QUERY` to specify the response format you want the model to follow.
 -- MAGIC
 -- MAGIC *Note: this will reproduce the behavior or the built-in `gen_ai` function, but leveraging one of the Model Serving Endpoint of your choice.*<br/>
 -- MAGIC *If you're looking at quickly generating data, we recommend you to just go with the built-in.*
 -- MAGIC
--- MAGIC *This notebook will use the foundation Dbrx Instruct model for inference*
+-- MAGIC *This notebook will use the foundation Llama 3.3 70B Instruct model for inference*
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=dbsql&notebook=02-Generate-fake-data-with-AI-functions&demo_name=sql-ai-functions&event=VIEW">
@@ -33,6 +35,7 @@
 -- COMMAND ----------
 
 -- as previously, make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster)
+-- assert_true function returns an untyped null if no error is returned
 SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE OR SERVERLESS, not a classic cluster');
 
 USE CATALOG main;
@@ -43,7 +46,7 @@ USE SCHEMA dbdemos_ai_query;
 
 SELECT
   AI_QUERY(
-    "databricks-dbrx-instruct",
+    "databricks-meta-llama-3-3-70b-instruct",
     "Generate a short product review for a red dress. The customer is very happy with the article."
   ) as product_review
 
@@ -54,24 +57,41 @@ SELECT
 -- MAGIC
 -- MAGIC While it's easy to call this function, having to our model endpoint name as parameter can be harder to use, especially for Data Analyst who should focus on crafting proper prompt. 
 -- MAGIC
--- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` with a string as input parameter (the question to ask) and wrap all the model configuration.
+-- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` with string input parameters prompt (the question to ask), response_format (output format) and wrap all the model configuration.
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-query-function-review-wrapper.png" width="1200px">
 
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL admin setup wrapper function
-CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING) 
+CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING, response_format STRING) 
   RETURNS STRING
   RETURN 
-    AI_QUERY("databricks-dbrx-instruct", prompt);
+    AI_QUERY("databricks-meta-llama-3-3-70b-instruct", 
+              prompt,
+              response_format);
 
 -- ALTER FUNCTION ASK_LLM_MODEL OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
 
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL Analyst simply use the wrapper
-SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The customer is very happy with the article.")
+SELECT ASK_LLM_MODEL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+("Generate a short product review for a red dress. The customer is very happy with the article.", "{'type': 'string'}")
 
 -- COMMAND ----------
 
@@ -84,9 +104,9 @@ SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The custo
 -- MAGIC
 -- MAGIC Here's a prompt example to generate JSON:
 -- MAGIC ```
--- MAGIC Generate a sample dataset for me of 2 rows that contains the following columns: "date" (random dates in 2022), 
--- MAGIC "review_id" (random id), "product_name" (use popular grocery product brands), and "review". Reviews should mimic useful product reviews 
--- MAGIC left on an e-commerce marketplace website. 
+-- MAGIC Generate a sample dataset for me of 2 rows that contains the following columns: "review_date" (random dates in 2022), 
+-- MAGIC "review_id" (random id), "customer_id" (random long from 1 to 100), and "review". Reviews should mimic useful product reviews 
+-- MAGIC left on an e-commerce marketplace website. The review must include the product name.
 -- MAGIC
 -- MAGIC The reviews should vary in length (shortest: one sentence, longest: 2 paragraphs), sentiment, and complexity. A very complex review 
 -- MAGIC would talk about multiple topics (entities) about the product with varying sentiment per topic. Provide a mix of positive, negative, 
@@ -99,18 +119,16 @@ SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The custo
 -- COMMAND ----------
 
 SELECT ASK_LLM_MODEL(
-      'Generate a sample dataset of 2 rows that contains the following columns: "date" (random dates in 2022), 
-      "review_id" (random id), "customer_id" (random long from 1 to 100)  and "review". Reviews should mimic useful product reviews 
-      left on an e-commerce marketplace website. 
-      
-      The reviews should be about a popular grocery brands product
+      'Generate a sample dataset of 2 rows that contains the following columns: "review_date" (random dates in 2022), 
+      "review_id" (random id), "customer_id" (random long from 1 to 100)  and "review". 
+      Reviews should mimic useful product reviews from popular grocery brands product left on an e-commerce marketplace website. The review must include the product name.
 
       The reviews should vary in length (shortest: one sentence, longest: 2 paragraphs), sentiment, and complexity. A very complex review 
       would talk about multiple topics (entities) about the product with varying sentiment per topic. Provide a mix of positive, negative, 
       and neutral reviews.
 
       Give me JSON only. No text outside JSON. No explanations or notes
-      [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]') as fake_reviews;
+      [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]', "{'type': 'json_object'}") as fake_reviews;
 
 -- COMMAND ----------
 
@@ -128,15 +146,16 @@ CREATE OR REPLACE FUNCTION GENERATE_FAKE_REVIEWS(num_reviews INT DEFAULT 5)
   RETURN 
   SELECT FROM_JSON(
       ASK_LLM_MODEL(
-        CONCAT('Generate a sample dataset of ', num_reviews, ' rows that contains the following columns: "date" (random dates in 2022), 
-        "review_id" (random long), "customer_id" (random long from 1 to 100) and "review". 
+        CONCAT('Generate a sample dataset of ', num_reviews, ' rows that contains the following columns: "review_date" (random dates in 2022), 
+        "review_id" (random long), "customer_id" (random long from 1 to ', num_reviews, '), and "review". 
         Reviews should mimic useful product reviews from popular grocery brands product left on an e-commerce marketplace website. The review must include the product name.
-
-        The reviews should vary in length (shortest: 5 sentence, longest: 10 sentences).
-        Provide a mix of positive, negative, and neutral reviews but mostly negative.
+        
+        The reviews should vary in length (shortest: one sentence, longest: 2 paragraphs), sentiment, and complexity. A very complex review 
+        would talk about multiple topics (entities) about the product with varying sentiment per topic. Provide a mix of positive, negative, 
+        and neutral reviews.
 
         Give me JSON only. No text outside JSON. No explanations or notes
-        [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]')), 
+        [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]'), "{'type': 'json_object'}"), 
         "array<struct<review_date:date, review_id:long, customer_id:long, review:string>>")
 
 -- ALTER FUNCTION GENERATE_FAKE_REVIEWS OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
@@ -168,8 +187,7 @@ FROM
 -- COMMAND ----------
 
 -- DBTITLE 1,Save the crafted review as a new table
-CREATE
-OR REPLACE TABLE fake_reviews COMMENT "Raw Review Data" AS
+CREATE OR REPLACE TABLE fake_reviews COMMENT "Raw Review Data" AS
 SELECT
   review.*
 FROM
@@ -179,7 +197,7 @@ FROM
     FROM
       (
         SELECT
-          GENERATE_FAKE_REVIEWS(10) as reviews
+          generate_fake_reviews(50) as reviews
       )
   )
 
@@ -195,7 +213,7 @@ CREATE OR REPLACE FUNCTION GENERATE_FAKE_CUSTOMERS(num_reviews INT DEFAULT 10)
         "customer_id" (long from 1 to ', num_reviews, '), "firstname", "lastname" and order_count (random positive number, smaller than 200)
 
         Give me JSON only. No text outside JSON. No explanations or notes
-        [{"customer_id":<long>, "firstname":<string>, "lastname":<string>, "order_count":<int>}]')), 
+        [{"customer_id":<long>, "firstname":<string>, "lastname":<string>, "order_count":<int>}]'), "{'type': 'json_object'}"), 
         "array<struct<customer_id:long, firstname:string, lastname:string, order_count:int>>")
         
 -- ALTER FUNCTION GENERATE_FAKE_CUSTOMERS OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
@@ -207,7 +225,7 @@ CREATE OR REPLACE TABLE fake_customers
   AS
   SELECT customer.* FROM (
     SELECT explode(customers) as customer FROM (
-      SELECT GENERATE_FAKE_CUSTOMERS(10) as customers))
+      SELECT GENERATE_FAKE_CUSTOMERS(50) as customers))
 
 -- COMMAND ----------
 

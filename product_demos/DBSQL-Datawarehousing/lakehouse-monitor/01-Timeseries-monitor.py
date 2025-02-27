@@ -27,8 +27,10 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install databricks-sdk>=0.39.0
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -83,10 +85,6 @@ TIMESTAMP_COL = "TransactionDate"
 
 # Enable Change Data Feed (CDF) to incrementally process changes to the table and make execution more efficient 
 display(spark.sql(f"ALTER TABLE {TABLE_NAME} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)"))
-
-# COMMAND ----------
-
-w = WorkspaceClient()
 
 # COMMAND ----------
 
@@ -351,7 +349,7 @@ std_delta_pct_drift = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
     name="std_delta_pct",
     input_columns=["TotalPurchaseAmount", "Discount"],
-    definition="100*({{current_df}}.std - {{base_df}}.std)/{{base_df}}.std",
+    definition="100*try_divide(`{{current_df}}`.std - `{{base_df}}`.std,`{{base_df}}`.std)",
     output_data_type=T.StructField("std_pct_delta", T.DoubleType()).json(),
 )
 
@@ -367,7 +365,7 @@ log_price_after_discount_delta_drift = MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_DRIFT,
     name="log_price_after_discount_ratio",
     input_columns=[":table"],
-    definition="{{current_df}}.log_price_after_discount/{{base_df}}.log_price_after_discount",
+    definition="try_divide(`{{current_df}}`.log_price_after_discount,`{{base_df}}`.log_price_after_discount)",
     output_data_type=T.StructField("log_price_after_discount_delta", T.DoubleType()).json(),
 )
 
@@ -439,7 +437,6 @@ display(spark.sql(f"SELECT window, avg_price_after_discount, log_price_after_dis
 # MAGIC And the custom aggregate & derived metric that we created on the individual columns (e.g. `TotalPurchaseAmount` and `Discount`)
 
 # COMMAND ----------
-
 
 display(spark.sql(f"SELECT window, column_name, variance, std FROM {profile_table} WHERE variance IS NOT NULL ORDER BY window.start, column_name"))
 

@@ -136,6 +136,8 @@ set variable (load_table, load_start_time, load_end_time) = (select session.br_t
 -- MAGIC ## COPY INTO staging table
 -- MAGIC
 -- MAGIC For more information, see [Easy Ingestion to Lakehouse With COPY INTO](https://www.databricks.com/blog/easy-ingestion-lakehouse-copy)
+-- MAGIC
+-- MAGIC Note that Streaming Tables provide advanced capabilities to load from additional sources. See [Load data using streaming tables in Databricks SQL](https://docs.databricks.com/aws/en/tables/streaming).
 
 -- COMMAND ----------
 

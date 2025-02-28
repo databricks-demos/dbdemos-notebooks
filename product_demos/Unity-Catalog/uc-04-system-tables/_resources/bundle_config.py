@@ -10,6 +10,7 @@
   "category": "governance",
   "title": "System Tables: Billing Forecast, Usage and Audit",
   "custom_schema_supported": True,
+  "serverless_supported": True,
   "default_schema": "dbdemos_billing_forecast",
   "default_catalog": "main",
   "custom_message": "System tables need the be enabled first on UC for this demo to work. See <a href=\"https://notebooks.databricks.com/demos/uc-04-system-tables/index.html#\">_enable_system_tables notebook</a> for more details (also installed as part of the demo).",

@@ -116,12 +116,13 @@ else:
     # create new
     wh_name = f'dbsqldemo-patient-dimension-etl-{time.time_ns()}'
 
-    # Create SQL warehouse
+    # Create serverless SQL warehouse
     created = w.warehouses.create(
         name=wh_name,
         cluster_size="Small",
         max_num_clusters=1,
         auto_stop_mins=1,
+        enable_serverless_compute=True,
         tags=sql.EndpointTags(
             custom_tags=[sql.EndpointTagPair(key="purpose", value="dbsqldemo")]
         )

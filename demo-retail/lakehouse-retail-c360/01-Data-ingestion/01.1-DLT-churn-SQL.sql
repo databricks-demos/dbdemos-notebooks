@@ -44,7 +44,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with LakeFlow Connect & Delta Live Tables
+-- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & Delta Live Tables
 -- MAGIC
 -- MAGIC <img style="float: right" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-1.png" />
 -- MAGIC
@@ -60,10 +60,10 @@
 -- MAGIC
 -- MAGIC <a href="https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo" target="_blank"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/lakeflow-connect-anim.gif?raw=true" style="float: right; margin-right: 20px" width="250px"></a>
 -- MAGIC
--- MAGIC ## 1/ Ingest data with LakeFlow Connect
+-- MAGIC ## 1/ Ingest data with Lakeflow Connect
 -- MAGIC
 -- MAGIC
--- MAGIC LakeFlow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks. 
+-- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks. 
 -- MAGIC
 -- MAGIC
 -- MAGIC ## 2/ Prepare and transform your data with Delta Live Table
@@ -72,7 +72,7 @@
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
--- MAGIC     <p>
+-- MAGIC     <p style="min-height: 65px;">
 -- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/diganparikh-dp/Images/refs/heads/main/Icons/LakeFlow%20Connect.jpg"/> 
 -- MAGIC       <strong>Efficient end-to-end ingestion</strong> <br/>
 -- MAGIC       Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance 
@@ -84,7 +84,7 @@
 -- MAGIC     </p>
 -- MAGIC   </div>
 -- MAGIC   <div style="width: 48%; float: left">
--- MAGIC     <p>
+-- MAGIC     <p style="min-height: 65px;">
 -- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-trust.png"/> 
 -- MAGIC       <strong>Trust your data</strong> <br/>
 -- MAGIC       With built-in orchestration, quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML 
@@ -112,7 +112,7 @@
 -- MAGIC
 -- MAGIC Let's implement the following flow: 
 -- MAGIC  
--- MAGIC <div><img width="1100px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-de.png"/></div>
+-- MAGIC <div><img width="1100px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-churn-de.png?raw=true"/></div>
 -- MAGIC
 -- MAGIC *Note that we're including the ML model our [Data Scientist built]($../04-Data-Science-ML/04.1-automl-churn-prediction) using Databricks AutoML to predict the churn. We'll cover that in the next section.*
 

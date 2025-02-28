@@ -37,7 +37,7 @@ AS SELECT
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Create `review_answer_gold` table
+-- MAGIC # Create `review_answer_gold` materialized view
 
 -- COMMAND ----------
 

@@ -57,14 +57,15 @@ SELECT
 -- MAGIC
 -- MAGIC While it's easy to call this function, having to our model endpoint name as parameter can be harder to use, especially for Data Analyst who should focus on crafting proper prompt. 
 -- MAGIC
--- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` with string input parameters prompt (the question to ask), response_format (output format) and wrap all the model configuration.
+-- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` with string input parameters prompt (the question to ask), response_format as string output format and wrap all the model configuration.
+-- MAGIC
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-query-function-review-wrapper.png" width="1200px">
 
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL admin setup wrapper function
-CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING, response_format STRING) 
+CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING, response_format STRING DEFAULT '{"type": "string"}') 
   RETURNS STRING
   RETURN 
     AI_QUERY("databricks-meta-llama-3-3-70b-instruct", 
@@ -76,7 +77,7 @@ CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING, response_format STRING)
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL Analyst simply use the wrapper
-SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The customer is very happy with the article.", "{'type': 'string'}")
+SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The customer is very happy with the article.")
 
 -- COMMAND ----------
 
@@ -85,7 +86,7 @@ SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The custo
 -- MAGIC
 -- MAGIC Now that we know how to send a basic query to Open AI using SQL functions, let's ask the model a more detailed question.
 -- MAGIC
--- MAGIC We'll directly ask to model to generate multiple rows and directly return as a json. 
+-- MAGIC We'll directly ask to model to generate multiple rows and directly return as a json. Notice we set the response format as json object to guide LLM to generate a JSON.
 -- MAGIC
 -- MAGIC Here's a prompt example to generate JSON:
 -- MAGIC ```

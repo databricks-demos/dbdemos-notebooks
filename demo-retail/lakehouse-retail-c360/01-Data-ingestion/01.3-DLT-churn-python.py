@@ -32,8 +32,9 @@
 # MAGIC
 # MAGIC <br>
 # MAGIC
+
 # MAGIC ## <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
-# MAGIC
+
 # MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>
 # MAGIC   *Supporting streaming and batch, handling concurrent operations, small files issues, GDPR requirements, complex DAG dependencies...*<br><br>
 # MAGIC * Building custom frameworks to enforce quality and tests<br><br>

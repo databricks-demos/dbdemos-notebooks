@@ -28,7 +28,7 @@
 # MAGIC
 # MAGIC ## Use-case: Increasing customer satisfaction and churn reduction with automatic reviews analysis
 # MAGIC
-# MAGIC In this demo, we'll build a data pipeline that takes customer reviews as text, analyze them by leveraging LLMs (Databricks Foundation Model Dbrx or Mistral). 
+# MAGIC In this demo, we'll build a data pipeline that takes customer reviews as text, analyze them by leveraging LLMs (Databricks Foundation Model Llama or Mistral). 
 # MAGIC
 # MAGIC We'll even provide recommendations for next best actions to our customer service team - i.e. whether a customer requires follow-up, and a sample message to follow-up with.
 # MAGIC
@@ -51,7 +51,7 @@
 # MAGIC
 # MAGIC AI Functions abstracts away the technical complexities of calling LLMs, enabling analysts and data scientists to start using these models without worrying about the underlying infrastructure.
 # MAGIC
-# MAGIC In this demo, we use one of our [Foundation models](https://docs.databricks.com/en/machine-learning/foundation-models/index.html), [DBRX Instruct](https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm) as our LLM that will be used by AI_QUERY() to generate fake reviews. 
+# MAGIC In this demo, we use one of our [Foundation models](https://docs.databricks.com/en/machine-learning/foundation-models/index.html), [Llama 3.3 70B Instruct](https://www.databricks.com/blog/making-ai-more-accessible-80-cost-savings-meta-llama-33-databricks) as our LLM that will be used by AI_QUERY() to generate fake reviews. 
 # MAGIC
 # MAGIC Open the next Notebook to generate some sample data for our demo: [02-Generate-fake-data-with-AI-functions]($./02-Generate-fake-data-with-AI-functions)
 

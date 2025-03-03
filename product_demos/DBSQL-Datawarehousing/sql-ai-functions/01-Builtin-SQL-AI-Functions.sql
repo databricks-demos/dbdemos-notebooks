@@ -40,6 +40,7 @@
 
 -- DBTITLE 1,Generate dataset
 -- Make sure you run this notebook using a SQL Warehouse or Serverless endpoint (not a classic cluster)
+-- assert_true function returns an untyped null if no error is returned
 SELECT assert_true(current_version().dbsql_version is not null, 'YOU MUST USE A SQL WAREHOUSE OR SERVERLESS, not a classic cluster');
 
 SELECT ai_gen('Generate a concise, cheerful email title for a summer bike sale with 20% discount');

@@ -61,12 +61,21 @@
       "warehouse_id": "9be8079d873b30a6"
     },
     {
-      "path": "04-Extra-setup-external-model-OpenAI", 
+      "path": "04-create-end-to-end-DLT-workflow", 
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Analyze and answer customer reviews", 
+      "title":  "Create your Materialized View with SQLA I", 
       "description": "Build a pipeline to ingest customer reviews, detect the negative one and generate answers.",
+      "warehouse_id": "9be8079d873b30a6"
+    },
+    {
+      "path": "05-Extra-setup-external-model-OpenAI", 
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "Setup external models", 
+      "description": "Leverage external models with OpenAI or other LLM Providers.",
       "warehouse_id": "9be8079d873b30a6"
     }
   ],

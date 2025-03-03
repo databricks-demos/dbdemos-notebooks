@@ -22,18 +22,19 @@
 -- MAGIC
 -- MAGIC ## More specifically, Databricks is...
 -- MAGIC <br/><br/>
--- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_intelligence_engine.png?raw=true" style="float: left; margin: 0px 5px 40px 0;" width="150px" />
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_intelligence_engine.png?raw=true" style="float: left; margin: 5px -18px 40px -22px; clip-path: inset(0 33px 0 31px);" width="127px" />
+-- MAGIC
 -- MAGIC <strong>1. Intelligent</strong><br/>
 -- MAGIC Databricks infuses your Lakehouse with intelligent AI. Because the platform deeply understands your data, it can auto-optimize performance and manage infrastructure for you - meaning, you can focus on optimizing your business instead.
 -- MAGIC
 -- MAGIC <div style="clear: both; float: left; width: 49%">
--- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_simple.png?raw=true" style="float: left; margin: 5px 5px 40px 0;" width="80px" />
+-- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_simple.png?raw=true" style="float: left; margin: 2px 5px 40px 0;" width="80px" />
 -- MAGIC     <strong>2. Simple</strong><br/>
 -- MAGIC     Ask questions of your data in plain English - or in any natural language that your organization utilizes. Databricks abstracts complex data tasks so that everyone in your organization - computer whiz or total novice - can gain insights & value from that data.
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC <div style="float: right; width: 50%;">
--- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_governance.png?raw=true" style="float: left; margin: 5px 5px 40px 0;" width="80px" />
+-- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_governance.png?raw=true" style="float: left; margin: 2px 5px 40px 0;" width="80px" />
 -- MAGIC     <strong>3. Secure</strong><br/>
 -- MAGIC     Provide a single layer of governance and security for all your data assets, from data pipelines to AI models, letting you build and deploy data products that are secure and trusted. Accelerate innovation while ensuring data privacy and IP protection.
 -- MAGIC </div>
@@ -93,11 +94,11 @@
 -- MAGIC Our first step is to ingest and clean the raw data we received so that our Data Analyst team can start running analysis on top of it.
 -- MAGIC
 -- MAGIC
--- MAGIC ### Simple ingestion with LakeFlow Connect
+-- MAGIC ### Simple ingestion with Lakeflow Connect
 -- MAGIC
--- MAGIC LakeFlow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
+-- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
 -- MAGIC
--- MAGIC To give it a try, check our [LakeFlow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
+-- MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
 -- MAGIC
 -- MAGIC ### Simplify ingestion with Delta Live Tables (DLT)
 -- MAGIC

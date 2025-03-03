@@ -28,7 +28,7 @@
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
+# MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/john.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
 # MAGIC
 # MAGIC
 # MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>

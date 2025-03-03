@@ -50,7 +50,7 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-4.png" />
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/ds.png" style="float: left;" width="80px"> 
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/marc.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Marc, as a Data Scientist, needs a data + ML platform accelerating all the ML & DS steps:</h3>
 # MAGIC
 # MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">

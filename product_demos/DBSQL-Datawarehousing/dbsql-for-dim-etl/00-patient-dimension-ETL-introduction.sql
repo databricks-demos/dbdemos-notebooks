@@ -30,19 +30,19 @@
 -- MAGIC A. Global Configuration
 -- MAGIC -  **ETL Log table**: This table captures the runtime metadata for a table that includes the table name, load start time and load end time.
 -- MAGIC  
--- MAGIC _See [Create Log Table notebook]($./01-Create/ETL Log Table) to review._
+-- MAGIC _See [Create Log Table notebook]($./02-Create/02.2-create-ETL-log-table) to review._
 -- MAGIC
 -- MAGIC B. Standardization<br>
 -- MAGIC -  **Codes table**: Master table initialized with standardized codes used for coded attributes in the schema.<br>
 -- MAGIC
--- MAGIC _See [Create Code Table notebook]($./01-Create/Code Table) to review._
+-- MAGIC _See [Create Code Table notebook]($./02-Create/02.1-create-code-table) to review._
 -- MAGIC
 -- MAGIC C. Patient tables<br>
 -- MAGIC - **Patient Staging table**<br>
 -- MAGIC - **Patient Integration table<br>**
 -- MAGIC - **Patient Dimension table<br>**
 -- MAGIC
--- MAGIC _See [Create Patient Tables notebook]($./01-Create/Patient Tables) to review._
+-- MAGIC _See [Create Patient Tables notebook]($./02-Create/02.3-create-patient-tables) to review._
 -- MAGIC
 -- MAGIC **<span style="color:orange">2. <u>Stage Initial Data</u>**<br>
 -- MAGIC   This task will download an initial CSV file with patient data onto a staging Volume.
@@ -56,7 +56,7 @@
 -- MAGIC **<span style="color:orange">5. <u>Patient load</u>**<br>
 -- MAGIC This will initiate the ETL which will read new files from the staging Volume and populate the staging, integration, and patient dimension tables.
 -- MAGIC
--- MAGIC _See [Patient Dimension ETL notebook]($./02-Populate/Patient Dimension ETL) to review._
+-- MAGIC _See [Patient Dimension ETL notebook]($./03-Populate/03.1-patient-dimension-ETL) to review._
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC You can also browse the results of each ETL run. This will show the data that is present in the log, exceptions, and patient tables, as it appears at the end of the initial load and each incremental load. Click on each of the **Browse Results** task.
@@ -80,7 +80,7 @@
 -- MAGIC %md
 -- MAGIC #Create Workflows Job
 -- MAGIC
--- MAGIC Open and Run notebook [02-Create-SQL-Warehouse-Workflows-Job]($./02-Create-SQL-Warehouse-Workflows-Job)
+-- MAGIC Open and Run notebook [02-Create-SQL-Warehouse-Workflows-Job]($./create-SQL-warehouse-workflows-job)
 
 -- COMMAND ----------
 

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,initialize config for sgc
-# MAGIC %run "./initialize-staging"
+# MAGIC %run "../01-Setup/01.1-initialize"
 
 # COMMAND ----------
 
@@ -11,20 +11,21 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,staging directory
-# clear staging directory
-dbutils.fs.rm(stg_path + "/patient", True)
+vol_path = spark.sql("select staging_path").first()["staging_path"]
+file_path = vol_path + "/patient"
 
-# if not present
-dbutils.fs.mkdirs(stg_path + "/patient")
+# COMMAND ----------
+
+# clear staging directory (remove patient directory in staging volume)
+dbutils.fs.rm(file_path, True)
+dbutils.fs.mkdirs(file_path)
 
 # COMMAND ----------
 
 # DBTITLE 1,initial file name
-file_name = "patients50_init.csv"
+cloud_loc = "s3://one-env-uc-external-location/shyam.rao/demo_data/"
 
 # COMMAND ----------
 
 # DBTITLE 1,stage the file for initial load
-# download to volume staging path
-get_file(file_name, "patient")
+dbutils.fs.cp(cloud_loc + "patients50_init.csv", file_path)

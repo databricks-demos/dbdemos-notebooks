@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- MAGIC %run "../00-Setup/Initialize"
+-- MAGIC %run "../01-Setup/01.1-initialize"
 
 -- COMMAND ----------
 

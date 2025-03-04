@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- MAGIC %run "../00-Setup/Initialize"
+-- MAGIC %run "../01-Setup/01.1-initialize"
 
 -- COMMAND ----------
 
@@ -13,7 +13,7 @@ declare or replace variable sqlstr string;
 
 -- COMMAND ----------
 
-set variable (br_table, si_table, gd_table) = (select catalog_nm || '.' || schema_nm || '.' || 'patient_stg', catalog_nm || '.' || schema_nm || '.' || 'patient_int', catalog_nm || '.' || schema_nm || '.' || 'g_patient_d');
+set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
 
 -- COMMAND ----------
 
@@ -116,28 +116,28 @@ drop table if exists identifier(gd_table);
 
 create table if not exists identifier(gd_table) (
   patient_sk bigint generated always as identity comment 'Primary Key (ID)',
-  last_name string NOT NULL  comment 'Last name of the person',
-  first_name string NOT NULL  comment 'First name of the person',
-  name_prefix string  comment 'Prefix of person name',
-  name_suffix string  comment 'Suffix of person name',
+  last_name string not null comment 'Last name of the person',
+  first_name string comment 'First name of the person',
+  name_prefix string comment 'Prefix of person name',
+  name_suffix string comment 'Suffix of person name',
   maiden_name string comment 'Maiden name',
-  gender_code string  comment 'Gender code',
-  gender string  comment 'gender description',
-  date_of_birth timestamp  comment 'Birth date and time',
-  marital_status string  comment 'Marital status',
-  ethnicity_code string,
-  ethnicity string,
+  gender_code string comment 'Gender code',
+  gender string comment 'Gender description',
+  date_of_birth timestamp comment 'Birth date and time',
+  marital_status string comment 'Marital status',
+  ethnicity_code string comment 'Ethnicity code',
+  ethnicity string comment 'Ethnicity description',
   ssn string  comment 'Patient SSN',
   other_identifiers map <string, string>  comment 'Identifier type (passport number, license number except mrn, ssn) and value',
   uda map <string, string>  comment 'User Defined Attributes',
-  patient_src_id string  comment 'Unique reference to the source record',
-  effective_start_date timestamp  comment 'SCD2 effective start date for version',
+  patient_src_id string not null comment 'Unique reference to the source record',
+  effective_start_date timestamp not null comment 'SCD2 effective start date for version',
   effective_end_date timestamp  comment 'SCD2 effective start date for version',
-  checksum string  comment 'Checksum for the record',
-  data_source string  comment 'Code for source system',
+  checksum string comment 'Checksum for the record',
+  data_source string not null comment 'Code for source system',
   insert_dt timestamp comment 'record inserted time',
   update_dt timestamp comment 'record updated time',
-  process_id string  comment 'Process ID for run',
+  process_id string comment 'Process ID for run',
   constraint c_d_pk primary key (patient_sk) RELY
 )
 cluster by auto

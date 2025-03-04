@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC #View the Introduction notebook
 # MAGIC
-# MAGIC If not already viewed, browse through [01-Patient-Dimension-ETL-Introduction]($./01-Patient-Dimension-ETL-Introduction)
+# MAGIC If not already viewed, browse through [00-patient-dimension-ETL-introduction]($./00-patient-dimension-ETL-introduction)
 
 # COMMAND ----------
 
@@ -16,7 +16,7 @@
 # MAGIC
 # MAGIC To run the demo, the following privileges are required:
 # MAGIC 1. Create Catalog, Schema, Table, Volume<br>
-# MAGIC   Note that the privilege to Create Catalog and Schema is not required if using precreated objects. See [Configure notebook]($./00-Setup/Initialize)
+# MAGIC   Note that the privilege to Create Catalog and Schema is not required if using precreated objects. See [Configure notebook]($./01-Setup/01.1-initialize)
 # MAGIC 2. Create SQL Warehouse, Workflows Job
 # MAGIC
 # MAGIC Additionally, the data files are downloaded via the internet.
@@ -147,7 +147,7 @@ nb_dir = "/Workspace" + "/".join(nb_path.split("/")[:-1]) + "/"
 task_setup_catalog_schema = {
     "task_key": "SETUP_CATALOG",
     "notebook_task": {
-      "notebook_path": nb_dir + "00-Setup/Setup",
+      "notebook_path": nb_dir + "01-Setup/01.2-setup",
       "warehouse_id": warehouse_id
     }
 }
@@ -161,7 +161,7 @@ task_create_code_table = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "01-Create/Code Table",
+      "notebook_path": nb_dir + "02-Create/02.1-create-code-table",
       "warehouse_id": warehouse_id
     }
 }
@@ -175,7 +175,7 @@ task_create_config_table = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "01-Create/ETL Log Table",
+      "notebook_path": nb_dir + "02-Create/02.2-create-ETL-log-table",
       "warehouse_id": warehouse_id
     }
 }
@@ -189,7 +189,7 @@ task_create_patient_tables = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "01-Create/Patient Tables",
+      "notebook_path": nb_dir + "02-Create/02.3-create-patient-tables",
       "warehouse_id": warehouse_id
     }
 }
@@ -203,7 +203,7 @@ task_stage_source_file_initial = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "_util/stage source file - initial load",
+      "notebook_path": nb_dir + "_resource/stage-source-file-init",
     }
 }
 
@@ -226,7 +226,7 @@ task_patient_initial_load = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "02-Populate/Patient Dimension ETL",
+      "notebook_path": nb_dir + "03-Populate/03.1-patient-dimension-ETL",
       "base_parameters": {
         "p_process_id": "{{job.id}}-{{job.run_id}}"
       },
@@ -244,7 +244,7 @@ task_browse_result_initial_load = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "_util/browse current load",
+      "notebook_path": nb_dir + "_resource/browse-load",
       "warehouse_id": warehouse_id
     }
 }
@@ -258,7 +258,7 @@ task_stage_source_file_incr_1 = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "_util/stage source file - incremental load #1",
+      "notebook_path": nb_dir + "_resource/stage-source-file-incr",
     }
 }
 
@@ -271,7 +271,7 @@ task_patient_load_incr1 = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "02-Populate/Patient Dimension ETL",
+      "notebook_path": nb_dir + "03-Populate/03.1-patient-dimension-ETL",
       "base_parameters": {
         "p_process_id": "{{job.id}}-{{job.run_id}}"
       },
@@ -288,7 +288,7 @@ task_browse_result_incr1 = {
     ],
     "run_if": "ALL_SUCCESS",
     "notebook_task": {
-      "notebook_path": nb_dir + "_util/browse current load",
+      "notebook_path": nb_dir + "_resource/browse-load",
       "warehouse_id": warehouse_id
     }
 }

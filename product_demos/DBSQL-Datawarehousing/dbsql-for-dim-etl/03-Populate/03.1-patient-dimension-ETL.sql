@@ -35,7 +35,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %run "../00-Setup/Initialize"
+-- MAGIC %run "../01-Setup/01.1-initialize"
 
 -- COMMAND ----------
 
@@ -51,7 +51,7 @@ declare or replace variable gd_table string; -- dimension table
 
 -- COMMAND ----------
 
-set variable (br_table, si_table, gd_table) = (select catalog_nm || '.' || schema_nm || '.' || 'patient_stg', catalog_nm || '.' || schema_nm || '.' || 'patient_int', catalog_nm || '.' || schema_nm || '.' || 'g_patient_d');
+set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
 
 -- COMMAND ----------
 
@@ -128,7 +128,7 @@ set variable (load_table, load_start_time, load_end_time) = (select session.br_t
 
 -- COMMAND ----------
 
--- MAGIC %run "./Log Run"
+-- MAGIC %run "./03.2-log-ETL-run-utility"
 
 -- COMMAND ----------
 
@@ -179,7 +179,7 @@ set variable load_end_time = current_timestamp();
 
 -- COMMAND ----------
 
--- MAGIC %run "./Log Run"
+-- MAGIC %run "./03.2-log-ETL-run-utility"
 
 -- COMMAND ----------
 
@@ -218,7 +218,7 @@ set variable (load_table, load_start_time, load_end_time) = (select session.si_t
 
 -- COMMAND ----------
 
--- MAGIC %run "./Log Run"
+-- MAGIC %run "./03.2-log-ETL-run-utility"
 
 -- COMMAND ----------
 
@@ -266,7 +266,7 @@ left outer join identifier(session.code_table) code_gr on code_gr.m_code = br_cd
 left outer join identifier(session.code_table) code_ethn on code_ethn.m_code = br_cdc.ethnicity and code_ethn.m_type = 'ETHNICITY'
 where
   -- no error records
-  id is not null and CHANGEDONDATE is not null -- these 2 conditions could be part of exception handling
+  `id` is not null and CHANGEDONDATE is not null and `LAST` is not null -- these conditions could be part of exception handling
 ;
 
 
@@ -298,7 +298,7 @@ set variable load_end_time = current_timestamp();
 
 -- COMMAND ----------
 
--- MAGIC %run "./Log Run"
+-- MAGIC %run "./03.2-log-ETL-run-utility"
 
 -- COMMAND ----------
 
@@ -319,7 +319,7 @@ set variable (load_table, load_start_time, load_end_time) = (select session.gd_t
 
 -- COMMAND ----------
 
--- MAGIC %run "./Log Run"
+-- MAGIC %run "./03.2-log-ETL-run-utility"
 
 -- COMMAND ----------
 
@@ -357,8 +357,8 @@ si_tc as (
     ethnicity_cd as ethnicity_code, ethnicity_nm as ethnicity,
     ssn, null as other_identifiers, null as uda,
     patient_src_id, src_changed_on_dt as effective_start_date,
-    md5(ifnull(last_name, '#') || ifnull(first_name, '#') || ifnull(name_prefix, '#') || ifnull(name_suffix, '#') || ifnull(maiden_name, '#') ||
-        ifnull(gender_cd, '#') || ifnull(gender_nm, '#') || ifnull(date_of_birth, '#') || ifnull(marital_status, '#') || ifnull(ethnicity_cd, '#') || ifnull(ethnicity_nm, '#') || ifnull(ssn, '#')) as checksum,
+    hash(last_name, ifnull(first_name, '#'), ifnull(name_prefix, '#'), ifnull(name_suffix, '#'), ifnull(maiden_name, '#'),
+        ifnull(gender_cd, '#'), ifnull(gender_nm, '#'), ifnull(date_of_birth, '#'), ifnull(marital_status, '#'), ifnull(ethnicity_cd, '#'), ifnull(ethnicity_nm, '#'), ifnull(ssn, '#')) as checksum,
     data_source
   from identifier(session.si_table) si
   where si.update_dt > session.gd_last_load_date -- CDC
@@ -450,4 +450,4 @@ set variable load_end_time = current_timestamp();
 
 -- COMMAND ----------
 
--- MAGIC %run "./Log Run"
+-- MAGIC %run "./03.2-log-ETL-run-utility"

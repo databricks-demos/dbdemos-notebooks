@@ -1,15 +1,15 @@
 -- Databricks notebook source
--- MAGIC %run "../00-Setup/Initialize"
+-- MAGIC %run "../01-Setup/01.1-initialize"
 
 -- COMMAND ----------
 
-declare or replace variable br_table string; -- bronze table identifier
-declare or replace variable si_table string; -- silver table
-declare or replace variable gd_table string; -- gold dimension table
+declare or replace variable br_table string; -- staging table identifier
+declare or replace variable si_table string; -- integration table
+declare or replace variable gd_table string; -- dimension table
 
 -- COMMAND ----------
 
-set variable (br_table, si_table, gd_table) = (select catalog_nm || '.' || schema_nm || '.' || 'patient_stg', catalog_nm || '.' || schema_nm || '.' || 'patient_int', catalog_nm || '.' || schema_nm || '.' || 'g_patient_d');
+set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
 
 -- COMMAND ----------
 

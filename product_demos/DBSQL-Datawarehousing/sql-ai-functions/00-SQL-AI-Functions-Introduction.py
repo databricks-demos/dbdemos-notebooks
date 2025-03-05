@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC Databricks SQL provides [built-in GenAI capabilities](https://docs.databricks.com/en/large-language-models/ai-functions.html), letting you perform adhoc operation, leveraging state of the art LLM, optimized for these tasks.
 # MAGIC
-# MAGIC Discover how to leverage functions such as  `ai_analyze_sentiment`,  `ai_classify` or `ai_gen` with Databricks SQL.
+# MAGIC Discover how to leverage functions such as  `ai_analyze_sentiment`,  `ai_classify` or `ai_gen` with Databricks SQL. In addition, Databricks AI Functions are fully serverless which delivers 10x faster performance with no requirement of setting up inference endpoint and manage infrastructure.
 # MAGIC
 # MAGIC Open the [01-Builtin-SQL-AI-Functions]($./01-Builtin-SQL-AI-Functions) to get started with Databricks SQL AI builtin functions.
 # MAGIC

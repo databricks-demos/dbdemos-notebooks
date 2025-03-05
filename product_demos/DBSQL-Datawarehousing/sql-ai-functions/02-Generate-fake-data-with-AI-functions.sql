@@ -19,6 +19,8 @@
 -- MAGIC
 -- MAGIC In addition, we use the optional `responseFormat` argument with `AI_QUERY` to specify the response format you want the model to follow.
 -- MAGIC
+-- MAGIC The [Query Profile UI](https://docs.databricks.com/aws/en/sql/user/queries/query-profile) provides real-time execution status, processing times, and error visibility for `AI_QUERY`
+-- MAGIC
 -- MAGIC *Note: this will reproduce the behavior or the built-in `gen_ai` function, but leveraging one of the Model Serving Endpoint of your choice.*<br/>
 -- MAGIC *If you're looking at quickly generating data, we recommend you to just go with the built-in.*
 -- MAGIC

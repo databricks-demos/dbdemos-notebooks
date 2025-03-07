@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.15.0 mlflow[databricks]==2.20.1 langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4 databricks-vectorsearch==0.44 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
+# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.16.0 mlflow[databricks]==2.20.2 langchain==0.3.19 langchain_core==0.3.37 databricks-vectorsearch==0.49 databricks-langchain==0.3.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -52,7 +52,7 @@ rag_chain_config = {
         "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,
     },
     "input_example": {
-        "messages": [{"content": "Sample user question", "role": "user"}]
+        "messages": [{"content": "What is Apache Spark?", "role": "user"}]
     },
     "llm_config": {
         "llm_parameters": {"max_tokens": 1500, "temperature": 0.01},
@@ -81,9 +81,8 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC import os
 # MAGIC import mlflow
 # MAGIC from operator import itemgetter
-# MAGIC from databricks.vector_search.client import VectorSearchClient
-# MAGIC from langchain_community.chat_models import ChatDatabricks
-# MAGIC from langchain_community.vectorstores import DatabricksVectorSearch
+# MAGIC from databricks_langchain.chat_models import ChatDatabricks
+# MAGIC from databricks_langchain.vectorstores import DatabricksVectorSearch
 # MAGIC from langchain_core.runnables import RunnableLambda
 # MAGIC from langchain_core.output_parsers import StrOutputParser
 # MAGIC from langchain_core.prompts import PromptTemplate
@@ -112,18 +111,12 @@ model_config = mlflow.models.ModelConfig(development_config='rag_chain_config.ya
 # MAGIC retriever_config = model_config.get("retriever_config")
 # MAGIC llm_config = model_config.get("llm_config")
 # MAGIC
-# MAGIC # Connect to the Vector Search Index
-# MAGIC vs_client = VectorSearchClient(disable_notice=True)
-# MAGIC vs_index = vs_client.get_index(
-# MAGIC     endpoint_name=databricks_resources.get("vector_search_endpoint_name"),
-# MAGIC     index_name=retriever_config.get("vector_search_index"),
-# MAGIC )
 # MAGIC vector_search_schema = retriever_config.get("schema")
 # MAGIC
 # MAGIC # Turn the Vector Search index into a LangChain retriever
 # MAGIC vector_search_as_retriever = DatabricksVectorSearch(
-# MAGIC     vs_index,
-# MAGIC     text_column=vector_search_schema.get("chunk_text"),
+# MAGIC     endpoint=databricks_resources.get("vector_search_endpoint_name"),
+# MAGIC     index_name=retriever_config.get("vector_search_index"),
 # MAGIC     columns=[
 # MAGIC         vector_search_schema.get("primary_key"),
 # MAGIC         vector_search_schema.get("chunk_text"),
@@ -193,13 +186,19 @@ init_experiment_for_batch("chatbot-rag-llm-standard", "simple")
 
 # COMMAND ----------
 
+from mlflow.models.resources import DatabricksVectorSearchIndex, DatabricksServingEndpoint
+
 # Log the model to MLflow
-with mlflow.start_run(run_name=f"dbdemos_rag_quickstart"):
+with mlflow.start_run(run_name="dbdemos_rag_quickstart"):
     logged_chain_info = mlflow.langchain.log_model(
         lc_model=os.path.join(os.getcwd(), 'chain.py'),  # Chain code file e.g., /path/to/the/chain.py 
         model_config='rag_chain_config.yaml',  # Chain configuration 
         artifact_path="chain",  # Required by MLflow
-        input_example=model_config.get("input_example"),  # Save the chain's input schema.  MLflow will execute the chain before logging & capture it's output schema.
+        input_example=model_config.get("input_example"),  # Save the chain's input schema
+        resources=[
+            DatabricksVectorSearchIndex(index_name=model_config.get("retriever_config").get("vector_search_index")),
+            DatabricksServingEndpoint(endpoint_name=model_config.get("databricks_resources").get("llm_endpoint_name"))
+        ]
     )
 
 # Test the chain locally

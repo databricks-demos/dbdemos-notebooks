@@ -11,9 +11,7 @@
 
 # DBTITLE 1,Library installs
 # Let's start by installing our dependencies
-%pip install databricks-genai==1.1.4 mlflow==2.16.2 langchain-community==0.2.0 transformers==4.31.0 datasets==2.16.1 huggingface-hub==0.27.1
-%pip install databricks-sdk==0.40.0
-
+%pip install databricks-genai==1.1.7 mlflow==2.19.0 langchain-community==0.3.18 transformers==4.49.0 datasets==3.2.0 huggingface-hub==0.27.1 databricks-sdk==0.40.0
 dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -312,7 +310,7 @@ endpoint_config = EndpointCoreConfigInput(
             entity_name=registered_model_name,
             entity_version=get_latest_model_version(registered_model_name),
             min_provisioned_throughput=0, # The minimum tokens per second that the endpoint can scale down to.
-            max_provisioned_throughput=100,# The maximum tokens per second that the endpoint can scale up to.
+            max_provisioned_throughput=10900,# The maximum tokens per second that the endpoint can scale up to.
             scale_to_zero_enabled=True
         )
     ]

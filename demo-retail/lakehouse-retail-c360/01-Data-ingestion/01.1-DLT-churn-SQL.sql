@@ -9,19 +9,23 @@
 -- MAGIC Ingesting, transforming and cleaning data to create clean SQL tables for our downstream user (Data Analysts and Data Scientists) is complex.
 -- MAGIC
 -- MAGIC <link href="https://fonts.googleapis.com/css?family=DM Sans" rel="stylesheet"/>
--- MAGIC <div style="width:300px; text-align: center; float: right; margin: 30px 60px 10px 10px;  font-family: 'DM Sans'">
--- MAGIC   <div style="height: 250px; width: 300px;  display: table-cell; vertical-align: middle; border-radius: 50%; border: 25px solid #fcba33ff;">
--- MAGIC     <div style="font-size: 70px;  color: #70c4ab; font-weight: bold">
+-- MAGIC <div style="width: 300px; height: 300px; text-align: center; float: right; margin: 30px 60px 10px 10px; font-family: 'DM Sans'; border-radius: 50%; border: 25px solid #fcba33ff; box-sizing: border-box; overflow: hidden;">
+-- MAGIC   <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
+-- MAGIC     <div style="font-size: 70px; color: #70c4ab; font-weight: bold;">
 -- MAGIC       73%
 -- MAGIC     </div>
--- MAGIC     <div style="color: #1b5162;padding: 0px 30px 0px 30px;">of enterprise data goes unused for analytics and decision making</div>
+-- MAGIC     <div style="color: #1b5162; padding: 0 30px; text-align: center;">
+-- MAGIC       of enterprise data goes unused for analytics and decision making
+-- MAGIC     </div>
 -- MAGIC   </div>
--- MAGIC   <div style="color: #bfbfbf; padding-top: 5px">Source: Forrester</div>
+-- MAGIC   <div style="color: #bfbfbf; padding-top: 5px;">
+-- MAGIC     Source: Forrester
+-- MAGIC   </div>
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC
--- MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
+-- MAGIC ## <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
 -- MAGIC
 -- MAGIC
 -- MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>
@@ -40,44 +44,50 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with Delta Live Tables
+-- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & Delta Live Tables
 -- MAGIC
 -- MAGIC <img style="float: right" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-1.png" />
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our c360 database. <br>
 -- MAGIC We'll consume and clean our raw data sources to prepare the tables required for our BI & ML workload.
 -- MAGIC
--- MAGIC We have 3 data sources sending new files in our blob storage (`/demos/retail/churn/`) and we want to incrementally load this data into our Data Warehousing tables:
+-- MAGIC We want to ingest the datasets below from Salesforce Sales Cloud and blob storage (`/demos/retail/churn/`) incrementally into our Data Warehousing tables:
 -- MAGIC
 -- MAGIC - Customer profile data *(name, age, address etc)*
 -- MAGIC - Orders history *(what our customer bought over time)*
 -- MAGIC - Streaming Events from our application *(when was the last time customers used the application, typically a stream from a Kafka queue)*
 -- MAGIC
 -- MAGIC
--- MAGIC Databricks simplifies this task with Delta Live Table (DLT) by making Data Engineering accessible to all.
+-- MAGIC <a href="https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo" target="_blank"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/lakeflow-connect-anim.gif?raw=true" style="float: right; margin-right: 20px" width="250px"></a>
 -- MAGIC
--- MAGIC DLT allows Data Analysts to create advanced pipelines with plain SQL.
+-- MAGIC ## 1/ Ingest data with Lakeflow Connect
 -- MAGIC
--- MAGIC ## Delta Live Table: A simple way to build and manage data pipelines for fresh, high quality data!
+-- MAGIC
+-- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks. 
+-- MAGIC
+-- MAGIC
+-- MAGIC ## 2/ Prepare and transform your data with Delta Live Table
+-- MAGIC
+-- MAGIC <!-- ## Delta Live Table: A simple way to build and manage data pipelines for fresh, high quality data! -->
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
--- MAGIC     <p>
--- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-accelerate.png"/> 
--- MAGIC       <strong>Accelerate ETL development</strong> <br/>
+-- MAGIC     <p style="min-height: 65px;">
+-- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/diganparikh-dp/Images/refs/heads/main/Icons/LakeFlow%20Connect.jpg"/> 
+-- MAGIC       <strong>Efficient end-to-end ingestion</strong> <br/>
 -- MAGIC       Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance 
 -- MAGIC     </p>
 -- MAGIC     <p>
--- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-complexity.png"/> 
--- MAGIC       <strong>Remove operational complexity</strong> <br/>
+-- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/diganparikh-dp/Images/refs/heads/main/Icons/LakeFlow%20Pipelines.jpg"/> 
+-- MAGIC       <strong>Flexible and easy setup</strong> <br/>
 -- MAGIC       By automating complex administrative tasks and gaining broader visibility into pipeline operations
 -- MAGIC     </p>
 -- MAGIC   </div>
 -- MAGIC   <div style="width: 48%; float: left">
--- MAGIC     <p>
+-- MAGIC     <p style="min-height: 65px;">
 -- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-trust.png"/> 
 -- MAGIC       <strong>Trust your data</strong> <br/>
--- MAGIC       With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML 
+-- MAGIC       With built-in orchestration, quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML 
 -- MAGIC     </p>
 -- MAGIC     <p>
 -- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-stream.png"/> 
@@ -88,14 +98,6 @@
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC <br style="clear:both">
--- MAGIC
--- MAGIC <img src="https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-logo.png" style="float: right;" width="200px">
--- MAGIC
--- MAGIC ## Delta Lake
--- MAGIC
--- MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake tables. Delta Lake is an open storage framework for reliability and performance.<br>
--- MAGIC It provides many functionalities (ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)<br>
--- MAGIC For more details on Delta Lake, run dbdemos.install('delta-lake')
 
 -- COMMAND ----------
 
@@ -110,7 +112,7 @@
 -- MAGIC
 -- MAGIC Let's implement the following flow: 
 -- MAGIC  
--- MAGIC <div><img width="1100px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-de.png"/></div>
+-- MAGIC <div><img width="1100px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-churn-de.png?raw=true"/></div>
 -- MAGIC
 -- MAGIC *Note that we're including the ML model our [Data Scientist built]($../04-Data-Science-ML/04.1-automl-churn-prediction) using Databricks AutoML to predict the churn. We'll cover that in the next section.*
 
@@ -143,7 +145,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ### 1/ Loading our data using Databricks Autoloader (cloud_files)
 -- MAGIC <div style="float:right">
--- MAGIC   <img width="500px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-de-small-1.png"/>
+-- MAGIC   <img width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-churn-de-small-1.png?raw=true"/>
 -- MAGIC </div>
 -- MAGIC   
 -- MAGIC Autoloader allow us to efficiently ingest millions of files from a cloud storage, and support efficient schema inference and evolution at scale.
@@ -184,7 +186,7 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_retail_c360/c360/user
 -- MAGIC %md-sandbox
 -- MAGIC ### 2/ Enforce quality and materialize our tables for Data Analysts
 -- MAGIC <div style="float:right">
--- MAGIC   <img width="500px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-de-small-2.png"/>
+-- MAGIC   <img width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-churn-de-small-2.png?raw=true"/>
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC The next layer often call silver is consuming **incremental** data from the bronze one, and cleaning up some information.
@@ -240,7 +242,7 @@ from STREAM(live.churn_orders_bronze)
 -- MAGIC %md-sandbox
 -- MAGIC ### 3/ Aggregate and join data to create our ML features
 -- MAGIC <div style="float:right">
--- MAGIC   <img width="500px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-de-small-3.png"/>
+-- MAGIC   <img width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-churn-de-small-3.png?raw=true"/>
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC We're now ready to create the features required for our Churn prediction.
@@ -278,7 +280,7 @@ AS
 -- MAGIC %md-sandbox
 -- MAGIC ## 5/ Enriching the gold data with a ML model
 -- MAGIC <div style="float:right">
--- MAGIC   <img width="500px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-de-small-4.png"/>
+-- MAGIC   <img width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-churn-de-small-4.png?raw=true"/>
 -- MAGIC </div>
 -- MAGIC
 -- MAGIC Our Data scientist team has build a churn prediction model using Auto ML and saved it into Databricks Model registry. 

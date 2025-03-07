@@ -57,3 +57,17 @@ else:
 import numpy as np
 import pandas as pd
 import pyspark.sql.functions as F
+
+# COMMAND ----------
+
+#Force torch to local filestore to properly support serverless workspaces
+try:
+    import os
+    import tempfile
+    import torch
+
+    file_store_path = os.path.join(tempfile.gettempdir(), os.environ["VIRTUAL_ENV"].split("/")[-1])
+    store = torch.distributed.FileStore(file_store_path, world_size=1)
+    torch.distributed.init_process_group(backend="gloo", rank=0, world_size=1, store=store)
+except:
+    pass

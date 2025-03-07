@@ -1,5 +1,5 @@
 databricks_resources:
-  llm_endpoint_name: databricks-dbrx-instruct
+  llm_endpoint_name: databricks-meta-llama-3-1-70b-instruct
   vector_search_endpoint_name: dbdemos_vs_endpoint
 input_example:
   messages:

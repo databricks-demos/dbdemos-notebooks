@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install opencv-python
+# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.20.2 shap==0.42.1 opencv-python==4.11.0.86 
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -56,14 +56,12 @@ import torch
 #Make sure to leverage the GPU when available
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
-pipeline = mlflow.transformers.load_model(
-  MODEL_URI, 
-  device=device.index)
+pipeline = mlflow.transformers.load_model(MODEL_URI, device=device.index)
 print(f"Model loaded from {MODEL_URI} to device {device}")
 
 # COMMAND ----------
 
-df = spark.read.table("training_dataset_augmented").limit(50).toPandas()
+df = spark.read.table("training_dataset_augmented").limit(10).toPandas()
 
 # COMMAND ----------
 

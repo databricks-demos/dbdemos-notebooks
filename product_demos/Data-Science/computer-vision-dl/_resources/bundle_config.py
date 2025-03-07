@@ -99,25 +99,11 @@
   ],
   "cluster": {
     "num_workers": 0,
-    "spark_version": "15.4.x-gpu-ml-scala2.12",
     "spark_conf": {
-        "spark.databricks.cluster.profile": "singleNode",
         "spark.master": "local[*, 4]"
     },
-    "node_type_id": {
-        "AWS": "g4dn.2xlarge", 
-        "AZURE": "Standard_NC4as_T4_v3", 
-        "GCP": "a2-highgpu-1g"
-    },
-    "driver_node_type_id": {
-        "AWS": "g4dn.2xlarge", 
-        "AZURE": "Standard_NC4as_T4_v3", 
-        "GCP": "a2-highgpu-1g"
-    },
-    "custom_tags": {
-        "ResourceClass": "SingleNode"
-    },
+    "spark_version": "15.4.x-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER"
-  }
+  }  
 }

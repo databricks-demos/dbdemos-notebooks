@@ -50,6 +50,12 @@ def download_file_from_git(dest, owner, repo, path):
 # COMMAND ----------
 
 def upload_pdfs_to_volume(volume_path):
+  try:
+    if len(dbutils.fs.ls(volume_path)) > 10:
+      print(f'Documents already available, skipping download (delete the volume folder {volume_path} to download them again)')
+      return
+  except:
+    pass
   download_file_from_git(volume_path, "databricks-demos", "dbdemos-dataset", "/llm/databricks-pdf-documentation")
 
 def upload_dataset_to_volume(volume_path):

@@ -27,8 +27,7 @@
 # COMMAND ----------
 
 # Let's start by installing our libraries
-%pip install --quiet databricks-genai==1.1.4 mlflow==2.16.2
-%pip install --quiet databricks-sdk==0.40.0
+%pip install databricks-genai==1.1.7 mlflow==2.19.0 databricks-sdk==0.40.0
 dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -244,7 +243,7 @@ endpoint_config = EndpointCoreConfigInput(
             entity_name=registered_model_name,
             entity_version=get_latest_model_version(registered_model_name),
             min_provisioned_throughput=0,
-            max_provisioned_throughput=100,
+            max_provisioned_throughput=10900,
             scale_to_zero_enabled=True
         )
     ]

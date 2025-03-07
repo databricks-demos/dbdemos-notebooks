@@ -11,19 +11,6 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Library updates
-# MAGIC SDK 0.1.6 has an issue with notebook-native authentication.  See https://github.com/databricks/databricks-sdk-py/issues/221
-# MAGIC Update to the latest version of databricks-sdk
-
-# COMMAND ----------
-
-# DBTITLE 1,SDK 0.1.6 (DBR 13.3 and 14.3) update
-# MAGIC %pip install -U databricks-sdk
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ## Demo initialization
 
 # COMMAND ----------
@@ -52,7 +39,6 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # DBTITLE 1,Import modules that will be used in the notebooks
 import os
-import torch
 import mlflow
 import pandas as pd
 import numpy as np
@@ -126,3 +112,17 @@ def define_lightning_dataset_moduel():
 
       def test_dataloader(self):
           return torch.utils.data.DataLoader(self.val_ds, batch_size=self.batch_size, num_workers=8)
+
+# COMMAND ----------
+
+#Force torch to local filestore to properly support serverless workspaces
+try:
+    import os
+    import tempfile
+    import torch
+
+    file_store_path = os.path.join(tempfile.gettempdir(), os.environ["VIRTUAL_ENV"].split("/")[-1])
+    store = torch.distributed.FileStore(file_store_path, world_size=1)
+    torch.distributed.init_process_group(backend="gloo", rank=0, world_size=1, store=store)
+except:
+    pass

@@ -255,11 +255,8 @@ def wait_for_model_serving_endpoint_to_be_ready(ep_name):
 # COMMAND ----------
 
 import requests
-from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from pyspark.sql.types import StringType
-import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 #Add retries with backoff to avoid 429 while fetching the doc
@@ -270,6 +267,9 @@ retries = Retry(
 )
 
 def download_databricks_documentation_articles(max_documents=None):
+    import markdownify
+    from bs4 import BeautifulSoup
+    import xml.etree.ElementTree as ET
     # Fetch the XML content from sitemap
     response = requests.get(DATABRICKS_SITEMAP_URL)
     root = ET.fromstring(response.content)
@@ -308,9 +308,12 @@ def download_databricks_documentation_articles(max_documents=None):
         def extract_text(html_content):
             if html_content:
                 soup = BeautifulSoup(html_content, "html.parser")
-                article_div = soup.find("div", itemprop="articleBody")
-                if article_div:
-                    return str(article_div).strip()
+                article = soup.find("article")
+                if article:
+                    try:
+                        return markdownify.markdownify(article.prettify(), heading_style="ATX")
+                    except Exception as e:
+                        return None
             return None
 
         return html_contents.apply(extract_text)
@@ -325,6 +328,7 @@ def download_databricks_documentation_articles(max_documents=None):
     return final_df
 
 #doc = download_databricks_documentation_articles(100)
+#display(doc)
 #doc.write.mode('overwrite').saveAsTable('databricks_documentation')
 
 # COMMAND ----------

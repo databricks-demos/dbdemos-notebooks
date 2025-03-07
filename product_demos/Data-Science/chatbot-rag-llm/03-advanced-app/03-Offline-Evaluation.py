@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.15.0 grpcio-status==1.59.3 # Temporary pin: grpcio version to avoid protobuf conflict.
+# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.16.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -178,7 +178,14 @@ pip_requirements = mlflow.pyfunc.get_model_dependencies(f"runs:/{model.run_id}/c
 
 # COMMAND ----------
 
+# DBTITLE 1,install the model requirements to avoid version conflict
 # MAGIC %pip install -r $pip_requirements
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,just reload our catalog/schema name for the demo
+# MAGIC %run ../_resources/00-init-advanced $reset_all_data=false
 
 # COMMAND ----------
 
@@ -187,10 +194,13 @@ pip_requirements = mlflow.pyfunc.get_model_dependencies(f"runs:/{model.run_id}/c
 
 # COMMAND ----------
 
+MODEL_NAME = "rag_demo_advanced"
+MODEL_NAME_FQN = f"{catalog}.{db}.{MODEL_NAME}"
+model = get_latest_model(MODEL_NAME_FQN)
 with mlflow.start_run(run_name="eval_dataset_advanced"):
     # Evaluate the logged model
     eval_results = mlflow.evaluate(
-        data=eval_dataset,
+        data=spark.table("eval_set_databricks_documentation"),
         model=f'runs:/{model.run_id}/chain',
         model_type="databricks-agent",
     )

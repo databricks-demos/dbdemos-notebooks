@@ -24,7 +24,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.42.4 tf-keras==2.17.0 accelerate==0.32.1 mlflow==2.19.0 torchvision==0.20.1 deepspeed==0.14.4
+# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.49.0 tf-keras==2.17.0 accelerate==1.4.0 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -284,7 +284,8 @@ client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="pr
 predict_damage_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod")
 columns = predict_damage_udf.metadata.get_input_schema().input_names()
 #Run the inferences
-predictions = spark.table('training_dataset').withColumn("damage_prediction", predict_damage_udf(*columns)).cache()
+spark.table('training_dataset').withColumn("damage_prediction", predict_damage_udf(*columns)).write.mode('overwrite').saveAsTable('damage_predictions')
+predictions = spark.table('damage_predictions')
 display(predictions)
 
 # COMMAND ----------

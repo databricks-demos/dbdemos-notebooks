@@ -1,26 +1,43 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Intelligence Data Platform for retail - Reducing Churn with a Customer 360 platform
+-- MAGIC # Data Intelligence Platform for Retail & Consumer Goods 
 -- MAGIC
--- MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn.png" style="float: left; margin-right: 30px" width="600px" />
+-- MAGIC ### Reducing Churn with a Customer 360 platform
 -- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_clean.png?raw=true" style="float: left; margin-right: 30px" width="600px" />
 -- MAGIC <br/>
 -- MAGIC
--- MAGIC ## What is The Databricks Intelligence Data Platform for retail?
+-- MAGIC ## What is The Databricks Data Intelligence Platform?
 -- MAGIC
--- MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to always offer more engaging customer experiences driven by real time data, at the lowest cost. 
+-- MAGIC It's the only enterprise data platform that allows seamless integration of _all_ of your relevant data systems for building models, GenAI agents, applications, dashboards, and more! Basically, Databricks allows you to **create value from your data.**
 -- MAGIC
--- MAGIC The Databricks Intelligence Data Platform for Retail unified analytics and AI capabilities allow you to achieve personalized engagement, employee productivity, and operational speed and efficiency at a scale never before possible - the foundation for future-proof retail transformation and the data-defined enterprise.
+-- MAGIC Specifically for Retail & Consumer Goods, the Databricks Data Intelligence Platform allows you to execute on high-value use-cases, including but not limited to:
+-- MAGIC
+-- MAGIC 1. Personalized consumer engagement. 
+-- MAGIC 2. Monitoring employee productivity. 
+-- MAGIC 3. New product ideation.
+-- MAGIC
+-- MAGIC _and many more,_ giving RCG organizations utilizing Databricks a major edge in business efficiencies.
 -- MAGIC
 -- MAGIC
--- MAGIC ### Simple
--- MAGIC   One single platform and governance/security layer for your data warehousing and AI to **accelerate innovation** and **reduce risks**. No need to stitch together multiple solutions with disparate governance and high complexity.
+-- MAGIC ## More specifically, Databricks is...
+-- MAGIC <br/><br/>
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_intelligence_engine.png?raw=true" style="float: left; margin: 5px -18px 40px -22px; clip-path: inset(0 33px 0 31px);" width="127px" />
 -- MAGIC
--- MAGIC ### Open
--- MAGIC   Built on open source and open standards. You own your data and prevent vendor lock-in, with easy integration with external solution. Being open also lets you share your data with any external organization, regardless of their data stack/vendor.
+-- MAGIC <strong>1. Intelligent</strong><br/>
+-- MAGIC Databricks infuses your Lakehouse with intelligent AI. Because the platform deeply understands your data, it can auto-optimize performance and manage infrastructure for you - meaning, you can focus on optimizing your business instead.
 -- MAGIC
--- MAGIC ### Multicloud
--- MAGIC   One consistent data platform across clouds. Process your data where your need.
+-- MAGIC <div style="clear: both; float: left; width: 49%">
+-- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_simple.png?raw=true" style="float: left; margin: 2px 5px 40px 0;" width="80px" />
+-- MAGIC     <strong>2. Simple</strong><br/>
+-- MAGIC     Ask questions of your data in plain English - or in any natural language that your organization utilizes. Databricks abstracts complex data tasks so that everyone in your organization - computer whiz or total novice - can gain insights & value from that data.
+-- MAGIC </div>
+-- MAGIC
+-- MAGIC <div style="float: right; width: 50%;">
+-- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_governance.png?raw=true" style="float: left; margin: 2px 5px 40px 0;" width="80px" />
+-- MAGIC     <strong>3. Secure</strong><br/>
+-- MAGIC     Provide a single layer of governance and security for all your data assets, from data pipelines to AI models, letting you build and deploy data products that are secure and trusted. Accelerate innovation while ensuring data privacy and IP protection.
+-- MAGIC </div>
 -- MAGIC  
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-churn-introduction-lakehouse&demo_name=lakehouse-retail-c360&event=VIEW">
@@ -70,21 +87,18 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 1/ Ingesting and preparing the data (Data Engineering)
 -- MAGIC
--- MAGIC <img style="float: left; margin-right: 20px" width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-2.png" />
+-- MAGIC <img style="float: left; margin-right: 20px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_de.png?raw=true" />
 -- MAGIC
 -- MAGIC
 -- MAGIC <br/>
--- MAGIC <div style="padding-left: 420px">
 -- MAGIC Our first step is to ingest and clean the raw data we received so that our Data Analyst team can start running analysis on top of it.
 -- MAGIC
 -- MAGIC
--- MAGIC <img src="https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-logo.png" style="float: right; margin-top: 20px" width="200px">
+-- MAGIC ### Simple ingestion with Lakeflow Connect
 -- MAGIC
--- MAGIC ### Delta Lake
+-- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
 -- MAGIC
--- MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake table. [Delta Lake](https://delta.io) is an open storage framework for reliability and performance. <br/>
--- MAGIC It provides many functionalities *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
--- MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
+-- MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
 -- MAGIC
 -- MAGIC ### Simplify ingestion with Delta Live Tables (DLT)
 -- MAGIC
@@ -102,10 +116,10 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 2/ Securing data & governance (Unity Catalog)
 -- MAGIC
--- MAGIC <img style="float: left" width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-6.png" />
+-- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_gov.png?raw=true" />
 -- MAGIC
 -- MAGIC <br/><br/><br/>
--- MAGIC <div style="padding-left: 420px">
+-- MAGIC <div style="padding-left: 520px">
 -- MAGIC   Now that our first tables have been created, we need to grant our Data Analyst team READ access to be able to start alayzing our Customer churn information.
 -- MAGIC   
 -- MAGIC   Let's see how Unity Catalog provides Security & governance across our data assets with, including data lineage and audit log.
@@ -128,7 +142,7 @@
 -- MAGIC
 -- MAGIC
 -- MAGIC
--- MAGIC <img width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-3.png"  style="float: left; margin-right: 10px"/>
+-- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_bi_dw.png?raw=true" />
 -- MAGIC  
 -- MAGIC <br><br><br>
 -- MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
@@ -147,7 +161,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 4/ Predict churn with Data Science & Auto-ML
 -- MAGIC
--- MAGIC <img width="400px" style="float: left; margin-right: 10px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-4.png" />
+-- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_ml_ds.png?raw=true" />
 -- MAGIC
 -- MAGIC <br><br><br>
 -- MAGIC Being able to run analysis on our past data already gave us a lot of insight to drive our business. We can better understand which customers are churning to evaluate the impact of churn.
@@ -203,7 +217,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC ## 5/ Deploying and orchestrating the full workflow
 -- MAGIC
--- MAGIC <img style="float: left; margin-right: 10px" width="400px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-5.png" />
+-- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_5_orchestration.png?raw=true" />
 -- MAGIC
 -- MAGIC <br><br><br>
 -- MAGIC While our data pipeline is almost completed, we're missing one last step: orchestrating the full workflow in production.

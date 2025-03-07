@@ -25,7 +25,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install --quiet mlflow[databricks]==2.20.1 lxml==4.9.3 transformers==4.30.2 langchain==0.2.1 databricks-vectorsearch==0.44 bs4==0.0.2
+# MAGIC %pip install --quiet mlflow[databricks]==2.20.2 lxml==4.9.3 transformers==4.49.0 langchain==0.3.19 databricks-vectorsearch==0.49 bs4==0.0.2 markdownify==0.14.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -111,36 +111,35 @@ display(spark.table("raw_documentation").limit(2))
 # COMMAND ----------
 
 # DBTITLE 1,Splitting our html pages in smaller chunks
-from langchain.text_splitter import HTMLHeaderTextSplitter, RecursiveCharacterTextSplitter
+import re
+from langchain.text_splitter import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from transformers import AutoTokenizer, OpenAIGPTTokenizer
 
 max_chunk_size = 500
 
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, chunk_size=max_chunk_size, chunk_overlap=50)
-html_splitter = HTMLHeaderTextSplitter(headers_to_split_on=[("h2", "header2")])
+md_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[("##", "header2")])
 
 # Split on H2, but merge small h2 chunks together to avoid having too small chunks. 
-def split_html_on_h2(html, min_chunk_size = 20, max_chunk_size=500):
-  if not html:
-      return []
-  h2_chunks = html_splitter.split_text(html)
-  chunks = []
-  previous_chunk = ""
-  # Merge chunks together to add text before h2 and avoid too small docs.
-  for c in h2_chunks:
-    # Concat the h2 (note: we could remove the previous chunk to avoid duplicate h2)
-    content = c.metadata.get('header2', "") + "\n" + c.page_content
-    if len(tokenizer.encode(previous_chunk + content)) <= max_chunk_size/2:
-        previous_chunk += content + "\n"
-    else:
+def split_html_on_h2(html, min_chunk_size=20, max_chunk_size=500):
+    if not html:
+        return []
+    #removes b64 images captured in the md    
+    html = re.sub(r'data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=\n]+', '', html, flags=re.MULTILINE)
+    chunks = []
+    previous_chunk = ""
+    for c in md_splitter.split_text(html):
+        content = c.metadata.get('header2', "") + "\n" + c.page_content
+        if len(tokenizer.encode(previous_chunk + content)) <= max_chunk_size / 2:
+            previous_chunk += content + "\n"
+        else:
+            chunks.extend(text_splitter.split_text(previous_chunk.strip()))
+            previous_chunk = content + "\n"
+    if previous_chunk:
         chunks.extend(text_splitter.split_text(previous_chunk.strip()))
-        previous_chunk = content + "\n"
-  if previous_chunk:
-      chunks.extend(text_splitter.split_text(previous_chunk.strip()))
-  # Discard too small chunks
-  return [c for c in chunks if len(tokenizer.encode(c)) > min_chunk_size]
- 
+    return [c for c in chunks if len(tokenizer.encode(c)) > min_chunk_size]
+
 # Let's try our chunking function
 html = spark.table("raw_documentation").limit(1).collect()[0]['text']
 split_html_on_h2(html)
@@ -174,6 +173,7 @@ def parse_and_split(docs: pd.Series) -> pd.Series:
     
 (spark.table("raw_documentation")
       .filter('text is not null')
+      .repartition(30)
       .withColumn('content', F.explode(parse_and_split('text')))
       .drop("text")
       .write.mode('overwrite').saveAsTable("databricks_documentation"))

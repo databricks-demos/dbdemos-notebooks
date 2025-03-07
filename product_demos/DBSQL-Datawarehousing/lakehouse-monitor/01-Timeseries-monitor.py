@@ -100,7 +100,7 @@ try:
       timestamp_col=TIMESTAMP_COL,
       granularities=GRANULARITIES
     ),
-    assets_dir = os.getcwd(),
+    assets_dir = f"{os.getcwd()}/monitoring",
     output_schema_name=f"{catalog}.{dbName}"
   )
   

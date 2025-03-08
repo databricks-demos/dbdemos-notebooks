@@ -107,7 +107,7 @@ mlflow.autolog(disable=True)
 mlflow.sklearn.autolog(disable=True)
 
 train_sample = banked_df[features].sample(n=np.minimum(100, banked_df.shape[0]), random_state=42)
-underbanked_sample = underbanked_df.sample(n=np.minimum(100, underbanked_df.shape[0]), random_state=42
+underbanked_sample = underbanked_df.sample(n=np.minimum(100, underbanked_df.shape[0]), random_state=42)
 
 # Use Kernel SHAP to explain feature importance on the sampled rows from the validation set.
 predict = lambda x: model.predict(pd.DataFrame(x, columns=features).astype(train_sample.dtypes.to_dict()))
@@ -255,7 +255,7 @@ if compliance_checks_passed:
 # COMMAND ----------
 
 #Let's load the underlying model to get the proba
-skmodel = mlflow.sklearn.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@none")
+skmodel = mlflow.sklearn.load_model(model_uri=f"models:/{catalog}.{db}.{model_name}@Staging")
 underbanked_sample['default_prob'] = skmodel.predict_proba(underbanked_sample[features])[:,1]
 underbanked_sample['prediction'] = skmodel.predict(underbanked_sample[features])
 final_df = pd.concat([underbanked_sample.reset_index(), shap_df], axis=1)

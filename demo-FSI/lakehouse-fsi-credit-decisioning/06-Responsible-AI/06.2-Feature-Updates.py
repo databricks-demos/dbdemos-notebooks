@@ -36,7 +36,7 @@ customer_gold_features = (spark.table("customer_gold")
                                .select('cust_id', 'education', 'marital_status', 'months_current_address', 'months_employment', 'is_resident',
                                        'tenure_months', 'product_cnt', 'tot_rel_bal', 'revenue_tot', 'revenue_12m', 'income_annual', 'tot_assets', 
                                        'overdraft_balance_amount', 'overdraft_number', 'total_deposits_number', 'total_deposits_amount', 'total_equity_amount', 
-                                       'total_UT', 'customer_revenue', 'age', 'avg_balance', 'num_accs', 'balance_usd', 'available_balance_usd')).dropDuplicates(['cust_id'])
+                                       'total_UT', 'customer_revenue', 'age', 'gender', 'avg_balance', 'num_accs', 'balance_usd', 'available_balance_usd')).dropDuplicates(['cust_id'])
 display(customer_gold_features)
 
 # COMMAND ----------
@@ -103,7 +103,11 @@ from databricks.feature_engineering import FeatureEngineeringClient
 fe = FeatureEngineeringClient()
 
 # Drop the fs table if it was already existing to cleanup the demo state
-fe.drop_table(name=f"{catalog}.{db}.credit_decisioning_features")
+try:
+  fe.drop_table(name=f"{catalog}.{db}.credit_decisioning_features")
+  print("Dropped existing feature table.")
+except:
+  print("Feature table does not exist. Creating a new feature table.")
 
 # Create feature table with `cust_id` as the primary key.
 fe.create_table(

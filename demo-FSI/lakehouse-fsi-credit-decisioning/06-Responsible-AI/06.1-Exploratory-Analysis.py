@@ -39,7 +39,7 @@
 
 # MAGIC %sql
 # MAGIC
-# MAGIC GRANT SELECT ON TABLE customer_gold TO `datascientists`
+# MAGIC GRANT SELECT ON TABLE customer_gold TO `Data Scientist`
 
 # COMMAND ----------
 

@@ -5,6 +5,9 @@
 # MAGIC In this notebook, you'll learn how to take the functions you defined in your previous Databricks notebook and integrate them into a **Databricks AI Agent**. This will allow you to use them in applications, the Databricks Playground, or other contexts where AI-driven functionality is needed.
 # MAGIC
 # MAGIC We'll walk through the process step by step, with **GIFs** to guide you along the way. By the end, you'll have a working AI Agent powered by your own functions, ready to deploy and use. Let's get started!
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.2-Agent-Creation-Guide&demo_name=lakehouse-retail-c360&event=VIEW">
 
 # COMMAND ----------
 
@@ -30,15 +33,13 @@
 # MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
 # MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_open_playground.gif" 
 # MAGIC     alt="Opening the Playground" 
-# MAGIC     width="40%"
+# MAGIC     width="80%"
 # MAGIC   >
 # MAGIC </p>
 # MAGIC
 # MAGIC ### Location Guide
 # MAGIC
-# MAGIC TODO: add playground link directlty to open as a new window
-# MAGIC
-# MAGIC Find the Playground under the **Machine Learning** section in your left sidebar.
+# MAGIC Find the **Playground** under the **Machine Learning** section in your Databricks Workspace's left sidebar.
 
 # COMMAND ----------
 
@@ -50,7 +51,7 @@
 # MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
 # MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_function_selection.gif" 
 # MAGIC     alt="Function Selection" 
-# MAGIC     width="40%"
+# MAGIC     width="80%"
 # MAGIC   >
 # MAGIC </p>
 # MAGIC
@@ -67,6 +68,13 @@
 # MAGIC * **Function:** my_awesome_function
 # MAGIC
 # MAGIC > 💡 Note: Replace the example names with your actual catalog and schema names.
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Refer to [your demo config file]($../config) to easily locate your catalog name (_if you don't know it_).
 
 # COMMAND ----------
 
@@ -78,14 +86,15 @@
 # MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
 # MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_export_from_playground.gif" 
 # MAGIC     alt="Exporting Agent" 
-# MAGIC     width="40%"
+# MAGIC     width="80%"
 # MAGIC   >
 # MAGIC </p>
 # MAGIC
 # MAGIC ### Export Checklist
-# MAGIC * ✅ Click the "Export" button in the Playground
-# MAGIC * ✅ Save to your demo's folder for better organization
-# MAGIC * ✅ Verify all selected functions are included
+# MAGIC * ✅ Verify all of the functions from 05.1-Agent-Functions-Creation (_or more that you may have added_) are **selected tools** in the Playground.
+# MAGIC * ✅ Click the "_Export_" button in the Playground
+# MAGIC * ✅ Save the exported notebooks to this directory (**"YOUR_WORKSPACE_PATH/05-Generative-AI/"**)
+# MAGIC
 
 # COMMAND ----------
 
@@ -93,11 +102,22 @@
 # MAGIC ## 🚀 Step 5: Deploy Your AI Agent
 # MAGIC
 # MAGIC ### Final Steps
-# MAGIC 1. Navigate to your exported notebooks
-# MAGIC 2. Follow the AI Agent's deployment instructions
-# MAGIC 3. Close this guide
+# MAGIC 1. Navigate to where your exported "driver" notebook is located.
+# MAGIC 2. Follow that notebook's documentation and guide.
+# MAGIC 3. Close this notebook. You may proceeed to using the "driver" and "agent" notebooks from here. 
 # MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
 # MAGIC ### What's next after you finish this notebook?
 # MAGIC * 🔍 **Agent Evaluation:** Test and validate performance
 # MAGIC * 🌟 **Agent Deployment:** Place your agent in a Databricks App or in the Playground for others to use!
 # MAGIC * ⚙️ **Additional Agent Features:** _and much more!_
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Interested in finishing up this demo? Check out [in the orchestration notebook]($../06-Workflow-orchestration/06-Workflow-orchestration-churn)

@@ -18,10 +18,10 @@
 -- MAGIC 3. New product ideation.
 -- MAGIC
 -- MAGIC _and many more,_ giving RCG organizations utilizing Databricks a major edge in business efficiencies.
--- MAGIC
--- MAGIC
--- MAGIC ## More specifically, Databricks is...
 -- MAGIC <br/><br/>
+-- MAGIC ---
+-- MAGIC <br/><br/>
+-- MAGIC ## More specifically, Databricks is...
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_intelligence_engine.png?raw=true" style="float: left; margin: 5px -18px 40px -22px; clip-path: inset(0 33px 0 31px);" width="127px" />
 -- MAGIC
 -- MAGIC <strong>1. Intelligent</strong><br/>
@@ -44,43 +44,40 @@
 
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC ## Demo: build a c360 database and reduce customer churn with Databricks Intelligence Data Platform.
+-- MAGIC %md  
+-- MAGIC ## Demo: Building a C360 Database to Reduce Customer Churn with Databricks  
 -- MAGIC
--- MAGIC In this demo, we'll step in the shoes of a retail company selling goods with a recurring business.
+-- MAGIC In this demo, we'll step into the role of a retail company that sells goods through a recurring business model.  
+-- MAGIC The company has identified **customer churn** as a key challenge and is focused on reducing it.  
 -- MAGIC
--- MAGIC The business has determined that the focus must be placed on churn. We're asked to:
+-- MAGIC ### Objectives  
+-- MAGIC We need to:  
+-- MAGIC - **Analyze and explain customer churn**: quantify churn, identify trends, and assess business impact.  
+-- MAGIC - **Build a proactive system** to forecast and reduce churn through automated actions, such as targeted emails and customer outreach.  
 -- MAGIC
--- MAGIC * Analyse and explain current customer churn: quantify churn, trends and the impact for the business
--- MAGIC * Build a proactive system to forecast and reduce churn by taking automated action: targeted email, phoning etc.
+-- MAGIC ### What We'll Build  
+-- MAGIC Using the **Lakehouse architecture**, we’ll develop an end-to-end solution that integrates data from multiple sources:  
+-- MAGIC - **Customer profiles** from the website  
+-- MAGIC - **Order details** from the ERP system  
+-- MAGIC - **Clickstream data** from the mobile app to track customer activity  
 -- MAGIC
+-- MAGIC The implementation will follow these key steps:  
+-- MAGIC 1. **Ingest and unify data** into a **C360 database** with structured tables for easy SQL queries.  
+-- MAGIC 2. **Secure the data** and grant access to Data Analysts and Data Scientists.  
+-- MAGIC 3. **Run BI queries** to analyze customer churn.  
+-- MAGIC 4. **Train an ML model** to predict churn and understand key risk factors.  
 -- MAGIC
--- MAGIC ### What we'll build
+-- MAGIC With these insights, we can trigger **automated retention strategies**, such as personalized emails, special offers, or direct outreach.  
 -- MAGIC
--- MAGIC To do so, we'll build an end-to-end solution with the Lakehouse. To be able to properly analyse and predict our customer churn, we need information coming from different external systems: Customer profiles coming from our website, order details from our ERP system and mobile application clickstream to analyse our customers activity.
+-- MAGIC ### Our Dataset  
+-- MAGIC For this demo, we'll assume an external system periodically sends data to cloud storage (S3, ADLS, GCS), including:  
+-- MAGIC - **Customer profile data** (name, age, address, etc.)  
+-- MAGIC - **Order history** (purchases over time)  
+-- MAGIC - **App events** (last activity, clicks, streaming data)  
 -- MAGIC
--- MAGIC At a very high level, this is the flow we'll implement:
+-- MAGIC *Note: Databricks can ingest data from virtually any source, including Salesforce, Fivetran, Kafka, blob storage, and relational or NoSQL databases.*  
 -- MAGIC
--- MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-0.png" />
--- MAGIC
--- MAGIC 1. Ingest and create our c360 database, with tables easy to query in SQL
--- MAGIC 2. Secure data and grant read access to the Data Analyst and Data Science teams.
--- MAGIC 3. Run BI queries to analyse existing churn
--- MAGIC 4. Build ML model to predict which customer is going to churn and why
--- MAGIC
--- MAGIC As a result, we'll have all the information required to trigger custom actions to increase retention (email personalized, special offers, phone call...)
--- MAGIC
--- MAGIC ### Our dataset
--- MAGIC
--- MAGIC To simplify this demo, we'll consider that an external system is periodically sending data into our blob storage (S3/ADLS/GCS):
--- MAGIC
--- MAGIC - Customer profile data *(name, age, address etc)*
--- MAGIC - Orders history *(what our customer bought over time)*
--- MAGIC - Events from our application *(when was the last time customers used the application, clicks, typically in streaming)*
--- MAGIC
--- MAGIC *Note that at a technical level, our data could come from any source. Databricks can ingest data from any system (SalesForce, Fivetran, queuing message like kafka, blob storage, SQL & NoSQL databases...).*
--- MAGIC
--- MAGIC Let's see how this data can be used within the Intelligence Data Platform to analyse and reduce our customer churn!  
+-- MAGIC Now, let's explore how Databricks' **Intelligence Data Platform** can help us analyze and reduce customer churn!  
 
 -- COMMAND ----------
 

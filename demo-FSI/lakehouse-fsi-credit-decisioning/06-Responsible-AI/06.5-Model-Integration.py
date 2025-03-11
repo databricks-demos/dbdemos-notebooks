@@ -20,6 +20,14 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC # `TODO`
+# MAGIC
+# MAGIC - Add integration testing
+# MAGIC - Remove Champion-Challenger testing
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Identify the current champion and challenger models
 # MAGIC
 # MAGIC If there is a model already in production, we define it as the current `champion model`. The model in staging is defined as the `challenger model`.

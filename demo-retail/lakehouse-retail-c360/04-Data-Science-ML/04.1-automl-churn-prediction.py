@@ -47,9 +47,6 @@
 # MAGIC The ML lifecycle is made of data pipelines: Data-preprocessing, feature engineering, training, inference, monitoring and retraining...<br>
 # MAGIC Stepping back, all pipelines are data + code.
 # MAGIC
-# MAGIC
-# MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-4.png" />
-# MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/marc.png" style="float: left;" width="80px"> 
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Marc, as a Data Scientist, needs a data + ML platform accelerating all the ML & DS steps:</h3>
 # MAGIC

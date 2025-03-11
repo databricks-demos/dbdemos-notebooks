@@ -163,6 +163,6 @@ def score_model(dataset):
 # MAGIC
 # MAGIC Databricks provides built-in GenAI capabilities for you to accelerate such GenAI apps deployment. 
 # MAGIC
-# MAGIC Discover how with the [04.4-GenAI-for-churn]($./04.4-GenAI-for-churn) Notebook.
+# MAGIC Discover how with the [Agent Tools]($../05-Generative-AI/05.1-Agent-Functions-Creation) Notebook in the new Generative AI section of this demo!
 # MAGIC
 # MAGIC [Go back to the introduction]($../00-churn-introduction-lakehouse)

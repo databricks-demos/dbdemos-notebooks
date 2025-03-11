@@ -143,6 +143,14 @@
       "description": "Once your model is deployed, run low latency inferences."
     },
     {
+      "path": "05-Generative-AI/05.1-Agent-Functions-Creation", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True,
+      "title":  "Define GenAI Functions for reducing customer churn", 
+      "description": "Define the Unity Catalog functions to reduce churn, including a churn predictor, order retriever, and marketing copy generator."
+    },    
+    {
       "path": "04-Data-Science-ML/04.4-GenAI-for-churn", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -167,7 +175,15 @@
       "description": "Run interactive queries on top of your data"
     },
     {
-      "path": "05-Workflow-orchestration/05-Workflow-orchestration-churn", 
+      "path": "05-Generative-AI/05.2-Agent-Creation-Guide", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Create an agent", 
+      "description": "Define an AI agent with the functions you defined in notebook 05.1"
+    },    
+    {
+      "path": "06-Workflow-orchestration/06-Workflow-orchestration-churn", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,

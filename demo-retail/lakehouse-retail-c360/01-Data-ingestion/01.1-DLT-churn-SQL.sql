@@ -46,8 +46,6 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & Delta Live Tables
 -- MAGIC
--- MAGIC <img style="float: right" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-1.png" />
--- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our c360 database. <br>
 -- MAGIC We'll consume and clean our raw data sources to prepare the tables required for our BI & ML workload.
 -- MAGIC

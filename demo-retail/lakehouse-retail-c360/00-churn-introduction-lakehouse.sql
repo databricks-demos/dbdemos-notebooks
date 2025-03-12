@@ -1,8 +1,7 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Data Intelligence Platform for Retail & Consumer Goods 
--- MAGIC
--- MAGIC ### Reducing Churn with a Customer 360 platform
+-- MAGIC # Data Intelligence Platform Demo for Retail & Consumer Goods 
+-- MAGIC ---
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_clean.png?raw=true" style="float: left; margin-right: 30px" width="600px" />
 -- MAGIC <br/>
@@ -44,40 +43,32 @@
 
 -- COMMAND ----------
 
--- MAGIC %md  
--- MAGIC ## Demo: Building a C360 Database to Reduce Customer Churn with Databricks  
+-- MAGIC %md-sandbox
+-- MAGIC # <span style="color: #FF5733; display: block; text-align: center;">How to Reduce Customer Churn with Databricks</span>
 -- MAGIC
--- MAGIC In this demo, we'll step into the role of a retail company that sells goods through a recurring business model.  
--- MAGIC The company has identified **customer churn** as a key challenge and is focused on reducing it.  
+-- MAGIC ## The Challenge
+-- MAGIC Recurring revenue businesses struggle with customer churn, impacting growth and profitability. With customer acquisition costs 5-25x higher than retention costs, companies face significant revenue loss when customers leave. The challenge is compounded by siloed data across systems - customer profiles in CRM, purchase history in ERP, and engagement metrics in web/mobile analytics platforms. Without a unified view, teams can't identify at-risk customers before they churn or understand the underlying causes driving customer departures.
 -- MAGIC
--- MAGIC ### Objectives  
--- MAGIC We need to:  
--- MAGIC - **Analyze and explain customer churn**: quantify churn, identify trends, and assess business impact.  
--- MAGIC - **Build a proactive system** to forecast and reduce churn through automated actions, such as targeted emails and customer outreach.  
+-- MAGIC ## Our Solution
+-- MAGIC Databricks enables cross-functional teams to build a complete Customer 360 view and deploy proactive churn reduction strategies:
 -- MAGIC
--- MAGIC ### What We'll Build  
--- MAGIC Using the **Lakehouse architecture**, we’ll develop an end-to-end solution that integrates data from multiple sources:  
--- MAGIC - **Customer profiles** from the website  
--- MAGIC - **Order details** from the ERP system  
--- MAGIC - **Clickstream data** from the mobile app to track customer activity  
+-- MAGIC Our team leverages the Databricks Data Intelligence Platform to transform fragmented customer data into actionable insights:
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture.png?raw=true" style="float: right; margin-right: 20px; width: 50%;" alt="Team Workflow"/>
+-- MAGIC 1. **Data Unification**: `John`, our Data Engineer, builds Delta Live Tables pipelines to synchronize and transform data from disparate sources (CRM, ERP, web analytics, mobile app) into a unified Customer 360 database. This creates a single source of truth with real-time data ingestion capabilities.
 -- MAGIC
--- MAGIC The implementation will follow these key steps:  
--- MAGIC 1. **Ingest and unify data** into a **C360 database** with structured tables for easy SQL queries.  
--- MAGIC 2. **Secure the data** and grant access to Data Analysts and Data Scientists.  
--- MAGIC 3. **Run BI queries** to analyze customer churn.  
--- MAGIC 4. **Train an ML model** to predict churn and understand key risk factors.  
+-- MAGIC 2. **Governance & Security**: `Emily` implements Unity Catalog to ensure proper data governance, providing role-based access controls while maintaining data lineage and compliance. This enables secure collaboration across business units while protecting sensitive customer information.
 -- MAGIC
--- MAGIC With these insights, we can trigger **automated retention strategies**, such as personalized emails, special offers, or direct outreach.  
+-- MAGIC 3. **Advanced Analytics**: `Alice`, our BI Analyst, uses SQL Analytics to identify churn patterns, segment customers by risk level, and quantify the financial impact of retention improvements. These insights drive strategic decision-making across the organization.
 -- MAGIC
--- MAGIC ### Our Dataset  
--- MAGIC For this demo, we'll assume an external system periodically sends data to cloud storage (S3, ADLS, GCS), including:  
--- MAGIC - **Customer profile data** (name, age, address, etc.)  
--- MAGIC - **Order history** (purchases over time)  
--- MAGIC - **App events** (last activity, clicks, streaming data)  
+-- MAGIC 4. **Predictive Intelligence**: `Marc` applies AutoML to develop custom machine learning models that predict which customers are likely to churn and identify the key factors contributing to churn risk. These models continuously improve as new data becomes available.
 -- MAGIC
--- MAGIC *Note: Databricks can ingest data from virtually any source, including Salesforce, Fivetran, Kafka, blob storage, and relational or NoSQL databases.*  
+-- MAGIC 5. **AI-Powered Intervention**: `Liza` leverages Mosaic AI to transform predictive insights into preventative actions. Using generative AI, she creates personalized retention campaigns, tailored offers, and proactive customer service interventions that address specific churn risk factors.
 -- MAGIC
--- MAGIC Now, let's explore how Databricks' **Intelligence Data Platform** can help us analyze and reduce customer churn!  
+-- MAGIC By connecting these capabilities in a seamless workflow, the team not only predicts which customers might leave but also understands why they're at risk and automatically triggers the most effective retention strategies for each customer segment.
+-- MAGIC
+-- MAGIC
+-- MAGIC
+-- MAGIC **Ready to transform your customer retention strategy? Let's get started with Databricks today!**
 
 -- COMMAND ----------
 
@@ -169,16 +160,25 @@
 
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC Let's see how to train an ML model within 1 click with the [04.1-automl-churn-prediction notebook]($./04-Data-Science-ML/04.1-automl-churn-prediction)
+-- MAGIC %md-sandbox
+-- MAGIC ## 5/ Transform Predictions into Action with GenAI
 -- MAGIC
--- MAGIC #### Reducing churn leveraging Databricks GenAI and LLMs capabilities 
+-- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_4_gen_ai.png?raw=true" />
 -- MAGIC
--- MAGIC GenAI provides unique capabilities to improve your customer relationship, providing better services but also better analyzing your churn risk.
 -- MAGIC
--- MAGIC Databricks provides built-in GenAI capabilities for you to accelerate such GenAI apps deployment. 
+-- MAGIC Predicting which customers will churn is powerful, but it's only half the solution. The real business value comes from taking proactive, personalized action to retain those at-risk customers before they leave.
 -- MAGIC
--- MAGIC Discover how with the [04.4-GenAI-for-churn]($./04-Data-Science-ML/04.4-GenAI-for-churn) Notebook.
+-- MAGIC This is where Liza, our Gen AI Engineer, leverages Databricks Mosaic AI to transform predictive insights into targeted interventions that drive measurable retention improvements.
+-- MAGIC
+-- MAGIC With the Databricks Intelligence Platform, Liza can:
+-- MAGIC
+-- MAGIC * **Generate personalized outreach campaigns** tailored to each customer's specific churn risk factors
+-- MAGIC * **Automate contextual recommendations** for customer service teams with specific retention offers
+-- MAGIC * **Create dynamic content** for email, SMS, and in-app messaging that addresses individual customer concerns
+-- MAGIC * **Design intelligent conversation flows** for support teams to guide retention discussions
+-- MAGIC * **Continuously optimize messaging** based on which interventions successfully prevent churn
+-- MAGIC
+-- MAGIC By connecting ML predictions directly to GenAI-powered interventions, we close the loop between insight and action—turning churn prediction into churn prevention and measurably improving customer lifetime value.
 
 -- COMMAND ----------
 
@@ -212,7 +212,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## 5/ Deploying and orchestrating the full workflow
+-- MAGIC ## 6/ Deploying and orchestrating the full workflow
 -- MAGIC
 -- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_5_orchestration.png?raw=true" />
 -- MAGIC
@@ -224,7 +224,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [workflow and orchestration notebook]($./05-Workflow-orchestration/05-Workflow-orchestration-churn) to schedule our pipeline (data ingetion, model re-training etc)
+-- MAGIC Open the [workflow and orchestration notebook]($./06-Workflow-orchestration/06-Workflow-orchestration-churn) to schedule our pipeline (data ingetion, model re-training etc)
 
 -- COMMAND ----------
 

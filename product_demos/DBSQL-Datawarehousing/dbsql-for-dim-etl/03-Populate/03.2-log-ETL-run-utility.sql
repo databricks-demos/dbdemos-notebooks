@@ -1,4 +1,9 @@
 -- Databricks notebook source
+-- MAGIC %md
+-- MAGIC Log the results of the load to specific patient table (specifically, the previous DML)
+
+-- COMMAND ----------
+
 declare or replace variable op_sql string;
 
 -- COMMAND ----------
@@ -17,6 +22,7 @@ execute immediate op_sql;
 
 -- COMMAND ----------
 
+-- write to ETL Log Table
 merge into identifier(session.run_log_table) as t
 using (select * from values (session.data_source, session.load_table, session.load_start_time, session.load_end_time, session.process_id) as
   source(data_source, table_name, load_start_time, load_end_time, process_id))

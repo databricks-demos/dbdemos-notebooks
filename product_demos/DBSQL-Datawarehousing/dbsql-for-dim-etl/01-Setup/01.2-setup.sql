@@ -25,6 +25,11 @@ execute immediate sqlstr;
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC Enable/disable Predictive Optimization for schema
+
+-- COMMAND ----------
+
 set variable sqlstr = "alter schema " || catalog_name || "." || schema_name || if(enable_po_for_schema, ' enable', ' inherit') || ' predictive optimization';
 execute immediate sqlstr;
 

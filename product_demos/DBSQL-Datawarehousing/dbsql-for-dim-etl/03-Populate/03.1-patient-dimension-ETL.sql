@@ -45,13 +45,13 @@
 
 -- COMMAND ----------
 
-declare or replace variable br_table string; -- staging table identifier
-declare or replace variable si_table string; -- integration table
-declare or replace variable gd_table string; -- dimension table
+declare or replace variable stg_table string; -- staging table identifier
+declare or replace variable int_table string; -- integration table
+declare or replace variable dim_table string; -- dimension table
 
 -- COMMAND ----------
 
-set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
+set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
 
 -- COMMAND ----------
 
@@ -99,10 +99,10 @@ declare or replace variable gd_last_load_date timestamp default '1990-01-01';
 -- COMMAND ----------
 
 -- to get table_changes since integration table last loaded
-set variable si_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.si_table), (select max(update_dt) from identifier(session.si_table)), session.si_last_load_date);
+set variable si_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.int_table), (select max(update_dt) from identifier(session.int_table)), session.si_last_load_date);
 
 -- to get table_changes since dimension table last loaded
-set variable gd_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.gd_table), (select max(update_dt) from identifier(session.gd_table)), session.gd_last_load_date);
+set variable gd_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.dim_table), (select max(update_dt) from identifier(session.dim_table)), session.gd_last_load_date);
 
 
 -- COMMAND ----------
@@ -124,7 +124,7 @@ set variable gd_last_load_date = coalesce((select max(load_end_time) from identi
 
 -- COMMAND ----------
 
-set variable (load_table, load_start_time, load_end_time) = (select session.br_table, current_timestamp(), null);
+set variable (load_table, load_start_time, load_end_time) = (select session.stg_table, current_timestamp(), null);
 
 -- COMMAND ----------
 
@@ -147,7 +147,7 @@ declare or replace variable file_stage string = session.staging_path || "/patien
 -- COMMAND ----------
 
 set variable sqlstr = "
-copy into " || session.br_table || "
+copy into " || session.stg_table || "
 from (
   select
     *,
@@ -214,7 +214,7 @@ set variable load_end_time = current_timestamp();
 
 -- COMMAND ----------
 
-set variable (load_table, load_start_time, load_end_time) = (select session.si_table, current_timestamp(), null);
+set variable (load_table, load_start_time, load_end_time) = (select session.int_table, current_timestamp(), null);
 
 -- COMMAND ----------
 
@@ -236,9 +236,9 @@ set variable (load_table, load_start_time, load_end_time) = (select session.si_t
 -- transform ingested source data
 create or replace temporary view si_transform_tv
 as
-with vars as (select session.si_table, session.br_table, session.si_last_load_date, session.code_table), -- required for identity(si_table) to work
+with vars as (select session.int_table, session.stg_table, session.si_last_load_date, session.code_table), -- required for identity(int_table) to work
 br_cdc as (
-  select * from identifier(session.br_table) br
+  select * from identifier(session.stg_table) br
   where br.insert_dt > session.si_last_load_date
 )
 select
@@ -281,7 +281,7 @@ where
 -- COMMAND ----------
 
 -- Insert new and changed data
-insert into identifier(si_table)
+insert into identifier(int_table)
 select * from si_transform_tv
 ;
 
@@ -315,7 +315,7 @@ set variable load_end_time = current_timestamp();
 
 -- COMMAND ----------
 
-set variable (load_table, load_start_time, load_end_time) = (select session.gd_table, current_timestamp(), null);
+set variable (load_table, load_start_time, load_end_time) = (select session.dim_table, current_timestamp(), null);
 
 -- COMMAND ----------
 
@@ -348,7 +348,8 @@ set variable (load_table, load_start_time, load_end_time) = (select session.gd_t
 
 create or replace temporary view dim_transform_tv
 as
-with vars as (select session.si_table, session.gd_table, session.gd_last_load_date), -- select the variables for use in later clauses
+with vars as (select session.int_table, session.dim_table, session.gd_last_load_date), -- select the variables for use in later clauses
+-- INCREMENTAL records from Integration Table
 si_tc as (
   select
     last_name, first_name, name_prefix, name_suffix, maiden_name,
@@ -360,25 +361,25 @@ si_tc as (
     hash(last_name, ifnull(first_name, '#'), ifnull(name_prefix, '#'), ifnull(name_suffix, '#'), ifnull(maiden_name, '#'),
         ifnull(gender_cd, '#'), ifnull(gender_nm, '#'), ifnull(date_of_birth, '#'), ifnull(marital_status, '#'), ifnull(ethnicity_cd, '#'), ifnull(ethnicity_nm, '#'), ifnull(ssn, '#')) as checksum,
     data_source
-  from identifier(session.si_table) si
+  from identifier(session.int_table) si
   where si.update_dt > session.gd_last_load_date -- CDC
 ),
+-- GET current version records in dimension table, if any, corresponding to incoming data
 curr_v as (
-  -- GET current version records in dimension table, if any, corresponding to incoming data
   select gd.* except (effective_end_date, insert_dt, update_dt, process_id)
-  from identifier(session.gd_table) gd
+  from identifier(session.dim_table) gd
   where effective_end_date is null and
     exists (select 1 from si_tc where si_tc.patient_src_id = gd.patient_src_id AND si_tc.data_source = gd.data_source)
 ),
+-- ISOLATE new patients and new versions
 ins_upd_rows as (
-  -- ISOLATE new patients and new versions
   select null as patient_sk, * from si_tc
   union all
   -- use this to update effective_end_date of existing version in gd
   select * from curr_v
 ),
+-- IGNORE consecutive versions if no changes to business attributes of interest
 no_dup_ver as (
-  -- IGNORE consecutive versions if no changes to business attributes of interest
   select
     *,
     lag(checksum, 1, null) over (partition by patient_src_id, data_source order by effective_start_date asc) as checksum_next
@@ -403,7 +404,7 @@ from no_dup_ver
 
 -- COMMAND ----------
 
-merge into identifier(session.gd_table) d
+merge into identifier(session.dim_table) d
 using dim_transform_tv tr
 on d.patient_sk = tr.patient_sk
 when matched then update

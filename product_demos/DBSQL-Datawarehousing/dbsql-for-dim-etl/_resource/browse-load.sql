@@ -3,13 +3,13 @@
 
 -- COMMAND ----------
 
-declare or replace variable br_table string; -- staging table identifier
-declare or replace variable si_table string; -- integration table
-declare or replace variable gd_table string; -- dimension table
+declare or replace variable stg_table string; -- staging table identifier
+declare or replace variable int_table string; -- integration table
+declare or replace variable dim_table string; -- dimension table
 
 -- COMMAND ----------
 
-set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
+set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
 
 -- COMMAND ----------
 
@@ -28,7 +28,7 @@ select * from identifier(run_log_table) order by load_start_time;
 -- COMMAND ----------
 
 -- DBTITLE 1,Bronze
-select id, CHANGEDONDATE, data_source, * except(id, CHANGEDONDATE, data_source) from identifier(br_table)
+select id, CHANGEDONDATE, data_source, * except(id, CHANGEDONDATE, data_source) from identifier(stg_table)
 order by data_source, id, CHANGEDONDATE
 
 -- COMMAND ----------
@@ -41,7 +41,7 @@ order by data_source, id, CHANGEDONDATE
 -- COMMAND ----------
 
 -- DBTITLE 1,Silver
-select patient_src_id, src_changed_on_dt, data_source, * except(patient_src_id, src_changed_on_dt, data_source) from identifier(si_table)
+select patient_src_id, src_changed_on_dt, data_source, * except(patient_src_id, src_changed_on_dt, data_source) from identifier(int_table)
 order by data_source, patient_src_id, src_changed_on_dt
 
 -- COMMAND ----------
@@ -52,5 +52,5 @@ order by data_source, patient_src_id, src_changed_on_dt
 -- COMMAND ----------
 
 -- DBTITLE 1,Gold
-select patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source, * except(patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source) from identifier(gd_table)
+select patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source, * except(patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source) from identifier(dim_table)
 order by data_source, patient_src_id, effective_start_date

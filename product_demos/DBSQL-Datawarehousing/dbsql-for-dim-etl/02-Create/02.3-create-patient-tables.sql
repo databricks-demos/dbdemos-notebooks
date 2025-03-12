@@ -3,9 +3,9 @@
 
 -- COMMAND ----------
 
-declare or replace variable br_table string; -- staging/bronze table identifier
-declare or replace variable si_table string; -- integration/silver table identifier
-declare or replace variable gd_table string; -- dimension table identifier
+declare or replace variable stg_table string; -- staging/bronze table identifier
+declare or replace variable int_table string; -- integration/silver table identifier
+declare or replace variable dim_table string; -- dimension table identifier
 
 -- COMMAND ----------
 
@@ -13,7 +13,7 @@ declare or replace variable sqlstr string;
 
 -- COMMAND ----------
 
-set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
+set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
 
 -- COMMAND ----------
 
@@ -33,11 +33,11 @@ set variable (br_table, si_table, gd_table) = (select catalog_name || '.' || sch
 
 -- COMMAND ----------
 
-drop table if exists identifier(br_table);
+drop table if exists identifier(stg_table);
 
 -- COMMAND ----------
 
-create table if not exists identifier(br_table)
+create table if not exists identifier(stg_table)
 comment 'Patient staging table ingesting initial and incremental master data from csv files'
 ;
 
@@ -48,7 +48,7 @@ comment 'Patient staging table ingesting initial and incremental master data fro
 
 -- COMMAND ----------
 
-drop table if exists identifier(si_table);
+drop table if exists identifier(int_table);
 
 -- COMMAND ----------
 
@@ -63,7 +63,7 @@ drop table if exists identifier(si_table);
 
 -- COMMAND ----------
 
-create table if not exists identifier(si_table) (
+create table if not exists identifier(int_table) (
   patient_src_id string not null comment 'ID of the record in the source',
   date_of_birth date comment 'date of birth',
   ssn string comment 'social security number',
@@ -96,7 +96,7 @@ tblproperties (delta.enableChangeDataFeed = true)
 
 -- COMMAND ----------
 
-drop table if exists identifier(gd_table);
+drop table if exists identifier(dim_table);
 
 -- COMMAND ----------
 
@@ -114,7 +114,7 @@ drop table if exists identifier(gd_table);
 
 -- COMMAND ----------
 
-create table if not exists identifier(gd_table) (
+create table if not exists identifier(dim_table) (
   patient_sk bigint generated always as identity comment 'Primary Key (ID)',
   last_name string not null comment 'Last name of the person',
   first_name string comment 'First name of the person',
@@ -151,5 +151,5 @@ tblproperties (
 -- COMMAND ----------
 
 -- FK to integration table
-set variable sqlstr = 'alter table ' || gd_table || ' add constraint c_d_int_source_fk foreign key (patient_src_id, data_source) references ' || si_table || '(patient_src_id, data_source) not enforced rely';
+set variable sqlstr = 'alter table ' || dim_table || ' add constraint c_d_int_source_fk foreign key (patient_src_id, data_source) references ' || int_table || '(patient_src_id, data_source) not enforced rely';
 execute immediate sqlstr;

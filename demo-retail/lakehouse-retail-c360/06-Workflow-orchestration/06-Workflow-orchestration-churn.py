@@ -1,22 +1,32 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Deploying and orchestrating the full workflow
+# MAGIC # Orchestrating the End-to-End Workflow: From Data to Action
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 10px" width="300px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-5.png" />
 # MAGIC
-# MAGIC All our assets are ready. We now need to define when we want our DLT pipeline to kick in and refresh the tables.
+# MAGIC ## Finding Your Rhythm: Real-time vs. Scheduled
 # MAGIC
-# MAGIC One option is to switch DLT pipeline in continuous mode to have a streaming pipeline, providing near-realtime insight.
+# MAGIC Every business has its own pulse. We need to match our technical architecture to this natural cadence:
 # MAGIC
-# MAGIC An alternative is to wakeup the DLT pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
+# MAGIC **Option 1: Always-On** ⚡  
+# MAGIC Configure DLT pipelines in continuous mode for streaming insights that capture customer signals as they happen.
 # MAGIC
-# MAGIC This is a simple configuration offering a tradeoff between uptime and ingestion latencies.
+# MAGIC **Option 2: Efficient Cycles** ⏱️  
+# MAGIC Wake your compute on a scheduled basis, process new data incrementally, and then release resources.
 # MAGIC
-# MAGIC In our case, we decided that the best tradoff is to ingest new data every hours:
+# MAGIC ## Our Blueprint: The Hourly Retention Cycle
 # MAGIC
-# MAGIC - Start the DLT pipeline to ingest new data and refresh our tables
-# MAGIC - Refresh the DBSQL dashboard (and potentially notify downstream applications)
-# MAGIC - Retrain our model to include the lastest date and capture potential behavior change
+# MAGIC For our retail business, an hourly cadence hits the sweet spot:
+# MAGIC
+# MAGIC 1. **Data Refresh** 📊 - DLT pipeline activates to ingest the latest customer data
+# MAGIC 2. **Dashboard Update** 📈 - DBSQL dashboards automatically refresh
+# MAGIC 3. **Model Retraining** 🧠 - ML models adapt to evolving customer behaviors
+# MAGIC 4. **Triggered Interventions** 🎯 - GenAI deploys personalized retention campaigns
+# MAGIC
+# MAGIC This creates a closed-loop system where insights drive actions, actions generate new data, and new data refines future insights—all automatically.
+# MAGIC
+# MAGIC <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
+# MAGIC <strong>💡 Pro Tip:</strong> During peak seasons or special promotions, consider shifting to continuous mode for real-time responsiveness, then return to scheduled intervals during normal operations.
+# MAGIC </div>
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05-Workflow-orchestration-churn&demo_name=lakehouse-retail-c360&event=VIEW">

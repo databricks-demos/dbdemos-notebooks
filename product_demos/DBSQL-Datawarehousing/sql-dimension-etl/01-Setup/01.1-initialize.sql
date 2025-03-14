@@ -60,7 +60,7 @@ declare or replace variable code_table string;
 
 -- COMMAND ----------
 
-set variable (run_log_table, code_table) = (select catalog_name || '.' || schema_name || '.' || 'elt_run_log', catalog_name || '.' || schema_name || '.' || 'code_m');
+set variable (run_log_table, code_table) = (select catalog_name || '.' || schema_name || '.' || 'etl_run_log', catalog_name || '.' || schema_name || '.' || 'code_m');
 
 -- COMMAND ----------
 

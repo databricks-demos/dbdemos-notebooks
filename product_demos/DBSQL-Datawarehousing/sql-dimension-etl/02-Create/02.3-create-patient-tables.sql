@@ -23,7 +23,7 @@ set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || 
 -- MAGIC Create the staging, integration, and dimension tables for patient.<br>
 -- MAGIC The patient dimension is part of the clinical data warehouse (star schema).
 -- MAGIC
--- MAGIC <u>NOTE:</u> By default, the tables are created in the **catalog dbsqldemos**.  To change this, or specify an existing catalog / schema, please see [Configure notebook]($../00-Setup/Configure) for more context.
+-- MAGIC <u>NOTE:</u> By default, the tables are created in the **catalog main**.  To change this, or specify an existing catalog / schema, please see [Configure notebook]($../00-Setup/Configure) for more context.
 
 -- COMMAND ----------
 

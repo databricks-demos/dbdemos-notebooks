@@ -93,16 +93,16 @@ set variable process_id = :p_process_id;
 
 -- COMMAND ----------
 
-declare or replace variable si_last_load_date timestamp default '1990-01-01';
-declare or replace variable gd_last_load_date timestamp default '1990-01-01';
+declare or replace variable int_last_load_date timestamp default '1990-01-01';
+declare or replace variable dim_last_load_date timestamp default '1990-01-01';
 
 -- COMMAND ----------
 
 -- to get table_changes since integration table last loaded
-set variable si_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.int_table), (select max(update_dt) from identifier(session.int_table)), session.si_last_load_date);
+set variable int_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.int_table), (select max(update_dt) from identifier(session.int_table)), session.int_last_load_date);
 
 -- to get table_changes since dimension table last loaded
-set variable gd_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.dim_table), (select max(update_dt) from identifier(session.dim_table)), session.gd_last_load_date);
+set variable dim_last_load_date = coalesce((select max(load_end_time) from identifier(session.run_log_table) where data_source = session.data_source and table_name = session.dim_table), (select max(update_dt) from identifier(session.dim_table)), session.dim_last_load_date);
 
 
 -- COMMAND ----------
@@ -203,7 +203,8 @@ set variable load_end_time = current_timestamp();
 -- MAGIC _For e.g.,_
 -- MAGIC - _ID is null_
 -- MAGIC - _CHANGEDONDATE is null_
--- MAGIC - _Older version_
+-- MAGIC - _LAST (name) is null_
+-- MAGIC - _Older version in source_
 
 -- COMMAND ----------
 
@@ -227,7 +228,6 @@ set variable (load_table, load_start_time, load_end_time) = (select session.int_
 -- MAGIC The temporary view curates the data as follows:<br>
 -- MAGIC - Transforms columns
 -- MAGIC - Standardizes code description for gender and ethnicity
--- MAGIC - Omits exception records
 -- MAGIC
 -- MAGIC The integration table is being treated as insert only.<br>
 
@@ -236,19 +236,19 @@ set variable (load_table, load_start_time, load_end_time) = (select session.int_
 -- transform ingested source data
 create or replace temporary view si_transform_tv
 as
-with vars as (select session.int_table, session.stg_table, session.si_last_load_date, session.code_table), -- required for identity(int_table) to work
+with vars as (select session.int_table, session.stg_table, session.int_last_load_date, session.code_table), -- required for identity(int_table) to work
 br_cdc as (
   select * from identifier(session.stg_table) br
-  where br.insert_dt > session.si_last_load_date
+  where br.insert_dt > session.int_last_load_date
 )
 select
-  id as patient_src_id,
+  `Id` as patient_src_id,
   birthdate as date_of_birth,
   ssn as ssn,
   drivers as drivers_license,
   initcap(prefix) as name_prefix,
-  first as first_name,
-  last as last_name,
+  `FIRST` as first_name,
+  `LAST` as last_name,
   suffix as name_suffix,
   maiden as maiden_name,
   gender as gender_cd,
@@ -266,7 +266,7 @@ left outer join identifier(session.code_table) code_gr on code_gr.m_code = br_cd
 left outer join identifier(session.code_table) code_ethn on code_ethn.m_code = br_cdc.ethnicity and code_ethn.m_type = 'ETHNICITY'
 where
   -- no error records
-  `id` is not null and CHANGEDONDATE is not null and `LAST` is not null -- these conditions could be part of exception handling
+  `Id` is not null and CHANGEDONDATE is not null and `LAST` is not null -- these conditions could be part of exception handling
 ;
 
 
@@ -348,7 +348,7 @@ set variable (load_table, load_start_time, load_end_time) = (select session.dim_
 
 create or replace temporary view dim_transform_tv
 as
-with vars as (select session.int_table, session.dim_table, session.gd_last_load_date), -- select the variables for use in later clauses
+with vars as (select session.int_table, session.dim_table, session.dim_last_load_date), -- select the variables for use in later clauses
 -- INCREMENTAL records from Integration Table
 si_tc as (
   select
@@ -362,14 +362,14 @@ si_tc as (
         ifnull(gender_cd, '#'), ifnull(gender_nm, '#'), ifnull(date_of_birth, '#'), ifnull(marital_status, '#'), ifnull(ethnicity_cd, '#'), ifnull(ethnicity_nm, '#'), ifnull(ssn, '#')) as checksum,
     data_source
   from identifier(session.int_table) si
-  where si.update_dt > session.gd_last_load_date -- CDC
+  where si.update_dt > session.dim_last_load_date -- CDC
 ),
 -- GET current version records in dimension table, if any, corresponding to incoming data
 curr_v as (
   select gd.* except (effective_end_date, insert_dt, update_dt, process_id)
   from identifier(session.dim_table) gd
   where effective_end_date is null and
-    exists (select 1 from si_tc where si_tc.patient_src_id = gd.patient_src_id AND si_tc.data_source = gd.data_source)
+    exists (select 1 from si_tc where si_tc.patient_src_id = gd.patient_src_id and si_tc.data_source = gd.data_source)
 ),
 -- ISOLATE new patients and new versions
 ins_upd_rows as (

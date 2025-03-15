@@ -115,7 +115,7 @@
           "max_concurrent_runs": 1,
           "tasks": [
             {
-              "task_key": "SETUP_CATALOG",
+              "task_key": "SETUP_CATALOG_SCHEMA",
               "run_if": "ALL_SUCCESS",
               "notebook_task": {
                 "notebook_path": "{{DEMO_FOLDER}}/01-Setup/01.2-setup",
@@ -126,10 +126,10 @@
               "email_notifications": {}
             },
             {
-              "task_key": "CREATE_TABLE_CODE",
+              "task_key": "CREATE_CODE_TABLE",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG"
+                  "task_key": "SETUP_CATALOG_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -142,10 +142,10 @@
               "email_notifications": {}
             },
             {
-              "task_key": "CREATE_TABLE_CONFIG",
+              "task_key": "CREATE_LOG_TABLE",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG"
+                  "task_key": "SETUP_CATALOG_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -158,10 +158,10 @@
               "email_notifications": {}
             },
             {
-              "task_key": "CREATE_TABLE_PATIENT",
+              "task_key": "CREATE_PATIENT_TABLES",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG"
+                  "task_key": "SETUP_CATALOG_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -177,7 +177,7 @@
               "task_key": "demo_StgSrcFileInit",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG"
+                  "task_key": "SETUP_CATALOG_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -192,13 +192,13 @@
               "task_key": "INITIAL_LOAD_PATIENT",
               "depends_on": [
                 {
-                  "task_key": "CREATE_TABLE_PATIENT"
+                  "task_key": "CREATE_PATIENT_TABLES"
                 },
                 {
-                  "task_key": "CREATE_TABLE_CODE"
+                  "task_key": "CREATE_CODE_TABLE"
                 },
                 {
-                  "task_key": "CREATE_TABLE_CONFIG"
+                  "task_key": "CREATE_LOG_TABLE"
                 },
                 {
                   "task_key": "demo_StgSrcFileInit"
@@ -287,7 +287,7 @@
           ],
           "format": "MULTI_TASK",
           "queue": {
-            "enabled": true
+            "enabled": True
           }
         },
     },

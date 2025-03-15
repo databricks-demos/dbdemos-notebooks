@@ -18,8 +18,9 @@
 -- MAGIC
 -- MAGIC ####<span style="color:darkblue">1. Create Tables
 -- MAGIC <br>
--- MAGIC   a) Global Configuration
--- MAGIC -  **ETL Log table**: This table captures the runtime metadata for a table that includes the table name, load start time and load end time.
+-- MAGIC   a) Global Configuration<br>
+-- MAGIC   
+-- MAGIC -  **ETL Log table**: This table captures the runtime metadata for a table that includes the table name, load start time and load end time.<br>
 -- MAGIC  
 -- MAGIC   _See [Create Log Table notebook]($./02-Create/02.2-create-ETL-log-table) to review._
 -- MAGIC

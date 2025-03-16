@@ -33,7 +33,7 @@
 # MAGIC
 # MAGIC Table Access Control (TAC) in Databricks lets administrators manage access to specific tables and columns, controlling permissions like read, write, or modify. Integrated with Unity Catalog, it allows fine-grained security to protect sensitive data and ensure only authorized users have access. This feature enhances data governance, compliance, and secure collaboration across the platform.
 # MAGIC
-# MAGIC Now, let's grant only a ```SELECT``` access to ```customer_gold``` table to everyone in the group ```datascientists```.
+# MAGIC Now, let's grant only a ```SELECT``` access to ```customer_gold``` table to everyone in the group ```Data Scientist```.
 
 # COMMAND ----------
 

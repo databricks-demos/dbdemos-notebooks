@@ -149,14 +149,6 @@
       "add_cluster_setup_cell": True,
       "title":  "Define GenAI Functions for reducing customer churn", 
       "description": "Define the Unity Catalog functions to reduce churn, including a churn predictor, order retriever, and marketing copy generator."
-    },    
-    {
-      "path": "04-Data-Science-ML/04.4-GenAI-for-churn", 
-      "pre_run": False, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": False,
-      "title":  "GenAI on Databricks", 
-      "description": "Reduce churn with GenAI capabilities."
     },
     {
       "path": "03-AI-BI-data-warehousing/03.1-AI-BI-Datawarehousing", 

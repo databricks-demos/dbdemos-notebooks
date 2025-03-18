@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.16.0 mlflow[databricks]==2.20.2 langchain==0.3.19 langchain_core==0.3.37 databricks-vectorsearch==0.49 databricks-langchain==0.3.0
+# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-langchain databricks-agents mlflow[databricks] langchain==0.3.19 langchain_core==0.3.37 databricks-vectorsearch==0.49
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

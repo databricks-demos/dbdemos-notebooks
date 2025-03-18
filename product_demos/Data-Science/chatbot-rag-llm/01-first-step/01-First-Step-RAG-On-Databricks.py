@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.16.0 databricks-langchain==0.3.0 mlflow[databricks]==2.20.2 databricks-vectorsearch==0.49 langchain==0.3.19 langchain_core==0.3.37 bs4==0.0.2 markdownify==0.14.1
+# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-langchain databricks-agents mlflow[databricks] databricks-vectorsearch==0.49 langchain==0.3.19 langchain_core==0.3.37 bs4==0.0.2 markdownify==0.14.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

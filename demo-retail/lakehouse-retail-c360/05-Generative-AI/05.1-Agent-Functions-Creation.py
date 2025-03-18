@@ -55,19 +55,8 @@
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.1-Agent-Functions-Creation&demo_name=lakehouse-retail-c360&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1660015457675682&notebook=%2F05-Generative-AI%2F05.1-Agent-Functions-Creation&demo_name=lakehouse-retail-c360&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-retail-c360%2F05-Generative-AI%2F05.1-Agent-Functions-Creation&version=1">
 # MAGIC
-
-# COMMAND ----------
-
-
-# CONFIGURATION CELL, installing necessary packages for this demo.
-%pip install mlflow==2.20.1 databricks-vectorsearch==0.40 databricks-feature-engineering==0.8.0 databricks-sdk==0.40.0
-dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -98,42 +87,41 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-spark.sql("DROP FUNCTION IF EXISTS churn_predictor")
-
-spark.sql(f"""
-          CREATE OR REPLACE FUNCTION churn_predictor(id STRING)
-RETURNS STRING
-LANGUAGE SQL
-COMMENT 'This function determines whether a customer is at risk of churning. The possible value are AT RISK or NOT AT RISK of churning. Use this function when a User ID is given.'
-RETURN
-(
-    SELECT CASE 
-             WHEN ai_query(
-                    'dbdemos_customer_churn_endpoint', 
-                    named_struct(
-                        'user_id', user_id,
-                        'canal', MAX(canal),
-                        'country', MAX(country),
-                        'gender', MAX(gender),
-                        'age_group', MAX(age_group),
-                        'order_count', MAX(order_count),
-                        'total_amount', MAX(total_amount),
-                        'total_item', MAX(total_item),
-                        'last_transaction', MAX(last_transaction),
-                        'platform', MAX(platform),
-                        'event_count', MAX(event_count),
-                        'session_count', MAX(session_count),
-                        'days_since_creation', MAX(days_since_creation),
-                        'days_since_last_activity', MAX(days_since_last_activity),
-                        'days_last_event', MAX(days_last_event)
-                    ),
-                    'STRING'
-                 ) = '0' THEN 'NOT AT RISK'
-             ELSE 'AT RISK'
-           END
-    FROM {catalog}.{db}.churn_user_features
-    WHERE user_id = id GROUP BY user_id
-)""")
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE FUNCTION churn_predictor(id STRING)
+# MAGIC RETURNS STRING
+# MAGIC LANGUAGE SQL
+# MAGIC COMMENT 'This function determines whether a customer is at risk of churning.'
+# MAGIC RETURN
+# MAGIC (
+# MAGIC     SELECT CASE 
+# MAGIC              WHEN ai_query(
+# MAGIC                     endpoint => 'dbdemos_customer_churn_endpoint', 
+# MAGIC                     request => named_struct(
+# MAGIC                         'user_id', user_id,
+# MAGIC                         'canal', canal,
+# MAGIC                         'country', country,
+# MAGIC                         'gender', gender,
+# MAGIC                         'age_group', age_group,
+# MAGIC                         'order_count', order_count,
+# MAGIC                         'total_amount', total_amount,
+# MAGIC                         'total_item', total_item,
+# MAGIC                         'last_transaction', last_transaction,
+# MAGIC                         'platform', platform,
+# MAGIC                         'event_count', event_count,
+# MAGIC                         'session_count', session_count,
+# MAGIC                         'days_since_creation', days_since_creation,
+# MAGIC                         'days_since_last_activity', days_since_last_activity,
+# MAGIC                         'days_last_event', days_last_event
+# MAGIC                     ),
+# MAGIC                     returnType => 'STRING'
+# MAGIC                  ) = '0' THEN 'NOT AT RISK'
+# MAGIC              ELSE 'AT RISK'
+# MAGIC            END
+# MAGIC     FROM churn_user_features
+# MAGIC     WHERE user_id = id
+# MAGIC     LIMIT 1
+# MAGIC )
 
 # COMMAND ----------
 
@@ -148,7 +136,6 @@ RETURN
 # MAGIC SELECT churn_predictor(
 # MAGIC     '2d17d7cd-38ae-440d-8485-34ce4f8f3b46'
 # MAGIC ) AS prediction
-# MAGIC
 
 # COMMAND ----------
 
@@ -169,51 +156,51 @@ RETURN
 
 # COMMAND ----------
 
-spark.sql(f"""
-  CREATE OR REPLACE FUNCTION customer_order_lookup (
-    input_user_id STRING
-    COMMENT 'User ID of the customer to be searched'
-  ) 
-  RETURNS TABLE(
-    firstname STRING,
-    channel STRING,
-    country STRING,
-    gender INT,
-    order_amount INT,
-    order_item_count INT,
-    last_order_date STRING,
-    current_date STRING,
-    days_elapsed_since_last_order INT
-  )
-  COMMENT "This function returns the customer details for a given customer User ID, along with their last order details. The return fields include First Name, Channel (e.g. Mobile App, Phone, or Web App/Browser ), Country of Residence, Gender, Order Amount, Item Count, and the Last Order Date (in format of yyyy-MM-dd). Use this function when a User ID is given." 
-  RETURN (
-    SELECT
-      firstname,
-      canal as channel,
-      country,
-      gender,
-      o.order_amount,
-      o.order_item_count,
-      o.last_order_date,
-      TO_CHAR(CURRENT_DATE(), 'yyyy-MM-dd') AS current_date,
-      DATEDIFF(CURRENT_DATE(), o.last_order_date) AS days_elapsed_since_last_order
-    FROM 
-      {catalog}.{db}.churn_users u
-    LEFT JOIN (
-      SELECT
-        user_id,
-        amount AS order_amount,
-        item_count AS order_item_count,
-        TO_CHAR(creation_date, 'yyyy-MM-dd') AS last_order_date
-      FROM {catalog}.{db}.churn_orders
-      WHERE user_id = input_user_id
-      ORDER BY creation_date DESC
-      LIMIT 1
-    ) o ON u.user_id = o.user_id
-    WHERE
-      u.user_id = input_user_id
-  )
-""")
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE FUNCTION customer_order_lookup (
+# MAGIC   input_user_id STRING
+# MAGIC   COMMENT 'User ID of the customer to be searched'
+# MAGIC ) 
+# MAGIC RETURNS TABLE(
+# MAGIC   firstname STRING,
+# MAGIC   channel STRING,
+# MAGIC   country STRING,
+# MAGIC   gender INT,
+# MAGIC   order_amount INT,
+# MAGIC   order_item_count INT,
+# MAGIC   last_order_date STRING,
+# MAGIC   current_date STRING,
+# MAGIC   days_elapsed_since_last_order INT
+# MAGIC )
+# MAGIC LANGUAGE SQL
+# MAGIC COMMENT "This function returns the customer details for a given customer User ID, along with their last order details. The return fields include First Name, Channel (e.g. Mobile App, Phone, or Web App/Browser ), Country of Residence, Gender, Order Amount, Item Count, and the Last Order Date (in format of yyyy-MM-dd). Use this function when a User ID is given." 
+# MAGIC RETURN (
+# MAGIC   SELECT
+# MAGIC     firstname,
+# MAGIC     canal as channel,
+# MAGIC     country,
+# MAGIC     gender,
+# MAGIC     o.order_amount,
+# MAGIC     o.order_item_count,
+# MAGIC     o.last_order_date,
+# MAGIC     TO_CHAR(CURRENT_DATE(), 'yyyy-MM-dd') AS current_date,
+# MAGIC     DATEDIFF(CURRENT_DATE(), o.last_order_date) AS days_elapsed_since_last_order
+# MAGIC   FROM 
+# MAGIC     churn_users u
+# MAGIC   LEFT JOIN (
+# MAGIC     SELECT
+# MAGIC       user_id,
+# MAGIC       amount AS order_amount,
+# MAGIC       item_count AS order_item_count,
+# MAGIC       TO_CHAR(creation_date, 'yyyy-MM-dd') AS last_order_date
+# MAGIC     FROM churn_orders
+# MAGIC     WHERE user_id = input_user_id
+# MAGIC     ORDER BY creation_date DESC
+# MAGIC     LIMIT 1
+# MAGIC   ) o ON u.user_id = o.user_id
+# MAGIC   WHERE
+# MAGIC     u.user_id = input_user_id
+# MAGIC )
 
 # COMMAND ----------
 

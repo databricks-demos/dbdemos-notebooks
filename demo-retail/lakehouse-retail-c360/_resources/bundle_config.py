@@ -143,14 +143,6 @@
       "description": "Once your model is deployed, run low latency inferences."
     },
     {
-      "path": "05-Generative-AI/05.1-Agent-Functions-Creation", 
-      "pre_run": True, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": True,
-      "title":  "Define GenAI Functions for reducing customer churn", 
-      "description": "Define the Unity Catalog functions to reduce churn, including a churn predictor, order retriever, and marketing copy generator."
-    },
-    {
       "path": "03-AI-BI-data-warehousing/03.1-AI-BI-Datawarehousing", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -166,6 +158,14 @@
       "title":  "Datawarehousing & BI / Dashboarding", 
       "description": "Run interactive queries on top of your data"
     },
+    {
+      "path": "05-Generative-AI/05.1-Agent-Functions-Creation", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True,
+      "title":  "Define GenAI Functions for reducing customer churn", 
+      "description": "Define the Unity Catalog functions to reduce churn, including a churn predictor, order retriever, and marketing copy generator."
+    },    
     {
       "path": "05-Generative-AI/05.2-Agent-Creation-Guide", 
       "pre_run": False, 
@@ -261,7 +261,23 @@
                           "task_key": "create_feature_and_automl_run"
                       }
                   ]
-            }
+            },
+            {
+                "task_key": "create_ai_functions",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/05-Generative-AI/05.1-Agent-Functions-Creation",
+                    "source": "WORKSPACE"
+                },
+                "base_parameters": {"shap_enabled": "false"},
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "create_ai_functions"
+                      }
+                  ]
+            }            
         ],
         "job_clusters": [
             {

@@ -31,6 +31,12 @@
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ## Note on UCX
+-- MAGIC We strongly suggest you start your journey with UCX. UCX provides an automated approach to your UC upgrade! Open [00-automated-upgrade-with-UCX]($./00-automated-upgrade-with-UCX) for more details!
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ## Understanding the upgrade process
 -- MAGIC
 -- MAGIC ### External table and Managed table

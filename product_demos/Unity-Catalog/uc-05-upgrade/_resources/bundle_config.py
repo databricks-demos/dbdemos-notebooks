@@ -33,11 +33,19 @@
       "description": "Init data for demo."
     },
     {
-      "path": "00-Upgrade-database-to-UC", 
-      "pre_run": True, 
+      "path": "00-automated-upgrade-with-UCX", 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
-      "title":  "Upgrade database to UC", 
+      "title":  "Upgrade database to UC with UCX", 
+      "description": "Introduction to Databricks UCX."
+    },
+    {
+      "path": "01-manual-upgrade-to-UC", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True, 
+      "title":  "Manual upgrade to UC", 
       "description": "Migration example, from one table to multiple databases."
     }
   ],

@@ -55,8 +55,7 @@
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1660015457675682&notebook=%2F05-Generative-AI%2F05.1-Agent-Functions-Creation&demo_name=lakehouse-retail-c360&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-retail-c360%2F05-Generative-AI%2F05.1-Agent-Functions-Creation&version=1">
-# MAGIC
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.1-Agent-Functions-Creation&demo_name=lakehouse-retail-c360&event=VIEW">
 
 # COMMAND ----------
 

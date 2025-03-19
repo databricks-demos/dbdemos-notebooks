@@ -7,7 +7,7 @@
 # MAGIC We'll walk through the process step by step, with **GIFs** to guide you along the way. By the end, you'll have a working AI Agent powered by your own functions, ready to deploy and use. Let's get started!
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1660015457675682&notebook=%2F05-Generative-AI%2F05.2-Agent-Creation-Guide&demo_name=lakehouse-retail-c360&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-retail-c360%2F05-Generative-AI%2F05.2-Agent-Creation-Guide&version=1">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.2-Agent-Creation-Guide&demo_name=lakehouse-retail-c360&event=VIEW">
 
 # COMMAND ----------
 

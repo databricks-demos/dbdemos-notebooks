@@ -59,6 +59,11 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Configuration Step
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC ## 🔍 Function 1: Customer Churn Prediction  
 # MAGIC
@@ -94,29 +99,29 @@
 # MAGIC RETURN
 # MAGIC (
 # MAGIC     SELECT CASE 
-# MAGIC              WHEN ai_query(
-# MAGIC                     endpoint => 'dbdemos_customer_churn_endpoint', 
-# MAGIC                     request => named_struct(
-# MAGIC                         'user_id', user_id,
-# MAGIC                         'canal', canal,
-# MAGIC                         'country', country,
-# MAGIC                         'gender', gender,
-# MAGIC                         'age_group', age_group,
-# MAGIC                         'order_count', order_count,
-# MAGIC                         'total_amount', total_amount,
-# MAGIC                         'total_item', total_item,
-# MAGIC                         'last_transaction', last_transaction,
-# MAGIC                         'platform', platform,
-# MAGIC                         'event_count', event_count,
-# MAGIC                         'session_count', session_count,
-# MAGIC                         'days_since_creation', days_since_creation,
-# MAGIC                         'days_since_last_activity', days_since_last_activity,
-# MAGIC                         'days_last_event', days_last_event
-# MAGIC                     ),
-# MAGIC                     returnType => 'STRING'
-# MAGIC                  ) = '0' THEN 'NOT AT RISK'
-# MAGIC              ELSE 'AT RISK'
-# MAGIC            END
+# MAGIC         WHEN ai_query(
+# MAGIC             endpoint => 'dbdemos_customer_churn_endpoint', 
+# MAGIC             request => named_struct(
+# MAGIC                 'user_id', user_id,
+# MAGIC                 'canal', canal,
+# MAGIC                 'country', country,
+# MAGIC                 'gender', gender,
+# MAGIC                 'age_group', age_group,
+# MAGIC                 'order_count', order_count,
+# MAGIC                 'total_amount', total_amount,
+# MAGIC                 'total_item', total_item,
+# MAGIC                 'last_transaction', last_transaction,
+# MAGIC                 'platform', platform,
+# MAGIC                 'event_count', event_count,
+# MAGIC                 'session_count', session_count,
+# MAGIC                 'days_since_creation', days_since_creation,
+# MAGIC                 'days_since_last_activity', days_since_last_activity,
+# MAGIC                 'days_last_event', days_last_event
+# MAGIC             ),
+# MAGIC             returnType => 'STRING'
+# MAGIC             ) = '0' THEN 'NOT AT RISK'
+# MAGIC         ELSE 'AT RISK'
+# MAGIC     END
 # MAGIC     FROM churn_user_features
 # MAGIC     WHERE user_id = id
 # MAGIC     LIMIT 1
@@ -289,7 +294,7 @@ spark.sql(f"""
     SELECT ai_query(
       'databricks-meta-llama-3-1-405b-instruct', 
       CONCAT(
-        "{prompt}" 
+        "{prompt}"
         'Customer details: ', 
         TO_JSON(NAMED_STRUCT('firstname', firstname, 'channel', channel, 'country', country, 'gender', gender, 'order_amount', order_amount, 'order_item_count', order_item_count, 'last_order_date', last_order_date, 'current_date', current_date, 'days_elapsed_since_last_order', days_elapsed_since_last_order, 'churn_status', churn_status))
       )

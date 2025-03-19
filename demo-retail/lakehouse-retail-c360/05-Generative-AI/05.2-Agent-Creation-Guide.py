@@ -26,16 +26,16 @@
 # MAGIC %md-sandbox
 # MAGIC ## Step 2: Access the Databricks Playground
 # MAGIC
+# MAGIC <hr>
 # MAGIC
-# MAGIC
-# MAGIC <p align="center">
+# MAGIC <div style="float: right; width: 70%;">
 # MAGIC   <img 
 # MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
 # MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_open_playground.gif" 
 # MAGIC     alt="Opening the Playground" 
-# MAGIC     width="80%"
+# MAGIC     width="100%"
 # MAGIC   >
-# MAGIC </p>
+# MAGIC </div>
 # MAGIC
 # MAGIC ### Location Guide
 # MAGIC
@@ -46,55 +46,46 @@
 # MAGIC %md-sandbox
 # MAGIC ## Step 3: Configure Your Agent Functions
 # MAGIC
-# MAGIC <p align="center">
+# MAGIC <hr>
+# MAGIC
+# MAGIC <div style="float: right; width: 70%;">
 # MAGIC   <img 
 # MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
 # MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_function_selection.gif" 
 # MAGIC     alt="Function Selection" 
-# MAGIC     width="80%"
+# MAGIC     width="100%"
 # MAGIC   >
-# MAGIC </p>
+# MAGIC </div>
 # MAGIC
-# MAGIC ### Function Location Guide
+# MAGIC ### Location Guide
+# MAGIC
 # MAGIC Your functions are organized in Unity Catalog using this structure:
 # MAGIC
-# MAGIC ```
-# MAGIC my_catalog.my_schema.function_name
-# MAGIC ```
-# MAGIC
 # MAGIC #### Example Path:
-# MAGIC * **Catalog:** my_catalog
-# MAGIC * **Schema:** my_schema
-# MAGIC * **Function:** my_awesome_function
+# MAGIC `my_catalog.my_schema.my_awesome_function`
 # MAGIC
-# MAGIC > 💡 Note: Replace the example names with your actual catalog and schema names.
-# MAGIC
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Refer to [your demo config file]($../config) to easily locate your catalog name (_if you don't know it_).
+# MAGIC 💡 Note: Replace the example names with your actual catalog and schema names.
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC ## Step 4: Export Your Agent
 # MAGIC
-# MAGIC <p align="center">
+# MAGIC <hr>
+# MAGIC
+# MAGIC <div style="float: right; width: 70%;">
 # MAGIC   <img 
 # MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
 # MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_export_from_playground.gif" 
 # MAGIC     alt="Exporting Agent" 
-# MAGIC     width="80%"
+# MAGIC     width="100%"
 # MAGIC   >
-# MAGIC </p>
+# MAGIC </div>
 # MAGIC
 # MAGIC ### Export Checklist
 # MAGIC * ✅ Verify all of the functions from 05.1-Agent-Functions-Creation (_or more that you may have added_) are **selected tools** in the Playground.
 # MAGIC * ✅ Click the "_Export_" button in the Playground
 # MAGIC * ✅ Save the exported notebooks to this directory (**"YOUR_WORKSPACE_PATH/05-Generative-AI/"**)
-# MAGIC
 
 # COMMAND ----------
 

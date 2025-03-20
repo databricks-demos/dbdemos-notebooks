@@ -171,20 +171,20 @@ if integration_test_status == "passed":
     # Existing model in production. Archive the existing prod model.
     client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="archived", version=prod_model_info.version)
     client.set_model_version_tag(f"{catalog}.{db}.{model_name}", prod_model_info.version, f"archived", "true")
-    print(f'{prod_model_info.version} of {catalog}.{db}.{model_name} is now archived.')
+    print(f'Version {prod_model_info.version} of {catalog}.{db}.{model_name} is now archived.')
   else:
     # No model in production.
     print(f'{catalog}.{db}.{model_name} does not have a Production model.')
   # Promote this model to Production
   client.delete_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="staging")
   client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="production", version=model_info.version)
-  print(f'{model_info.version} of {catalog}.{db}.{model_name} is now promoted to Production.')
+  print(f'Version {model_info.version} of {catalog}.{db}.{model_name} is now promoted to Production.')
 else:
   # This model has failed integration testing. Set it to Archived
   client.delete_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="staging")
   client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="archived", version=model_info.version)
   client.set_model_version_tag(f"{catalog}.{db}.{model_name}", model_info.version, f"archived", "true")
-  print(f'{model_info.version} of {catalog}.{db}.{model_name} is transitioned to Archived. No model promoted to Production.')
+  print(f'Version {model_info.version} of {catalog}.{db}.{model_name} is transitioned to Archived. No model promoted to Production.')
 
 # COMMAND ----------
 

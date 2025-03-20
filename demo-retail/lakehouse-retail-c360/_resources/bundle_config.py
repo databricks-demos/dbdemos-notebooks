@@ -274,7 +274,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "create_ai_functions"
+                          "task_key": "register_churn_model"
                       }
                   ]
             }            

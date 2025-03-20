@@ -108,7 +108,8 @@ def save_features_def():
     rcvd_amt_avg_6m,Incoming average transaction amount in last 6 months
     months_employment,Months in employment
     is_resident,Whether the customer is a resident
-    age,Customer age"""
+    age,Customer age
+    gender,Customer gender"""
 
 
     from io import StringIO

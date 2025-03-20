@@ -131,6 +131,26 @@ endpoint = deploy_client.create_endpoint(
 
 # COMMAND ----------
 
+from time import sleep
+
+# Wait for endpoint to be ready before running inference
+# This can take 10 minutes or so
+
+endpoint_udpate = endpoint
+is_not_ready = True
+is_not_updated = True
+
+print("Waiting for endpoint to be ready...")
+while(is_not_ready | is_not_updated):
+  sleep(10)
+  endpoint_udpate = deploy_client.get_endpoint(endpoint_name)
+  is_not_ready = endpoint_udpate["state"]["ready"] != "READY"
+  is_not_updated = endpoint_udpate["state"]["config_update"] != "NOT_UPDATING"
+
+print(f"Endpoint status: {endpoint_udpate['state']['ready']}; {endpoint_udpate['state']['config_update']}")
+
+# COMMAND ----------
+
 # MAGIC %md 
 # MAGIC Our model endpoint was automatically created. 
 # MAGIC

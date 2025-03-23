@@ -344,6 +344,25 @@ display(fb_metrics_df)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Create Alert for changes in model behavior
+# MAGIC
+# MAGIC Now that we have set up the components to constantly monitor the model's behavior, we can set up alerts to notify us of significant changes.
+# MAGIC
+# MAGIC Run the following cell and you will find a SQL Query and an Alert created for you in the `monitoring` folder.
+# MAGIC
+# MAGIC The query retrieves key model KPIs from the monitor's metric table, and the Alert will be triggered when the rules defined over the query's results are violated. Our exmample shows an Alert that is triggered when the model's F1 score falls below a threshold.
+# MAGIC
+# MAGIC Check them out in the `monitoring` folder.
+# MAGIC - Open the Alert `rai_credit_decisioning_accuracy_alert` to inspect its definition
+# MAGIC - Open the query `rai_credit_decisioning_performance_last_window` and run it to inspect its results
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/02-create-monitoring-query-and-alert
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Conclusion

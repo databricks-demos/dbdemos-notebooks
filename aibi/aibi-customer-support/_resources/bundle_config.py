@@ -36,11 +36,38 @@
     ],
     "data_folders": [
       {
-        "source_folder": "aibi/dbdemos_aibi_customer_support/customer_support_review",
+        "source_folder": "aibi/dbdemos_aibi_customer_support/agents_bronze",
         "source_format": "parquet",
-        "target_table_name": "customer_support_review",
-        "target_format": "delta"
-      }
+        "target_volume_folder": "agents_bronze",
+        "target_format": "parquet"
+      },
+      {
+        "source_folder": "aibi/dbdemos_aibi_customer_support/tickets_bronze",
+        "source_format": "parquet",
+        "target_volume_folder": "tickets_bronze",
+        "target_format": "parquet"
+      },
+      {
+        "source_folder": "aibi/dbdemos_aibi_customer_support/sla_bronze",
+        "source_format": "parquet",
+        "target_volume_folder": "sla_bronze",
+        "target_format": "parquet"
+      }      
+    ],
+    "sql_queries": [
+      [
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE) COMMENT 'Bronze table containing customer support agent information' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/agents_bronze', format => 'parquet', pathGlobFilter => '*.parquet')",
+      "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE) COMMENT 'Bronze table containing service level agreement metrics for customer support tickets' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/sla_bronze', format => 'parquet', pathGlobFilter => '*.parquet')",
+      "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE) COMMENT 'Bronze table containing customer support ticket information and history' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/tickets_bronze', format => 'parquet', pathGlobFilter => '*.parquet')"
+      ],
+      [
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_core AS SELECT ticket_id, status, priority, source, topic, CAST(created_time AS TIMESTAMP) AS created_time, CAST(close_time AS TIMESTAMP) AS close_time, product_group, support_level, country, CAST(latitude AS DOUBLE) AS latitude, CAST(longitude AS DOUBLE) AS longitude, _rescued_data FROM `{{CATALOG}}`.`{{SCHEMA}}`.bronze_core",
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_agent AS SELECT ticket_id, INITCAP(agent_group) AS agent_group, INITCAP(agent_name) AS agent_name, CAST(agent_interactions AS INT) AS agent_interactions FROM `{{CATALOG}}`.`{{SCHEMA}}`.bronze_agent",
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_sla AS SELECT ticket_id, CAST(expected_sla_to_resolve AS TIMESTAMP) AS expected_sla_to_resolve, CAST(expected_sla_to_first_response AS TIMESTAMP) AS expected_sla_to_first_response, CAST(first_response_time AS TIMESTAMP) AS first_response_time, sla_for_first_response, CAST(resolution_time AS TIMESTAMP) AS resolution_time, sla_for_resolution, CAST(survey_results AS INT) AS survey_results FROM `{{CATALOG}}`.`{{SCHEMA}}`.bronze_sla"
+        ],
+      [
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.customer_support_review AS SELECT c.status, c.ticket_id, c.priority, c.source, c.topic, a.agent_group, a.agent_name, c.created_time, s.expected_sla_to_resolve, s.expected_sla_to_first_response, s.first_response_time, s.sla_for_first_response, s.resolution_time, s.sla_for_resolution, c.close_time, a.agent_interactions, s.survey_results, c.product_group, c.support_level, c.country, c.latitude, c.longitude, c._rescued_data FROM `{{CATALOG}}`.`{{SCHEMA}}`.silver_core c JOIN `{{CATALOG}}`.`{{SCHEMA}}`.silver_agent a USING (ticket_id) JOIN `{{CATALOG}}`.`{{SCHEMA}}`.silver_sla s USING (ticket_id) ORDER BY created_time"
+      ]
     ],
     "genie_rooms": [
       {

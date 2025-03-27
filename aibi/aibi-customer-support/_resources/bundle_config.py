@@ -68,7 +68,7 @@
       [
         "CREATE OR REPLACE FUNCTION get_top_agents_by_survey_score(catalog_name STRING, schema_name STRING, rank_cutoff INT) RETURNS TABLE (agent_name STRING, month TIMESTAMP, total_survey_results DECIMAL(10,2), performance_rank INT) RETURN (WITH monthly_ranked_agents AS (SELECT a.agent_name, DATE_TRUNC('month', t.created_time) AS month, SUM(s.survey_results) AS total_survey_results, ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('month', t.created_time) ORDER BY SUM(s.survey_results) DESC) AS performance_rank FROM cal_test_03_27_customer_support.dbdemos_aibi_customer_support.tickets_clean t JOIN cal_test_03_27_customer_support.dbdemos_aibi_customer_support.agents_clean a JOIN cal_test_03_27_customer_support.dbdemos_aibi_customer_support.sla_clean s ON t.ticket_id = a.ticket_id AND t.ticket_id = s.ticket_id GROUP BY a.agent_name, DATE_TRUNC('month', t.created_time)) SELECT agent_name, month, total_survey_results, performance_rank FROM monthly_ranked_agents WHERE performance_rank <= rank_cutoff);",
         "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean ADD CONSTRAINT agents_clean_tickets_fk FOREIGN KEY (ticket_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id)",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean ADD CONSTRAINT sla_clean_tickets_fk FOREIGN KEY (ticket_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id)",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean ADD CONSTRAINT sla_clean_tickets_fk FOREIGN KEY (ticket_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id)"
       ]
     ],
     "genie_rooms": [

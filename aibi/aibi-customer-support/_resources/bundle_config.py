@@ -62,7 +62,7 @@
       ],
       [
         "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_core AS SELECT t.ticket_id, t.status, t.priority, t.source, t.topic, CAST(t.created_time AS TIMESTAMP) AS created_time, CAST(t.close_time AS TIMESTAMP) AS close_time, t.product_group, t.support_level, t.country, CAST(t.latitude AS DOUBLE) AS latitude, CAST(t.longitude AS DOUBLE) AS longitude, t._rescued_data FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze t",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_agent AS SELECT ticket_id, INITCAP(agent_group) AS agent_group, INITCAP(agent_name) AS agent_name, CAST(agent_interactions AS INT) AS agent_interactions FROM `{{CATALOG}}`.`{{SCHEMA}}`.bronze_agent",
+        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_agent AS SELECT ticket_id, INITCAP(agent_group) AS agent_group, INITCAP(agent_name) AS agent_name, CAST(agent_interactions AS INT) AS agent_interactions FROM `{{CATALOG}}`.`{{SCHEMA}}`.agents_bronze",
         "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.silver_sla AS SELECT ticket_id, CAST(expected_sla_to_resolve AS TIMESTAMP) AS expected_sla_to_resolve, CAST(expected_sla_to_first_response AS TIMESTAMP) AS expected_sla_to_first_response, CAST(first_response_time AS TIMESTAMP) AS first_response_time, sla_for_first_response, CAST(resolution_time AS TIMESTAMP) AS resolution_time, sla_for_resolution, CAST(survey_results AS INT) AS survey_results FROM `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze"
         ],
       [

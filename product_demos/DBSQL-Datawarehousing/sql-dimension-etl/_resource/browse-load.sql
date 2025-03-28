@@ -3,47 +3,54 @@
 
 -- COMMAND ----------
 
-declare or replace variable stg_table string; -- staging table identifier
-declare or replace variable int_table string; -- integration table
-declare or replace variable dim_table string; -- dimension table
-
--- COMMAND ----------
-
-set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'patient_dim');
+USE IDENTIFIER(full_schema_name)
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC **Patient Staging table**
+-- MAGIC **ETL Log Table**
+
+-- COMMAND ----------
+
+SELECT * FROM IDENTIFIER(run_log_table) ORDER BY load_start_time;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **Patient Staging Table**
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Bronze
-select id, CHANGEDONDATE, data_source, * except(id, CHANGEDONDATE, data_source) from identifier(stg_table)
-order by data_source, id, CHANGEDONDATE
+SELECT Id, CHANGEDONDATE, data_source, * EXCEPT(Id, CHANGEDONDATE, data_source)
+FROM patient_stg
+ORDER BY data_source, Id, CHANGEDONDATE
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC **Patient Integration table**
+-- MAGIC **Patient Integration Table**
 -- MAGIC
 -- MAGIC The integration process filters out records where the **Id is NULL or CHANGEDONDATE is NULL or Last Name is NULL**.  These and other business errors can be part of the exception logging process.
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Silver
-select patient_src_id, src_changed_on_dt, data_source, * except(patient_src_id, src_changed_on_dt, data_source) from identifier(int_table)
-order by data_source, patient_src_id, src_changed_on_dt
+SELECT patient_src_id, src_changed_on_dt, data_source, * EXCEPT(patient_src_id, src_changed_on_dt, data_source)
+FROM patient_int
+ORDER BY data_source, patient_src_id, src_changed_on_dt
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC **Patient Dimension table**
+-- MAGIC **Patient Dimension Table**
 -- MAGIC
--- MAGIC The MERGE process ignores duplicate versions.
+-- MAGIC The MERGE process ignores **duplicate versions**.
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Gold
-select patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source, * except(patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source) from identifier(dim_table)
-order by data_source, patient_src_id, effective_start_date
+SELECT
+  patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source, * EXCEPT(patient_sk, patient_src_id, effective_start_date, effective_end_date, data_source)
+FROM patient_dim
+ORDER BY data_source, patient_src_id, effective_start_date

@@ -36,7 +36,11 @@
 
 -- MAGIC %md
 -- MAGIC ##Initialize
--- MAGIC Initialize and include variables such as full_schema_name, code_table, staging_path, etc.
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Include variables such as full_schema_name, code_table, staging_path, etc.
 
 -- COMMAND ----------
 
@@ -44,9 +48,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC ## Variables
--- MAGIC Variables used in the statements.
+DECLARE OR REPLACE VARIABLE table_load_start_time TIMESTAMP;
 
 -- COMMAND ----------
 
@@ -76,7 +78,7 @@ USE IDENTIFIER(full_schema_name);
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ##Set variables for incremental load
+-- MAGIC ##Set Variables for Incremental Load
 -- MAGIC For Integration and Dimension tables.
 -- MAGIC
 
@@ -101,6 +103,10 @@ SET VARIABLE dim_last_load_date = COALESCE((SELECT MAX(update_dt) FROM patient_d
 -- MAGIC
 -- MAGIC The staging table is insert-only.
 -- MAGIC
+
+-- COMMAND ----------
+
+SET VARIABLE table_load_start_time = CURRENT_TIMESTAMP();
 
 -- COMMAND ----------
 
@@ -138,6 +144,15 @@ EXECUTE IMMEDIATE sqlstr;
 
 -- COMMAND ----------
 
+-- Optionally log the ETL run for easy reporting, monitoring, and alerting
+INSERT INTO IDENTIFIER(run_log_table)
+WITH op_metrics AS (
+  SELECT COALESCE(operationMetrics.numTargetRowsInserted, operationMetrics.numOutputRows) AS num_inserted, operationMetrics.numTargetRowsUpdated AS num_updated FROM (DESCRIBE HISTORY patient_stg) WHERE operation IN ('MERGE', 'WRITE', 'COPY INTO') LIMIT 1
+)
+SELECT session.data_source, session.full_schema_name || '.' || 'patient_stg', table_load_start_time, CURRENT_TIMESTAMP(), num_inserted, num_updated, session.process_id FROM op_metrics;
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC # Populate integration table
 -- MAGIC Validate, curate, and load incremental data into the integration table.
@@ -160,6 +175,10 @@ EXECUTE IMMEDIATE sqlstr;
 -- MAGIC - _CHANGEDONDATE is null_
 -- MAGIC - _LAST (name) is null_
 -- MAGIC - _Older version in source_
+
+-- COMMAND ----------
+
+SET VARIABLE table_load_start_time = CURRENT_TIMESTAMP();
 
 -- COMMAND ----------
 
@@ -226,9 +245,22 @@ SELECT * FROM stg_transform_temp_v
 
 -- COMMAND ----------
 
+-- Optionally log the ETL run for easy reporting, monitoring, and alerting
+INSERT INTO IDENTIFIER(run_log_table)
+WITH op_metrics AS (
+  SELECT COALESCE(operationMetrics.numTargetRowsInserted, operationMetrics.numOutputRows) AS num_inserted, operationMetrics.numTargetRowsUpdated AS num_updated FROM (DESCRIBE HISTORY patient_int) WHERE operation IN ('MERGE', 'WRITE', 'COPY INTO') LIMIT 1
+)
+SELECT session.data_source, session.full_schema_name || '.' || 'patient_int', table_load_start_time, CURRENT_TIMESTAMP(), num_inserted, num_updated, session.process_id FROM op_metrics;
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC # Populate dimension table
 -- MAGIC The dimension table patient_dim is created as a SCD2 dimension.<br>
+
+-- COMMAND ----------
+
+SET VARIABLE table_load_start_time = CURRENT_TIMESTAMP();
 
 -- COMMAND ----------
 
@@ -359,3 +391,12 @@ WHEN NOT MATCHED THEN INSERT (
   VALUES (last_name, first_name, name_prefix, name_suffix, maiden_name, gender_code, gender, date_of_birth, marital_status, ethnicity_code,
     ethnicity, ssn, patient_src_id, effective_start_date, effective_end_date, checksum, data_source, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), session.process_id)
 ;
+
+-- COMMAND ----------
+
+-- Optionally log the ETL run for easy reporting, monitoring, and alerting
+INSERT INTO IDENTIFIER(run_log_table)
+WITH op_metrics AS (
+  SELECT COALESCE(operationMetrics.numTargetRowsInserted, operationMetrics.numOutputRows) AS num_inserted, operationMetrics.numTargetRowsUpdated AS num_updated FROM (DESCRIBE HISTORY patient_dim) WHERE operation IN ('MERGE', 'WRITE', 'COPY INTO') LIMIT 1
+)
+SELECT session.data_source, session.full_schema_name || '.' || 'patient_dim', table_load_start_time, CURRENT_TIMESTAMP(), num_inserted, num_updated, session.process_id FROM op_metrics;

@@ -55,33 +55,39 @@ DECLARE OR REPLACE VARIABLE volume_name STRING = 'staging';
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC **Additional global variables**
+
+-- COMMAND ----------
+
 -- Path of the UC volume where patient source data will be staged
-DECLARE OR REPLACE VARIABLE staging_path STRING;
-SET VARIABLE staging_path = '/Volumes/' || catalog_name || "/" || schema_name || "/" || volume_name;
+DECLARE OR REPLACE VARIABLE staging_path STRING
+  = '/Volumes/' || catalog_name || "/" || schema_name || "/" || volume_name;
+
+-- COMMAND ----------
 
 SELECT staging_path;
 
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC **Additional variables**
--- MAGIC <br>
--- MAGIC Defines our logging table to store our operation details
-
--- COMMAND ----------
-
 -- Two-level schema name
-DECLARE OR REPLACE VARIABLE full_schema_name STRING = catalog_name || '.' || schema_name;
+DECLARE OR REPLACE VARIABLE full_schema_name STRING
+  = catalog_name || '.' || schema_name;
 
 -- Full volume name
-DECLARE OR REPLACE VARIABLE full_volume_name STRING = full_schema_name || "." || volume_name;
+DECLARE OR REPLACE VARIABLE full_volume_name STRING
+  = full_schema_name || "." || volume_name;
 
 -- COMMAND ----------
 
-DECLARE OR REPLACE VARIABLE run_log_table STRING;
-SET VARIABLE run_log_table = full_schema_name || '.' || 'etl_run_log';
+-- Three-level name of ETL Log Table
+DECLARE OR REPLACE VARIABLE run_log_table STRING
+  = full_schema_name || '.' || 'etl_run_log';
 
-DECLARE OR REPLACE VARIABLE code_table STRING;
-SET VARIABLE code_table = full_schema_name || '.' || 'code_m';
+-- Three-level name of Code Master Table
+DECLARE OR REPLACE VARIABLE code_table STRING
+  = full_schema_name || '.' || 'code_m';
+
+-- COMMAND ----------
 
 SELECT run_log_table, code_table;

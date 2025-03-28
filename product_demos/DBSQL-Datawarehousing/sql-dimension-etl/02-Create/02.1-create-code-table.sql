@@ -21,7 +21,9 @@ SELECT code_table;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE IDENTIFIER(code_table) (
+DROP TABLE IF EXISTS IDENTIFIER(code_table);
+
+CREATE TABLE IDENTIFIER(code_table) (
   m_code STRING COMMENT 'code',
   m_desc STRING COMMENT 'name or description for the code',
   m_type STRING COMMENT 'attribute type utilizing code'

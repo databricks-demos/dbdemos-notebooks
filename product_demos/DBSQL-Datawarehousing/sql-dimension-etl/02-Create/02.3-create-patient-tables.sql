@@ -53,7 +53,7 @@ COMMENT 'Patient staging table ingesting initial and incremental master data fro
 
 DROP TABLE IF EXISTS patient_int;
 
-CREATE TABLE IF NOT EXISTS patient_int (
+CREATE TABLE patient_int (
   patient_src_id STRING NOT NULL COMMENT 'ID of the record in the source',
   date_of_birth DATE COMMENT 'Date of birth',
   ssn STRING COMMENT 'Social Security Number',
@@ -101,7 +101,7 @@ TBLPROPERTIES (delta.enableChangeDataFeed = true);
 
 DROP TABLE IF EXISTS patient_dim;
 
-CREATE TABLE IF NOT EXISTS patient_dim (
+CREATE TABLE patient_dim (
   patient_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Primary Key (ID)',
   last_name STRING NOT NULL COMMENT 'Last name of the person',
   first_name STRING COMMENT 'First name of the person',

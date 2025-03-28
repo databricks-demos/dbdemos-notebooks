@@ -9,16 +9,7 @@ declare or replace variable dim_table string; -- dimension table
 
 -- COMMAND ----------
 
-set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC **Log table**
-
--- COMMAND ----------
-
-select * from identifier(run_log_table) order by load_start_time;
+set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'patient_dim');
 
 -- COMMAND ----------
 
@@ -36,7 +27,7 @@ order by data_source, id, CHANGEDONDATE
 -- MAGIC %md
 -- MAGIC **Patient Integration table**
 -- MAGIC
--- MAGIC The integration process filters out records where the **Id is NULL or CHANGEDONDATE is NULL**.  These and other business errors can be part of the exception logging process.
+-- MAGIC The integration process filters out records where the **Id is NULL or CHANGEDONDATE is NULL or Last Name is NULL**.  These and other business errors can be part of the exception logging process.
 
 -- COMMAND ----------
 
@@ -48,6 +39,8 @@ order by data_source, patient_src_id, src_changed_on_dt
 
 -- MAGIC %md
 -- MAGIC **Patient Dimension table**
+-- MAGIC
+-- MAGIC The MERGE process ignores duplicate versions.
 
 -- COMMAND ----------
 

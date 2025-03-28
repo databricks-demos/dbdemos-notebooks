@@ -53,20 +53,13 @@ DECLARE OR REPLACE VARIABLE enable_po_for_schema BOOLEAN = true;
 -- Created in the demo schema
 DECLARE OR REPLACE VARIABLE volume_name STRING = 'staging';
 
+-- COMMAND ----------
+
 -- Path of the UC volume where patient source data will be staged
 DECLARE OR REPLACE VARIABLE staging_path STRING;
 SET VARIABLE staging_path = '/Volumes/' || catalog_name || "/" || schema_name || "/" || volume_name;
 
 SELECT staging_path;
-
--- COMMAND ----------
-
--- Two-level schema name
-DECLARE OR REPLACE VARIABLE full_schema_name = catalog_name || schema_name;
-
--- Full volume name
-DECLARE OR REPLACE VARIABLE full_volume_name STRING;
-SET VARIABLE full_volume_name =  full_schema_name || "." || volume_name;
 
 -- COMMAND ----------
 
@@ -77,10 +70,18 @@ SET VARIABLE full_volume_name =  full_schema_name || "." || volume_name;
 
 -- COMMAND ----------
 
+-- Two-level schema name
+DECLARE OR REPLACE VARIABLE full_schema_name STRING = catalog_name || '.' || schema_name;
+
+-- Full volume name
+DECLARE OR REPLACE VARIABLE full_volume_name STRING = full_schema_name || "." || volume_name;
+
+-- COMMAND ----------
+
 DECLARE OR REPLACE VARIABLE run_log_table STRING;
-SET VARIABLE run_log_table = catalog_name || '.' || schema_name || '.' || 'etl_run_log';
+SET VARIABLE run_log_table = full_schema_name || '.' || 'etl_run_log';
 
 DECLARE OR REPLACE VARIABLE code_table STRING;
-SET VARIABLE code_table = catalog_name || '.' || schema_name || '.' || 'code_m';
+SET VARIABLE code_table = full_schema_name || '.' || 'code_m';
 
 SELECT run_log_table, code_table;

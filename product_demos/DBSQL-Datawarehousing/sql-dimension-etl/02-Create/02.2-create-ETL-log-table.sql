@@ -10,7 +10,9 @@
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE IDENTIFIER(run_log_table) (
+DROP TABLE IF EXISTS IDENTIFIER(run_log_table);
+
+CREATE TABLE IDENTIFIER(run_log_table) (
   data_source STRING,
   table_name STRING,
   load_start_time TIMESTAMP,

@@ -1,44 +1,39 @@
 -- Databricks notebook source
--- MAGIC %run "./01.1-initialize"
+-- MAGIC %run ./01.1-initialize
 
 -- COMMAND ----------
 
-declare or replace variable sqlstr string; -- variable to hold any sql statement for EXECUTE IMMEDIATE
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC Create Catalog and Schema(s) if required
-
--- COMMAND ----------
-
-set variable sqlstr = "create catalog if not exists " || catalog_name;
-execute immediate sqlstr;
-
--- COMMAND ----------
-
-set variable sqlstr = "create schema if not exists " || catalog_name || "." || schema_name;
-
--- COMMAND ----------
-
-execute immediate sqlstr;
+DECLARE OR REPLACE VARIABLE sqlstr STRING; -- Variable to hold any SQL statement for EXECUTE IMMEDIATE
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Enable/disable Predictive Optimization for schema
+-- MAGIC **Create Catalog and Schema(s) if required**
 
 -- COMMAND ----------
 
-set variable sqlstr = "alter schema " || catalog_name || "." || schema_name || if(enable_po_for_schema, ' enable', ' inherit') || ' predictive optimization';
-execute immediate sqlstr;
+SET VARIABLE sqlstr = "CREATE CATALOG IF NOT EXISTS " || catalog_name;
+EXECUTE IMMEDIATE sqlstr;
+
+-- COMMAND ----------
+
+EXECUTE IMMEDIATE 'create schema if not exists IDENTIFIER(?)' USING full_schema_name;
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Create Volume for staging source data files
+-- MAGIC **Enable/disable Predictive Optimization for schema**
 
 -- COMMAND ----------
 
-set variable sqlstr = "create volume if not exists " || catalog_name || "." || schema_name || "." || volume_name;
-execute immediate sqlstr;
+SET VARIABLE sqlstr = "ALTER SCHEMA " || full_schema_name || IF(enable_po_for_schema, ' ENABLE', ' INHERIT') || ' PREDICTIVE OPTIMIZATION';
+EXECUTE IMMEDIATE sqlstr;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **Create Volume for staging source data files**
+
+-- COMMAND ----------
+
+EXECUTE IMMEDIATE "CREATE VOLUME IF NOT EXISTS IDENTIFIER(?)" USING full_volume_name;

@@ -1,20 +1,63 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Demo: Create & Populate Type 2 Patient Dimension
+-- MAGIC # Running SQL-based ETL on Databricks - Datawarehousing Migration
 -- MAGIC
--- MAGIC The demo will illustrate the data architecture and data workflow that creates and populates a dimension in a Star Schema using **Databricks SQL**.
--- MAGIC This will utilize a Patient dimension in the Healthcare domain.
--- MAGIC The demo will illustrate all facets of an end-to-end ETL to transform, validate, and load an SCD2 dimension.
--- MAGIC <br><br>
+-- MAGIC TODO @KD: add a small introduction on Databricks being State of the art DW, we can add an image on the right side 
+-- MAGIC
+-- MAGIC
+-- MAGIC
+-- MAGIC ## Building a Star Schema using Databricks SQL
+-- MAGIC
+-- MAGIC The demo illustrate how to create a SQL-first data architecture and data workflow to a classic Star Schema.
+-- MAGIC
+-- MAGIC You'll discover how to run classic SQL / DBA workflow, making it ideal to migrate your existing Datawarehouse scripts to Databricks, with minimum effort: 
+-- MAGIC
+-- MAGIC * Parametrize your job to support different environements.
+-- MAGIC * Load the raw staging data
+-- MAGIC * Apply transformations
+-- MAGIC * Create start schema with FK/PK
+-- MAGIC * Leverage Databricks Workflow to chain your operation
+-- MAGIC * Incremental data loading
+-- MAGIC * Data validation
+-- MAGIC * SCD2 dimention
+-- MAGIC
+-- MAGIC <br>
 -- MAGIC Note: The ETL assumes that the source data is extracted to cloud storage as incremental CSV files.
+-- MAGIC
+-- MAGIC ## A note on DLT
+-- MAGIC With Lakeflow DLT Databricks, provides a higher level of abstraction that we recommend for new pipelines, as it simplify the operations.  We're looking to add a DLT version of this demo to outline the difference in the future.
+-- MAGIC
+-- MAGIC For more details on DLT, you can install `dbdemos.install('dbt-loans)`.
+
+-- COMMAND ----------
+
+-- SRE
+-- WHAT DO I NEED TO ADD ABOUT-
+-- patient360 as an analytics app
+-- pointing to RLS / CLM demo..
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC # Analytics Architecture
+-- MAGIC
+-- MAGIC #### <span style="color:darkblue">Data Warehouse integrating patient data to cater to analytics applications such as Patient 360.
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC <div style="border: 0px solid grey; padding: 1px; display: inline-block;">
+-- MAGIC
+-- MAGIC ![](https://github.com/shyamraodb/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true)
+-- MAGIC
+-- MAGIC
+-- MAGIC </div>
 -- MAGIC
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # What We Will Build
+-- MAGIC ## What We Will Build
 -- MAGIC
--- MAGIC #### This end-to-end demo builds a Workflows Job that will perform the following tasks:
+-- MAGIC ### This end-to-end demo builds a Workflows Job that will perform the following tasks:
 -- MAGIC
 -- MAGIC ####<span style="color:darkblue">1. Create Tables
 -- MAGIC <br>
@@ -75,7 +118,7 @@
 -- MAGIC
 -- MAGIC <div style="border: 1px solid grey; padding: 1px; display: inline-block;">
 -- MAGIC
--- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true)
+-- MAGIC ![](https://github.com/shyamraodb/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true)
 -- MAGIC
 -- MAGIC
 -- MAGIC </div>

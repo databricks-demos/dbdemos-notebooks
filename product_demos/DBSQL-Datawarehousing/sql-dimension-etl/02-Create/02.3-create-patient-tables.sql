@@ -1,19 +1,9 @@
 -- Databricks notebook source
--- MAGIC %run "../01-Setup/01.1-initialize"
+-- MAGIC %run ../01-Setup/01.1-initialize
 
 -- COMMAND ----------
 
-declare or replace variable stg_table string; -- staging/bronze table identifier
-declare or replace variable int_table string; -- integration/silver table identifier
-declare or replace variable dim_table string; -- dimension table identifier
-
--- COMMAND ----------
-
-declare or replace variable sqlstr string;
-
--- COMMAND ----------
-
-set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || schema_name || '.' || 'patient_stg', catalog_name || '.' || schema_name || '.' || 'patient_int', catalog_name || '.' || schema_name || '.' || 'g_patient_d');
+DECLARE OR REPLACE VARIABLE sqlstr STRING;
 
 -- COMMAND ----------
 
@@ -23,7 +13,12 @@ set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || 
 -- MAGIC Create the staging, integration, and dimension tables for patient.<br>
 -- MAGIC The patient dimension is part of the clinical data warehouse (star schema).
 -- MAGIC
--- MAGIC <u>NOTE:</u> By default, the tables are created in the **catalog main**.  To change this, or specify an existing catalog / schema, please see [Configure notebook]($../00-Setup/Configure) for more context.
+-- MAGIC <u>NOTE:</u> By default, the tables are created in the **catalog main**.  To change this, or specify an existing catalog / schema, please see [01.1-initialize notebook]($../01-Setup/01.1-initialize) for more context.
+
+-- COMMAND ----------
+
+-- Set the current schema
+USE IDENTIFIER(full_schema_name);
 
 -- COMMAND ----------
 
@@ -33,22 +28,15 @@ set variable (stg_table, int_table, dim_table) = (select catalog_name || '.' || 
 
 -- COMMAND ----------
 
-drop table if exists identifier(stg_table);
+DROP TABLE IF EXISTS patient_stg;
 
--- COMMAND ----------
-
-create table if not exists identifier(stg_table)
-comment 'Patient staging table ingesting initial and incremental master data from csv files'
-;
+CREATE TABLE patient_stg
+COMMENT 'Patient staging table ingesting initial and incremental master data from csv files';
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC ## Create Integration Table
-
--- COMMAND ----------
-
-drop table if exists identifier(int_table);
 
 -- COMMAND ----------
 
@@ -63,40 +51,37 @@ drop table if exists identifier(int_table);
 
 -- COMMAND ----------
 
-create table if not exists identifier(int_table) (
-  patient_src_id string not null comment 'ID of the record in the source',
-  date_of_birth date comment 'date of birth',
-  ssn string comment 'social security number',
-  drivers_license string comment 'driver\'s license',
-  name_prefix string comment 'name prefix',
-  first_name string comment 'first name of patient',
-  last_name string not null comment 'last name of patient',
-  name_suffix string comment 'name suffix',
-  maiden_name string comment 'maiden name',
-  gender_cd string comment 'code for patient\'s gender',
-  gender_nm string comment 'description of patient\'s gender',
-  marital_status string comment 'marital status',
-  ethnicity_cd string comment 'code for patient\'s ethnicity',
-  ethnicity_nm string comment 'description of patient\'s ethnicity',
-  src_changed_on_dt timestamp comment 'date of last change to record in source',
-  data_source string not null comment 'code for source system',
-  insert_dt timestamp comment 'date record inserted',
-  update_dt timestamp comment 'date record updated',
-  process_id string comment 'Process ID for run',
-  constraint c_int_pk primary key (patient_src_id, data_source) RELY
+DROP TABLE IF EXISTS patient_int;
+
+CREATE TABLE IF NOT EXISTS patient_int (
+  patient_src_id STRING NOT NULL COMMENT 'ID of the record in the source',
+  date_of_birth DATE COMMENT 'Date of birth',
+  ssn STRING COMMENT 'Social Security Number',
+  drivers_license STRING COMMENT 'Driver\'s license',
+  name_prefix STRING COMMENT 'Name prefix',
+  first_name STRING COMMENT 'First Name of patient',
+  last_name STRING NOT NULL COMMENT 'Last Name of patient',
+  name_suffix STRING COMMENT 'Name suffix',
+  maiden_name STRING COMMENT 'Maiden Name',
+  gender_cd STRING COMMENT 'Code for patient\'s gender',
+  gender_nm STRING COMMENT 'Description of patient\'s gender',
+  marital_status STRING COMMENT 'Marital Status',
+  ethnicity_cd STRING COMMENT 'Code for patient\'s ethnicity',
+  ethnicity_nm STRING COMMENT 'Description of patient\'s ethnicity',
+  src_changed_on_dt TIMESTAMP COMMENT 'Date of last change to record in source',
+  data_source STRING NOT NULL COMMENT 'Source System',
+  insert_dt TIMESTAMP COMMENT 'Date record inserted',
+  update_dt TIMESTAMP COMMENT 'Date record updated',
+  process_id STRING COMMENT 'Process ID for run',
+  CONSTRAINT c_int_pk PRIMARY KEY (patient_src_id, data_source) RELY
 )
-comment 'curated integration table for patient data'
-tblproperties (delta.enableChangeDataFeed = true)
-;
+COMMENT 'Curated integration table for patient data'
+TBLPROPERTIES (delta.enableChangeDataFeed = true);
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC ## Create Dimension
-
--- COMMAND ----------
-
-drop table if exists identifier(dim_table);
 
 -- COMMAND ----------
 
@@ -114,42 +99,44 @@ drop table if exists identifier(dim_table);
 
 -- COMMAND ----------
 
-create table if not exists identifier(dim_table) (
-  patient_sk bigint generated always as identity comment 'Primary Key (ID)',
-  last_name string not null comment 'Last name of the person',
-  first_name string comment 'First name of the person',
-  name_prefix string comment 'Prefix of person name',
-  name_suffix string comment 'Suffix of person name',
-  maiden_name string comment 'Maiden name',
-  gender_code string comment 'Gender code',
-  gender string comment 'Gender description',
-  date_of_birth timestamp comment 'Birth date and time',
-  marital_status string comment 'Marital status',
-  ethnicity_code string comment 'Ethnicity code',
-  ethnicity string comment 'Ethnicity description',
-  ssn string  comment 'Patient SSN',
-  other_identifiers map <string, string>  comment 'Identifier type (passport number, license number except mrn, ssn) and value',
-  uda map <string, string>  comment 'User Defined Attributes',
-  patient_src_id string not null comment 'Unique reference to the source record',
-  effective_start_date timestamp not null comment 'SCD2 effective start date for version',
-  effective_end_date timestamp  comment 'SCD2 effective start date for version',
-  checksum string comment 'Checksum for the record',
-  data_source string not null comment 'Code for source system',
-  insert_dt timestamp comment 'record inserted time',
-  update_dt timestamp comment 'record updated time',
-  process_id string comment 'Process ID for run',
-  constraint c_d_pk primary key (patient_sk) RELY
-)
-cluster by auto
-comment 'Patient dimension'
-tblproperties (
-  delta.deletedFileRetentionDuration = 'interval 30 days'
-)
-;
+DROP TABLE IF EXISTS patient_dim;
 
+CREATE TABLE IF NOT EXISTS patient_dim (
+  patient_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Primary Key (ID)',
+  last_name STRING NOT NULL COMMENT 'Last name of the person',
+  first_name STRING COMMENT 'First name of the person',
+  name_prefix STRING COMMENT 'Prefix of person name',
+  name_suffix STRING COMMENT 'Suffix of person name',
+  maiden_name STRING COMMENT 'Maiden name',
+  gender_code STRING COMMENT 'Gender code',
+  gender STRING COMMENT 'Gender description',
+  date_of_birth TIMESTAMP COMMENT 'Birth date and time',
+  marital_status STRING COMMENT 'Marital status',
+  ethnicity_code STRING COMMENT 'Ethnicity code',
+  ethnicity STRING COMMENT 'Ethnicity description',
+  ssn STRING COMMENT 'Patient SSN',
+  other_identifiers MAP<STRING, STRING> COMMENT 'Identifier type (passport number, license number except mrn, ssn) and value',
+  uda MAP<STRING, STRING> COMMENT 'User Defined Attributes',
+  patient_src_id STRING NOT NULL COMMENT 'Unique reference to the source record',
+  effective_start_date TIMESTAMP NOT NULL COMMENT 'SCD2 effective start date for version',
+  effective_end_date TIMESTAMP COMMENT 'SCD2 effective start date for version',
+  checksum STRING COMMENT 'Checksum for the record',
+  data_source STRING NOT NULL COMMENT 'Code for source system',
+  insert_dt TIMESTAMP COMMENT 'Record inserted time',
+  update_dt TIMESTAMP COMMENT 'Record updated time',
+  process_id STRING COMMENT 'Process ID for run',
+  CONSTRAINT c_d_pk PRIMARY KEY (patient_sk) RELY
+)
+CLUSTER BY AUTO
+COMMENT 'Patient dimension'
+TBLPROPERTIES (
+  delta.deletedFileRetentionDuration = 'interval 30 days'
+);
 
 -- COMMAND ----------
 
 -- FK to integration table
-set variable sqlstr = 'alter table ' || dim_table || ' add constraint c_d_int_source_fk foreign key (patient_src_id, data_source) references ' || int_table || '(patient_src_id, data_source) not enforced rely';
-execute immediate sqlstr;
+SET VARIABLE sqlstr = 'ALTER TABLE patient_dim ADD CONSTRAINT 
+  c_d_int_source_fk FOREIGN KEY (patient_src_id, data_source) REFERENCES ' || full_schema_name || '.' || 'patient_int(patient_src_id, data_source) NOT ENFORCED RELY';
+
+EXECUTE IMMEDIATE sqlstr;

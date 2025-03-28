@@ -1,10 +1,12 @@
 -- Databricks notebook source
--- MAGIC %run "../01-Setup/01.1-initialize"
+-- MAGIC %run ../01-Setup/01.1-initialize
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Create Table
+-- MAGIC # Creating Code Table
+-- MAGIC
+-- MAGIC Let's start by creating our initial tables.
 
 -- COMMAND ----------
 
@@ -14,25 +16,32 @@
 
 -- COMMAND ----------
 
-drop table if exists identifier(code_table);
+-- We defined our common table names including their catalog and schema in the parent 01-setup notebook
+SELECT code_table;
 
 -- COMMAND ----------
 
--- LC options - m_code, m_type
-
-create table identifier(code_table) (
-  m_code string comment 'code',
-  m_desc string comment 'name or description for the code',
-  m_type string comment 'attribute type utilizing code'
+CREATE OR REPLACE TABLE IDENTIFIER(code_table) (
+  m_code STRING COMMENT 'code',
+  m_desc STRING COMMENT 'name or description for the code',
+  m_type STRING COMMENT 'attribute type utilizing code'
 )
-comment 'master table for coded attributes'
+COMMENT 'master table for coded attributes';
 
 -- COMMAND ----------
 
-insert into identifier(code_table)
-values
+INSERT INTO IDENTIFIER(code_table)
+VALUES
   ('M', 'Male', 'GENDER'),
   ('F', 'Female', 'GENDER'),
   ('hispanic', 'Hispanic', 'ETHNICITY'),
-  ('nonhispanic', 'Not Hispanic', 'ETHNICITY')e
-;
+  ('nonhispanic', 'Not Hispanic', 'ETHNICITY');
+
+-- COMMAND ----------
+
+SELECT * FROM IDENTIFIER(code_table);
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Next: [create the ETL Log table]($./02.2-create-ETL-log-table)

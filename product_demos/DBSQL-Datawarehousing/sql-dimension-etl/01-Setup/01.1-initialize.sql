@@ -1,69 +1,86 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC **Configure Catalog and Schema** <br>
+-- MAGIC # Parametrize your SQL Script
 -- MAGIC
--- MAGIC 1. Specify the catalog name (to create demo schema and objects) <br>
+-- MAGIC In this initial notebook, we're defining our table and schema as parameter.
+-- MAGIC This makes it easy to run your ETL pipeline on different catalogs (for e.g., dev/test)
+-- MAGIC <br><br>
+-- MAGIC Specify the following:
+-- MAGIC 1. Catalog name (to create demo schema and objects)
+-- MAGIC 2. Schema name (to create data warehouse tables, staging volume)
 -- MAGIC
--- MAGIC 2. Specify the schema name (to create data warehouse tables, staging volume) <br>
--- MAGIC
--- MAGIC <u>NOTE:</u>
--- MAGIC The catalog and schema can be create beforehand.  If not, ensure that the user running the workflow has permissions to create catalog and schema.
+-- MAGIC <br>
+-- MAGIC *NOTE: DBDemos will create the catalog and schema for you if they do not exist. Ensure that the user running the workflow has permissions to create catalog and schema.*
 
 -- COMMAND ----------
 
--- DBTITLE 1,dimension schema
+-- MAGIC %md
+-- MAGIC CREATE WIDGET TEXT catalog_name DEFAULT "main";
+-- MAGIC CREATE WIDGET TEXT schema_name DEFAULT "dbdemos_sql_etl";
+
+-- COMMAND ----------
+
 -- Name of catalog under which to create the demo schema
-declare or replace variable catalog_name string = 'main';
+DECLARE OR REPLACE VARIABLE catalog_name STRING = 'main';
 
 -- Name of the demo schema under which to create tables, volume
-declare or replace variable schema_name string  = 'dbdemos_sql_etl';
+DECLARE OR REPLACE VARIABLE schema_name STRING = 'dbdemos_sql_etl';
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC **Configure Predictive Optimization (PO)**
--- MAGIC <br><br>
+-- MAGIC <br>
 -- MAGIC Specify (true/false) whether to enable Predictive Optimization (PO) for the DW schema
 
 -- COMMAND ----------
 
--- Enable PO at schema level / else inherit from account setting
-declare or replace variable enable_po_for_schema boolean = true;
+-- Enable PO prodictive optimization at schema level / else inherit from account setting
+DECLARE OR REPLACE VARIABLE enable_po_for_schema BOOLEAN = true;
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC **Configure Volume**
--- MAGIC <br><br>
+-- MAGIC <br>
 -- MAGIC A folder named "patient" will be created in this volume, and used to stage the source data files that comprise the demo.
--- MAGIC <br><br>
+-- MAGIC <br>
 -- MAGIC Please note, the code removes any existing folder named "patient" from this volume.
 
 -- COMMAND ----------
 
 -- Name of the UC volume where patient source data will be staged
 -- Created in the demo schema
-declare or replace variable volume_name string = 'staging';
+DECLARE OR REPLACE VARIABLE volume_name STRING = 'staging';
+
+-- Path of the UC volume where patient source data will be staged
+DECLARE OR REPLACE VARIABLE staging_path STRING;
+SET VARIABLE staging_path = '/Volumes/' || catalog_name || "/" || schema_name || "/" || volume_name;
+
+SELECT staging_path;
+
+-- COMMAND ----------
+
+-- Two-level schema name
+DECLARE OR REPLACE VARIABLE full_schema_name = catalog_name || schema_name;
+
+-- Full volume name
+DECLARE OR REPLACE VARIABLE full_volume_name STRING;
+SET VARIABLE full_volume_name =  full_schema_name || "." || volume_name;
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC **Additional variables**
+-- MAGIC <br>
+-- MAGIC Defines our logging table to store our operation details
 
 -- COMMAND ----------
 
--- variable to store qualified name of ETL log table
-declare or replace variable run_log_table string;
+DECLARE OR REPLACE VARIABLE run_log_table STRING;
+SET VARIABLE run_log_table = catalog_name || '.' || schema_name || '.' || 'etl_run_log';
 
--- variable to store qualified name of Code Master table
-declare or replace variable code_table string;
+DECLARE OR REPLACE VARIABLE code_table STRING;
+SET VARIABLE code_table = catalog_name || '.' || schema_name || '.' || 'code_m';
 
--- COMMAND ----------
-
-set variable (run_log_table, code_table) = (select catalog_name || '.' || schema_name || '.' || 'etl_run_log', catalog_name || '.' || schema_name || '.' || 'code_m');
-
--- COMMAND ----------
-
--- Path of the UC volume where patient source data will be staged
-declare or replace variable staging_path string;
-set variable staging_path = '/Volumes/' || catalog_name || "/" || schema_name || "/" || volume_name;
+SELECT run_log_table, code_table;

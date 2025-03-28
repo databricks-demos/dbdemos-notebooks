@@ -1,22 +1,30 @@
 -- Databricks notebook source
--- MAGIC %run "../01-Setup/01.1-initialize"
+-- MAGIC %run ../01-Setup/01.1-initialize
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Create Tables
+-- MAGIC # Create the Log Table to track our ETL runs
+-- MAGIC
+-- MAGIC This table captures the metadata for a given table that includes the table name, load start time and load end time, and other operations metadata.
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TABLE IDENTIFIER(run_log_table) (
+  data_source STRING,
+  table_name STRING,
+  load_start_time TIMESTAMP,
+  load_end_time TIMESTAMP,
+  num_inserts INT,
+  num_updates INT,
+  process_id STRING
+);
+
+-- COMMAND ----------
+
+SELECT * FROM IDENTIFIER(run_log_table);
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Config/Log Table for ETL
--- MAGIC This table captures the metadata for a given table that includes the table name, load start time and load end time.
-
--- COMMAND ----------
-
-drop table if exists identifier(run_log_table);
-
--- COMMAND ----------
-
-create table identifier(run_log_table) (data_source string, table_name string, load_start_time timestamp, locked boolean, load_end_time timestamp, num_inserts int, num_updates int, process_id string)
-;
+-- MAGIC Next: [create the Patient table]($./02.3-create-patient-tables)

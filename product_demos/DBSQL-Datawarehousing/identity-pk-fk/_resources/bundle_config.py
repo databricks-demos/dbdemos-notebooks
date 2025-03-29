@@ -34,6 +34,14 @@
       "description": "Init data for demo."
     },
     {
+      "path": "config", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "config", 
+      "description": "Define your schema and catalog"
+    },
+    {
       "path": "00-Identity_PK_FK", 
       "pre_run": True, 
       "publish_on_website": True, 

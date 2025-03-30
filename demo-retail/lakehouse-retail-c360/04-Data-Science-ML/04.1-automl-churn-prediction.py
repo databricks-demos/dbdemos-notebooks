@@ -66,7 +66,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md
+# MAGIC %md-sandbox
 # MAGIC
 # MAGIC # Churn Prediction - Single click deployment with AutoML
 # MAGIC

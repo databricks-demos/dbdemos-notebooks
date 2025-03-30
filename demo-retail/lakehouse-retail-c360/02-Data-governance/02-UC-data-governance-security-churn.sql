@@ -76,6 +76,9 @@
 -- MAGIC %md-sandbox  
 -- MAGIC # Scalable Data Governance with Unity Catalog  
 -- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_2.png?raw=true" style="float: right" width="500px">
+-- MAGIC
+-- MAGIC
 -- MAGIC Managing secure, scalable data access is critical. With **Unity Catalog**, the **Lakehouse** enables seamless governance while ensuring teams can collaborate efficiently.  
 -- MAGIC
 -- MAGIC ### The Challenge  
@@ -94,20 +97,6 @@
 -- MAGIC ✅ **Seamless data sharing** across teams and organizations (**Delta Sharing**)  
 -- MAGIC
 -- MAGIC With **Unity Catalog**, teams can confidently manage **governance, security, and collaboration** across workspaces. 🚀  
-
--- COMMAND ----------
-
--- MAGIC %md-sandbox
--- MAGIC ## Cluster setup for UC
--- MAGIC
--- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/uc/uc-cluster-setup-single-user.png" style="float: right"/>
--- MAGIC
--- MAGIC
--- MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
--- MAGIC
--- MAGIC Go in the compute page, create a new cluster.
--- MAGIC
--- MAGIC Select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
 
 -- COMMAND ----------
 

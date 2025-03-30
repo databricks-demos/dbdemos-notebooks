@@ -36,7 +36,7 @@
 # MAGIC %md-sandbox
 # MAGIC ## Orchestrating our Churn pipeline with Databricks Workflows
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-workflow.png?raw=true" />
+# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/dbdemos-workflow-churn-1.png?raw=true" />
 # MAGIC
 # MAGIC With Databricks Lakehouse, no need for external orchestrator. We can use [Workflows](/#job/list) (available on the left menu) to orchestrate our Churn pipeline within a few click.
 # MAGIC
@@ -57,7 +57,7 @@
 # MAGIC
 # MAGIC ## Creating your workflow
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-dashboard-full.png?raw=trueg" />
+# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/dbdemos-workflow-churn-3.png?raw=true" />
 # MAGIC
 # MAGIC A Databricks Workflow is composed of Tasks.
 # MAGIC
@@ -87,7 +87,7 @@
 # MAGIC
 # MAGIC ## Monitoring your runs
 # MAGIC
-# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-workflow-monitoring.png" />
+# MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/dbdemos-workflow-tasks.png?raw=true" />
 # MAGIC
 # MAGIC Once your workflow is created, we can access historical runs and receive alerts if something goes wrong!
 # MAGIC

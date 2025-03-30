@@ -3,12 +3,14 @@
 -- MAGIC
 -- MAGIC # AI / BI On Databricks: Your AI-powered Lakehouse is the best Warehouse
 -- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_3.png?raw=true" style="float: right" width="500px">
+-- MAGIC
 -- MAGIC Traditional Data Warehouses can’t keep up with the variety of data and use cases. Business agility requires reliable, real-time data, with insight from ML models.
 -- MAGIC
 -- MAGIC Working with the lakehouse unlock traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
 -- MAGIC
 -- MAGIC With AI assistant infused in all the BI stack, Databricks makes it easy to analysts and business users to extract insight from their data.  
--- MAGIC <br>
+-- MAGIC <br style="clear: both">
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/dbsql.png" width="700px" style="float: left" />
 -- MAGIC

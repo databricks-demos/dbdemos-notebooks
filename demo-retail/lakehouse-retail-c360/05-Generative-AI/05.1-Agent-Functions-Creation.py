@@ -29,6 +29,9 @@
 # MAGIC
 # MAGIC
 # MAGIC ### Liza's Goal  
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_5.png?raw=true" style="float: right" width="500px">
+# MAGIC
 # MAGIC Liza wants to develop a GenAI agent that minimizes the time Account Managers spend crafting customized outreach for customers at risk of churning. More specifically, Liza wants to make an agent that can do multiple things, including:
 # MAGIC
 # MAGIC 1. Determining if a customer is likely to churn.

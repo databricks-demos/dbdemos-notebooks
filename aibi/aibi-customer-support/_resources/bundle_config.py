@@ -140,21 +140,33 @@
       ],
       [
         """
-        CREATE OR REPLACE FUNCTION `{{CATALOG}}`.`{{SCHEMA}}`.get_top_agents_by_survey_score(catalog_name STRING, schema_name STRING, rank_cutoff INT) 
-        RETURNS TABLE (agent_name STRING, month TIMESTAMP, total_survey_results DECIMAL(10,2), performance_rank INT) 
-        RETURN (
-          WITH monthly_ranked_agents AS (
-            SELECT a.agent_name, DATE_TRUNC('month', t.created_time) AS month, SUM(s.survey_results) AS total_survey_results, 
-                   ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('month', t.created_time) ORDER BY SUM(s.survey_results) DESC) AS performance_rank 
-            FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean t 
-            JOIN `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean a ON t.ticket_id = a.ticket_id 
-            JOIN `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean s ON t.ticket_id = s.ticket_id 
-            GROUP BY a.agent_name, DATE_TRUNC('month', t.created_time)
-          ) 
-          SELECT agent_name, month, total_survey_results, performance_rank 
-          FROM monthly_ranked_agents 
-          WHERE performance_rank <= rank_cutoff
-        );
+CREATE OR REPLACE FUNCTION `{{CATALOG}}`.`{{SCHEMA}}`.get_top_agents_by_survey_score(
+  catalog_name STRING, 
+  schema_name STRING, 
+  rank_cutoff INT
+) 
+RETURNS TABLE (
+  agent_name STRING, 
+  avg_survey_score DECIMAL(10,2), 
+  performance_rank INT
+) 
+RETURN (
+  WITH ranked_agents AS (
+    SELECT 
+      a.agent_name, 
+      AVG(s.survey_results) AS avg_survey_score, 
+      ROW_NUMBER() OVER (
+        ORDER BY AVG(s.survey_results) DESC
+      ) AS performance_rank 
+    FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean t 
+    JOIN `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean a ON t.ticket_id = a.ticket_id 
+    JOIN `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean s ON t.ticket_id = s.ticket_id 
+    GROUP BY a.agent_name
+  )
+  SELECT agent_name, avg_survey_score, performance_rank 
+  FROM ranked_agents 
+  WHERE performance_rank <= rank_cutoff
+);
         """,
         """
         ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean 

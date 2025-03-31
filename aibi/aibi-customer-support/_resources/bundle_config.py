@@ -128,10 +128,14 @@
         FROM `{{CATALOG}}`.`{{SCHEMA}}`.agents_bronze;
         """,
         """
-        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean SELECT ticket_id, status, priority, source, topic, created_time, close_time, product_group, support_level, country, try_cast(latitude AS DOUBLE) AS latitude, try_cast(longitude AS DOUBLE) AS longitude FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze`"
+        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean
+        SELECT ticket_id, status, priority, source, topic, created_time, close_time, product_group, support_level, country, try_cast(latitude AS DOUBLE) AS latitude, try_cast(longitude AS DOUBLE) AS longitude
+        FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze;
         """,
         """
-        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean SELECT ticket_id, expected_sla_to_resolve, expected_sla_to_first_response, first_response_time, sla_for_first_response, resolution_time, sla_for_resolution, try_cast(survey_results AS INT) AS survey_results FROM `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze`"
+        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean
+        SELECT ticket_id, expected_sla_to_resolve, expected_sla_to_first_response, first_response_time, sla_for_first_response, resolution_time, sla_for_resolution, try_cast(survey_results AS INT) AS survey_results
+        FROM `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze;
         """
       ],
       [
@@ -155,12 +159,12 @@
         """
         ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean 
         ADD CONSTRAINT agents_clean_tickets_fk FOREIGN KEY (ticket_id) 
-        REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id)
+        REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id);
         """,
         """
         ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean 
         ADD CONSTRAINT sla_clean_tickets_fk FOREIGN KEY (ticket_id) 
-        REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id)
+        REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id);
         """
       ]
     ],

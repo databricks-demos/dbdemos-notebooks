@@ -115,7 +115,7 @@
             sla_for_first_response STRING COMMENT 'The SLA achieved for the first response to the ticket.',
             resolution_time TIMESTAMP COMMENT 'The actual time taken to resolve the ticket.',
             sla_for_resolution STRING COMMENT 'The SLA achieved for resolving the ticket.',
-            survey_results INT COMMENT 'The survey results for the customers experience with the support ticket, measured on a numerical scale.',
+            survey_results DOUBLE COMMENT 'The survey results for the customers experience with the support ticket, measured on a numerical scale.',
             PRIMARY KEY (ticket_id) RELY
         )
         USING delta COMMENT 'The sla_clean table contains information about the Service Level Agreements (SLAs) for customer support tickets. It includes details about the expected SLAs for first response and resolution, as well as the actual SLAs achieved. This data can be used to assess the performance of customer support teams, identify bottlenecks, and track improvements in SLAs over time. Additionally, survey results are included to provide feedback on the quality of customer support.';
@@ -134,7 +134,7 @@
         """,
         """
         INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean
-        SELECT ticket_id, expected_sla_to_resolve, expected_sla_to_first_response, first_response_time, sla_for_first_response, resolution_time, sla_for_resolution, try_cast(survey_results AS INT) AS survey_results
+        SELECT ticket_id, expected_sla_to_resolve, expected_sla_to_first_response, first_response_time, sla_for_first_response, resolution_time, sla_for_resolution, try_cast(survey_results AS DOUBLE) AS survey_results
         FROM `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze;
         """
       ],
@@ -182,61 +182,61 @@
           {
             "title": "Agent performance by tickets closed per month",
             "content": """
-            WITH monthly_ranked_agents AS (
-                SELECT a.`agent_name`, DATE_TRUNC('month', t.`created_time`) AS month, 
-                       SUM(s.`survey_results`) AS total_survey_results, 
-                       ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('month', t.`created_time`) 
-                       ORDER BY SUM(s.`survey_results`) DESC) AS performance_rank 
-                FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-                JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
-                JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-                WHERE t.`created_time` IS NOT NULL 
-                GROUP BY a.`agent_name`, DATE_TRUNC('month', t.`created_time`)
-            ) 
-            SELECT `agent_name`, `month`, `total_survey_results` 
-            FROM monthly_ranked_agents 
-            WHERE performance_rank <= 10 
-            ORDER BY `month`, performance_rank;
+WITH monthly_ranked_agents AS (
+    SELECT a.`agent_name`, DATE_TRUNC('month', t.`created_time`) AS month, 
+            SUM(s.`survey_results`) AS total_survey_results, 
+            ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('month', t.`created_time`) 
+            ORDER BY SUM(s.`survey_results`) DESC) AS performance_rank 
+    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
+    JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
+    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
+    WHERE t.`created_time` IS NOT NULL 
+    GROUP BY a.`agent_name`, DATE_TRUNC('month', t.`created_time`)
+) 
+SELECT `agent_name`, `month`, `total_survey_results` 
+FROM monthly_ranked_agents 
+WHERE performance_rank <= 10 
+ORDER BY `month`, performance_rank;
             """
           },
           {
             "title": "Proportion of tickets per month that violate first response SLA",
             "content": """
-            WITH monthly_tickets AS (
-                SELECT DATE_TRUNC('month', t.`created_time`) AS month, COUNT(*) AS total_tickets, 
-                       SUM(CASE WHEN s.`first_response_time` > s.`expected_sla_to_first_response` THEN 1 ELSE 0 END) AS sla_violations 
-                FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-                JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-                WHERE t.`created_time` IS NOT NULL AND s.`first_response_time` IS NOT NULL AND s.`expected_sla_to_first_response` IS NOT NULL 
-                GROUP BY DATE_TRUNC('month', t.`created_time`)
-            ) 
-            SELECT month, ROUND((sla_violations / total_tickets :: decimal) * 100, 2) AS violation_percentage 
-            FROM monthly_tickets 
-            ORDER BY month;
+WITH monthly_tickets AS (
+    SELECT DATE_TRUNC('month', t.`created_time`) AS month, COUNT(*) AS total_tickets, 
+            SUM(CASE WHEN s.`first_response_time` > s.`expected_sla_to_first_response` THEN 1 ELSE 0 END) AS sla_violations 
+    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
+    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
+    WHERE t.`created_time` IS NOT NULL AND s.`first_response_time` IS NOT NULL AND s.`expected_sla_to_first_response` IS NOT NULL 
+    GROUP BY DATE_TRUNC('month', t.`created_time`)
+) 
+SELECT month, ROUND((sla_violations / total_tickets :: decimal) * 100, 2) AS violation_percentage 
+FROM monthly_tickets 
+ORDER BY month;
             """
           },
           {
             "title": "Which agents violate the resolution SLA most often compared to their number of closed tickets?",
             "content": """
-            SELECT a.`agent_name`, a.`violation_count`, t2.`total_tickets`, 
-                   ROUND((a.`violation_count` :: decimal / t2.`total_tickets`) * 100, 2) AS violation_percentage 
-            FROM (
-                SELECT a.`agent_name`, COUNT(*) AS violation_count 
-                FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-                JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
-                JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-                WHERE a.`agent_name` IS NOT NULL AND s.`resolution_time` > s.`expected_sla_to_resolve` 
-                GROUP BY a.`agent_name`
-            ) a 
-            JOIN (
-                SELECT a.`agent_name`, COUNT(*) AS total_tickets 
-                FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-                JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
-                JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-                WHERE a.`agent_name` IS NOT NULL AND s.`close_time` IS NOT NULL 
-                GROUP BY a.`agent_name`
-            ) t2 ON a.`agent_name` = t2.`agent_name` 
-            ORDER BY violation_percentage DESC;
+SELECT a.`agent_name`, a.`violation_count`, t2.`total_tickets`, 
+        ROUND((a.`violation_count` :: decimal / t2.`total_tickets`) * 100, 2) AS violation_percentage 
+FROM (
+    SELECT a.`agent_name`, COUNT(*) AS violation_count 
+    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
+    JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
+    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
+    WHERE a.`agent_name` IS NOT NULL AND s.`resolution_time` > s.`expected_sla_to_resolve` 
+    GROUP BY a.`agent_name`
+) a 
+JOIN (
+    SELECT a.`agent_name`, COUNT(*) AS total_tickets 
+    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
+    JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
+    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
+    WHERE a.`agent_name` IS NOT NULL AND t.`close_time` IS NOT NULL 
+    GROUP BY a.`agent_name`
+) t2 ON a.`agent_name` = t2.`agent_name` 
+ORDER BY violation_percentage DESC;
             """
           }
         ],

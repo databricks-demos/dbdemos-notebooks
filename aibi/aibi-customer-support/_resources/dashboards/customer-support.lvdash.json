@@ -2,19 +2,19 @@
   "datasets" : [ {
     "name" : "39a5402c",
     "displayName" : "Support Data",
-    "query" : "-- CTE to get the top 5 topics by the number of tickets\nWITH TopTopics AS (\n  SELECT topic\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY topic\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 5\n),\n-- CTE to get the top 4 countries by the number of tickets\nTopCountries AS (\n  SELECT country\n  FROM main.dbdemos_aibi_customer_support.customer_support_review\n  GROUP BY country\n  ORDER BY COUNT(ticket_id) DESC\n  LIMIT 4\n)\n\n-- Main query to select data from the technical support dataset\nSELECT \n       *,\n       -- Calculate the resolution time in hours, adding a random adjustment for Tier 2 support level\n       (TIMESTAMPDIFF(MINUTE, created_time, resolution_time) \n              + CASE \n           WHEN support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400)))\n           ELSE 0 \n         END) / 60.0 AS adjusted_resolution_time\nFROM main.dbdemos_aibi_customer_support.customer_support_review\n-- Filter to include only tickets with top topics\nWHERE topic IN (SELECT topic FROM TopTopics)\n-- Filter to include only tickets from top countries\nAND country IN (SELECT country FROM TopCountries)\n-- Exclude tickets where the resolution time is zero\nAND TIMESTAMPDIFF(MINUTE, created_time, resolution_time) != 0;"
+    "query" : "WITH TopTopics AS (SELECT topic FROM main.dbdemos_aibi_customer_support.tickets_clean GROUP BY topic ORDER BY COUNT(ticket_id) DESC LIMIT 5), TopCountries AS (SELECT country FROM main.dbdemos_aibi_customer_support.tickets_clean GROUP BY country ORDER BY COUNT(ticket_id) DESC LIMIT 4) SELECT s.*, a.*, t.*, (TIMESTAMPDIFF(MINUTE, t.created_time, s.resolution_time) + CASE WHEN t.support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400))) ELSE 0 END) / 60.0 AS adjusted_resolution_time FROM main.dbdemos_aibi_customer_support.sla_clean s JOIN main.dbdemos_aibi_customer_support.agents_clean a USING (ticket_id) JOIN main.dbdemos_aibi_customer_support.tickets_clean t USING (ticket_id) WHERE t.topic IN (SELECT topic FROM TopTopics) AND t.country IN (SELECT country FROM TopCountries) AND TIMESTAMPDIFF(MINUTE, t.created_time, s.resolution_time) != 0;"
   }, {
     "name" : "916033f4",
     "displayName" : "Support by Volume",
-    "query" : "SELECT country, COUNT(ticket_id) AS support_volume\nFROM main.dbdemos_aibi_customer_support.customer_support_review\nGROUP BY country"
+    "query" : "SELECT t.country, COUNT(s.ticket_id) AS support_volume FROM main.dbdemos_aibi_customer_support.sla_clean s JOIN main.dbdemos_aibi_customer_support.agents_clean a ON s.ticket_id = a.ticket_id JOIN main.dbdemos_aibi_customer_support.tickets_clean t ON s.ticket_id = t.ticket_id GROUP BY t.country;"
   }, {
     "name" : "44cccafd",
     "displayName" : "Support by Topic",
-    "query" : "SELECT topic, COUNT(ticket_id) AS support_volume, \n       (COUNT(ticket_id) * 100.0 / (SELECT COUNT(*) FROM main.dbdemos_aibi_customer_support.customer_support_review)) AS percentage\nFROM main.dbdemos_aibi_customer_support.customer_support_review\nGROUP BY topic"
+    "query" : "SELECT t.topic, COUNT(s.ticket_id) AS support_volume, (COUNT(s.ticket_id) * 100.0 / (SELECT COUNT(*) FROM main.dbdemos_aibi_customer_support.tickets_clean)) AS percentage FROM main.dbdemos_aibi_customer_support.sla_clean s JOIN main.dbdemos_aibi_customer_support.agents_clean a ON s.ticket_id = a.ticket_id JOIN main.dbdemos_aibi_customer_support.tickets_clean t ON s.ticket_id = t.ticket_id GROUP BY t.topic;"
   }, {
     "name" : "56d2ee72",
     "displayName" : "Counts by Case Status",
-    "query" : "SELECT \n  SUM(CASE WHEN status = 'In progress' THEN 1 ELSE 0 END) AS in_progress_tickets,\n  SUM(CASE WHEN status = 'Closed' THEN 1 ELSE 0 END) AS closed_tickets,\n  SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) AS resolved_tickets\nFROM main.dbdemos_aibi_customer_support.customer_support_review"
+    "query" : "SELECT SUM(CASE WHEN t.status = 'In progress' THEN 1 ELSE 0 END) AS in_progress_tickets, SUM(CASE WHEN t.status = 'Closed' THEN 1 ELSE 0 END) AS closed_tickets, SUM(CASE WHEN t.status = 'Resolved' THEN 1 ELSE 0 END) AS resolved_tickets FROM main.dbdemos_aibi_customer_support.sla_clean s JOIN main.dbdemos_aibi_customer_support.agents_clean a ON s.ticket_id = a.ticket_id JOIN main.dbdemos_aibi_customer_support.tickets_clean t ON s.ticket_id = t.ticket_id;"
   } ],
   "pages" : [ {
     "name" : "ab333341",

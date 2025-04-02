@@ -153,7 +153,12 @@
         ],
         "name": "dbdemos_dlt_loan_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
-        "schema": "{{SCHEMA}}"
+        "schema": "{{SCHEMA}}",
+        "event_log": {
+            "catalog": "{{CATALOG}}",
+            "schema": "{{SCHEMA}}",
+            "name": "event_logs"
+        },
       }
     }
   ],

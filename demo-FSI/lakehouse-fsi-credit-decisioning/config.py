@@ -20,4 +20,4 @@ schema = dbName = db = "sc_rai"
 
 volume_name = "credit_raw_data"
 model_name = "rai_credit_decisioning"
-endpoint_name = "rai_credit_decisioning_endpoint"
+endpoint_name = "rai_credit_decisioning_endpoint_1"

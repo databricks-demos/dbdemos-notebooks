@@ -178,3 +178,7 @@ client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="No
 # MAGIC ## Next Steps
 # MAGIC
 # MAGIC With our model trained and documented, the next step is validation. In the [06.4-Model-Validation]($./06-Responsible-AI/06.4-Model-Validation) notebook, we will conduct compliance checks, pre-deployment tests, and fairness evaluations. This ensures that our model meets regulatory requirements and maintains transparency before it is deployed into production.
+
+# COMMAND ----------
+
+

@@ -8,13 +8,14 @@
 # MAGIC
 # MAGIC However, responsible AI practices—focusing on quality, security, and governance—are essential for building trust and ensuring sustainable adoption. [Gartner](https://www.gartner.com/en/information-technology/insights/top-technology-trends) highlights AI trust, risk, and security management as the top strategy trend for 2024, predicting that by 2026, organizations that prioritize AI transparency and governance will see a [50% increase](https://www.gartner.com/en/articles/what-it-takes-to-make-ai-safe-and-effective) in adoption and business success.
 # MAGIC
-# MAGIC With AI regulations expanding globally, compliance is becoming a critical part of responsible AI strategies. Previous discussions have explored global AI policymaking trends, and this blog will examine how the Databricks Data Intelligence Platform can help organizations align with emerging AI governance requirements, ensuring they navigate the evolving regulatory landscape effectively.
+# MAGIC With AI regulations expanding globally, compliance is becoming a critical part of responsible AI strategies. This demo will show how the Databricks Data Intelligence Platform can help organizations align with emerging AI governance requirements, ensuring they navigate the evolving regulatory landscape effectively.
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC # Core Challenges in Responsible AI: Trust, Security, and Governance
+# MAGIC # Core Challenges in Responsible AI
 # MAGIC
+# MAGIC There are three core challenges in responsible AI:<br />
 # MAGIC <br />
 # MAGIC
 # MAGIC <style>

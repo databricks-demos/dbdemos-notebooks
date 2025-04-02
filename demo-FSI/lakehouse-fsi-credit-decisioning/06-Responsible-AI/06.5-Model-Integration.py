@@ -201,3 +201,7 @@ else:
 # MAGIC
 # MAGIC
 # MAGIC Now that the model is in Production, we proceed to [06.6-Model-Inference]($./06-Responsible-AI/06.6-Model-Inference), where the deployed model is used for batch or real-time inference and predictions are logged for explainability and transparency. This ensures that model outputs are reliable, ethical, and aligned with regulatory standards, closing the loop on Responsible AI implementation.
+
+# COMMAND ----------
+
+

@@ -1,6 +1,6 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Simplify ETL with DLT
+-- MAGIC ## Simple ETL with DLT
 -- MAGIC
 -- MAGIC DLT makes Data Engineering accessible for all. Just declare your transformations in SQL or Python, and DLT will handle the Data Engineering complexity for you.
 -- MAGIC
@@ -17,6 +17,12 @@
 -- MAGIC
 -- MAGIC **Simplify batch and streaming** <br/>
 -- MAGIC With self-optimization and auto-scaling data pipelines for batch or streaming processing 
+-- MAGIC
+-- MAGIC ## Simple ingestion with Lakeflow Connect
+-- MAGIC
+-- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
+-- MAGIC
+-- MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
 -- MAGIC
 -- MAGIC ## Our DLT pipeline
 -- MAGIC
@@ -58,12 +64,13 @@
 -- MAGIC
 -- MAGIC Autoloader simplify this ingestion, including schema inference, schema evolution while being able to scale to millions of incoming files. 
 -- MAGIC
--- MAGIC Autoloader is available in SQL using the `cloud_files` function and can be used with a variety of format (json, csv, avro...):
+-- MAGIC Autoloader is available in SQL using the `read_files` function and can be used with a variety of format (json, csv, avro...):
 -- MAGIC
 -- MAGIC For more detail on Autoloader, you can see `dbdemos.install('auto-loader')`
 -- MAGIC
 -- MAGIC #### STREAMING LIVE TABLE 
 -- MAGIC Defining tables as `STREAMING` will guarantee that you only consume new incoming data. Without `STREAMING`, you will scan and ingest all the data available at once. See the [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-incremental-data.html) for more details
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -191,7 +198,7 @@ AS SELECT sum(count) as sum_count, country_code FROM cleaned_new_txs GROUP BY co
 
 -- COMMAND ----------
 
--- MAGIC %md ## Tracking data quality
+-- MAGIC %md-sandbox ## Tracking data quality
 -- MAGIC
 -- MAGIC Expectations stats are automatically available as system table.
 -- MAGIC
@@ -202,6 +209,6 @@ AS SELECT sum(count) as sum_count, country_code FROM cleaned_new_txs GROUP BY co
 -- MAGIC
 -- MAGIC See [how to access your DLT metrics]($./03-Log-Analysis)
 -- MAGIC
--- MAGIC <img width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
+-- MAGIC <img width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/dlt/dlt-loans-dashboard.png?raw=true">
 -- MAGIC
 -- MAGIC <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard example</a>

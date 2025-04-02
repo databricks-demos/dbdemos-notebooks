@@ -3,8 +3,7 @@
 -- MAGIC
 -- MAGIC # DLT pipeline log analysis
 -- MAGIC
--- MAGIC ## TODO: Update Image
--- MAGIC <img style="float:right" width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
+-- MAGIC <img style="float:right" width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/dlt/dlt-loans-dashboard.png?raw=true">
 -- MAGIC
 -- MAGIC Each DLT Pipeline can be configured to save out the metrics to a table in Unity Catalog. From this table we can see what is happening and the quality of the data passing through it.
 -- MAGIC

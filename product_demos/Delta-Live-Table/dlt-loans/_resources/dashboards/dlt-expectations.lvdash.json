@@ -29,17 +29,6 @@
     "displayName" : "New Page",
     "layout" : [ {
       "widget" : {
-        "name" : "fc82aba0",
-        "textbox_spec" : "# Retail ingestion quality tracker\nThis dashboard leverage the DLT expectation metrics to track our data quality over the ingestion pipeline.\n\nThe pipeline is incrementally consuming new data (each hour or in real time) and the dashboard is updated accordingly. Open notebook `02.1-Delta-Live-Table-Ingestion` to visualize the DLT pipeline.\n\nData has been prepared using a SQL query over the value from the  `event_log` table. Open `02.3-DLT-expectation-dashboard-data-prep` for more details."
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 0,
-        "width" : 6,
-        "height" : 4
-      }
-    }, {
-      "widget" : {
         "name" : "3734b963",
         "queries" : [ {
           "name" : "main_query",

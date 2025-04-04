@@ -11,23 +11,24 @@
 -- MAGIC
 -- MAGIC This notebook extracts and analyses expectation metrics to build such KPIS.
 -- MAGIC
+-- MAGIC ## Your event log table is now available as a Table within your schema!
+-- MAGIC
+-- MAGIC This is simply set as an option in your DLT configuration menu.
+-- MAGIC
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&org_id=984752964297111&notebook=%2F03-Log-Analysis&demo_name=dlt-loans&event=VIEW&path=%2F_dbdemos%2Fdata-engineering%2Fdlt-loans%2F03-Log-Analysis&version=1">
 
 -- COMMAND ----------
 
-SELECT
-  event_type,
-  parse_json(details) as details
-FROM
-  main__build.dbdemos_dlt_loan.event_logs
+SELECT * FROM main__build.dbdemos_dlt_loan.event_logs
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
-  as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.raw_txs));
-SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
+-- Note: old legacy way to access your event log is through tthe event_log function:
+-- CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
+--   as SELECT * FROM event_log(TABLE(main__build.dbdemos_dlt_loan.raw_txs));
+-- SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
 
 -- COMMAND ----------
 
@@ -75,8 +76,6 @@ where
   e.event_type = "flow_progress"
   and details:flow_progress:status = "RUNNING"
   and details:flow_progress:data_quality:expectations IS NOT NULL
-
-
 
 -- COMMAND ----------
 

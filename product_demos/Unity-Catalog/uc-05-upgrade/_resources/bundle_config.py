@@ -41,7 +41,15 @@
       "description": "Introduction to Databricks UCX."
     },
     {
-      "path": "01-manual-upgrade-to-UC", 
+      "path": "01-hive-mestastore-federation", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True, 
+      "title":  "HMS federation in UC", 
+      "description": "Access your hive metastore through UC."
+    },
+    {
+      "path": "02-manual-upgrade-to-UC", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 

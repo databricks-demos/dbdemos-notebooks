@@ -37,14 +37,6 @@
       "description": "Generate data for the pipeline."
     },
     {
-      "path": "_resources/01-load-data-quality-dashboard", 
-      "pre_run": False, 
-      "publish_on_website": False, 
-      "add_cluster_setup_cell": False,
-      "title":  "Data quality expectation load", 
-      "description": "Creates data from expectation for DBSQL dashboard."
-    },
-    {
       "path": "01-DLT-Loan-pipeline-SQL", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -102,21 +94,6 @@
                         "task_key": "init_data"
                     }
                 ]
-            },
-            {
-                "task_key": "load_data_quality_dashboard",
-                "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/_resources/01-load-data-quality-dashboard",
-                    "source": "WORKSPACE"
-                },
-                "job_cluster_key": "Shared_job_cluster",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "depends_on": [
-                    {
-                        "task_key": "start_dlt_pipeline"
-                    }
-                ]
             }
         ],
         "job_clusters": [
@@ -154,7 +131,7 @@
   "pipelines": [
     {
       "id": "dlt-loans",
-      "run_after_creation": True,
+      "run_after_creation": False,
       "definition": {
         "clusters": [
             {
@@ -176,7 +153,12 @@
         ],
         "name": "dbdemos_dlt_loan_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "schema": "{{SCHEMA}}",
+        "event_log": {
+            "catalog": "{{CATALOG}}",
+            "schema": "{{SCHEMA}}",
+            "name": "event_logs"
+        },
       }
     }
   ],

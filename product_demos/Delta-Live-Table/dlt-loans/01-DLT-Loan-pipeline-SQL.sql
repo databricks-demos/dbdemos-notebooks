@@ -1,6 +1,6 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Simplify ETL with Delta Live Table
+-- MAGIC ## Simple ETL with DLT
 -- MAGIC
 -- MAGIC DLT makes Data Engineering accessible for all. Just declare your transformations in SQL or Python, and DLT will handle the Data Engineering complexity for you.
 -- MAGIC
@@ -18,7 +18,13 @@
 -- MAGIC **Simplify batch and streaming** <br/>
 -- MAGIC With self-optimization and auto-scaling data pipelines for batch or streaming processing 
 -- MAGIC
--- MAGIC ## Our Delta Live Table pipeline
+-- MAGIC ## Simple ingestion with Lakeflow Connect
+-- MAGIC
+-- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
+-- MAGIC
+-- MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
+-- MAGIC
+-- MAGIC ## Our DLT pipeline
 -- MAGIC
 -- MAGIC We'll be using as input a raw dataset containing information on our customers Loan and historical transactions. 
 -- MAGIC
@@ -58,26 +64,27 @@
 -- MAGIC
 -- MAGIC Autoloader simplify this ingestion, including schema inference, schema evolution while being able to scale to millions of incoming files. 
 -- MAGIC
--- MAGIC Autoloader is available in SQL using the `cloud_files` function and can be used with a variety of format (json, csv, avro...):
+-- MAGIC Autoloader is available in SQL using the `read_files` function and can be used with a variety of format (json, csv, avro...):
 -- MAGIC
 -- MAGIC For more detail on Autoloader, you can see `dbdemos.install('auto-loader')`
 -- MAGIC
 -- MAGIC #### STREAMING LIVE TABLE 
 -- MAGIC Defining tables as `STREAMING` will guarantee that you only consume new incoming data. Without `STREAMING`, you will scan and ingest all the data available at once. See the [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-incremental-data.html) for more details
+-- MAGIC
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Capture new incoming transactions
 CREATE STREAMING TABLE raw_txs
   COMMENT "New raw loan data incrementally ingested from cloud object storage landing zone"
-AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions', 'json', map("cloudFiles.inferColumnTypes", "true"))
+AS SELECT * FROM read_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions', format => 'json', inferColumnTypes => true)
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Reference table - metadata (small & almost static)
-CREATE MATERIALIZED VIEW ref_accounting_treatment
+CREATE STREAMING TABLE ref_accounting_treatment
   COMMENT "Lookup mapping for accounting codes"
-AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment`
+AS SELECT * FROM STREAM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accounting_treatment`
 
 -- COMMAND ----------
 
@@ -86,7 +93,7 @@ AS SELECT * FROM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/ref_accou
 CREATE STREAMING TABLE raw_historical_loans
   TBLPROPERTIES ("pipelines.trigger.interval"="6 hour")
   COMMENT "Raw historical transactions"
-AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans', 'csv', map("cloudFiles.inferColumnTypes", "true"))
+AS SELECT * FROM read_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans', format => 'csv', inferColumnTypes => true)
 
 -- COMMAND ----------
 
@@ -110,8 +117,8 @@ AS SELECT * FROM cloud_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/his
 -- DBTITLE 1,enrich transactions with metadata
 CREATE STREAMING LIVE VIEW new_txs 
   COMMENT "Livestream of new transactions"
-AS SELECT txs.*, ref.accounting_treatment as accounting_treatment FROM stream(LIVE.raw_txs) txs
-  INNER JOIN live.ref_accounting_treatment ref ON txs.accounting_treatment_id = ref.id
+AS SELECT txs.*, ref.accounting_treatment as accounting_treatment FROM stream(raw_txs) txs
+  INNER JOIN ref_accounting_treatment ref ON txs.accounting_treatment_id = ref.id
 
 -- COMMAND ----------
 
@@ -122,7 +129,7 @@ CREATE STREAMING TABLE cleaned_new_txs (
   CONSTRAINT `Cost center must be specified` EXPECT (cost_center_code IS NOT NULL) ON VIOLATION FAIL UPDATE
 )
   COMMENT "Livestream of new transactions, cleaned and compliant"
-AS SELECT * from STREAM(live.new_txs)
+AS SELECT * from STREAM(new_txs)
 
 -- COMMAND ----------
 
@@ -133,15 +140,15 @@ CREATE STREAMING TABLE quarantine_bad_txs (
   CONSTRAINT `Balance should be positive`    EXPECT (balance <= 0 OR arrears_balance <= 0) ON VIOLATION DROP ROW
 )
   COMMENT "Incorrect transactions requiring human analysis"
-AS SELECT * from STREAM(live.new_txs)
+AS SELECT * from STREAM(new_txs)
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Enrich all historical transactions
 CREATE MATERIALIZED VIEW historical_txs
   COMMENT "Historical loan transactions"
-AS SELECT l.*, ref.accounting_treatment as accounting_treatment FROM LIVE.raw_historical_loans l
-  INNER JOIN LIVE.ref_accounting_treatment ref ON l.accounting_treatment_id = ref.id
+AS SELECT l.*, ref.accounting_treatment as accounting_treatment FROM raw_historical_loans l
+  INNER JOIN ref_accounting_treatment ref ON l.accounting_treatment_id = ref.id
 
 -- COMMAND ----------
 
@@ -161,15 +168,15 @@ AS SELECT l.*, ref.accounting_treatment as accounting_treatment FROM LIVE.raw_hi
 CREATE MATERIALIZED VIEW total_loan_balances
   COMMENT "Combines historical and new loan data for unified rollup of loan balances"
   TBLPROPERTIES ("pipelines.autoOptimize.zOrderCols" = "location_code")
-AS SELECT sum(revol_bal)  AS bal, addr_state   AS location_code FROM live.historical_txs  GROUP BY addr_state
-  UNION SELECT sum(balance) AS bal, country_code AS location_code FROM live.cleaned_new_txs GROUP BY country_code
+AS SELECT sum(revol_bal)  AS bal, addr_state   AS location_code FROM historical_txs  GROUP BY addr_state
+  UNION SELECT sum(balance) AS bal, country_code AS location_code FROM cleaned_new_txs GROUP BY country_code
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Balance aggregate per cost center
 CREATE MATERIALIZED VIEW new_loan_balances_by_cost_center
   COMMENT "Live table of new loan balances for consumption by different cost centers"
-AS SELECT sum(balance) as sum_balance, cost_center_code FROM live.cleaned_new_txs
+AS SELECT sum(balance) as sum_balance, cost_center_code FROM cleaned_new_txs
   GROUP BY cost_center_code
 
 -- COMMAND ----------
@@ -177,7 +184,7 @@ AS SELECT sum(balance) as sum_balance, cost_center_code FROM live.cleaned_new_tx
 -- DBTITLE 1,Balance aggregate per country
 CREATE MATERIALIZED VIEW new_loan_balances_by_country
   COMMENT "Live table of new loan balances per country"
-AS SELECT sum(count) as sum_count, country_code FROM live.cleaned_new_txs GROUP BY country_code
+AS SELECT sum(count) as sum_count, country_code FROM cleaned_new_txs GROUP BY country_code
 
 -- COMMAND ----------
 
@@ -191,7 +198,7 @@ AS SELECT sum(count) as sum_count, country_code FROM live.cleaned_new_txs GROUP 
 
 -- COMMAND ----------
 
--- MAGIC %md ## Tracking data quality
+-- MAGIC %md-sandbox ## Tracking data quality
 -- MAGIC
 -- MAGIC Expectations stats are automatically available as system table.
 -- MAGIC
@@ -202,6 +209,6 @@ AS SELECT sum(count) as sum_count, country_code FROM live.cleaned_new_txs GROUP 
 -- MAGIC
 -- MAGIC See [how to access your DLT metrics]($./03-Log-Analysis)
 -- MAGIC
--- MAGIC <img width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
+-- MAGIC <img width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/dlt/dlt-loans-dashboard.png?raw=true">
 -- MAGIC
 -- MAGIC <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard example</a>

@@ -1,0 +1,10 @@
+# Web framework and server
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Databricks SDK
+databricks-sdk 
+pyyaml

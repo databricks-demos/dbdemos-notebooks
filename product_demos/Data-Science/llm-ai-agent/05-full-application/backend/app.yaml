@@ -1,0 +1,3 @@
+command: ["uvicorn", "app:app"]
+env:
+  ENV: 'prod'

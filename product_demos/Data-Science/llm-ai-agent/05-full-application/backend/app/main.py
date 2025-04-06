@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles 
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -15,6 +16,9 @@ from typing import Dict
 
 # Development environment settings
 
+# Set up application logging
+logger = logging.getLogger("app")
+
 def load_config() -> Dict:
     """Load configuration from YAML files with fallback to default config."""
     config_dir = Path(__file__).parent.parent
@@ -29,12 +33,14 @@ def load_config() -> Dict:
         logger.error(f"Failed to load configuration: {e}")
         return {'ENV': 'prod'}  # Safe default
 
+def get_config_value(config: list, key: str, default_value: str = '') -> str:
+    """Get a configuration value from the config list of dictionaries"""
+    return next((item['value'] for item in config if item['name'] == key), default_value)
+
 # Load configuration
 config = load_config()
-environment = config.get('ENV', 'prod')
+environment = get_config_value(config, 'ENV', 'prod')
 
-# Set up application logging
-logger = logging.getLogger("app")
 
 app = FastAPI(title="AI Agent demo")
 
@@ -69,6 +75,7 @@ app.add_middleware(RequestLoggingMiddleware)
 
 # Add CORS middleware only in development environment
 if environment == 'dev':
+    print("STARTING IN DEV MODE - This won't work in a deployed environment on Databricks. If you see this message in your databricks logs, change the ENV to prod in the app.yaml file.")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
@@ -76,6 +83,22 @@ if environment == 'dev':
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    @app.get("/")
+    async def root():
+        return {"message": "Databricks GenAI API"} 
+else:
+    print("STARTING IN PROD MODE - will serve the /dist folder. This will work in a deployed environment on Databricks.")
+
+# Initialize API routes first
+app.include_router(agent.router, prefix="/api/agent")
+
+# Then mount static files in prod mode
+if environment == 'prod':
+    try:
+        target_dir = "dist"
+        app.mount("/", StaticFiles(directory=target_dir, html=True), name="site")
+    except:
+        print('ERROR - dist folder not found')
 
 # Global exception handler for all unhandled exceptions
 @app.exception_handler(Exception)
@@ -109,10 +132,3 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         status_code=exc.status_code,
         content={"detail": exc.detail}
     )
-
-# Initialize routers
-app.include_router(agent.router, prefix="/api/agent")
-
-@app.get("/")
-async def root():
-    return {"message": "Databricks GenAI API"} 

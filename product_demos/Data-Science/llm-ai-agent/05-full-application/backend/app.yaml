@@ -1,3 +1,5 @@
-command: ["uvicorn", "app:app"]
+command: ["uvicorn", "app.main:app"]
+
 env:
-  ENV: 'prod'
+  - name: 'ENV'
+    value: 'prod'

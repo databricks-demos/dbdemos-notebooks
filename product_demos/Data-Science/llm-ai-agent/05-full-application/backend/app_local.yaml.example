@@ -1,4 +1,4 @@
-command: ["uvicorn", "app:app"]
+command: ["uvicorn", "app.main:app"]
 
 env:
   - name: 'ENV'

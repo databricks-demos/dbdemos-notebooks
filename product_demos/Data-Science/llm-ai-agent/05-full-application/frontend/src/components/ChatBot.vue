@@ -480,9 +480,13 @@ onMounted(() => {
   scrollToBottom();
 });
 
-// Expose the handleUseCaseChange method
+// Add method to get current use case
+const getCurrentUseCase = () => useCase.value;
+
+// Expose both methods
 defineExpose({
-  handleUseCaseChange
+  handleUseCaseChange,
+  getCurrentUseCase
 });
 
 // Add event handler for use case changes
@@ -766,5 +770,44 @@ const onUseCaseChange = (useCase: string) => {
     width: 100%;
     margin-right: 0 !important;
   }
+}
+
+.message-bubble :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  background-color: #fff;
+}
+
+.message-bubble :deep(th), .message-bubble :deep(td) {
+  border: 1px solid #eee;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.message-bubble :deep(th) {
+  background-color: #f5f5f5;
+  font-weight: 500;
+}
+
+.message-bubble :deep(tr:nth-child(even)) {
+  background-color: #fafafa;
+}
+
+.user-message .message-bubble :deep(table) {
+  color: white;
+  background-color: transparent;
+}
+
+.user-message .message-bubble :deep(th), .user-message .message-bubble :deep(td) {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-message .message-bubble :deep(th) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-message .message-bubble :deep(tr:nth-child(even)) {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 </style> 

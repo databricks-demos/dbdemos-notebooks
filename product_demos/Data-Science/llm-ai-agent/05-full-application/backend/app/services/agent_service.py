@@ -11,19 +11,34 @@ class AgentService:
         return [{"preview": q["question"][:50] + "..." if len(q["question"]) > 50 else q["question"], 
                  "text": q["question"]} for q in responses]
 
-    async def get_response_by_history_size(self, history_size: int, use_case: str = "telco"):
-        """Get response based on history size and use case"""
+    def _calculate_word_similarity(self, text1: str, text2: str) -> float:
+        """Calculate similarity score between two texts based on word overlap"""
+        words1 = set(text1.lower().split())
+        words2 = set(text2.lower().split())
+        intersection = len(words1.intersection(words2))
+        union = len(words1.union(words2))
+        return intersection / union if union > 0 else 0
+
+    async def find_best_response(self, question: str, use_case: str = "telco") -> dict:
+        """Find the most relevant response by matching the question with predefined questions"""
         responses = self.use_cases.get(use_case, self.use_cases["telco"])["responses"]
-        user_message_count = history_size - 1
-        index = user_message_count % len(responses) if user_message_count >= 0 else 0
-        return responses[index]
-    
+        
+        if not question:
+            return responses[0]
+        
+        # Find most similar question
+        best_match = max(responses, key=lambda r: self._calculate_word_similarity(question, r["question"]))
+        return best_match
 
     async def process_message(self, messages, intelligence_enabled: bool = True, use_case: str = "telco"):
         """Process a message and yield streaming responses"""
         import asyncio
-        history_size = len([m for m in messages if m["role"] == "user"])
-        response = await self.get_response_by_history_size(history_size, use_case)
+        
+        # Get the last user message
+        user_messages = [m for m in messages if m["role"] == "user"]
+        last_question = user_messages[-1]["content"] if user_messages else ""
+        
+        response = await self.find_best_response(last_question, use_case)
 
         # First emit thinking start
         yield f"data: {json.dumps({'type': 'thinking-start', 'data': None})}\n\n"

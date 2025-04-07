@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md 
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
@@ -100,7 +99,7 @@
     },
     {
       "path": "04-Generative-AI/04.1-AI-Functions-Creation", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "GenAI Functions", 

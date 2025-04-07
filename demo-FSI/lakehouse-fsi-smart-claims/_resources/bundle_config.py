@@ -99,9 +99,9 @@
     },
     {
       "path": "04-Generative-AI/04.1-AI-Functions-Creation", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "GenAI Functions", 
       "description": "Utilize Databricks AI functions to generate automated claims summarizations."
     },

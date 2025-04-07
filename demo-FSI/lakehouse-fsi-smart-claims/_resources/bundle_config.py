@@ -208,7 +208,7 @@
             {
                 "task_key": "create_ai_functions",
                 "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/04-Generative-AI/04.1-Agent-Functions-Creation",
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Generative-AI/04.1-AI-Functions-Creation",
                     "source": "WORKSPACE"
                 },
                 "job_cluster_key": "Shared_job_cluster",

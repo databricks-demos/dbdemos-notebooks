@@ -122,7 +122,7 @@
 # MAGIC     sum_insured,
 # MAGIC     borough,
 # MAGIC     neighborhood
-# MAGIC   FROM claim_policy_telematics_ml
+# MAGIC   FROM claim_policy_telematics
 # MAGIC   WHERE claim_no = claim_id
 # MAGIC   LIMIT 1);
 

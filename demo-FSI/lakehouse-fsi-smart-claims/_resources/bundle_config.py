@@ -106,7 +106,7 @@
       "description": "Utilize Databricks AI functions to generate automated claims summarizations."
     },
     {
-      "path": "04-Generative-AI/04.2-AI-Creation-Guide", 
+      "path": "04-Generative-AI/04.2-Agent-Creation-Guide", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,

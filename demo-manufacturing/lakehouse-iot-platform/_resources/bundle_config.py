@@ -127,7 +127,7 @@
     },
     {
       "path": "05-Generative-AI/05.1-ai-tools-iot-turbine-prescriptive-maintenance", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Build AI agent tools with UC functions", 
@@ -135,7 +135,7 @@
     },
     {
       "path": "05-Generative-AI/05.2-build-agent-iot-turbine-prescriptive-maintenance", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Build the AI agent using this driver notebook.", 
@@ -143,7 +143,7 @@
     },
     {
       "path": "05-Generative-AI/05.3-deploy-agent-iot-turbine-prescriptive-maintenance", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Deploy AI agent and invoke it in a batch or real-time.", 

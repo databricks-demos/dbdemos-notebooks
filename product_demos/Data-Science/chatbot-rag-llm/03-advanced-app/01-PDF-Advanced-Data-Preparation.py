@@ -33,7 +33,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries 
-# MAGIC %pip install --quiet -U transformers==4.49.0 pypdf==4.1.0 langchain-text-splitters==0.2.0 databricks-vectorsearch==0.49 mlflow[databricks] tiktoken==0.7.0 torch==2.3.0 llama-index==0.10.43 markdownify==0.14.1
+# MAGIC %pip install --quiet -U transformers==4.49.0 pypdf==4.1.0 langchain-text-splitters==0.2.0 databricks-vectorsearch==0.55 mlflow[databricks] tiktoken==0.7.0 torch==2.3.0 llama-index==0.10.43 markdownify==0.14.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

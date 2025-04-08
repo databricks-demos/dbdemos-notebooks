@@ -305,14 +305,17 @@
     }
   },
   "cluster": {
-        "autoscale": {
-            "min_workers": 2,
-            "max_workers": 10
-        },
-        "spark_version": "15.4.x-cpu-ml-scala2.12",
-        "single_user_name": "{{CURRENT_USER}}",
-        "data_security_mode": "SINGLE_USER",
-        "runtime_engine": "STANDARD"
+      "spark_version": "15.4.x-cpu-ml-scala2.12",
+      "spark_conf": {
+        "spark.master": "local[*]",
+        "spark.databricks.cluster.profile": "singleNode"
+    },
+    "custom_tags": {
+        "ResourceClass": "SingleNode"
+    },
+    "single_user_name": "{{CURRENT_USER}}",
+    "data_security_mode": "SINGLE_USER",
+    "num_workers": 0
   }, 
   "pipelines": [
     {

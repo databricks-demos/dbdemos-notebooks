@@ -48,7 +48,7 @@
 
 rag_chain_config = {
     "databricks_resources": {
-        "llm_endpoint_name": "databricks-meta-llama-3-1-70b-instruct",
+        "llm_endpoint_name": "databricks-meta-llama-3-3-70b-instruct",
         "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,
     },
     "input_example": {

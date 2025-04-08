@@ -242,7 +242,7 @@ spark.sql(f"""
   COMMENT "Generates a professional insurance claim summary using AI based on the provided claim details. This function produces a well-structured report with sections for Claim Information, Incident Details, Vehicle Information, and Policy Details."
   RETURN (
     SELECT ai_query(
-      'databricks-mixtral-8x7b-instruct',
+      'databricks-meta-llama-3-1-405b-instruct',
       CONCAT(
         "{prompt}"
         'Claim details: ', 

@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install the required libraries
-# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-langchain databricks-agents mlflow[databricks] langchain==0.3.19 langchain_core==0.3.37 databricks-vectorsearch==0.49 pydantic==2.10.1
+# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-langchain>=0.4.0 databricks-agents mlflow[databricks] langchain==0.3.19 langchain_core==0.3.37 databricks-vectorsearch==0.49 pydantic==2.10.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -198,7 +198,8 @@ with mlflow.start_run(run_name="dbdemos_rag_quickstart"):
         resources=[
             DatabricksVectorSearchIndex(index_name=model_config.get("retriever_config").get("vector_search_index")),
             DatabricksServingEndpoint(endpoint_name=model_config.get("databricks_resources").get("llm_endpoint_name"))
-        ]
+        ],
+        extra_pip_requirements=["databricks-connect"]
     )
 
 # Test the chain locally

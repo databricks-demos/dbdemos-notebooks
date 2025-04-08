@@ -114,9 +114,9 @@ if not spark.catalog.tableExists("databricks_documentation") or spark.table("dat
             url STRING,
             content STRING
           ) TBLPROPERTIES (delta.enableChangeDataFeed = true)''')
-  (spark.createDataFrame(pd.read_parquet('https://notebooks.databricks.com/demos/dbdemos-dataset/llm/databricks-documentation/databricks_documentation.parquet'))
+  (spark.createDataFrame(pd.read_parquet('https://dbdemos-dataset.s3.amazonaws.com/llm/databricks-documentation/databricks_documentation.parquet'))
    .drop('title').write.mode('overwrite').saveAsTable("databricks_documentation"))
-  (spark.createDataFrame(pd.read_parquet('https://notebooks.databricks.com/demos/dbdemos-dataset/llm/databricks-documentation/databricks_doc_eval_set.parquet'))
+  (spark.createDataFrame(pd.read_parquet('https://dbdemos-dataset.s3.amazonaws.com/llm/databricks-documentation/databricks_doc_eval_set.parquet'))
    .write.mode('overwrite').saveAsTable("eval_set_databricks_documentation"))
   #Make sure enableChangeDataFeed is enabled
   spark.sql('ALTER TABLE databricks_documentation SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')

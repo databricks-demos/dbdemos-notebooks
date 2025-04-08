@@ -108,20 +108,20 @@
 # MAGIC   SELECT
 # MAGIC     claim_no,
 # MAGIC     policy_no,
-# MAGIC     chassis_no AS chassis_number,
+# MAGIC     CHASSIS_NO AS chassis_number,
 # MAGIC     claim_amount_total,
 # MAGIC     incident_type,
 # MAGIC     incident_date,
 # MAGIC     incident_severity,
 # MAGIC     driver_age,
 # MAGIC     suspicious_activity,
-# MAGIC     make,
-# MAGIC     model,
-# MAGIC     model_year,
-# MAGIC     policytype,
-# MAGIC     sum_insured,
-# MAGIC     borough,
-# MAGIC     neighborhood
+# MAGIC     MAKE as make,
+# MAGIC     MODEL as model,
+# MAGIC     MODEL_YEAR as model_year,
+# MAGIC     POLICYTYPE as policytype,
+# MAGIC     SUM_INSURED as sum_insured,
+# MAGIC     BOROUGH as borough,
+# MAGIC     NEIGHBORHOOD as neighborhood
 # MAGIC   FROM claim_policy_telematics
 # MAGIC   WHERE claim_no = claim_id
 # MAGIC   LIMIT 1);
@@ -342,16 +342,16 @@ spark.sql(f"""
 # MAGIC   ) AS claim_report 
 # MAGIC FROM (
 # MAGIC   SELECT * 
-# MAGIC   FROM claim_policy_telematics_ml
+# MAGIC   FROM claim_policy_telematics
 # MAGIC   WHERE suspicious_activity = true
 # MAGIC   -- REMOVE LIMIT if you would like to apply this summarization to more claims!
-# MAGIC   LIMIT 10
+# MAGIC   LIMIT 5
 # MAGIC )
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM suspicious_claim_report_table LIMIT 10;
+# MAGIC SELECT * FROM suspicious_claim_report_table LIMIT 5;
 
 # COMMAND ----------
 

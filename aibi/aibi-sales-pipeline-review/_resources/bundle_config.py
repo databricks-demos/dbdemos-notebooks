@@ -38,32 +38,27 @@
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_accounts",
         "source_format": "parquet",
-        "target_volume_folder": "raw_accounts",
-        "target_format": "delta"
+        "target_volume_folder": "raw_accounts"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_opportunity",
         "source_format": "parquet",
-        "target_volume_folder": "raw_opportunity",
-        "target_format": "delta"
+        "target_volume_folder": "raw_opportunity"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_user",
         "source_format": "parquet",
-        "target_volume_folder": "raw_user",
-        "target_format": "delta"
+        "target_volume_folder": "raw_user"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_dim_country",
         "source_format": "parquet",
-        "target_volume_folder": "raw_dim_country",
-        "target_format": "delta"
+        "target_volume_folder": "raw_dim_country"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_employee_hierarchy",
         "source_format": "parquet",
-        "target_volume_folder": "raw_employee_hierarchy",
-        "target_format": "delta"
+        "target_volume_folder": "raw_employee_hierarchy"
       }
     ],
     "sql_queries": [

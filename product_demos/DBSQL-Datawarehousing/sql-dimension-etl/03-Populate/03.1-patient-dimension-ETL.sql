@@ -147,7 +147,13 @@ EXECUTE IMMEDIATE sqlstr;
 -- Optionally log the ETL run for easy reporting, monitoring, and alerting
 INSERT INTO IDENTIFIER(run_log_table)
 WITH op_metrics AS (
-  SELECT COALESCE(operationMetrics.numTargetRowsInserted, operationMetrics.numOutputRows) AS num_inserted, operationMetrics.numTargetRowsUpdated AS num_updated FROM (DESCRIBE HISTORY patient_stg) WHERE operation IN ('MERGE', 'WRITE', 'COPY INTO') LIMIT 1
+  SELECT
+    -- For the COPY command,
+    -- if no new files are present, then a) no operation is performed and b) new table version is not registered
+    -- Check if a new table version was created by the COPY command
+    CASE WHEN `timestamp` > table_load_start_time THEN COALESCE(operationMetrics.numTargetRowsInserted, operationMetrics.numOutputRows) ELSE 0 END AS num_inserted,
+    operationMetrics.numTargetRowsUpdated AS num_updated
+  FROM (DESCRIBE HISTORY patient_stg) WHERE operation IN ('MERGE', 'WRITE', 'COPY INTO') LIMIT 1
 )
 SELECT session.data_source, session.full_schema_name || '.' || 'patient_stg', table_load_start_time, CURRENT_TIMESTAMP(), num_inserted, num_updated, session.process_id FROM op_metrics;
 
@@ -204,17 +210,11 @@ SELECT
   `Id` AS patient_src_id,
   birthdate AS date_of_birth,
   ssn AS ssn,
-  drivers AS drivers_license,
-  INITCAP(prefix) AS name_prefix,
   `FIRST` AS first_name,
   `LAST` AS last_name,
-  suffix AS name_suffix,
-  maiden AS maiden_name,
+  INITCAP(suffix) AS name_suffix,
   gender AS gender_cd,
   IFNULL(code_gender.m_desc, gender) AS gender_nm,
-  marital AS marital_status,
-  ethnicity AS ethnicity_cd,
-  IFNULL(code_ethn.m_desc, ethnicity) AS ethnicity_nm,
   CHANGEDONDATE AS src_changed_on_dt,
   data_source,
   CURRENT_TIMESTAMP() AS insert_dt,
@@ -278,20 +278,15 @@ WITH vars AS (SELECT session.dim_last_load_date) -- select the variables for use
 SELECT
   last_name,
   first_name,
-  name_prefix,
   name_suffix,
-  maiden_name,
   gender_cd AS gender_code, gender_nm AS gender,
   date_of_birth,
-  nvl(marital_status, 'Not Available') AS marital_status,
-  ethnicity_cd AS ethnicity_code, ethnicity_nm AS ethnicity,
   ssn,
   NULL AS other_identifiers,
-  NULL AS uda,
   patient_src_id,
   src_changed_on_dt AS effective_start_date,
   hash(
-    last_name, ifnull(first_name, '#'), ifnull(name_prefix, '#'), ifnull(name_suffix, '#'), ifnull(maiden_name, '#'), ifnull(gender_cd, '#'), ifnull(gender_nm, '#'), ifnull(date_of_birth, '#'), ifnull(marital_status, '#'), ifnull(ethnicity_cd, '#'), ifnull(ethnicity_nm, '#'), ifnull(ssn, '#')
+    last_name, ifnull(first_name, '#'), ifnull(name_suffix, '#'), ifnull(gender_cd, '#'), ifnull(gender_nm, '#'), ifnull(date_of_birth, '#'), ifnull(ssn, '#')
   ) AS checksum,
   data_source
 FROM patient_int
@@ -370,15 +365,10 @@ WHEN NOT MATCHED THEN INSERT (
   -- INSERT new version, new patient
   last_name,
   first_name,
-  name_prefix,
   name_suffix,
-  maiden_name,
   gender_code,
   gender,
   date_of_birth,
-  marital_status,
-  ethnicity_code,
-  ethnicity,
   ssn,
   patient_src_id,
   effective_start_date,
@@ -388,8 +378,8 @@ WHEN NOT MATCHED THEN INSERT (
   insert_dt,
   update_dt,
   process_id)
-  VALUES (last_name, first_name, name_prefix, name_suffix, maiden_name, gender_code, gender, date_of_birth, marital_status, ethnicity_code,
-    ethnicity, ssn, patient_src_id, effective_start_date, effective_end_date, checksum, data_source, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), session.process_id)
+  VALUES (last_name, first_name, name_suffix, gender_code, gender, date_of_birth, ssn, patient_src_id,
+          effective_start_date, effective_end_date, checksum, data_source, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), session.process_id)
 ;
 
 -- COMMAND ----------

@@ -31,22 +31,15 @@
 
 -- COMMAND ----------
 
--- SRE
--- WHAT DO I NEED TO ADD ABOUT-
--- patient360 as an analytics app
--- pointing to RLS / CLM demo..
-
--- COMMAND ----------
-
 -- MAGIC %md-sandbox
 -- MAGIC # Analytics Architecture
 -- MAGIC
--- MAGIC #### <span style="color:darkblue">Data Warehouse integrating patient data to cater to analytics applications such as Patient 360.
+-- MAGIC #### <span style="color:darkblue">Integrating patient data to cater to analytics applications such as Patient 360
 -- MAGIC <br>
 -- MAGIC
 -- MAGIC <div style="border: 0px solid grey; padding: 1px; display: inline-block;">
 -- MAGIC
--- MAGIC ![](https://github.com/shyamraodb/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true)
+-- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/cba7ffa9fe38534e4922649313eacd52785f87eb/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true)
 -- MAGIC
 -- MAGIC
 -- MAGIC </div>
@@ -54,7 +47,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %md-sandbox
+-- MAGIC %md
 -- MAGIC ## What We Will Build
 -- MAGIC
 -- MAGIC ### This end-to-end demo builds a Workflows Job that will perform the following tasks:
@@ -118,7 +111,7 @@
 -- MAGIC
 -- MAGIC <div style="border: 1px solid grey; padding: 1px; display: inline-block;">
 -- MAGIC
--- MAGIC ![](https://github.com/shyamraodb/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true)
+-- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/cba7ffa9fe38534e4922649313eacd52785f87eb/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true)
 -- MAGIC
 -- MAGIC
 -- MAGIC </div>

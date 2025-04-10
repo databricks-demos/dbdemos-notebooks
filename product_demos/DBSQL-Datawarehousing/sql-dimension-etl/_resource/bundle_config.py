@@ -16,7 +16,15 @@
     "bundle": True,
     "notebooks": [
       {
-        "path": "00-patient-dimension-ETL-introduction", 
+        "path": "00-get-started-with-SQL", 
+        "pre_run": False, 
+        "publish_on_website": True, 
+        "add_cluster_setup_cell": False,
+        "title":  "Get Started with Databricks SQL", 
+        "description": "Start here to explore the demo."
+      },
+      {
+        "path": "01-patient-dimension-ETL-introduction", 
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
@@ -48,7 +56,7 @@
         "description": "Create the code master table and initialize with sample data."
       },
       {
-        "path": "02-Create/02.2-ETL-log-table", 
+        "path": "02-Create/02.2-create-ETL-log-table", 
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
@@ -72,14 +80,6 @@
         "description": "Populate the patient staging, patient integration, and patient dimension tables."
       },
       {
-        "path": "03-Populate/03.2-log-ETL-run-utility", 
-        "pre_run": False, 
-        "publish_on_website": True, 
-        "add_cluster_setup_cell": False,
-        "title":  "Log ETL Run Utility", 
-        "description": "Utility to log the metadata from each ETL run by table."
-      },
-      {
         "path": "_resource/browse-load", 
         "pre_run": False, 
         "publish_on_website": True, 
@@ -96,7 +96,7 @@
         "description": "Stage the source CSV file for initial load onto the staging volume and folder."
       },
       {
-        "path": "_resource/stage-source-file-init", 
+        "path": "_resource/stage-source-file-incr", 
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,

@@ -12,6 +12,8 @@
 env/
 build/
 **/app_local.yaml
+frontend/dist
+frontend/static
 backend/app_local.yaml
 develop-eggs/
 downloads/

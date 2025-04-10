@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from fastapi.responses import StreamingResponse
 from typing import List
 from ..services.agent_service import AgentService
+import mlflow.deployments
+import mlflow
 
 router = APIRouter()
 agent_service = AgentService()

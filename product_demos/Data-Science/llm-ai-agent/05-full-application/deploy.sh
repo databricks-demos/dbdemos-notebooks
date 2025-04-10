@@ -8,21 +8,26 @@ LAKEHOUSE_APP_NAME=${2:-"dbdemos-genai-agent-support"}
 (
   cd frontend
   npm run build
-  databricks workspace delete "$APP_FOLDER_IN_WORKSPACE/dist" --recursive --profile WEST
-  databricks workspace import-dir dist "$APP_FOLDER_IN_WORKSPACE/dist" --overwrite --profile WEST
+  rm -rf ../static/
+  mv dist ../static
+  databricks workspace delete "$APP_FOLDER_IN_WORKSPACE/static" --recursive --profile WEST
+  databricks workspace import-dir ../static "$APP_FOLDER_IN_WORKSPACE/static" --overwrite --profile WEST
 ) &
 
 # Backend packaging
 (
-  cd backend
   rm -rf build
   mkdir -p build
   rsync -av \
     --exclude='**/__pycache__/' \
     --exclude='**/app_local.yaml' \
+    --exclude='frontend' \
     --exclude='**/app_local.yaml.example' \
     --exclude='**/*.pyc' \
     --exclude='.*' \
+    --exclude='tests' \
+    --exclude='deploy.sh' \
+    --exclude='test' \
     --exclude='build' \
     --exclude='local_conf*' \
     ./ build/

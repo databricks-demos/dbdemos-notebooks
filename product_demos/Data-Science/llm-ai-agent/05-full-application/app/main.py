@@ -10,37 +10,15 @@ import os
 import traceback
 import time
 import logging
-import yaml
-from pathlib import Path
-from typing import Dict
-
-# Development environment settings
+from .config import Config
 
 # Set up application logging
 logger = logging.getLogger("app")
 
-def load_config() -> Dict:
-    """Load configuration from YAML files with fallback to default config."""
-    config_dir = Path(__file__).parent.parent
-    local_config = config_dir / 'app_local.yaml'
-    default_config = config_dir / 'app.yaml'
-    
-    try:
-        config_file = local_config if local_config.exists() else default_config
-        with open(config_file) as f:
-            return yaml.safe_load(f).get('env', {})
-    except Exception as e:
-        logger.error(f"Failed to load configuration: {e}")
-        return {'ENV': 'prod'}  # Safe default
+# Initialize configuration
+config = Config()
 
-def get_config_value(config: list, key: str, default_value: str = '') -> str:
-    """Get a configuration value from the config list of dictionaries"""
-    return next((item['value'] for item in config if item['name'] == key), default_value)
-
-# Load configuration
-config = load_config()
-environment = get_config_value(config, 'ENV', 'prod')
-
+environment = config.environment
 
 app = FastAPI(title="AI Agent demo")
 
@@ -75,6 +53,7 @@ app.add_middleware(RequestLoggingMiddleware)
 
 # Add CORS middleware only in development environment
 if environment == 'dev':
+    config.setup_databricks_env()
     print("STARTING IN DEV MODE - This won't work in a deployed environment on Databricks. If you see this message in your databricks logs, change the ENV to prod in the app.yaml file.")
     app.add_middleware(
         CORSMiddleware,
@@ -87,7 +66,7 @@ if environment == 'dev':
     async def root():
         return {"message": "Databricks GenAI API"} 
 else:
-    print("STARTING IN PROD MODE - will serve the /dist folder. This will work in a deployed environment on Databricks.")
+    print("STARTING IN PROD MODE - will serve the /static folder. This will work in a deployed environment on Databricks.")
 
 # Initialize API routes first
 app.include_router(agent.router, prefix="/api/agent")
@@ -95,10 +74,10 @@ app.include_router(agent.router, prefix="/api/agent")
 # Then mount static files in prod mode
 if environment == 'prod':
     try:
-        target_dir = "dist"
+        target_dir = "static"
         app.mount("/", StaticFiles(directory=target_dir, html=True), name="site")
     except:
-        print('ERROR - dist folder not found')
+        print('ERROR - static folder not found')
 
 # Global exception handler for all unhandled exceptions
 @app.exception_handler(Exception)

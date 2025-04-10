@@ -42,19 +42,51 @@
     },
     {
       "path": "02-evaluate-and-deploy/agent", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False, 
       "title":  "First Steps: RAG on Databricks", 
       "description": "Quickstart: deploy your RAG in 10 min. Start here!"
     },
     {
-      "path": "02-evaluate-and-deploy/agent", 
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "05-full-application/requirements.txt", 
+      "pre_run": False, 
+      "publish_on_website": False, 
       "add_cluster_setup_cell": False, 
-      "title":  "First Steps: RAG on Databricks", 
-      "description": "Quickstart: deploy your RAG in 10 min. Start here!"
+      "title":  "App requirement", 
+      "description": "App dependencies"
+    },
+    {
+      "path": "05-full-application/05.1-deploy-app", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Deploy your Databricks Application", 
+      "description": "Run this notebook to deploy the chatbot application"
+    },
+    {
+      "path": "05-full-application/app.yaml", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "App conf", 
+      "description": "Setup"
+    },
+    {
+      "path": "05-full-application/static", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Frontend static", 
+      "description": "Static resouces compiled by npm"
+    },
+    {
+      "path": "05-full-application/app", 
+      "pre_run": False, 
+      "publish_on_website": False, 
+      "add_cluster_setup_cell": False, 
+      "title":  "Application backend", 
+      "description": "Python Application server backend"
     },
     {
       "path": "config", 

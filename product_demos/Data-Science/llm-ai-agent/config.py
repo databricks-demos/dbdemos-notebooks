@@ -12,10 +12,6 @@
 VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"
 
 catalog = "main__build"
-
-#email = spark.sql('select current_user() as user').collect()[0]['user']
-#username = email.split('@')[0].replace('.', '_')
-#dbName = db = f"dbdemos_rag_{username}"
 dbName = db = "dbdemos_ai_agent"
 
 # COMMAND ----------

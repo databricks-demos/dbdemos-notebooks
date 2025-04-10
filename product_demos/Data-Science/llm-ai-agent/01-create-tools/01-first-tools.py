@@ -11,6 +11,8 @@ see https://github.com/databricks/tmm/blob/main/agents-workshop/01_create_tools/
 # MAGIC
 # MAGIC See deck template: https://docs.google.com/presentation/d/18aIGHtwmrYFhVtF7gE6fi5g7xeA8jRgoCgNLwle9IfM/edit#slide=id.g2ee8efb26f5_4_0
 # MAGIC
+# MAGIC Cal can help to accept the image PR on dbdemos-resources repo
+# MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/llm-tools-functions-flow.png?raw=true" width="900px">
 # MAGIC
 # MAGIC

@@ -77,7 +77,7 @@
 -- DBTITLE 1,Capture new incoming transactions
 CREATE STREAMING TABLE raw_txs
   COMMENT "New raw loan data incrementally ingested from cloud object storage landing zone"
-AS SELECT * FROM read_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions', format => 'json', inferColumnTypes => true)
+AS SELECT * FROM STREAM read_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/raw_transactions', format => 'json', inferColumnTypes => true)
 
 -- COMMAND ----------
 
@@ -93,7 +93,7 @@ AS SELECT * FROM STREAM delta.`/Volumes/main__build/dbdemos_dlt_loan/raw_data/re
 CREATE STREAMING TABLE raw_historical_loans
   TBLPROPERTIES ("pipelines.trigger.interval"="6 hour")
   COMMENT "Raw historical transactions"
-AS SELECT * FROM read_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans', format => 'csv', inferColumnTypes => true)
+AS SELECT * FROM STREAM read_files('/Volumes/main__build/dbdemos_dlt_loan/raw_data/historical_loans', format => 'csv', inferColumnTypes => true)
 
 -- COMMAND ----------
 

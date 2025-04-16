@@ -9,16 +9,16 @@
 # MAGIC * **Discover** registered models, current aliases in model development, experiment runs, and associated code with a registered model
 # MAGIC * **Promote** models to different phases of their lifecycle with the use of model aliases
 # MAGIC * **Tag** models to capture metadata specific to your MLOps process
-# MAGIC * **Deploy** different versions of a registered model, offering MLOps engineers ability to deploy and conduct testing of different model versions
+# MAGIC * **Deploy** different versions of a registered model, offering MLOps engineers the ability to deploy and conduct testing of different model versions
 # MAGIC * **Test** models in an automated fashion
 # MAGIC * **Document** models throughout their lifecycle
-# MAGIC * **Secure** access and permission for model registrations, execution or modifications
+# MAGIC * **Secure** access and permission for model registrations, execution, or modifications
 # MAGIC
 # MAGIC We will look at how we test and promote a new __Challenger__ model as a candidate to replace an existing __Champion__ model.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-3.png?raw=true" width="1200">
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable the collection or disable the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03_from_notebook_to_models_in_uc&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
@@ -44,9 +44,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Programmatically find best run and push model to the Unity Catalog for validation
+# MAGIC ## Programmatically find the best run and push the model to Unity Catalog for validation
 # MAGIC
-# MAGIC We have completed the training runs to find a candidate __Challenger__ model. We'll programatically select the best model from our last ML experiment and register it to Unity Catalog. We can easily do that using MLFlow `search_runs` API:
+# MAGIC We have completed the training runs to find a candidate __Challenger__ model. We'll programmatically select the best model from our last ML experiment and register it to Unity Catalog. We can easily do that using MLFlow `search_runs` API:
 
 # COMMAND ----------
 
@@ -84,20 +84,20 @@ print(f"Registering model to {model_name}")  # {model_name} is defined in the se
 # Get the run id from the best model
 run_id = best_model.iloc[0]['run_id']
 
-# Register best model from experiments run to MLflow model registry
+# Register the best model from experiments run to MLflow model registry
 model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_name)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC At this point the model does not yet have any aliases or description that indicates its lifecycle and meta-data/info.  Let's update this information.
+# MAGIC At this point, the model does not yet have any aliases or descriptions that indicate its lifecycle and meta-data/info.  Let's update this information.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Give the registered model a description
 # MAGIC
-# MAGIC We'll do this for the registered model overall.
+# MAGIC We'll do this overall for the registered model.
 
 # COMMAND ----------
 
@@ -105,7 +105,7 @@ from mlflow import MlflowClient
 
 client = MlflowClient()
 
-# The main model description, typically done once.
+# The main model description is typically done once.
 client.update_registered_model(
   name=model_details.name,
   description="This model predicts whether a customer will churn using the features in the mlops_churn_training table. It is used to power the Telco Churn Dashboard in DB SQL.",
@@ -159,15 +159,15 @@ client.set_registered_model_alias(
 
 # MAGIC %md
 # MAGIC
-# MAGIC Now, visually inspect the model verions in Unity Catalog Explorer. You should see the version description and `Challenger` alias applied to the version.
+# MAGIC Now, visually inspect the model versions in Unity Catalog Explorer. You should see the version description and `Challenger` alias applied to the version.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Next: Validation of the Challenger model
 # MAGIC
-# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook so that the validation process can be automated as part of a Databricks Workflow job.
 # MAGIC
 # MAGIC If the model passes all the tests, it'll be promoted to `Champion`.
 # MAGIC
-# MAGIC Next: Find out how the model is being tested befored being promoted as `Champion` [using the model validation notebook]($./04_challenger_validation)
+# MAGIC Next: Find out how the model is being tested before being promoted as `Champion` [using the model validation notebook]($./04_challenger_validation)

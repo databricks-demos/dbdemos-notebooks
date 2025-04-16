@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC ## Inference with the Champion model
 # MAGIC
-# MAGIC Models in Unity Catalog can be loaded for use in batch inference pipelines. Generated predictions would be used to advise on customer retention strategies, or be used for analytics. The model in use is the __@Champion__ model, and we will load it for use in our pipeline.
+# MAGIC Models in Unity Catalog can be loaded for use in batch inference pipelines. Generated predictions would be used to advise on customer retention strategies or be used for analytics. The model in use is the __@Champion__ model, and we will load it for use in our pipeline.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-5.png?raw=true" width="1200">
 # MAGIC
@@ -30,7 +30,7 @@
 # MAGIC
 # MAGIC Now that our model is available in the Unity Catalog Model Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
 # MAGIC
-# MAGIC We will use the feature engineering client's `score_batch` method which would automatically load a pyspark UDF and distribute the inference on the entire cluster. If the data is small, we can also load the model in plain python and use a pandas Dataframe.
+# MAGIC We will use the feature engineering client's `score_batch` method, automatically loading a PySpark UDF and distributing the inference on the entire cluster. If the data is small, we can load the model in plain Python and use a Pandas Dataframe.
 # MAGIC
 # MAGIC If you don't know how to start, you can get sample code from the __"Artifacts"__ page of the model's experiment run.
 
@@ -73,9 +73,9 @@ display(preds_df)
 
 # MAGIC %md
 # MAGIC
-# MAGIC That's it! Our data can now be saved as a table and re-used by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
+# MAGIC That's it! Our data can now be saved as a table and reused by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
 # MAGIC
-# MAGIC Your data will also be available within Genie to answer any churn-related question using plain text english!
+# MAGIC Your data will also be available within Genie to answer any churn-related question using plain text English!
 
 # COMMAND ----------
 
@@ -86,7 +86,7 @@ display(preds_df)
 # MAGIC
 # MAGIC Note that this table does not have the ground truth labels. These are usually collected and made available over time, and in many cases, may not even be available! However, this does not stop us from monitoring the data for drift, as that alone may be a sign that the model has to be retrained.
 # MAGIC
-# MAGIC The table displayed below is saved into `advanced_churn_offline_inference`. It includes the model version used for scoring, the model alias, the predictions and timestamp when the inference was made. It does not contain any labels.
+# MAGIC The table displayed below is saved into `advanced_churn_offline_inference`. It includes the model version used for scoring, the model alias, the predictions, and the timestamp when the inference was made. It does not contain any labels.
 # MAGIC
 
 # COMMAND ----------

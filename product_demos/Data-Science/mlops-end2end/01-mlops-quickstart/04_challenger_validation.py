@@ -4,15 +4,15 @@
 # MAGIC
 # MAGIC This notebook performs validation tasks on the candidate __Challenger__ model.
 # MAGIC
-# MAGIC It goes through a few steps to validate the model before labelling it (by setting its alias) to `Challenger`.
+# MAGIC It goes through a few steps to validate the model before labeling it (by setting its alias) to `Challenger`.
 # MAGIC
 # MAGIC When organizations first start to put MLOps processes in place, they should consider having a "human-in-the-loop" to perform visual analyses to validate models before promoting them. As they get more familiar with the process, they can consider automating the steps in a __Workflow__ . The benefits of automation is to ensure that these validation checks are systematically performed before new models are integrated into inference pipelines or deployed for realtime serving. Of course, organizations can opt to retain a "human-in-the-loop" in any part of the process and put in place the degree of automation that suits its business needs.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-4.png?raw=true" width="1200">
 # MAGIC
-# MAGIC *Note: in a typical mlops setup, this would run as part of an automated job to validate new model. For this simpel demo, we'll run it as an interactive notebook.*
+# MAGIC *Note: in a typical MLOps setup, this would run as part of an automated job to validate a new model. We'll run this simple demo as an interactive notebook.*
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable the collection or disable the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04_challenger_validation&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
@@ -29,7 +29,7 @@
 # MAGIC * __Inference on production data__
 # MAGIC * __Champion-Challenger testing to ensure that business KPIs are acceptable__
 # MAGIC
-# MAGIC In this notebook we explore some approaches to performing these tests, and how we can add metadata to our models with tagging if they have passed a given test or not.
+# MAGIC In this notebook, we explore some approaches to performing these tests and how we can add metadata to our models by tagging whether they have passed a given test.
 # MAGIC
 # MAGIC This part is typically specific to your line of business and quality requirements.
 # MAGIC
@@ -77,7 +77,7 @@ print(f"Validating {model_alias} model for {model_name} on model version {model_
 
 # COMMAND ----------
 
-# If there's no description or an insufficient number of charaters, tag accordingly
+# If there's no description or an insufficient number of characters, tag accordingly
 if not model_details.description:
   has_description = False
   print("Please add model description")
@@ -95,11 +95,11 @@ client.set_model_version_tag(name=model_name, version=str(model_details.version)
 # MAGIC %md
 # MAGIC #### Model performance metric
 # MAGIC
-# MAGIC We want to validate the model performance metric. Typically, we want to compare this metric obtained for the Challenger model agaist that of the Champion model. Since we have yet to register a Champion model, we will only retrieve the metric for the Challenger model without doing a comparison.
+# MAGIC We want to validate the model performance metric. Typically, we want to compare this metric obtained for the Challenger model against that of the Champion model. Since we have yet to register a Champion model, we will only retrieve the metric for the Challenger model without doing a comparison.
 # MAGIC
 # MAGIC The registered model captures information about the MLflow experiment run, where the model metrics were logged during training. This gives you traceability from the deployed model back to the initial training runs.
 # MAGIC
-# MAGIC Here, we will use the F1 score for the out-of-sample test data that was set aside at training time.
+# MAGIC Here, we will use the F1 score for the out-of-sample test data set aside at training time.
 
 # COMMAND ----------
 
@@ -127,7 +127,7 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 # MAGIC
 # MAGIC Let's use our validation dataset to check the potential new model impact.
 # MAGIC
-# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic to 2 models and requires a feedback loop to evaluate the effect of the prediction (e.g. after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing in the advanced part.*
+# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic between 2 models. It requires a feedback loop to evaluate the effect of the prediction (e.g., after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing in the advanced part.*
 
 # COMMAND ----------
 
@@ -146,7 +146,7 @@ import pandas as pd
 import plotly.express as px
 from sklearn.metrics import confusion_matrix
 
-#Note: this is over-simplified and depends of your use-case, but the idea is to evaluate our model against business metrics
+#Note: this is over-simplified and depends on your use-case, but the idea is to evaluate our model against business metrics
 cost_of_customer_churn = 2000 #in dollar
 cost_of_discount = 500 #in dollar
 
@@ -161,7 +161,7 @@ def get_model_value_in_dollar(model_alias):
     # Calculate the confusion matrix
     tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['predictions']).ravel()
     return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive
-#add exception to catch non-existing model champion yet
+#add an exception to catch non-existing model champion yet
 is_champ_model_exist = True
 try:
     client.get_model_version_by_alias(f"{catalog}.{db}.mlops_churn", "Champion")
@@ -207,7 +207,7 @@ results.tags
 # MAGIC %md
 # MAGIC ## Promoting the Challenger to Champion
 # MAGIC
-# MAGIC When we are satisfied with the results of the __Challenger__ model, we can then promote it to Champion. This is done by setting its alias to `@Champion`. Inference pipelines that load the model using the `@Champion` alias will then be loading this new model. The alias on the older Champion model, if there is one, will be automatically unset. The model retains its `@Challenger` alias until a newer Challenger model is deployed with the alias to replace it.
+# MAGIC When we are satisfied with the results of the __Challenger__ model, we can promote it to Champion. This is done by setting its alias to `@Champion`. Inference pipelines that load the model using the `@Champion` alias will then load this new model. The alias on the older Champion model, if there is one, will be automatically unset. The model retains its `@Challenger` alias until a newer Challenger model is deployed with the alias to replace it.
 
 # COMMAND ----------
 
@@ -224,9 +224,9 @@ else:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Congratulations, our model is now validated and promoted accordingly
+# MAGIC ### Congratulations! Our model is now validated and promoted accordingly
 # MAGIC
-# MAGIC We now have the certainty that our model is ready to be used in inference pipelines and in realtime serving endpoints, as it matches our validation standards.
+# MAGIC We now have the certainty that our model is ready to be used in inference pipelines and real-time serving endpoints, as it matches our validation standards.
 # MAGIC
 # MAGIC
 # MAGIC Next: [Run batch inference from our newly promoted Champion model]($./05_batch_inference)

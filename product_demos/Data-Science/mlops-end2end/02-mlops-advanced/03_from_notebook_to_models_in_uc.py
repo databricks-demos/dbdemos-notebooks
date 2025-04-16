@@ -9,10 +9,10 @@
 # MAGIC * **Discover** registered models, current aliases in model development, experiment runs, and associated code with a registered model
 # MAGIC * **Promote** models to different phases of their lifecycle with the use of model aliases
 # MAGIC * **Tag** models to capture metadata specific to your MLOps process
-# MAGIC * **Deploy** different versions of a registered model, offering MLOps engineers ability to deploy and conduct testing of different model versions
+# MAGIC * **Deploy** different versions of a registered model, offering MLOps engineers the ability to deploy and conduct testing of different model versions
 # MAGIC * **Test** models in an automated fashion
 # MAGIC * **Document** models throughout their lifecycle
-# MAGIC * **Secure** access and permission for model registrations, execution or modifications
+# MAGIC * **Secure** access and permission for model registrations, execution, or modifications
 # MAGIC
 # MAGIC We will look at how we test and promote a new __Challenger__ model as a candidate to replace an existing __Champion__ model.
 # MAGIC
@@ -25,11 +25,11 @@
 
 # MAGIC %md
 # MAGIC ## How to use Models in Unity Catalog
-# MAGIC Typically, data scientists who use MLflow will conduct many experiments, each with a number of runs that track and log metrics and parameters. During the course of this development cycle, they will select the best run within an experiment and register its model to Unity Catalog.  Think of this as **committing** the model to the Unity Catalog, much as you would commit code to a version control system.
+# MAGIC Typically, data scientists who use MLflow will conduct many experiments, each with a number of runs that track and log metrics and parameters. During this development cycle, they will select the best run within an experiment and register its model to Unity Catalog.  Think of this as **committing** the model to the Unity Catalog, much as you would commit code to a version control system.
 # MAGIC
-# MAGIC Unity Catalog proposes free-text model alias i.e. `Baseline`, `Challenger`, `Champion` along with tagging.
+# MAGIC Unity Catalog proposes free-text model alias, i.e., `Baseline`, `Challenger`, `Champion`, along with tagging.
 # MAGIC
-# MAGIC Users with appropriate permissions can create models, modify aliases and tags, use models etc.
+# MAGIC Users with appropriate permissions can create models, modify aliases and tags, use models, etc.
 
 # COMMAND ----------
 
@@ -152,7 +152,7 @@ client.set_registered_model_alias(
 
 # MAGIC %md
 # MAGIC
-# MAGIC Now, visually inspect the model verions in Unity Catalog Explorer. You should see the version description and `Challenger` alias applied to the version.
+# MAGIC Now, visually inspect the model versions in Unity Catalog Explorer. You should see the version description and `Challenger` alias applied to the version.
 
 # COMMAND ----------
 
@@ -162,7 +162,7 @@ client.set_registered_model_alias(
 # MAGIC
 # MAGIC Unity Catalog allows you to track model lineage. Select the model in the Catalog Explorer, click on the latest model version, and click **See lineage graph** in the **Lineage** tab.
 # MAGIC
-# MAGIC Unity Catalog captures the upstream featurization logic in the form of the feature table used to train the model, as well as the feature function used to calculate features. It also traces back to the notebook where the model was trained. You can navigate to all these assets using the link displayed on the screen. This allows you to have traceability on where the model got its features from and lets you perform impact analysis.
+# MAGIC Unity Catalog captures the upstream featurization logic in the form of the feature table used to train the model and the feature function used to calculate features. It also traces back to the notebook where the model was trained. You can navigate to all these assets using the link displayed on the screen. This allows you to have traceability on where the model got its features from and lets you perform impact analysis.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/03_model_lineage.png?raw=true" width="1200">
 
@@ -171,8 +171,8 @@ client.set_registered_model_alias(
 # MAGIC %md
 # MAGIC ## Next: Validation of the Challenger model
 # MAGIC
-# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook, so that the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook, so the validation process can be automated as part of a Databricks Workflow job.
 # MAGIC
 # MAGIC If the model passes all the tests, it'll be promoted to `Champion`.
 # MAGIC
-# MAGIC Next: Find out how the model is being tested befored being promoted as `Champion` [using the model validation notebook]($./04_challenger_validation)
+# MAGIC Next: Find out how the model is being tested before being promoted as `Champion` [using the model validation notebook]($./04_challenger_validation)

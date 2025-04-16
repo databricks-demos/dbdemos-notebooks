@@ -315,7 +315,7 @@ results.tags
 # MAGIC %md
 # MAGIC ## Promoting the new version/Challenger to Champion
 # MAGIC
-# MAGIC When we are satisfied with the results of the model, we can promote it to Champion. This is done by setting its alias to `@Champion`. Inference pipelines that load the model using the `@Champion` alias will load this new model. If there is one, the alias on the older Champion model will be automatically unset. The model retains its `@Challenger` alias until a newer Challenger model is deployed with the alias to replace it.
+# MAGIC When we are satisfied with the results of the __Challenger__ model, we can promote it to Champion. This is done by setting its alias to `@Champion`. Inference pipelines that load the model using the `@Champion` alias will load this new model. If there is one, the alias on the older Champion model will be automatically unset. The model retains its `@Challenger` alias until a newer Challenger model is deployed with the alias to replace it.
 
 # COMMAND ----------
 

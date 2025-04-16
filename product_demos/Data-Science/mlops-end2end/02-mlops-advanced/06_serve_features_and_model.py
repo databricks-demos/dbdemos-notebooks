@@ -484,7 +484,6 @@ else:
 # DBTITLE 1,Query endpoint
 import time
 
-
 # Wait 60 seconds for the endpoint so that the endpoint is fully ready to handle errors in the next command
 # time.sleep(60)
 

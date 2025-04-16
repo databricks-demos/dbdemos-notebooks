@@ -30,14 +30,14 @@
 
 # MAGIC %md
 # MAGIC ## Exploratory Data Analysis
-# MAGIC To get a feel of the data, what needs cleaning, pre-processing etc.
+# MAGIC To get a feel of the data, what needs cleaning, pre-processing, etc.
 # MAGIC - **Use Databricks's native visualization tools**
 # MAGIC - Bring your own visualization library of choice (i.e., seaborn, plotly)
 
 # COMMAND ----------
 
 # DBTITLE 1,Read in Bronze Delta table using Spark
-# Read into spark dataframe
+# Read into a Spark dataframe
 telcoDF = spark.read.table("advanced_churn_bronze_customers")
 display(telcoDF)
 
@@ -55,7 +55,7 @@ display(telcoDF)
 
 # MAGIC %md
 # MAGIC ### Using PandasUDF and PySpark
-# MAGIC To scale pandas analytics on a spark dataframe
+# MAGIC To scale pandas analytics on a Spark dataframe
 
 # COMMAND ----------
 
@@ -89,7 +89,7 @@ def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
 # DBTITLE 1,Define featurization function
 def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   """
-  Simple cleaning function leveraging pandas API
+  Simple cleaning function leveraging the Pandas API
   """
 
   # Convert to pandas on spark dataframe
@@ -106,7 +106,7 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   data_psdf = data_psdf.fillna({"monthly_charges": 0.0})
   data_psdf = data_psdf.fillna({"total_charges": 0.0})
 
-  # Add/Force semantic data types for specific colums (to facilitate autoML)
+  # Add/Force semantic data types for specific columns (to facilitate autoML)
   data_cleanDF = data_psdf.to_spark()
   data_cleanDF = data_cleanDF.withMetadata("customer_id", {"spark.contentAnnotation.semanticType":"native"})
   data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
@@ -143,7 +143,7 @@ display(churn_features_n_predsDF)
 
 # MAGIC %md
 # MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
-# MAGIC * In reality, ground-truth label data should be in its own separate table
+# MAGIC * In reality, ground-truth label data should be in a separate table
 
 # COMMAND ----------
 
@@ -216,7 +216,7 @@ from pprint import pprint
 from databricks.sdk import WorkspaceClient
 
 
-# Create workspace client
+# Create a workspace client instance
 w = WorkspaceClient()
 
 # Remove any existing online feature table
@@ -253,7 +253,7 @@ churn_feature_table = fe.create_table(
   primary_keys=["customer_id", "transaction_ts"],
   schema=churn_featuresDF.schema,
   timeseries_columns="transaction_ts",
-  description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features and cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground truth and now can be used with AutoML's feature table integration."
+  description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features and cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground truth and can now be used with AutoML's feature table integration."
 )
 
 # COMMAND ----------
@@ -270,7 +270,7 @@ fe.write_table(
 # MAGIC %md
 # MAGIC ## Define Featurization Logic for on-demand feature functions
 # MAGIC
-# MAGIC We will define a function for features that need to be calculated on demand. These functions can be used in both batch/offline and serving/online inference.
+# MAGIC We will define a function for features that need to be calculated on demand. These functions can be used in batch/offline and serving/online inference.
 # MAGIC
 # MAGIC It is common that customers who have elevated monthly bills have a higher propensity to churn. The `avg_price_increase` function calculates the potential average price increase based on their historical charges and current tenure. The function lets the model use this freshly calculated value as a feature for training and, later, scoring.
 # MAGIC
@@ -304,11 +304,11 @@ fe.write_table(
 # MAGIC ## Accelerating Churn model creation using Databricks Auto-ML
 # MAGIC ### A glass-box solution that empowers data teams without taking away control
 # MAGIC
-# MAGIC Databricks simplify model creation and MLOps. However, bootstrapping new ML projects can still be long and inefficient.
+# MAGIC Databricks simplifies model creation and MLOps. However, bootstrapping new ML projects can still be long and inefficient.
 # MAGIC
 # MAGIC Instead of creating the same boilerplate for each new project, Databricks Auto-ML can automatically generate state-of-the-art models for Classifications, regression, and forecasts.
 # MAGIC
-# MAGIC Models can be directly deployed, or instead leverage generated notebooks to bootstrap projects with best practices, saving you weeks of effort.
+# MAGIC Models can be directly deployed or leverage generated notebooks to bootstrap projects with best practices, saving you weeks of effort.
 # MAGIC
 # MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
 # MAGIC
@@ -329,7 +329,7 @@ fe.write_table(
 # MAGIC
 # MAGIC Click on **Start**, and Databricks will do the rest.
 # MAGIC
-# MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
+# MAGIC While this is done using the UI, you can also leverage the [Python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
 # MAGIC
 # MAGIC <br>
 # MAGIC

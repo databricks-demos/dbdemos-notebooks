@@ -151,7 +151,11 @@ display(churn_features_n_predsDF)
 
 # MAGIC %md
 # MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
+<<<<<<< HEAD
 # MAGIC * In reality, ground-truth label data should be in a separate table
+=======
+# MAGIC * In reality, ground-truth label data should be in its own separate table
+>>>>>>> 2b59c28 (Update 01_feature_engineering.py)
 
 # COMMAND ----------
 
@@ -256,7 +260,7 @@ fe.write_table(
 # MAGIC %md
 # MAGIC ## Define Featurization Logic for on-demand feature functions
 # MAGIC
-# MAGIC We will define a function for features that need to be calculated on demand. These functions can be used in batch/offline and serving/online inference.
+# MAGIC We will define a function for features that need to be calculated on demand. These functions can be used in both batch/offline and serving/online inference.
 # MAGIC
 # MAGIC It is common that customers who have elevated monthly bills have a higher propensity to churn. The `avg_price_increase` function calculates the potential average price increase based on their historical charges and current tenure. The function lets the model use this freshly calculated value as a feature for training and, later, scoring.
 # MAGIC

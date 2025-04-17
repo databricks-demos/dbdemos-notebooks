@@ -1,0 +1,8 @@
+---
+description: code style - maximum len size
+globs: *.py
+---
+
+# Maximum line length code style
+
+- You can write longer lines, don't stop at 80, don't make them too long either, especially for function definition, put more parameters on the same line.

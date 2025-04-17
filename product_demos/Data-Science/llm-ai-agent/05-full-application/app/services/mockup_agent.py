@@ -46,7 +46,7 @@ USE_CASES = {
                 ],
                 "final_answer": "Based on the billing details, the increase is due to the promotion not being applied to the current billing cycle. As a result, the customer was charged the full monthly device installment of $50.00 for the Samsung Galaxy S25 Ultra.\n\nOnce the promo is correctly applied, this charge should be removed or credited in future cycles, and the customer's bill will return to the expected amount",
                 "final_informations": [
-                    "Databricks lets you plug any LLM foundation model (openai, llama, anthropic...). But these LLMs are quickly evolving! You need to make sure your genAI application will provide relevant information overtime and focus on reducing return. Databricks lets you benchmark your applications against your dataset and instruction, making software iteration easy and safe.[Discover how MLFlow Evaluate enforces your quality](https://www.databricks.com/product/mlflow)"
+                    "Databricks lets you plug any LLM foundation model (openai, llama, anthropic...). But these LLMs are quickly evolving! You need to make sure your AI application will provide relevant information overtime and focus on increasing customer satisfaction. Databricks lets you benchmark your applications against your dataset and instruction, making software iteration easy and safe.[Discover how MLFlow Evaluate enforces your quality](https://www.databricks.com/product/mlflow)"
                 ]
             },
             {
@@ -72,7 +72,7 @@ USE_CASES = {
                         ]
                     }
                 ],
-                "final_answer": "It looks like this customer is a loyal high-value client. I recommend offering a 5% discount coupon for 1 month.\n\nHere's the message I've drafted for the customer service team:\n---\n\n**Subject:** We Fixed the Upgrade — and Added a Little Thank You 🎁\n\nDear Layla,\n\nThanks again for reaching out — I understand how frustrating a surprise bill can be. I took another look and made sure the promotion was correctly applied to your upgrade.\nThat means your phone is now fully covered under the promo, and you won't see any increase related to the device going forward.\n\nAs a thank you for your patience, I've also added a 10% discount coupon to your account, which will be applied to your next bill.\n\nWe really appreciate having you with us, and I'm here if there's anything else I can help with.\n\nLet me know if there is anything else I can do for you."
+                "final_answer": "It looks like this customer is a loyal high-value client. I recommend offering a 10% discount coupon for 1 month.\n\nHere's the message I've drafted for the customer service team:\n---\n\n**Subject:** We Fixed the Upgrade — and Added a Little Thank You 🎁\n\nDear Layla,\n\nThanks again for reaching out — I understand how frustrating a surprise bill can be. I took another look and made sure the promotion was correctly applied to your upgrade.\nThat means your phone is now fully covered under the promo, and you won't see any increase related to the device going forward.\n\nAs a thank you for your patience, I've also added a 10% discount coupon to your account, which will be applied to your next bill.\n\nWe really appreciate having you with us, and I'm here if there's anything else I can help with.\n"
             }
         ]
     },

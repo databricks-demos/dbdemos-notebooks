@@ -3,7 +3,7 @@ USE_CASES = {
         "name": "Telco Subscription Support",
         "responses": [
             {
-                "question": "I had a customer asking about his high bill last month after upgrading to a new phone. Could you give me the support steps?",
+                "question": "I had a customer asking about her high bill last month after upgrading to a new phone. Could you give me the support steps?",
                 "non_intelligent_answer": "Your bill may be higher due to charges related to the phone upgrade. Please review your billing statement or contact support for more details.",
                 "tools": [
                     {
@@ -50,7 +50,7 @@ USE_CASES = {
                 ]
             },
             {
-                "question": "Ok, the customer seems angry and has churn risk, can you craft a friendly message for me to handle that?",
+                "question": "Ok, the customer seems angry and has **churn risk**, can you craft a friendly message for me to handle that?",
                 "non_intelligent_answer": "# Customer Service Response\n\nDear [Customer's Name],\n\nThanks for contacting us.\nWe understand there may be some confusion with your recent bill after the phone upgrade. Please note that charges may vary depending on your account activity.\nIf you're not satisfied with the new phone, we recommend returning it and reviewing your billing details in your online account.\n\nLet us know if you have further questions.",
                 "tools": [
                     {
@@ -72,7 +72,7 @@ USE_CASES = {
                         ]
                     }
                 ],
-                "final_answer": "It looks like this customer is a loyal high-value client. I recommend offering a 5% discount coupon for 1 month.\n\nHere's the message I've drafted for the customer service team:\n---\n\n**Subject:** We Fixed the Upgrade — and Added a Little Thank You 🎁\n\nDear Layla,\n\nThanks again for reaching out — I understand how frustrating a surprise bill can be. I took another look and made sure the promotion was correctly applied to your upgrade.\nThat means your phone is now fully covered under the promo, and you won't see any increase related to the device going forward.\n\nAs a thank you for your patience, I've also added a 10% discount coupon to your account, which will be applied to your next bill.\n\nWe really appreciate having you with us, and I'm here if there's anything else I can help with.\n\nLet me know if there is anything else I can do for you."
+                "final_answer": "It looks like this customer is a loyal high-value client. I recommend offering a 10% discount coupon for 1 month.\n\nHere's the message I've drafted for the customer service team:\n---\n\n**Subject:** We Fixed the Upgrade — and Added a Little Thank You 🎁\n\nDear Layla,\n\nThanks again for reaching out — I understand how frustrating a surprise bill can be. I took another look and made sure the promotion was correctly applied to your upgrade.\nThat means your phone is now fully covered under the promo, and you won't see any increase related to the device going forward.\n\nAs a thank you for your patience, I've also added a 10% discount coupon to your account, which will be applied to your next bill.\n\nWe really appreciate having you with us, and I'm here if there's anything else I can help with.\n"
             }
         ]
     },

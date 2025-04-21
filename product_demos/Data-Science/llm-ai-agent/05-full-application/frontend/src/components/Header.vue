@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <!-- Right section with use case selector -->
+      <!-- Right section with use case selector and admin button -->
       <div class="d-flex align-center">
         <v-select
           v-model="selectedUseCase"
@@ -49,9 +49,24 @@
           variant="outlined"
           density="compact"
           hide-details
-          class="use-case-select"
+          class="use-case-select mr-6"
           @update:model-value="handleUseCaseChange"
         ></v-select>
+        
+        <div class="admin-dashboard-divider"></div>
+        
+        <!-- Add Admin Dashboard button -->
+        <v-btn
+          color="white"
+          variant="flat"
+          class="admin-dashboard-btn ml-6"
+          href="https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f0187a33881d0db7fea91f596f8bda/published/pages/468b8ea5?o=1444828305810485"
+          target="_blank"
+          elevation="0"
+        >
+          <v-icon icon="mdi-view-dashboard" class="mr-2" />
+          Admin Dashboard (AI/BI)
+        </v-btn>
       </div>
     </div>
   </v-app-bar>
@@ -76,6 +91,9 @@ const emit = defineEmits<{
 
 const useCases = [
   { label: 'Telco Subscription', value: 'telco' },
+  { label: 'Healthcare Member Support', value: 'hls' },
+  { label: 'Financial Services', value: 'fins' },
+  { label: 'Manufacturing Support', value: 'mfg' },
   { label: 'Retail Order Support', value: 'retail' }
 ]
 
@@ -94,5 +112,26 @@ const handleUseCaseChange = (value: string) => {
 <style scoped>
 .use-case-select {
   width: 300px;
+}
+
+.admin-dashboard-divider {
+  width: 1px;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-dashboard-btn {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+  padding: 0 20px;
+  height: 36px;
+}
+
+.admin-dashboard-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 </style> 

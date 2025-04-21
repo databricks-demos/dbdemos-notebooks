@@ -146,3 +146,27 @@ databricks workspace import-dir build "/Workspace/your/path" --overwrite
 ├── requirements.txt       # Python dependencies
 └── deploy.sh             # Deployment script
 ```
+
+## Industry Use Cases
+
+This application supports multiple industry-specific use cases for AI agent interactions. Each industry has its own implementation with custom:
+- System prompts
+- Example responses
+- Tool integrations
+- Domain-specific logic
+
+### Available Industries
+- TELCO - Telecommunications Support
+- HLS - Healthcare and Life Sciences
+- FINS - Financial Services
+- MFG - Manufacturing
+- CMEG - Communications, Media & Entertainment Games
+- PubS - Public Sector
+- RCG - Retail and Consumer Goods
+
+### Adding or Modifying Industries
+See [Industry Documentation](app/industries/README.md) for detailed instructions on:
+- Adding new industry use cases
+- Modifying existing implementations
+- Best practices and examples
+- Testing guidelines

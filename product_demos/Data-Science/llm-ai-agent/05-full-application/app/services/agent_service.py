@@ -1,19 +1,25 @@
-from .mockup_agent import USE_CASES
-from .agent_prompt import PROMPTS
+"""Service for handling agent interactions."""
+
+from typing import List, Dict, Any
 import json
 import mlflow.deployments
 import mlflow
-from typing import List
 import asyncio
+from .industry_registry import IndustryRegistry
 
 class AgentService:
     def __init__(self, use_mockup: bool = True):
-        self.use_cases = USE_CASES
         self.use_mockup = use_mockup
+        self.registry = IndustryRegistry()
 
     async def get_questions(self, use_case: str = "telco"):
         """Return the list of predefined questions for the given use case"""
-        responses = self.use_cases.get(use_case, self.use_cases["telco"])["responses"]
+        implementation = self.registry.get_implementation(use_case)
+        if not implementation:
+            # Fallback to telco if implementation not found
+            implementation = self.registry.get_implementation("telco")
+        
+        responses = implementation.get_responses()
         return [{"preview": q["question"][:50] + "..." if len(q["question"]) > 50 else q["question"], 
                  "text": q["question"]} for q in responses]
 
@@ -55,8 +61,12 @@ class AgentService:
 
     async def _process_message_real(self, messages, intelligence_enabled: bool, use_case: str):
         """Process messages using real Databricks endpoints"""
+        implementation = self.registry.get_implementation(use_case)
+        if not implementation:
+            implementation = self.registry.get_implementation("telco")
+        
         # Add system prompt based on use case
-        system_messages = [{"role": "system", "content": PROMPTS[use_case]}]
+        system_messages = [{"role": "system", "content": implementation.get_system_prompt()}]
         
         # Clean up message sequence
         cleaned_messages = self._cleanup_message_sequence(messages)
@@ -124,8 +134,11 @@ class AgentService:
 
     async def find_best_response(self, question: str, use_case: str = "telco") -> dict:
         """Find the most relevant response by matching the question with predefined questions"""
-        responses = self.use_cases.get(use_case, self.use_cases["telco"])["responses"]
+        implementation = self.registry.get_implementation(use_case)
+        if not implementation:
+            implementation = self.registry.get_implementation("telco")
         
+        responses = implementation.get_responses()
         if not question:
             return responses[0]
         

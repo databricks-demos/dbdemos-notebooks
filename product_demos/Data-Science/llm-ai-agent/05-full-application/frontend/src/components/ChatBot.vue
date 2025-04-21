@@ -15,15 +15,60 @@
           <div class="message-bubble">
             <div v-if="message.sender === 'bot'" class="message-with-intelligence">
               <div v-html="formatMessage(message.text)" class="message-text"></div>
-              <button 
-                v-if="responsesMap.get(message.id)"
-                @click="showIntelligence(message.id)"
-                class="intelligence-button"
-                title="View intelligence behind this answer"
-              >
-                <IconBrainCircuit class="intelligence-icon" />
-                <span class="intelligence-text">Show Intelligence</span>
-              </button>
+              <!-- Add feedback panel with conditions -->
+              <div v-if="index !== 0 && message.animationComplete" class="feedback-panel">
+                <div class="feedback-controls">
+                  <button 
+                    class="feedback-button"
+                    :class="{ 'active': message.feedbackState?.type === 'positive' }"
+                    title="Thumbs up"
+                    @click="handleFeedbackClick(message, 'positive')"
+                  >
+                    <v-icon icon="mdi-thumb-up" size="small" />
+                  </button>
+                  <button 
+                    class="feedback-button"
+                    :class="{ 'active': message.feedbackState?.type === 'negative' }"
+                    title="Thumbs down"
+                    @click="handleFeedbackClick(message, 'negative')"
+                  >
+                    <v-icon icon="mdi-thumb-down" size="small" />
+                  </button>
+                </div>
+                <div v-if="message.feedbackState?.showInput" class="feedback-input-container">
+                  <v-text-field
+                    v-model="message.feedbackState.text"
+                    placeholder="Add your feedback (optional)"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    class="feedback-input"
+                    @keyup.enter="submitFeedback(message)"
+                  />
+                  <v-btn
+                    size="small"
+                    color="primary"
+                    variant="text"
+                    class="feedback-submit-btn"
+                    @click="submitFeedback(message)"
+                  >
+                    Send
+                  </v-btn>
+                </div>
+                <div v-else-if="message.feedbackState?.submitted" class="feedback-submitted-container">
+                  <v-btn
+                    size="small"
+                    color="primary"
+                    variant="text"
+                    class="see-evaluations-btn"
+                    href="https://app.getreprise.com/launch/dnbxeoy/"
+                    target="_blank"
+                  >
+                    <v-icon icon="mdi-chart-box" class="mr-1" size="small" />
+                    See Evaluations
+                  </v-btn>
+                </div>
+              </div>
             </div>
             <div v-else v-html="formatMessage(message.text)"></div>
           </div>
@@ -125,7 +170,6 @@ import { marked } from 'marked';
 import { type ApiMessage } from '@/types/ChatMessage';
 import { sendMessageToAgent, agentResultsEmitter, getPredefinedQuestions } from '@/services/api';
 import type { AgentResponse, ToolCall } from '@/types/AgentResponse';
-import IconBrainCircuit from './icons/IconBrainCircuit.vue';
 
 const props = defineProps<{
   thinking: boolean;
@@ -163,6 +207,13 @@ interface Message {
   sender: 'user' | 'bot';
   timestamp: Date;
   agentResponse?: AgentResponse | null;
+  animationComplete?: boolean;
+  feedbackState?: {
+    type: 'positive' | 'negative';
+    showInput: boolean;
+    text: string;
+    submitted?: boolean;
+  };
 }
 
 const messages = ref<Message[]>([
@@ -170,7 +221,8 @@ const messages = ref<Message[]>([
     id: generateMessageId(),
     text: "Hello! I'm your AI assistant. How can I help you today?",
     sender: 'bot',
-    timestamp: new Date()
+    timestamp: new Date(),
+    animationComplete: true
   }
 ]);
 
@@ -214,7 +266,8 @@ const handleUseCaseChange = async (newUseCase: string) => {
     id: generateMessageId(),
     text: "Hello! I'm your AI assistant. How can I help you today?",
     sender: 'bot',
-    timestamp: new Date()
+    timestamp: new Date(),
+    animationComplete: true
   }];
   
   // Clear any ongoing state
@@ -378,7 +431,8 @@ const startTypingAnimation = async (text: string, isNonIntelligent = false) => {
     id: messageId,
     text: '',
     sender: 'bot',
-    timestamp: new Date()
+    timestamp: new Date(),
+    animationComplete: false
   });
 
   isShowingTypingAnimation.value = false;
@@ -402,6 +456,11 @@ const startTypingAnimation = async (text: string, isNonIntelligent = false) => {
     messages.value[messageIndex].text += chunk;
     await new Promise(resolve => setTimeout(resolve, actualSpeed * chunk.length));
     await scrollToBottom();
+  }
+  
+  // Set animation as complete after all text is shown
+  if (messageIndex !== -1) {
+    messages.value[messageIndex].animationComplete = true;
   }
   
   await scrollToBottom();
@@ -493,6 +552,43 @@ defineExpose({
 const onUseCaseChange = (useCase: string) => {
   handleUseCaseChange(useCase);
 };
+
+// Update the handleFeedback function and add new functions
+const handleFeedbackClick = (message: Message, type: 'positive' | 'negative') => {
+  // If clicking the same button again, toggle the input off
+  if (message.feedbackState?.type === type && message.feedbackState?.showInput) {
+    message.feedbackState = undefined;
+    return;
+  }
+  
+  // Set or update the feedback state
+  message.feedbackState = {
+    type,
+    showInput: true,
+    text: message.feedbackState?.text || ''
+  };
+};
+
+const submitFeedback = (message: Message) => {
+  if (!message.feedbackState) return;
+  
+  const feedback = {
+    messageId: message.id,
+    type: message.feedbackState.type,
+    text: message.feedbackState.text
+  };
+  
+  console.log('Submitting feedback:', feedback);
+  // Here you can add logic to send the feedback to your backend
+  
+  // Update the feedback state to show the evaluations button
+  message.feedbackState = {
+    ...message.feedbackState,
+    showInput: false,
+    submitted: true,
+    text: ''
+  };
+};
 </script>
 
 <style scoped>
@@ -509,7 +605,7 @@ const onUseCaseChange = (useCase: string) => {
 
 .messages-container {
   flex: 1;
-  overflow-y: scroll; /* Force scrollbar to be visible */
+  overflow-y: scroll;
   padding: 16px;
   scroll-behavior: smooth;
   background-color: #f9f9f9;
@@ -697,43 +793,93 @@ const onUseCaseChange = (useCase: string) => {
   padding-bottom: 28px;
 }
 
-.intelligence-button {
-  position: absolute;
-  bottom: -8px;
-  right: -8px;
-  color: #666;
-  background-color: #f0f4ff;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 12px;
-  border: 1px solid #e0e8ff;
-  cursor: pointer;
-  font-size: 0.75rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+/* Add padding-bottom when feedback panel exists */
+.message-with-intelligence:has(.feedback-panel) {
+  padding-bottom: 48px; /* Increase padding to accommodate the wider input */
 }
 
-.intelligence-button:hover {
+.feedback-panel {
+  position: absolute;
+  bottom: -8px;
+  left: -8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  width: calc(100% - 16px); /* Full width minus some padding */
+}
+
+.feedback-panel:hover {
+  opacity: 1;
+}
+
+.feedback-controls {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.feedback-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.feedback-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #4f6df5;
+}
+
+.feedback-button.active {
   color: #4f6df5;
   background-color: #e5ebff;
-  border-color: #d0dcff;
-  box-shadow: 0 2px 4px rgba(79, 109, 245, 0.1);
+}
+
+.feedback-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-grow: 1;
+  animation: slideIn 0.2s ease-out;
+  max-width: none; /* Remove max-width limitation */
+}
+
+.feedback-input {
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.feedback-submit-btn {
+  flex-shrink: 0;
+  margin-right: -8px; /* Align with the message bubble */
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Update this style to remove intelligence button padding */
+.message-with-intelligence:has(.intelligence-button) {
+  padding-bottom: 28px;
 }
 
 .message-text {
   display: inline-block;
-}
-
-.intelligence-icon {
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-}
-
-.intelligence-text {
-  font-weight: 500;
 }
 
 .message-text :deep(p) {
@@ -809,5 +955,33 @@ const onUseCaseChange = (useCase: string) => {
 
 .user-message .message-bubble :deep(tr:nth-child(even)) {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Remove intelligence button styles but keep other necessary styles */
+.message-with-intelligence {
+  position: relative;
+}
+
+.message-with-intelligence .message-text {
+  display: block;
+}
+
+/* Only keep the feedback panel padding */
+.message-with-intelligence:has(.feedback-panel) {
+  padding-bottom: 48px;
+}
+
+.feedback-submitted-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.see-evaluations-btn {
+  margin-left: auto;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 </style> 

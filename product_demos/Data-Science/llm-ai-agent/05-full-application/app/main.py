@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -74,10 +74,25 @@ app.include_router(agent.router, prefix="/api/agent")
 # Then mount static files in prod mode
 if environment == 'prod':
     try:
-        target_dir = "static"
-        app.mount("/", StaticFiles(directory=target_dir, html=True), name="site")
-    except:
-        print('ERROR - static folder not found')
+        print("Mounting static files from static directory")
+        app.mount("/", StaticFiles(directory="static", html=True), name="static")
+        
+        @app.exception_handler(404)
+        async def custom_404_handler(request: Request, exc: StarletteHTTPException):
+            if request.url.path.startswith("/api"):
+                return JSONResponse(
+                    status_code=404,
+                    content={"detail": "API endpoint not found"}
+                )
+            return FileResponse("static/index.html")
+            
+    except Exception as e:
+        print(f'ERROR - Failed to mount static files: {str(e)}')
+        traceback.print_exc()
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "Databricks GenAI API"}
 
 # Global exception handler for all unhandled exceptions
 @app.exception_handler(Exception)

@@ -7,6 +7,8 @@ LAKEHOUSE_APP_NAME=${2:-"dbdemos-genai-agent-support"}
 # Frontend build and import
 (
   cd frontend
+  # Ensure clean build
+  rm -rf dist/
   npm run build
   rm -rf ../static/
   mv dist ../static
@@ -20,9 +22,8 @@ LAKEHOUSE_APP_NAME=${2:-"dbdemos-genai-agent-support"}
   mkdir -p build
   rsync -av \
     --exclude='**/__pycache__/' \
-    --exclude='**/app_local.yaml' \
+    --exclude='app_local.yaml' \
     --exclude='frontend' \
-    --exclude='**/app_local.yaml.example' \
     --exclude='**/*.pyc' \
     --exclude='.*' \
     --exclude='tests' \
@@ -30,6 +31,7 @@ LAKEHOUSE_APP_NAME=${2:-"dbdemos-genai-agent-support"}
     --exclude='test' \
     --exclude='build' \
     --exclude='local_conf*' \
+    --exclude='static' \
     ./ build/
   if [ -f app_prod.py ]; then
     cp app_prod.py build/app.py

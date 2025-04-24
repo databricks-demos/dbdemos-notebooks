@@ -16,7 +16,7 @@
 # MAGIC
 # MAGIC ## Delta Sharing Credentials
 # MAGIC
-# MAGIC When a new Recipient entity is created for a Delta Share an activation link for that recipient will be generated. That URL will lead to a website for data recipients to download a credential file that contains a long-term access token for that recipient. Following the link will be take the recipient to an activation page that looks similar to this:
+# MAGIC When a new Recipient entity is created for a Delta Share an activation link for that recipient will be generated. That URL will lead to a website for data recipients to download a credential file that contains a long-term access token for that recipient. Following the link will take the recipient to an activation page that looks similar to this:
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/kanonymity_share_activation.png" width=600>
 # MAGIC
@@ -34,9 +34,9 @@
 # MAGIC %md
 # MAGIC # Accessing the data using plain Python
 # MAGIC
-# MAGIC `delta-sharing` is available as a python package that can be installed via pip. <br>
+# MAGIC `delta-sharing` is available as a Python package that can be installed via pip. <br>
 # MAGIC
-# MAGIC This simplifies the consumer side integration; anyone who can run python can consume shared data via SharingClient object. <br>
+# MAGIC This simplifies the consumer side integration; anyone who can run Python can consume shared data via the SharingClient object. <br>
 
 # COMMAND ----------
 
@@ -104,14 +104,14 @@ flights_df.head(10)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Similarly to Pandas connect delta sharing comes with a spark connector. <br>
-# MAGIC The way to specify the location of profile file slightly differs between connectors. <br>
-# MAGIC For spark connector the profile file path needs to be HDFS compliant. <br>
+# MAGIC Similar to the Pandas connector, Delta Sharing comes with a Spark connector. <br>
+# MAGIC The way to specify the location of the profile file slightly differs between connectors. <br>
+# MAGIC For the Spark connector, the profile file path needs to be HDFS compliant. <br>
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC To load the data into spark, we can use delta sharing client.
+# MAGIC To load the data into Spark, we can use Delta Sharing client.
 
 # COMMAND ----------
 
@@ -128,7 +128,7 @@ display(spark_flights_df.
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Alternatively, we can use 'deltaSharing' fromat in spark reader. 
+# MAGIC Alternatively, we can use 'deltaSharing' format in the Spark reader. 
 
 # COMMAND ----------
 
@@ -195,17 +195,17 @@ display(spark_flights_df.
 # MAGIC %md 
 # MAGIC
 # MAGIC # Conclusion
-# MAGIC To recap, Delta Sharing is a cloud and platform agnostic solution to share your data with external consumer. 
+# MAGIC To recap, Delta Sharing is a cloud- and platform-agnostic solution to share your data with external consumers. 
 # MAGIC
 # MAGIC It's simple (pure SQL), open (can be used on any system) and scalable.
 # MAGIC
 # MAGIC All recipients can access your data, using Databricks or any other system on any Cloud.
 # MAGIC
-# MAGIC Delta Sharing enable critical use cases around Data Sharing and Data Marketplace. 
+# MAGIC Delta Sharing enables critical use cases around Data Sharing and Data Marketplace. 
 # MAGIC
-# MAGIC When combined with Databricks Unity catalog, it's the perfect too to accelerate your Datamesh deployment and improve your data governance.
+# MAGIC When combined with Databricks' Unity Catalog, it's the perfect tool to accelerate your Datamesh deployment and improve your data governance.
 # MAGIC
-# MAGIC Next: Discover how to easily [Share data within Databricks with Unity Catalog]($./04-share-data-within-databricks)
+# MAGIC Next: Discover how to easily [share data within Databricks with Unity Catalog]($./04-share-data-within-databricks)
 # MAGIC
 # MAGIC
 # MAGIC [Back to Overview]($./01-Delta-Sharing-presentation)

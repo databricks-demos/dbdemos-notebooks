@@ -69,7 +69,7 @@
 # MAGIC
 # MAGIC
 # MAGIC #### STREAMING LIVE TABLE
-# MAGIC Defining tables as `STREAMING` will guarantee that you only consume new incoming data. Without `STREAMING`, you will scan and ingest all the data available at once. See the [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-incremental-data.html) for more details
+# MAGIC Defining tables as `STREAMING` will guarantee that you only consume new incoming data. Without `STREAMING`, you will scan and ingest all the data available at once. See the [documentation](https://docs.databricks.com/aws/en/dlt/flows) for more details
 
 # COMMAND ----------
 

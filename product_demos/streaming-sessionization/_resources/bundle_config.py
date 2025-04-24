@@ -123,6 +123,6 @@
     },
     "num_workers": 0,
     "single_user_name": "{{CURRENT_USER}}",
-    "data_security_mode": "SINGLE_USER",    
+    "data_security_mode": "SINGLE_USER"   
   }
 }

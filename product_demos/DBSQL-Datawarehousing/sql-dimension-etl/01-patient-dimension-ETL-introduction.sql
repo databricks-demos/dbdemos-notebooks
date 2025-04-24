@@ -1,10 +1,8 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Running SQL-based ETL on Databricks - Datawarehousing Migration
+-- MAGIC # Running SQL-based ETL on Databricks - Data Warehousing Migration
 -- MAGIC
--- MAGIC TODO @KD: add a small introduction on Databricks being State of the art DW, we can add an image on the right side 
--- MAGIC
--- MAGIC
+-- MAGIC ![](https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/Databricks%20SQL%20Marketecture.png)
 -- MAGIC
 -- MAGIC ## Building a Star Schema using Databricks SQL
 -- MAGIC
@@ -21,7 +19,7 @@
 -- MAGIC * Data validation
 -- MAGIC * SCD2 dimention
 -- MAGIC
--- MAGIC <br>
+-- MAGIC
 -- MAGIC Note: The ETL assumes that the source data is extracted to cloud storage as incremental CSV files.
 -- MAGIC
 -- MAGIC ## A note on DLT

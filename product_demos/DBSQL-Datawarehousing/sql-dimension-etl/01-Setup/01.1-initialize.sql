@@ -2,7 +2,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Parametrize your SQL Script
 -- MAGIC
--- MAGIC In this initial notebook, we're defining our table and schema as parameter.
+-- MAGIC In this initial notebook, we're defining our table and schema as global variables.
 -- MAGIC This makes it easy to run your ETL pipeline on different catalogs (for e.g., dev/test)
 -- MAGIC <br><br>
 -- MAGIC Specify the following:
@@ -11,12 +11,6 @@
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC *NOTE: DBDemos will create the catalog and schema for you if they do not exist. Ensure that the user running the workflow has permissions to create catalog and schema.*
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC CREATE WIDGET TEXT catalog_name DEFAULT "main";
--- MAGIC CREATE WIDGET TEXT schema_name DEFAULT "dbdemos_sql_etl";
 
 -- COMMAND ----------
 
@@ -74,10 +68,6 @@ SELECT staging_path;
 DECLARE OR REPLACE VARIABLE full_schema_name STRING
   = catalog_name || '.' || schema_name;
 
--- Full volume name
-DECLARE OR REPLACE VARIABLE full_volume_name STRING
-  = full_schema_name || "." || volume_name;
-
 -- COMMAND ----------
 
 -- Three-level name of ETL Log Table
@@ -87,7 +77,3 @@ DECLARE OR REPLACE VARIABLE run_log_table STRING
 -- Three-level name of Code Master Table
 DECLARE OR REPLACE VARIABLE code_table STRING
   = full_schema_name || '.' || 'code_m';
-
--- COMMAND ----------
-
-SELECT run_log_table, code_table;

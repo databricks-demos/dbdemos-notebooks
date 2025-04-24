@@ -17,7 +17,7 @@ EXECUTE IMMEDIATE sqlstr;
 
 -- COMMAND ----------
 
-EXECUTE IMMEDIATE 'create schema if not exists IDENTIFIER(?)' USING full_schema_name;
+EXECUTE IMMEDIATE 'CREATE SCHEMA IF NOT EXISTS IDENTIFIER(?)' USING full_schema_name;
 
 -- COMMAND ----------
 
@@ -36,4 +36,5 @@ EXECUTE IMMEDIATE sqlstr;
 
 -- COMMAND ----------
 
+DECLARE OR REPLACE full_volume_name = full_schema_name || '.' || volume_name;
 EXECUTE IMMEDIATE "CREATE VOLUME IF NOT EXISTS IDENTIFIER(?)" USING full_volume_name;

@@ -16,6 +16,13 @@
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC Staging table name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; => **patient_stg**<br>
+-- MAGIC Integration table name => **patient_int**<br>
+-- MAGIC Dimension table name => **patient_dim**<br>
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC **The code incorporates the following design elements:**
 -- MAGIC - Incremental load
 -- MAGIC - Versioning of data (SCD Type 2)
@@ -48,6 +55,7 @@
 
 -- COMMAND ----------
 
+-- to capture load start time for each table
 DECLARE OR REPLACE VARIABLE table_load_start_time TIMESTAMP;
 
 -- COMMAND ----------
@@ -79,7 +87,7 @@ USE IDENTIFIER(full_schema_name);
 
 -- MAGIC %md
 -- MAGIC ##Set Variables for Incremental Load
--- MAGIC For Integration and Dimension tables.
+-- MAGIC Determine the last load date for Integration and Dimension tables.
 -- MAGIC
 
 -- COMMAND ----------
@@ -106,6 +114,8 @@ SET VARIABLE dim_last_load_date = COALESCE((SELECT MAX(update_dt) FROM patient_d
 
 -- COMMAND ----------
 
+-- Record load start time for staging table
+-- This is used to populate the ETL Run Table
 SET VARIABLE table_load_start_time = CURRENT_TIMESTAMP();
 
 -- COMMAND ----------
@@ -184,6 +194,8 @@ SELECT session.data_source, session.full_schema_name || '.' || 'patient_stg', ta
 
 -- COMMAND ----------
 
+-- Record load start time for integration table
+-- This is used to populate the ETL Run Table
 SET VARIABLE table_load_start_time = CURRENT_TIMESTAMP();
 
 -- COMMAND ----------
@@ -234,7 +246,7 @@ WHERE
 -- MAGIC ## Insert data
 -- MAGIC Insert data into the integration table using transformation view.
 -- MAGIC
--- MAGIC Note: The design is to retain all versions of data, hence Insert.  Else Merge.
+-- MAGIC Note: The design is to retain all versions of data, hence Insert.  Else use Merge.
 
 -- COMMAND ----------
 
@@ -260,6 +272,8 @@ SELECT session.data_source, session.full_schema_name || '.' || 'patient_int', ta
 
 -- COMMAND ----------
 
+-- Record load start time for dimension table
+-- This is used to populate the ETL Run Table
 SET VARIABLE table_load_start_time = CURRENT_TIMESTAMP();
 
 -- COMMAND ----------

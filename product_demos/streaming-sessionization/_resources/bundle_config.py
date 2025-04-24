@@ -123,9 +123,6 @@
     },
     "num_workers": 0,
     "single_user_name": "{{CURRENT_USER}}",
-    "data_security_mode": "SINGLE_USER",
-    "aws_attributes": {
-      "instance_profile_arn": "arn:aws:iam::997819012307:instance-profile/one-env-databricks-access"
-    }    
+    "data_security_mode": "SINGLE_USER",    
   }
 }

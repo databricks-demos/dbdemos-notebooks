@@ -21,7 +21,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                                     Stage/version  
 #                                                                                   Model name               |        
 #                                                                                       |                    |        
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "string", env_manager='virtualenv')
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "long", env_manager='virtualenv')
 spark.udf.register("predict_churn", predict_churn_udf)
 
 # COMMAND ----------

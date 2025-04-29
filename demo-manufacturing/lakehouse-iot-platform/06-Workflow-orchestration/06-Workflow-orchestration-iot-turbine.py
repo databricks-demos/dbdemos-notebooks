@@ -90,6 +90,6 @@
 # MAGIC %md
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Not only Datatabricks Data Intelligence Platform let you ingest, analyze and infer churn, it also provides a best-in-class orchestrator to offer your business fresh insight making sure everything works as expected!
+# MAGIC Not only does the Datatabricks Data Intelligence Platform let you ingest, analyze and infer churn, it also provides a best-in-class orchestrator to offer your business fresh insight making sure everything works as expected!
 # MAGIC
 # MAGIC [Go back to introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

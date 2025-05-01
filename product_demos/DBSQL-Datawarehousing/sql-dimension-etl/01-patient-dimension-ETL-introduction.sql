@@ -1,11 +1,17 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
 -- MAGIC # Running SQL-based ETL on Databricks - Data Warehousing Migration
+-- MAGIC <br>
 -- MAGIC
--- MAGIC ![](https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/Databricks%20SQL%20Marketecture.png)
+-- MAGIC <div style="float: right; width: 100%;">
+-- MAGIC
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/Databricks%20SQL%20Marketecture.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>
 -- MAGIC
 -- MAGIC ## Building a Star Schema using Databricks SQL
 -- MAGIC
+-- MAGIC <div>
 -- MAGIC The demo illustrate how to create a SQL-first data architecture and data workflow to a classic Star Schema.
 -- MAGIC
 -- MAGIC You'll discover how to run classic SQL / DBA workflow, making it ideal to migrate your existing Datawarehouse scripts to Databricks, with minimum effort: 
@@ -26,6 +32,9 @@
 -- MAGIC With Lakeflow DLT Databricks, provides a higher level of abstraction that we recommend for new pipelines, as it simplify the operations.  We're looking to add a DLT version of this demo to outline the difference in the future.
 -- MAGIC
 -- MAGIC For more details on DLT, you can install `dbdemos.install('dbt-loans)`.
+-- MAGIC
+-- MAGIC </div>
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -35,17 +44,16 @@
 -- MAGIC #### <span style="color:darkblue">Integrating patient data to cater to analytics applications such as Patient 360
 -- MAGIC <br>
 -- MAGIC
--- MAGIC <div style="border: 0px solid grey; padding: 1px; display: inline-block;">
+-- MAGIC <div style="float: right; width: 100%;">
 -- MAGIC
--- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/cba7ffa9fe38534e4922649313eacd52785f87eb/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true)
--- MAGIC
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true" style="float: right" width="100%">
 -- MAGIC
 -- MAGIC </div>
 -- MAGIC
 
 -- COMMAND ----------
 
--- MAGIC %md
+-- MAGIC %md-sandbox
 -- MAGIC ## What We Will Build
 -- MAGIC
 -- MAGIC ### This end-to-end demo builds a Workflows Job that will perform the following tasks:
@@ -92,10 +100,13 @@
 
 -- MAGIC %md-sandbox
 -- MAGIC # Table Definitions
+-- MAGIC <br>
 -- MAGIC
--- MAGIC #### <span style="color:darkblue">Patient tables created in the Data Warehouse
+-- MAGIC <div style="float: right; width: 100%;">
 -- MAGIC
--- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/patient_tables_dw.png?raw=true)
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/patient_tables_dw.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>
 -- MAGIC
 -- MAGIC You can view the tables within the catalog.schema that is specified in notebook 00-Setup/Initialize.
 
@@ -107,13 +118,11 @@
 -- MAGIC #### <span style="color:darkblue">Flow of data from the Staging Area for the source data files to the Patient Dimension table
 -- MAGIC <br>
 -- MAGIC
--- MAGIC <div style="border: 1px solid grey; padding: 1px; display: inline-block;">
+-- MAGIC <div style="float: right; width: 100%;">
 -- MAGIC
--- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/cba7ffa9fe38534e4922649313eacd52785f87eb/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true)
--- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/cba7ffa9fe38534e4922649313eacd52785f87eb/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true" style="float: right" width="100%">
 -- MAGIC
 -- MAGIC </div>
--- MAGIC
 
 -- COMMAND ----------
 
@@ -121,5 +130,9 @@
 -- MAGIC # Sample Source Data
 -- MAGIC
 -- MAGIC #### <span style="color:darkblue">Patient data as contained in the source files
+-- MAGIC <br>
+-- MAGIC <div style="float: right; width: 100%;">
 -- MAGIC
--- MAGIC ![](https://github.com/databricks-demos/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/patient_data.png?raw=true)
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/patient_data.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>

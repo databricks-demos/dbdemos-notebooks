@@ -4,15 +4,13 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Creating Code Table
--- MAGIC
--- MAGIC Let's start by creating our initial tables.
+-- MAGIC # Create and Populate Master Data for Coded Attributes
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ##Master Data
--- MAGIC Standardized codes used for coded attributes
+-- MAGIC ## Create Code Table
+-- MAGIC Create the table to store standardized descriptions for coded attributes.
 
 -- COMMAND ----------
 
@@ -29,6 +27,11 @@ CREATE TABLE IDENTIFIER(code_table) (
   m_type STRING COMMENT 'attribute type utilizing code'
 )
 COMMENT 'master table for coded attributes';
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Populate Sample Data
 
 -- COMMAND ----------
 

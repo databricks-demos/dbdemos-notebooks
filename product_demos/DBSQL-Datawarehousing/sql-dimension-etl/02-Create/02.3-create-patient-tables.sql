@@ -9,11 +9,11 @@ DECLARE OR REPLACE VARIABLE sqlstr STRING;
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC # Create Tables
--- MAGIC Create the staging, integration, and dimension tables for patient.<br>
--- MAGIC The patient dimension is part of the clinical data warehouse (star schema).
+-- MAGIC # Create Tables for Patient
+-- MAGIC Create the staging, integration, and dimension tables for patient entity.<br>
+-- MAGIC The patient dimension is part of the clinical data warehouse (star schema), similar to a customer dimension in a Sales Data Warehouse.
 -- MAGIC
--- MAGIC <u>NOTE:</u> By default, the tables are created in the **catalog main**.  To change this, or specify an existing catalog / schema, please see [01.1-initialize notebook]($../01-Setup/01.1-initialize) for more context.
+-- MAGIC <u>NOTE:</u> By default, the tables are created in the **catalog main** and **schema dbdemos_sql_etl**.  To change this, or specify an existing catalog / schema, please see [01.1-initialize notebook]($../01-Setup/01.1-initialize) for more context.
 
 -- COMMAND ----------
 
@@ -23,7 +23,7 @@ USE IDENTIFIER(full_schema_name);
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Create Staging Table
+-- MAGIC ## Create Staging Table for Patient
 -- MAGIC The schema for the staging table will be derived from the source data file(s)
 
 -- COMMAND ----------
@@ -36,15 +36,15 @@ COMMENT 'Patient staging table ingesting initial and incremental master data fro
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Create Integration Table
+-- MAGIC ## Create Integration Table for Patient
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Potential clustering columns - (data_source, patient_src_id) <br>
+-- MAGIC Potential clustering columns include (data_source, patient_src_id) <br>
 -- MAGIC Also, column src_changed_on_dt will be naturally ordered (ingestion-time clustering) AND data_source will typically be the same for all records in a source file.
 -- MAGIC
--- MAGIC **Note:** Predictive Optimization intelligently optimizes your table data layouts for faster queries and reduced storage costs.
+-- MAGIC **Note: Predictive Optimization** intelligently optimizes your table data layouts for faster queries and reduced storage costs.
 -- MAGIC
 -- MAGIC
 -- MAGIC
@@ -76,17 +76,13 @@ TBLPROPERTIES (delta.enableChangeDataFeed = true);
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Create Dimension
+-- MAGIC ## Create Dimension Table for Patient
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Potential clustering columns - attributes used for filtering in end-user queries.  For e.g., Last Name, Gender Code.
--- MAGIC
--- MAGIC Additionally, for large dimensions, using the Source ID (patient_src_id) as a cluster key may help with ETL performance.
--- MAGIC
 -- MAGIC **Note:** <br>
--- MAGIC For the dimension table, take advantage of Predictive Optimization and Auto clustering.
+-- MAGIC For the dimension table, take advantage of **Predictive Optimization** and **Auto clustering**.
 -- MAGIC
 -- MAGIC Auto Clustering can be used to automatically cluster your tables based on your evolving workload!
 -- MAGIC <br>
@@ -130,3 +126,14 @@ SET VARIABLE sqlstr = 'ALTER TABLE patient_dim ADD CONSTRAINT
   c_d_int_source_fk FOREIGN KEY (patient_src_id, data_source) REFERENCES ' || full_schema_name || '.' || 'patient_int(patient_src_id, data_source) NOT ENFORCED RELY';
 
 EXECUTE IMMEDIATE sqlstr;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### What's next after you finish this notebook?
+-- MAGIC
+-- MAGIC This notebook highlights the design of dimensional entities in your Data Warehouse while following all best practices.
+-- MAGIC
+-- MAGIC You can carry this forward to all your Dimension and Fact tables.
+-- MAGIC
+-- MAGIC See Also: [Star Schema Data Modeling Best Practices on Databricks SQL](https://medium.com/dbsql-sme-engineering/star-schema-data-modeling-best-practices-on-databricks-sql-8fe4bd0f6902)

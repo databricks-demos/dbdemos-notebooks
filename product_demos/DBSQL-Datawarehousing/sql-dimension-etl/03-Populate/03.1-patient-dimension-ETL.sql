@@ -404,3 +404,16 @@ WITH op_metrics AS (
   SELECT COALESCE(operationMetrics.numTargetRowsInserted, operationMetrics.numOutputRows) AS num_inserted, operationMetrics.numTargetRowsUpdated AS num_updated FROM (DESCRIBE HISTORY patient_dim) WHERE operation IN ('MERGE', 'WRITE', 'COPY INTO') LIMIT 1
 )
 SELECT session.data_source, session.full_schema_name || '.' || 'patient_dim', table_load_start_time, CURRENT_TIMESTAMP(), num_inserted, num_updated, session.process_id FROM op_metrics;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### What's next after you finish this notebook?
+-- MAGIC
+-- MAGIC This notebook highlights the end-to-end SQL code for staging, integrating, and populating a dimensional entity. The same pattern can be followed for all SCD Type 2 dimensions in your Star Schema.
+-- MAGIC
+-- MAGIC SCD Type 1 dimensions will follow a simpler pattern when merging into the dimension table.
+-- MAGIC
+-- MAGIC Complete the ETL pipeline, populating your Fact Tables by looking up the dimension tables (and for SCD Type 2 dimensions be sure to factor in the effective dates in relation to the business process event time).
+-- MAGIC
+-- MAGIC The presentation layer is now ready for consumption using Databricks AI/BI or other enterprise BI tool.

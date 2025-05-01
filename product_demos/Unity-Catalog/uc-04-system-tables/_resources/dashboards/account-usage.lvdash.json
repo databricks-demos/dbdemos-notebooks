@@ -742,10 +742,253 @@
         }
       }
     } ]
+  }, {
+    "name" : "9e57f5f1",
+    "displayName" : "commit_usage_text_summary",
+    "query" : "with\n-- parse workspaces json\nworkspace as (select distinct(workspace_id) as workspace_id, null as workspace_name from system.billing.usage ),\n-- apply date filter\nusage_with_ws_filtered_by_date as (\n  select\n    case\n      when workspace_name is null then concat('id: ', u.workspace_id)\n      else concat(workspace_name, ' (id: ', u.workspace_id, ')')\n    end as workspace,\n    u.*\n  from system.billing.usage as u\n  left join workspace\n    on u.workspace_id = workspace.workspace_id\n  where u.usage_date between :param_contract_start_date and :param_contract_end_date\n),\n-- apply workspace filter\nusage_filtered as (\n  select\n    *\n  from usage_with_ws_filtered_by_date\n  where if(:param_workspace='<ALL WORKSPACES>', true, workspace = :param_workspace) -- all workspaces under account, or single workspace\n),\n-- calc list priced usage in USD\nprices as (\n  select coalesce(price_end_time, date_add(current_date, 1)) as coalesced_price_end_time, *\n  from system.billing.list_prices\n  where currency_code = 'USD'\n),\nlist_priced_usd as (\n  select\n    coalesce(u.usage_quantity * p.pricing.default, 0) as usage_usd,\n    date_trunc('QUARTER', usage_date) as usage_quarter,\n    date_trunc('MONTH', usage_date) as usage_month,\n    date_trunc('WEEK', usage_date) as usage_week,\n    u.*\n  from usage_filtered as u\n  left join prices as p\n    on u.sku_name=p.sku_name\n    and u.usage_unit=p.usage_unit\n    and (u.usage_end_time between p.price_start_time and p.coalesced_price_end_time)\n),\n-- calc total usage and commit in home currency with enterprise discount in defined period\nusage_commit_total as (\n  select\n    (sum(usage_usd) * (1 - (:param_enterprise_discount / 100))) * :param_usd_conversion_rate as usage_in_period,\n    :param_commit * :param_usd_conversion_rate as commit_in_period\n  from list_priced_usd\n)\n-- query\nselect\n  concat(\n    'Total usage (',\n    :param_currency_name,\n    '): $ ',\n    case\n        when usage_in_period >= 1e9 then concat(format_number(usage_in_period / 1e9, 2), 'B')\n        when usage_in_period >= 1e6 then concat(format_number(usage_in_period / 1e6, 2), 'M')\n        when usage_in_period >= 1e3 then concat(format_number(usage_in_period / 1e3, 2), 'K')\n        else format_number(usage_in_period, 2)\n    end\n  ) as total_usage_usd,\n    concat(\n    'Total commit (',\n    :param_currency_name,\n    '): $ ',\n    case\n        when commit_in_period >= 1e9 then concat(format_number(commit_in_period / 1e9, 2), 'B')\n        when commit_in_period >= 1e6 then concat(format_number(commit_in_period / 1e6, 2), 'M')\n        when commit_in_period >= 1e3 then concat(format_number(commit_in_period / 1e3, 2), 'K')\n        else format_number(commit_in_period, 2)\n    end\n  ) as total_dbu_commit,\n    concat(\n    'Commit Remaining (%): ',\n    format_number((1 - (usage_in_period / commit_in_period)) * 100, 1)\n  ) as commit_remaining\nfrom usage_commit_total\n",
+    "parameters" : [ {
+      "displayName" : "param_workspace",
+      "keyword" : "param_workspace",
+      "dataType" : "STRING",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "STRING",
+          "values" : [ {
+            "value" : "<ALL WORKSPACES>"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_commit",
+      "keyword" : "param_commit",
+      "dataType" : "INTEGER",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "INTEGER",
+          "values" : [ {
+            "value" : "4000000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_contract_start_date",
+      "keyword" : "param_contract_start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "now-12M/M"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_contract_end_date",
+      "keyword" : "param_contract_end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2025-05-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_enterprise_discount",
+      "keyword" : "param_enterprise_discount",
+      "dataType" : "INTEGER",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "INTEGER",
+          "values" : [ {
+            "value" : "0"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_usd_conversion_rate",
+      "keyword" : "param_usd_conversion_rate",
+      "dataType" : "DECIMAL",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DECIMAL",
+          "values" : [ {
+            "value" : "1"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_currency_name",
+      "keyword" : "param_currency_name",
+      "dataType" : "STRING",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "STRING",
+          "values" : [ {
+            "value" : "USD"
+          } ]
+        }
+      }
+    } ]
+  }, {
+    "name" : "6fe3d4f5",
+    "displayName" : "commit_usage_total",
+    "query" : "with\n-- parse workspaces json\nworkspace as (select distinct(workspace_id) as workspace_id, null as workspace_name from system.billing.usage ),\n-- apply date filter\nusage_with_ws_filtered_by_date as (\n  select\n    case\n      when workspace_name is null then concat('id: ', u.workspace_id)\n      else concat(workspace_name, ' (id: ', u.workspace_id, ')')\n    end as workspace,\n    u.*\n  from system.billing.usage as u\n  left join workspace\n    on u.workspace_id = workspace.workspace_id\n  where u.usage_date between :param_contract_start_date and :param_contract_end_date\n),\n-- apply workspace filter\nusage_filtered as (\n  select\n    *\n  from usage_with_ws_filtered_by_date\n  where if(:param_workspace='<ALL WORKSPACES>', true, workspace = :param_workspace) -- all workspaces under account, or single workspace\n),\n-- calc list priced usage in USD\nprices as (\n  select coalesce(price_end_time, date_add(current_date, 1)) as coalesced_price_end_time, *\n  from system.billing.list_prices\n  where currency_code = 'USD'\n),\nlist_priced_usd as (\n  select\n    coalesce(u.usage_quantity * p.pricing.default, 0) as usage_usd,\n    date_trunc('QUARTER', usage_date) as usage_quarter,\n    date_trunc('MONTH', usage_date) as usage_month,\n    date_trunc('WEEK', usage_date) as usage_week,\n    u.*\n  from usage_filtered as u\n  left join prices as p\n    on u.sku_name=p.sku_name\n    and u.usage_unit=p.usage_unit\n    and (u.usage_end_time between p.price_start_time and p.coalesced_price_end_time)\n),\n-- calc total usage and commit in home currency with enterprise discount in defined period\nusage_commit_total as (\n  select\n    (sum(usage_usd) * (1 - (:param_enterprise_discount / 100))) * :param_usd_conversion_rate as usage_in_period,\n    :param_commit * :param_usd_conversion_rate as commit_in_period\n  from list_priced_usd\n)\n-- query\nselect\n  round(usage_in_period,0) as usage_total,\n  'Usage' as label\nfrom usage_commit_total\nunion all\nselect\n  round(commit_in_period) as commit_total,\n  'Commit' as label\nfrom usage_commit_total",
+    "parameters" : [ {
+      "displayName" : "param_contract_start_date",
+      "keyword" : "param_contract_start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "now-12M/M"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_contract_end_date",
+      "keyword" : "param_contract_end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2025-05-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_workspace",
+      "keyword" : "param_workspace",
+      "dataType" : "STRING",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "STRING",
+          "values" : [ {
+            "value" : "<ALL WORKSPACES>"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_enterprise_discount",
+      "keyword" : "param_enterprise_discount",
+      "dataType" : "INTEGER",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "INTEGER",
+          "values" : [ {
+            "value" : "0"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_usd_conversion_rate",
+      "keyword" : "param_usd_conversion_rate",
+      "dataType" : "DECIMAL",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DECIMAL",
+          "values" : [ {
+            "value" : "1"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_commit",
+      "keyword" : "param_commit",
+      "dataType" : "INTEGER",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "INTEGER",
+          "values" : [ {
+            "value" : "4000000"
+          } ]
+        }
+      }
+    } ]
+  }, {
+    "name" : "768e6a56",
+    "displayName" : "commit_usage_overview",
+    "query" : "with\n-- parse workspaces json\nworkspace as (select distinct(workspace_id) as workspace_id, null as workspace_name from system.billing.usage ),\n-- apply date filter\nusage_with_ws_filtered_by_date as (\n  select\n    case\n      when workspace_name is null then concat('id: ', u.workspace_id)\n      else concat(workspace_name, ' (id: ', u.workspace_id, ')')\n    end as workspace,\n    u.*\n  from system.billing.usage as u\n  left join workspace\n    on u.workspace_id = workspace.workspace_id\n  where u.usage_date between :param_contract_start_date and :param_contract_end_date\n),\n-- apply workspace filter\nusage_filtered as (\n  select\n    *\n  from usage_with_ws_filtered_by_date\n  where if(:param_workspace='<ALL WORKSPACES>', true, workspace = :param_workspace) -- all workspaces under account, or single workspace\n),\n-- calc list priced usage in USD\nprices as (\n  select coalesce(price_end_time, date_add(current_date, 1)) as coalesced_price_end_time, *\n  from system.billing.list_prices\n  where currency_code = 'USD'\n),\nlist_priced_usd as (\n  select\n    coalesce(u.usage_quantity * p.pricing.default, 0) as usage_usd,\n    date_trunc('MONTH', usage_date) as usage_month,\n    u.*\n  from usage_filtered as u\n  left join prices as p\n    on u.sku_name=p.sku_name\n    and u.usage_unit=p.usage_unit\n    and (u.usage_end_time between p.price_start_time and p.coalesced_price_end_time)\n)\n-- query: running total\nselect\n  usage_month as month,\n  sum(usage_usd * (1 - :param_enterprise_discount / 100)) * :param_usd_conversion_rate as amount_this_month,\n  sum(sum(usage_usd * (1 - :param_enterprise_discount / 100)) * :param_usd_conversion_rate) over (\n    order by usage_month\n    rows between unbounded preceding and current row\n  ) as running_total_dbu,\n  :param_total_commit as total_commit\nfrom list_priced_usd\ngroup by usage_month\norder by usage_month",
+    "parameters" : [ {
+      "displayName" : "param_enterprise_discount",
+      "keyword" : "param_enterprise_discount",
+      "dataType" : "INTEGER",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "INTEGER",
+          "values" : [ {
+            "value" : "0"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_usd_conversion_rate",
+      "keyword" : "param_usd_conversion_rate",
+      "dataType" : "DECIMAL",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DECIMAL",
+          "values" : [ {
+            "value" : "1"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_total_commit",
+      "keyword" : "param_total_commit",
+      "dataType" : "INTEGER",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "INTEGER",
+          "values" : [ {
+            "value" : "4000000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_contract_start_date",
+      "keyword" : "param_contract_start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "now-12M/M"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_contract_end_date",
+      "keyword" : "param_contract_end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2025-05-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "param_workspace",
+      "keyword" : "param_workspace",
+      "dataType" : "STRING",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "STRING",
+          "values" : [ {
+            "value" : "<ALL WORKSPACES>"
+          } ]
+        }
+      }
+    } ]
   } ],
   "pages" : [ {
     "name" : "373cd3ff",
-    "displayName" : "New Page",
+    "displayName" : "Usage Overview",
     "layout" : [ {
       "widget" : {
         "name" : "8a50f0fc",
@@ -3148,6 +3391,627 @@
         "y" : 64,
         "width" : 6,
         "height" : 3
+      }
+    } ]
+  }, {
+    "name" : "ef6fa67e",
+    "displayName" : "Commit Tracking",
+    "layout" : [ {
+      "widget" : {
+        "name" : "7e96dc37",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "fields" : [ {
+              "name" : "total_usage_usd",
+              "expression" : "`total_usage_usd`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "total_usage_usd",
+              "displayName" : "total_usage_usd"
+            }
+          },
+          "frame" : {
+            "showTitle" : false
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 7,
+        "width" : 2,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "103209b0",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_contract_start_date",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_contract_start_date",
+              "keyword" : "param_contract_start_date"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_contract_start_date",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "parameters" : [ {
+              "name" : "param_contract_start_date",
+              "keyword" : "param_contract_start_date"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_contract_start_date",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "parameters" : [ {
+              "name" : "param_contract_start_date",
+              "keyword" : "param_contract_start_date"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-date-picker",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "param_contract_start_date",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_contract_start_date"
+            }, {
+              "parameterName" : "param_contract_start_date",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_contract_start_date"
+            }, {
+              "parameterName" : "param_contract_start_date",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_contract_start_date"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Contract Start Date",
+            "showDescription" : false
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 4,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "54778295",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_contract_end_date",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_contract_end_date",
+              "keyword" : "param_contract_end_date"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_contract_end_date",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "parameters" : [ {
+              "name" : "param_contract_end_date",
+              "keyword" : "param_contract_end_date"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_contract_end_date",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "parameters" : [ {
+              "name" : "param_contract_end_date",
+              "keyword" : "param_contract_end_date"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-date-picker",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "param_contract_end_date",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_contract_end_date"
+            }, {
+              "parameterName" : "param_contract_end_date",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_contract_end_date"
+            }, {
+              "parameterName" : "param_contract_end_date",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_contract_end_date"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Contract End Date"
+          }
+        }
+      },
+      "position" : {
+        "x" : 3,
+        "y" : 4,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "68085445",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_currency_name",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_currency_name",
+              "keyword" : "param_currency_name"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-single-select",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "param_currency_name",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_currency_name"
+            } ]
+          },
+          "selection" : {
+            "defaultSelection" : {
+              "values" : {
+                "dataType" : "STRING",
+                "values" : [ {
+                  "value" : "USD"
+                } ]
+              }
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Currency"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 5,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "84503da4",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_usd_conversion_rate",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_usd_conversion_rate",
+              "keyword" : "param_usd_conversion_rate"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_usd_conversion_rate",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "parameters" : [ {
+              "name" : "param_usd_conversion_rate",
+              "keyword" : "param_usd_conversion_rate"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_usd_conversion_rate",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "parameters" : [ {
+              "name" : "param_usd_conversion_rate",
+              "keyword" : "param_usd_conversion_rate"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-single-select",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "param_usd_conversion_rate",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_usd_conversion_rate"
+            }, {
+              "parameterName" : "param_usd_conversion_rate",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_usd_conversion_rate"
+            }, {
+              "parameterName" : "param_usd_conversion_rate",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_usd_conversion_rate"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "USD Conversion Rate"
+          }
+        }
+      },
+      "position" : {
+        "x" : 3,
+        "y" : 5,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "f69f075f",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_enterprise_discount",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_enterprise_discount",
+              "keyword" : "param_enterprise_discount"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_enterprise_discount",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "parameters" : [ {
+              "name" : "param_enterprise_discount",
+              "keyword" : "param_enterprise_discount"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_enterprise_discount",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "parameters" : [ {
+              "name" : "param_enterprise_discount",
+              "keyword" : "param_enterprise_discount"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-single-select",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "param_enterprise_discount",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_enterprise_discount"
+            }, {
+              "parameterName" : "param_enterprise_discount",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_enterprise_discount"
+            }, {
+              "parameterName" : "param_enterprise_discount",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_enterprise_discount"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Enterprise Discount (%)"
+          },
+          "selection" : {
+            "defaultSelection" : {
+              "values" : {
+                "dataType" : "INTEGER",
+                "values" : [ {
+                  "value" : "0"
+                } ]
+              }
+            }
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 6,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "09225a73",
+        "queries" : [ {
+          "name" : "dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a256551d6fbf1b6f136cbfcb01_workspace",
+          "query" : {
+            "datasetName" : "784f005c",
+            "fields" : [ {
+              "name" : "workspace",
+              "expression" : "`workspace`"
+            }, {
+              "name" : "workspace_associativity",
+              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_workspace",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_workspace",
+              "keyword" : "param_workspace"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_workspace",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "parameters" : [ {
+              "name" : "param_workspace",
+              "keyword" : "param_workspace"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_workspace",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "parameters" : [ {
+              "name" : "param_workspace",
+              "keyword" : "param_workspace"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-single-select",
+          "encodings" : {
+            "fields" : [ {
+              "fieldName" : "workspace",
+              "displayName" : "workspace",
+              "queryName" : "dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a256551d6fbf1b6f136cbfcb01_workspace"
+            }, {
+              "parameterName" : "param_workspace",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_workspace"
+            }, {
+              "parameterName" : "param_workspace",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_workspace"
+            }, {
+              "parameterName" : "param_workspace",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_workspace"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Workspace"
+          },
+          "disallowAll" : false
+        }
+      },
+      "position" : {
+        "x" : 3,
+        "y" : 6,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "6387238d",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "fields" : [ {
+              "name" : "total_dbu_commit",
+              "expression" : "`total_dbu_commit`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "total_dbu_commit",
+              "displayName" : "total_dbu_commit"
+            }
+          },
+          "frame" : {
+            "showTitle" : false
+          }
+        }
+      },
+      "position" : {
+        "x" : 2,
+        "y" : 7,
+        "width" : 2,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "c49b7ea2",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "fields" : [ {
+              "name" : "commit_remaining",
+              "expression" : "`commit_remaining`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "commit_remaining",
+              "displayName" : "commit_remaining"
+            }
+          },
+          "frame" : {
+            "showTitle" : false
+          }
+        }
+      },
+      "position" : {
+        "x" : 4,
+        "y" : 7,
+        "width" : 2,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "e6a70f0c",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "fields" : [ {
+              "name" : "sum(usage_total)",
+              "expression" : "SUM(`usage_total`)"
+            }, {
+              "name" : "label",
+              "expression" : "`label`"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "bar",
+          "encodings" : {
+            "x" : {
+              "fieldName" : "sum(usage_total)",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "$DBU"
+            },
+            "y" : {
+              "fieldName" : "label",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "axis" : {
+                "hideTitle" : true
+              },
+              "displayName" : "label"
+            },
+            "label" : {
+              "show" : true
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Total Usage and Commit Over Period"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 8,
+        "width" : 6,
+        "height" : 4
+      }
+    }, {
+      "widget" : {
+        "name" : "83eabbe4",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "fields" : [ {
+              "name" : "monthly(month)",
+              "expression" : "DATE_TRUNC(\"MONTH\", `month`)"
+            }, {
+              "name" : "sum(amount_this_month)",
+              "expression" : "SUM(`amount_this_month`)"
+            }, {
+              "name" : "sum(running_total_dbu)",
+              "expression" : "SUM(`running_total_dbu`)"
+            }, {
+              "name" : "sum(total_commit)",
+              "expression" : "SUM(`total_commit`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 1,
+          "widgetType" : "combo",
+          "encodings" : {
+            "x" : {
+              "fieldName" : "monthly(month)",
+              "scale" : {
+                "type" : "temporal"
+              },
+              "displayName" : "Month"
+            },
+            "y" : {
+              "primary" : {
+                "fields" : [ {
+                  "fieldName" : "sum(amount_this_month)",
+                  "displayName" : "Monthly Usage"
+                } ]
+              },
+              "secondary" : {
+                "fields" : [ {
+                  "fieldName" : "sum(running_total_dbu)",
+                  "displayName" : "Total Usage"
+                }, {
+                  "fieldName" : "sum(total_commit)",
+                  "displayName" : "Total Commit"
+                } ]
+              },
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "axis" : {
+                "hideTitle" : false,
+                "title" : "$DBU"
+              }
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Monthly and Total Usage Over Period "
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 12,
+        "width" : 6,
+        "height" : 7
+      }
+    }, {
+      "widget" : {
+        "name" : "f74ce38e",
+        "textbox_spec" : "### Overview\nThis dashboard takes contract information as inputs and shows contract commit against in-contract usage.\n\n**If you have not pre-purchased DBUs ignore this tab**\n\n##### Notes\n- Leave USD conversion rate as 1 unless currency is set to something other than USD\n- Enterprise discount reflects a bulk contract discount, not a feature level discount\n\n"
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 0,
+        "width" : 6,
+        "height" : 4
       }
     } ]
   } ]

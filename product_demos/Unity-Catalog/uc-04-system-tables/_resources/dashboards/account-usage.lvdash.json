@@ -3426,7 +3426,7 @@
       },
       "position" : {
         "x" : 0,
-        "y" : 7,
+        "y" : 9,
         "width" : 2,
         "height" : 1
       }
@@ -3544,6 +3544,16 @@
           "frame" : {
             "showTitle" : true,
             "title" : "Contract End Date"
+          },
+          "selection" : {
+            "defaultSelection" : {
+              "values" : {
+                "dataType" : "DATE",
+                "values" : [ {
+                  "value" : "now/d"
+                } ]
+              }
+            }
           }
         }
       },
@@ -3594,8 +3604,8 @@
       },
       "position" : {
         "x" : 0,
-        "y" : 5,
-        "width" : 3,
+        "y" : 6,
+        "width" : 2,
         "height" : 1
       }
     }, {
@@ -3654,9 +3664,9 @@
         }
       },
       "position" : {
-        "x" : 3,
-        "y" : 5,
-        "width" : 3,
+        "x" : 2,
+        "y" : 6,
+        "width" : 2,
         "height" : 1
       }
     }, {
@@ -3726,7 +3736,7 @@
       },
       "position" : {
         "x" : 0,
-        "y" : 6,
+        "y" : 5,
         "width" : 3,
         "height" : 1
       }
@@ -3805,7 +3815,7 @@
       },
       "position" : {
         "x" : 3,
-        "y" : 6,
+        "y" : 5,
         "width" : 3,
         "height" : 1
       }
@@ -3839,7 +3849,7 @@
       },
       "position" : {
         "x" : 2,
-        "y" : 7,
+        "y" : 9,
         "width" : 2,
         "height" : 1
       }
@@ -3873,7 +3883,7 @@
       },
       "position" : {
         "x" : 4,
-        "y" : 7,
+        "y" : 9,
         "width" : 2,
         "height" : 1
       }
@@ -3927,7 +3937,7 @@
       },
       "position" : {
         "x" : 0,
-        "y" : 8,
+        "y" : 10,
         "width" : 6,
         "height" : 4
       }
@@ -3998,7 +4008,7 @@
       },
       "position" : {
         "x" : 0,
-        "y" : 12,
+        "y" : 14,
         "width" : 6,
         "height" : 7
       }
@@ -4012,6 +4022,88 @@
         "y" : 0,
         "width" : 6,
         "height" : 4
+      }
+    }, {
+      "widget" : {
+        "name" : "c97259ea",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_commit",
+          "query" : {
+            "datasetName" : "9e57f5f1",
+            "parameters" : [ {
+              "name" : "param_commit",
+              "keyword" : "param_commit"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_commit",
+          "query" : {
+            "datasetName" : "6fe3d4f5",
+            "parameters" : [ {
+              "name" : "param_commit",
+              "keyword" : "param_commit"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_total_commit",
+          "query" : {
+            "datasetName" : "768e6a56",
+            "parameters" : [ {
+              "name" : "param_total_commit",
+              "keyword" : "param_total_commit"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-single-select",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "param_commit",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a2e24f1a689afcef4ee7142675_param_commit"
+            }, {
+              "parameterName" : "param_commit",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a6c2d01d5c8efbefee223800e1_param_commit"
+            }, {
+              "parameterName" : "param_total_commit",
+              "queryName" : "parameter_dashboards/01f026a2565514aba561e541a4ae97a6/datasets/01f026a7e6431e279b4ac45e0a779688_param_total_commit"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "$DBU Commit"
+          },
+          "selection" : {
+            "defaultSelection" : {
+              "values" : {
+                "dataType" : "INTEGER",
+                "values" : [ {
+                  "value" : "100000"
+                } ]
+              }
+            }
+          }
+        }
+      },
+      "position" : {
+        "x" : 4,
+        "y" : 6,
+        "width" : 2,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "0df4849e",
+        "textbox_spec" : "### Results"
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 7,
+        "width" : 6,
+        "height" : 2
       }
     } ]
   } ]

@@ -321,6 +321,12 @@ best_model = summary_cl.best_trial.load_model()
 env = mlflow.pyfunc.get_default_conda_env()
 with open(mlflow.artifacts.download_artifacts("runs:/"+summary_cl.best_trial.mlflow_run_id+"/model/requirements.txt"), 'r') as f:
     env['dependencies'][-1]['pip'] = f.read().split('\n')
+    
+#Just ensure that MLFLOW version is at the latest to avoid package version conflict
+for dep in env['dependencies']:
+    if isinstance(dep, dict) and 'pip' in dep:
+        dep['pip'] = [pkg for pkg in dep['pip'] if not pkg.startswith('mlflow==')]
+        dep['pip'].insert(0, 'mlflow=='+mlflow.__version__)
 
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model_advanced", experiment_id=summary_cl.experiment.experiment_id) as run:

@@ -5,6 +5,7 @@ from ..industries.hls import HealthcareSupport
 from ..industries.fins import FinancialServicesSupport
 from ..industries.mfg import ManufacturingSupport
 from ..industries.rcg import RetailOrderSupport
+from ..industries.pharma import PharmaSupport
 
 class IndustryRegistry:
     """Registry for managing different industry implementations."""
@@ -14,7 +15,8 @@ class IndustryRegistry:
         "hls": HealthcareSupport,
         "fins": FinancialServicesSupport,
         "mfg": ManufacturingSupport,
-        "retail": RetailOrderSupport
+        "retail": RetailOrderSupport,
+        "pharma": PharmaSupport
     }
     
     @classmethod

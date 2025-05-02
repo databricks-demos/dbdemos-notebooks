@@ -94,7 +94,8 @@ const useCases = [
   { label: 'Healthcare Member Support', value: 'hls' },
   { label: 'Financial Services', value: 'fins' },
   { label: 'Manufacturing Support', value: 'mfg' },
-  { label: 'Retail Order Support', value: 'retail' }
+  { label: 'Retail Order Support', value: 'retail' },
+  { label: 'Pharmaceutical Support', value: 'pharma' }
 ]
 
 const selectedUseCase = ref('telco')

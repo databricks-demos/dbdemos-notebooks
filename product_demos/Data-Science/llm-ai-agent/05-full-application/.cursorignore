@@ -11,4 +11,3 @@ dist
 *.egg-info/
 backend/__pycache__
 .idea
-deploy.sh

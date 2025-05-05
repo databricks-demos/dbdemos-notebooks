@@ -19,7 +19,7 @@
   "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
-      {"title": "Solution Accelerator: Subscriber Churn Prediction", "url": "https://www.databricks.com/solutions/accelerators/claims-management-automation"}],
+      {"title": "Databricks for Financial Services", "url": "https://www.databricks.com/solutions/industries/financial-services"}],
   "recommended_items": ["lakehouse-fsi-credit", "lakehouse-fsi-fraud", "lakehouse-iot-platform"],
   "demo_assets": [],   
   "bundle": True,

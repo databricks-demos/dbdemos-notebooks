@@ -38,7 +38,7 @@
     },
     {
       "path": "_resources/01-load-data", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": False, 
       "add_cluster_setup_cell": False,
       "title":  "Load raw data", 
@@ -62,7 +62,7 @@
     },
     {
       "path": "01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Ingest data with Delta Live Table", 
@@ -80,7 +80,7 @@
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine", 
       "pre_run": False, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "Alternative: Ingest data with Spark+Delta", 
       "description": "Build a complete ingestion pipeline using spark API (alternative to DLT)"
     },
@@ -129,7 +129,7 @@
       "path": "05-Generative-AI/05.1-ai-tools-iot-turbine-prescriptive-maintenance", 
       "pre_run": False, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "Build AI agent tools with UC functions", 
       "description": "Use tools to enable the AI agent to perform actions besides language generation."
     },
@@ -137,7 +137,7 @@
       "path": "05-Generative-AI/05.2-build-agent-iot-turbine-prescriptive-maintenance", 
       "pre_run": False, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "Build the AI agent using this driver notebook.", 
       "description": "Build an AI agent using the Mosaic AI Agent Framework."
     },
@@ -145,7 +145,7 @@
       "path": "05-Generative-AI/05.3-deploy-agent-iot-turbine-prescriptive-maintenance", 
       "pre_run": False, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True,
+      "add_cluster_setup_cell": False,
       "title":  "Deploy AI agent and invoke it in a batch or real-time.", 
       "description": "Deploy an AI agent using the Mosaic AI Agent Framework."
     },

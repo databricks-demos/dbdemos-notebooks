@@ -337,6 +337,18 @@ spark.sql(f"""
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Example
+# MAGIC
+# MAGIC Below are fraud reports for five fraudulent transactions. Want to apply the report generator to all of your data? Modify the previous table generation cell. 
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM fraudulent_transactions_report_table;
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Next Steps
 # MAGIC
 # MAGIC Proceed to notebook **05.2-Agent-Creation-Guide** in order to package the above functions into an implementable AI Agent with Databricks!

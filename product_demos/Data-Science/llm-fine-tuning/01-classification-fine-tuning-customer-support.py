@@ -115,13 +115,13 @@ Based on the above categorize the following issue: \n\n"""
 # COMMAND ----------
 
 # Make sure you put your PROVISIONED THROUGHPUT ENDPOINT NAME HERE.
-# You can also try the foundation model API, however this will be slower: databricks-meta-llama-3-1-70b-instruct
-llama_3_1_8b_endpoint = "databricks-meta-llama-3-1-70b-instruct" #"meta_llama_3_8b_instruct"
+# You can also try the foundation model API, however this will be slower: databricks-meta-llama-3-3-70b-instruct
+llama_3_1_8b_endpoint = "databricks-meta-llama-3-3-70b-instruct" #"meta_llama_3_8b_instruct"
 
 # COMMAND ----------
 
 spark.sql(f"""SELECT 
-            ai_query("{llama_3_1_8b_endpoint}", concat("{system_prompt}", description)) AS llama_3_1_8b,
+            ai_query("databricks-meta-llama-3-3-70b-instruct", concat("{system_prompt}", description)) AS llama_3_1_8b,
             description
         FROM customer_tickets 
         LIMIT 5""").display()

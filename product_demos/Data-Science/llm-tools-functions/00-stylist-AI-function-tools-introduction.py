@@ -144,7 +144,7 @@
 # MAGIC RETURNS STRING
 # MAGIC LANGUAGE SQL
 # MAGIC COMMENT 'This function generate a stylist outfit description based on initial request and the current weather.'
-# MAGIC RETURN SELECT ai_query('databricks-meta-llama-3-70b-instruct',
+# MAGIC RETURN SELECT ai_query('databricks-meta-llama-3-3-70b-instruct',
 # MAGIC     CONCAT("You are a stylist assistant. Your goal is to give recommendation on what would be the best outfit for today. The current temperature is ",temperature_in_celsius ," celsius and rain is:", rain_in_mm, "mm. Give size in inches if any. Don't assume customer size if they don't share it. Give ideas of colors and other items to match. The user added this instruction based on what they like: ", requested_style)
 # MAGIC   ) AS recommended_outfit;
 # MAGIC
@@ -187,7 +187,7 @@
 # MAGIC SELECT clothes.* FROM (
 # MAGIC   SELECT explode(from_json(
 # MAGIC     ai_query(
-# MAGIC       'databricks-meta-llama-3-70b-instruct', 
+# MAGIC       'databricks-meta-llama-3-3-70b-instruct', 
 # MAGIC       CONCAT(
 # MAGIC         'returns a json list of 3 json object clothes: <"id": bigint, "name": string, "color": string, "category": string, "price": double, "description": string>. These clothes should match the following user description: ', description, '. Return only the answer as a javascript json object ready to be parsed, no comment or text or javascript or ``` at the beginning.' ) ), 'ARRAY<STRUCT<id: BIGINT, name: STRING, color: STRING, category: STRING, price: DOUBLE, description: STRING>>' )) AS clothes );
 # MAGIC
@@ -281,7 +281,7 @@ from databricks.sdk import WorkspaceClient
 llm = ChatOpenAI(
   base_url=f"{WorkspaceClient().config.host}/serving-endpoints/",
   api_key=dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get(),
-  model="databricks-meta-llama-3-70b-instruct"
+  model="databricks-meta-llama-3-3-70b-instruct"
 )
 
 

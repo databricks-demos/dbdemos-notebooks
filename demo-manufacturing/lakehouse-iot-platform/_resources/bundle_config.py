@@ -86,7 +86,7 @@
     },
     {
       "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Governance with Unity Catalog", 

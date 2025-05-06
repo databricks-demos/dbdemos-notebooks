@@ -62,7 +62,7 @@
     },
     {
       "path": "01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Ingest data with Delta Live Table", 
@@ -78,7 +78,7 @@
     },
     {
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Alternative: Ingest data with Spark+Delta", 

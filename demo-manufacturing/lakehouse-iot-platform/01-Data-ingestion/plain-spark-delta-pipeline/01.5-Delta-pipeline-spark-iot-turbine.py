@@ -142,7 +142,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_tu
 # DBTITLE 1,We'll store the raw data in a USER_BRONZE DELTA table, supporting schema evolution and incorrect data
 # MAGIC %sql
 # MAGIC -- Note: tables are automatically created during  .writeStream.table("sensor_bronze") operation, but we can also use plain SQL to create them:
-# MAGIC CREATE TABLE IF NOT EXISTS spark_sensor_bronze (
+# MAGIC CREATE TABLE IF NOT EXISTS sensor_bronze (
 # MAGIC   energy   DOUBLE,
 # MAGIC   sensor_A DOUBLE,
 # MAGIC   sensor_B DOUBLE,
@@ -197,8 +197,8 @@ ingest_folder(f'{volume_folder}/incoming_data', 'parquet', 'sensor_bronze').awai
 
 # DBTITLE 1,Quick data exploration leveraging pandas on spark (Koalas): sensor from our first turbine
 #Let's explore a bit our datasets with pandas on spark.
-first_turbine = spark.table('spark_sensor_bronze').limit(1).collect()[0]['turbine_id']
-df = spark.table('spark_sensor_bronze').where(f"turbine_id == '{first_turbine}' ").orderBy('timestamp').pandas_api()
+first_turbine = spark.table('sensor_bronze').limit(1).collect()[0]['turbine_id']
+df = spark.table('sensor_bronze').where(f"turbine_id == '{first_turbine}' ").orderBy('timestamp').pandas_api()
 df.plot(x="timestamp", y=["sensor_F", "sensor_E"], kind="line")
 
 # COMMAND ----------
@@ -217,18 +217,18 @@ df.plot(x="timestamp", y=["sensor_F", "sensor_E"], kind="line")
 
 import pyspark.sql.functions as F
 #Compute std and percentil of our timeserie per hour
-sensors = [c for c in spark.read.table("spark_sensor_bronze").columns if "sensor" in c]
+sensors = [c for c in spark.read.table("sensor_bronze").columns if "sensor" in c]
 aggregations = [F.avg("energy").alias("avg_energy")]
 for sensor in sensors:
   aggregations.append(F.stddev_pop(sensor).alias("std_"+sensor))
   aggregations.append(F.percentile_approx(sensor, [0.1, 0.3, 0.6, 0.8, 0.95]).alias("percentiles_"+sensor))
   
-df = (spark.table("spark_sensor_bronze")
+df = (spark.table("sensor_bronze")
           .withColumn("hourly_timestamp", F.date_trunc("hour", F.from_unixtime("timestamp")))
           .groupBy('hourly_timestamp', 'turbine_id').agg(*aggregations))
 
-df.write.mode('overwrite').saveAsTable("spark_sensor_hourly")
-display(spark.table("spark_sensor_hourly"))
+df.write.mode('overwrite').saveAsTable("sensor_hourly")
+display(spark.table("sensor_hourly"))
 #Note: a more scalable solution would be to switch to streaming API and compute the aggregation with a ~3hours watermark and MERGE (upserting) the final output. For this demo clarity we we'll go with a full table update instead.
 
 # COMMAND ----------
@@ -245,15 +245,15 @@ display(spark.table("spark_sensor_hourly"))
 
 # COMMAND ----------
 
-turbine = spark.table("spark_turbine")
-health = spark.table("spark_historical_turbine_status")
-(spark.table("spark_sensor_hourly")
+turbine = spark.table("turbine")
+health = spark.table("historical_turbine_status")
+(spark.table("sensor_hourly")
   .join(turbine, ['turbine_id']).drop("row", "_rescued_data")
   .join(health, ['turbine_id'])
   .drop("_rescued_data")
-  .write.mode('overwrite').saveAsTable("spark_turbine_training_dataset"))
+  .write.mode('overwrite').saveAsTable("turbine_training_dataset"))
 
-display(spark.table("spark_turbine_training_dataset"))
+display(spark.table("turbine_training_dataset"))
 
 # COMMAND ----------
 
@@ -282,16 +282,16 @@ columns = predict_maintenance.metadata.get_input_schema().input_names()
 # COMMAND ----------
 
 w = Window.partitionBy("turbine_id").orderBy(col("hourly_timestamp").desc())
-(spark.table("spark_sensor_hourly")
+(spark.table("sensor_hourly")
   .withColumn("row", F.row_number().over(w))
   .filter(col("row") == 1)
-  .join(spark.table('spark_turbine'), ['turbine_id']).drop("row", "_rescued_data")
+  .join(spark.table('turbine'), ['turbine_id']).drop("row", "_rescued_data")
   .withColumn("prediction", predict_maintenance(*columns))
-  .write.mode('overwrite').saveAsTable("spark_current_turbine_metrics"))
+  .write.mode('overwrite').saveAsTable("current_turbine_metrics"))
 
 # COMMAND ----------
 
-# MAGIC %sql select * from spark_current_turbine_metrics
+# MAGIC %sql select * from current_turbine_metrics
 
 # COMMAND ----------
 
@@ -303,12 +303,12 @@ w = Window.partitionBy("turbine_id").orderBy(col("hourly_timestamp").desc())
 # COMMAND ----------
 
 # DBTITLE 1,We just realised we have to delete bad entry for a specific turbine
-spark.sql(f"DELETE FROM spark_sensor_bronze where turbine_id='{first_turbine}'")
+spark.sql(f"DELETE FROM sensor_bronze where turbine_id='{first_turbine}'")
 
 # COMMAND ----------
 
 # DBTITLE 1,Delta Lake keeps history of the table operation
-# MAGIC %sql describe history spark_sensor_bronze;
+# MAGIC %sql describe history sensor_bronze;
 
 # COMMAND ----------
 
@@ -331,9 +331,9 @@ spark.sql(f"DELETE FROM spark_sensor_bronze where turbine_id='{first_turbine}'")
 # DBTITLE 1,Make sure all our tables are optimized
 # MAGIC %sql
 # MAGIC --Note: can be turned on by default or for all the database
-# MAGIC ALTER TABLE spark_turbine                  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
-# MAGIC ALTER TABLE spark_sensor_bronze            SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
-# MAGIC ALTER TABLE spark_current_turbine_metrics  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
+# MAGIC ALTER TABLE turbine                  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
+# MAGIC ALTER TABLE sensor_bronze            SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
+# MAGIC ALTER TABLE current_turbine_metrics  SET TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE );
 
 # COMMAND ----------
 

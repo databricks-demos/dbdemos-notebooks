@@ -14,6 +14,8 @@
 
 -- COMMAND ----------
 
+-- NOTE: enclose names in backticks if they contain special characters
+
 -- Name of catalog under which to create the demo schema
 DECLARE OR REPLACE VARIABLE catalog_name STRING = 'main';
 

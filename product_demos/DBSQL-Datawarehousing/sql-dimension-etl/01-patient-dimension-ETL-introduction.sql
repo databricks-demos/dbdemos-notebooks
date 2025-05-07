@@ -44,7 +44,7 @@
 -- MAGIC #### <span style="color:darkblue">Integrating patient data to cater to analytics applications such as Patient 360
 -- MAGIC <br>
 -- MAGIC
--- MAGIC <div style="float: right; width: 100%;">
+-- MAGIC <div style="float: center; width: 70%;">
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true" style="float: right" width="100%">
 -- MAGIC
@@ -54,7 +54,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## What We Will Build
+-- MAGIC ## Patient Dimension Demo
 -- MAGIC
 -- MAGIC ### This end-to-end demo builds a Workflows Job that will perform the following tasks:
 -- MAGIC

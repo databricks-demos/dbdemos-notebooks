@@ -32,6 +32,14 @@
         "description": "Start here to explore the demo."
       },
       {
+        "path": "sql-centric-capabilities-examples", 
+        "pre_run": False, 
+        "publish_on_website": True, 
+        "add_cluster_setup_cell": False,
+        "title":  "SQL Centric Capabilities Examples", 
+        "description": "Start here to explore the SQL Scripting example."
+      },
+      {
         "path": "01-Setup/01.1-initialize", 
         "pre_run": False, 
         "publish_on_website": True, 

@@ -1,0 +1,15 @@
+# Web framework and server
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Environment variables
+python-dotenv==1.0.0
+mlflow
+
+# Databricks SDK
+databricks-sdk 
+pyyaml
+
+# Testing
+pytest==8.0.0
+pytest-asyncio==0.23.5

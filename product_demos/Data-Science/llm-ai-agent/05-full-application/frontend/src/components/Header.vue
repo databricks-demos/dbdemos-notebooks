@@ -61,7 +61,7 @@
           color="white"
           variant="flat"
           class="admin-dashboard-btn ml-6"
-          href="https://e2-demo-west.cloud.databricks.com/dashboardsv3/01f021ea4ba3198a8e05989572d035b7/published/pages/ab333341?o=2556758628403379"
+          href="https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f0187a33881d0db7fea91f596f8bda/published/pages/468b8ea5?o=1444828305810485"
           target="_blank"
           elevation="0"
         >
@@ -172,26 +172,17 @@ const toggleSapUseCase = () => {
   showSapNotification.value = true
   
   if (sapModeEnabled.value) {
-    // When SAP mode is enabled, if the user is in the financial services use case,
-    // switch to the SAP use case
-    if (selectedUseCase.value === 'fins') {
-      selectedUseCase.value = 'sap'
-      emit('use-case-change', selectedUseCase.value)
-    }
-    
-    // Add SAP option to the dropdown if it's not already there
     if (!useCases.value.some(uc => uc.value === 'sap')) {
-      useCases.value.push({ label: 'SAP Financial Services', value: 'sap' })
+      useCases.value.push({ label: 'SAP Support', value: 'sap' })
     }
   } else {
-    // When SAP mode is disabled, switch back to the regular financial services use case
     const sapIndex = useCases.value.findIndex(uc => uc.value === 'sap')
     if (sapIndex !== -1) {
       useCases.value.splice(sapIndex, 1)
       
-      // If currently selected usecase is SAP, reset to regular financial services
+      // If currently selected usecase is SAP, reset to telco
       if (selectedUseCase.value === 'sap') {
-        selectedUseCase.value = 'fins'
+        selectedUseCase.value = 'telco'
         emit('use-case-change', selectedUseCase.value)
       }
     }

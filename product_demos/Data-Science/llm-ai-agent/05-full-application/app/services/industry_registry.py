@@ -16,7 +16,8 @@ class IndustryRegistry:
         "fins": FinancialServicesSupport,
         "mfg": ManufacturingSupport,
         "retail": RetailOrderSupport,
-        "pharma": PharmaSupport
+        "pharma": PharmaSupport,
+        "sap": FinancialServicesSupport  # Special implementation with SAP mode=True
     }
     
     @classmethod
@@ -24,10 +25,17 @@ class IndustryRegistry:
         """Get an instance of the implementation class for a given industry code."""
         if industry_code not in cls._implementations:
             raise ValueError(f"No implementation found for industry code: {industry_code}")
+        
         implementation_class = cls._implementations[industry_code]
+        
+        # Special case for SAP mode
+        if industry_code == "sap":
+            return implementation_class(sap_mode=True)
+            
         return implementation_class()  # Return an instance of the class
     
     @classmethod
     def list_industries(cls) -> list:
         """List all available industry implementations."""
-        return list(cls._implementations.keys()) 
+        # Exclude "sap" from the list as it's a hidden implementation
+        return [k for k in cls._implementations.keys() if k != "sap"] 

@@ -3,7 +3,7 @@
 PHARMA_RESPONSES = [
     {
         "question": "I have a patient with atrial fibrillation and a CrCl of 35 mL/min. How should I adjust their Xarelto dose compared to someone with normal renal function?",
-        "non_intelligent_answer": "I'll review the latest guidelines and pharmacokinetic data for Xarelto dosing in renal impairment.",
+        "non_intelligent_answer": "Xarelto is typically used for atrial fibrillation, but I cannot provide specific dosing for a CrCl of 35 mL/min without checking the latest prescribing information. Generally, medication doses may need adjustment in renal impairment. I recommend consulting the product label or a pharmacist for the appropriate dosing in this specific situation.",
         "tools": [
             {
                 "tool_name": "query_clinical_guidelines",
@@ -30,7 +30,7 @@ PHARMA_RESPONSES = [
     },
     {
         "question": "What monitoring parameters are critical here?",
-        "non_intelligent_answer": "I'll summarize the key monitoring parameters for Xarelto in renal impairment.",
+        "non_intelligent_answer": "When taking anticoagulants like Xarelto, it's important to monitor for signs of bleeding. Beyond that, I don't have specific monitoring parameters for this particular situation without more details about the patient's condition and medical history. A healthcare provider would typically determine the appropriate monitoring based on individual patient factors.",
         "tools": [
             {
                 "tool_name": "summarize_monitoring_guidelines",
@@ -57,7 +57,7 @@ PHARMA_RESPONSES = [
     },
     {
         "question": "How does Xarelto compare to warfarin in advanced CKD?",
-        "non_intelligent_answer": "I'll compare the safety and efficacy of Xarelto and warfarin in advanced CKD based on available studies.",
+        "non_intelligent_answer": "Both Xarelto and warfarin are anticoagulants, but they work differently. Warfarin requires regular INR monitoring while Xarelto typically doesn't. For advanced chronic kidney disease (CKD), the choice between these medications depends on multiple factors. I recommend consulting with a nephrologist and cardiologist for personalized advice based on the patient's specific kidney function and other medical considerations.",
         "tools": [
             {
                 "tool_name": "compare_anticoagulants_ckd",
@@ -81,7 +81,7 @@ PHARMA_RESPONSES = [
     },
     {
         "question": "Are there drug interactions that exacerbate renal risks?",
-        "non_intelligent_answer": "I'll identify drug interactions that may increase renal or bleeding risk with Xarelto.",
+        "non_intelligent_answer": "Anticoagulants like Xarelto can interact with many medications. Without knowing which specific drugs your patient is taking, I can only provide general information. Xarelto may interact with certain antibiotics, antifungals, and anticonvulsants. I recommend checking a drug interaction database or consulting with a pharmacist for a complete assessment of potential interactions in your patient's specific case.",
         "tools": [
             {
                 "tool_name": "analyze_drug_interactions",
@@ -107,7 +107,7 @@ PHARMA_RESPONSES = [
     },
     {
         "question": "What if renal function deteriorates during treatment?",
-        "non_intelligent_answer": "I'll provide guidance on managing Xarelto if renal function worsens during therapy.",
+        "non_intelligent_answer": "Changes in renal function can affect medication safety and efficacy, especially for drugs that are renally cleared. If a patient's kidney function worsens while on Xarelto, their healthcare provider should reassess the treatment plan. Without specific clinical details, I can only suggest that the dose might need adjustment or the medication might need to be switched. I recommend consulting the prescribing information or a specialist for guidance in this situation.",
         "tools": [
             {
                 "tool_name": "manage_acute_renal_decline",
@@ -129,7 +129,7 @@ PHARMA_RESPONSES = [
     },
     {
         "question": "Any advice for patients with fluctuating CrCl near 30 mL/min?",
-        "non_intelligent_answer": "I'll provide dosing and monitoring advice for patients with variable renal function.",
+        "non_intelligent_answer": "Fluctuating kidney function can make medication management challenging. For patients with varying creatinine clearance levels around 30 mL/min, close monitoring would be important. I don't have specific guidelines for Xarelto dosing in this scenario, but generally, medication adjustments might be needed as kidney function changes. A nephrologist and cardiologist would need to collaborate on the best approach for these complex cases.",
         "tools": [
             {
                 "tool_name": "personalize_dosing_monitoring",

@@ -7,26 +7,26 @@ SAP_FINS_RESPONSES = [
         "non_intelligent_answer": "I'll analyze the economic scenario and estimate the impact on cash flow. Please provide more details about your business units for a more accurate analysis.",
         "tools": [
             {
-                "tool_name": "simulate_economic_impact",
-                "description": "Simulate cash flow impact in SAP FSCM",
+                "tool_name": "get_economic_data and monte_carlo_simulation",
+                "description": "Simulate cash flow impact using the distributed compute power of PySpark",
                 "type": "SAP_ANALYTICS",
-                "reasoning": "Simulating the effect of macroeconomic conditions on different business units using SAP Financial Supply Chain Management",
+                "reasoning": "Simulating the effect of macroeconomic conditions on cash flow of different business units",
                 "informations": [
-                    "SAP financial simulations integrate economic indicators with internal business data to project impacts across different organizational units.\n[Learn more about SAP financial simulation](https://www.databricks.com/product/solutions/finance)"
+                    "Monte Carlo simulation optionally supports specifying one of three dozen statistical distributions.\n[Learn more about Monte Carlos simulation using PySpark](https://community.databricks.com/t5/technical-blog/migrating-ml-workload-to-databricks/ba-p/114180#toc-hId--1941021199)"
                 ]
             },
             {
                 "tool_name": "generate_mitigation_strategies",
-                "description": "Create data-driven financial recommendations via SAP BPC",
+                "description": "AI-generated recommendations to address the identified risk factors",
                 "type": "SAP_PLANNING",
-                "reasoning": "Using SAP Business Planning and Consolidation to generate mitigation strategies based on the simulation results",
+                "reasoning": "GenAI-powered analysis offers tailored recommendations to address the specific business context",
                 "informations": [
                     "AI-powered recommendations through SAP can analyze multiple scenarios and propose optimized mitigation strategies tailored to specific business contexts"
                 ]
             }
         ],
-        "finbot": "**Simulation complete.** Here's the projected cash flow impact by business unit under the given macroeconomic conditions:\n\n**Retail BU:** -**14%** cash flow due to reduced consumer spending\n\n**Manufacturing BU:** -**9%** driven by rising raw material costs\n\n**Services BU:** -**5%** from delayed customer payments\n\n**📊 Identified Risks:**\n• Potential liquidity gap of **$20M** in Q3\n• Operating margin compression by **2.3%**\n• Increased reliance on short-term credit lines\n\n**💡 Mitigation Strategies:**\n1️⃣ Defer **$8M** in discretionary CAPEX projects\n2️⃣ Renegotiate supplier contracts to hedge input costs\n3️⃣ Introduce dynamic discounting to accelerate receivables",
-        "final_answer": "**Simulation complete.** Here's the projected cash flow impact by business unit under the given macroeconomic conditions:\n\n**Retail BU:** -**14%** cash flow due to reduced consumer spending\n\n**Manufacturing BU:** -**9%** driven by rising raw material costs\n\n**Services BU:** -**5%** from delayed customer payments\n\n**📊 Identified Risks:**\n• Potential liquidity gap of **$20M** in Q3\n• Operating margin compression by **2.3%**\n• Increased reliance on short-term credit lines\n\n**💡 Mitigation Strategies:**\n1️⃣ Defer **$8M** in discretionary CAPEX projects\n2️⃣ Renegotiate supplier contracts to hedge input costs\n3️⃣ Introduce dynamic discounting to accelerate receivables",
+        "finbot": "**Simulation complete.** Here's the projected cash flow impact by business unit under the given macroeconomic conditions:\n\n**Retail BU:** -**14%** cash flow due to reduced consumer spending\n\n**Manufacturing BU:** -**9%** driven by rising raw material costs\n\n**Services BU:** -**5%** from delayed customer payments\n\n**📊 Identified Risks:**\n• Cost of goods sold (COGS) increases by **7%**\n• Sales declines by **4%**\n• Working capital reduction of **$20M** in Q3\n\n**💡 Mitigation Strategies:**\n1️⃣ Renegotiate supplier contracts to lengthen Accounts Payable (AP) Net Terms\n2️⃣ Accelerate Accounts Receivables (AR) collection through early payment discounts\n3️⃣ Reduce inventory levels",
+        "final_answer": "**Simulation complete.** Here's the projected cash flow impact by business unit under the given macroeconomic conditions:\n\n**Retail BU:** -**14%** cash flow due to reduced consumer spending\n\n**Manufacturing BU:** -**9%** driven by rising raw material costs\n\n**Services BU:** -**5%** from delayed customer payments\n\n**📊 Identified Risks:**\n• Cost of goods sold (COGS) increases by **7%**\n• Sales declines by **4%**\n• Working capital reduction of **$20M** in Q3\n\n**💡 Mitigation Strategies:**\n1️⃣ Renegotiate supplier contracts to lengthen Accounts Payable (AP) Net Terms\n2️⃣ Accelerate Accounts Receivables (AR) collection through early payment discounts\n3️⃣ Reduce inventory levels",
         "final_informations": [
             "SAP financial simulations integrate real-time economic indicators with business data to provide actionable insights during uncertain economic conditions"
         ]
@@ -37,28 +37,28 @@ SAP_FINS_RESPONSES = [
         "non_intelligent_answer": "To analyze the liquidity gap by month and business unit, I'll need to access our financial projections. Let me break down the data we have available.",
         "tools": [
             {
-                "tool_name": "analyze_liquidity_forecast",
-                "description": "Analyze detailed liquidity projections in SAP Treasury",
+                "tool_name": "disaggregate_monte_carlo",
+                "description": "Disaggregate Monte Carlos simulation results",
                 "type": "SAP_FINANCE",
-                "reasoning": "Examining granular liquidity forecasts from SAP Treasury to break down the gap by month and business unit",
+                "reasoning": "Display the by month by BU Monte Carlo cash flow simulation result",
                 "informations": [
-                    "SAP Treasury management provides detailed liquidity forecasting capabilities that help identify cash flow patterns and risks across different time horizons"
+                    "Monte Carlo simulation provides detailed breakdowns of financial projections across different time periods and business units"
                 ]
             },
             {
-                "tool_name": "identify_risk_contributors",
-                "description": "Identify main contributing factors to liquidity risk via SAP GRC",
+                "tool_name": "key_factor_summarization",
+                "description": "Summarize key contributing factors",
                 "type": "SAP_RISK_ANALYSIS",
-                "reasoning": "Using SAP Governance, Risk and Compliance to identify which business units and factors contribute most to the liquidity shortfall",
+                "reasoning": "GenAI-powered analysis of changes in various attributes to determine the key drivers for the target attribute of cash flow",
                 "informations": [
-                    "Risk factor analysis in SAP systems can identify root causes of financial challenges and prioritize mitigation efforts"
+                    "Risk factor analysis can identify root causes of financial challenges and prioritize mitigation efforts"
                 ]
             }
         ],
         "finbot": "**📈 Monthly Breakdown of $20M Liquidity Gap:**\n\n**July:** **$4M** shortfall\n• Retail BU: **60%**\n• Manufacturing: **30%**\n• Services: **10%**\n\n**August:** **$6M** shortfall\n• Retail BU: **50%**\n• Manufacturing: **35%**\n• Services: **15%**\n\n**September:** **$10M** shortfall\n• Retail BU: **45%**\n• Manufacturing: **40%**\n• Services: **15%**\n\n**🔍 Top Contributors:**\n\n**Retail BU:** **$9.5M** total gap\n• Primary factor: Inventory buildup and slower sales\n\n**Manufacturing BU:** **$7M** total\n• Primary factor: Increased procurement costs\n\n**Services BU:** **$3.5M** total\n• Primary factor: Delayed customer payments",
         "final_answer": "**📈 Monthly Breakdown of $20M Liquidity Gap:**\n\n**July:** **$4M** shortfall\n• Retail BU: **60%**\n• Manufacturing: **30%**\n• Services: **10%**\n\n**August:** **$6M** shortfall\n• Retail BU: **50%**\n• Manufacturing: **35%**\n• Services: **15%**\n\n**September:** **$10M** shortfall\n• Retail BU: **45%**\n• Manufacturing: **40%**\n• Services: **15%**\n\n**🔍 Top Contributors:**\n\n**Retail BU:** **$9.5M** total gap\n• Primary factor: Inventory buildup and slower sales\n\n**Manufacturing BU:** **$7M** total\n• Primary factor: Increased procurement costs\n\n**Services BU:** **$3.5M** total\n• Primary factor: Delayed customer payments",
         "final_informations": [
-            "Detailed liquidity analysis through SAP systems helps pinpoint specific cash flow challenges and prioritize mitigation strategies by business unit"
+            "Detailed liquidity analysis helps pinpoint specific cash flow challenges and prioritize mitigation strategies by business unit"
         ]
     },
     {
@@ -67,28 +67,28 @@ SAP_FINS_RESPONSES = [
         "non_intelligent_answer": "A 10% reduction in operating expenses would likely improve cash flow. To provide specific numbers, I'll need to analyze your current expense structure and business unit financials.",
         "tools": [
             {
-                "tool_name": "simulate_cost_reduction",
-                "description": "Simulate cost-cutting scenario in SAP BPC",
+                "tool_name": "sacp_create_plan",
+                "description": "Plan cost cutting in SAP Analytics Cloud - Planning (SAC-P)",
                 "type": "SAP_SIMULATION",
-                "reasoning": "Creating a simulation in SAP Business Planning and Consolidation to model the impact of an opex reduction across different business units",
+                "reasoning": "Create a planning scenario in SAC-P and allocate the opex reduction across the BUs",
                 "informations": [
-                    "SAP financial planning allows for granular scenario modeling to test various cost reduction strategies and their impacts on cash flow"
+                    "SAP Analytics Cloud Planning enables comprehensive scenario modeling to test various cost reduction strategies and their impacts on cash flow"
                 ]
             },
             {
-                "tool_name": "calculate_net_impact",
-                "description": "Calculate resulting liquidity position via SAP FI",
+                "tool_name": "analyze_financial_plan",
+                "description": "Summarize the output of the SAC-P generated plan",
                 "type": "SAP_FINANCE",
-                "reasoning": "Using SAP Financial Accounting to calculate the net impact on the company's liquidity position after the proposed cost reductions",
+                "reasoning": "AI-generated summary of the by-BU impact on cash flow",
                 "informations": [
-                    "Comprehensive financial impact assessments through SAP help quantify benefits while identifying any potential operational constraints"
+                    "Comprehensive financial impact assessments help quantify benefits while identifying any potential operational constraints"
                 ]
             }
         ],
         "finbot": "**💰 Cash Flow Uplift (Next 6 Months):**\n\n**Retail BU:** +**$4.2M**\n\n**Manufacturing BU:** +**$3.5M**\n\n**Services BU:** +**$2.1M**\n\n**Total Net Improvement:** +**$9.8M**\n\n**📊 Revised Liquidity Position:**\n• Original gap: **$20M**\n• New gap: **$10.2M** (49% reduction)\n\n**⚠️ Note:** This analysis assumes no negative impact on revenue from cost-saving measures.",
         "final_answer": "**💰 Cash Flow Uplift (Next 6 Months):**\n\n**Retail BU:** +**$4.2M**\n\n**Manufacturing BU:** +**$3.5M**\n\n**Services BU:** +**$2.1M**\n\n**Total Net Improvement:** +**$9.8M**\n\n**📊 Revised Liquidity Position:**\n• Original gap: **$20M**\n• New gap: **$10.2M** (49% reduction)\n\n**⚠️ Note:** This analysis assumes no negative impact on revenue from cost-saving measures.",
         "final_informations": [
-            "Data-driven cost reduction strategies through SAP financial systems can precisely quantify cash flow improvements while highlighting any operational trade-offs"
+            "Data-driven cost reduction strategies can precisely quantify cash flow improvements while highlighting any operational trade-offs"
         ]
     }
 ] 

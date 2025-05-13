@@ -57,7 +57,7 @@ PHARMA_RESPONSES = [
     },
     {
         "question": "How does Xarelto compare to warfarin in advanced CKD?",
-        "non_intelligent_answer": "Both Xarelto and warfarin are anticoagulants, but they work differently. Warfarin requires regular INR monitoring while Xarelto typically doesn't. For advanced chronic kidney disease (CKD), the choice between these medications depends on multiple factors. I recommend consulting with a nephrologist and cardiologist for personalized advice based on the patient's specific kidney function and other medical considerations.",
+        "non_intelligent_answer": "Both Xarelto and warfarin are anticoagulants, but they work differently. Warfarin requires regular INR monitoring while Xarelto typically doesn't. For advanced chronic kidney disease (CKD), the choice between these medications depends on multiple factors. I recommend consulting with a nephrologist and cardiologist for personalized advice based on the patient's specific kidney function and other medical considerations. Have you considered switching to **generic apixaban** for patients with impaired renal function? It could be another option, but I can't make specific recommendations without knowing the full clinical picture.",
         "tools": [
             {
                 "tool_name": "compare_anticoagulants_ckd",
@@ -120,11 +120,35 @@ PHARMA_RESPONSES = [
                 "informations": [
                     "Acute renal decline requires prompt reassessment of anticoagulation strategy."
                 ]
+            },
+            {
+                "tool_name": "fetch_hcp_interaction_history",
+                "description": "Retrieve past interactions with this HCP",
+                "type": "DATABASE",
+                "reasoning": "Identifying previous related inquiries to provide personalized context.",
+                "mock_response": {
+                    "previous_interactions": [
+                        {
+                            "date": "2023-10-15",
+                            "topic": "Xarelto dosing in moderate hepatic impairment",
+                            "key_details": "Discussed Child-Pugh B classification dosing recommendations"
+                        },
+                        {
+                            "date": "2023-12-02", 
+                            "topic": "Drug interactions with P-gp inhibitors",
+                            "key_details": "Provided guidance on concomitant use with amiodarone"
+                        }
+                    ]
+                },
+                "informations": [
+                    "This HCP has previously inquired about Xarelto use in hepatic impairment."
+                ]
             }
         ],
-        "final_answer": "Discontinue Xarelto if CrCl drops below 15 mL/min or acute renal failure develops. Transition to alternative anticoagulation (e.g., heparin) if needed, and re-evaluate once renal function stabilizes.",
+        "final_answer": "Thank you for another important question about Xarelto management. I see you've previously inquired about dosing in hepatic impairment and drug interactions with P-gp inhibitors. Regarding renal deterioration: discontinue Xarelto if CrCl drops below 15 mL/min or acute renal failure develops. Transition to alternative anticoagulation (e.g., heparin) if needed, and re-evaluate once renal function stabilizes.",
         "final_informations": [
-            "Management recommendations are based on clinical guidelines and expert consensus."
+            "Management recommendations are based on clinical guidelines and expert consensus.",
+            "Your previous questions about hepatic impairment and drug interactions demonstrate a comprehensive approach to anticoagulation management."
         ]
     },
     {

@@ -5,7 +5,7 @@
 # MAGIC
 # MAGIC Model validation is a critical step in ensuring the compliance, fairness, and reliability of our credit scoring model before deployment. This notebook performs key compliance checks to align with Responsible AI principles. Specifically, we:
 # MAGIC
-# MAGIC - Validate model fairness for new credit customers.
+# MAGIC - Validate model fairness for existing credit customers.
 # MAGIC - Analyze feature importance and model behavior using Shapley values.
 # MAGIC - Log custom metrics for auditing and transparency.
 # MAGIC - Ensure compliance with regulatory fairness constraints.
@@ -80,16 +80,16 @@ features = model.metadata.get_input_schema().input_names()
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Ensuring model fairness for new credit customers
+# MAGIC ## Ensuring model fairness for existing credit customers
 # MAGIC
-# MAGIC In this example, we'll make sure that our model behaves as expected and is fair for our new customers.
+# MAGIC In this example, we'll make sure that our model behaves as expected and is fair for our existing customers.
 # MAGIC
-# MAGIC We'll select our existing customers not having credit (We'll flag them as `defaulted = 2`) and make sure that our model is fair and behave the same among different group of the population.
+# MAGIC We'll select our existing customers not having credit and make sure that our model is fair and behave the same among different group of the population.
 
 # COMMAND ----------
 
 underbanked_df = df[df.defaulted==2].toPandas() # Features for underbanked customers
-banked_df = df[df.defaulted!=2].toPandas() # Features for rest of the customers
+banked_df = df[df.defaulted!=2].toPandas() # Features for our existing credit customers
 
 # COMMAND ----------
 
@@ -136,7 +136,7 @@ plt.savefig(f"{os.getcwd()}/images/shap_feature_importance.png")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Shapely values can also help for the analysis of local, instance-wise effects. 
+# MAGIC Shapley values can also help for the analysis of local, instance-wise effects. 
 # MAGIC
 # MAGIC We can also easily explain which feature impacted the decision for a given user. This can helps agent to understand the model an apply additional checks or control if required.
 
@@ -148,7 +148,7 @@ plt.savefig(f"{os.getcwd()}/images/shap_feature_importance.png")
 with open(shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js", 'r') as file:
    shap_bundle_js = '<script type="text/javascript">'+file.read()+';</script>'
 
-html = shap.force_plot(explainer.expected_value, shap_values[0,:], underbanked_sample[features].iloc[0,:])
+html = shap.force_plot(explainer.expected_value, shap_values[0,:], banked_df[features].iloc[0,:])
 displayHTML(shap_bundle_js + html.html())
 
 # COMMAND ----------
@@ -160,7 +160,7 @@ displayHTML(shap_bundle_js + html.html())
 
 # COMMAND ----------
 
-gender_array = underbanked_df['gender'].replace({'Female':0, 'Male':1}).to_numpy()[:100]
+gender_array = banked_df['gender'].replace({'Female':0, 'Male':1}).to_numpy()[:100]
 shap.group_difference_plot(shap_values.sum(1), \
                            gender_array, \
                            xmin=-1.0, xmax=1.0, \

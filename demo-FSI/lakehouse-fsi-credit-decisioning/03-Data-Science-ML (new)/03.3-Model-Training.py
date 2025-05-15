@@ -56,7 +56,7 @@ training_dataset.write.mode('overwrite').saveAsTable('credit_decisioning_feature
 
 # MAGIC %md 
 # MAGIC
-# MAGIC ## Balancing our dataset
+# MAGIC ## Adressing the class imbalance of our dataset
 # MAGIC
 # MAGIC Let's downsample and upsample our dataset to improve our model performance
 
@@ -85,11 +85,18 @@ px.pie(train_df.groupBy('defaulted').count().toPandas(), values='count', names='
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Addressing Demographic or Ethical Bias
+# MAGIC
+# MAGIC When dealing with demographic or ethical bias—where disparities exist across sensitive attributes like gender, race, or age—standard class balancing techniques may be insufficient. Instead, more targeted strategies are used to promote fairness. Pre-processing methods like reweighing assign different instance weights to ensure equitable representation across groups. Techniques such as the disparate impact remover modify feature values to reduce bias while preserving predictive utility. In-processing approaches like adversarial debiasing involve training the main model alongside an adversary that attempts to predict the sensitive attribute, thereby encouraging the model to learn representations that are less biased. Additionally, fair sampling methods, such as Kamiran’s preferential sampling, selectively sample training data to correct for group imbalances. These approaches aim to improve fairness metrics like demographic parity or equal opportunity while maintaining model performance.
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Accelerating credit scoring model creation using MLFlow and Databricks AutoML
 # MAGIC
-# MAGIC MLFlow is an open source project allowing model tracking, packaging and deployment. Every time your Data Science team works on a model, Databricks will track all parameters and data used and will auto-log them. This ensures ML traceability and reproductibility, making it easy to know what parameters/data were used to build each model and model version.
+# MAGIC MLFlow is an open source project allowing model tracking, packaging and deployment. Every time your Data Science team works on a model, Databricks will track all parameters and data used and will auto-log them. This ensures ML transparency, traceability, and reproducibility, making it easy to know what parameters/data were used to build each model and model version.
 # MAGIC
 # MAGIC ### A glass-box solution that empowers data teams without taking control away
 # MAGIC

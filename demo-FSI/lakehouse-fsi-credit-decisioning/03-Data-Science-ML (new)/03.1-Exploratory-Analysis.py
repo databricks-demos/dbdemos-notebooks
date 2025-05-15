@@ -6,7 +6,7 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC Data exploration is a critical first step in building a Responsible AI solution, as it helps ensure transparency, fairness, and reliability from the outset. In this notebook, we will analyze our dataset within the Databricks Data Intelligence Platform to detect biases, anomalies, and data drift. This process lays the foundation for responsible feature engineering and model development. Human validation remains an essential part of this step, ensuring that data-driven insights align with domain knowledge and ethical considerations.
+# MAGIC Data exploration is a critical first step in building a Responsible AI solution, as it helps ensure transparency, fairness, and reliability from the outset. In this notebook, we will explore and analyze our dataset on the Databricks Data Intelligence Platform. This process lays the foundation for responsible feature engineering and model development. Human validation remains an essential part of this step, ensuring that data-driven insights align with domain knowledge and ethical considerations.
 # MAGIC
 # MAGIC By leveraging Databricks’ unified data and AI capabilities, we can conduct secure and scalable exploratory data analysis (EDA), assess data distributions, and validate class representation before moving forward with model development.
 # MAGIC

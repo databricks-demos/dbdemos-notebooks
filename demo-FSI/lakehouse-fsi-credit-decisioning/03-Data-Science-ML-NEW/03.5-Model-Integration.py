@@ -7,7 +7,7 @@
 # MAGIC
 # MAGIC While the model has been validated for fairness and tested for comparable performance against the existing model in production, having this structured integration process ensures that system robustness and business continuity are taken into account in Responsible AI considerations.
 # MAGIC
-# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_5.png?raw=true" 
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_5.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------

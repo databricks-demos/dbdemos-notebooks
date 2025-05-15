@@ -7,7 +7,7 @@
 # MAGIC
 # MAGIC This notebook focuses on the ingestion, transformation, and tracking of features within the Databricks Feature Store. We ensure that every update is logged for traceability and that feature engineering practices align with Responsible AI principles. With transparent feature updates, we enhance the model’s effectiveness while meeting compliance standards.
 # MAGIC
-# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_2.png?raw=true" 
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_2.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------

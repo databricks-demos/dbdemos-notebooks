@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC By leveraging Databricks’ unified data and AI capabilities, we can conduct secure and scalable exploratory data analysis (EDA), assess data distributions, and validate class representation before moving forward with model development.
 # MAGIC
-# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_1.png?raw=true" 
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_1.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------

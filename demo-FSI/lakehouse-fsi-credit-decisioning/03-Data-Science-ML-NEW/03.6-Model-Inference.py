@@ -3,7 +3,7 @@
 # MAGIC # Model Inference
 # MAGIC
 # MAGIC In this notebook, we demonstrate how to operationalize machine learning models on Databricks by enabling both batch and real-time inference. For real-time serving, we leverage Databricks Model Serving, which allows us to expose the model through a low-latency REST API endpoint, enabling scalable and responsive predictions for downstream applications. We also implement batch inference using pyspark for large-scale processing. This dual approach illustrates how Databricks supports a unified platform for production-grade ML inference across diverse use cases.
-# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_6.png?raw=true" 
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_6.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------

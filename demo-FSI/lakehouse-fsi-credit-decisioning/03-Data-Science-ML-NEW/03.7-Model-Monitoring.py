@@ -20,7 +20,7 @@
 # MAGIC By embedding monitoring within the **Databricks Data Intelligence Platform**, we create a scalable and responsible approach to lifecycle management, aligning with regulatory requirements while ensuring that credit decisions remain fair, accurate, and explainable.
 # MAGIC
 # MAGIC
-# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_7.png?raw=true" 
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_7.png?raw=true" 
 # MAGIC      style="width: 100%; height: auto; display: block; margin: 0;" />
 
 # COMMAND ----------

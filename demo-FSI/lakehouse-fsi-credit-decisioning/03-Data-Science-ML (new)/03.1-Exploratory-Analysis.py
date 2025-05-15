@@ -97,6 +97,11 @@ px.pie(data_frame=data, names="gender", values="count", color="gender", title="P
 
 # MAGIC %md
 # MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
 # MAGIC ## Next Steps
 # MAGIC
 # MAGIC After completing exploratory analysis, we proceed to [06.2-Feature-Updates]($./06-Responsible-AI/06.2-Feature-Updates), where we:

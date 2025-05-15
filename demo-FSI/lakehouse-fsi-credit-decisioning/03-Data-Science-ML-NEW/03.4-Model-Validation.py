@@ -25,13 +25,6 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC
-# MAGIC
-# MAGIC
-
-# COMMAND ----------
-
 # MAGIC %pip install --quiet shap==0.46.0
 # MAGIC dbutils.library.restartPython() 
 

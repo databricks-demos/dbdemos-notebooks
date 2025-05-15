@@ -149,7 +149,7 @@
 # MAGIC   </div>
 # MAGIC </div>
 # MAGIC
-# MAGIC <center><img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/06-Responsible-AI/images/architecture_0.png?raw=true" 
+# MAGIC <center><img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_0.png?raw=true" 
 # MAGIC      style="width: 1200px; height: auto; display: block; margin: 0;" /></center>
 # MAGIC
 # MAGIC With this approach, we can confidently meet regulatory and ethical benchmarks while improving organizational outcomes—demonstrating that Responsible AI is not just about checking boxes but about building trust and value across the entire ML lifecycle.

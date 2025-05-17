@@ -49,7 +49,7 @@ dbutils.widgets.text("model_id", "*", "Model Id")
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true $gen_synthetic_data=true
+# MAGIC %run ../_resources/00-setup $adv_mlops=true $gen_synthetic_data=true
 
 # COMMAND ----------
 

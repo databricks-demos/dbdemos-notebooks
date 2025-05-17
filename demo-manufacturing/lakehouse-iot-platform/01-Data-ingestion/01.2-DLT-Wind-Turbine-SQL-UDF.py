@@ -1,9 +1,8 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow to load our model
-# MAGIC %pip install mlflow==2.20.2 cloudpickle==2.2.1 
-# MAGIC # hardcode the ml 15.4 LTS libraries versions here - should move to env_manager='conda' for prod use-case instead
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1
+# MAGIC %pip install mlflow==2.22.0
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -18,13 +17,13 @@
 
 # COMMAND ----------
 
-import mlflow
+import mlflow 
 mlflow.set_registry_uri('databricks-uc')
-#                                                                                                                        Stage/version  
-#                                                                                           Model name                          |        
-#                                                                                               |                               |        
-predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string")
-spark.udf.register("predict_maintenance", predict_maintenance_udf)
+#                                                                                                     Stage/version  
+#                                                                                   Model name               |        
+#                                                                                       |                    |        
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "long", env_manager='virtualenv')
+spark.udf.register("predict_churn", predict_churn_udf)
 
 # COMMAND ----------
 

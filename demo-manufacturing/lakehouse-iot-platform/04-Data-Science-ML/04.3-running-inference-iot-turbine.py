@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.20.2 databricks-sdk==0.40.0
+# MAGIC %pip install mlflow==2.22.0 databricks-sdk==0.40.0
 
 # COMMAND ----------
 

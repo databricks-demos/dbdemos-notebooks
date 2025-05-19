@@ -39,26 +39,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Load the version from our mlflow run
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-import os
-import mlflow
-# Use the Unity Catalog model registry
-mlflow.set_registry_uri("databricks-uc")
-# download model requirement from remote registry
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts(artifact_path="requirements.txt") 
-
-# COMMAND ----------
-
-# MAGIC %pip install -r $requirements_path
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# MAGIC %run ../../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC ## Building a Spark Data pipeline with Delta Lake
 # MAGIC
@@ -269,14 +249,30 @@ display(spark.table("spark_turbine_training_dataset"))
 
 # COMMAND ----------
 
+import glob, os
+from mlflow.pyfunc import build_model_env
+
+model_version = MlflowClient().get_model_version_by_alias(name=f"{catalog}.{db}.dbdemos_turbine_maintenance", alias="prod").version
+prebuilt_env_path = f"/Volumes/{catalog}/{schema}/turbine_raw_landing/mlflow_env/{model_version}"
+tar_files = glob.glob(f"{prebuilt_env_path}/*.tar.gz")
+# Create a python environment archive file
+if not os.path.exists(prebuilt_env_path) or not tar_files:
+    print(f"Env not found at {prebuilt_env_path}, creating a new one, please wait...")
+    prebuilt_env_uri = build_model_env(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", prebuilt_env_path)
+else:
+    prebuilt_env_uri = tar_files[0]
+
+# COMMAND ----------
+
 # DBTITLE 1,Load the ML model
 #Note: ideally we should download and install the model libraries with the model requirements.txt and PIP. See 04.3-running-inference for an example
 import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                                                                       Stage/version  
-#                                                                                                       Model name         |        
-#                                                                                                           |              |        
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
+#                                                                                                    Stage/version  
+#                                                                                       Model name         |        
+#                                                                                           |              |        
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string", env_manager=None, prebuilt_env_uri=prebuilt_env_uri)
+#Note: use env manager to avoid python version conflict issues
 columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------

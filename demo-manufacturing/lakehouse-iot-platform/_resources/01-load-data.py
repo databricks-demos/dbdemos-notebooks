@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.40.0 mlflow==2.21.0
+# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.40.0 mlflow==2.22.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -65,6 +65,7 @@ import mlflow
 from  mlflow.models.signature import ModelSignature
 import pandas as pd
 import numpy as np
+import cloudpickle
 
 # define a custom model randomly flagging 10% of sensor for the demo init (it'll be replace with proper model on the training part.)
 class MaintenanceEmptyModel(mlflow.pyfunc.PythonModel):
@@ -92,7 +93,7 @@ except Exception as e:
         signature = ModelSignature.from_dict({'inputs': '[{"name": "hourly_timestamp", "type": "datetime"}, {"name": "avg_energy", "type": "double"}, {"name": "std_sensor_A", "type": "double"}, {"name": "std_sensor_B", "type": "double"}, {"name": "std_sensor_C", "type": "double"}, {"name": "std_sensor_D", "type": "double"}, {"name": "std_sensor_E", "type": "double"}, {"name": "std_sensor_F", "type": "double"}, {"name": "location", "type": "string"}, {"name": "model", "type": "string"}, {"name": "state", "type": "string"}]',
 'outputs': '[{"type": "tensor", "tensor-spec": {"dtype": "object", "shape": [-1]}}]'})
         with mlflow.start_run() as run:
-            model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature, pip_requirements=['mlflow=='+mlflow.__version__, 'pandas=='+pd.__version__, 'numpy=='+np.__version__])
+            model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature, pip_requirements=['mlflow=='+mlflow.__version__, 'pandas=='+pd.__version__, 'numpy=='+np.__version__, 'cloudpickle=='+cloudpickle.__version__])
 
         #Register & move the model in production
         model_registered = mlflow.register_model(f'runs:/{run.info.run_id}/model', f"{catalog}.{db}.{model_name}")

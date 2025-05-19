@@ -1,6 +1,11 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
-# MAGIC # Data Intelligence Platform for Financial Services - Serving the Underbanked population with the Databricks Lakehouse
+# MAGIC # Data Intelligence Platform for Financial Services - Serving the Underbanked population
 # MAGIC <br />
 # MAGIC <img src="https://raw.githubusercontent.com/borisbanushev/CAPM_Databricks/main/lakehouseDAIWTusecases.jpg" style="float: left; margin-right: 30px" width="650px" />
 # MAGIC
@@ -19,15 +24,6 @@
 # MAGIC  
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-Credit-Decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC # Raising Interest Rates - an opportunity or a threat?
-# MAGIC
-# MAGIC The current raising interest rates can be both a great opportunity for retail banks and other FS organizations to increase their revenues from their credit instruments (such as loans, mortgages, and credit cards) but also a risk for larger losses as customers might end up unable to repay credits with higher rates. In the current market conditions, FS companies need better credit scoring and decisioning models and approaches. Such models, however, are very difficult to achieve as financial information might be insufficient or siloed. <br />
-# MAGIC #### <p><strong>In its essence, good credit decisioning is a massive data curation exercise.</strong></p>
 
 # COMMAND ----------
 
@@ -65,7 +61,7 @@
 # MAGIC   <div class="badge_b"><div class="badge">2</div>  Secure data and grant read access to the Data Analyst and Data Science teams, including row- and column-level filtering, PII data masking, and others (<strong>data security and control</strong>)</div>
 # MAGIC   <div class="badge_b"><div class="badge">3</div> Use the Databricks unified <strong>data lineage</strong> to understand how your data flows and is used in your organisation</div>
 # MAGIC   <div class="badge_b"><div class="badge">4</div> Run BI  queries and EDA to analyze existing credit risk</div>
-# MAGIC   <div class="badge_b"><div class="badge">5</div>  Build ML model to <strong>predict credit worthiness</strong> of underbanked customers, evaluate the risk of current debt-holders, and deploy ML models for real-time serving in order to enable Buy Now, Pay Later use cases</div>
+# MAGIC   <div class="badge_b"><div class="badge">5</div> Build and deploy <strong>responsibly governed ML models</strong> that assess creditworthiness of underbanked customers and evaluate the risk of existing debt-holders. Ensure real-time, trustworthy decisioning for Buy Now, Pay Later-like use cases through unified model training, monitoring, and governance—promoting fairness, transparency, and compliance across the AI lifecycle.</div>
 # MAGIC   <div class="badge_b"><div class="badge">6</div> <strong>Visualise your business</strong> models along with all actionable insights coming from machine learning</div>
 # MAGIC   <div class="badge_b"><div class="badge">7</div>Provide an easy and simple way to securely share these insights to non-data users, such as bank tellers, call center agents, or credit agents (<strong>data democratization</strong>)</div>
 # MAGIC </div>
@@ -112,57 +108,35 @@
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC
-# MAGIC ## 3: ML - Building a credit scoring model to predict payment defaults, reduce loss, and upsell
-# MAGIC
-# MAGIC Now that our data is ready and secured, let's create a model to predict the risk and potential default of current creditholders and potential new customers.
-# MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi-credit-decisioning-ml-usecase.png" width="800px" style="float: right">
-# MAGIC
-# MAGIC To do that, we'll leverage the data previously ingested, analyze, and save the features set within Databricks feature store.
-# MAGIC
-# MAGIC Databricks AutoML will then accelerate our ML journey by creating state of the art Notebooks that we'll use to deploy our model in production within MLFlow Model registry.
-# MAGIC
-# MAGIC
-# MAGIC Once our is model ready, we'll leverage it to:
-# MAGIC
-# MAGIC <div style="padding-left: 20px;">
-# MAGIC
-# MAGIC   <h4> Score, analyze, and target our existing customer database </h4>
-# MAGIC
-# MAGIC   Once our model is created and deployed in production within Databricks Model registry, we can use it to run batch inference.
-# MAGIC
-# MAGIC   The model outcome will be available for our Analysts to implement new use cases, such as upsell or risk exposure analysis (see below for more details).
-# MAGIC
-# MAGIC   <h4>   Deploy our model for Real time model serving, allowing Buy Now, Pay Later (BNPL)</h4>
-# MAGIC
-# MAGIC   Leveraging Databricks Lakehouse, we can deploy our model to provide real-time serving over REST API. <br>
-# MAGIC   This will allow us to give instant results on credit requests, allowing customers to automatically open a new credit while reducing payment default risks. 
-# MAGIC
-# MAGIC
-# MAGIC   <h4> Ensure model Explainability and Fairness</h4>
-# MAGIC
-# MAGIC   An important part of every regulated industry use case is the ability to explain the decisions taken through data and AI; and to also be able to evaluate the fairness of the model and identify whether it disadvantages certain people or groups of people.
-# MAGIC
-# MAGIC   The demo shows how to add explainability and fairness to the final dashboard:
-# MAGIC
-# MAGIC   1. Feature importance and SHAP ratios charts are added to provide an overall understanding as to what are the drivers and root causes behind credit worthiness and defaults, so the bank can take appropriate measures,
-# MAGIC   2. Detailed fairness like gender fairness score and a breakdown of different demographic features, such as education, marital status, and residency.
-# MAGIC   
-# MAGIC </div>
-
-# COMMAND ----------
-
 # MAGIC %md
+# MAGIC ## 3: Responsible AI with the Databricks Data Intelligence Platform
 # MAGIC
-# MAGIC #### Machine Learning next steps:
+# MAGIC Databricks emphasizes trust in AI by enabling organizations to maintain ownership and control over their data and models. [Databricks Data Intelligence Platform](https://www.databricks.com/product/data-intelligence-platform) unifies data, model training, management, monitoring, and governance across the AI lifecycle. This approach ensures that systems are **high-quality**, **safe**, and **well-governed**, helping organizations implement responsible AI practices effectively while fostering trust in intelligent applications.</br>
 # MAGIC
-# MAGIC * [03.1-Feature-Engineering-credit-decisioning]($./03-Data-Science-ML/03.1-Feature-Engineering-credit-decisioning): Open the first notebook to analyze our data and start building our model leveraging Databricks Feature Store and AutoML.
-# MAGIC * [03.2-AutoML-credit-decisioning]($./03-Data-Science-ML/03.2-AutoML-credit-decisioning): Leverage AutoML to accelerate your model creation.
-# MAGIC * [03.3-Batch-Scoring-credit-decisioning]($./03-Data-Science-ML/03.3-Batch-Scoring-credit-decisioning): score our entire dataset and save the result as a new delta table for downstream usage.
-# MAGIC * [03.4-model-serving-BNPL-credit-decisioning]($./03-Data-Science-ML/03.4-model-serving-BNPL-credit-decisioning): leverage Databricks Serverless model serving to deploy a Buy Now Pay Later offers (including AB testing).
-# MAGIC * [03.5-Explainability-and-Fairness-credit-decisioning]($./03-Data-Science-ML/03.5-Explainability-and-Fairness-credit-decisioning): Explain your model and review fairness.
+# MAGIC To accomplish these objectives responsibly, we’ll construct an end-to-end solution on the Databricks Data Intelligence platform, with a strong focus on transparency, fairness, and governance at each step. Specifically, we will:
+# MAGIC
+# MAGIC - Run exploratory analysis to identify anomalies, biases, and data drift early, paving the way for responsible feature engineering.
+# MAGIC - Continuously update features and log transformations for full lineage and compliance.
+# MAGIC - Train and evaluate models against fairness and accuracy criteria, logging artifacts for reproducibility.
+# MAGIC - Validate models by performing compliance checks and pre-deployment tests, ensuring alignment with Responsible AI standards.
+# MAGIC - Integrate champion and challenger models to deploy the winning solution, maintaining traceability and accountability at each decision point.
+# MAGIC - Provide batch or real-time inference with robust explainability.
+# MAGIC - Monitor production models to detect data drift, alert on performance decay, and trigger recalibration workflows whenever the model’s effectiveness declines.
+# MAGIC
+# MAGIC <center><img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/architecture_0.png?raw=true" 
+# MAGIC      style="width: 1200px; height: auto; display: block; margin: 0;" /></center>
+# MAGIC
+# MAGIC With this approach, we can confidently meet regulatory and ethical benchmarks while improving organizational outcomes—demonstrating that Responsible AI is not just about checking boxes but about building trust and value across the entire ML lifecycle.
+# MAGIC
+# MAGIC Below is a concise overview of each notebook’s role in the Responsible AI pipeline, as depicted in the architecture diagram. Together, they illustrate how Databricks supports transparency (explainability), effectiveness (model performance and bias control), and reliability (ongoing monitoring) throughout the model lifecycle.
+# MAGIC
+# MAGIC * [03.1-Exploratory-Analysis]($./03-Data-Science-ML/03.1-Exploratory-Analysis-credit-decisioning): Examines data distributions and identifies biases or anomalies, providing transparency early in the lifecycle. Sets the stage for responsible feature selection and model design.
+# MAGIC * [03.2-Feature-Updates]($./03-Data-Science-ML/03.2-Feature-Updates-credit-decisioning): Continuously ingests new data, refreshes features, and logs transformations, ensuring model effectiveness. Maintains transparency around feature lineage for compliance and traceability.
+# MAGIC * [03.3-Model-Training]($./03-Data-Science-ML/03.3-Model-Training-credit-decisioning): Trains, evaluates, and documents candidate models, tracking performance and fairness metrics. Stores artifacts for reproducibility, aligning with responsible AI goals.
+# MAGIC * [03.4-Model-Validation]($./03-Data-Science-ML/03.4-Model-Validation-credit-decisioning): Performs compliance checks, pre-deployment tests, and fairness evaluations. Verifies reliability and transparency standards before the model progresses to production.
+# MAGIC * [03.5-Model-Integration]($./03-Data-Science-ML/03.5-Model-Integration-credit-decisioning): Compares champion and challenger models, enabling human oversight for final selection. Deploys the chosen pipeline responsibly, ensuring accountability at each handoff.
+# MAGIC * [03.6-Model-Inference]($./03-Data-Science-ML/03.6-Model-Inference-credit-decisioning): Executes batch or real-time predictions using the deployed model. Ensures outputs remain consistent and explainable for responsible decision-making.
+# MAGIC * [03.7-Model-Monitoring]($./03-Data-Science-ML/03.7-Model-Monitoring-credit-decisioning): Continuously tracks data drift, prediction stability, and performance degradation. Generates alerts for timely retraining, preserving reliability and trustworthiness across the model’s lifecycle.
 
 # COMMAND ----------
 

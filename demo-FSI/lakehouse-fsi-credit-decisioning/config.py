@@ -12,11 +12,8 @@
 #Note: we do not recommend to change the catalog here as it won't impact all the demo resources such as DLT pipeline and Dashboards.
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("...", catalog="..", schema="...")
 
-catalog = "nuwan"
-schema = dbName = db = "sc_rai"
-
-#catalog = "main__build"
-#schema = dbName = db = "dbdemos_fsi_credit_decisioning"
+catalog = "main__build"
+schema = dbName = db = "dbdemos_fsi_credit_decisioning"
 
 volume_name = "credit_raw_data"
 model_name = "rai_credit_decisioning"

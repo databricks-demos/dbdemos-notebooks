@@ -353,7 +353,7 @@ display(fb_metrics_df)
 # MAGIC
 # MAGIC The query retrieves key model KPIs from the monitor's metric table, and the Alert will be triggered when the rules defined over the query's results are violated. Our exmample shows an Alert that is triggered when the model's F1 score falls below a threshold:
 # MAGIC
-# MAGIC <img src="./images/alert-triggered.png?raw=true" 
+# MAGIC <img src="https://github.com/manganganath/dbdemos-notebooks/blob/main/demo-FSI/lakehouse-fsi-credit-decisioning/_resources/images/alert-triggered.png?raw=true" 
 # MAGIC      style="width: 50%; height: auto; display: block; margin: 0;" />
 # MAGIC
 # MAGIC Check them out in the `monitoring` folder.

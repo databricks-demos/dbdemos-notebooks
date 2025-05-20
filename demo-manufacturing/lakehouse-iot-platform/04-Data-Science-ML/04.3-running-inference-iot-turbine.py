@@ -23,27 +23,6 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../config
-
-# COMMAND ----------
-
-import os
-import mlflow
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-mlflow.set_registry_uri('databricks-uc')
-local_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts("") # download model from remote registry
-
-requirements_path = os.path.join(local_path, "requirements.txt")
-if not os.path.exists(requirements_path):
-  dbutils.fs.put("file:" + requirements_path, "", True)
-
-# COMMAND ----------
-
-# MAGIC %pip install -r $requirements_path
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -68,12 +47,13 @@ if not os.path.exists(requirements_path):
 
 import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                                                   Stage/version
-#                                                                                 Model name              |
-#                                                                                       |                 |
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", result_type="string")
+#                                                                                                    Stage/version  
+#                                                                                       Model name         |        
+#                                                                                           |              |        
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
 #We can use the function in SQL
 spark.udf.register("predict_maintenance", predict_maintenance)
+columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
 
@@ -94,6 +74,26 @@ spark.table('turbine_hourly_features').withColumn("dbdemos_turbine_maintenance",
 
 # COMMAND ----------
 
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+mlflow.set_registry_uri('databricks-uc')
+local_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts("") # download model from remote registry
+
+requirements_path = os.path.join(local_path, "requirements.txt")
+if not os.path.exists(requirements_path):
+  dbutils.fs.put("file:" + requirements_path, "", True)
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+import mlflow
 model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod")
 df = spark.table('turbine_hourly_features').select(*columns).limit(10).toPandas()
 df['churn_prediction'] = model.predict(df)

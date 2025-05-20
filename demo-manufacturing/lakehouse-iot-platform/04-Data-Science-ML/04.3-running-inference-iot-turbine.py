@@ -94,6 +94,7 @@ if not os.path.exists(requirements_path):
 # COMMAND ----------
 
 import mlflow
+mlflow.set_registry_uri('databricks-uc')
 model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod")
 columns = model.metadata.get_input_schema().input_names()
 df = spark.table('turbine_hourly_features').select(*columns).limit(10).toPandas()

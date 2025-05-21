@@ -132,7 +132,7 @@ try:
     custom_metrics=expected_loss_metric)
   
 except Exception as lhm_exception:
-  if "already exist" in str(lhm_exception):
+  if "already exist" in str(lhm_exception.lower()):
     print(f"Monitor for {catalog}.{db}.advanced_churn_inference_table already exists, retrieving monitor info:")
     info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
   else:

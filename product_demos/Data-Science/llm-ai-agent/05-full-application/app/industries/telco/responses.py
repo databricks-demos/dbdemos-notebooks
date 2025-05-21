@@ -20,13 +20,13 @@ TELCO_RESPONSES = [
                 "type": "DATABASE",
                 "reasoning": "Let's get the latest billing information for this customer. Calling the tool query_billing",
                 "informations": [
-                    "Agents need to have access to a variety of data.\nAll your data sources can be ingested and centralized, instantly available for Analytics and GenAI usecases [Discover how to ingest data with LakeFlow ](https://www.databricks.com/product/lakehouse)"
+                    "Agents need to have access to a variety of data.\nAll your data sources can be ingested and centralized, instantly available for Analytics and GenAI usecases [Discover how to ingest data with LakeFlow ](https://www.databricks.com/blog/introducing-databricks-lakeflow)"
                 ]
             }
         ],
         "final_answer": "Let's get the latest billing information for this customer. Calling the tool query_billing...\n\nI see that this billing data is for Layla Yang, home address **redacted**, billing cycle starting 01/20/2025.\nHere's a summary of the current charges:\n\n| Bill Description | Amount | Notes |\n| ------------| ------ | ------- |\n| Plan Charge (Unlimited Max) | $85.00 | Recurring monthly |\n| Device Installment (S25 Ultra) | $50.00 | Phone upgrade  |\n| Taxes & Surcharges | $19.99 | Recurring monthly |\n\nIt looks like the promotion for the S25 Ultra wasn't applied, so the customer is currently being billed the full device installment — which explains the $50 increase they're seeing. Would you like me to troubleshoot the issue instead? We might be able to avoid the return.",
         "final_informations": [
-            "GenAI can make the system vulnerable to leaking **sensitive PII** information. Databricks provides a defense layer, securing your business integrity while tracking usage and cost.\n[Discover Databricks AI Governance](https://www.databricks.com/product/ai-governance)"
+            "GenAI can make the system vulnerable to leaking **sensitive PII** information. Databricks provides a defense layer, securing your business integrity while tracking usage and cost.\n[Discover Databricks AI Governance](https://www.databricks.com/discover/data-governance)"
         ]
     },
     {
@@ -39,7 +39,7 @@ TELCO_RESPONSES = [
                 "type": "DATABASE",
                 "reasoning": "Let's try to troubleshoot the issue before asking for a return. ",
                 "informations": [
-                    "Databricks makes it easy to plug any unstructured data sources (Past tickets, PDF, Office documents and other)[Discover how to perform RAG and Vector Search ](https://www.databricks.com/product/lakehouse)"
+                    "Databricks makes it easy to plug any unstructured data sources (Past tickets, PDF, Office documents and other)[Discover how to perform RAG and Vector Search ](https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/lakehouse-ai-deploy-your-llm-chatbot)"
                 ]
             }
         ],

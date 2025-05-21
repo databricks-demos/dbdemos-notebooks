@@ -28,7 +28,7 @@
 # MAGIC %md
 # MAGIC # LightGBM Classifier training
 # MAGIC - This is an auto-generated notebook.
-# MAGIC - To reproduce these results, attach this notebook to a cluster with runtime version **15.3.x-cpu-ml-scala2.12**, and rerun it.
+# MAGIC - To reproduce these results, attach this notebook to a cluster with runtime version **16.4.x-cpu-ml-scala2.12**, and rerun it.
 # MAGIC - Compare trials in the [MLflow experiment](#mlflow/experiments/xxx).
 # MAGIC - Clone this notebook into your project folder by selecting **File > Clone** in the notebook toolbar.
 

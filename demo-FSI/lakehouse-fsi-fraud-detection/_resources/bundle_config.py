@@ -242,7 +242,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "15.3.x-cpu-ml-scala2.12",
+                    "spark_version": "16.4.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -271,7 +271,7 @@
     "custom_tags": {
         "ResourceClass": "SingleNode"
     },
-    "spark_version": "15.3.x-cpu-ml-scala2.12",
+    "spark_version": "16.4.x-cpu-ml-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
     "num_workers": 0

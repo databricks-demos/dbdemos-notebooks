@@ -100,7 +100,7 @@
               {
                   "job_cluster_key": "Shared_job_cluster",
                   "new_cluster": {
-                      "spark_version": "15.4.x-scala2.12",
+                      "spark_version": "16.4.x-scala2.12",
                       "spark_conf": {
                           "spark.master": "local[*, 4]",
                           "spark.databricks.cluster.profile": "singleNode"
@@ -123,7 +123,7 @@
     },
     "cluster": {
       "num_workers": 1,
-      "spark_version": "15.4.x-scala2.12",
+      "spark_version": "16.4.x-scala2.12",
       "spark_conf": {},
       "data_security_mode": "USER_ISOLATION",
       "runtime_engine": "STANDARD"

@@ -59,7 +59,7 @@
     }
   ],
   "cluster": {
-      "spark_version": "15.3.x-cpu-ml-scala2.12",
+      "spark_version": "16.4.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

@@ -28,27 +28,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.21.2
-
-# COMMAND ----------
-
-# MAGIC %run ../../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-import os
-import mlflow
-# Use the Unity Catalog model registry
-mlflow.set_registry_uri("databricks-uc")
-# download model requirement from remote registry
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_customer_churn@prod").download_artifacts(artifact_path="requirements.txt") 
-
-# COMMAND ----------
-
-# DBTITLE 1,Pip install requirements
-# MAGIC %pip install -r $requirements_path
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install mlflow==2.22.0
 
 # COMMAND ----------
 
@@ -303,7 +283,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                            Alias/version
 #                                                                 Model name (UC)                   |   
 #                                                                     |                             |   
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_customer_churn@prod")
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_customer_churn@prod", "long", env_manager='virtualenv'))
 
 # COMMAND ----------
 

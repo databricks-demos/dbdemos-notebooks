@@ -9,7 +9,7 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
-# MAGIC %pip install faker databricks-sdk==0.36.0 mlflow==2.21.2 cloudpickle==2.2.1
+# MAGIC %pip install faker databricks-sdk==0.36.0 mlflow==2.22.0 cloudpickle==2.2.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -74,6 +74,8 @@ import random
 import mlflow
 from  mlflow.models.signature import ModelSignature
 import cloudpickle
+from unittest import mock
+import numpy as np
 
 # define a custom model
 class ChurnEmptyModel(mlflow.pyfunc.PythonModel):
@@ -99,8 +101,9 @@ except Exception as e:
         import pandas as pd
         signature = ModelSignature.from_dict({'inputs': '[{"name": "user_id", "type": "string"}, {"name": "age_group", "type": "long"}, {"name": "canal", "type": "string"}, {"name": "country", "type": "string"}, {"name": "gender", "type": "long"}, {"name": "order_count", "type": "long"}, {"name": "total_amount", "type": "long"}, {"name": "total_item", "type": "long"}, {"name": "last_transaction", "type": "datetime"}, {"name": "platform", "type": "string"}, {"name": "event_count", "type": "long"}, {"name": "session_count", "type": "long"}, {"name": "days_since_creation", "type": "long"}, {"name": "days_since_last_activity", "type": "long"}, {"name": "days_last_event", "type": "long"}]',
 'outputs': '[{"type": "tensor", "tensor-spec": {"dtype": "int32", "shape": [-1]}}]'})
-        with mlflow.start_run() as run:
-            model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature, pip_requirements=['mlflow=='+mlflow.__version__, 'cloudpickle=='+cloudpickle.__version__]) #'scikit-learn==1.3.0', 
+        #Temporary pin python to 3.11.10
+        with mlflow.start_run(run_name="mockup_model") as run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", "3.11.10"):
+            model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature, pip_requirements=['mlflow=='+mlflow.__version__, 'pandas=='+pd.__version__, 'numpy=='+np.__version__, 'cloudpickle=='+cloudpickle.__version__])
 
         #Register & move the model in production
         model_registered = mlflow.register_model(f'runs:/{run.info.run_id}/model', f"{catalog}.{db}.{model_name}")

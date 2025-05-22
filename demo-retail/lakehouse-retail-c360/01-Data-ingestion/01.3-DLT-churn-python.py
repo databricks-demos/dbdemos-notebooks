@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install mlflow==2.21.2 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 databricks-automl-runtime==0.2.21 holidays==0.45 lightgbm==4.3.0
+# MAGIC %pip install mlflow==2.22.0
 # MAGIC #If you issues, make sure this matches your automl dependency version. For prod usage, use env_manager='conda'
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
 # MAGIC dbutils.library.restartPython()
@@ -298,11 +298,12 @@ def churn_features():
 # COMMAND ----------
 
 # DBTITLE 1,Load the model as SQL function
-import mlflow
+import mlflow 
+mlflow.set_registry_uri('databricks-uc')
 #                                                                                                     Stage/version  
 #                                                                                   Model name               |        
 #                                                                                       |                    |        
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "int")
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "long", env_manager='virtualenv')
 spark.udf.register("predict_churn", predict_churn_udf)
 
 # COMMAND ----------

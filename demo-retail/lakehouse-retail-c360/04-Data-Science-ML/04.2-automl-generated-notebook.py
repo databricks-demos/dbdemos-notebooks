@@ -22,7 +22,7 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.21.2 hyperopt==0.2.7 shap==0.46.0
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.22.0 hyperopt==0.2.7 shap==0.46.0
 # MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
 # MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.45 lightgbm==4.3.0
 # MAGIC dbutils.library.restartPython()
@@ -300,6 +300,7 @@ from mlflow import pyfunc
 import sklearn
 from sklearn import set_config
 from sklearn.pipeline import Pipeline
+from unittest import mock
 
 from hyperopt import hp, tpe, fmin, STATUS_OK, Trials
 
@@ -313,8 +314,10 @@ pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
 dataset = mlflow.data.from_pandas(X_train)
 
+
 def objective(params):
-  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run:
+  #Temporary pin python to 3.11.10
+  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", "3.11.10"):
     lgbmc_classifier = LGBMClassifier(**params)
     mlflow.log_input(dataset, "training")
     model = Pipeline([

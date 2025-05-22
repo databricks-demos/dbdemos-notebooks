@@ -17,13 +17,13 @@
 
 # COMMAND ----------
 
-import mlflow 
+import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                                                     Stage/version  
-#                                                                                   Model name               |        
-#                                                                                       |                    |        
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "long", env_manager='virtualenv')
-spark.udf.register("predict_churn", predict_churn_udf)
+#                                                                                                                        Stage/version  
+#                                                                                           Model name                          |        
+#                                                                                               |                               |        
+predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
+spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # COMMAND ----------
 
@@ -33,35 +33,43 @@ spark.udf.register("predict_churn", predict_churn_udf)
 # MAGIC
 # MAGIC ```
 # MAGIC {
-# MAGIC     "id": "95f28631-1884-425e-af69-05c3f397dd90",
-# MAGIC     "name": "xxxx",
-# MAGIC     "storage": "/demos/dlt/lakehouse_iot_wind_turbine/xxxxx",
-# MAGIC     "configuration": {
-# MAGIC         "pipelines.useV2DetailsPage": "true"
-# MAGIC     },
+# MAGIC     "id": "b5dbbef6-aab1-45d8-9fa3-04d0da636a05",
+# MAGIC     "pipeline_type": "WORKSPACE",
 # MAGIC     "clusters": [
 # MAGIC         {
 # MAGIC             "label": "default",
 # MAGIC             "autoscale": {
 # MAGIC                 "min_workers": 1,
-# MAGIC                 "max_workers": 5
+# MAGIC                 "max_workers": 5,
+# MAGIC                 "mode": "ENHANCED"
 # MAGIC             }
 # MAGIC         }
 # MAGIC     ],
+# MAGIC     "development": true,
+# MAGIC     "event_log": {
+# MAGIC         "catalog": "main_build",
+# MAGIC         "schema": "dbdemos_iot_platform",
+# MAGIC         "name": "event_log"
+# MAGIC     },
+# MAGIC     "continuous": false,
+# MAGIC     "channel": "CURRENT",
+# MAGIC     "photon": false,
 # MAGIC     "libraries": [
 # MAGIC         {
 # MAGIC             "notebook": {
-# MAGIC                 "path": "/Repos/xxxx/01.1-DLT-Wind-Turbine-SQL"
+# MAGIC                 "path": "/Repos/quentin.ambard@databricks.com/dbdemos-notebooks/demo-manufacturing/lakehouse-iot-platform/01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL"
 # MAGIC             }
 # MAGIC         },
 # MAGIC         {
 # MAGIC             "notebook": {
-# MAGIC                 "path": "/Repos/xxxx/01.2-DLT-Wind-Turbine-SQL-UDF"
+# MAGIC                 "path": "/Repos/quentin.ambard@databricks.com/dbdemos-notebooks/demo-manufacturing/lakehouse-iot-platform/01-Data-ingestion/01.2-DLT-Wind-Turbine-SQL-UDF"
 # MAGIC             }
 # MAGIC         }
 # MAGIC     ],
-# MAGIC     "target": "retail_lakehouse_churn_xxxx",
-# MAGIC     "continuous": false,
-# MAGIC     "development": false
+# MAGIC     "name": "dbdemos-build-manuf-iot-turbine",
+# MAGIC     "edition": "ADVANCED",
+# MAGIC     "catalog": "main_build",
+# MAGIC     "schema": "dbdemos_iot_platform",
+# MAGIC     "data_sampling": false
 # MAGIC }
 # MAGIC ```

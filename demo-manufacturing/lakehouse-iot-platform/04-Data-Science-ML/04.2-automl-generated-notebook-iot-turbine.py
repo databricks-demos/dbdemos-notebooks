@@ -22,7 +22,7 @@
 
 # MAGIC %pip install mlflow==2.22.0 cloudpickle==2.2.1 databricks-sdk==0.40.0
 # MAGIC # hardcode the ml 15.4 LTS libraries versions here for demo stability
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1 shap==0.46.0 hyperopt==0.2.7
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1 shap==0.46.0 hyperopt==0.2.7
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -285,6 +285,7 @@ from mlflow import pyfunc
 import sklearn
 from sklearn import set_config
 from sklearn.pipeline import Pipeline
+from unittest import mock
 
 from hyperopt import hp, tpe, fmin, STATUS_OK, Trials
 
@@ -299,7 +300,8 @@ X_val_processed = pipeline_val.transform(X_val)
 dataset = mlflow.data.from_pandas(X_train)
 
 def objective(params):
-  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run:
+  #Temporary pin python to 3.11.10
+  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", "3.11.10"):
     lgbmc_classifier = LGBMClassifier(**params)
     mlflow.log_input(dataset, context="training")
     model = Pipeline([

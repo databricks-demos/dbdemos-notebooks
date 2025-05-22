@@ -30,59 +30,68 @@ MFG_RESPONSES = [
         ]
     },
     {
-        "question": "The quality control report for batch B-456 shows some anomalies in the measurements. The customer is concerned about product reliability.",
-        "non_intelligent_answer": "I'll check the quality control report for batch B-456 and review the measurements.",
+        "question": "What will be the impact of the substitution to this Order?",
+        "non_intelligent_answer": "There will be no impact to this order because the substitution is approved by Engineering",
         "tools": [
             {
-                "tool_name": "analyze_qc_data",
-                "description": "Analyze quality control measurements",
-                "type": "ML_MODEL",
-                "reasoning": "Let's analyze the QC data to identify any significant deviations",
+                "tool_name": "material_cost_calculation",
+                "description": "Calculate the change in costs from this substitution",
+                "type": "FUNCTION",
+                "reasoning": "Let's calculate the cost difference between the original part and the substitute part, and multiply by the quantity required for each unit of the product ",
                 "informations": [
-                    "Databricks ML models can detect anomalies while maintaining data integrity [Learn about ML in manufacturing](https://www.databricks.com/solutions/industries/manufacturing)"
+                    "You can create user-defined functions that perform the calculations using data in Delta Tables.(https://www.databricks.com/solutions/industries/manufacturing)"
                 ]
             },
             {
-                "tool_name": "generate_qc_report",
-                "description": "Generate detailed quality control report",
-                "type": "LLM",
-                "reasoning": "Based on the analysis, we'll provide a comprehensive quality assessment",
+                "tool_name": "identify_qc_process",
+                "description": "Identify additional QC steps to handle substitutions",
+                "type": "VECTOR_SEARCH",
+                "reasoning": "Need to check QC process manuals for any part substitutions",
                 "informations": [
-                    "Automated quality control reporting improves accuracy and response time"
+                    "Quality Control process compliance is critical from a safety and auditability point of view"
                 ]
             }
         ],
-        "final_answer": "I've analyzed the quality control data for batch B-456. Here's what we found:\n\nQuality Metrics:\n- Dimensional Accuracy: 99.7% (Within spec)\n- Material Strength: 98.5% (Within spec)\n- Surface Finish: 96.8% (⚠️ Slight deviation)\n\nThe anomalies are limited to minor surface finish variations that are:\n1. Within acceptable tolerance ranges\n2. Don't affect product functionality or reliability\n3. Present in only 3% of the batch\n\nRecommended Actions:\n1. Provide detailed QC documentation to the customer\n2. Offer additional testing for concerned units\n3. Schedule a technical review meeting if desired\n\nWould you like me to prepare any of these materials or schedule the review?",
+        "final_answer": "I have analyzed the cost and process impact of this change. Here's what I found:\n\nCost impact:\n- The unit cost for P-ABC123 increases by $0.70 or 10% from this substitution. Since the #MFG-2025-789 has 25,000 units, that increases the order cost by $17,500 or 10%. \n\nQuality impact:\n- Substituting this part means a slight change in the in-line QC process. While this will not change the number of samples to be QC checked, the line supervisor needs to refer to the Product Engineering manual for the QC steps.\n\nWould you like me to go ahead and prepare the memo to swap the parts?",
         "final_informations": [
             "Databricks enables comprehensive quality analytics while ensuring traceability [Learn about quality control analytics](https://www.databricks.com/solutions/industries/manufacturing)"
         ]
     },
     {
-        "question": "We're running low on raw materials RM-101 and RM-102. Can you help optimize our inventory and prevent production stoppage?",
-        "non_intelligent_answer": "I can check the inventory levels and help with ordering more materials.",
+        "question": "How will this impact the stocks for the substitution part?",
+        "non_intelligent_answer": "The stock of the substitution part will come down by 17,500 because of the unplanned use of the part",
         "tools": [
             {
-                "tool_name": "forecast_inventory",
-                "description": "Forecast inventory requirements",
+                "tool_name": "Stock_burndown_calculation",
+                "description": "Calculate consumption of part based on projected usage",
                 "type": "FORECASTING_MODEL",
-                "reasoning": "Let's predict future inventory needs based on production schedule",
+                "reasoning": "I need to calculate the usage of the part based on the planned forecast and the current order",
                 "informations": [
-                    "GenAI relies on specialized forecasting models for inventory optimization.\nDatabricks offers advanced forecasting capabilities with MLOps support."
+                    "GenAI relies on Material Requirement Processes (MRP) to compute part usage based on forecasted demand generated from ML Models.\nDatabricks offers advanced forecasting capabilities with MLOps support."
                 ]
             },
             {
-                "tool_name": "optimize_ordering",
-                "description": "Generate optimal order recommendations",
+                "tool_name": "project_usage",
+                "description": "Generate projected usage and the date by which the part will run out of stock",
                 "type": "ML_MODEL",
-                "reasoning": "We'll calculate optimal order quantities and timing",
+                "reasoning": "I will need to calculate the modified part usage over time and identify the date by which the inventory will come down to 0",
+                "informations": [
+                    "Databricks can integrate with your ERP and supply chain systems"
+                ]
+            },
+            {
+                "tool_name": "order_backlog",
+                "description": "Identify open Purchase Orders for a part",
+                "type": "FUNCTION",
+                "reasoning": "I need to identify Purchase Orders for the part that can impact the inventory position of the part",
                 "informations": [
                     "Databricks can integrate with your ERP and supply chain systems"
                 ]
             }
         ],
-        "final_answer": "I've analyzed our inventory situation and production schedule. Here's the current status:\n\nRM-101 Status:\n- Current Stock: 500 units\n- Daily Usage: 100 units\n- Reorder Point: 600 units\n- Lead Time: 5 days\n\nRM-102 Status:\n- Current Stock: 300 units\n- Daily Usage: 75 units\n- Reorder Point: 450 units\n- Lead Time: 7 days\n\nRecommended Actions:\n1. ⚠️ Immediate order for RM-102 (1000 units)\n2. 🔄 Schedule RM-101 order for next week (1500 units)\n3. 📊 Adjust reorder points based on new usage patterns\n\nI can also suggest alternative suppliers or materials if needed. Would you like me to proceed with any of these recommendations?",
+        "final_answer": "I have analyzed the inventory situation. Based on the production schedule, if we go ahead with this substitution, the plant will run out of stock for C-789Y 4 days sooner than planned. To mitigate this, you can choose to expedite the following Purchase Orders: O-7831 and O-7838. Would you like me to proceed with this recommendation?",
         "final_informations": [
-            "Databricks enables real-time inventory optimization with predictive analytics [Learn about supply chain analytics](https://www.databricks.com/solutions/industries/manufacturing)"
+            "Databricks enables real-time scenario planning with predictive analytics [Learn about supply chain analytics](https://www.databricks.com/solutions/industries/manufacturing)"
         ]
     }
 ] 

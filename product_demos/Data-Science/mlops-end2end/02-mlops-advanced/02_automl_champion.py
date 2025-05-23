@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.22.0 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

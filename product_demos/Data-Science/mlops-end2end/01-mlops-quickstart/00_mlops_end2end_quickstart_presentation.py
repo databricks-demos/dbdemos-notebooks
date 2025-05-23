@@ -59,7 +59,9 @@
 # MAGIC - ...
 
 # COMMAND ----------
-# MAGIC %pip install mlflow=="2.19"
+
+# MAGIC %pip install mlflow==2.22.0
+
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup

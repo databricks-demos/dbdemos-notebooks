@@ -11,7 +11,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python SDK
-# MAGIC %pip install --quiet mlflow==2.19
+# MAGIC %pip install --quiet mlflow==2.22.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -232,6 +232,7 @@ except Exception as e:
     else: 
         raise e
     
+
 # COMMAND ----------
 
 # MAGIC %md

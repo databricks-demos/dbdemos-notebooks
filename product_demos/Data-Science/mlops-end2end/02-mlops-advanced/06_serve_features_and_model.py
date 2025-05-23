@@ -28,8 +28,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install Databricks Python SDK [for MLR < 13.3] and MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.19
-# MAGIC %pip install -U databricks-sdk
+# MAGIC %pip install --quiet databricks-sdk==0.40.0 mlflow==2.22.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -145,7 +145,7 @@ datetime_transformers = []
 
 for col in ["hourly_timestamp"]:
     ohe_transformer = ColumnTransformer(
-        [("ohe", OneHotEncoder(sparse=False, handle_unknown="ignore"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
+        [("ohe", OneHotEncoder(sparse_output=False, handle_unknown="ignore"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
         remainder="passthrough")
     timestamp_preprocessor = Pipeline([
         (f"impute_{col}", imputers[col]),

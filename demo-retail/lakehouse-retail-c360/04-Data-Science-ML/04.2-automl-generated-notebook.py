@@ -143,7 +143,7 @@ datetime_transformers = []
 
 for col in ["last_transaction"]:
     ohe_transformer = ColumnTransformer(
-        [("ohe", OneHotEncoder(sparse=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
+        [("ohe", OneHotEncoder(sparse_output=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
         remainder="passthrough")
     timestamp_preprocessor = Pipeline([
         (f"impute_{col}", imputers[col]),

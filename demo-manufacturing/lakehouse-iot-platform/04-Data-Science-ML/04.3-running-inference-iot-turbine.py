@@ -180,19 +180,11 @@ dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPa
 # MAGIC
 # MAGIC ## Automate action to react on potential turbine failure
 # MAGIC
-# MAGIC We now have an end 2 end data pipeline analizing and predicting churn. We can now easily trigger actions to reduce the churn based on our business:
+# MAGIC We now have an end 2 end data pipeline analizing and predicting churn. We can now easily trigger actions to reduce downtime, such as dispatching a team earlier to fix the issue before an actual outage!
 # MAGIC
-# MAGIC - Send targeting email campaign to the customer the most likely to churn
-# MAGIC - Phone campaign to discuss with our customers and understand what's going
-# MAGIC - Understand what's wrong with our line of product and fixing it
+# MAGIC ## Track windturbine failure and impact
 # MAGIC
-# MAGIC These actions are out of the scope of this demo and simply leverage the Churn prediction field from our ML model.
-# MAGIC
-# MAGIC ## Track churn impact over the next month and campaign impact
-# MAGIC
-# MAGIC Of course, this churn prediction can be re-used in our dashboard to analyse future churn and measure churn reduction. 
-# MAGIC
-# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
+# MAGIC Of course, this prediction can be re-used in our dashboard to analyse future failure and measure impact. 
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC

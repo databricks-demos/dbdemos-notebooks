@@ -23,9 +23,9 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 hyperopt==0.2.7 shap==0.46.0
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0
 # MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
-# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.45 lightgbm==4.3.0
+# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.54 lightgbm==4.5.0 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

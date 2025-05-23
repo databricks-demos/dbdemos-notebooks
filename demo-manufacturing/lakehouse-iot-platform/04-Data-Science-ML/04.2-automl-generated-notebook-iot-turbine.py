@@ -21,8 +21,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install mlflow==2.22.0 cloudpickle==2.2.1 databricks-sdk==0.40.0
-# MAGIC # hardcode the ml 15.4 LTS libraries versions here for demo stability
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1 shap==0.46.0 hyperopt==0.2.7
+# MAGIC # hardcode the ml 16.4 LTS libraries versions here for demo stability
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==1.5.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -256,6 +256,7 @@ const predefinedQuestions = ref<PredefinedQuestion[]>([]);
 
 // Add useCase ref
 const useCase = ref('telco');
+const demoType = ref('assist');
 
 // Handle use case changes
 const handleUseCaseChange = async (newUseCase: string) => {
@@ -285,8 +286,51 @@ const handleUseCaseChange = async (newUseCase: string) => {
   responsesMap.value.clear();
   
   try {
-    // Fetch new questions for the use case
-    const questions = await getPredefinedQuestions(newUseCase);
+    // Fetch new questions for the use case and demo type
+    const questions = await getPredefinedQuestions(newUseCase, demoType.value);
+    predefinedQuestions.value = questions;
+  } catch (error) {
+    console.error('Error fetching predefined questions:', error);
+    predefinedQuestions.value = [];
+  }
+  
+  // Scroll to top since we're resetting
+  await nextTick();
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = 0;
+  }
+};
+
+// Handle demo type changes
+const handleDemoTypeChange = async (newDemoType: string) => {
+  demoType.value = newDemoType;
+  
+  // Reset chat to initial state
+  messages.value = [{
+    id: generateMessageId(),
+    text: "Hello! I'm your AI assistant. How can I help you today?",
+    sender: 'bot',
+    timestamp: new Date(),
+    animationComplete: true
+  }];
+  
+  // Clear any ongoing state
+  currentStreamingTools.value = [];
+  currentFinalAnswer.value = '';
+  currentFinalInformations.value = [];
+  isTyping.value = false;
+  isThinking.value = false;
+  emit('update:thinking', false);
+  emit('update:agents', []);
+  emit('update:final-answer', '');
+  emit('update:final-informations', []);
+  
+  // Clear the responses map
+  responsesMap.value.clear();
+  
+  try {
+    // Fetch new questions for the current use case and new demo type
+    const questions = await getPredefinedQuestions(useCase.value, newDemoType);
     predefinedQuestions.value = questions;
   } catch (error) {
     console.error('Error fetching predefined questions:', error);
@@ -302,7 +346,7 @@ const handleUseCaseChange = async (newUseCase: string) => {
 
 // Load predefined questions on mount
 onMounted(async () => {
-  predefinedQuestions.value = await getPredefinedQuestions(useCase.value);
+  predefinedQuestions.value = await getPredefinedQuestions(useCase.value, demoType.value);
   scrollToBottom();
 });
 
@@ -323,7 +367,7 @@ const convertToApiMessages = (chatMessages: Message[]): ApiMessage[] => {
   }));
 };
 
-// Modified sendMessage to include use case
+// Modified sendMessage to include use case and demo type
 const sendMessage = async () => {
   if (!userInput.value.trim()) return;
   
@@ -358,9 +402,9 @@ const sendMessage = async () => {
     // Convert messages to API format
     const apiMessages = convertToApiMessages(messages.value);
     
-    // Call the API with the user message ID
+    // Call the API with the user message ID, use case, and demo type
     agentResultsEmitter.addListener(userMessageId, handleAgentStreamingResponse);
-    await sendMessageToAgent(apiMessages, userMessageId, props.intelligenceEnabled, useCase.value);
+    await sendMessageToAgent(apiMessages, userMessageId, props.intelligenceEnabled, useCase.value, demoType.value);
     agentResultsEmitter.removeListener(userMessageId);
     
   } catch (error) {
@@ -542,10 +586,15 @@ onMounted(() => {
 // Add method to get current use case
 const getCurrentUseCase = () => useCase.value;
 
+// Add method to get current demo type
+const getCurrentDemoType = () => demoType.value;
+
 // Expose both methods
 defineExpose({
   handleUseCaseChange,
-  getCurrentUseCase
+  handleDemoTypeChange,
+  getCurrentUseCase,
+  getCurrentDemoType
 });
 
 // Add event handler for use case changes

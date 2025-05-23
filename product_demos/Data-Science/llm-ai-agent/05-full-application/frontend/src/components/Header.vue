@@ -50,9 +50,38 @@
           variant="outlined"
           density="compact"
           hide-details
-          class="use-case-select mr-6"
+          class="use-case-select mr-4"
           @update:model-value="handleUseCaseChange"
         ></v-select>
+        
+        <!-- Demo Type Toggle -->
+        <div class="demo-type-toggle mr-6">
+          <v-btn-toggle
+            v-model="selectedDemoType"
+            variant="outlined"
+            density="compact"
+            mandatory
+            class="demo-toggle-group"
+            @update:model-value="handleDemoTypeChange"
+          >
+            <v-btn
+              value="assist"
+              size="small"
+              class="demo-toggle-btn"
+            >
+              <v-icon size="small" class="mr-1">mdi-account-tie</v-icon>
+              AI Assist
+            </v-btn>
+            <v-btn
+              value="autopilot"
+              size="small"
+              class="demo-toggle-btn"
+            >
+              <v-icon size="small" class="mr-1">mdi-robot</v-icon>
+              AI Autopilot
+            </v-btn>
+          </v-btn-toggle>
+        </div>
         
         <div class="admin-dashboard-divider"></div>
         
@@ -124,7 +153,8 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'refresh': [],
-  'use-case-change': [useCase: string]
+  'use-case-change': [useCase: string],
+  'demo-type-change': [demoType: string]
 }>()
 
 const useCases = ref([
@@ -137,6 +167,7 @@ const useCases = ref([
 ])
 
 const selectedUseCase = ref('telco')
+const selectedDemoType = ref('assist')
 const sapModeEnabled = ref(false)
 const showSapNotification = ref(false)
 const showSapToggle = ref(false)
@@ -146,6 +177,7 @@ const logoClickTimer = ref<number | null>(null)
 // Emit initial value on mount
 onMounted(() => {
   emit('use-case-change', selectedUseCase.value)
+  emit('demo-type-change', selectedDemoType.value)
 })
 
 const handleLogoClick = () => {
@@ -192,11 +224,41 @@ const toggleSapUseCase = () => {
 const handleUseCaseChange = (value: string) => {
   emit('use-case-change', value)
 }
+
+const handleDemoTypeChange = (value: string) => {
+  emit('demo-type-change', value)
+}
 </script>
 
 <style scoped>
 .use-case-select {
   width: 300px;
+}
+
+.demo-type-toggle .demo-toggle-group {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.demo-toggle-btn {
+  color: white !important;
+  background-color: transparent !important;
+  border: none !important;
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+  height: 32px !important;
+  padding: 0 12px !important;
+}
+
+.demo-toggle-btn.v-btn--selected {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+.demo-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .admin-dashboard-divider {

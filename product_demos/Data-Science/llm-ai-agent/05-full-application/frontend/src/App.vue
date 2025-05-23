@@ -4,6 +4,7 @@
       :title="appTitle"
       @refresh="handleRefresh"
       @use-case-change="handleUseCaseChange"
+      @demo-type-change="handleDemoTypeChange"
     />
     
     <v-main>
@@ -105,6 +106,13 @@ const handleRefresh = () => {
 const handleUseCaseChange = (useCase: string) => {
   if (chatBot.value) {
     chatBot.value.handleUseCaseChange(useCase)
+  }
+}
+
+// Handle demo type changes
+const handleDemoTypeChange = (demoType: string) => {
+  if (chatBot.value) {
+    chatBot.value.handleDemoTypeChange(demoType)
   }
 }
 

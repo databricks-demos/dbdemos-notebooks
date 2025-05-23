@@ -21,7 +21,7 @@ class IndustryRegistry:
     }
     
     @classmethod
-    def get_implementation(cls, industry_code: str):
+    def get_implementation(cls, industry_code: str, demo_type: str = "assist"):
         """Get an instance of the implementation class for a given industry code."""
         if industry_code not in cls._implementations:
             raise ValueError(f"No implementation found for industry code: {industry_code}")
@@ -31,8 +31,14 @@ class IndustryRegistry:
         # Special case for SAP mode
         if industry_code == "sap":
             return implementation_class(sap_mode=True)
-            
-        return implementation_class()  # Return an instance of the class
+        
+        # Check if the implementation supports demo_type parameter
+        try:
+            # Try to pass demo_type parameter for implementations that support it (like telco)
+            return implementation_class(demo_type=demo_type)
+        except TypeError:
+            # Fallback for implementations that don't support demo_type parameter
+            return implementation_class()
     
     @classmethod
     def list_industries(cls) -> list:

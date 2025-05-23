@@ -38,13 +38,15 @@ export const agentResultsEmitter = {
  * @param messageId The ID of the message being responded to
  * @param intelligenceEnabled Whether to show the full intelligence process
  * @param useCase The use case to process messages for
+ * @param demoType The demo type: 'assist' or 'autopilot'
  * @returns A promise that resolves when all agent results are emitted
  */
 export const sendMessageToAgent = async (
   messages: ApiMessage[], 
   messageId: string, 
   intelligenceEnabled: boolean = true,
-  useCase: string = "telco"
+  useCase: string = "telco",
+  demoType: string = "assist"
 ): Promise<void> => {
   try {
     const response = await fetch('/api/agent/chat', {
@@ -55,7 +57,8 @@ export const sendMessageToAgent = async (
       body: JSON.stringify({
         messages,
         intelligence_enabled: intelligenceEnabled,
-        use_case: useCase
+        use_case: useCase,
+        demo_type: demoType
       })
     });
 
@@ -98,9 +101,9 @@ export const sendMessageToAgent = async (
 };
 
 // Function to get predefined questions from the backend
-export const getPredefinedQuestions = async (useCase: string = "telco") => {
+export const getPredefinedQuestions = async (useCase: string = "telco", demoType: string = "assist") => {
   try {
-    const response = await fetch(`/api/agent/questions?use_case=${useCase}`);
+    const response = await fetch(`/api/agent/questions?use_case=${useCase}&demo_type=${demoType}`);
     if (!response.ok) {
       throw new Error('Failed to fetch questions');
     }

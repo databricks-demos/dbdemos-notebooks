@@ -12,12 +12,12 @@ class AgentService:
         self.use_mockup = use_mockup
         self.registry = IndustryRegistry()
 
-    async def get_questions(self, use_case: str = "telco"):
+    async def get_questions(self, use_case: str = "telco", demo_type: str = "assist"):
         """Return the list of predefined questions for the given use case"""
-        implementation = self.registry.get_implementation(use_case)
+        implementation = self.registry.get_implementation(use_case, demo_type)
         if not implementation:
             # Fallback to telco if implementation not found
-            implementation = self.registry.get_implementation("telco")
+            implementation = self.registry.get_implementation("telco", demo_type)
         
         responses = implementation.get_responses()
         return [{"preview": q["question"][:50] + "..." if len(q["question"]) > 50 else q["question"], 
@@ -47,23 +47,23 @@ class AgentService:
             
         return cleaned_messages
 
-    async def process_message(self, messages, intelligence_enabled: bool = True, use_case: str = "telco"):
+    async def process_message(self, messages, intelligence_enabled: bool = True, use_case: str = "telco", demo_type: str = "assist"):
         """Process a message and yield streaming responses"""
         # First emit thinking start
         yield f"data: {json.dumps({'type': 'thinking-start', 'data': None})}\n\n"
 
         if self.use_mockup:
-            async for response in self._process_message_mock(messages, intelligence_enabled, use_case):
+            async for response in self._process_message_mock(messages, intelligence_enabled, use_case, demo_type):
                 yield response
         else:
-            async for response in self._process_message_real(messages, intelligence_enabled, use_case):
+            async for response in self._process_message_real(messages, intelligence_enabled, use_case, demo_type):
                 yield response
 
-    async def _process_message_real(self, messages, intelligence_enabled: bool, use_case: str):
+    async def _process_message_real(self, messages, intelligence_enabled: bool, use_case: str, demo_type: str = "assist"):
         """Process messages using real Databricks endpoints"""
-        implementation = self.registry.get_implementation(use_case)
+        implementation = self.registry.get_implementation(use_case, demo_type)
         if not implementation:
-            implementation = self.registry.get_implementation("telco")
+            implementation = self.registry.get_implementation("telco", demo_type)
         
         # Add system prompt based on use case
         system_messages = [{"role": "system", "content": implementation.get_system_prompt()}]
@@ -132,11 +132,11 @@ class AgentService:
         union = len(words1.union(words2))
         return intersection / union if union > 0 else 0
 
-    async def find_best_response(self, question: str, use_case: str = "telco") -> dict:
+    async def find_best_response(self, question: str, use_case: str = "telco", demo_type: str = "assist") -> dict:
         """Find the most relevant response by matching the question with predefined questions"""
-        implementation = self.registry.get_implementation(use_case)
+        implementation = self.registry.get_implementation(use_case, demo_type)
         if not implementation:
-            implementation = self.registry.get_implementation("telco")
+            implementation = self.registry.get_implementation("telco", demo_type)
         
         responses = implementation.get_responses()
         if not question:
@@ -146,13 +146,13 @@ class AgentService:
         best_match = max(responses, key=lambda r: self._calculate_word_similarity(question, r["question"]))
         return best_match
 
-    async def _process_message_mock(self, messages, intelligence_enabled: bool, use_case: str):
+    async def _process_message_mock(self, messages, intelligence_enabled: bool, use_case: str, demo_type: str = "assist"):
         """Process messages using mock data and simulated delays"""
         # Get the last user message
         user_messages = [m for m in messages if m["role"] == "user"]
         last_question = user_messages[-1]["content"] if user_messages else ""
         
-        response = await self.find_best_response(last_question, use_case)
+        response = await self.find_best_response(last_question, use_case, demo_type)
         
         # Use shorter thinking time for non-intelligent mode
         await asyncio.sleep(2 if intelligence_enabled else 1)

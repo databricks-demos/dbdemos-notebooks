@@ -8,6 +8,12 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
+import sys
+major, minor = sys.version_info[:2]
+assert (major, minor) >= (3, 11), f"This demo expect python version 3.11, but found {major}.{minor}. \nUse DBR15.4 or above. \nIf you're on serverless compute, open the 'Environment' menu on the right of your notebook, set it to >=2 and apply."
+
+# COMMAND ----------
+
 # MAGIC %run ../../../_resources/00-global-setup-v2
 
 # COMMAND ----------

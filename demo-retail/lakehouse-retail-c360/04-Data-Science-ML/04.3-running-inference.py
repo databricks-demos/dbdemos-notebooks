@@ -46,7 +46,7 @@ mlflow.set_registry_uri("databricks-uc")
 #                                                                                                Alias
 #                                                                                  Model name       |
 #                                                                                        |          |
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='virtualenv')
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='virtualenv', result_type='long')
 #We can use the function in SQL
 spark.udf.register("predict_churn", predict_churn_udf)
 
@@ -84,6 +84,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 
 import mlflow
 mlflow.set_registry_uri("databricks-uc")
+model_name = "dbdemos_customer_churn"
 model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.{model_name}@prod")
 columns = model.metadata.get_input_schema().input_names()
 df = spark.table('churn_features').select(*columns).limit(10).toPandas()

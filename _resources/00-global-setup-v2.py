@@ -250,6 +250,18 @@ class DBDemos():
         raise Exception(f"couldn't find table {table_name} or table is empty. Do you have data being generated to be consumed?")
       i += 1
 
+  @staticmethod
+  def get_python_version_mlflow():
+    import sys
+    # Determine target version
+    major, minor, micro = sys.version_info[:3]
+
+    if major == 3 and minor == 11 and micro > 10:
+        return "3.11.10"
+    elif major == 3 and minor == 12 and micro > 3:
+        return "3.12.3"
+    else:
+        return f"{major}.{minor}.{micro}"
 
   # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
   @staticmethod

@@ -22,6 +22,12 @@ dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset al
 
 # COMMAND ----------
 
+import sys
+major, minor = sys.version_info[:2]
+assert (major, minor) >= (3, 11), f"This demo expect python version 3.11, but found {major}.{minor}. \nUse DBR15.4 or above. \nIf you're on serverless compute, open the 'Environment' menu on the right of your notebook, set it to >=2 and apply."
+
+# COMMAND ----------
+
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
 folder = f"/Volumes/{catalog}/{db}/{volume_name}"
@@ -102,7 +108,7 @@ except Exception as e:
         signature = ModelSignature.from_dict({'inputs': '[{"name": "user_id", "type": "string"}, {"name": "age_group", "type": "long"}, {"name": "canal", "type": "string"}, {"name": "country", "type": "string"}, {"name": "gender", "type": "long"}, {"name": "order_count", "type": "long"}, {"name": "total_amount", "type": "long"}, {"name": "total_item", "type": "long"}, {"name": "last_transaction", "type": "datetime"}, {"name": "platform", "type": "string"}, {"name": "event_count", "type": "long"}, {"name": "session_count", "type": "long"}, {"name": "days_since_creation", "type": "long"}, {"name": "days_since_last_activity", "type": "long"}, {"name": "days_last_event", "type": "long"}]',
 'outputs': '[{"type": "tensor", "tensor-spec": {"dtype": "int32", "shape": [-1]}}]'})
         #Temporary pin python to 3.11.10
-        with mlflow.start_run(run_name="mockup_model") as run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", "3.11.10"):
+        with mlflow.start_run(run_name="mockup_model") as run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", DBDemos.get_python_version_mlflow()):
             model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature, pip_requirements=['mlflow=='+mlflow.__version__, 'pandas=='+pd.__version__, 'numpy=='+np.__version__, 'cloudpickle=='+cloudpickle.__version__])
 
         #Register & move the model in production

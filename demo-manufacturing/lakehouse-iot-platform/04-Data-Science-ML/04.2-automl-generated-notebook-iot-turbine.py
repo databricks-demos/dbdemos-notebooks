@@ -301,7 +301,7 @@ dataset = mlflow.data.from_pandas(X_train)
 
 def objective(params):
   #Temporary pin python to 3.11.10
-  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", "3.11.10"):
+  with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", DBDemos.get_python_version_mlflow()):
     lgbmc_classifier = LGBMClassifier(**params)
     mlflow.log_input(dataset, context="training")
     model = Pipeline([

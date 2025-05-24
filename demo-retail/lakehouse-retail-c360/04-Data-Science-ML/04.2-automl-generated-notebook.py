@@ -24,7 +24,7 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.22.0
 # MAGIC # Hardcode dbrml 16.4 version here to avoid version conflict
-# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.54 lightgbm==4.5.0 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==2.2.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl networkx==3.2.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -98,7 +98,7 @@ df_loaded.head(5)
 # COMMAND ----------
 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-supported_cols = ["event_count", "gender", "total_amount", "country", "last_transaction", "order_count", "total_item", "days_since_last_activity", "canal", "days_last_event", "days_since_creation", "session_count", "age_group", "platform"]
+supported_cols = ["canal", "event_count", "days_since_creation", "country", "session_count", "order_count", "days_last_event", "last_transaction", "days_since_last_activity", "total_amount", "gender", "total_item", "age_group", "platform"]
 col_selector = ColumnSelector(supported_cols)
 
 # COMMAND ----------
@@ -143,7 +143,7 @@ datetime_transformers = []
 
 for col in ["last_transaction"]:
     ohe_transformer = ColumnTransformer(
-        [("ohe", OneHotEncoder(sparse_output=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
+        [("ohe", OneHotEncoder(sparse=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
         remainder="passthrough")
     timestamp_preprocessor = Pipeline([
         (f"impute_{col}", imputers[col]),
@@ -201,7 +201,7 @@ numerical_pipeline = Pipeline(steps=[
     ("standardizer", StandardScaler()),
 ])
 
-numerical_transformers = [("numerical", numerical_pipeline, ["event_count", "gender", "total_amount", "order_count", "total_item", "days_since_last_activity", "days_last_event", "days_since_creation", "session_count", "age_group"])]
+numerical_transformers = [("numerical", numerical_pipeline, ["event_count", "days_since_creation", "session_count", "order_count", "days_last_event", "total_amount", "days_since_last_activity", "gender", "total_item", "age_group"])]
 
 # COMMAND ----------
 
@@ -229,7 +229,7 @@ one_hot_pipeline = Pipeline(steps=[
     ("one_hot_encoder", OneHotEncoder(handle_unknown="indicator")),
 ])
 
-categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["age_group", "canal", "country", "event_count", "order_count", "platform", "session_count"])]
+categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["age_group", "canal", "country", "days_last_event", "days_since_last_activity", "event_count", "order_count", "platform", "session_count"])]
 
 # COMMAND ----------
 
@@ -237,7 +237,7 @@ from sklearn.compose import ColumnTransformer
 
 transformers = datetime_transformers + bool_transformers + numerical_transformers + categorical_one_hot_transformers
 
-preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_threshold=1)
+preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_threshold=0)
 
 # COMMAND ----------
 
@@ -314,12 +314,11 @@ pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
 dataset = mlflow.data.from_pandas(X_train)
 
-
 def objective(params):
-  #Temporary pin python to 3.11.10
   with mlflow.start_run(experiment_id=run['experiment_id'], run_name="lightgbm") as mlflow_run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", DBDemos.get_python_version_mlflow()):
     lgbmc_classifier = LGBMClassifier(**params)
     mlflow.log_input(dataset, "training")
+
     model = Pipeline([
         ("column_selector", col_selector),
         ("preprocessor", preprocessor),
@@ -338,10 +337,9 @@ def objective(params):
     mlflow_model = Model()
     pyfunc.add_to_model(mlflow_model, loader_module="mlflow.sklearn")
     pyfunc_model = PyFuncModel(model_meta=mlflow_model, model_impl=model)
-    X_train[target_col] = y_train
     training_eval_result = mlflow.evaluate(
         model=pyfunc_model,
-        data=X_train,
+        data=X_train.assign(**{str(target_col):y_train}),
         targets=target_col,
         model_type="classifier",
         evaluator_config = {"log_model_explainability": False,
@@ -349,10 +347,9 @@ def objective(params):
     )
     lgbmc_training_metrics = training_eval_result.metrics
     # Log metrics for the validation set
-    X_val[target_col] = y_val
     val_eval_result = mlflow.evaluate(
         model=pyfunc_model,
-        data=X_val,
+        data=X_val.assign(**{str(target_col):y_val}),
         targets=target_col,
         model_type="classifier",
         evaluator_config = {"log_model_explainability": False,
@@ -360,10 +357,9 @@ def objective(params):
     )
     lgbmc_val_metrics = val_eval_result.metrics
     # Log metrics for the test set
-    X_test[target_col] = y_test
     test_eval_result = mlflow.evaluate(
         model=pyfunc_model,
-        data=X_test,
+        data=X_test.assign(**{str(target_col):y_test}),
         targets=target_col,
         model_type="classifier",
         evaluator_config = {"log_model_explainability": False,
@@ -371,7 +367,7 @@ def objective(params):
     )
     lgbmc_test_metrics = test_eval_result.metrics
 
-    loss = lgbmc_val_metrics["val_f1_score"]
+    loss = -lgbmc_val_metrics["val_f1_score"]
 
     # Truncate metric key names so they can be displayed together
     lgbmc_val_metrics = {k.replace("val_", ""): v for k, v in lgbmc_val_metrics.items()}
@@ -410,18 +406,18 @@ def objective(params):
 # COMMAND ----------
 
 space = {
-  "colsample_bytree": 0.7172680490525541,
-  "lambda_l1": 0.6558368029168495,
-  "lambda_l2": 35.41076330226356,
-  "learning_rate": 0.623192939429768,
-  "max_bin": 432,
-  "max_depth": 10,
-  "min_child_samples": 186,
-  "n_estimators": 1370,
-  "num_leaves": 9,
-  "path_smooth": 95.79260596167464,
-  "subsample": 0.6273099032075418,
-  "random_state": 837718497,
+  "colsample_bytree": 0.6894665418662436,
+  "lambda_l1": 0.24114681074974328,
+  "lambda_l2": 117.97769127793491,
+  "learning_rate": 0.41044009194210707,
+  "max_bin": 36,
+  "max_depth": 8,
+  "min_child_samples": 247,
+  "n_estimators": 282,
+  "num_leaves": 16,
+  "path_smooth": 57.07445771956602,
+  "subsample": 0.7845389221041094,
+  "random_state": 418579392,
 }
 
 # COMMAND ----------
@@ -456,10 +452,61 @@ mlflow_run = best_result["run"]
 display(
   pd.DataFrame(
     [best_result["val_metrics"], best_result["test_metrics"]],
-    index=["validation", "test"]))
+    index=pd.Index(["validation", "test"], name="split")).reset_index())
 
 set_config(display="diagram")
 model
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Patch pandas version in logged model
+# MAGIC
+# MAGIC Ensures that model serving uses the same version of pandas that was used to train the model.
+
+# COMMAND ----------
+
+import mlflow
+import os
+import shutil
+import tempfile
+import yaml
+
+run_id = mlflow_run.info.run_id
+
+# Set up a local dir for downloading the artifacts.
+tmp_dir = tempfile.mkdtemp()
+
+client = mlflow.tracking.MlflowClient()
+
+# Fix conda.yaml
+conda_file_path = mlflow.artifacts.download_artifacts(artifact_uri=f"runs:/{run_id}/model/conda.yaml", dst_path=tmp_dir)
+with open(conda_file_path) as f:
+  conda_libs = yaml.load(f, Loader=yaml.FullLoader)
+pandas_lib_exists = any([lib.startswith("pandas==") for lib in conda_libs["dependencies"][-1]["pip"]])
+if not pandas_lib_exists:
+  print("Adding pandas dependency to conda.yaml")
+  conda_libs["dependencies"][-1]["pip"].append(f"pandas=={pd.__version__}")
+
+  with open(f"{tmp_dir}/conda.yaml", "w") as f:
+    f.write(yaml.dump(conda_libs))
+  client.log_artifact(run_id=run_id, local_path=conda_file_path, artifact_path="model")
+
+# Fix requirements.txt
+venv_file_path = mlflow.artifacts.download_artifacts(artifact_uri=f"runs:/{run_id}/model/requirements.txt", dst_path=tmp_dir)
+with open(venv_file_path) as f:
+  venv_libs = f.readlines()
+venv_libs = [lib.strip() for lib in venv_libs]
+pandas_lib_exists = any([lib.startswith("pandas==") for lib in venv_libs])
+if not pandas_lib_exists:
+  print("Adding pandas dependency to requirements.txt")
+  venv_libs.append(f"pandas=={pd.__version__}")
+
+  with open(f"{tmp_dir}/requirements.txt", "w") as f:
+    f.write("\n".join(venv_libs))
+  client.log_artifact(run_id=run_id, local_path=venv_file_path, artifact_path="model")
+
+shutil.rmtree(tmp_dir)
 
 # COMMAND ----------
 

@@ -22,7 +22,7 @@
 
 # MAGIC %pip install mlflow==2.22.0 cloudpickle==2.2.1 databricks-sdk==0.40.0
 # MAGIC # hardcode the ml 16.4 LTS libraries versions here for demo stability
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==1.5.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==2.2.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl networkx==3.2.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -444,6 +444,57 @@ display(
 
 set_config(display="diagram")
 model
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Patch pandas version in logged model
+# MAGIC
+# MAGIC Ensures that model serving uses the same version of pandas that was used to train the model.
+
+# COMMAND ----------
+
+import mlflow
+import os
+import shutil
+import tempfile
+import yaml
+
+run_id = mlflow_run.info.run_id
+
+# Set up a local dir for downloading the artifacts.
+tmp_dir = tempfile.mkdtemp()
+
+client = mlflow.tracking.MlflowClient()
+
+# Fix conda.yaml
+conda_file_path = mlflow.artifacts.download_artifacts(artifact_uri=f"runs:/{run_id}/model/conda.yaml", dst_path=tmp_dir)
+with open(conda_file_path) as f:
+  conda_libs = yaml.load(f, Loader=yaml.FullLoader)
+pandas_lib_exists = any([lib.startswith("pandas==") for lib in conda_libs["dependencies"][-1]["pip"]])
+if not pandas_lib_exists:
+  print("Adding pandas dependency to conda.yaml")
+  conda_libs["dependencies"][-1]["pip"].append(f"pandas=={pd.__version__}")
+
+  with open(f"{tmp_dir}/conda.yaml", "w") as f:
+    f.write(yaml.dump(conda_libs))
+  client.log_artifact(run_id=run_id, local_path=conda_file_path, artifact_path="model")
+
+# Fix requirements.txt
+venv_file_path = mlflow.artifacts.download_artifacts(artifact_uri=f"runs:/{run_id}/model/requirements.txt", dst_path=tmp_dir)
+with open(venv_file_path) as f:
+  venv_libs = f.readlines()
+venv_libs = [lib.strip() for lib in venv_libs]
+pandas_lib_exists = any([lib.startswith("pandas==") for lib in venv_libs])
+if not pandas_lib_exists:
+  print("Adding pandas dependency to requirements.txt")
+  venv_libs.append(f"pandas=={pd.__version__}")
+
+  with open(f"{tmp_dir}/requirements.txt", "w") as f:
+    f.write("\n".join(venv_libs))
+  client.log_artifact(run_id=run_id, local_path=venv_file_path, artifact_path="model")
+
+shutil.rmtree(tmp_dir)
 
 # COMMAND ----------
 

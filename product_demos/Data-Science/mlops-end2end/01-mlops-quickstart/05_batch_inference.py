@@ -14,8 +14,16 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.22.0
+# MAGIC %pip install --quiet mlflow==2.19
 # MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+pip install https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -41,9 +49,14 @@
 
 # COMMAND ----------
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+from mlflow.tracking import MlflowClient
 
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+client = MlflowClient()
+model_name = f"{catalog}.{db}.mlops_churn"
+version_info = client.get_model_version_by_alias(model_name, "champion")
+run_id = version_info.run_id
+
+requirements_path = client.download_artifacts(run_id, "sklearn_model/requirements.txt")
 
 # COMMAND ----------
 
@@ -65,17 +78,17 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 
 # COMMAND ----------
 
-# DBTITLE 1,In a Python notebook
 import mlflow
-# Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
-# Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@Champion")
+inference_pdf = inference_df.toPandas()
+if 'split' in inference_pdf.columns:
+    inference_pdf = inference_pdf.rename(columns={"split": "_automl_split_col"})
 
-# Batch score
-preds_df = inference_df.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))
+model_uri = f"models:/{catalog}.{db}.mlops_churn@Champion"
+model = mlflow.pyfunc.load_model(model_uri)
 
-display(preds_df)
+inference_pdf['predictions'] = model.predict(inference_pdf)
+display(inference_pdf)
 
 # COMMAND ----------
 

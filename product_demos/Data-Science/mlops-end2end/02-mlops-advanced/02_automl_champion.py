@@ -312,6 +312,10 @@ help(LGBMClassifier)
 
 # COMMAND ----------
 
+!pip install networkx
+
+# COMMAND ----------
+
 from mlflow.models import Model, infer_signature, ModelSignature
 from mlflow.pyfunc import PyFuncModel
 from mlflow import pyfunc

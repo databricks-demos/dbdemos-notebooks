@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.22.0
+# MAGIC %pip install --quiet mlflow==2.19
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -131,64 +131,78 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
-#get our validation dataset:
-validation_df = spark.table('mlops_churn_training').filter("split='validate'")
-
-#Call the model with the given alias and return the prediction
-def predict_churn(validation_df, model_alias):
-    model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@{model_alias}")
-    return validation_df.withColumn('predictions', model(*model.metadata.get_input_schema().input_names()))
-
-# COMMAND ----------
-
 import pandas as pd
-import plotly.express as px
+import numpy as np
 from sklearn.metrics import confusion_matrix
+import plotly.express as px
 
-#Note: this is over-simplified and depends on your use-case, but the idea is to evaluate our model against business metrics
-cost_of_customer_churn = 2000 #in dollar
-cost_of_discount = 500 #in dollar
+validation_pdf = spark.table('mlops_churn_training').filter("split='validate'").toPandas()
 
-cost_true_negative = 0 #did not churn, we did not give him the discount
-cost_false_negative = cost_of_customer_churn #did churn, we lost the customer
-cost_true_positive = cost_of_customer_churn -cost_of_discount #We avoided churn with the discount
-cost_false_positive = -cost_of_discount #doesn't churn, we gave the discount for free
+def get_predictions(validation_pdf, model_alias):
+    try:
+        import mlflow
+        model_uri = f"models:/{catalog}.{db}.mlops_churn@{model_alias}"
+        model = mlflow.pyfunc.load_model(model_uri)
+        validation_pdf['predictions'] = model.predict(validation_pdf)
+    except Exception as e:
+        error_msg = str(e)
+        if (
+            "No module named 'databricks.automl_runtime'" in error_msg or
+            "cannot import name 'automl'" in error_msg or
+            "one_hot_encoder" in error_msg or
+            "free variable 'loaded_model'" in error_msg
+        ):
+            print(f"AutoML model cannot be loaded on serverless. Using mock predictions for {model_alias}.")
+            # MOCK: For demo, copy the true churn labels as predictions (simulates a perfect model)
+            # Note: cannot import name 'automl' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+            # adding a temporary workaround to make sure this works well for now -- ignore this for classic run
+            validation_pdf['predictions'] = validation_pdf['churn']
+        else:
+            raise e
+    return validation_pdf
 
-def get_model_value_in_dollar(model_alias):
-    # Convert preds_df to Pandas DataFrame
-    model_predictions = predict_churn(validation_df, model_alias).toPandas()
-    # Calculate the confusion matrix
-    tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['predictions']).ravel()
-    return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive
-#add an exception to catch non-existing model champion yet
+
+cost_of_customer_churn = 2000
+cost_of_discount = 500
+cost_true_negative = 0
+cost_false_negative = cost_of_customer_churn
+cost_true_positive = cost_of_customer_churn - cost_of_discount
+cost_false_positive = -cost_of_discount
+
+def get_model_value_in_dollar(preds_df):
+    tn, fp, fn, tp = confusion_matrix(preds_df['churn'], preds_df['predictions']).ravel()
+    return (
+        tn * cost_true_negative +
+        fp * cost_false_positive +
+        fn * cost_false_negative +
+        tp * cost_true_positive
+    )
+
 is_champ_model_exist = True
 try:
     client.get_model_version_by_alias(f"{catalog}.{db}.mlops_churn", "Champion")
-    print("Model already registered as Champion")
 except Exception as error:
-    print("An error occurred:", type(error).__name__, "It means no champion model yet exist")
+    print("No Champion model found, using mock for both.")
     is_champ_model_exist = False
-if is_champ_model_exist:
-    champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
-    challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
 
-try:
-    #Compare the challenger f1 score to the existing champion if it exists
-    champion_potential_revenue_gain = get_model_value_in_dollar("Champion")
-except:
-    print(f"No Champion found. Accept the model as it's the first one.")
-    champion_potential_revenue_gain = 0
-    
-challenger_potential_revenue_gain = get_model_value_in_dollar("Challenger")
+champion_potential_revenue_gain = get_model_value_in_dollar(get_predictions(validation_pdf.copy(), "Champion")) if is_champ_model_exist else 0
+challenger_potential_revenue_gain = get_model_value_in_dollar(get_predictions(validation_pdf.copy(), "Challenger"))
 
-data = {'Model Alias': ['Challenger', 'Champion'],
-        'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]}
+data = {
+    'Model Alias': ['Challenger', 'Champion'],
+    'Potential Revenue Gain': [challenger_potential_revenue_gain, champion_potential_revenue_gain]
+}
 
-# Create a bar plot using plotly express
-px.bar(data, x='Model Alias', y='Potential Revenue Gain', color='Model Alias',
+fig = px.bar(
+    data,
+    x='Model Alias',
+    y='Potential Revenue Gain',
+    color='Model Alias',
     labels={'Potential Revenue Gain': 'Revenue Impacted'},
-    title='Business Metrics - Revenue Impacted')
+    title='Business Metrics - Revenue Impacted'
+)
+fig.show()
+
 
 # COMMAND ----------
 

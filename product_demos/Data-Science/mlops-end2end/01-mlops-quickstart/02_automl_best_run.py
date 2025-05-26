@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl networkx
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -225,9 +225,11 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # COMMAND ----------
 
 # AutoML completed train - validation - test split internally and used split to specify the set
-split_train_df = df_loaded.loc[df_loaded.split == "train"]
-split_val_df = df_loaded.loc[df_loaded.split == "validate"]
-split_test_df = df_loaded.loc[df_loaded.split == "test"]
+split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col') or c == 'split'][0]
+
+split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
+split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
+split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
 # Separate target co# Separate target column from features and drop split
 X_train = split_train_df.drop([target_col, "split"], axis=1)

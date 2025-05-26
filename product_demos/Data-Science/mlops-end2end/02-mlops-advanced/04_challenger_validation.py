@@ -17,6 +17,10 @@
 
 # COMMAND ----------
 
+
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## General Validation Checks
@@ -42,7 +46,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $adv_mlops=true
+# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true 
 
 # COMMAND ----------
 
@@ -121,7 +125,7 @@ try:
 
   # Batch score
   features_w_preds = fe.score_batch(df=labelsDF, model_uri=model_uri, result_type=labelsDF.schema[label_col].dataType)
-  display(features_w_preds)
+  #display(features_w_preds)
   client.set_model_version_tag(name=model_name, version=str(model_version), key="predicts", value=True)
 
 except Exception as e:

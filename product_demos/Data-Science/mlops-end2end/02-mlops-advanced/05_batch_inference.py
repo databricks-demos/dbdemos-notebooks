@@ -14,7 +14,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.8.0
+# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.8.0 cloudpickle==2.2.1 scikit-learn==1.4.2
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -50,9 +50,22 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,In a python notebook
+# DBDemos.get_python_version_mlflow() 
+# Install the required package
+# !pip install databricks-automl-runtime
+# !pip install holidays
+# !pip install category_encoders
+# !pip install lightgbm
+# import mlflow
+# print(mlflow.__version__)
+
+# COMMAND ----------
+
+
 from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F
+import mlflow
+from unittest import mock
 
 # Load customer features to be scored
 inference_df = spark.read.table("advanced_churn_cust_ids")
@@ -64,10 +77,11 @@ model_name = f"{catalog}.{db}.advanced_mlops_churn"
 
 # Model URI
 model_uri = f"models:/{model_name}@Champion"
-
-# Batch score
-preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string")
-display(preds_df)
+with mlflow.start_run(nested=True), mock.patch("mlflow.utils.environment.PYTHON_VERSION", DBDemos.get_python_version_mlflow()):
+  # Batch score
+  preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string")
+  preds_df.printSchema()
+  display(preds_df.limit(5))
 
 # COMMAND ----------
 

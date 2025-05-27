@@ -25,7 +25,26 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet shap==0.46.0 mlflow==2.19.0 scikit-learn==1.3.0
+import sklearn
+sklearn.__version__
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet shap==0.46.0 mlflow==2.19.0
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_fsi_credit_decisioning@prod").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

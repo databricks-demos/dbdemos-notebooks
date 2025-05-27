@@ -25,11 +25,6 @@
 
 # COMMAND ----------
 
-import sklearn
-sklearn.__version__
-
-# COMMAND ----------
-
 # MAGIC %pip install --quiet shap==0.46.0 mlflow==2.19.0
 # MAGIC dbutils.library.restartPython()
 

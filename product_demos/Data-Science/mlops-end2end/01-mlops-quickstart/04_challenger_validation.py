@@ -46,6 +46,21 @@
 
 # COMMAND ----------
 
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Fetch Model information
 # MAGIC
@@ -137,7 +152,7 @@ validation_df = spark.table('mlops_churn_training').filter("split='validate'")
 
 #Call the model with the given alias and return the prediction
 def predict_churn(validation_df, model_alias):
-    model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@{model_alias}")
+    model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@{model_alias}") #Use env_manager="virtualenv" to recreate a venv with the same python version if needed
     return validation_df.withColumn('predictions', model(*model.metadata.get_input_schema().input_names()))
 
 # COMMAND ----------

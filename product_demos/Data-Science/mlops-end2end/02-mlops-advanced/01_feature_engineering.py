@@ -175,6 +175,7 @@ churn_featuresDF = churn_features_n_predsDF.drop("churn")
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC ALTER TABLE advanced_churn_label_table DROP CONSTRAINT IF EXISTS advanced_churn_label_table_pk;
 # MAGIC ALTER TABLE advanced_churn_label_table ALTER COLUMN customer_id SET NOT NULL;
 # MAGIC ALTER TABLE advanced_churn_label_table ALTER COLUMN transaction_ts SET NOT NULL;
 # MAGIC ALTER TABLE advanced_churn_label_table ADD CONSTRAINT advanced_churn_label_table_pk PRIMARY KEY(customer_id, transaction_ts);

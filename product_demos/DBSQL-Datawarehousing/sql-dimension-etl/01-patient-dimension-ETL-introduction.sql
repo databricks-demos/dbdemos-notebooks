@@ -16,7 +16,7 @@
 -- MAGIC
 -- MAGIC You'll discover how to run classic SQL / DBA workflow, making it ideal to migrate your existing Datawarehouse scripts to Databricks, with minimum effort: 
 -- MAGIC
--- MAGIC * Parametrize your job to support different environements.
+-- MAGIC * Parametrize your job to support different environments.
 -- MAGIC * Load the raw staging data
 -- MAGIC * Apply transformations
 -- MAGIC * Create star schema with FK/PK

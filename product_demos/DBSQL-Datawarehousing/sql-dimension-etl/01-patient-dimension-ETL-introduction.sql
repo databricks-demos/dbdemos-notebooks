@@ -19,7 +19,7 @@
 -- MAGIC * Parametrize your job to support different environements.
 -- MAGIC * Load the raw staging data
 -- MAGIC * Apply transformations
--- MAGIC * Create start schema with FK/PK
+-- MAGIC * Create star schema with FK/PK
 -- MAGIC * Leverage Databricks Workflow to chain your operation
 -- MAGIC * Incremental data loading
 -- MAGIC * Data validation

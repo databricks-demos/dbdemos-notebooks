@@ -27,7 +27,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk>=0.39.0
+# MAGIC %pip install databricks-sdk>=0.40.0
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -105,7 +105,7 @@ try:
   )
   
 except Exception as lhm_exception:
-  if "already exist" in str(lhm_exception):
+  if "already exist" in str(lhm_exception).lower():
     print(f"Monitor for {TABLE_NAME} already exists, retrieving monitor info:")
     lhm_monitor = w.quality_monitors.get(table_name=f"{TABLE_NAME}")
 

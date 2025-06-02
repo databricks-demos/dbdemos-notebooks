@@ -10,9 +10,9 @@
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-4.png?raw=true" width="1200">
 # MAGIC
-# MAGIC *Note: in a typical mlops setup, this would run as part of an automated job to validate new model. For this demo, we'll run it as an interactive notebook.*
+# MAGIC *Note: In a typical mlops setup, this would run as part of an automated job to validate a new model. We'll run this demo as an interactive notebook.*
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable the collection or the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04_challenger_validation&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
@@ -29,7 +29,7 @@
 # MAGIC * __Inference on production data__
 # MAGIC * __Champion-Challenger testing to ensure that business KPIs are acceptable__
 # MAGIC
-# MAGIC In this notebook we explore some approaches to performing these tests, and how we can add metadata to our models with tagging if they have passed a given test or not.
+# MAGIC In this notebook, we explore some approaches to performing these tests, and how we can add metadata to our models by tagging if they have passed a given test.
 # MAGIC
 # MAGIC This part is typically specific to your line of business and quality requirements.
 # MAGIC
@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.19 databricks-feature-engineering==0.8.0
+# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.8.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -80,7 +80,7 @@ print(f"Validating {model_alias} model for {model_name} on model version {model_
 
 # COMMAND ----------
 
-# If there's no description or an insufficient number of charaters, tag accordingly
+# If there's no description or an insufficient number of characters, tag accordingly
 if not model_details.description:
   has_description = False
   print("Please add model description")
@@ -99,7 +99,7 @@ client.set_model_version_tag(name=model_name, version=str(model_details.version)
 # MAGIC
 # MAGIC #### Validate prediction
 # MAGIC
-# MAGIC We want to test to see that the model can predict on production data.  So, we will load the model and the latest from the feature store and test making some predictions.
+# MAGIC We want to test to see that the model can predict on production data.  So, we will load the model and the latest from the feature store and test by making some predictions.
 
 # COMMAND ----------
 
@@ -198,7 +198,7 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 # MAGIC
 # MAGIC Let's use our validation dataset to check the potential new model impact.
 # MAGIC
-# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic to 2 models and requires a feedback loop to evaluate the effect of the prediction (e.g. after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing later in the real-time model serving notebook.*
+# MAGIC ***Note: This is just to evaluate our models, not to be confused with A/B testing**. A/B testing is done online, splitting the traffic between 2 models. It requires a feedback loop to evaluate the effect of the prediction (e.g., after a prediction, did the discount we offered to the customer prevent the churn?). We will cover A/B testing later in the real-time model serving notebook.*
 
 # COMMAND ----------
 
@@ -220,7 +220,7 @@ import pandas as pd
 import plotly.express as px
 from sklearn.metrics import confusion_matrix
 
-# Note: this is over-simplified and depends on the use-case, but the idea is to evaluate our model against business metrics
+# Note: This is over-simplified and depends on the use-case, but the idea is to evaluate our model against business metrics
 cost_of_customer_churn = 2000 #in dollar
 cost_of_discount = 500 #in dollar
 
@@ -273,7 +273,7 @@ results.tags
 # MAGIC %md
 # MAGIC ## Promoting the Challenger to Champion
 # MAGIC
-# MAGIC When we are satisfied with the results of the __Challenger__ model, we can then promote it to Champion. This is done by setting its alias to `@Champion`. Inference pipelines that load the model using the `@Champion` alias will then be loading this new model. The alias on the older Champion model, if there is one, will be automatically unset. The model retains its `@Challenger` alias until a newer Challenger model is deployed with the alias to replace it.
+# MAGIC When we are satisfied with the results of the __Challenger__ model, we can promote it to Champion. This is done by setting its alias to `@Champion`. Inference pipelines that load the model using the `@Champion` alias will load this new model. If there is one, the alias on the older Champion model will be automatically unset. The model retains its `@Challenger` alias until a newer Challenger model is deployed with the alias to replace it.
 
 # COMMAND ----------
 
@@ -290,16 +290,16 @@ else:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Note that we are promoting the model while keeping in one catalog and schema in this demo. We do this for simplicity so that the demo can be self-contained to a catalog and schema.
+# MAGIC Note that we are promoting the model while keeping it in one catalog and schema in this demo. We do this for simplicity so the demo can be self-contained to a catalog and schema.
 # MAGIC
-# MAGIC In actual practice, it is recommended to maintain separate catalogs for Dev, QA and Prod data and AI assets. This applies to models as well. In that case, we would register the production model to a production catalog, with an appropriate `@alias` set for it. This can be done programatically, and triggered when the model is ready to be promoted to production.
+# MAGIC In actual practice, it is recommended to maintain separate catalogs for Dev, QA, and Prod data and AI assets. This applies to models as well. In that case, we would register the production model to a production catalog, with an appropriate `@alias` set. This can be done programmatically and triggered when the model is ready to be promoted to production.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Congratulations, our model is now validated and promoted accordingly
 # MAGIC
-# MAGIC We now have the certainty that our model is ready to be used in inference pipelines and in realtime serving endpoints, as it matches our validation standards.
+# MAGIC We now know that our model is ready to be used in inference pipelines and real-time serving endpoints, as it matches our validation standards.
 # MAGIC
 # MAGIC
 # MAGIC Next: [Run batch inference from our newly promoted Champion model]($./05_batch_inference)

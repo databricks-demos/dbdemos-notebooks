@@ -21,7 +21,7 @@
       {"title": "Free Dolly", "url": "https://www.databricks.com/blog/2023/04/12/dolly-first-open-commercially-viable-instruction-tuned-llm"}],
   "recommended_items": ["sql-ai-functions", "feature-store", "mlops-end2end"],
   "demo_assets": [],
-  "bundle": True,
+  "bundle": False,
   "tags": [{"ds": "Data Science"}],
   "notebooks": [
     {
@@ -86,7 +86,7 @@
     "spark_conf": {
         "spark.master": "local[*, 4]"
     },
-    "spark_version": "15.4.x-scala2.12",
+    "spark_version": "16.4.x-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER"
   }  

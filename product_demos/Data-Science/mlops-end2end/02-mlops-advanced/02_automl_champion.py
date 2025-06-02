@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Use the best Auto-ML generated notebook to bootstrap our ML Project
+# MAGIC # Use the best AutoML generated notebook to bootstrap our ML Project
 # MAGIC
-# MAGIC We have selected the notebook from best run from the Auto ML experiment and reusing it to build our model.
+# MAGIC We have selected the notebook from the best run of the AutoML experiment and reused it to build our model.
 # MAGIC
-# MAGIC AutoML generates the code in this notebook automatically. As Data Scientist, I can tune it based on the business knowledge I have if needed.
+# MAGIC AutoML generates the code in this notebook automatically. As a Data Scientist, I can tune it based on my business knowledge if needed.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-2.png?raw=True" width="1200">
 # MAGIC
@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 hyperopt==0.2.7 shap==0.46.0 lightgbm==4.5.0
+# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.22.0 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -68,9 +68,9 @@ display(spark.table("advanced_churn_feature_table"))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Create features specifications.
+# MAGIC Create feature specifications.
 # MAGIC
-# MAGIC The feature lookup defintion specifies the tables to use as feature tables and the lookup keys to use to lookup feature values.
+# MAGIC The feature lookup definition specifies the tables to use as feature tables and the key to lookup feature values.
 # MAGIC
 # MAGIC The feature function definition specifies which columns from the feature table are bound to the function inputs.
 # MAGIC
@@ -116,7 +116,7 @@ label_col = "churn"
 
 # MAGIC %md
 # MAGIC
-# MAGIC Create the training set specifications. This contains information how the training set should be assembled from the label table, feature table and feature function.
+# MAGIC Create the training set specifications. This contains information on how the training set should be assembled from the label table, feature table, and feature function.
 
 # COMMAND ----------
 
@@ -154,8 +154,8 @@ df_loaded = training_set_specs.load_df().toPandas()
 # MAGIC Once we have the dataset in a pandas DF
 # MAGIC
 # MAGIC ### Select supported columns
-# MAGIC Select only the columns that are supported. This allows us to train a model that can predict on a dataset that has extra columns that are not used in training.
-# MAGIC `[]` are dropped in the pipelines. See the Alerts tab of the AutoML Experiment page for details on why these columns are dropped.
+# MAGIC Select only the columns that are supported. This allows us to train a model that can predict on a dataset with extra columns not used in training.
+# MAGIC `[]` are dropped in the pipelines. Please take a look at the Alerts tab of the AutoML Experiment page for details on why these columns are dropped.
 
 # COMMAND ----------
 
@@ -200,7 +200,7 @@ bool_transformers = [("boolean", bool_pipeline, ["gender", "phone_service", "dep
 # MAGIC %md
 # MAGIC ### Numerical columns
 # MAGIC
-# MAGIC Missing values for numerical columns are imputed with mean by default.
+# MAGIC Missing values for numerical columns are imputed with the mean by default.
 
 # COMMAND ----------
 
@@ -428,13 +428,13 @@ def objective(params):
 
 # MAGIC %md
 # MAGIC ### Configure the hyperparameter search space
-# MAGIC Configure the search space of parameters. Parameters below are all constant expressions but can be
+# MAGIC Configure the search space of parameters. Parameters below are all constant expressions, but can be
 # MAGIC modified to widen the search space. For example, when training a decision tree classifier, to allow
 # MAGIC the maximum tree depth to be either 2 or 3, set the key of 'max_depth' to
 # MAGIC `hp.choice('max_depth', [2, 3])`. Be sure to also increase `max_evals` in the `fmin` call below.
 # MAGIC
 # MAGIC See https://docs.databricks.com/applications/machine-learning/automl-hyperparam-tuning/index.html
-# MAGIC for more information on hyperparameter tuning as well as
+# MAGIC for more information on hyperparameter tuning, as well as
 # MAGIC http://hyperopt.github.io/hyperopt/getting-started/search_spaces/ for documentation on supported
 # MAGIC search expressions.
 # MAGIC
@@ -508,7 +508,7 @@ model
 # MAGIC of the relationship between features and model output. Features are ranked in descending order of
 # MAGIC importance, and impact/color describe the correlation between the feature and the target variable.
 # MAGIC - Generating SHAP feature importance is a very memory intensive operation, so to ensure that AutoML can run trials without
-# MAGIC   running out of memory, we disable SHAP by default.<br />
+# MAGIC   running out of memory, so we disable SHAP by default.<br />
 # MAGIC   You can set the flag defined below to `shap_enabled = True` and re-run this notebook to see the SHAP plots.
 # MAGIC - To reduce the computational overhead of each trial, a single example is sampled from the validation set to explain.<br />
 # MAGIC   For more thorough results, increase the sample size of explanations, or provide your own examples to explain.
@@ -548,9 +548,9 @@ if shap_enabled:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Confusion matrix, ROC and Precision-Recall curves for validation data
+# MAGIC ## Confusion matrix, ROC, and Precision-Recall curves for validation data
 # MAGIC
-# MAGIC We show the confusion matrix, ROC and Precision-Recall curves of the model on the validation data.
+# MAGIC We show the confusion matrix, RO,C and Precision-Recall curves of the model on the validation data.
 # MAGIC
 # MAGIC For the plots evaluated on the training and the test data, check the artifacts on the MLflow run page.
 

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Intelligence Data Platform for HLS - Patient Cohorts and re-admission 
+# MAGIC # Data Intelligence Platform for HLS - Patient Cohorts and re-admission 
 # MAGIC <br />
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/hls/patient-readmission/hls-patient-readmision-lakehouse-0.png" style="float: left; margin-right: 30px; margin-top:10px" width="650px" />
 # MAGIC

@@ -215,9 +215,6 @@ def wait_for_feature_endpoint_to_start(fe, endpoint_name: str):
             print(f"Endpoint {endpoint_name} ready - {ep}")
             return ep
         
-def get_headers():
-    token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-    return {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
 
 # COMMAND ----------
 

@@ -2,7 +2,7 @@
 
 This repository contains all the notebooks for [https://github.com/databricks-demos/dbdemos](https://github.com/databricks-demos/dbdemos)
 
-dbdemos repository contains the code to package and distribute these notebooks
+dbdemos repository contains the code to package and distribute these notebooks.
 
 
 ## How to use this content

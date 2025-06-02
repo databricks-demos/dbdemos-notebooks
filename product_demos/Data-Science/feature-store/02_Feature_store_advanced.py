@@ -15,7 +15,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-feature-engineering==0.2.0 databricks-sdk==0.20.0
+# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.10.2 databricks-sdk==0.50.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -254,21 +254,28 @@ display(training_pd)
 
 # COMMAND ----------
 
-# DBTITLE 1,Start an AutoML run
 from datetime import datetime
-from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/feature-store"
 xp_name = f"automl_purchase_advanced_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-summary_cl = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = training_pd,
-    target_col = "purchased",
-    primary_metric="log_loss",
-    timeout_minutes = 10
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+try:
+    from databricks import automl
+    summary_cl = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = training_pd,
+        target_col = "purchased",
+        primary_metric="log_loss",
+        timeout_minutes = 10
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        summary_cl = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_pd.toPandas(), model_name="automl_mockup", target_col="purchased")
+    else:
+        raise e
 
 # COMMAND ----------
 
@@ -314,6 +321,12 @@ best_model = summary_cl.best_trial.load_model()
 env = mlflow.pyfunc.get_default_conda_env()
 with open(mlflow.artifacts.download_artifacts("runs:/"+summary_cl.best_trial.mlflow_run_id+"/model/requirements.txt"), 'r') as f:
     env['dependencies'][-1]['pip'] = f.read().split('\n')
+    
+#Just ensure that MLFLOW version is at the latest to avoid package version conflict
+for dep in env['dependencies']:
+    if isinstance(dep, dict) and 'pip' in dep:
+        dep['pip'] = [pkg for pkg in dep['pip'] if not pkg.startswith('mlflow==')]
+        dep['pip'].insert(0, 'mlflow=='+mlflow.__version__)
 
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model_advanced", experiment_id=summary_cl.experiment.experiment_id) as run:
@@ -391,6 +404,7 @@ display(scored_df)
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
+from datetime import timedelta
 
 def create_online_table(table_name, pks, timeseries_key=None):
     w = WorkspaceClient()
@@ -399,15 +413,20 @@ def create_online_table(table_name, pks, timeseries_key=None):
         from databricks.sdk.service import catalog as c
         print(f"Creating online table for {online_table_name}...")
         spark.sql(f'ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
-        spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
-        w.online_tables.create(name=online_table_name, spec=spec)
+        # Create an online table
+        spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered=c.OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}), timeseries_key=timeseries_key)
+        online_table = c.OnlineTable(name = online_table_name, spec=spec)
+        return w.online_tables.create(table=online_table)
         
 #Note that the timeseries key 'ts' is optional. When defined, the online store will return the most recent entry.
-create_online_table(f"{catalog}.{db}.destination_features_advanced", ["destination_id"], "ts") 
-create_online_table(f"{catalog}.{db}.user_features_advanced",        ["user_id"], "ts")
+wait_tables = []
+wait_tables.append(create_online_table(f"{catalog}.{db}.destination_features_advanced", ["destination_id"], "ts")) 
+wait_tables.append(create_online_table(f"{catalog}.{db}.user_features_advanced",        ["user_id"], "ts"))
 
 #wait for all the tables to be online
-wait_for_online_tables(catalog, db, ["destination_features_advanced_online", "user_features_advanced_online"])
+for t in wait_tables:
+    if t:
+        t.result(timeout=timedelta(minutes=20))
 
 # COMMAND ----------
 
@@ -433,16 +452,17 @@ wait_for_online_tables(catalog, db, ["destination_features_advanced_online", "us
 
 # COMMAND ----------
 
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
 endpoint_name = "dbdemos_feature_store_endpoint_advanced"
 wc = WorkspaceClient()
-served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
+served_entities = [ServedEntityInput(entity_name=model_full_name, entity_version=latest_model.version, workload_size="Small", scale_to_zero_enabled=True)]
 try:
     print(f'Creating endpoint {endpoint_name} with latest version...')
-    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
+    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_entities=served_entities))
 except Exception as e:
     if 'already exists' in str(e):
         print(f'Endpoint exists, updating with latest model version...')
-        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_entities=served_entities)
     else: 
         raise e
 
@@ -457,12 +477,12 @@ except Exception as e:
 # COMMAND ----------
 
 lookup_keys = test_labels_df.drop('purchased', "ts").limit(2).toPandas()
-data = lookup_keys.to_dict(orient="records")
+data = lookup_keys.to_dict(orient="record")
 print('Data sent to the model:')
 print(data)
 
 starting_time = timeit.default_timer()
-inferences = wc.serving_endpoints.query(endpoint_name, inputs=lookup_keys.to_dict(orient="records"))
+inferences = wc.serving_endpoints.query(endpoint_name, dataframe_records=lookup_keys.to_dict(orient="record"))
 print(f"Inference time, end 2 end :{round((timeit.default_timer() - starting_time)*1000)}ms")
 print(inferences.predictions)
 

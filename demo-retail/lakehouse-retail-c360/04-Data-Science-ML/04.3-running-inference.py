@@ -14,7 +14,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.19.0
+# MAGIC %pip install mlflow==2.22.0
 
 # COMMAND ----------
 
@@ -32,6 +32,34 @@
 # MAGIC We will use MLFlow function to load a pyspark UDF and distribute our inference in the entire cluster. If the data is small, we can also load the model with plain python and use a pandas Dataframe.
 # MAGIC
 # MAGIC If you don't know how to start, Databricks can generate a batch inference notebook in just one click from the model registry: Open MLFlow model registry and click the "User model for inference" button!
+
+# COMMAND ----------
+
+# MAGIC %md ### Scaling inferences using Spark 
+# MAGIC We'll first see how it can be loaded as a spark UDF and called directly in a SQL function:
+
+# COMMAND ----------
+
+import mlflow
+model_name = "dbdemos_customer_churn"
+mlflow.set_registry_uri("databricks-uc")
+#                                                                                                Alias
+#                                                                                  Model name       |
+#                                                                                        |          |
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='virtualenv', result_type='long')
+#We can use the function in SQL
+spark.udf.register("predict_churn", predict_churn_udf)
+
+# COMMAND ----------
+
+# DBTITLE 1,Run inferences
+columns = predict_churn_udf.metadata.get_input_schema().input_names()
+spark.table('churn_features').withColumn("churn_prediction", predict_churn_udf(*columns)).display()
+
+# COMMAND ----------
+
+# MAGIC %md ### Pure pandas inference
+# MAGIC If we have a small dataset, we can also compute our segment using a single node and pandas API:
 
 # COMMAND ----------
 
@@ -54,35 +82,11 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 
 # COMMAND ----------
 
-# MAGIC %md ### Scaling inferences using Spark 
-# MAGIC We'll first see how it can be loaded as a spark UDF and called directly in a SQL function:
-
-# COMMAND ----------
-
 import mlflow
-model_name = "dbdemos_customer_churn"
 mlflow.set_registry_uri("databricks-uc")
-#                                                                                                Alias
-#                                                                                  Model name       |
-#                                                                                        |          |
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod")
-#We can use the function in SQL
-spark.udf.register("predict_churn", predict_churn_udf)
-
-# COMMAND ----------
-
-# DBTITLE 1,Run inferences
-columns = predict_churn_udf.metadata.get_input_schema().input_names()
-spark.table('churn_features').withColumn("churn_prediction", predict_churn_udf(*columns)).display()
-
-# COMMAND ----------
-
-# MAGIC %md ### Pure pandas inference
-# MAGIC If we have a small dataset, we can also compute our segment using a single node and pandas API:
-
-# COMMAND ----------
-
+model_name = "dbdemos_customer_churn"
 model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.{model_name}@prod")
+columns = model.metadata.get_input_schema().input_names()
 df = spark.table('churn_features').select(*columns).limit(10).toPandas()
 df['churn_prediction'] = model.predict(df)
 df.head(3)
@@ -163,6 +167,6 @@ def score_model(dataset):
 # MAGIC
 # MAGIC Databricks provides built-in GenAI capabilities for you to accelerate such GenAI apps deployment. 
 # MAGIC
-# MAGIC Discover how with the [04.4-GenAI-for-churn]($./04.4-GenAI-for-churn) Notebook.
+# MAGIC Discover how with the [Agent Tools]($../05-Generative-AI/05.1-Agent-Functions-Creation) Notebook in the new Generative AI section of this demo!
 # MAGIC
 # MAGIC [Go back to the introduction]($../00-churn-introduction-lakehouse)

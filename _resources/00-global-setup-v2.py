@@ -250,6 +250,18 @@ class DBDemos():
         raise Exception(f"couldn't find table {table_name} or table is empty. Do you have data being generated to be consumed?")
       i += 1
 
+  @staticmethod
+  def get_python_version_mlflow():
+    import sys
+    # Determine target version
+    major, minor, micro = sys.version_info[:3]
+
+    if major == 3 and minor == 11 and micro > 10:
+        return "3.11.10"
+    elif major == 3 and minor == 12 and micro > 3:
+        return "3.12.3"
+    else:
+        return f"{major}.{minor}.{micro}"
 
   # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
   @staticmethod
@@ -278,40 +290,69 @@ class DBDemos():
         os.makedirs(os.path.dirname(random_path), exist_ok=True)
         df.to_parquet(random_path, index=False)
         mlflow.log_artifact(random_path, artifact_path='data/training_data')
-        
+        model = None
         if model_name is not None and target_col is not None:
-            from sklearn.ensemble import RandomForestClassifier
-            from sklearn.metrics import f1_score
-            
-            # Split the data based on _automl_split_col
-            train_df = df[df['_automl_split_col'] == 'train']
-            val_df = df[df['_automl_split_col'] == 'val']
-            
-            # Prepare training and validation datasets
-            X_train = train_df.drop(columns=['_automl_split_col', target_col], errors='ignore')
-            y_train = train_df[target_col]
-            X_val = val_df.drop(columns=['_automl_split_col', target_col], errors='ignore')
-            y_val = val_df[target_col]
-            
-            # Train RandomForest model
-            model = RandomForestClassifier(random_state=42)
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_val)
-            val_f1 = f1_score(y_val, y_pred, average='weighted')
-            
-            # Log model and metric to MLflow
-            mlflow.log_metric('val_f1_score', val_f1)
-            mlflow.sklearn.log_model(model, artifact_path="model", input_example=X_train.iloc[[0]])
+          from sklearn.ensemble import RandomForestClassifier
+          from sklearn.metrics import f1_score
+          import pandas as pd
 
-        class BestTrial:
-            def __init__(self, mlflow_run_id):
+          class SafeRandomForestClassifier(RandomForestClassifier):
+              def fit(self, X, y=None, sample_weight=None):
+                  # Auto-drop datetime columns
+                  if isinstance(X, pd.DataFrame):
+                      datetime_cols = X.select_dtypes(include=['datetime']).columns
+                      if len(datetime_cols) > 0:
+                          X = X.drop(columns=datetime_cols)
+                  return super().fit(X, y, sample_weight)
+
+              def predict(self, X):
+                  # Same: drop datetime columns at predict time
+                  if isinstance(X, pd.DataFrame):
+                      datetime_cols = X.select_dtypes(include=['datetime']).columns
+                      if len(datetime_cols) > 0:
+                          X = X.drop(columns=datetime_cols)
+                  return super().predict(X)
+                
+          # Split the data based on _automl_split_col
+          train_df = df[df['_automl_split_col'] == 'train']
+          val_df = df[df['_automl_split_col'] == 'val']
+          
+          # Prepare training and validation datasets
+          X_train = train_df.drop(columns=['_automl_split_col', target_col], errors='ignore')
+          y_train = train_df[target_col]
+          X_val = val_df.drop(columns=['_automl_split_col', target_col], errors='ignore')
+          y_val = val_df[target_col]
+          
+          # Train RandomForest model
+          model = SafeRandomForestClassifier(random_state=42)
+          model.fit(X_train, y_train)
+          y_pred = model.predict(X_val)
+          val_f1 = f1_score(y_val, y_pred, average='weighted')
+          
+          # Log model and metric to MLflow
+          mlflow.log_metric('val_f1_score', val_f1)
+          mlflow.sklearn.log_model(model, artifact_path="model", input_example=X_train.iloc[[0]])
+
+        class BestTrialMock:
+            def __init__(self, mlflow_run_id, model):
                 self.mlflow_run_id = mlflow_run_id
+                self.model = model
+                run_data = mlflow.get_run(mlflow_run_id).data
+                self.metrics = run_data.metrics
+                self.params = run_data.params
+            def load_model(self):
+                return self.model
+        
+        class XPMock:
+            def __init__(self, experiment_id):
+                self.experiment_id = experiment_id
         
         class AutoMLRun:
-            def __init__(self, best_trial_mlflow_run_id):
-                self.best_trial = BestTrial(best_trial_mlflow_run_id)
+            def __init__(self, best_trial_mlflow_run_id, model, xp):
+                self.best_trial = BestTrialMock(best_trial_mlflow_run_id, model)
+                self.experiment = XPMock(xp)
         
-        return AutoMLRun(run.info.run_id)
+        return AutoMLRun(run.info.run_id, model, xp)
 
 # COMMAND ----------
 

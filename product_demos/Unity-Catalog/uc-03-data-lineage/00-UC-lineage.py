@@ -148,7 +148,4 @@ dinner_price.write.mode("overwrite").saveAsTable("dinner_price")
 # MAGIC %md
 # MAGIC
 # MAGIC ### Existing Limitations
-# MAGIC - Streaming operations are not yet supported
-# MAGIC - Lineage will not be captured when data is written directly to files in cloud storage even if a table is defined at that location (eg spark.write.save(“s3:/mybucket/mytable/”) will not produce lineage)
-# MAGIC - Lineage is not captured across workspaces (eg if a table A > table B transformation is performed in workspace 1 and table B > table C in workspace 2, each workspace will show a partial view of the lineage for table B)
-# MAGIC - Lineage is computed on a 90-day rolling window, meaning that lineage will not be displayed for tables that have not been modified in more than 90 days ago
+# MAGIC Revew the data lineage [documentation](https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-lineage#lineage-limitations) for the latest limitations.

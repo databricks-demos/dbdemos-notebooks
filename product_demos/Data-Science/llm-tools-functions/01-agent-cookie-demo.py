@@ -212,8 +212,8 @@ display_tools(get_tools()) #display in a table the tools - see _resource/00-init
 
 from langchain_community.chat_models.databricks import ChatDatabricks
 
-#We're going to use llama 3.1 because it's tool enabled and works great. Keep temp at 0 to make it more deterministic.
-llm = ChatDatabricks(endpoint="databricks-meta-llama-3-1-70b-instruct",
+#We're going to use llama 3.3 because it's tool enabled and works great. Keep temp at 0 to make it more deterministic.
+llm = ChatDatabricks(endpoint="databricks-meta-llama-3-3-70b-instruct",
     temperature=0.0,
     streaming=False)
 

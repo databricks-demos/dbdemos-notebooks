@@ -143,14 +143,6 @@
       "description": "Once your model is deployed, run low latency inferences."
     },
     {
-      "path": "04-Data-Science-ML/04.4-GenAI-for-churn", 
-      "pre_run": False, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": False,
-      "title":  "GenAI on Databricks", 
-      "description": "Reduce churn with GenAI capabilities."
-    },
-    {
       "path": "03-AI-BI-data-warehousing/03.1-AI-BI-Datawarehousing", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -167,7 +159,23 @@
       "description": "Run interactive queries on top of your data"
     },
     {
-      "path": "05-Workflow-orchestration/05-Workflow-orchestration-churn", 
+      "path": "05-Generative-AI/05.1-Agent-Functions-Creation", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True,
+      "title":  "Define GenAI Functions for reducing customer churn", 
+      "description": "Define the Unity Catalog functions to reduce churn, including a churn predictor, order retriever, and marketing copy generator."
+    },    
+    {
+      "path": "05-Generative-AI/05.2-Agent-Creation-Guide", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Create an agent", 
+      "description": "Define an AI agent with the functions you defined in notebook 05.1"
+    },    
+    {
+      "path": "06-Workflow-orchestration/06-Workflow-orchestration-churn", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -253,13 +261,29 @@
                           "task_key": "create_feature_and_automl_run"
                       }
                   ]
-            }
+            },
+            {
+                "task_key": "create_ai_functions",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/05-Generative-AI/05.1-Agent-Functions-Creation",
+                    "source": "WORKSPACE"
+                },
+                "base_parameters": {"shap_enabled": "false"},
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "register_churn_model"
+                      }
+                  ]
+            }            
         ],
         "job_clusters": [
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "15.4.x-cpu-ml-scala2.12",
+                    "spark_version": "16.4.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -281,7 +305,7 @@
     }
   },
   "cluster": {
-      "spark_version": "15.4.x-cpu-ml-scala2.12",
+      "spark_version": "16.4.x-cpu-ml-scala2.12",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

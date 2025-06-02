@@ -4,17 +4,17 @@
 # MAGIC
 # MAGIC ## Inference with the Champion model
 # MAGIC
-# MAGIC With Models in Unity Catalog, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies, or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
+# MAGIC With Models in Unity Catalog, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-5.png?raw=true" width="1200">
 # MAGIC
-# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <!-- Collect usage data (view). Remove it to disable the collection or disable the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05_batch_inference&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.19
+# MAGIC %pip install --quiet mlflow==2.22.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -30,7 +30,7 @@
 # MAGIC
 # MAGIC Now that our model is available in the Unity Catalog Model Registry, we can load it to compute our inferences and save them in a table to start building dashboards.
 # MAGIC
-# MAGIC We will use MLFlow function to load a pyspark UDF and distribute our inference in the entire cluster. If the data is small, we can also load the model with plain python and use a pandas Dataframe.
+# MAGIC We will use the MLflow function to load a pyspark UDF and distribute our inference in the entire cluster. We can load the model with plain Python and use a Pandas Dataframe if the data is small.
 # MAGIC
 # MAGIC If you don't know how to start, you can get sample code from the __"Artifacts"__ page of the model's experiment run.
 
@@ -61,16 +61,16 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 # MAGIC
 # MAGIC We are ready to run inference on the Champion model. We will load the model as a Spark UDF and generate predictions for our customer records.
 # MAGIC
-# MAGIC For simplicity, we assume that features have been extracted for the new customer records and these are already stored in the feature table. These are typically done by separate feature engineering pipelines.
+# MAGIC For simplicity, we assume that features have been extracted for the new customer records already stored in the feature table. These are typically done by separate feature engineering pipelines.
 
 # COMMAND ----------
 
-# DBTITLE 1,In a python notebook
+# DBTITLE 1,In a Python notebook
 import mlflow
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
-# Load champion model as a Spark UDF
-champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@Champion")
+# Load champion model as a Spark UDF. You can use virtual env manager for the demo to avoid version conflict (you can remove the pip install above with virtual env)
+champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@Champion") #Use env_manager="virtualenv" to recreate a venv with the same python version if needed
 
 # Batch score
 preds_df = inference_df.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))
@@ -83,17 +83,17 @@ display(preds_df)
 # MAGIC
 # MAGIC That's it! Our data can now be saved as a table and re-used by the Data Analyst / Marketing team to take special action and reduce Churn risk on these customers!
 # MAGIC
-# MAGIC Your data will also be available within Genie to answer any churn-related question using plain text english!
+# MAGIC Your data will also be available within Genie to answer any churn-related question using plain text English!
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Conclusion
 # MAGIC
-# MAGIC This is all for the quickstart demo! We have looked at basic concepts of MLOps and how Databricks helps you achieve them. They include:
+# MAGIC This is all for the quickstart demo! We have looked at the basic concepts of MLOps and how Databricks helps you achieve them. They include:
 # MAGIC
 # MAGIC - Feature engineering and storing feature tables with labels in Databricks
-# MAGIC - AutoML, model training and experiment tracking in MLflow
+# MAGIC - AutoML, model training, and experiment tracking in MLflow
 # MAGIC - Registering models as Models in Unity Catalog for governed usage
 # MAGIC - Model validation, Champion-Challenger testing, and model promotion
 # MAGIC - Batch inference by loading the model as a pySpark UDF

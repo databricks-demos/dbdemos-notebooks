@@ -31,31 +31,11 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.20.2
+# MAGIC %pip install mlflow==2.22.0
 
 # COMMAND ----------
 
 # MAGIC %run ../../_resources/00-setup
-
-# COMMAND ----------
-
-# DBTITLE 1,Load the version from our mlflow run
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-import os
-import mlflow
-# Use the Unity Catalog model registry
-mlflow.set_registry_uri("databricks-uc")
-# download model requirement from remote registry
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts(artifact_path="requirements.txt") 
-
-# COMMAND ----------
-
-# MAGIC %pip install -r $requirements_path
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# MAGIC %run ../../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -176,9 +156,9 @@ def ingest_folder(folder, data_format, table):
                     .trigger(availableNow= True) #Remove for real time streaming
                     .table("spark_"+table)) #Table will be created if we haven't specified the schema first
   
-ingest_folder(f'{volume_folder}/historical_turbine_status', 'json', 'historical_turbine_status')
-ingest_folder(f'{volume_folder}/turbine', 'json', 'turbine')
-ingest_folder(f'{volume_folder}/incoming_data', 'parquet', 'sensor_bronze').awaitTermination()
+ingest_folder(f'{volume_folder}/historical_turbine_status', 'json', 'spark_historical_turbine_status')
+ingest_folder(f'{volume_folder}/turbine', 'json', 'spark_turbine')
+ingest_folder(f'{volume_folder}/incoming_data', 'parquet', 'spark_sensor_bronze').awaitTermination()
 
 # COMMAND ----------
 
@@ -269,14 +249,14 @@ display(spark.table("spark_turbine_training_dataset"))
 
 # COMMAND ----------
 
-# DBTITLE 1,Load the ML model
-#Note: ideally we should download and install the model libraries with the model requirements.txt and PIP. See 04.3-running-inference for an example
 import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                                                                       Stage/version  
-#                                                                                                       Model name         |        
-#                                                                                                           |              |        
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string") #, env_manager='virtualenv'
+#                                                                                                    Stage/version  
+#                                                                                       Model name         |        
+#                                                                                           |              |        
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
+#We can use the function in SQL
+spark.udf.register("predict_maintenance", predict_maintenance)
 columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------

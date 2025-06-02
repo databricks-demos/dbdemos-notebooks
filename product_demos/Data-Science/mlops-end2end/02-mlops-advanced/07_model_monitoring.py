@@ -5,30 +5,30 @@
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-7.png?raw=true" width="1200">
 # MAGIC
-# MAGIC Databricks Lakehouse Monitoring attaches a data monitor to any Delta table and it will generate the necessary pipelines to profile the data and calculate quality metrics. You just need to tell it how frequently these quality metrics need to be collected.
+# MAGIC Databricks Lakehouse Monitoring attaches a data monitor to any Delta table, and it will generate the necessary pipelines to profile the data and calculate quality metrics. You just need to tell it how frequently these quality metrics need to be collected.
 # MAGIC
-# MAGIC Use Databricks Lakehouse Monitoring to monitor for data drifts, as well as label drift, prediction drift and changes in model quality metrics in Machine Learning use cases. Databricks Lakehouse Monitoring enables monitoring for statistics (e.g. data profiles) and drifts on tables containing:
+# MAGIC Use Databricks Lakehouse Monitoring to monitor for data drifts, as well as label drift, prediction drift, and changes in model quality metrics in Machine Learning use cases. Databricks Lakehouse Monitoring enables monitoring for statistics (e.g. data profiles) and drifts on tables containing:
 # MAGIC * batch scoring inferences
 # MAGIC * request logs from Model Serving endpoint ([AWS](https://docs.databricks.com/en/machine-learning/model-serving/inference-tables.html) |[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/model-serving/inference-tables))
 # MAGIC
 # MAGIC Databricks Lakehouse Monitoring stores the data quality and drift metrics in two tables that it automatically creates for each monitored table:
 # MAGIC - Profile metrics table (with a `_profile_metrics` suffix)
-# MAGIC   - Metrics like percentage of null values, descriptive statistics, model metrics such as accuracy, RMSE, fairness and bias metrics etc.
+# MAGIC - Metrics like percentage of null values, descriptive statistics, model metrics such as accuracy, RMSE, fairness, and bias metrics, etc.
 # MAGIC - Drift metrics table (with a `_drift_metrics` suffix)
-# MAGIC   - Metrics like the "delta" between percentage of null values, averages, as well as metrics from statistical tests to detect data drift.
+# MAGIC   - Metrics like the "delta" between percentage of null values, averages, and metrics from statistical tests to detect data drift.
 # MAGIC
-# MAGIC For demo simplicity purpose, we will use the batch scoring model inference as our inference table. We will attach a monitor to the table `mlops_churn_advanced_inference_table`.
+# MAGIC We will use the batch scoring model inference as our inference table for demo simplicity. We will attach a monitor to the table `mlops_churn_advanced_inference_table`.
 # MAGIC
 
 # COMMAND ----------
 
 # DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
-# MAGIC %pip install -qU databricks-sdk==0.40.0 mlflow==2.19
+# MAGIC %pip install -qU databricks-sdk==0.40.0 mlflow==2.22.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 
@@ -45,7 +45,7 @@
 # MAGIC This can serve as a union for offline & online processed inference.
 # MAGIC For simplicity of this demo, we will create the inference table as a copy of the first offline batch prediction table.
 # MAGIC
-# MAGIC In a different scenario, we could have processed the online inference table and store them in the inference table alongside with the offline inference table.
+# MAGIC In a different scenario, we could have processed the online inference table and stored it in the inference table alongside the offline inference table.
 
 # COMMAND ----------
 
@@ -74,7 +74,7 @@
 # MAGIC %md
 # MAGIC ### Create a custom metric
 # MAGIC
-# MAGIC Customer metrics can be defined and will automatically be calculated by lakehouse monitoring. They often serve as a mean to capture some aspect of business logic or use a custom model quality score. 
+# MAGIC Customer metrics can be defined and calculated automatically by Lakehouse monitoring. They often serve as a means to capture some aspect of business logic or use a custom model quality score. 
 # MAGIC
 # MAGIC In this example, we will calculate the business impact (loss in monthly charges) of a bad model performance
 
@@ -102,7 +102,7 @@ expected_loss_metric = [
 # MAGIC %md
 # MAGIC ### Create monitor
 # MAGIC
-# MAGIC As we are monitoring an inference table (including machine learning model predcitions data), we will pick an [Inference profile](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/create-monitor-api#inferencelog-profile) for the monitor.
+# MAGIC As we are monitoring an inference table (including machine learning model predictions data), we will pick an [Inference profile](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/create-monitor-api#inferencelog-profile) for the monitor.
 
 # COMMAND ----------
 
@@ -132,7 +132,7 @@ try:
     custom_metrics=expected_loss_metric)
   
 except Exception as lhm_exception:
-  if "already exist" in str(lhm_exception):
+  if "already exist" in str(lhm_exception).lower():
     print(f"Monitor for {catalog}.{db}.advanced_churn_inference_table already exists, retrieving monitor info:")
     info = w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_table")
   else:
@@ -140,7 +140,7 @@ except Exception as lhm_exception:
 
 # COMMAND ----------
 
-# MAGIC %md Wait/Verify that monitor was created
+# MAGIC %md Wait/Verify that the monitor was created
 
 # COMMAND ----------
 
@@ -191,7 +191,7 @@ w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_tabl
 # MAGIC %md
 # MAGIC ## Inspect dashboard
 # MAGIC
-# MAGIC You can now inspect the monitoring dashboard that is automatically generated for you. Navigate to `advanced_churn_inference_table` in the __Catalog Explorer__, go to the __Quality__ tab and click on the __View dashboard__ button.
+# MAGIC You can now inspect the monitoring dashboard automatically generated for you. Navigate to `advanced_churn_inference_table` in the __Catalog Explorer__, go to the __Quality__ tab and click on the __View dashboard__ button.
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -217,14 +217,14 @@ w.quality_monitors.get(table_name=f"{catalog}.{db}.advanced_churn_inference_tabl
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC We do not observe any drift yet, as we only have the first refresh "window". We will simulate some drifted data in the next step and refresh the monitor against the newly captured data.
+# MAGIC We have not observed any drift yet, as we only have the first refresh "window". In the next step, we will simulate some drifted data and refresh the monitor against the newly captured data.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Next: Test for drift and trigger a model retrain
 # MAGIC
-# MAGIC Now, let explore how to detect drift on the inference data and define violations rules for triggering a model (re)train workflow.
+# MAGIC Now, let's explore how to detect drift on the inference data and define violation rules for triggering a model (re)train workflow.
 # MAGIC
 # MAGIC Next steps:
 # MAGIC * [Detect drift and trigger model retrain]($./08_drift_detection)

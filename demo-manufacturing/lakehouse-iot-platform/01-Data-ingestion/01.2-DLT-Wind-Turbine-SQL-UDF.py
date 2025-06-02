@@ -1,9 +1,8 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow to load our model
-# MAGIC %pip install mlflow==2.20.2 cloudpickle==2.2.1 
-# MAGIC # hardcode the ml 15.4 LTS libraries versions here - should move to env_manager='conda' for prod use-case instead
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.15.1 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.45 lightgbm==4.2.0 lz4==4.3.2 matplotlib==3.7.2 numpy==1.23.5 pandas==1.5.3 psutil==5.9.0 pyarrow==14.0.1 scikit-learn==1.3.0 scipy==1.11.1
+# MAGIC %pip install mlflow==2.22.0
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -23,7 +22,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                                                        Stage/version  
 #                                                                                           Model name                          |        
 #                                                                                               |                               |        
-predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string")
+predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
 spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # COMMAND ----------
@@ -34,35 +33,43 @@ spark.udf.register("predict_maintenance", predict_maintenance_udf)
 # MAGIC
 # MAGIC ```
 # MAGIC {
-# MAGIC     "id": "95f28631-1884-425e-af69-05c3f397dd90",
-# MAGIC     "name": "xxxx",
-# MAGIC     "storage": "/demos/dlt/lakehouse_iot_wind_turbine/xxxxx",
-# MAGIC     "configuration": {
-# MAGIC         "pipelines.useV2DetailsPage": "true"
-# MAGIC     },
+# MAGIC     "id": "b5dbbef6-aab1-45d8-9fa3-04d0da636a05",
+# MAGIC     "pipeline_type": "WORKSPACE",
 # MAGIC     "clusters": [
 # MAGIC         {
 # MAGIC             "label": "default",
 # MAGIC             "autoscale": {
 # MAGIC                 "min_workers": 1,
-# MAGIC                 "max_workers": 5
+# MAGIC                 "max_workers": 5,
+# MAGIC                 "mode": "ENHANCED"
 # MAGIC             }
 # MAGIC         }
 # MAGIC     ],
+# MAGIC     "development": true,
+# MAGIC     "event_log": {
+# MAGIC         "catalog": "main_build",
+# MAGIC         "schema": "dbdemos_iot_platform",
+# MAGIC         "name": "event_log"
+# MAGIC     },
+# MAGIC     "continuous": false,
+# MAGIC     "channel": "CURRENT",
+# MAGIC     "photon": false,
 # MAGIC     "libraries": [
 # MAGIC         {
 # MAGIC             "notebook": {
-# MAGIC                 "path": "/Repos/xxxx/01.1-DLT-Wind-Turbine-SQL"
+# MAGIC                 "path": "/Repos/quentin.ambard@databricks.com/dbdemos-notebooks/demo-manufacturing/lakehouse-iot-platform/01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL"
 # MAGIC             }
 # MAGIC         },
 # MAGIC         {
 # MAGIC             "notebook": {
-# MAGIC                 "path": "/Repos/xxxx/01.2-DLT-Wind-Turbine-SQL-UDF"
+# MAGIC                 "path": "/Repos/quentin.ambard@databricks.com/dbdemos-notebooks/demo-manufacturing/lakehouse-iot-platform/01-Data-ingestion/01.2-DLT-Wind-Turbine-SQL-UDF"
 # MAGIC             }
 # MAGIC         }
 # MAGIC     ],
-# MAGIC     "target": "retail_lakehouse_churn_xxxx",
-# MAGIC     "continuous": false,
-# MAGIC     "development": false
+# MAGIC     "name": "dbdemos-build-manuf-iot-turbine",
+# MAGIC     "edition": "ADVANCED",
+# MAGIC     "catalog": "main_build",
+# MAGIC     "schema": "dbdemos_iot_platform",
+# MAGIC     "data_sampling": false
 # MAGIC }
 # MAGIC ```

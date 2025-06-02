@@ -3,12 +3,14 @@
 -- MAGIC
 -- MAGIC # AI / BI On Databricks: Your AI-powered Lakehouse is the best Warehouse
 -- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_3.png?raw=true" style="float: right" width="500px">
+-- MAGIC
 -- MAGIC Traditional Data Warehouses can’t keep up with the variety of data and use cases. Business agility requires reliable, real-time data, with insight from ML models.
 -- MAGIC
 -- MAGIC Working with the lakehouse unlock traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
 -- MAGIC
 -- MAGIC With AI assistant infused in all the BI stack, Databricks makes it easy to analysts and business users to extract insight from their data.  
--- MAGIC <br>
+-- MAGIC <br style="clear: both">
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/dbsql.png" width="700px" style="float: left" />
 -- MAGIC
@@ -24,25 +26,6 @@
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03.1-AI-BI-Datawarehousing&demo_name=lakehouse-retail-c360&event=VIEW">
-
--- COMMAND ----------
-
--- MAGIC %md-sandbox
--- MAGIC # BI & Datawarehousing with Databricks SQL
--- MAGIC
--- MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-3.png" />
--- MAGIC
--- MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
--- MAGIC
--- MAGIC Let's explore how Databricks SQL support your Data Analyst team with interactive BI and start analyzing our customer Churn.
--- MAGIC
--- MAGIC To start with Databricks SQL, open the SQL view on the top left menu.
--- MAGIC
--- MAGIC You'll be able to:
--- MAGIC
--- MAGIC - Create a SQL Warehouse to run your queries
--- MAGIC - Use DBSQL to build your own dashboards
--- MAGIC - Plug any BI tools (Tableau/PowerBI/..) to run your analysis
 
 -- COMMAND ----------
 

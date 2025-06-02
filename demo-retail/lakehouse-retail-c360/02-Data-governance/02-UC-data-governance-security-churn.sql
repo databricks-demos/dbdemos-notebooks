@@ -73,44 +73,30 @@
 
 -- COMMAND ----------
 
--- MAGIC %md-sandbox
--- MAGIC # Implementing a global data governance and security with Unity Catalog
+-- MAGIC %md-sandbox  
+-- MAGIC # Scalable Data Governance with Unity Catalog  
 -- MAGIC
--- MAGIC <img style="float: right; margin-top: 30px" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-2.png" />
--- MAGIC
--- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
--- MAGIC
--- MAGIC Our Data has been saved as Delta Table by our Data Engineering team.  The next step is to secure this data while allowing cross team to access it. <br>
--- MAGIC A typical setup would be the following:
--- MAGIC
--- MAGIC * Data Engineers / Jobs can read and update the main data/schemas (ETL part)
--- MAGIC * Data Scientists can read the final tables and update their features tables
--- MAGIC * Data Analyst have READ access to the Data Engineering and Feature Tables and can ingest/transform additional data in a separate schema.
--- MAGIC * Data is masked/anonymized dynamically based on each user access level
--- MAGIC
--- MAGIC This is made possible by Unity Catalog. When tables are saved in the Unity Catalog, they can be made accessible to the entire organization, cross-workpsaces and cross users.
--- MAGIC
--- MAGIC Unity Catalog is key for data governance, including creating data products or organazing teams around datamesh. It brings among other:
--- MAGIC
--- MAGIC * Fined grained ACL
--- MAGIC * Audit log
--- MAGIC * Data lineage
--- MAGIC * Data exploration & discovery
--- MAGIC * Sharing data with external organization (Delta Sharing)
-
--- COMMAND ----------
-
--- MAGIC %md-sandbox
--- MAGIC ## Cluster setup for UC
--- MAGIC
--- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/uc/uc-cluster-setup-single-user.png" style="float: right"/>
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_2.png?raw=true" style="float: right" width="500px">
 -- MAGIC
 -- MAGIC
--- MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
+-- MAGIC Managing secure, scalable data access is critical. With **Unity Catalog**, the **Lakehouse** enables seamless governance while ensuring teams can collaborate efficiently.  
 -- MAGIC
--- MAGIC Go in the compute page, create a new cluster.
+-- MAGIC ### The Challenge  
+-- MAGIC Our data, stored as **Delta Tables**, needs to be secured while remaining accessible to different teams:  
+-- MAGIC - **Data Engineers** manage and update core datasets.  
+-- MAGIC - **Data Scientists** read final tables and refine feature sets.  
+-- MAGIC - **Analysts** explore and transform data within governed schemas.  
+-- MAGIC - **Access is dynamically masked/anonymized** based on user roles.  
 -- MAGIC
--- MAGIC Select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
+-- MAGIC ### The Solution: Unity Catalog  
+-- MAGIC By centralizing access control, **Unity Catalog** enables:  
+-- MAGIC ✅ Fine-grained **ACLs**  
+-- MAGIC ✅ **Audit logs** for compliance  
+-- MAGIC ✅ **Data lineage** for transparency  
+-- MAGIC ✅ **Easy exploration & discovery**  
+-- MAGIC ✅ **Seamless data sharing** across teams and organizations (**Delta Sharing**)  
+-- MAGIC
+-- MAGIC With **Unity Catalog**, teams can confidently manage **governance, security, and collaboration** across workspaces. 🚀  
 
 -- COMMAND ----------
 

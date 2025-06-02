@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install mlflow==2.19.0 cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 databricks-automl-runtime==0.2.21 holidays==0.45 lightgbm==4.3.0
+# MAGIC %pip install mlflow==2.22.0
 # MAGIC #If you issues, make sure this matches your automl dependency version. For prod usage, use env_manager='conda'
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
 # MAGIC dbutils.library.restartPython()
@@ -32,9 +32,9 @@
 # MAGIC
 # MAGIC <br>
 # MAGIC
-
+# MAGIC
 # MAGIC ## <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/john.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
-
+# MAGIC
 # MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>
 # MAGIC   *Supporting streaming and batch, handling concurrent operations, small files issues, GDPR requirements, complex DAG dependencies...*<br><br>
 # MAGIC * Building custom frameworks to enforce quality and tests<br><br>
@@ -50,9 +50,9 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & Delta Live Tables
+# MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & DLT
 # MAGIC
-# MAGIC <img style="float: right" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/lakehouse-retail-c360-churn-1.png" />
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_1.png?raw=true" style="float: right" width="500px">
 # MAGIC
 # MAGIC In this notebook, we'll work as a Data Engineer to build our c360 database. <br>
 # MAGIC We'll consume and clean our raw data sources to prepare the tables required for our BI & ML workload.
@@ -72,9 +72,7 @@
 # MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks. 
 # MAGIC
 # MAGIC
-# MAGIC ## 2/ Prepare and transform your data with Delta Live Table
-# MAGIC
-# MAGIC <!-- ## Delta Live Table: A simple way to build and manage data pipelines for fresh, high quality data! -->
+# MAGIC ## 2/ Prepare and transform your data with DLT
 # MAGIC
 # MAGIC <div>
 # MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
@@ -108,7 +106,7 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Building a Delta Live Table pipeline to analyze and reduce churn
+# MAGIC ## Building a DLT pipeline to analyze and reduce churn
 # MAGIC
 # MAGIC In this example, we'll implement a end-to-end DLT pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modelisation.
 # MAGIC
@@ -125,7 +123,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Your DLT Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn Delta Live Table pipeline</a> to see it in action.<br/>
+# MAGIC Your DLT Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn DLT pipeline</a> to see it in action.<br/>
 # MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 # COMMAND ----------
@@ -300,11 +298,12 @@ def churn_features():
 # COMMAND ----------
 
 # DBTITLE 1,Load the model as SQL function
-import mlflow
+import mlflow 
+mlflow.set_registry_uri('databricks-uc')
 #                                                                                                     Stage/version  
 #                                                                                   Model name               |        
 #                                                                                       |                    |        
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "int")
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, "models:/main__build.dbdemos_retail_c360.dbdemos_customer_churn@prod", "long", env_manager='virtualenv')
 spark.udf.register("predict_churn", predict_churn_udf)
 
 # COMMAND ----------
@@ -324,7 +323,7 @@ def churn_prediction():
 # MAGIC
 # MAGIC As you can see, building Data Pipeline with databricks let you focus on your business implementation while the engine solves all hard data engineering work for you.
 # MAGIC
-# MAGIC Open the <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+# MAGIC Open the <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn DLT pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
 
 # COMMAND ----------
 
@@ -338,8 +337,8 @@ def churn_prediction():
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Optional: Checking your data quality metrics with Delta Live Tables
-# MAGIC Delta Live Tables tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required. This let you build the following dashboards:
+# MAGIC ## Optional: Checking your data quality metrics with DLT
+# MAGIC DLT tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required. This let you build the following dashboards:
 # MAGIC
 # MAGIC <img width="1000" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-dlt-stat.png?raw=true">
 # MAGIC

@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow-skinny==2.20.0 langchain==0.3.19 langgraph-checkpoint==1.0.12 langchain_core langchain-community==0.2.16 langgraph==0.2.16 pydantic langchain_databricks
+# MAGIC %pip install -U -qqqq mlflow langchain langgraph==0.3.4 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -49,7 +49,7 @@ try:
     """,
     "llm_endpoint": "databricks-meta-llama-3-3-70b-instruct",
     "warehouse_id": wh.id,
-    "uc_functions": [
+    "tools": [
       f"{catalog}.{schema}.turbine_specifications_retriever",
       f"{catalog}.{schema}.turbine_maintenance_reports_retriever",
       f"{catalog}.{schema}.turbine_maintenance_predictor"
@@ -60,7 +60,7 @@ try:
   with open('config.yml', 'w') as f:
       yaml.dump(config, f)
 except Exception as e:
-    print("Could not write the file - make sure it exists in the local folder")
+    print(f"Could not write the file - make sure it exists in the local folder: {e}")
 
 
 # COMMAND ----------
@@ -83,228 +83,163 @@ config = ModelConfig(development_config="config.yml")
 
 # COMMAND ----------
 
-from langchain_community.chat_models import ChatDatabricks
-from langchain_community.tools.databricks import UCFunctionToolkit
-
-# Create the llm
-llm = ChatDatabricks(endpoint=config.get("llm_endpoint"))
-
-uc_functions = config.get("uc_functions")
-
-tools = (
-    UCFunctionToolkit(warehouse_id=config.get("warehouse_id"))
-    .include(*uc_functions)
-    .get_tools()
-)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Output parsers
-# MAGIC Databricks interfaces, such as the AI Playground, can optionally display pretty-printed tool calls.
+# MAGIC %%writefile agent.py
+# MAGIC from typing import Any, Generator, Optional, Sequence, Union
 # MAGIC
-# MAGIC Use the following helper functions to parse the LLM's output into the expected format.
-
-# COMMAND ----------
-
-from typing import Iterator, Dict, Any
-from langchain_core.messages import (
-    AIMessage,
-    HumanMessage,
-    ToolMessage,
-    MessageLikeRepresentation,
-)
-
-import json
-
-def stringify_tool_call(tool_call: Dict[str, Any]) -> str:
-    """
-    Convert a raw tool call into a formatted string that the playground UI expects if there is enough information in the tool_call
-    """
-    try:
-        request = json.dumps(
-            {
-                "id": tool_call.get("id"),
-                "name": tool_call.get("name"),
-                "arguments": json.dumps(tool_call.get("args", {})),
-            },
-            indent=2,
-        )
-        return f"<tool_call>{request}</tool_call>"
-    except:
-        return str(tool_call)
-
-
-def stringify_tool_result(tool_msg: ToolMessage) -> str:
-    """
-    Convert a ToolMessage into a formatted string that the playground UI expects if there is enough information in the ToolMessage
-    """
-    try:
-        result = json.dumps(
-            {"id": tool_msg.tool_call_id, "content": tool_msg.content}, indent=2
-        )
-        return f"<tool_call_result>{result}</tool_call_result>"
-    except:
-        return str(tool_msg)
-
-
-def parse_message(msg) -> str:
-    """Parse different message types into their string representations"""
-    # tool call result
-    if isinstance(msg, ToolMessage):
-        return stringify_tool_result(msg)
-    # tool call
-    elif isinstance(msg, AIMessage) and msg.tool_calls:
-        tool_call_results = [stringify_tool_call(call) for call in msg.tool_calls]
-        return "".join(tool_call_results)
-    # normal HumanMessage or AIMessage (reasoning or final answer)
-    elif isinstance(msg, (AIMessage, HumanMessage)):
-        return msg.content
-    else:
-        print(f"Unexpected message type: {type(msg)}")
-        return str(msg)
-
-
-def wrap_output(stream: Iterator[MessageLikeRepresentation]) -> Iterator[str]:
-    """
-    Process and yield formatted outputs from the message stream.
-    The invoke and stream langchain functions produce different output formats.
-    This function handles both cases.
-    """
-    for event in stream:
-        # the agent was called with invoke()
-        if "messages" in event:
-            for msg in event["messages"]:
-                yield parse_message(msg) + "\n\n"
-        # the agent was called with stream()
-        else:
-            for node in event:
-                for key, messages in event[node].items():
-                    if isinstance(messages, list):
-                        for msg in messages:
-                            yield parse_message(msg) + "\n\n"
-                    else:
-                        print("Unexpected value {messages} for key {key}. Expected a list of `MessageLikeRepresentation`'s")
-                        yield str(messages)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Create the agent
-# MAGIC Here we provide a simple graph that uses the model and tools defined by [config.yml]($./config.yml). This graph is adapated from [this LangGraph guide](https://langchain-ai.github.io/langgraph/how-tos/react-agent-from-scratch/).
+# MAGIC import mlflow
+# MAGIC from databricks_langchain import (
+# MAGIC     ChatDatabricks,
+# MAGIC     VectorSearchRetrieverTool,
+# MAGIC     DatabricksFunctionClient,
+# MAGIC     UCFunctionToolkit,
+# MAGIC     set_uc_function_client,
+# MAGIC )
+# MAGIC from langchain_core.language_models import LanguageModelLike
+# MAGIC from langchain_core.runnables import RunnableConfig, RunnableLambda
+# MAGIC from langchain_core.tools import BaseTool
+# MAGIC from langgraph.graph import END, StateGraph
+# MAGIC from langgraph.graph.graph import CompiledGraph
+# MAGIC from langgraph.graph.state import CompiledStateGraph
+# MAGIC from langgraph.prebuilt.tool_node import ToolNode
+# MAGIC from mlflow.langchain.chat_agent_langgraph import ChatAgentState, ChatAgentToolNode
+# MAGIC from mlflow.pyfunc import ChatAgent
+# MAGIC from mlflow.models import ModelConfig
+# MAGIC from mlflow.types.agent import (
+# MAGIC     ChatAgentChunk,
+# MAGIC     ChatAgentMessage,
+# MAGIC     ChatAgentResponse,
+# MAGIC     ChatContext,
+# MAGIC )
+# MAGIC
+# MAGIC mlflow.langchain.autolog()
+# MAGIC config = ModelConfig(development_config="config.yml")
+# MAGIC
+# MAGIC client = DatabricksFunctionClient()
+# MAGIC set_uc_function_client(client)
+# MAGIC
+# MAGIC ############################################
+# MAGIC # Define your LLM endpoint and system prompt
+# MAGIC ############################################
+# MAGIC LLM_ENDPOINT_NAME = config.get("llm_endpoint")
+# MAGIC llm = ChatDatabricks(endpoint=LLM_ENDPOINT_NAME)
+# MAGIC
+# MAGIC system_prompt = config.get("agent_prompt")
+# MAGIC
+# MAGIC ###############################################################################
+# MAGIC ## Define tools for your agent, enabling it to retrieve data or take actions
+# MAGIC ## beyond text generation
+# MAGIC ## To create and see usage examples of more tools, see
+# MAGIC ## https://docs.databricks.com/generative-ai/agent-framework/agent-tool.html
+# MAGIC ###############################################################################
+# MAGIC tools = []
+# MAGIC
+# MAGIC # You can use UDFs in Unity Catalog as agent tools
+# MAGIC uc_tool_names = config.get("tools")
+# MAGIC uc_toolkit = UCFunctionToolkit(function_names=uc_tool_names)
+# MAGIC tools.extend(uc_toolkit.tools)
 # MAGIC
 # MAGIC
-# MAGIC To further customize your LangGraph agent, you can refer to:
-# MAGIC * [LangGraph - Quick Start](https://langchain-ai.github.io/langgraph/tutorials/introduction/) for explanations of the concepts used in this LangGraph agent
-# MAGIC * [LangGraph - How-to Guides](https://langchain-ai.github.io/langgraph/how-tos/) to expand the functionality of your agent
+# MAGIC #####################
+# MAGIC ## Define agent logic
+# MAGIC #####################
 # MAGIC
+# MAGIC
+# MAGIC def create_tool_calling_agent(
+# MAGIC     model: LanguageModelLike,
+# MAGIC     tools: Union[Sequence[BaseTool], ToolNode],
+# MAGIC     system_prompt: Optional[str] = None,
+# MAGIC ) -> CompiledGraph:
+# MAGIC     model = model.bind_tools(tools)
+# MAGIC
+# MAGIC     # Define the function that determines which node to go to
+# MAGIC     def should_continue(state: ChatAgentState):
+# MAGIC         messages = state["messages"]
+# MAGIC         last_message = messages[-1]
+# MAGIC         # If there are function calls, continue. else, end
+# MAGIC         if last_message.get("tool_calls"):
+# MAGIC             return "continue"
+# MAGIC         else:
+# MAGIC             return "end"
+# MAGIC
+# MAGIC     if system_prompt:
+# MAGIC         preprocessor = RunnableLambda(
+# MAGIC             lambda state: [{"role": "system", "content": system_prompt}]
+# MAGIC             + state["messages"]
+# MAGIC         )
+# MAGIC     else:
+# MAGIC         preprocessor = RunnableLambda(lambda state: state["messages"])
+# MAGIC     model_runnable = preprocessor | model
+# MAGIC
+# MAGIC     def call_model(
+# MAGIC         state: ChatAgentState,
+# MAGIC         config: RunnableConfig,
+# MAGIC     ):
+# MAGIC         response = model_runnable.invoke(state, config)
+# MAGIC
+# MAGIC         return {"messages": [response]}
+# MAGIC
+# MAGIC     workflow = StateGraph(ChatAgentState)
+# MAGIC
+# MAGIC     workflow.add_node("agent", RunnableLambda(call_model))
+# MAGIC     workflow.add_node("tools", ChatAgentToolNode(tools))
+# MAGIC
+# MAGIC     workflow.set_entry_point("agent")
+# MAGIC     workflow.add_conditional_edges(
+# MAGIC         "agent",
+# MAGIC         should_continue,
+# MAGIC         {
+# MAGIC             "continue": "tools",
+# MAGIC             "end": END,
+# MAGIC         },
+# MAGIC     )
+# MAGIC     workflow.add_edge("tools", "agent")
+# MAGIC
+# MAGIC     return workflow.compile()
+# MAGIC
+# MAGIC
+# MAGIC class LangGraphChatAgent(ChatAgent):
+# MAGIC     def __init__(self, agent: CompiledStateGraph):
+# MAGIC         self.agent = agent
+# MAGIC
+# MAGIC     def predict(
+# MAGIC         self,
+# MAGIC         messages: list[ChatAgentMessage],
+# MAGIC         context: Optional[ChatContext] = None,
+# MAGIC         custom_inputs: Optional[dict[str, Any]] = None,
+# MAGIC     ) -> ChatAgentResponse:
+# MAGIC         request = {"messages": self._convert_messages_to_dict(messages)}
+# MAGIC
+# MAGIC         messages = []
+# MAGIC         for event in self.agent.stream(request, stream_mode="updates"):
+# MAGIC             for node_data in event.values():
+# MAGIC                 messages.extend(
+# MAGIC                     ChatAgentMessage(**msg) for msg in node_data.get("messages", [])
+# MAGIC                 )
+# MAGIC         return ChatAgentResponse(messages=messages)
+# MAGIC
+# MAGIC     def predict_stream(
+# MAGIC         self,
+# MAGIC         messages: list[ChatAgentMessage],
+# MAGIC         context: Optional[ChatContext] = None,
+# MAGIC         custom_inputs: Optional[dict[str, Any]] = None,
+# MAGIC     ) -> Generator[ChatAgentChunk, None, None]:
+# MAGIC         request = {"messages": self._convert_messages_to_dict(messages)}
+# MAGIC         for event in self.agent.stream(request, stream_mode="updates"):
+# MAGIC             for node_data in event.values():
+# MAGIC                 yield from (
+# MAGIC                     ChatAgentChunk(**{"delta": msg}) for msg in node_data["messages"]
+# MAGIC                 )
+# MAGIC
+# MAGIC
+# MAGIC # Create the agent object, and specify it as the agent object to use when
+# MAGIC # loading the agent back for inference via mlflow.models.set_model()
+# MAGIC agent = create_tool_calling_agent(llm, tools, system_prompt)
+# MAGIC AGENT = LangGraphChatAgent(agent)
+# MAGIC mlflow.models.set_model(AGENT)
 
 # COMMAND ----------
 
-from typing import (
-    Annotated,
-    Optional,
-    Sequence,
-    TypedDict,
-    Union,
-)
-
-from langchain_core.language_models import LanguageModelLike
-from langchain_core.messages import (
-    BaseMessage,
-    SystemMessage,
-)
-from langchain_core.runnables import RunnableConfig, RunnableLambda
-from langchain_core.tools import BaseTool
-
-from langgraph.graph import END, StateGraph
-from langgraph.graph.graph import CompiledGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt.tool_executor import ToolExecutor
-from langgraph.prebuilt.tool_node import ToolNode
-
-
-# We create the AgentState that we will pass around
-# This simply involves a list of messages
-class AgentState(TypedDict):
-    """The state of the agent."""
-
-    messages: Annotated[Sequence[BaseMessage], add_messages]
-
-
-def create_tool_calling_agent(
-    model: LanguageModelLike,
-    tools: Union[ToolExecutor, Sequence[BaseTool]],
-    agent_prompt: Optional[str] = None,
-) -> CompiledGraph:
-    model = model.bind_tools(tools)
-
-    # Define the function that determines which node to go to
-    def should_continue(state: AgentState):
-        messages = state["messages"]
-        last_message = messages[-1]
-        # If there is no function call, then we finish
-        if not last_message.tool_calls:
-            return "end"
-        else:
-            return "continue"
-
-    if agent_prompt:
-        system_message = SystemMessage(content=agent_prompt)
-        preprocessor = RunnableLambda(
-            lambda state: [system_message] + state["messages"]
-        )
-    else:
-        preprocessor = RunnableLambda(lambda state: state["messages"])
-    model_runnable = preprocessor | model
-
-    # Define the function that calls the model
-    def call_model(
-        state: AgentState,
-        config: RunnableConfig,
-    ):
-        response = model_runnable.invoke(state, config)
-        return {"messages": [response]}
-
-    workflow = StateGraph(AgentState)
-
-    workflow.add_node("agent", RunnableLambda(call_model))
-    workflow.add_node("tools", ToolNode(tools))
-
-    workflow.set_entry_point("agent")
-    workflow.add_conditional_edges(
-        # First, we define the start node. We use agent.
-        # This means these are the edges taken after the agent node is called.
-        "agent",
-        # Next, we pass in the function that will determine which node is called next.
-        should_continue,
-        # The mapping below will be used to determine which node to go to
-        {
-            # If tools, then we call the tool node.
-            "continue": "tools",
-            # END is a special node marking that the graph should finish.
-            "end": END,
-        },
-    )
-    # We now add a unconditional edge from tools to agent.
-    workflow.add_edge("tools", "agent")
-
-    return workflow.compile()
-
-# COMMAND ----------
-
-from langchain_core.runnables import RunnableGenerator
-from mlflow.langchain.output_parsers import ChatCompletionsOutputParser
-
-# Create the agent with the system message if it exists
-try:
-    agent_prompt = config.get("agent_prompt")
-    agent_with_raw_output = create_tool_calling_agent(
-        llm, tools, agent_prompt=agent_prompt
-    )
-except KeyError:
-    agent_with_raw_output = create_tool_calling_agent(llm, tools)
-agent = agent_with_raw_output | RunnableGenerator(wrap_output) | ChatCompletionsOutputParser()
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -317,17 +252,22 @@ agent = agent_with_raw_output | RunnableGenerator(wrap_output) | ChatCompletions
 
 # COMMAND ----------
 
-for event in agent.stream({"messages": [{"role": "user", "content": "How is turbine 5ef39b37-7f89-b8c2-aff1-5e4c0453377d performing?"}]}):
+import sys
+sys.path.append(".")
+from agent import AGENT
+
+AGENT.predict({"messages": [{"role": "user", "content": "Hello!"}]})
+
+# COMMAND ----------
+
+from agent import AGENT
+for event in AGENT.predict_stream({"messages": [{"role": "user", "content": "How is turbine 5ef39b37-7f89-b8c2-aff1-5e4c0453377d performing?"}]}):
     print(event, "---" * 20 + "\n")
 
 # COMMAND ----------
 
-for event in agent.stream({"messages": [{"role": "user", "content": "Fetch me information and readings for turbine 004a641f-e9e5-9fff-d421-1bf88319420b. Give me maintenance recommendation based on existing reports"}]}):
+for event in AGENT.predict_stream({"messages": [{"role": "user", "content": "Fetch me information and readings for turbine 004a641f-e9e5-9fff-d421-1bf88319420b. Give me maintenance recommendation based on existing reports"}]}):
     print(event, "---" * 20 + "\n")
-
-# COMMAND ----------
-
-mlflow.models.set_model(agent)
 
 # COMMAND ----------
 

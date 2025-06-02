@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U --quiet databricks-sdk==0.40.0 databricks-agents==0.16.0 databricks-langchain==0.3.0 mlflow[databricks]==2.20.2 databricks-vectorsearch==0.49 langchain==0.3.19 langchain_core==0.3.37 bs4==0.0.2 markdownify==0.14.1
+# MAGIC %pip install -U --quiet databricks-sdk==0.49.0 "databricks-langchain>=0.4.0" databricks-agents mlflow[databricks] databricks-vectorsearch==0.55 langchain==0.3.25 langchain_core==0.3.59 bs4==0.0.2 markdownify==0.14.1 pydantic==2.10.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -154,7 +154,7 @@ docs
 
 # For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
 chain_config = {
-    "llm_model_serving_endpoint_name": "databricks-meta-llama-3-1-70b-instruct",  # the foundation model we want to use
+    "llm_model_serving_endpoint_name": "databricks-meta-llama-3-3-70b-instruct",  # the foundation model we want to use
     "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,  # the endoint we want to use for vector search
     "vector_search_index": f"{catalog}.{db}.databricks_documentation_vs_index",
     "llm_prompt_template": """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.\n\nContext: {context}""",

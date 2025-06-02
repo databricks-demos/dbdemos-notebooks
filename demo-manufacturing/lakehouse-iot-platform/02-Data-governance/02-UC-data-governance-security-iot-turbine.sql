@@ -181,7 +181,6 @@ SHOW TABLES;
 -- DBTITLE 1,Granting access to Analysts & Data Engineers:
 -- Let's grant our ANALYSTS a SELECT permission:
 -- Note: make sure you created an analysts and dataengineers group first.
-GRANT SELECT ON TABLE main_build.dbdemos_iot_platform.turbine TO `analysts`;
 GRANT SELECT ON TABLE main_build.dbdemos_iot_platform.sensor_bronze TO `analysts`;
 GRANT SELECT ON TABLE main_build.dbdemos_iot_platform.sensor_hourly TO `analysts`;
 GRANT SELECT ON TABLE main_build.dbdemos_iot_platform.historical_turbine_status TO `analysts`;

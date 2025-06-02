@@ -117,7 +117,23 @@
       "description": "Deploy the new model comparing its performance with the previous one."
     },
     {
-      "path": "05-Workflow-orchestration/05-Workflow-orchestration-fsi-fraud", 
+      "path": "05-Generative-AI/05.1-AI-Functions-Creation", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "GenAI Functions", 
+      "description": "Utilize Databricks AI functions to generate automated fraud report generation."
+    },
+    {
+      "path": "05-Generative-AI/05.2-Agent-Creation-Guide", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Create an agent", 
+      "description": "Define an AI agent with the functions you defined in notebook 04.1"
+    },     
+    {
+      "path": "06-Workflow-orchestration/06-Workflow-orchestration-fsi-fraud", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -204,13 +220,29 @@
                           "task_key": "register_model"
                       }
                   ]
-            }
+            },
+            {
+                "task_key": "create_ai_functions",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/05-Generative-AI/05.1-AI-Functions-Creation",
+                    "source": "WORKSPACE"
+                },
+                "base_parameters": {"shap_enabled": "false"},
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "create_model_serving_endpoint"
+                      }
+                  ]
+            }            
         ],
         "job_clusters": [
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "15.3.x-cpu-ml-scala2.12",
+                    "spark_version": "16.4.x-cpu-ml-scala2.12",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -239,7 +271,7 @@
     "custom_tags": {
         "ResourceClass": "SingleNode"
     },
-    "spark_version": "15.3.x-cpu-ml-scala2.12",
+    "spark_version": "16.4.x-cpu-ml-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
     "num_workers": 0

@@ -29,7 +29,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq databricks-agents==0.16.0 mlflow==2.20.2 langchain==0.3.19 langgraph-checkpoint==1.0.12  langchain_core langchain-community==0.2.16 langgraph==0.2.16 pydantic langchain_databricks
+# MAGIC %pip install -U -qqqq mlflow langchain langgraph==0.3.4 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -45,6 +45,8 @@
 # COMMAND ----------
 
 # Log the model to MLflow
+import sys
+sys.path.append(".")
 import os
 import mlflow
 
@@ -52,26 +54,35 @@ input_example = {
     "messages": [{"role": "user", "content": "Fetch me information and readings for turbine 004a641f-e9e5-9fff-d421-1bf88319420b. Give me maintenance recommendation based on existing reports"}]
 }
 
-assert os.path.exists('config.yml'), "Make sure you run the notebook 05.2 first to create the yaml file required in the demo deployment"
+assert os.path.exists('config.yml') and os.path.exists('agent.py'), "Make sure you run the notebook 05.2 first to create the yaml file required in the demo deployment"
+
+# Determine Databricks resources to specify for automatic auth passthrough at deployment time
+import mlflow
+from agent import tools, LLM_ENDPOINT_NAME
+from databricks_langchain import VectorSearchRetrieverTool
+from mlflow.models.resources import DatabricksFunction, DatabricksServingEndpoint
+from unitycatalog.ai.langchain.toolkit import UnityCatalogTool
+
+resources = [DatabricksServingEndpoint(endpoint_name=LLM_ENDPOINT_NAME)]
+for tool in tools:
+    if isinstance(tool, VectorSearchRetrieverTool):
+        resources.extend(tool.resources)
+    elif isinstance(tool, UnityCatalogTool):
+        resources.append(DatabricksFunction(function_name=tool.uc_function_name))
+
 
 with mlflow.start_run():
-    logged_agent_info = mlflow.langchain.log_model(
-        lc_model=os.path.join(
-            os.getcwd(),
-            "05.2-build-agent-iot-turbine-prescriptive-maintenance",
-        ),
-        pip_requirements=[
-            "langchain==0.2.16",
-            "langchain-community==0.2.16",
-            "langgraph-checkpoint==1.0.12",
-            "langgraph==0.2.16",
-            "pydantic",
-            "langchain_databricks", # used for the retriever tool
-        ],
+    logged_agent_info = mlflow.pyfunc.log_model(
+        artifact_path="agent",
+        python_model="agent.py",
         model_config="config.yml",
-        artifact_path="05.2-build-agent-iot-turbine-prescriptive-maintenance",
         input_example=input_example,
+        resources=resources,
+        extra_pip_requirements=[
+            "databricks-connect"
+        ]
     )
+
 
 # COMMAND ----------
 
@@ -128,7 +139,7 @@ import pandas as pd
 
 with mlflow.start_run(run_id=logged_agent_info.run_id):
     eval_results = mlflow.evaluate(
-        f"runs:/{logged_agent_info.run_id}/05.2-build-agent-iot-turbine-prescriptive-maintenance",  # replace `chain` with artifact_path that you used when calling log_model.
+        f"runs:/{logged_agent_info.run_id}/agent",  # replace `chain` with artifact_path that you used when calling log_model.
         data=eval_dataset,  # Your evaluation dataset
         model_type="databricks-agent",  # Enable Mosaic AI Agent Evaluation
     )

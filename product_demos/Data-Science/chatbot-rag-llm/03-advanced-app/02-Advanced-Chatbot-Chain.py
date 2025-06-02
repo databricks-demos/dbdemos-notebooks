@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-sdk==0.40.0 databricks-agents==0.16.0 mlflow[databricks]==2.20.2 langchain==0.3.19 langchain_core==0.3.37 databricks-vectorsearch==0.49 databricks-langchain==0.3.0
+# MAGIC %pip install --quiet -U databricks-sdk==0.49.0 databricks-agents mlflow[databricks] "databricks-langchain>=0.4.0" langchain==0.3.25 langchain_core==0.3.59 databricks-vectorsearch==0.55 pydantic==2.10.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -30,7 +30,7 @@
 
 rag_chain_config = {
     "databricks_resources": {
-        "llm_endpoint_name": "databricks-meta-llama-3-1-70b-instruct",
+        "llm_endpoint_name": "databricks-meta-llama-3-3-70b-instruct",
         "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,
     },
     "input_example": {
@@ -258,6 +258,9 @@ with mlflow.start_run(run_name=f"dbdemos_rag_advanced"):
             DatabricksVectorSearchIndex(index_name=model_config.get("retriever_config").get("vector_search_index")),
             DatabricksServingEndpoint(endpoint_name=model_config.get("retriever_config").get("embedding_model")),
             DatabricksServingEndpoint(endpoint_name=model_config.get("databricks_resources").get("llm_endpoint_name"))
+        ],
+        extra_pip_requirements=[
+            "databricks-connect"
         ]
     )
 

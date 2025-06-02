@@ -3,17 +3,17 @@
 -- MAGIC
 -- MAGIC # B2B Data Exchange with Delta Sharing
 -- MAGIC
--- MAGIC On this notebook, we'll explore how to create a SHARE to share data with another organization.
+-- MAGIC In this notebook, we'll explore how to create a SHARE to share data with another organization.
 -- MAGIC
 -- MAGIC
 -- MAGIC ##  Discovering the data
--- MAGIC To Illustrate let's consider us a company like **TripActions**, a Corporate Travel & Spend Management Platform. 
+-- MAGIC To illustrate, let's consider us a company like **TripActions**, a Corporate Travel & Spend Management Platform. 
 -- MAGIC
 -- MAGIC We have already adopted a <b> Delta Lakehouse Architecture </b> for servicing all of our data internally. 
 -- MAGIC
--- MAGIC A few of our largest partnered airlines, <b>American Airlines</b> & <b>Southwest</b> just let us know that they are looking to partner to add reward and recommendation programs to airline customers using TripActions data. In order to pilot this new feature, they need daily data of scheduled and results of flights taking within TripActions.
+-- MAGIC A few of our largest partnered airlines, <b>American Airlines</b> & <b>Southwest</b> just let us know that they are looking to partner to add reward and recommendation programs to airline customers using TripActions' data. In order to pilot this new feature, they need daily data of scheduled and results of flights taking within TripActions.
 -- MAGIC
--- MAGIC We'll leverage Delta Sharing to grant data access to Americal Airlines and Southwest without data duplication and replication. 
+-- MAGIC We'll leverage Delta Sharing to grant data access to American Airlines and Southwest without data duplication and replication. 
 -- MAGIC
 -- MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fdelta_sharing%2Fnotebook_provider%2Faccess&dt=FEATURE_DELTA_SHARING">
 
@@ -27,9 +27,9 @@
 -- MAGIC
 -- MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
 -- MAGIC
--- MAGIC Go in the compute page, create a new cluster.
+-- MAGIC Go to the compute page, create a new cluster.
 -- MAGIC
--- MAGIC Select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
+-- MAGIC Select "Dedicated (formerly: Single user)" and your UC-user (the user needs to exist at the workspace and the account level)
 -- MAGIC
 -- MAGIC **Make sure your cluster is using DBR 11.2+**
 
@@ -42,11 +42,11 @@
 -- MAGIC %md
 -- MAGIC ## Delta Sharing
 -- MAGIC
--- MAGIC Delta Sharing let you share data with external recipient without creating copy of the data. Once they're authorized, recipients can access and download your data directly.
+-- MAGIC Delta Sharing lets you share data with external recipients without creating a copy of the data. Once they're authorized, recipients can access and download your data directly.
 -- MAGIC
 -- MAGIC In Delta Sharing, it all starts with a Delta Lake table registered in the Delta Sharing Server by the data provider. <br/>
 -- MAGIC This is done with the following steps:
--- MAGIC - Create a RECIPIENT and share activation link with your recipient 
+-- MAGIC - Create a RECIPIENT and share the activation link with your recipient 
 -- MAGIC - Create a SHARE
 -- MAGIC - Add your Delta tables to the given SHARE
 -- MAGIC - GRANT SELECT on your SHARE to your RECIPIENT
@@ -63,14 +63,14 @@
 -- MAGIC
 -- MAGIC ## Unity Catalog
 -- MAGIC Databricks Unity Catalog is the central place to administer your data governance and security.<br/>
--- MAGIC Unity Catalog’s security model is based on standard ANSI SQL, to grant permissions at the level of databases, tables, views, rows and columns<br/>
+-- MAGIC Unity Catalog’s security model is based on standard ANSI SQL, allowing data owners to grant permissions at the level of databases, tables, views, rows and columns.<br/> 
 -- MAGIC Using Databricks, we'll leverage the Unity Catalog to easily share data with our customers.
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Unity Catalog’s security model is based on standard ANSI SQL, to grant permissions at the level of databases, tables, views, rows and columns 
 -- the catalog has been created for your user and is defined as default. All shares will be created inside.
--- make sure you run the 00-setup cell above to init the catalog to your user. 
+-- make sure you run the 00-setup cell above to init the catalog for your user. 
 SELECT CURRENT_CATALOG(), CURRENT_SCHEMA();
 
 -- COMMAND ----------
@@ -80,13 +80,13 @@ SELECT CURRENT_CATALOG(), CURRENT_SCHEMA();
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/product_demos/delta-sharing-flow-1.png" width="700" style="float:right" />
 -- MAGIC
--- MAGIC We'll use the UNITY catalog to create 2 shares:
+-- MAGIC We'll use the Unity Catalog to create 2 shares:
 -- MAGIC - One for American Airlines data
 -- MAGIC - One for Southwest Airlines data
 
 -- COMMAND ----------
 
--- Note: you need to be account ADMIN to create the shares or GRANT CREATE PERMISSION to another principal:
+-- Note: you need to be an account ADMIN to create the shares or GRANT CREATE PERMISSION to another principal:
 -- GRANT CREATE SHARE ON metastore TO `<my_principal@xx.com>`;
 -- GRANT CREATE RECIPIENT ON metastore TO `<my_principal@xx.com>`;
 
@@ -96,7 +96,7 @@ COMMENT 'Daily Flight Data provided by Tripactions to American Airlines for Exte
 CREATE SHARE IF NOT EXISTS dbdemos_southwestairlines 
 COMMENT 'Daily Flight Data provided by Tripactions to Southwest Airlines for Extended Rewards';
 
--- You can grant ownership to other users. Typical deployments wouls have admin groups or similar.
+-- You can grant ownership to other users. Typical deployments would have admin groups or similar.
 -- ALTER SHARE dbdemos_americanairlines OWNER TO `<my_principal@xx.com>`;
 -- ALTER SHARE dbdemos_southwestairlines OWNER TO `<my_principal@xx.com>`;
 
@@ -115,7 +115,7 @@ DESCRIBE SHARE dbdemos_southwestairlines;
 -- MAGIC
 -- MAGIC You can visualize all your Delta Sharing Shares using Databricks Data Explorer UI!
 -- MAGIC
--- MAGIC You can also create your share and recipient with just a few click.<br/>
+-- MAGIC You can also create your share and recipient with just a few clicks.<br/>
 -- MAGIC Select "Delta Sharing" in the Data Explorer menu, then "Create Share", "Create recipient" ...
 
 -- COMMAND ----------
@@ -142,10 +142,10 @@ SELECT * FROM lookupcodes WHERE Description = "Southwest Airlines Co." OR Descri
 
 -- MAGIC %md
 -- MAGIC ### Sharing a subset of a table to a SHARE recipient based on dynamic properties
--- MAGIC We shouldn't share all the historical flights to all Airline. It might be private information and we don't want all our consumers accessing the entire `flights` table. 
+-- MAGIC We shouldn't share all the historical flights to all airlines. It might be private information and we don't want all of our consumers accessing the entire `flights` table. 
 -- MAGIC <br>
 -- MAGIC #### Customizing Consumer Experience
--- MAGIC To restrict the data access, we can properties on the recipient Shares, and then create a dynamic view that will query these properties.
+-- MAGIC To restrict the data access, we can set properties on the recipient Shares, and then create a dynamic view that will query these properties.
 -- MAGIC
 -- MAGIC Note: before supporting VIEW, you could also restrict the access through Delta partition, but this is much less flexible.
 -- MAGIC ```
@@ -206,12 +206,12 @@ ALTER RECIPIENT dbdemos_americanairlines_recipient SET PROPERTIES ('carrier_id' 
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/product_demos/delta-sharing-flow-5.png" width="700" style="float:right" />
 -- MAGIC
--- MAGIC Each Recipient has an activation link that the consumer can use to download it's credential.
+-- MAGIC Each Recipient has an activation link that the consumer can use to download its credential.
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/product_demos/delta-sharing-credential.png" width=400>
 -- MAGIC
--- MAGIC The credentials are typically saved as a file containing. The Delta Server identify and authorize consumer based on these identifiants.<br/>
--- MAGIC Note that the activation link is single use. You can only access it once (it'll return null if already used)
+-- MAGIC The credentials are typically saved as a file containing the Delta Server identity and authorize a consumer based on this identification.<br/>
+-- MAGIC Note that the activation link is single use. You can only access it once (it'll return null if already used).
 
 -- COMMAND ----------
 
@@ -233,7 +233,7 @@ DESCRIBE RECIPIENT dbdemos_southwestairlines_recipient
 
 -- DBTITLE 1,Let's download our RECIPIENT authentication file under /FileStore/southwestairlines.share
 -- MAGIC %python
--- MAGIC #This function just download the credential file for the RECIPIENT and save it under the given location as we'll need it next to access the data.
+-- MAGIC #This function just downloads the credential file for the RECIPIENT and saves it under the given location. We'll need it next to access the data.
 -- MAGIC download_recipient_credential("dbdemos_southwestairlines_recipient", "/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/southwestairlines.share")
 -- MAGIC download_recipient_credential("dbdemos_americanairlines_recipient", "/Volumes/main__build/dbdemos_sharing_airlinedata/raw_data/americanairlines.share")
 

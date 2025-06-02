@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-feature-engineering==0.2.0 databricks-sdk==0.20.0
+# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.10.2 databricks-sdk==0.50.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -210,7 +210,7 @@ fe.write_table(
 # Split to define a training and inference set
 training_keys = spark.table('travel_purchase').select('ts', 'purchased', 'destination_id', 'user_id', 'user_latitude', 'user_longitude', 'booking_date')
 training_df = training_keys.where("ts < '2022-11-23'")
-test_df = training_keys.where("ts >= '2022-11-23'").cache()
+test_df = training_keys.where("ts >= '2022-11-23'")
 
 display(training_df.limit(5))
 
@@ -271,12 +271,10 @@ training_set = fe.create_training_set(
 
 # COMMAND ----------
 
-
-training_set_df = training_set.load_df()
+training_features_df = training_set.load_df()
 #Let's cache the training dataset for automl (to avoid recomputing it everytime)
-training_features_df = training_set_df.cache()
 
-display(training_features_df)
+training_features_df.toPandas()
 
 # COMMAND ----------
 
@@ -286,21 +284,27 @@ display(training_features_df)
 # COMMAND ----------
 
 from datetime import datetime
-from databricks import automl
 xp_path = "/Shared/dbdemos/experiments/feature-store"
 xp_name = f"automl_purchase_expert_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-summary_cl = automl.classify(
-    experiment_name = xp_name,
-    experiment_dir = xp_path,
-    dataset = training_features_df,
-    target_col = "purchased",
-    primary_metric="log_loss",
-    timeout_minutes = 15
-)
-#Make sure all users can access dbdemos shared experiment
-DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
-
-print(f"Best run id: {summary_cl.best_trial.mlflow_run_id}")
+try:
+    from databricks import automl
+    summary_cl = automl.classify(
+        experiment_name = xp_name,
+        experiment_dir = xp_path,
+        dataset = training_features_df,
+        target_col = "purchased",
+        primary_metric="log_loss",
+        timeout_minutes = 15
+    )
+    #Make sure all users can access dbdemos shared experiment
+    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
+except Exception as e:
+    if "cannot import name 'automl'" in str(e):
+        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
+        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
+        summary_cl = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_features_df.toPandas(), model_name="automl_mockup_expert", target_col="purchased")
+    else:
+        raise e
 
 # COMMAND ----------
 
@@ -320,7 +324,7 @@ model_full_name = f"{catalog}.{db}.{model_name}"
 
 mlflow.set_registry_uri('databricks-uc')
 # creating sample input to be logged (do not include the live features in the schema as they'll be computed within the model)
-df_sample = training_set_df.limit(10).toPandas()
+df_sample = training_features_df.limit(10).toPandas()
 x_sample = df_sample.drop(columns=["purchased"])
 dataset = mlflow.data.from_pandas(x_sample)
 
@@ -434,6 +438,7 @@ print("Accuracy: ", accuracy_score(pd_scoring["purchased"], pd_scoring["predicti
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
+from datetime import timedelta
 
 def create_online_table(table_name, pks, timeseries_key=None):
     w = WorkspaceClient()
@@ -442,16 +447,19 @@ def create_online_table(table_name, pks, timeseries_key=None):
         from databricks.sdk.service import catalog as c
         print(f"Creating online table for {online_table_name}...")
         spark.sql(f'ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
-        spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered={'triggered': 'true'}, timeseries_key=timeseries_key)
-        w.online_tables.create(name=online_table_name, spec=spec)
+        spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered=c.OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}), timeseries_key=timeseries_key)
+        online_table = c.OnlineTable(name = online_table_name, spec=spec)
+        w.online_tables.create(online_table)
 
-create_online_table(f"{catalog}.{db}.user_features",                 ["user_id"], "ts")
-create_online_table(f"{catalog}.{db}.destination_features",          ["destination_id"], "ts")
-create_online_table(f"{catalog}.{db}.destination_location_features", ["destination_id"])
-create_online_table(f"{catalog}.{db}.availability_features",         ["destination_id", "booking_date"], "ts")
+wait_tables = []
+wait_tables.append(create_online_table(f"{catalog}.{db}.user_features",                 ["user_id"], "ts"))
+wait_tables.append(create_online_table(f"{catalog}.{db}.destination_features",          ["destination_id"], "ts"))
+wait_tables.append(create_online_table(f"{catalog}.{db}.destination_location_features", ["destination_id"]))
+wait_tables.append(create_online_table(f"{catalog}.{db}.availability_features",         ["destination_id", "booking_date"], "ts"))
 
-#wait for all the tables to be online
-wait_for_online_tables(catalog, db, ["user_features_online", "destination_features_online", "destination_location_features_online", "availability_features_online"])
+for t in wait_tables:
+    if t:
+        t.result(timeout=timedelta(minutes=20))
 
 # COMMAND ----------
 
@@ -476,16 +484,17 @@ wait_for_online_tables(catalog, db, ["user_features_online", "destination_featur
 
 # COMMAND ----------
 
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
 endpoint_name = "dbdemos_feature_store_endpoint_expert"
 wc = WorkspaceClient()
-served_models =[ServedModelInput(model_full_name, model_version=latest_model.version, workload_size=ServedModelInputWorkloadSize.SMALL, scale_to_zero_enabled=True)]
+served_entities = [ServedEntityInput(entity_name=model_full_name, entity_version=latest_model.version, workload_size="Small", scale_to_zero_enabled=True)]
 try:
     print(f'Creating endpoint {endpoint_name} with latest version...')
-    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_models=served_models))
+    wc.serving_endpoints.create_and_wait(endpoint_name, config=EndpointCoreConfigInput(served_entities=served_entities))
 except Exception as e:
     if 'already exists' in str(e):
         print(f'Endpoint exists, updating with latest model version...')
-        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_models=served_models)
+        wc.serving_endpoints.update_config_and_wait(endpoint_name, served_entities=served_entities)
     else: 
         raise e
 
@@ -565,7 +574,7 @@ ep = wait_for_feature_endpoint_to_start(fe, feature_endpoint_name)
 print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):
-    return requests.request(method='POST', headers=get_headers(), url=url, json={'dataframe_records': lookup_keys}).json()
+    return requests.request(method='POST', headers=WorkspaceClient().config.authenticate(), url=url, json={'dataframe_records': lookup_keys}).json()
 query_endpoint(ep.url+"/invocations", lookup_keys)
 
 # COMMAND ----------

@@ -19,28 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.20.2 databricks-sdk==0.40.0
-
-# COMMAND ----------
-
-# MAGIC %run ../config
-
-# COMMAND ----------
-
-import os
-import mlflow
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-mlflow.set_registry_uri('databricks-uc')
-local_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts("") # download model from remote registry
-
-requirements_path = os.path.join(local_path, "requirements.txt")
-if not os.path.exists(requirements_path):
-  dbutils.fs.put("file:" + requirements_path, "", True)
-
-# COMMAND ----------
-
-# MAGIC %pip install -r $requirements_path
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install mlflow==2.22.0 databricks-sdk==0.40.0
 
 # COMMAND ----------
 
@@ -68,12 +47,13 @@ if not os.path.exists(requirements_path):
 
 import mlflow
 mlflow.set_registry_uri('databricks-uc')
-#                                                                                                   Stage/version
-#                                                                                 Model name              |
-#                                                                                       |                 |
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", result_type="string")
+#                                                                                                    Stage/version  
+#                                                                                       Model name         |        
+#                                                                                           |              |        
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
 #We can use the function in SQL
 spark.udf.register("predict_maintenance", predict_maintenance)
+columns = predict_maintenance.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
 
@@ -94,7 +74,29 @@ spark.table('turbine_hourly_features').withColumn("dbdemos_turbine_maintenance",
 
 # COMMAND ----------
 
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+mlflow.set_registry_uri('databricks-uc')
+local_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod").download_artifacts("") # download model from remote registry
+
+requirements_path = os.path.join(local_path, "requirements.txt")
+if not os.path.exists(requirements_path):
+  dbutils.fs.put("file:" + requirements_path, "", True)
+
+# COMMAND ----------
+
+# MAGIC %pip install -r $requirements_path
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+import mlflow
+mlflow.set_registry_uri('databricks-uc')
 model = mlflow.pyfunc.load_model(f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod")
+columns = model.metadata.get_input_schema().input_names()
 df = spark.table('turbine_hourly_features').select(*columns).limit(10).toPandas()
 df['churn_prediction'] = model.predict(df)
 display(df)
@@ -178,19 +180,11 @@ dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPa
 # MAGIC
 # MAGIC ## Automate action to react on potential turbine failure
 # MAGIC
-# MAGIC We now have an end 2 end data pipeline analizing and predicting churn. We can now easily trigger actions to reduce the churn based on our business:
+# MAGIC We now have an end 2 end data pipeline analizing and predicting churn. We can now easily trigger actions to reduce downtime, such as dispatching a team earlier to fix the issue before an actual outage!
 # MAGIC
-# MAGIC - Send targeting email campaign to the customer the most likely to churn
-# MAGIC - Phone campaign to discuss with our customers and understand what's going
-# MAGIC - Understand what's wrong with our line of product and fixing it
+# MAGIC ## Track windturbine failure and impact
 # MAGIC
-# MAGIC These actions are out of the scope of this demo and simply leverage the Churn prediction field from our ML model.
-# MAGIC
-# MAGIC ## Track churn impact over the next month and campaign impact
-# MAGIC
-# MAGIC Of course, this churn prediction can be re-used in our dashboard to analyse future churn and measure churn reduction. 
-# MAGIC
-# MAGIC The pipeline created with the Data Intelligence Platform will offer a strong ROI: it took us a few hours to setup this pipeline end 2 end and we have potential gain for $129,914 / month!
+# MAGIC Of course, this prediction can be re-used in our dashboard to analyse future failure and measure impact. 
 # MAGIC
 # MAGIC <img width="800px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/manufacturing/lakehouse-iot-turbine/lakehouse-manuf-iot-dashboard-2.png">
 # MAGIC

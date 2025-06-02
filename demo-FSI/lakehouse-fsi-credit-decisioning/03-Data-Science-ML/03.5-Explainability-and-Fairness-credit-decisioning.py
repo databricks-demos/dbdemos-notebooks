@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet shap==0.46.0 mlflow==2.19.0
+# MAGIC %pip install --quiet shap==0.46.0 mlflow==2.22.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -34,8 +34,13 @@
 
 # COMMAND ----------
 
+import mlflow
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_fsi_credit_decisioning@prod").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+
+# Configure MLflow to use Unity Catalog instead of Workspace Model Registry
+mlflow.set_registry_uri('databricks-uc')
+
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_fsi_credit_decisioning@prod").download_artifacts(artifact_path="requirements.txt")
 
 # COMMAND ----------
 

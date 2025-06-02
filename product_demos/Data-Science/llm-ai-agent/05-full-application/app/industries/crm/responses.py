@@ -31,14 +31,14 @@ CRM_AI_ASSIST_RESPONSES = [
         ]
     },
     {
-        "question": "Our client is threatening to cancel their contract due to poor service delivery. How should I handle this escalation?",
+        "question": "Our client TechFlow Solutions is threatening to cancel their contract due to poor service delivery. How should I handle this escalation?",
         "non_intelligent_answer": "For contract cancellation threats, immediately escalate to management and review the client's service history. Document all issues and prepare a remediation plan to address their concerns.",
         "tools": [
             {
                 "tool_name": "query_client_history",
                 "description": "Retrieve comprehensive client service history",
                 "type": "DATABASE",
-                "reasoning": "I need to review this client's complete service history, support tickets, and satisfaction scores to understand the root cause of their dissatisfaction.",
+                "reasoning": "I need to review TechFlow Solutions' complete service history, support tickets, and satisfaction scores to understand the root cause of their dissatisfaction.",
                 "informations": [
                     "Customer service data from multiple touchpoints needs to be unified for comprehensive analysis.\nDatabricks centralizes all customer interaction data for 360-degree insights [Discover Data Integration](https://www.databricks.com/product/data-integration)"
                 ]
@@ -47,26 +47,26 @@ CRM_AI_ASSIST_RESPONSES = [
                 "tool_name": "generate_retention_strategy",
                 "description": "Generate personalized retention strategy",
                 "type": "FORECASTING_MODEL",
-                "reasoning": "Based on the client profile and history, I'll generate a data-driven retention strategy with specific remediation steps.",
+                "reasoning": "Based on TechFlow Solutions' client profile and history, I'll generate a data-driven retention strategy with specific remediation steps.",
                 "informations": [
                     "Retention strategies benefit from predictive analytics to identify at-risk accounts early.\nDatabricks ML models can predict churn risk and recommend proactive interventions."
                 ]
             }
         ],
-        "final_answer": "This is a critical escalation that requires immediate action. Based on the client analysis, here's your recommended approach:\n\n**Client: GlobalTech Industries**\n- Contract value: $450K annually\n- Relationship: 2.5 years\n- Recent issues: 3 service outages in Q4, delayed project delivery\n\n**Immediate Actions (Next 24 hours):**\n1. **Executive escalation**: Involve your VP/Director in the response\n2. **Service recovery**: Implement temporary workarounds for current issues\n3. **Communication plan**: Schedule emergency stakeholder call\n\n**Retention Strategy:**\n- Offer 15% service credit for recent outages\n- Assign dedicated customer success manager\n- Implement weekly check-ins for next 90 days\n- Fast-track pending feature requests\n\n**Success probability**: 75% based on similar situations where we implemented this approach quickly.\n\n⚠️ **Critical**: Respond within 4 hours to prevent escalation to their executive team.",
+        "final_answer": "This is a critical escalation with TechFlow Solutions that requires immediate action. Remember, we successfully re-engaged Sarah Chen 6 months ago, and they became a valued client. Here's your recommended approach:\n\n**Client: TechFlow Solutions**\n- Contract value: $180K annually (signed after our successful re-engagement)\n- Relationship: 6 months since conversion from lead\n- Recent issues: 2 service outages in Q4, delayed onboarding of their HR module\n- Key contact: Sarah Chen, VP of Operations (our original lead)\n\n**Immediate Actions (Next 24 hours):**\n1. **Personal outreach to Sarah**: Leverage your existing relationship\n2. **Service recovery**: Implement temporary workarounds for HR module issues\n3. **Executive involvement**: Have our VP call their CEO to show commitment\n\n**Retention Strategy:**\n- Offer 10% service credit for recent outages\n- Assign dedicated customer success manager (they've been managed by general support)\n- Implement bi-weekly check-ins for next 90 days\n- Fast-track HR module deployment (was delayed due to resource constraints)\n\n**Success probability**: 85% based on strong relationship foundation with Sarah and their initial positive ROI results.\n\n⚠️ **Critical**: Sarah specifically mentioned they chose us over competitors because of our initial responsiveness - we need to prove that wasn't a one-time occurrence.",
         "final_informations": [
             "Real-time customer health scoring helps identify at-risk accounts before they escalate.\nDatabricks enables continuous monitoring of customer satisfaction metrics and predictive churn analysis."
         ]
     },
     {
-        "question": "I need to prepare for a quarterly business review with our largest client. What data should I focus on?",
+        "question": "I need to prepare for a quarterly business review with TechFlow Solutions after resolving their service issues. What data should I focus on?",
         "non_intelligent_answer": "For QBRs, focus on key performance metrics, ROI analysis, usage statistics, and future roadmap alignment. Prepare data on service performance, achievements, and growth opportunities.",
         "tools": [
             {
                 "tool_name": "generate_qbr_analytics",
                 "description": "Generate comprehensive QBR analytics dashboard",
                 "type": "DATABASE",
-                "reasoning": "I'll compile comprehensive analytics for the QBR including usage metrics, ROI analysis, and performance indicators specific to this client.",
+                "reasoning": "I'll compile comprehensive analytics for the QBR including usage metrics, ROI analysis, and performance indicators specific to TechFlow Solutions, highlighting both challenges overcome and successes achieved.",
                 "informations": [
                     "QBR analytics require aggregating data from multiple business systems for comprehensive insights.\nDatabricks enables unified analytics across all customer touchpoints [Discover Unified Analytics](https://www.databricks.com/product/lakehouse)"
                 ]
@@ -75,13 +75,13 @@ CRM_AI_ASSIST_RESPONSES = [
                 "tool_name": "identify_growth_opportunities",
                 "description": "Identify expansion and growth opportunities",
                 "type": "FORECASTING_MODEL",
-                "reasoning": "Using predictive analytics to identify potential upsell opportunities and expansion areas based on client behavior and industry trends.",
+                "reasoning": "Using predictive analytics to identify potential upsell opportunities with TechFlow Solutions, especially given their successful recovery and strong relationship with Sarah Chen.",
                 "informations": [
                     "Growth opportunity identification benefits from machine learning models that analyze usage patterns and market trends.\nDatabricks ML capabilities enable sophisticated customer expansion modeling."
                 ]
             }
         ],
-        "final_answer": "Here's your comprehensive QBR preparation guide for **Enterprise Corp** (Contract value: $2.1M):\n\n## 📊 Key Performance Metrics to Highlight\n\n**Business Impact Achieved:**\n- 34% reduction in processing time\n- $1.8M in operational cost savings\n- 99.7% system uptime (exceeded 99.5% SLA)\n- 87% user adoption rate\n\n**Usage Analytics:**\n- 15,000+ monthly active users\n- 2.3M transactions processed\n- Peak usage: 40% above baseline\n\n## 🎯 Strategic Discussion Points\n\n1. **Success Stories**: Highlight the Q3 automation project success\n2. **ROI Validation**: 340% ROI achieved vs. 250% projected\n3. **Future Roadmap**: Present Q2 feature releases aligned with their goals\n4. **Expansion Opportunities**: \n   - Additional departments (HR, Finance) showing interest\n   - International rollout potential\n   - Advanced analytics package upgrade\n\n## 💡 Recommended Next Steps\n- Schedule technical deep-dive for Q2 features\n- Pilot program for HR department (potential $400K expansion)\n- Executive workshop on data strategy\n\n**Meeting outcome goal**: Secure contract renewal + 25% expansion",
+        "final_answer": "Perfect timing for this QBR with **TechFlow Solutions**! After successfully navigating the service challenges, this is your opportunity to strengthen the relationship and drive expansion. Here's your comprehensive preparation guide:\n\n## 📊 Key Performance Metrics to Highlight\n\n**Recovery & Transformation Story:**\n- **Service improvement**: 99.8% uptime since implementing dedicated support (vs. 97.2% during issues)\n- **Issue resolution**: Average response time reduced from 4 hours to 45 minutes\n- **User satisfaction**: CSAT score improved from 6.2 to 8.7/10\n\n**Business Impact Achieved:**\n- **25% reduction** in manual processing time (Sarah's original goal)\n- **$85K operational cost savings** in first 6 months\n- **92% user adoption** rate across their operations team\n- **3,200+ monthly active workflows** (exceeded projections by 40%)\n\n## 🎯 Strategic Discussion Points\n\n1. **Challenges Overcome**: Address the Q4 service issues head-on and show concrete improvements\n2. **ROI Validation**: 280% ROI achieved vs. 200% originally projected to Sarah\n3. **Success Partnership**: Highlight how Sarah's feedback drove product improvements\n4. **Future Vision**: Present Q2 roadmap features that align with their expansion plans\n\n## 💡 Expansion Opportunities (Based on Sarah's Team Feedback)\n- **HR Department Integration**: Sarah mentioned HR struggles with similar manual processes (potential $75K expansion)\n- **Advanced Analytics Package**: Operations team requesting custom dashboards\n- **Multi-location Rollout**: They're planning to expand to 3 new offices\n\n## 🤝 Relationship Highlights\n- **Journey together**: From lead re-engagement → service recovery → strategic partnership\n- **Sarah as advocate**: She's already recommended us to 2 industry contacts\n- **Executive relationship**: Strong CEO-to-CEO connection established during escalation\n\n**Meeting outcome goal**: Secure 12-month renewal + 35% expansion (HR module + analytics package)\n\n💬 **Opening line suggestion**: \"Sarah, it's incredible to see how far we've come together - from that initial conversation about operational efficiency to now being a strategic partner in TechFlow's growth story...\"",
         "final_informations": [
             "Effective QBRs rely on real-time, accurate data visualization and predictive insights.\nDatabricks provides enterprise-grade analytics platforms for comprehensive customer success reporting."
         ]

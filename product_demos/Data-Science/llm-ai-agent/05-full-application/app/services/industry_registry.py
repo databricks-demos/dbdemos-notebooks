@@ -6,6 +6,7 @@ from ..industries.fins import FinancialServicesSupport
 from ..industries.mfg import ManufacturingSupport
 from ..industries.rcg import RetailOrderSupport
 from ..industries.pharma import PharmaSupport
+from ..industries.crm import CrmSupport
 
 class IndustryRegistry:
     """Registry for managing different industry implementations."""
@@ -17,6 +18,7 @@ class IndustryRegistry:
         "mfg": ManufacturingSupport,
         "retail": RetailOrderSupport,
         "pharma": PharmaSupport,
+        "crm": CrmSupport,
         "sap": FinancialServicesSupport  # Special implementation with SAP mode=True
     }
     

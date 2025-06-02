@@ -90,7 +90,7 @@
           color="white"
           variant="flat"
           class="admin-dashboard-btn ml-6"
-          href="https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f0187a33881d0db7fea91f596f8bda/published/pages/468b8ea5?o=1444828305810485"
+          href="https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f03b09809b1b629aef4f621012e171/published/pages/ab333341?o=1444828305810485"
           target="_blank"
           elevation="0"
         >
@@ -163,7 +163,8 @@ const useCases = ref([
   { label: 'Financial Services', value: 'fins' },
   { label: 'Manufacturing Support', value: 'mfg' },
   { label: 'Retail Order Support', value: 'retail' },
-  { label: 'Pharmaceutical Support', value: 'pharma' }
+  { label: 'Pharmaceutical Support', value: 'pharma' },
+  { label: 'CRM Support', value: 'crm' }
 ])
 
 const selectedUseCase = ref('telco')

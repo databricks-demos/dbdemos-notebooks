@@ -22,7 +22,7 @@
         "MLFlow",
         "Model Serving",
         "Online Tables",
-        "Workflows",
+        "Workflows"
     ],
     "related_links": [
         {

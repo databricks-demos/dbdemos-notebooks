@@ -362,23 +362,23 @@
                     "email_notifications": {},
                     "webhook_notifications": {},
                 },
-                # {
-                #     "task_key": "adv_set_up_serving",
-                #     "depends_on": [
-                #     {
-                #         "task_key": "adv_batch_inference"
-                #     }
-                #     ],
-                #     "run_if": "ALL_SUCCESS",
-                #     "notebook_task": {
-                #       "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/06_serve_features_and_model",
-                #       "source": "WORKSPACE"
-                #     },
-                #     "job_cluster_key": "Shared_job_cluster",
-                #     "timeout_seconds": 0,
-                #     "email_notifications": {},
-                #     "webhook_notifications": {}
-                # }
+                //  {
+                //      "task_key": "adv_set_up_serving",
+                //      "depends_on": [
+                //      {
+                //          "task_key": "adv_batch_inference"
+                //      }
+                //      ],
+                //      "run_if": "ALL_SUCCESS",
+                //      "notebook_task": {
+                //        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/06_serve_features_and_model",
+                //        "source": "WORKSPACE"
+                //      },
+                //      "job_cluster_key": "Shared_job_cluster",
+                //      "timeout_seconds": 0,
+                //      "email_notifications": {},
+                //      "webhook_notifications": {}
+                //  }
             ],
             "job_clusters": [
                 {

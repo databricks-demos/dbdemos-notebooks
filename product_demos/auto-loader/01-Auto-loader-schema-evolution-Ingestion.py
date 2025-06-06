@@ -226,9 +226,9 @@ def start_stream_restart_on_schema_evolution():
                   .option("cloudFiles.inferColumnTypes", "true")
                   .load(volume_folder+"/user_json")
                 .writeStream
-                   .toTable("autoloader_demo_output",
-                            checkpointLocation=volume_folder+"/checkpoint",
-                            mergeSchema=True)
+                  .toTable("autoloader_demo_output",
+                           checkpointLocation=volume_folder+"/checkpoint",
+                           mergeSchema=True)
           )
       q.awaitTermination()
       return q

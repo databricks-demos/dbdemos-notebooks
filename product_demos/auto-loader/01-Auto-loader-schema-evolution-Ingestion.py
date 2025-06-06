@@ -226,15 +226,17 @@ def start_stream_restart_on_schema_evolution():
                   .option("cloudFiles.inferColumnTypes", "true")
                   .load(volume_folder+"/user_json")
                 .writeStream
-                  .format("delta")
-                  .option("checkpointLocation", volume_folder+"/checkpoint")
-                  .option("mergeSchema", "true")
-                  .table("autoloader_demo_output"))
+                   .toTable("autoloader_demo_output",
+                            checkpointLocation=volume_folder+"/checkpoint",
+                            mergeSchema=True)
+          )
       q.awaitTermination()
       return q
     except BaseException as e:
-      #Adding a new column will trigger an UnknownFieldException. In this case we just restart the stream:
-      if not ('UnknownFieldException' in str(e)):
+      # Adding a new column will trigger an UnknownFieldException. In this case we just restart the stream:
+      if 'UNKNOWN_FIELD_EXCEPTION' in str(e):
+        print(f"Going to restart stream after schema change:\n{e}")
+      else:
         raise e
 
 #Note: serverless doesn't support timeless streaming. See https://docs.databricks.com/en/compute/serverless/limitations.html#streaming

@@ -47,6 +47,7 @@ mlflow.set_registry_uri("databricks-uc")
 #                                                                                  Model name       |
 #                                                                                        |          |
 predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='virtualenv', result_type='long')
+# Note: virtualenv will recreate an env from scratch which can take some time, but prevent any version issue. If you're using the same compute as for training, you can remove it to use the local env instead (just install the lib from the requirements.txt file as below)
 #We can use the function in SQL
 spark.udf.register("predict_churn", predict_churn_udf)
 
@@ -109,6 +110,37 @@ df.head(3)
 
 # COMMAND ----------
 
+# DBTITLE 1,Deploy the endpoint via databricks sdk client
+from mlflow.deployments import get_deploy_client
+model_endpoint_name = "dbdemos_customer_churn_endpoint"
+last_version = get_last_model_version(f"{catalog}.{db}.{model_name}")
+client = get_deploy_client("databricks")
+try:
+    endpoint = client.create_endpoint(
+        name=model_endpoint_name,
+        config={
+            "served_entities": [
+                {
+                    "name": f"dbdemos_customer_churn_endpoint_{last_version}",
+                    "entity_name": f"{catalog}.{db}.{model_name}",
+                    "entity_version": last_version,
+                    "workload_size": "Small",
+                    "scale_to_zero_enabled": True
+                }
+            ]
+        }
+    )
+except Exception as e:
+    if "already exists" in str(e).lower():
+        print(f"Endpoint {catalog}.{db}.{model_endpoint_name} already exists. Skipping creation.")
+    else:
+        raise e
+
+while client.get_endpoint(model_endpoint_name)['state']['config_update'] == 'IN_PROGRESS':
+    time.sleep(10)
+
+# COMMAND ----------
+
 dataset = spark.table('churn_features').select(*columns).limit(3).toPandas()
 #Make it a string to send to the inference endpoint
 dataset['last_transaction'] = dataset['last_transaction'].astype(str)
@@ -119,14 +151,14 @@ dataset
 # DBTITLE 1,Call the REST API deployed using standard python
 from mlflow import deployments
 
-model_endpoint_name = "dbdemos_customer_churn_endpoint"
-
 def score_model(dataset):
   client = mlflow.deployments.get_deploy_client("databricks")
-  predictions = client.predict(endpoint=model_endpoint_name, inputs=dataset.to_dict(orient='split'))
+  payload = {"dataframe_split": dataset.to_dict(orient='split')}
+  predictions = client.predict(endpoint=model_endpoint_name, inputs=payload)
+  print(predictions)
 
 #Deploy your model and uncomment to run your inferences live!
-#score_model(dataset)
+score_model(dataset)
 
 # COMMAND ----------
 

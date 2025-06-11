@@ -263,6 +263,22 @@
                   ]
             },
             {
+                "task_key": "running_inference",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.3-running-inference",
+                    "source": "WORKSPACE"
+                },
+                "base_parameters": {"shap_enabled": "false"},
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "register_churn_model"
+                      }
+                  ]
+            },            
+            {
                 "task_key": "create_ai_functions",
                 "notebook_task": {
                     "notebook_path": "{{DEMO_FOLDER}}/05-Generative-AI/05.1-Agent-Functions-Creation",
@@ -274,7 +290,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "register_churn_model"
+                          "task_key": "running_inference"
                       }
                   ]
             }            

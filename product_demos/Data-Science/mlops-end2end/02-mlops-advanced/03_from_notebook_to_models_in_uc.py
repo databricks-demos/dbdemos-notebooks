@@ -34,6 +34,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.22.0
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -50,6 +52,8 @@
 # COMMAND ----------
 
 import mlflow
+
+
 model_name = f"{catalog}.{db}.advanced_mlops_churn"
 
 print(f"Finding best run from {xp_name} and pushing new model version to {model_name}")
@@ -96,6 +100,8 @@ model_details = mlflow.register_model(f"runs:/{run_id}/model", f"{catalog}.{db}.
 # COMMAND ----------
 
 from mlflow import MlflowClient
+
+
 client = MlflowClient()
 
 # The main model description, typically done once.

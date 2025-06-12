@@ -15,6 +15,8 @@
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.12.1
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -51,6 +53,8 @@
 # COMMAND ----------
 
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
+
 requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
@@ -67,6 +71,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_m
 # DBTITLE 1,In a python notebook
 from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F
+
 
 # Load customer features to be scored
 inference_df = spark.read.table("advanced_churn_cust_ids")
@@ -107,6 +112,8 @@ display(preds_df)
 
 from mlflow import MlflowClient
 from datetime import datetime
+
+
 client = MlflowClient()
 
 model = client.get_registered_model(name=model_name)
@@ -116,6 +123,7 @@ model_version = int(client.get_model_version_by_alias(name=model_name, alias="Ch
 
 import pyspark.sql.functions as F
 from datetime import datetime, timedelta
+
 
 offline_inference_df = preds_df.withColumn("model_name", F.lit(model_name)) \
                               .withColumn("model_version", F.lit(model_version)) \

@@ -24,6 +24,8 @@
 
 # DBTITLE 1,Install latest databricks-sdk package (>=0.28.0)
 # MAGIC %pip install -qU databricks-sdk==0.40.0 mlflow==2.22.0
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -84,6 +86,7 @@
 from pyspark.sql.types import DoubleType, StructField
 from databricks.sdk.service.catalog import MonitorMetric, MonitorMetricType
 
+
 expected_loss_metric = [
   MonitorMetric(
     type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,
@@ -110,6 +113,7 @@ expected_loss_metric = [
 import os
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInferenceLogProblemType
+
 
 print(f"Creating monitor for inference table {catalog}.{db}.advanced_churn_inference_table")
 w = WorkspaceClient()
@@ -146,6 +150,7 @@ except Exception as lhm_exception:
 
 import time
 from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfoState
+
 
 # Wait for monitor to be created
 while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:

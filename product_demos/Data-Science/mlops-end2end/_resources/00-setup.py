@@ -18,7 +18,6 @@ reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 catalog = "main__build"
 dbName = db = "dbdemos_mlops"
 
-
 # COMMAND ----------
 
 # MAGIC %run ../../../../_resources/00-global-setup-v2
@@ -31,11 +30,12 @@ import random
 import re
 #remove warnings for nicer display
 import warnings
-warnings.filterwarnings("ignore")
 import logging
-logging.getLogger("mlflow").setLevel(logging.ERROR)
-
 from mlflow import MlflowClient
+
+
+warnings.filterwarnings("ignore")
+logging.getLogger("mlflow").setLevel(logging.ERROR)
 
 # COMMAND ----------
 
@@ -155,7 +155,7 @@ if setup_adv_inference_data:
 
 # DBTITLE 1,Generate inference synthetic data
 gen_synthetic_data = False
-def generate_synthetic(inference_table, drift_type="label_drift"):
+def generate_synthetic(inference_table):
   import dbldatagen as dg
   import pyspark.sql.types
   import pyspark.sql.functions as F
@@ -191,32 +191,17 @@ def generate_synthetic(inference_table, drift_type="label_drift"):
     .withColumn('total_charges', 'double', minValue=0.0, maxValue=8684.0, step=20)
     .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
     .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
-    .withColumn('churn', 'string', values=['Yes'], random=True)
+    .withColumn('churn', 'string', values=['No', 'Yes'], random=True, weights=[0.8, 0.2])
+    .withColumn('predictions', 'string', values=['No', 'Yes'], random=True, weights=[0.2, 0.8])
     )
-
 
   # Generate Synthetic Data
   df_synthetic_data = generation_spec.build()
 
-  # Model URI
-  model_uri = f"models:/{model_name}@Champion"
-
-  import mlflow
-  #TODO: need to review this. if we're calling the model we need to install dependencies too
-  #from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-  #requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
-  # from databricks.feature_engineering import FeatureEngineeringClient
-  # Load customer features to be scored
-  # Load champion model as a Spark UDF. You can use virtual env manager for the demo to avoid version conflict (you can remove the pip install above with virtual env)
-  #champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=model_uri) #Use env_manager="virtualenv" to recreate a venv with the same python version if needed
-
-  ## Batch score
-  #preds_df = df_synthetic_data.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))
-  preds_df = df_synthetic_data.withColumn("predictions", F.when(F.rand() < 0.1, "Yes").otherwise("No"))
-  preds_df = preds_df \
+  ## Append relevant/monitoring columns
+  preds_df = df_synthetic_data \
     .withColumn('model_name', F.lit(f"{model_name}")) \
-    .withColumn('model_version', F.lit(1)) \
-    .withColumn('model_alias', F.lit("Champion")) \
+    .withColumn('model_version', F.lit(2)) \
     .withColumn('inference_timestamp', F.lit(datetime.now()- timedelta(days=1))) 
 
   preds_df.write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{db}.{inference_table_name}")
@@ -226,12 +211,3 @@ if is_advanced_mlops_demo:
   inference_table_name = "advanced_churn_inference_table"
   if generate_synthetic_data:
     generate_synthetic(inference_table=inference_table_name)
-
-# COMMAND ----------
-
-# DBTITLE 1,Get slack webhook
-# Replace this with your Slack webhook
-try:
-  slack_webhook = dbutils.secrets.get(scope="fieldeng", key=f"{user_name}_slack_webhook")
-except:
-  slack_webhook = "" # https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX

@@ -16,7 +16,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.19 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install --quiet databricks-sdk==0.40.0 mlflow==2.22.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -35,9 +35,10 @@
 # COMMAND ----------
 
 import mlflow
+xp_path = f"/Users/{current_user}/dbdemos_mlops"
 
 #Added for the demo purpose
-xp = mlflow.search_experiments(filter_string=f"name LIKE '/Shared/dbdemos/experiments/mlops%'", order_by=["last_update_time DESC"])[0]
+xp = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}/dbdemos_automl%'", order_by=["last_update_time DESC"])[0]
 # Use MLflow to track experiments
 mlflow.set_experiment(experiment_id=xp.experiment_id)
 
@@ -224,20 +225,27 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 
 # COMMAND ----------
 
+# AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
+split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
+
 # AutoML completed train - validation - test split internally and used split to specify the set
-split_train_df = df_loaded.loc[df_loaded.split == "train"]
-split_val_df = df_loaded.loc[df_loaded.split == "validate"]
-split_test_df = df_loaded.loc[df_loaded.split == "test"]
+split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
+split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
+split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
 # Separate target co# Separate target column from features and drop split
-X_train = split_train_df.drop([target_col, "split"], axis=1)
+X_train = split_train_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
 y_train = split_train_df[target_col]
 
-X_val = split_val_df.drop([target_col, "split"], axis=1)
+X_val = split_val_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
 y_val = split_val_df[target_col]
 
-X_test = split_test_df.drop([target_col, "split"], axis=1)
+X_test = split_test_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
 y_test = split_test_df[target_col]
+
+if len(X_val) == 0: #hack for the demo to support all version - don't do that in production
+    X_val = X_test
+    y_val = y_test
 
 # COMMAND ----------
 

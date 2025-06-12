@@ -18,12 +18,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk==0.23.0 mlflow==2.22.0 databricks-feature-engineering==0.8.0 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install --quiet databricks-sdk==0.40.0 mlflow==2.22.0 databricks-feature-engineering==0.12.1 databricks-automl-runtime==0.2.21 holidays==0.64 category_encoders==2.7.0 shap==0.46.0 lightgbm==4.5.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl pyarrow==16.1.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 
@@ -371,6 +371,7 @@ def objective(params):
         flavor=mlflow.sklearn,
         training_set=training_set_specs,
         output_schema=output_schema,
+        extra_pip_requirements=["databricks-feature-lookup>=1.5.0"]
     )
 
     # Log metrics for the training set

@@ -19,12 +19,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.8.0
+# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.12.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false $adv_mlops=true
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 

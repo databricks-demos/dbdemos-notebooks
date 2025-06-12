@@ -11,6 +11,7 @@
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_mlops",
+    "serverless_supported": True,
     "title": "MLOps - End 2 end pipeline",
     "description": "Automate your model deployment with MLFlow and UC, end 2 end!",
     "fullDescription": "This demo covers a full MLOPs pipeline. We'll show you how Databricks Lakehouse can be leverage to orchestrate and deploy model in production while ensuring governance, security and robustness.<ul></li>Ingest data and save them as feature store</li><li>Build ML model with Databricks AutoML</li><li>Setup MLFlow hook to automatically test our models</li><li>Create the model test job</li><li>Automatically move model in production once the test are validated</li><li>Periodically retrain our model to prevent from drift</li></ul><br/><br/>Note that this is a fairly advanced demo. If you're new to Databricks and just want to learn about ML, we recommend starting with a ML demo or one of the Lakehouse demos.",

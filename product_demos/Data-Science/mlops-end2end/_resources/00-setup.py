@@ -1,9 +1,4 @@
 # Databricks notebook source
-# MAGIC %pip install "databricks-sdk>=0.28.0" -qU
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.dropdown("gen_synthetic_data", "false", ["true", "false"], "Generate Synthetic data for Drift Detection")
 dbutils.widgets.dropdown("adv_mlops", "false", ["true", "false"], "Setup for advanced MLOps demo")
@@ -50,17 +45,18 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 
 # Set UC Model Registry as default
 mlflow.set_registry_uri("databricks-uc")
+xp_name = "dbdemos_mlops_churn_demo_experiment"
+xp_path = f"/Users/{current_user}/dbdemos_mlops"
 if is_advanced_mlops_demo:
   # Set Experiment name as default
-  xp_path = f"/Users/{current_user}/databricks_automl"
-  xp_name = "advanced_mlops_churn_demo_experiment"
-
-  # Create directory in case it doesn't exist
-  try: 
-    dbutils.fs.mkdirs(f'file:/Workspace{xp_path}')
-  except:
-    import os 
-    os.makedirs(f'/Workspace{xp_path}', exist_ok=True)  
+  xp_name = "dbdemos_advanced_mlops_churn_demo_experiment"
+try:
+  from databricks.sdk import WorkspaceClient
+  w = WorkspaceClient()
+  r = w.workspace.mkdirs(path=xp_path)
+except Exception as e:
+  print(f"ERROR: couldn't create a folder for the experiment under {xp_path} - please create the folder manually or  skip this init (used for job only: {e})")
+  raise e
 
 client = MlflowClient()
 
@@ -162,62 +158,68 @@ gen_synthetic_data = False
 def generate_synthetic(inference_table, drift_type="label_drift"):
   import dbldatagen as dg
   import pyspark.sql.types
-  from databricks.feature_engineering import FeatureEngineeringClient
   import pyspark.sql.functions as F
   from datetime import datetime, timedelta
   # Column definitions are stubs only - modify to generate correct data  
   #
   generation_spec = (
-      dg.DataGenerator(sparkSession=spark, 
-                      name='synthetic_data', 
-                      rows=5000,
-                      random=True,
-                      )
-      .withColumn('customer_id', 'string', template=r'dddd-AAAA')
-      .withColumn('transaction_ts', 'timestamp', begin=(datetime.now() + timedelta(days=-30)), end=(datetime.now() + timedelta(days=-1)), interval="1 hour")
-      .withColumn('gender', 'string', values=['Female', 'Male'], random=True, weights=[0.5, 0.5])
-      .withColumn('senior_citizen', 'string', values=['No', 'Yes'], random=True, weights=[0.85, 0.15])
-      .withColumn('partner', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-      .withColumn('dependents', 'string', values=['No', 'Yes'], random=True, weights=[0.7, 0.3])
-      .withColumn('tenure', 'double', minValue=0.0, maxValue=72.0, step=1.0)
-      .withColumn('phone_service', values=['No', 'Yes'], random=True, weights=[0.9, 0.1])
-      .withColumn('multiple_lines', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-      .withColumn('internet_service', 'string', values=['Fiber optic', 'DSL', 'No'], random=True, weights=[0.5, 0.3, 0.2])
-      .withColumn('online_security', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-      .withColumn('online_backup', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-      .withColumn('device_protection', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-      .withColumn('tech_support', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
-      .withColumn('streaming_tv', 'string', values=['No', 'Yes', 'No internet service'], random=True, weights=[0.4, 0.4, 0.2])
-      .withColumn('streaming_movies', 'string', values=['No', 'Yes', 'No internet service'], random=True, weights=[0.4, 0.4, 0.2])
-      .withColumn('contract', 'string', values=['Month-to-month', 'One year','Two year'], random=True, weights=[0.5, 0.25, 0.25])
-      .withColumn('paperless_billing', 'string', values=['No', 'Yes'], random=True, weights=[0.6, 0.4])
-      .withColumn('payment_method', 'string', values=['Credit card (automatic)', 'Mailed check',
-  'Bank transfer (automatic)', 'Electronic check'], weights=[0.2, 0.2, 0.2, 0.4])
-      .withColumn('monthly_charges', 'double', minValue=18.0, maxValue=118.0, step=0.5)
-      .withColumn('total_charges', 'double', minValue=0.0, maxValue=8684.0, step=20)
-      .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
-      .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
-      .withColumn('churn', 'string', values=['Yes'], random=True)
-      )
+    dg.DataGenerator(sparkSession=spark, 
+                    name='synthetic_data', 
+                    rows=5000,
+                    random=True,
+                    )
+    .withColumn('customer_id', 'string', template=r'dddd-AAAA')
+    .withColumn('transaction_ts', 'timestamp', begin=(datetime.now() + timedelta(days=-30)), end=(datetime.now() + timedelta(days=-1)), interval="1 hour")
+    .withColumn('gender', 'string', values=['Female', 'Male'], random=True, weights=[0.5, 0.5])
+    .withColumn('senior_citizen', 'string', values=['No', 'Yes'], random=True, weights=[0.85, 0.15])
+    .withColumn('partner', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('dependents', 'string', values=['No', 'Yes'], random=True, weights=[0.7, 0.3])
+    .withColumn('tenure', 'double', minValue=0.0, maxValue=72.0, step=1.0)
+    .withColumn('phone_service', values=['No', 'Yes'], random=True, weights=[0.9, 0.1])
+    .withColumn('multiple_lines', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('internet_service', 'string', values=['Fiber optic', 'DSL', 'No'], random=True, weights=[0.5, 0.3, 0.2])
+    .withColumn('online_security', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('online_backup', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('device_protection', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('tech_support', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])
+    .withColumn('streaming_tv', 'string', values=['No', 'Yes', 'No internet service'], random=True, weights=[0.4, 0.4, 0.2])
+    .withColumn('streaming_movies', 'string', values=['No', 'Yes', 'No internet service'], random=True, weights=[0.4, 0.4, 0.2])
+    .withColumn('contract', 'string', values=['Month-to-month', 'One year','Two year'], random=True, weights=[0.5, 0.25, 0.25])
+    .withColumn('paperless_billing', 'string', values=['No', 'Yes'], random=True, weights=[0.6, 0.4])
+    .withColumn('payment_method', 'string', values=['Credit card (automatic)', 'Mailed check', 'Bank transfer (automatic)', 'Electronic check'], weights=[0.2, 0.2, 0.2, 0.4])
+    .withColumn('monthly_charges', 'double', minValue=18.0, maxValue=118.0, step=0.5)
+    .withColumn('total_charges', 'double', minValue=0.0, maxValue=8684.0, step=20)
+    .withColumn('num_optional_services', 'double', minValue=0.0, maxValue=6.0, step=1)
+    .withColumn('avg_price_increase', 'float', minValue=-19.0, maxValue=130.0, step=20)
+    .withColumn('churn', 'string', values=['Yes'], random=True)
+    )
 
 
   # Generate Synthetic Data
   df_synthetic_data = generation_spec.build()
 
-  fe = FeatureEngineeringClient()
-
   # Model URI
   model_uri = f"models:/{model_name}@Champion"
 
-  # Batch score
-  preds_df = fe.score_batch(df=df_synthetic_data, model_uri=model_uri, result_type="string")
+  import mlflow
+  #TODO: need to review this. if we're calling the model we need to install dependencies too
+  #from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+  #requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+  # from databricks.feature_engineering import FeatureEngineeringClient
+  # Load customer features to be scored
+  # Load champion model as a Spark UDF. You can use virtual env manager for the demo to avoid version conflict (you can remove the pip install above with virtual env)
+  #champion_model = mlflow.pyfunc.spark_udf(spark, model_uri=model_uri) #Use env_manager="virtualenv" to recreate a venv with the same python version if needed
+
+  ## Batch score
+  #preds_df = df_synthetic_data.withColumn('predictions', champion_model(*champion_model.metadata.get_input_schema().input_names()))
+  preds_df = df_synthetic_data.withColumn("predictions", F.when(F.rand() < 0.1, "Yes").otherwise("No"))
   preds_df = preds_df \
     .withColumn('model_name', F.lit(f"{model_name}")) \
     .withColumn('model_version', F.lit(1)) \
     .withColumn('model_alias', F.lit("Champion")) \
     .withColumn('inference_timestamp', F.lit(datetime.now()- timedelta(days=1))) 
 
-  preds_df.write.mode("append").saveAsTable(f"{catalog}.{db}.{inference_table_name}")
+  preds_df.write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{db}.{inference_table_name}")
 
 if is_advanced_mlops_demo:
   model_name = f"{catalog}.{db}.advanced_mlops_churn"
@@ -233,63 +235,3 @@ try:
   slack_webhook = dbutils.secrets.get(scope="fieldeng", key=f"{user_name}_slack_webhook")
 except:
   slack_webhook = "" # https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
-
-# COMMAND ----------
-
-from pyspark.sql.functions import col
-#from databricks.feature_store import FeatureStoreClient
-import mlflow
-import databricks
-from datetime import datetime
-
-def get_automl_run(name):
-  #get the most recent automl run
-  df = spark.table("field_demos_metadata.automl_experiment").filter(col("name") == name).orderBy(col("date").desc()).limit(1)
-  return df.collect()
-
-#Get the automl run information from the field_demos_metadata.automl_experiment table. 
-#If it's not available in the metadata table, start a new run with the given parameters
-def get_automl_run_or_start(name, model_name, dataset, target_col, timeout_minutes):
-  spark.sql("create database if not exists field_demos_metadata")
-  spark.sql("create table if not exists field_demos_metadata.automl_experiment (name string, date string)")
-  result = get_automl_run(name)
-  if len(result) == 0:
-    print("No run available, start a new Auto ML run, this will take a few minutes...")
-    start_automl_run(name, model_name, dataset, target_col, timeout_minutes)
-    result = get_automl_run(name)
-  return result[0]
-
-
-#Start a new auto ml classification task and save it as metadata.
-def start_automl_run(name, model_name, dataset, target_col, timeout_minutes = 5):
-  automl_run = databricks.automl.classify(
-    dataset = dataset,
-    target_col = target_col,
-    timeout_minutes = timeout_minutes
-  )
-  experiment_id = automl_run.experiment.experiment_id
-  path = automl_run.experiment.name
-  data_run_id = mlflow.search_runs(experiment_ids=[automl_run.experiment.experiment_id], filter_string = "tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].run_id
-  exploration_notebook_id = automl_run.experiment.tags["_databricks_automl.exploration_notebook_id"]
-  best_trial_notebook_id = automl_run.experiment.tags["_databricks_automl.best_trial_notebook_id"]
-
-  cols = ["name", "date", "experiment_id", "experiment_path", "data_run_id", "best_trial_run_id", "exploration_notebook_id", "best_trial_notebook_id"]
-  spark.createDataFrame(data=[(name, datetime.today().isoformat(), experiment_id, path, data_run_id, automl_run.best_trial.mlflow_run_id, exploration_notebook_id, best_trial_notebook_id)], schema = cols).write.mode("append").option("mergeSchema", "true").saveAsTable("field_demos_metadata.automl_experiment")
-  #Create & save the first model version in the MLFlow repo (required to setup hooks etc)
-  mlflow.register_model(f"runs:/{automl_run.best_trial.mlflow_run_id}/model", model_name)
-  return get_automl_run(name)
-
-#Generate nice link for the given auto ml run
-def display_automl_link(name, model_name, dataset, target_col, force_refresh=False, timeout_minutes = 5):
-  r = get_automl_run_or_start(name, model_name, dataset, target_col, timeout_minutes)
-  html = f"""For exploratory data analysis, open the <a href="/#notebook/{r["exploration_notebook_id"]}">data exploration notebook</a><br/><br/>"""
-  html += f"""To view the best performing model, open the <a href="/#notebook/{r["best_trial_notebook_id"]}">best trial notebook</a><br/><br/>"""
-  html += f"""To view details about all trials, navigate to the <a href="/#mlflow/experiments/{r["experiment_id"]}/s?orderByKey=metrics.%60val_f1_score%60&orderByAsc=false">MLflow experiment</>"""
-  displayHTML(html)
-
-
-def display_automl_churn_link(): 
-  display_automl_link("churn_auto_ml", "field_demos_customer_churn", spark.table("churn_features"), "churn", 5)
-
-def get_automl_churn_run(): 
-  return get_automl_run_or_start("churn_auto_ml", "field_demos_customer_churn", spark.table("churn_features"), "churn", 5)

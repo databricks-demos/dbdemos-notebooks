@@ -37,7 +37,21 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.8.0
+# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.12.1
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
+
+# COMMAND ----------
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

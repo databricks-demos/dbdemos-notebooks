@@ -55,9 +55,9 @@ import mlflow
 churn_experiment_name = "churn_auto_ml"
 model_name = f"{catalog}.{db}.mlops_churn"
 print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
+xp_path = f"/Users/{current_user}/dbdemos_mlops"
 
-xp_path = "/Shared/dbdemos/experiments/mlops"
-experiment_id = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}%'", order_by=["last_update_time DESC"])[0].experiment_id
+experiment_id = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}/dbdemos_automl%'", order_by=["last_update_time DESC"])[0].experiment_id
 print(experiment_id)
 
 # COMMAND ----------

@@ -297,21 +297,26 @@ class DBDemos():
           import pandas as pd
 
           class SafeRandomForestClassifier(RandomForestClassifier):
-              def fit(self, X, y=None, sample_weight=None):
-                  # Auto-drop datetime columns
-                  if isinstance(X, pd.DataFrame):
-                      datetime_cols = X.select_dtypes(include=['datetime']).columns
-                      if len(datetime_cols) > 0:
-                          X = X.drop(columns=datetime_cols)
-                  return super().fit(X, y, sample_weight)
+            def _sanitize(self, X):
+                if isinstance(X, pd.DataFrame):
+                    # Drop datetime columns
+                    X = X.drop(columns=X.select_dtypes(include=['datetime']).columns)
 
-              def predict(self, X):
-                  # Same: drop datetime columns at predict time
-                  if isinstance(X, pd.DataFrame):
-                      datetime_cols = X.select_dtypes(include=['datetime']).columns
-                      if len(datetime_cols) > 0:
-                          X = X.drop(columns=datetime_cols)
-                  return super().predict(X)
+                    # Encode object/string columns as categorical codes
+                    for col in X.select_dtypes(include=['object', 'category']).columns:
+                        X[col] = X[col].astype('category').cat.codes
+
+                    # Fill missing values
+                    X = X.fillna(0)
+                return X
+
+            def fit(self, X, y=None, sample_weight=None):
+                X = self._sanitize(X)
+                return super().fit(X, y, sample_weight)
+
+            def predict(self, X):
+                X = self._sanitize(X)
+                return super().predict(X)
                 
           # Split the data based on _automl_split_col
           train_df = df[df['_automl_split_col'] == 'train']

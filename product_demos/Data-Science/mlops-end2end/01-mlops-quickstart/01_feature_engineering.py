@@ -11,7 +11,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python SDK
-# MAGIC %pip install --quiet mlflow==2.22.0
+# MAGIC %pip install --quiet mlflow==2.22.0 databricks-automl-runtime==0.2.21
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -202,16 +202,12 @@ spark.sql(f"""COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The feat
 
 # DBTITLE 1,Run 'baseline' autoML experiment in the background
 from datetime import datetime
-
-xp_path = "/Shared/dbdemos/experiments/mlops"
-xp_name = f"automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-
+xp_path = f"/Users/{current_user}/dbdemos_mlops"
+xp_name = f"dbdemos_automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 try: 
     from databricks import automl 
-
     # Add/Force semantic data types for specific columns (to facilitate autoML and make sure it doesn't interpret it as categorical)
-
     automl_run = automl.classify(
         experiment_name = xp_name,
         experiment_dir = xp_path,
@@ -228,10 +224,9 @@ except Exception as e:
     if "cannot import name 'automl'" in str(e):
         # Note: cannot import name 'automl' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
         # adding a temporary workaround to make sure this works well for now -- ignore this for classic run
-        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", churn_features.toPandas()) 
+        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", churn_features.toPandas(), model_name="sklearn_model", target_col = "churn") 
     else: 
         raise e
-    
 
 # COMMAND ----------
 

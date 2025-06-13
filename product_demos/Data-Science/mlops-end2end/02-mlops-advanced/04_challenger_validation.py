@@ -38,6 +38,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.12.1
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -47,11 +49,15 @@
 # COMMAND ----------
 
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
+
 requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -98,9 +104,11 @@ print(f"Validating {model_alias} model for {model_name} on model version {model_
 if not model_details.description:
   has_description = False
   print("Please add model description")
+
 elif not len(model_details.description) > 20:
   has_description = False
   print("Please add detailed model description (40 char min).")
+  
 else:
   has_description = True
 
@@ -154,6 +162,7 @@ except Exception as e:
 # COMMAND ----------
 
 import os
+
 
 # Create local directory
 local_dir = "/tmp/model_artifacts"
@@ -218,6 +227,7 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 
 import pyspark.sql.functions as F
 
+
 # Get our validation dataset:
 validation_df = spark.table('advanced_churn_label_table').filter("split='validate'")
 
@@ -233,6 +243,7 @@ def predict_churn(validation_df, model_alias):
 import pandas as pd
 import plotly.express as px
 from sklearn.metrics import confusion_matrix
+
 
 # Note: This is over-simplified and depends on the use-case, but the idea is to evaluate our model against business metrics
 cost_of_customer_churn = 2000 #in dollar
@@ -298,6 +309,7 @@ if results.tags["has_description"] and results.tags["metric_f1_passed"] and resu
     alias="Champion",
     version=model_version
   )
+
 else:
   raise Exception("Model not ready for promotion")
 

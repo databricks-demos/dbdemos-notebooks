@@ -29,6 +29,8 @@
 
 # DBTITLE 1,Install Databricks Python SDK [for MLR < 13.3] and MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet databricks-sdk==0.40.0 mlflow==2.22.0
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -114,6 +116,8 @@
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
+
+
 # Create workspace client for the Databricks Python SDK
 w = WorkspaceClient()
 
@@ -121,6 +125,7 @@ w = WorkspaceClient()
 
 # DBTITLE 1,Drop any existing online table (optional)
 from pprint import pprint
+
 
 try:
   online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
@@ -145,6 +150,7 @@ from databricks.sdk.service.catalog import (
     OnlineTableSpecTriggeredSchedulingPolicy,
 )
 
+
 # Create an online table specification
 churn_features_online_store_spec = OnlineTableSpec(
     primary_key_columns=["customer_id"],
@@ -167,6 +173,7 @@ churn_features_online_table = OnlineTable.from_dict(
 # DBTITLE 1,Create the online table
 from databricks.sdk.service.catalog import OnlineTable
 
+
 # Create the online table
 w.online_tables.create_and_wait(table = churn_features_online_table)
 
@@ -174,6 +181,7 @@ w.online_tables.create_and_wait(table = churn_features_online_table)
 
 # DBTITLE 1,Check the status of the online table
 from pprint import pprint
+
 
 try:
   online_table_exist = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
@@ -187,6 +195,7 @@ pprint(online_table_exist.status.detailed_state)
 
 # DBTITLE 1,Wait for Online Table to be ready
 from pprint import pprint
+
 
 ready_state = online_table_exist.status.detailed_state.ONLINE_NO_PENDING_UPDATE
 current_state = online_table_exist.status.detailed_state

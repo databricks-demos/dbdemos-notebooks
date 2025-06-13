@@ -27,6 +27,7 @@ try:
   dbutils.fs.ls(folder+"/parts")
   dbutils.fs.ls(folder+"/turbine")
   dbutils.fs.ls(folder+"/incoming_data")
+  dbutils.fs.ls(folder+"/maintenance_guide")
   data_exists = True
   print("data already exists")
 except Exception as e:
@@ -48,6 +49,7 @@ if not data_exists:
         DBDemos.download_file_from_git(folder+'/parts', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/parts")
         DBDemos.download_file_from_git(folder+'/turbine', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/turbine")
         DBDemos.download_file_from_git(folder+'/incoming_data', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/incoming_data")
+        DBDemos.download_file_from_git(folder+'/maintenance_guide', "databricks-demos", "dbdemos-dataset", "/manufacturing/lakehouse-iot-turbine/maintenance_guide")
         spark.sql("CREATE TABLE IF NOT EXISTS turbine_power_prediction ( hour INT, min FLOAT, max FLOAT, prediction FLOAT);")
         spark.sql("DELETE FROM turbine_power_prediction")
         spark.sql("insert into turbine_power_prediction values (0, 377, 397, 391), (1, 393, 423, 412), (2, 399, 455, 426), (3, 391, 445, 404), (4, 345, 394, 365), (5, 235, 340, 276), (6, 144, 275, 195), (7, 93, 175, 133), (8, 45, 105, 76), (9, 55, 125, 95), (10, 35, 99, 77), (11, 14, 79, 44)")

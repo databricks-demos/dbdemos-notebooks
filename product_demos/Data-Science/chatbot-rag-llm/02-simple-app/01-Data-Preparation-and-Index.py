@@ -55,9 +55,7 @@
 
 if not spark.catalog.tableExists("raw_documentation") or spark.table("raw_documentation").isEmpty():
     # Download Databricks documentation to a DataFrame (see _resources/00-init for more details)
-    doc_articles = download_databricks_documentation_articles()
-    #Save them as a raw_documentation table
-    doc_articles.write.mode('overwrite').saveAsTable("raw_documentation")
+    download_and_write_databricks_documentation_to_table(table_name="raw_documentation")
 
 display(spark.table("raw_documentation").limit(2))
 

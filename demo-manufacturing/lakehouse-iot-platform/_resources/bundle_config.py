@@ -134,20 +134,12 @@
       "description": "Use tools to enable the AI agent to perform actions besides language generation."
     },
     {
-      "path": "05-Generative-AI/05.2-build-agent-iot-turbine-prescriptive-maintenance", 
+      "path": "05-Generative-AI/05.2-agent-creation-guide", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Build the AI agent using this driver notebook.", 
-      "description": "Build an AI agent using the Mosaic AI Agent Framework."
-    },
-    {
-      "path": "05-Generative-AI/05.3-deploy-agent-iot-turbine-prescriptive-maintenance", 
-      "pre_run": False, 
-      "publish_on_website": True, 
-      "add_cluster_setup_cell": False,
-      "title":  "Deploy AI agent and invoke it in a batch or real-time.", 
-      "description": "Deploy an AI agent using the Mosaic AI Agent Framework."
+      "title":  "Deploy your agents.", 
+      "description": "Use Databricks Playground to test and deploy your agent."
     },
     {
       "path": "06-Workflow-orchestration/06-Workflow-orchestration-iot-turbine", 

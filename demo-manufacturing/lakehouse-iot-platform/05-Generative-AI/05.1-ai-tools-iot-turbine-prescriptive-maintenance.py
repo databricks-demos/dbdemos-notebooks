@@ -77,12 +77,12 @@
 # MAGIC - Use agents to reason about the tools you selected and chain them together to properly answer your question. 
 # MAGIC
 # MAGIC At a high level, here is the agent system we will implement in this demo:
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_7.png" style="margin-left: 05%"  width="1000px;">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_0.png" style="margin-left: 05%"  width="1000px;">
 # MAGIC
 # MAGIC This notebook creates the three Mosaic AI tools and associated Mosaic AI endpoints, which will be composed together into a agent in notebook [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-agent-framework-iot-turbine-prescriptive-maintenance).
 # MAGIC 1. **Turbine predictor** which uses a Model Serving endpoint to predict turbines at risk of failure.
-# MAGIC 2. **Turbine maintenance report retriever**  which uses a Vector Search endpoint to retrieve historical maintenance reports with similar sensor readings.
-# MAGIC 3. **Turbine specifications retriever** which uses a Feature Serving endpoint to retrueve turbine specifications based on id.
+# MAGIC 2. **Turbine specifications retriever** which retrieve the turbine specifications based on its id.
+# MAGIC 3. **Turbine maintenance guide**  which uses a Vector Search endpoint to retrieve maintenance guide based on the turbines and issues being adressed.
 
 # COMMAND ----------
 
@@ -100,16 +100,13 @@
 # MAGIC %md-sandbox
 # MAGIC ## Part 1: Create the Turbine Predictor as a tool to predict turbine failure
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_2.png" style="float: right; width: 600px; margin-left: 10px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_1.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
 # MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we will rely on the model we deployed previously in the  [04.1-automl-iot-turbine-predictive-maintenance]($./04.3-running-inference-iot-turbine) notebook. 
 # MAGIC
-# MAGIC **Make sure you run this notebook to create the model serving endpoint!**
+# MAGIC **Make sure you run this ML notebook to create the model serving endpoint!**
 # MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
+# MAGIC
 # MAGIC ### Using the Model Serving as tool to predict faulty turbines
 # MAGIC Let's define the turbine predictor tool function our LLM agent will be able to execute. 
 # MAGIC
@@ -171,53 +168,102 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Part 2: Create the Maintenance Report Retriever as a tool to retrieve maintenance reports
 # MAGIC
-# MAGIC To enable our Agent System to retrieve relevant historical maintenance reports for turbines predicted to be at risk of failure, we have to index historical maintenance reports into a Vector Search Index. Since our `Turbine Predictor as a tool` requires sensor readings as input, we will use an embedding vector of the sensor readings to retrieve maintenance reports with similar sensor readings. 
+# MAGIC ## Part 2: Create a Turbine Specifications Retriever as tool to retrieve turbine specifications
 # MAGIC
-# MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-06-01%20at%2012.58.23.png?raw=true" style="float: right" width="700px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_2.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC Databricks provides multiple types of vector search indexes:
+# MAGIC This is great, our agent can access the predictive maintenance model, but we now need a tool to get the latest reading on our wind turbines to be able to get the features required by our ML model. 
 # MAGIC
-# MAGIC - **Managed embeddings**: you provide a text column and endpoint name and Databricks synchronizes the index with your Delta table. 
-# MAGIC - **Self Managed embeddings**: you compute the embeddings and save them as a field of your Delta Table, Databricks will then synchronize the index.
-# MAGIC - **Direct index**: when you want to use and update the index without having a Delta Table. **(what we'll use in this demo)**
+# MAGIC Let's create a simple retriever tool function our LLM agent will be able to execute, with all the features required to call our ML model.
 # MAGIC
-# MAGIC Since we are working with numerical sensor readings, which are non-text inputs, we have to use Vector Search Direct Index. In this section we:
-# MAGIC 1. Create a `Vector Search endpoint`
-# MAGIC 2. Create a `Vector Search Direct Index` 
-# MAGIC 3. Create a `Vector Search as tool` 
-# MAGIC 4. Query a `Vector Search as tool` 
+# MAGIC In this case, we'll simply do a SQL call to our ML model.
+# MAGIC
+# MAGIC *Note: in a more production-grade setup, we would instead use Databricks managed postgres to fetch our features with millisecond response time to speedup our system, but this is out side of the scope of this demo!* 
 
 # COMMAND ----------
 
-# MAGIC %md Let's start by loading the `turbine training dataset`, which we will use to index the historical maintenance reports:
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE FUNCTION turbine_specifications_retriever(turbine_id STRING)
+# MAGIC RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
+# MAGIC LANGUAGE SQL
+# MAGIC RETURN (
+# MAGIC   SELECT struct(turbine_id, hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, country, lat, location, long, model, state)
+# MAGIC   FROM turbine_current_features
+# MAGIC   WHERE turbine_id = turbine_specifications_retriever.turbine_id
+# MAGIC   LIMIT 1
+# MAGIC );
 
 # COMMAND ----------
 
-# Read our dataset into a DataFrame
-(spark.read.table("turbine_training_dataset").dropDuplicates(["turbine_id"])
-  .select("composite_key", "sensor_vector", "maintenance_report", "abnormal_sensor").filter("maintenance_report is not null")
-  .write.mode('overwrite').saveAsTable("turbine_sensor_reports"))
-spark.sql('ALTER TABLE turbine_sensor_reports SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
-
-display(spark.table("turbine_sensor_reports"))
-
+# MAGIC %sql
+# MAGIC SELECT turbine_specifications_retriever('25b2116a-ae6c-ff55-ce0c-3f08e12656f1') AS turbine_specifications
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Creating the Vector Search endpoint
+# MAGIC ## Part 3: Add a tool to access our maintenance guide content and provide support to the operator during maintenance operation
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_4.png" style="float: right; width: 600px; margin-left: 10px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_3.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC Direct Vector Access Index supports direct read and write of vectors and metadata. The user is responsible for updating this table using the REST API or the Python SDK. This type of index cannot be created using the UI. You must use the REST API or the SDK.
 # MAGIC
-# MAGIC A vector search index uses a **Vector search endpoint** to serve the embeddings (you can think about it as your Vector Search API endpoint).
+# MAGIC We were provided with PDF guide containing all the error code and maintenance steps for the critical components of our wind turbine. The're saved as pdf file in our volume.
 # MAGIC
-# MAGIC Multiple Indexes can use the same endpoint. 
+# MAGIC Let's parse them and index them so that we can properly retrieve them. We'll save them in a Vector Search endpoint and leverage it to guide the operators with the maintenance step and recommendations.
 # MAGIC
-# MAGIC Let's now create one.
+# MAGIC We'll use a Managed embedding index to make it simple. In this section we will:
+# MAGIC
+# MAGIC 1. Parse and save our PDF text in a Delta Table using Databricks AI Query `ai_parse_document`
+# MAGIC 2. Create a `Vector Search endpoint` (required to host your vector search index)
+# MAGIC 3. Create a `Vector Search Direct Index`  (the actual index)
+# MAGIC 4. Create a `Tool (UC function)` using our vector search 
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC
+# MAGIC ### 2.1. Parse and save our PDF text
+# MAGIC Let's start by parsing the maintenance guide documents, saved as pdf in our volume:
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS turbine_maintenance_guide (
+# MAGIC   id BIGINT GENERATED ALWAYS AS IDENTITY,
+# MAGIC   EAN STRING,
+# MAGIC   weight STRING,
+# MAGIC   component_type STRING,
+# MAGIC   component_name STRING,
+# MAGIC   full_guide STRING)
+# MAGIC   TBLPROPERTIES (delta.enableChangeDataFeed = true);
+
+# COMMAND ----------
+
+# DBTITLE 1,Read the pdf and
+# MAGIC %sql
+# MAGIC INSERT OVERWRITE TABLE turbine_maintenance_guide (EAN, weight, component_type, component_name, full_guide)
+# MAGIC SELECT ai_extract.*, full_guide FROM (
+# MAGIC   SELECT 
+# MAGIC     ai_extract(full_guide, array('EAN', 'weight', 'component_type', 'component_name')) AS ai_extract,
+# MAGIC     full_guide
+# MAGIC   FROM (
+# MAGIC     -- TODO: review why parsed_document:document.pages[*].content isn't working
+# MAGIC     SELECT array_join(
+# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS full_guide
+# MAGIC     FROM (
+# MAGIC       SELECT ai_parse_document(content) AS parsed_document
+# MAGIC       FROM READ_FILES("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/maintenance_guide", format => 'binaryFile')
+# MAGIC     )
+# MAGIC   ));
+# MAGIC
+# MAGIC SELECT * FROM turbine_maintenance_guide
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC ### 2.2. Creating the Vector Search endpoint
+# MAGIC
+# MAGIC Let's create a new Vector search endpoint. You can also use the [UI under Compute](#/setting/clusters/vector-search) to directly create your endpoint.
 
 # COMMAND ----------
 
@@ -235,32 +281,35 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/index_creation.gif?raw=true" width="600px" style="float: right">
+# MAGIC ### 2.3 Creating the Vector Search Index
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/index_creation.gif?raw=true" width="600px" style="float: right; margin-left: 10px">
 # MAGIC
 # MAGIC You can view your endpoint on the [Vector Search Endpoints UI](#/setting/clusters/vector-search). Click on the endpoint name to see all indexes that are served by the endpoint.
 # MAGIC
-# MAGIC
-# MAGIC ### Creating the Vector Search Index
-# MAGIC
 # MAGIC All we now have to do is to as Databricks to create the index on top of our table. The Delta Table will automatically be synched with the index.
+# MAGIC
+# MAGIC
+# MAGIC Again, you can do that using your Unity Catalog UI, and selecting the turbine_maintenance_guide table in your Unity Catalog, and click on add a vector search. 
 
 # COMMAND ----------
 
+# DBTITLE 1,Creating the VS from the maintenance table
 import databricks.sdk.service.catalog as c
 
 # Where we want to store our index
-vs_index_fullname = f"{catalog}.{db}.turbine_sensor_reports_vs_index"
+vs_index_fullname = f"{catalog}.{db}.turbine_maintenance_guide_vs_index"
 
 if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
   print(f"Creating index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
   index = vsc.create_delta_sync_index(
     endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
-    source_table_name=f"{catalog}.{db}.turbine_sensor_reports",
+    source_table_name=f"{catalog}.{db}.turbine_maintenance_guide",
     index_name=vs_index_fullname,
     pipeline_type="TRIGGERED",
-    primary_key='composite_key',
-    embedding_dimension=6,
-    embedding_vector_column="sensor_vector"
+    primary_key='id',
+    embedding_source_column="full_guide",
+    embedding_model_endpoint_name="databricks-gte-large-en"
   )
 else:
   print(f"Grabbing existing index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
@@ -269,251 +318,42 @@ else:
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### Define Maintenance Report Retriever function
+# MAGIC ### 2.4 Create our tool
 # MAGIC Below, we utilize the _VECTOR\_SEARCH_ SQL function from Databricks to easily set up our maintenance reports retriever function. Our agent will utilize this function in the subsequent steps!
 
 # COMMAND ----------
 
-spark.sql("DROP FUNCTION IF EXISTS turbine_maintenance_reports_retriever")
+spark.sql("DROP FUNCTION IF EXISTS turbine_maintenance_guide_retriever")
 spark.sql(f"""
-CREATE OR REPLACE FUNCTION turbine_maintenance_reports_retriever(sensor_reading_array ARRAY<DOUBLE>)
+CREATE OR REPLACE FUNCTION turbine_maintenance_guide_retriever(question STRING)
 RETURNS ARRAY<STRING>
 LANGUAGE SQL
 RETURN (
-  SELECT collect_list(maintenance_report) FROM VECTOR_SEARCH(index => '{catalog}.{schema}.turbine_sensor_reports_vs_index', query_vector => sensor_reading_array, num_results => 3) ) """)
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ### Using the Maintenance Report Retriever as tool to retrieve maintenance reports
-# MAGIC Now we can now use our function in SQL, and it'll be available to our tool
+  SELECT collect_list(full_guide) FROM VECTOR_SEARCH(index => '{catalog}.{schema}.turbine_maintenance_guide_vs_index', query => question, num_results => 1) ) """)
 
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC SELECT turbine_maintenance_reports_retriever(
-# MAGIC   ARRAY(0.9901583695625525,2.2170412500371417,3.2607344819672837,2.3033028001321516,2.4663900152731313,4.575124113082638)
-# MAGIC   ) AS reports
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ## Part 3: Create the Turbine Specifications Retriever as a tool to retrieve turbine specifications
-# MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/agent_graph_3.png" style="float: right; width: 600px; margin-left: 10px">
-# MAGIC
-# MAGIC To enable our Agent System to retrieve turbine specifications for turbines predicted to be faulty, we need to serve the DLT `turbine_current_features` feature table through a feature serving endpoint.
-# MAGIC
-# MAGIC Databricks Feature Serving offers a unified interface for serving pre-materialized and on-demand features to models or applications deployed outside Databricks. These endpoints automatically scale to handle real-time traffic, ensuring high availability and low latency.
-# MAGIC
-# MAGIC This part illustrates how to:
-# MAGIC 1. Create a `FeatureSpec`. A `FeatureSpec` defines a set of features (prematerialized and on-demand) that are served together. 
-# MAGIC 2. Create an `Online Table` from a Delta Table.
-# MAGIC 3. Serve the features. To serve features, you create a Feature Serving endpoint with the `FeatureSpec`.
-# MAGIC 4. Create a `Feature Serving as tool` using UC tool functions.
-# MAGIC 5. Query a `Feature Serving as tool` using SQL.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC   
-# MAGIC ###  This demo requires a secret to work:
-# MAGIC Your Tool will need a secret to authenticate against the online table we create (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).  <br/>
-# MAGIC **Note: if you are using a shared demo workspace and you see that the secret is setup, please don't run these steps and do not override its value**<br/>
-# MAGIC
-# MAGIC - You'll need to [setup the Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/install.html) on your laptop or using this cluster terminal: <br/>
-# MAGIC `pip install databricks-cli` <br/>
-# MAGIC - Configure the CLI. You'll need your workspace URL and a PAT token from your profile page<br>
-# MAGIC `databricks configure`
-# MAGIC - Create the dbdemos scope:<br/>
-# MAGIC `databricks secrets create-scope --scope dbdemos`
-# MAGIC - Save your service principal secret. It will be used by the Model Endpoint to autenticate. If this is a demo/test, you can use one of your [PAT token](https://docs.databricks.com/en/dev-tools/auth/pat.html).<br>
-# MAGIC `databricks secrets put-secret <SCOPE_GOES_HERE> <KEY_GOES_HERE> --string-value 
-# MAGIC <SECRET_GOES_HERE>'`
-# MAGIC
-# MAGIC *Note: Make sure your service principal has access to the Vector Search index:*
-# MAGIC
-# MAGIC ```
-# MAGIC spark.sql('GRANT USAGE ON CATALOG <catalog> TO `<YOUR_SP>`');
-# MAGIC spark.sql('GRANT USAGE ON DATABASE <catalog>.<db> TO `<YOUR_SP>`');
-# MAGIC from databricks.sdk import WorkspaceClient
-# MAGIC import databricks.sdk.service.catalog as c
-# MAGIC WorkspaceClient().grants.update(c.SecurableType.TABLE, <index_name>, 
-# MAGIC                                 changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal="<YOUR_SP>")])
-# MAGIC WorkspaceClient().secrets.put_acl(scope=dbdemos, principal="<YOUR_SP>", permission=workspace.AclPermission.READ)
-# MAGIC   ```
-
-# COMMAND ----------
-
-# MAGIC %md ### Set up a Feature Table
-# MAGIC
-# MAGIC We'll use the table `turbine_current_features` we created in our DLT pipeline as our feature store.
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ### What's required for our Feature Serving endpoint
-# MAGIC
-# MAGIC To deploy a Feature Serving endpoint, you need to create a **FeatureSpec**.
-# MAGIC
-# MAGIC FeatureSpecs are stored in and mananged by Unity Catalog and appear in the Catalog Explorer.
-# MAGIC
-# MAGIC Tables specified in a FeatureSpec must be published to an **online store or an online table** for Online Serving.
-# MAGIC
-# MAGIC This demo shows how to setup a **Feature Spec** with a **Feature Function**.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Setting up a Databricks Online Table
-# MAGIC To access the feature table from Feature Serving, you must create an Online Table from the feature table. You can create an online table from the Catalog Explorer UI, Databricks SDK or Rest API. The steps to use Databricks python SDK are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
-
-# COMMAND ----------
-
-# DBTITLE 1,Databricks Online Table Setup
-from pprint import pprint
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.catalog import *
-import mlflow
-
-w = WorkspaceClient()
-online_table_name = f"{catalog}.{db}.turbine_current_features_online"
-
-spec = OnlineTableSpec(
-    primary_key_columns=["turbine_id"],
-    source_table_full_name=f"{catalog}.{db}.turbine_current_features",
-    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}),
-    perform_full_copy=True
-)
-
-try:
-    online_table_pipeline = w.online_tables.create(table=OnlineTable(name=online_table_name, spec=spec))
-except Exception as e:
-    if "already exists" in str(e):
-        pass
-    else:
-        raise e
-
-pprint(w.online_tables.get(online_table_name))
-
-# COMMAND ----------
-
-# DBTITLE 1,Catalog Turbine Specifications
-from databricks.feature_engineering import FeatureLookup
-from databricks.feature_engineering import FeatureEngineeringClient
-
-fe = FeatureEngineeringClient()
-
-features = [FeatureLookup(
-    table_name=f"{catalog}.{db}.turbine_current_features",
-    lookup_key=["turbine_id"]
-  )]
-
-# Create a `FeatureSpec` in Unity Catalog
-try:
-  fe.create_feature_spec(name=f"{catalog}.{db}.turbine_features_spec", features=features)
-except Exception as e:
-  if "already exists" in str(e):
-    print(f"FeatureSpec {catalog}.{db}.turbine_features_spec already exists. Skipping execution")
-  else:
-    print(f"An error occurred: {e}")
-    raise e
-
-# COMMAND ----------
-
-# MAGIC %md ### Create a Feature Serving endpoint
-# MAGIC
-# MAGIC Let's create Feature Serving endpoint using the Databricks Python SDK: 
-
-# COMMAND ----------
-
-from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
-
-try:
- status = w.serving_endpoints.create_and_wait(
-   name=FEATURE_SERVING_ENDPOINT_NAME,
-   config = EndpointCoreConfigInput(
-     served_entities=[
-       ServedEntityInput(
-         entity_name=f"{catalog}.{db}.turbine_features_spec",
-         scale_to_zero_enabled=True,
-         workload_size="Small"
-       )
-     ]
-   ) 
- )
-
-except Exception as e:
-  if "already exists" in str(e):
-    print(f"Serving endpoint {FEATURE_SERVING_ENDPOINT_NAME} already exists. Skipping execution")
-  else:
-    raise e
-
-# COMMAND ----------
-
-# MAGIC %md You can now view the status of the Feature Serving Endpoint in the table on the **Serving endpoints** page. Click **Serving** in the sidebar to display the page.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Using the Turbine Specifications Retriever as tool to retrieve turbine specifications
-# MAGIC Next, we define the turbine specifications retriever tool function our LLM agent will be able to execute. To do so, we will wrap the Feature Serving endpoint in a UC tool function.
-
-# COMMAND ----------
-
-host = WorkspaceClient().config.host
-
-spark.sql(f"""DROP FUNCTION IF EXISTS {catalog}.{db}.turbine_specifications_retriever_with_secret;""")
-spark.sql(f"""
-CREATE OR REPLACE FUNCTION {catalog}.{db}.turbine_specifications_retriever_with_secret(
-  turbine_id STRING, databricks_token STRING)
-RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
-LANGUAGE PYTHON
-AS
-$$
-  try:
-    import requests
-    headers = {{"Authorization": "Bearer " + databricks_token}}
-    #Call our vector search endpoint via simple SQL statement
-    response = requests.post("{host}/serving-endpoints/dbdemos_iot_turbine_feature_endpoint/invocations", json = {{"dataframe_records": [{{"turbine_id": turbine_id}}]}}, headers=headers)
-    return response.json().get('outputs')[0]
-  except Exception as e:
-    raise e
-$$;""")
-
-# COMMAND ----------
-
-# DBTITLE 1,Add the wrapper
-# MAGIC %sql
-# MAGIC DROP FUNCTION IF EXISTS turbine_specifications_retriever;
-# MAGIC CREATE OR REPLACE FUNCTION turbine_specifications_retriever (turbine_id STRING)
-# MAGIC   RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
-# MAGIC LANGUAGE SQL
-# MAGIC COMMENT 'This tool returns turbine specifications based on the turbine_id.'
-# MAGIC   RETURN SELECT turbine_specifications_retriever_with_secret(turbine_id, secret('dbdemos', 'ai_agent_sp_token'));
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Now we can query our turbine specifcations retriever tool function:
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT turbine_specifications_retriever('25b2116a-ae6c-ff55-ce0c-3f08e12656f1') AS turbine_specifications
+# MAGIC -- Let's test the tool we created
+# MAGIC SELECT turbine_maintenance_guide_retriever('The VibeGuard TVS-950 is giving me an error code TVS-001.') AS reports
 
 # COMMAND ----------
 
 # MAGIC %md ## Exploring Mosaic AI Tools in Unity Catalog
 # MAGIC
-# MAGIC You can now view the UC function tools in Catalog Explorer. Click **Catalog** in the sidebar. In the Catalog Explorer, navigate to your catalog and schema. The UC function tools appears under **Functions**. 
+# MAGIC Our tools are ready! 
+# MAGIC
+# MAGIC You can now view the UC function tools in Catalog Explorer. Click **Catalog** in the sidebar. In the Catalog Explorer, navigate to your catalog and schema. 
+# MAGIC
+# MAGIC The UC function tools appears under **Functions**. 
 # MAGIC
 # MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Screenshot%202024-09-18%20at%2016.24.24.png?raw=true"/>
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## What’s next:
-# MAGIC Now that we create the Mosaic AI Tools, We will compose them into an agent system that generates maintenance work orders using the Mosaic AI agent framework.
+# MAGIC ## What’s next: test your Agents with Databricks Playground
 # MAGIC
-# MAGIC Open the [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-build-agent-iot-turbine-prescriptive-maintenance) notebook to create and deploy the system.
+# MAGIC Now that we have our AI Tools ready and registered in Unity Catalog, we can compose them into an agent system that generates maintenance work orders using the Mosaic AI agent framework.
+# MAGIC
+# MAGIC Open the [05.2-agent-creation-guide]($./05.2-agent-creation-guide) notebook to create and deploy the system.

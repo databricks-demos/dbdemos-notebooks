@@ -86,7 +86,7 @@
     },
     {
       "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Governance with Unity Catalog", 
@@ -135,7 +135,7 @@
     },
     {
       "path": "05-Generative-AI/05.2-agent-creation-guide", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Deploy your agents.", 

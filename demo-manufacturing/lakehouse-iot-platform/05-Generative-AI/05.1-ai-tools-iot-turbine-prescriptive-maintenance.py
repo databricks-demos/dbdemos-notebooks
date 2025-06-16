@@ -70,16 +70,16 @@
 # MAGIC
 # MAGIC We will build an Agent System designed to generate prescriptive work orders for wind turbine maintenance technicians. This system integrates multiple interacting components to ensure proactive and efficient maintenance, thereby optimizing the overall equipment effectiveness.
 # MAGIC
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_0.png" style="margin-left: 5px; float: right"  width="1000px;">
+# MAGIC
 # MAGIC Databricks simplifies this by providing a built-in service to:
 # MAGIC
 # MAGIC - Create and store your AI tools leveraging UC functions
 # MAGIC - Execute the AI tools in a safe way
 # MAGIC - Use agents to reason about the tools you selected and chain them together to properly answer your question. 
 # MAGIC
-# MAGIC At a high level, here is the agent system we will implement in this demo:
-# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_0.png" style="margin-left: 05%"  width="1000px;">
 # MAGIC
-# MAGIC This notebook creates the three Mosaic AI tools and associated Mosaic AI endpoints, which will be composed together into a agent in notebook [05.2-agent-framework-iot-turbine-prescriptive-maintenance]($./05.2-agent-framework-iot-turbine-prescriptive-maintenance).
+# MAGIC This notebook creates the three Mosaic AI tools and associated Mosaic AI endpoints, which will be composed together into a agent in notebook [05.2-agent-creation-guide]($./05.2-agent-creation-guide).
 # MAGIC 1. **Turbine predictor** which uses a Model Serving endpoint to predict turbines at risk of failure.
 # MAGIC 2. **Turbine specifications retriever** which retrieve the turbine specifications based on its id.
 # MAGIC 3. **Turbine maintenance guide**  which uses a Vector Search endpoint to retrieve maintenance guide based on the turbines and issues being adressed.
@@ -102,7 +102,7 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_1.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we will rely on the model we deployed previously in the  [04.1-automl-iot-turbine-predictive-maintenance]($./04.3-running-inference-iot-turbine) notebook. 
+# MAGIC To enable our Agent System to predict turbine failtures based on industrial IoT sensor readings, we will rely on the model we deployed previously in the  [./04.3-running-inference-iot-turbine]($./04.3-running-inference-iot-turbine) notebook. 
 # MAGIC
 # MAGIC **Make sure you run this ML notebook to create the model serving endpoint!**
 # MAGIC

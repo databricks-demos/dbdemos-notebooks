@@ -59,7 +59,7 @@
             "min_workers": 1,
             "max_workers": 1
         },
-        "spark_version": "13.3.x-cpu-ml-scala2.12",
+        "spark_version": "16.4.x-cpu-ml-scala2.12",
         "single_user_name": "{{CURRENT_USER}}",
         "data_security_mode": "SINGLE_USER",
         "runtime_engine": "STANDARD"

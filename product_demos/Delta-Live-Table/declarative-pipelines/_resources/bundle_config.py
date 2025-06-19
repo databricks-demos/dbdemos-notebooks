@@ -165,7 +165,6 @@
           "photon": False,
           "root_path": "{{DEMO_FOLDER}}",
           "libraries": [
-            {
               {"glob": {"include": "{{DEMO_FOLDER}}/transformations/01-bronze.sql"}},
               {"glob": {"include": "{{DEMO_FOLDER}}/transformations/02-silver.sql"}},
               {"glob": {"include": "{{DEMO_FOLDER}}/transformations/03-gold.sql"}}

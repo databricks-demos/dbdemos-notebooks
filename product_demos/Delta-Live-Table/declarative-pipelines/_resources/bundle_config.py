@@ -59,7 +59,7 @@
       {
         "path": "transformations/01-bronze.sql", 
         "pre_run": False, 
-        "publish_on_website": True, 
+        "publish_on_website": False, 
         "add_cluster_setup_cell": False,
         "title":  "Bronze SQL tables", 
         "description": "Ingest the raw data."
@@ -67,7 +67,7 @@
       {
         "path": "transformations/02-silver.sql", 
         "pre_run": False, 
-        "publish_on_website": True, 
+        "publish_on_website": False, 
         "add_cluster_setup_cell": False,
         "title":  "Silver SQL tables", 
         "description": "Clean and prepare your data."
@@ -75,7 +75,7 @@
       {
         "path": "transformations/03-gold.sql", 
         "pre_run": False, 
-        "publish_on_website": True, 
+        "publish_on_website": False, 
         "add_cluster_setup_cell": False,
         "title":  "Gold SQL tables", 
         "description": "Final aggregation layer, for ML and BI usage."
@@ -163,10 +163,12 @@
           "channel": "CURRENT",
           "edition": "ADVANCED",
           "photon": False,
+          "root_path": "{{DEMO_FOLDER}}"
           "libraries": [
-              {"notebook": {"path": "{{DEMO_FOLDER}}/transformations/01-bronze.sql"}},
-              {"notebook": {"path": "{{DEMO_FOLDER}}/transformations/02-silver.sql"}},
-              {"notebook": {"path": "{{DEMO_FOLDER}}/transformations/03-gold.sql"}}
+            {
+              {"glob": {"include": "{{DEMO_FOLDER}}/transformations/01-bronze.sql"}},
+              {"glob": {"include": "{{DEMO_FOLDER}}/transformations/02-silver.sql"}},
+              {"glob": {"include": "{{DEMO_FOLDER}}/transformations/03-gold.sql"}}
           ],
           "name": "dbdemos_pipeline_bike_{{CATALOG}}_{{SCHEMA}}",
           "catalog": "{{CATALOG}}",
@@ -179,6 +181,6 @@
         }
       }
     ],
-    "dashboards": [{"name": "[dbdemos] Declarative Pipeline - Bike Rental Business Insights",  "id": "bike-rental"},
-                   {"name": "[dbdemos] Declarative Pipeline - Bike Data Monitoring",  "id": "data-quality"}]
+    "dashboards": [{"name": "[dbdemos] LDP - Bike Rental Business Insights",  "id": "bike-rental"},
+                   {"name": "[dbdemos] LDP - Bike Data Monitoring",  "id": "data-quality"}]
   }

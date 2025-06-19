@@ -163,7 +163,7 @@
           "channel": "CURRENT",
           "edition": "ADVANCED",
           "photon": False,
-          "root_path": "{{DEMO_FOLDER}}"
+          "root_path": "{{DEMO_FOLDER}}",
           "libraries": [
             {
               {"glob": {"include": "{{DEMO_FOLDER}}/transformations/01-bronze.sql"}},

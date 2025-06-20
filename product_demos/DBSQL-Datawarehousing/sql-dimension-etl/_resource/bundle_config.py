@@ -123,7 +123,7 @@
           "max_concurrent_runs": 1,
           "tasks": [
             {
-              "task_key": "SETUP_CATALOG_SCHEMA",
+              "task_key": "INITIALIZE_AND_SETUP_SCHEMA",
               "run_if": "ALL_SUCCESS",
               "notebook_task": {
                 "notebook_path": "{{DEMO_FOLDER}}/01-Setup/01.2-setup",
@@ -137,7 +137,7 @@
               "task_key": "CREATE_CODE_TABLE",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG_SCHEMA"
+                  "task_key": "INITIALIZE_AND_SETUP_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -153,7 +153,7 @@
               "task_key": "CREATE_LOG_TABLE",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG_SCHEMA"
+                  "task_key": "INITIALIZE_AND_SETUP_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -169,7 +169,7 @@
               "task_key": "CREATE_PATIENT_TABLES",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG_SCHEMA"
+                  "task_key": "INITIALIZE_AND_SETUP_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",
@@ -185,7 +185,7 @@
               "task_key": "demo_StgSrcFileInit",
               "depends_on": [
                 {
-                  "task_key": "SETUP_CATALOG_SCHEMA"
+                  "task_key": "INITIALIZE_AND_SETUP_SCHEMA"
                 }
               ],
               "run_if": "ALL_SUCCESS",

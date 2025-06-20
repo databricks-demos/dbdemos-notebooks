@@ -176,6 +176,10 @@
               "catalog": "{{CATALOG}}",
               "schema": "{{SCHEMA}}",
               "name": "event_logs"
+          },
+          "configuration": {
+            "catalog": "{{CATALOG}}",
+            "schema": "{{SCHEMA}}"
           }
         }
       }

@@ -59,7 +59,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Creating our silver Streaming Tables enrigched with AI
+# MAGIC ## Creating our silver Streaming Tables enriched with AI
 # MAGIC Take a look at [silver.sql]($../transformations/silver.sql) to see how we create our silver tables `maintenance_logs` `rides` and `weather`.
 
 # COMMAND ----------

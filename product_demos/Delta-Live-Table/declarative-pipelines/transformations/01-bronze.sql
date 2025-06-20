@@ -5,7 +5,7 @@
 CREATE OR REFRESH STREAMING TABLE RIDES_RAW 
 COMMENT "Raw rides data streamed in from CSV files."
 AS SELECT * FROM 
-  STREAM READ_FILES("/Volumes/main/jesse_young_dlt_demo/raw_data/rides/*.csv", FORMAT => "csv");
+  STREAM READ_FILES("/Volumes/${catalog}/${schema}/raw_data/rides/*.csv", FORMAT => "csv");
 
 
 -- ==========================================================================
@@ -14,7 +14,7 @@ AS SELECT * FROM
 CREATE OR REFRESH STREAMING TABLE MAINTENANCE_LOGS_RAW
 COMMENT "Raw maintenance logs streamed in from CSV files."
 AS SELECT * FROM 
-  STREAM READ_FILES("/Volumes/main/jesse_young_dlt_demo/raw_data/maintenance_logs/*.csv", FORMAT => "csv", MULTILINE => TRUE);
+  STREAM READ_FILES("/Volumes/${catalog}/${schema}/raw_data/maintenance_logs/*.csv", FORMAT => "csv", MULTILINE => TRUE);
 
 
 -- ==========================================================================
@@ -23,6 +23,6 @@ AS SELECT * FROM
 CREATE OR REFRESH STREAMING TABLE WEATHER_RAW
 COMMENT "Raw weather data streamed in from JSON files."
 AS SELECT * FROM 
-  STREAM READ_FILES("/Volumes/main/jesse_young_dlt_demo/raw_data/weather/*.json", FORMAT => "json");
+  STREAM READ_FILES("/Volumes/${catalog}/${schema}/raw_data/weather/*.json", FORMAT => "json");
 
 -- Next up, let's clean up our data for our silver layer in 02-silver.sql

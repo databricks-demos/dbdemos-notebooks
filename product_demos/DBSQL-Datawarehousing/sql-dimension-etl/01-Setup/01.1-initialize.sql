@@ -9,12 +9,12 @@
 -- MAGIC 1. Catalog name (to create demo schema and objects)
 -- MAGIC 2. Schema name (to create data warehouse tables, staging volume)
 -- MAGIC
--- MAGIC <br>
--- MAGIC *NOTE: DBDemos will create the catalog and schema for you if they do not exist. Ensure that the user running the workflow has permissions to create catalog and schema.*
+-- MAGIC
+-- MAGIC <b>NOTE:</b> <br>
+-- MAGIC - Ensure that the Catalog and Schema exist.<br>
+-- MAGIC - Ensure that the user running the demo has <b>CREATE TABLE</b> and <b>CREATE VOLUME</b> privileges in the above schema.
 
 -- COMMAND ----------
-
--- NOTE: enclose names in backticks if they contain special characters
 
 -- Name of catalog under which to create the demo schema
 DECLARE OR REPLACE VARIABLE catalog_name STRING = 'main';
@@ -32,6 +32,7 @@ DECLARE OR REPLACE VARIABLE schema_name STRING = 'dbdemos_sql_etl';
 -- COMMAND ----------
 
 -- Enable PO prodictive optimization at schema level / else inherit from account setting
+-- User needs to have ALTER SCHEMA privilege
 DECLARE OR REPLACE VARIABLE enable_po_for_schema BOOLEAN = true;
 
 -- COMMAND ----------

@@ -8,16 +8,19 @@ DECLARE OR REPLACE VARIABLE sqlstr STRING; -- Variable to hold any SQL statement
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC **Create Catalog and Schema(s) if required**
+-- MAGIC -- To CREATE Catalog<br>
+-- MAGIC -- This option is disabled<br>
+-- MAGIC
+-- MAGIC SET VARIABLE sqlstr = "CREATE CATALOG IF NOT EXISTS " || catalog_name;
+-- MAGIC EXECUTE IMMEDIATE sqlstr;
 
 -- COMMAND ----------
 
-SET VARIABLE sqlstr = "CREATE CATALOG IF NOT EXISTS " || catalog_name;
-EXECUTE IMMEDIATE sqlstr;
-
--- COMMAND ----------
-
-EXECUTE IMMEDIATE 'CREATE SCHEMA IF NOT EXISTS IDENTIFIER(?)' USING full_schema_name;
+-- MAGIC %md
+-- MAGIC -- To CREATE Catalog<br>
+-- MAGIC -- This option is disabled<br>
+-- MAGIC
+-- MAGIC EXECUTE IMMEDIATE 'CREATE SCHEMA IF NOT EXISTS IDENTIFIER(?)' USING full_schema_name;
 
 -- COMMAND ----------
 
@@ -26,8 +29,14 @@ EXECUTE IMMEDIATE 'CREATE SCHEMA IF NOT EXISTS IDENTIFIER(?)' USING full_schema_
 
 -- COMMAND ----------
 
-SET VARIABLE sqlstr = "ALTER SCHEMA " || full_schema_name || IF(enable_po_for_schema, ' ENABLE', ' INHERIT') || ' PREDICTIVE OPTIMIZATION';
-EXECUTE IMMEDIATE sqlstr;
+BEGIN
+  DECLARE sqlstr STRING;
+
+  IF enable_po_for_schema THEN
+    SET sqlstr = "ALTER SCHEMA " || full_schema_name || ' ENABLE PREDICTIVE OPTIMIZATION';
+    EXECUTE IMMEDIATE sqlstr;
+  END IF;
+END
 
 -- COMMAND ----------
 

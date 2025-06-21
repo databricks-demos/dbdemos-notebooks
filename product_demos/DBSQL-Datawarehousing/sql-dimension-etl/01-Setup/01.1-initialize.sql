@@ -2,15 +2,18 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Parametrize your SQL Script
 -- MAGIC
--- MAGIC In this initial notebook, we're defining our table and schema as global variables.
+-- MAGIC In this initial notebook, we're defining our catalog / schema / table names as global variables.
 -- MAGIC This makes it easy to run your ETL pipeline on different catalogs (for e.g., dev/test)
--- MAGIC <br><br>
--- MAGIC Specify the following:
--- MAGIC 1. Catalog name (to create demo schema and objects)
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **Configure:**
+-- MAGIC 1. Catalog name (to contain demo schema and objects)
 -- MAGIC 2. Schema name (to create data warehouse tables, staging volume)
+-- MAGIC <br>
 -- MAGIC
--- MAGIC
--- MAGIC <b>NOTE:</b> <br>
+-- MAGIC <b>NOTE</b>
 -- MAGIC - Ensure that the Catalog and Schema exist.<br>
 -- MAGIC - Ensure that the user running the demo has <b>CREATE TABLE</b> and <b>CREATE VOLUME</b> privileges in the above schema.
 
@@ -33,7 +36,7 @@ DECLARE OR REPLACE VARIABLE schema_name STRING = 'dbdemos_sql_etl';
 
 -- Enable PO prodictive optimization at schema level / else inherit from account setting
 -- User needs to have ALTER SCHEMA privilege
-DECLARE OR REPLACE VARIABLE enable_po_for_schema BOOLEAN = true;
+DECLARE OR REPLACE VARIABLE enable_po_for_schema BOOLEAN = false;
 
 -- COMMAND ----------
 

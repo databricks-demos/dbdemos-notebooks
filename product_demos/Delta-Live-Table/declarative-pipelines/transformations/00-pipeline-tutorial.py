@@ -22,6 +22,8 @@
 # MAGIC * Handle high volumes of data
 # MAGIC * Low latency
 # MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-pipeline-tutorial&demo_name=declarative-pipelines&event=VIEW">
 
 # COMMAND ----------
 

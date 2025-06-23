@@ -5,6 +5,10 @@
 # MAGIC Each pipeline can be configured to save out the metrics to a table in Unity Catalog. From this table we can see what is happening and the quality of the data passing through it.
 # MAGIC You can leverage the expecations directly as a SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
 # MAGIC This notebook extracts and analyses expectation metrics to build such KPIS.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-Pipeline-event-monitoring&demo_name=declarative-pipelines&event=VIEW">
+# MAGIC
 
 # COMMAND ----------
 

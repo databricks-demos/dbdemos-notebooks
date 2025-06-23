@@ -15,9 +15,8 @@
 # MAGIC ### Getting started with the new pipeline editor
 # MAGIC Databricks provides a [rich editor](https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-0.png?raw=true) to help you build and navigate through your different pipeline steps! 
 # MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-Lakeflow-Declarative-Pipeline-Introduction&demo_name=declarative-pipelines&event=VIEW">
 
 # COMMAND ----------
 

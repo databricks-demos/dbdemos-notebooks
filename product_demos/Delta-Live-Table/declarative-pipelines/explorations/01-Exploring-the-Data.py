@@ -9,6 +9,9 @@
 # MAGIC **Note: this notebook is a simple Exploration Notebook, it's not part of our final Pipeline!**
 # MAGIC
 # MAGIC Having a notebook on the side to test SQL queries interactively can be very handy to accelerate exploration and build your pipelines faster!
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01-Exploring-the-Data&demo_name=declarative-pipelines&event=VIEW">
 
 # COMMAND ----------
 

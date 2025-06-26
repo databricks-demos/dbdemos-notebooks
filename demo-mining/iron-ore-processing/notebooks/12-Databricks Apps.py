@@ -67,6 +67,3 @@
 # MAGIC ## 10.4 Would you like to know more?
 # MAGIC
 # MAGIC See our documentation here: [Databricks Apps](https://docs.databricks.com/aws/en/dev-tools/databricks-apps)
-
-# COMMAND ----------
-

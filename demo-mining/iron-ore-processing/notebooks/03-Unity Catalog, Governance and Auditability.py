@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %run ../config
+# MAGIC %run ../demo_setup/_set_variables
 
 # COMMAND ----------
 
@@ -18,7 +18,7 @@ dbutils.widgets.text("schema_name", schema_name)
 # MAGIC Unity Catalog provides a unified governance layer in Databricks to centrally manage data access, lineage, and security across all data assets — including tables, files, models, and notebooks — with fine-grained, role-based controls.
 # MAGIC
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/Unity_Catalog.png" width="800px"/> 
+# MAGIC   <img src="../_resources/images/Unity_Catalog.png" width="800px"/> 
 # MAGIC </div>
 
 # COMMAND ----------
@@ -295,6 +295,3 @@ display(spark.sql("SELECT * FROM gold_iron_ore_prediction_dataset"))
 # MAGIC ##### Sharing data with external organization
 # MAGIC
 # MAGIC Sharing your data outside of your Databricks users is simple with Delta Sharing, and doesn't require your data consumers to use Databricks:  `dbdemos.intall('delta-sharing-airlines')`
-
-# COMMAND ----------
-

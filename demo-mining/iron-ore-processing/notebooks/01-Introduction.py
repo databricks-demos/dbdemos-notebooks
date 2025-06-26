@@ -48,6 +48,6 @@
 # MAGIC As we go through this end-to-end workflow, we will highlight Databricks capabilities such as collaborative notebooks, feature engineering, experiment tracking, model registry, and integration with ML tools — illustrating how data engineers, data scientists, and ML engineers can collaborate to deliver production-ready solutions faster.
 # MAGIC
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/intro_sections.png" width="1300px"/> 
+# MAGIC   <img src="../_resources/images/intro_sections.png" width="1300px"/> 
 # MAGIC </div>
 # MAGIC

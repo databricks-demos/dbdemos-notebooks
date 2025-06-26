@@ -104,12 +104,18 @@
 # MAGIC
 # MAGIC <table>
 # MAGIC   <tr>
-# MAGIC     <td><a href="https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f02f90ecfe19f9897d61a2c7a96dbf/published?o=1444828305810485">Business Dasbhoard</a></td>
-# MAGIC     <td><a href="https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f02f90ecfe19f9897d61a2c7a96dbf/published?o=1444828305810485">Data Quality & Operation Dashboard</a></td>
+# MAGIC     <td>
+# MAGIC     <a dbdemos-dashboard-id="bike-rental" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Business Dasbhoard</a>
+# MAGIC     </td>
+# MAGIC     <td>
+# MAGIC     - <a  dbdemos-dashboard-id="data-quality" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Bike Rental Data Monitoring Dashboard</a>
+# MAGIC     <br/>
+# MAGIC     - <a dbdemos-dashboard-id="operational" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Bike Rental Pipeline Operational Dashboard</a>
+# MAGIC     </td>
 # MAGIC   </tr>
 # MAGIC   <tr>
-# MAGIC     <td><a href="$./transformations/01-bronze.sql"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-dashboard-1.png?raw=true" width="500px" style="width:300px;" /></a></td>
-# MAGIC     <td><a href="$./transformations/01-silver.sql"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-dashboard-2.png?raw=true" width="500px" style="width:300px;" /></a></td>
+# MAGIC     <td><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-dashboard-1.png?raw=true" width="500px" style="width:300px;" /></td>
+# MAGIC     <td><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-dashboard-2.png?raw=true" width="500px" style="width:300px;" /></td>
 # MAGIC   </tr>
 # MAGIC </table>
 # MAGIC

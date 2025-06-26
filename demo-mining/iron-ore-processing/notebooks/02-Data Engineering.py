@@ -103,31 +103,7 @@ def bronze_lab_equipment():
 # COMMAND ----------
 
 @dlt.table(
-    comment="Silver view for aggregated flotation data",
-    schema = """
-        date timestamp NOT NULL,
-        Starch_Flow double,
-        Amina_Flow double,
-        Ore_Pulp_Flow double,
-        Ore_Pulp_pH double,
-        Ore_Pulp_Density double,
-        Flotation_Column_01_Air_Flow double,
-        Flotation_Column_02_Air_Flow double,
-        Flotation_Column_03_Air_Flow double,
-        Flotation_Column_04_Air_Flow double,
-        Flotation_Column_05_Air_Flow double,
-        Flotation_Column_06_Air_Flow double,
-        Flotation_Column_07_Air_Flow double,
-        Flotation_Column_01_Level double,
-        Flotation_Column_02_Level double,
-        Flotation_Column_03_Level double,
-        Flotation_Column_04_Level double,
-        Flotation_Column_05_Level double,
-        Flotation_Column_06_Level double,
-        Flotation_Column_07_Level double,
-        _rescued_data double,
-        CONSTRAINT flot_pk PRIMARY KEY (date)
-    """
+    comment="Silver view for aggregated flotation data"
 )
 def silver_flotation_data(
 ):
@@ -138,29 +114,14 @@ def silver_flotation_data(
     )
 
 @dlt.table(
-    comment="Silver view for infeed lab data",
-    schema = """
-        date timestamp NOT NULL,
-        Percent_Iron_Feed double,
-        Percent_Silica_Feed double,
-        CONSTRAINT infeed_pk PRIMARY KEY (date),
-        CONSTRAINT infeed_fk FOREIGN KEY(date) REFERENCES mining_iron_ore_processing_demo_catalog.iop_schema.silver_flotation_data(date)
-    """
+    comment="Silver view for infeed lab data"
 )
 def silver_infeed_lab_data():
     return dlt.read("bronze_lab_data").select("date", "Percent_Iron_Feed", "Percent_Silica_Feed")
 
 
 @dlt.table(
-    comment="Silver view for concentrate lab data",
-    schema = """
-        date timestamp NOT NULL,
-        Percent_Iron_Concentrate double,
-        Percent_Silica_Concentrate double,
-        operator_name string,
-        CONSTRAINT conc_pk PRIMARY KEY (date),
-        CONSTRAINT conc_fk FOREIGN KEY(date) REFERENCES mining_iron_ore_processing_demo_catalog.iop_schema.silver_flotation_data(date)
-    """
+    comment="Silver view for concentrate lab data"
 )
 def silver_concentrate_lab_data():
     return dlt.read("bronze_lab_data").select("date", "Percent_Iron_Concentrate", "Percent_Silica_Concentrate", "operator_name")
@@ -191,36 +152,7 @@ def silver_lab_equipment():
 # COMMAND ----------
 
 @dlt.table(
-    comment="Gold table for iron ore processing features",
-    schema = """
-        date timestamp NOT NULL,
-        Percent_Iron_Concentrate double,
-        Percent_Silica_Concentrate double,
-        Percent_Iron_Feed double,
-        Percent_Silica_Feed double,
-        Starch_Flow double,
-        Amina_Flow double,
-        Ore_Pulp_Flow double,
-        Ore_Pulp_pH double,
-        Ore_Pulp_Density double,
-        Flotation_Column_01_Air_Flow double,
-        Flotation_Column_02_Air_Flow double,
-        Flotation_Column_03_Air_Flow double,
-        Flotation_Column_04_Air_Flow double,
-        Flotation_Column_05_Air_Flow double,
-        Flotation_Column_06_Air_Flow double,
-        Flotation_Column_07_Air_Flow double,
-        Flotation_Column_01_Level double,
-        Flotation_Column_02_Level double,
-        Flotation_Column_03_Level double,
-        Flotation_Column_04_Level double,
-        Flotation_Column_05_Level double,
-        Flotation_Column_06_Level double,
-        Flotation_Column_07_Level double,
-        operator_name string,
-        _rescued_data double,
-        CONSTRAINT gold_pk PRIMARY KEY (date)
-    """
+    comment="Gold table for iron ore processing features"
 )
 def gold_iron_ore_prediction_dataset():
     silver_infeed = dlt.read("silver_infeed_lab_data")
@@ -240,21 +172,21 @@ def gold_iron_ore_prediction_dataset():
 # MAGIC ### 1.2.1 LakeFlow connect
 # MAGIC
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/LakeFlow1.png" width="800px"/> 
+# MAGIC   <img src="../_resources/images/LakeFlow1.png" width="800px"/> 
 # MAGIC </div>
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/LakeFlow2.png" width="800px"/> 
+# MAGIC   <img src="../_resources/images/LakeFlow2.png" width="800px"/> 
 # MAGIC </div>
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/LakeFlow3.png" width="800px"/> 
+# MAGIC   <img src="../_resources/images/LakeFlow3.png" width="800px"/> 
 # MAGIC </div>
 
 # COMMAND ----------
@@ -265,7 +197,7 @@ def gold_iron_ore_prediction_dataset():
 # MAGIC Aveva connect allows Delta Sharing with Databricks for easier PI data ingestion. Additional information can be found here:  https://www.databricks.com/dataaisummit/session/unlocking-industrial-intelligence-aveva-and-agnico-eagle
 # MAGIC
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/Aveva_connect.png" width="800px"/> 
+# MAGIC   <img src="../_resources/images/Aveva_connect.png" width="800px"/> 
 # MAGIC </div>
 # MAGIC
 # MAGIC
@@ -274,5 +206,5 @@ def gold_iron_ore_prediction_dataset():
 
 # MAGIC %md
 # MAGIC <div style="text-align: center;">
-# MAGIC   <img src="../demo_setup/images/Aveva_connect_2.png" width="800px"/> 
+# MAGIC   <img src="../_resources/images/Aveva_connect_2.png" width="800px"/> 
 # MAGIC </div>

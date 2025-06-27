@@ -254,82 +254,106 @@ def wait_for_model_serving_endpoint_to_be_ready(ep_name):
 
 # COMMAND ----------
 
-import requests
-from concurrent.futures import ThreadPoolExecutor
-from pyspark.sql.types import StringType
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-#Add retries with backoff to avoid 429 while fetching the doc
-retries = Retry(
-    total=3,
-    backoff_factor=3,
-    status_forcelist=[429],
-)
-
-def download_databricks_documentation_articles(max_documents=None):
+# Main function
+def download_and_write_databricks_documentation_to_table(max_documents=None, table_name="databricks_doc"):
+    import requests
     import markdownify
     from bs4 import BeautifulSoup
     import xml.etree.ElementTree as ET
-    # Fetch the XML content from sitemap
-    response = requests.get(DATABRICKS_SITEMAP_URL)
-    root = ET.fromstring(response.content)
+    import pandas as pd
+    from urllib3.util.retry import Retry
+    from requests.adapters import HTTPAdapter
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    # Find all 'loc' elements (URLs) in the XML
-    urls = [loc.text for loc in root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-    if max_documents:
-        urls = urls[:max_documents]
+    # Constants
+    MAX_CONTENT_SIZE = 5 * 1024 * 1024  # 5MB per document
+    MAX_BATCH_SIZE = 100 * 1024 * 1024  # Flush every 100MB
+    URL_PARALLELISM = 50
 
-    # Create DataFrame from URLs
-    df_urls = spark.createDataFrame(urls, StringType()).toDF("url").repartition(10)
+    # Setup shared retry-enabled HTTP session
+    shared_session = requests.Session()
+    retries = Retry(total=3, backoff_factor=3, status_forcelist=[429])
+    adapter = HTTPAdapter(max_retries=retries, pool_maxsize=URL_PARALLELISM)
+    shared_session.mount("http://", adapter)
+    shared_session.mount("https://", adapter)
 
-    # Pandas UDF to fetch HTML content for a batch of URLs
-    @pandas_udf("string")
-    def fetch_html_udf(urls: pd.Series) -> pd.Series:
-        adapter = HTTPAdapter(max_retries=retries)
-        http = requests.Session()
-        http.mount("http://", adapter)
-        http.mount("https://", adapter)
-        def fetch_html(url):
-            try:
-                response = http.get(url)
-                if response.status_code == 200:
-                    return response.content
-            except requests.RequestException:
-                return None
-            return None
+    # Fetch sitemap URLs
+    def fetch_urls(max_documents=None):
+        response = shared_session.get(DATABRICKS_SITEMAP_URL)
+        root = ET.fromstring(response.content)
+        urls = [loc.text for loc in root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+        return urls[:max_documents] if max_documents else urls
 
-        with ThreadPoolExecutor(max_workers=200) as executor:
-            results = list(executor.map(fetch_html, urls))
-        return pd.Series(results)
+    # Fetch and convert HTML to Markdown
+    def fetch_and_parse(url, session):
+        try:
+            resp = session.get(url, stream=True, timeout=10)
+            if resp.status_code != 200:
+                return url, resp.status_code
+            content = b""
+            for chunk in resp.iter_content(chunk_size=8192):
+                content += chunk
+                if len(content) > MAX_CONTENT_SIZE:
+                    return url, "TOO_LARGE"
+            soup = BeautifulSoup(content, "html.parser")
+            article = soup.find("article")
+            if not article:
+                return url, None
+            html_str = article.prettify()
+            if len(html_str.encode("utf-8")) > MAX_CONTENT_SIZE:
+                return url, "TOO_LARGE"
+            markdown = markdownify.markdownify(html_str, heading_style="ATX")
+            if len(markdown.encode("utf-8")) > MAX_CONTENT_SIZE:
+                return url, "TOO_LARGE"
+            return url, markdown
+        except Exception as e:
+            return url, str(e)
+    print(f'Downloading Databricks documentation to {table_name}, this can take a few minutes...')
+    urls = fetch_urls(max_documents)
+    pending_results = []
+    accumulated_size = 0
+    total_processed = 0
+    total_skipped = 0
+    chunk_idx = 0
 
-    # Pandas UDF to process HTML content and extract text
-    @pandas_udf("string")
-    def download_web_page_udf(html_contents: pd.Series) -> pd.Series:
-        def extract_text(html_content):
-            if html_content:
-                soup = BeautifulSoup(html_content, "html.parser")
-                article = soup.find("article")
-                if article:
-                    try:
-                        return markdownify.markdownify(article.prettify(), heading_style="ATX")
-                    except Exception as e:
-                        return None
-            return None
+    def flush_to_delta(data):
+        nonlocal chunk_idx
+        df = pd.DataFrame(data, columns=["url", "text"])
+        df = df[df["text"].notnull() & (df["text"] != "TOO_LARGE")]
+        if not df.empty:
+            spark_df = spark.createDataFrame(df)
+            mode = "overwrite" if chunk_idx == 0 else "append"
+            spark_df.write.mode(mode).format("delta").saveAsTable(table_name)
+            chunk_idx += 1
 
-        return html_contents.apply(extract_text)
+    with ThreadPoolExecutor(max_workers=URL_PARALLELISM) as executor:
+        futures = {executor.submit(fetch_and_parse, url, shared_session): url for url in urls}
+        for future in as_completed(futures):
+            url, text = future.result()
+            if text and text != "TOO_LARGE":
+                size = len(text.encode("utf-8"))
+                accumulated_size += size
+                pending_results.append((url, text))
+            else:
+                #    print(f"SKIPPED ({text}): {url}")
+                total_skipped += 1
+            if accumulated_size >= MAX_BATCH_SIZE or len(pending_results) >= 250:
+                print(f"Flushing {len(pending_results)} rows (~{accumulated_size / 1024 / 1024:.1f} MB)")
+                flush_to_delta(pending_results)
+                pending_results = []
+                accumulated_size = 0
+            total_processed += 1
+            #if total_processed % 100 == 0:
+            #    print(f"{total_processed} URLs processed...")
 
-    # Apply UDFs to DataFrame
-    df_with_html = df_urls.withColumn("html_content", fetch_html_udf("url"))
-    final_df = df_with_html.withColumn("text", download_web_page_udf("html_content"))
+    # Final flush
+    if pending_results:
+        print(f"Final flush with {len(pending_results)} rows")
+        flush_to_delta(pending_results)
+    print(f'Total skipped: {total_skipped}')
 
-    # Select and filter non-null results
-    final_df = final_df.select("url", "text").filter("text IS NOT NULL")
-
-    return final_df
-
-#doc = download_databricks_documentation_articles(100)
-#display(doc)
-#doc.write.mode('overwrite').saveAsTable('databricks_documentation')
+# Example usage
+#download_and_write_databricks_documentation_to_table(table_name="test_quentin")
 
 # COMMAND ----------
 

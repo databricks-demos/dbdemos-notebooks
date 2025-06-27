@@ -226,7 +226,7 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # COMMAND ----------
 
 # AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
+split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col') or c == 'split'][0]
 
 # AutoML completed train - validation - test split internally and used split to specify the set
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]

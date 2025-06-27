@@ -301,6 +301,10 @@
         "width" : 4,
         "height" : 11
       }
-    } ]
-  } ]
+    } ],
+    "pageType" : "PAGE_TYPE_CANVAS"
+  } ],
+  "uiSettings" : {
+    "theme" : { }
+  }
 }

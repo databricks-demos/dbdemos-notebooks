@@ -47,7 +47,7 @@
     },
     {
       "path": "02_Feature_store_advanced", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - advanced", 

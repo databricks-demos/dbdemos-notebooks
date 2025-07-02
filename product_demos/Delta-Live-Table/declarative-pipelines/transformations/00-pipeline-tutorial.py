@@ -55,14 +55,14 @@
 # MAGIC   -- Classify issues as either related to brakes, chains/pedals, tires or something else
 # MAGIC   ai_classify(issue_description, array("brakes", "chains_pedals", "tires", "other")) as issue_type
 # MAGIC from
-# MAGIC   main.jesse_young_dlt_demo.maintenance_logs_raw
+# MAGIC   main__build.dbdemos_pipeline_bike.maintenance_logs_raw
 # MAGIC limit 10
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Creating our silver Streaming Tables enriched with AI
-# MAGIC Take a look at [silver.sql]($../transformations/silver.sql) to see how we create our silver tables `maintenance_logs` `rides` and `weather`.
+# MAGIC Take a look at [silver.sql]($./02-silver.sql) to see how we create our silver tables `maintenance_logs` `rides` and `weather`.
 
 # COMMAND ----------
 
@@ -103,4 +103,4 @@
 # MAGIC
 # MAGIC ### Next: tracking data quality
 # MAGIC
-# MAGIC Lakeflow Declarative Pipelines makes it easy to track your data quality and set alerts when something is wrong! Open the [02-Pipeline-event-monitoring]($./02-Pipeline-event-monitoring) notebook for more details.
+# MAGIC Lakeflow Declarative Pipelines makes it easy to track your data quality and set alerts when something is wrong! Open the [02-Pipeline-event-monitoring]($../explorations/02-Pipeline-event-monitoring) notebook for more details.

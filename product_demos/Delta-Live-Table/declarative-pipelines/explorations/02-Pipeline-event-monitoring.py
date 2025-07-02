@@ -81,5 +81,4 @@
 # MAGIC Let's leverage Databricks AI/BI dashboard to monitor our pipeline and data ingestion. 
 # MAGIC
 # MAGIC - Open the <a  dbdemos-dashboard-id="data-quality" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Bike Rental Data Monitoring Dashboard</a> to track all your data quality, and add alerts based on your requirements.
-# MAGIC
-# MAGIC - Open the <a  dbdemos-dashboard-id="operational" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Bike Rental Operational Pipeline Dashboard</a> to track all your pipeline event and cost!
+# MAGIC - Open the <a  dbdemos-dashboard-id="operational" href='/sql/dashboardsv3/01f05785758918c0a2703b1c5edcca41' target="_blank">Bike Rental Operational Pipeline Dashboard</a> to track all your pipeline event and cost!

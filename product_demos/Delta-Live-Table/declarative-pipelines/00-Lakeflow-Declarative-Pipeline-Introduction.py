@@ -22,7 +22,7 @@
 
 # MAGIC %md
 # MAGIC #### 1/ Exploring the data
-# MAGIC First, open the [notebook in the Exploration folder]($./explorations/Exploring the Data) to discover our dataset.
+# MAGIC First, open the [notebook in the Exploration folder]($./explorations/01-Exploring-the-Data) to discover our dataset.
 # MAGIC
 # MAGIC We'll consume data from 3 sources, all available to us as raw CSV or JSON file in our schema volume:
 # MAGIC

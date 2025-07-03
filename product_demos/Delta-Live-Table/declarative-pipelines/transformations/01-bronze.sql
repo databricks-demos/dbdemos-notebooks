@@ -1,6 +1,6 @@
 -- Let's start out by ingesting our raw files from our UC Volume
 -- ==========================================================================
--- == Incrementally loaw RAW RIDES from CSV                                ==
+-- == Incrementally load RAW RIDES from CSV                                ==
 -- ==========================================================================
 CREATE OR REFRESH STREAMING TABLE RIDES_RAW 
 COMMENT "Raw rides data streamed in from CSV files."
@@ -9,7 +9,7 @@ AS SELECT * FROM
 
 
 -- ==========================================================================
--- == Incrementally loaw RAW MAINTENANCE LOG from CSV                      ==
+-- == Incrementally load RAW MAINTENANCE LOG from CSV                      ==
 -- ==========================================================================
 CREATE OR REFRESH STREAMING TABLE MAINTENANCE_LOGS_RAW
 COMMENT "Raw maintenance logs streamed in from CSV files."
@@ -18,7 +18,7 @@ AS SELECT * FROM
 
 
 -- ==========================================================================
--- == Incrementally loaw RAW WEATHER from CSV                              ==
+-- == Incrementally load RAW WEATHER from CSV                              ==
 -- ==========================================================================
 CREATE OR REFRESH STREAMING TABLE WEATHER_RAW
 COMMENT "Raw weather data streamed in from JSON files."

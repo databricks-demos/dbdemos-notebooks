@@ -29,7 +29,7 @@
 
 # MAGIC %md
 # MAGIC ## Creating our bronze streaming tables
-# MAGIC Take a look at [bronze.sql]($./01-bronze.sql) to see how we create our bronze tables `maintenance_logs_raw` `rides_raw` and `weather_raw`.
+# MAGIC Take a look at [bronze.sql]($./01-bronze.sql) to see how we create our bronze tables `maintenance_logs_raw`, `rides_raw`, `weather_raw`, and `customers_cdc_raw`.
 
 # COMMAND ----------
 
@@ -62,7 +62,7 @@
 
 # MAGIC %md
 # MAGIC ## Creating our silver Streaming Tables enriched with AI
-# MAGIC Take a look at [silver.sql]($./02-silver.sql) to see how we create our silver tables `maintenance_logs` `rides` and `weather`.
+# MAGIC Take a look at [silver.sql]($./02-silver.sql) to see how we create our silver tables `maintenance_logs`, `rides`, `weather`, `customers_cdc_clean`, and `customers` (using Auto CDC).
 
 # COMMAND ----------
 

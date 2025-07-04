@@ -12,6 +12,9 @@
 # MAGIC - Introduce timestamp key, to simplify temporal feature management
 # MAGIC - Use AutoML to create the best model for us
 # MAGIC - Online table, synchronizing Databricks Delta Table with a real time, low latency table automatically used by your model to lookup features.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=02_Feature_store_advanced&demo_name=feature-store&event=VIEW">
 
 # COMMAND ----------
 

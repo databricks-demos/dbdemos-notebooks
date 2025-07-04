@@ -28,6 +28,9 @@
 # MAGIC - [Named Entity Extraction and evaluation]($./03-entity-extraction-fine-tuning/03.1-llm-entity-extraction-drug-fine-tuning)
 # MAGIC - [RAG LLM fine tuning]($./02-chatbot-rag-fine-tuning/02.1-llm-rag-fine-tuning) 
 # MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=01-classification-fine-tuning-customer-support&demo_name=llm-fine-tuning&event=VIEW">
+# MAGIC
 
 # COMMAND ----------
 

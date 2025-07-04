@@ -52,25 +52,22 @@ for table in os.listdir(raw_data_volume):
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv", format => "text") limit 10
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC Yup, it looks like there's some instances where the `issue_description` fields include a newline character. Let's tell `read_files` that records may span multiple lines and see if that fixes the issue. 
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select count(*) from read_files(
-# MAGIC     "/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv",
-# MAGIC     format => "csv",
-# MAGIC     multiLine => true -- multiLine tells read_files that there may be records that span multiple lines
-# MAGIC   )
-# MAGIC where
-# MAGIC   maintenance_id is null or bike_id is null or reported_time is null or resolved_time is null or _rescued_data is not null
+from pyspark.sql.functions import expr
+# note - in python for now to avoid temp FAILED_READ_FILE.NO_HINT issue
+df = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("multiLine", "true") \
+    .load("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv")
+
+filtered_df = df.filter(expr("maintenance_id IS NULL OR bike_id IS NULL OR reported_time IS NULL OR resolved_time IS NULL"))
+
+print(filtered_df.count())
 
 # COMMAND ----------
 

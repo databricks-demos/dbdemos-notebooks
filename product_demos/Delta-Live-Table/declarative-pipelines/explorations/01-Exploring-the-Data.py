@@ -53,8 +53,7 @@ for table in os.listdir(raw_data_volume):
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv", format => "csv") where
-# MAGIC   maintenance_id is null or bike_id is null or reported_time is null or resolved_time is null or _rescued_data is not null limit 10
+# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv", format => "text") limit 10
 
 # COMMAND ----------
 

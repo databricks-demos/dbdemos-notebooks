@@ -1,3 +1,0 @@
-databricks-agents
-mlflow>=3.1.0
-databricks-sdk==0.56.0

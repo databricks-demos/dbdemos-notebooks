@@ -21,7 +21,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install databricks-agents mlflow>=3.1.0 databricks-sdk==0.55.0
+# MAGIC %pip install databricks-agents mlflow>=3.1.0 databricks-sdk==0.55.0 unitycatalog-ai[databricks]
 # MAGIC # Restart to load the packages into the Python environment
 # MAGIC dbutils.library.restartPython()
 
@@ -32,7 +32,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Customer Service Return Processing Workflow
+# MAGIC # Customer Service
 # MAGIC
 # MAGIC Below is a structured outline of the **key steps** a customer service agent would typically follow when **processing a return**. This workflow ensures consistency and clarity across your support team.
 # MAGIC
@@ -46,26 +46,9 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from customers
-
-# COMMAND ----------
-
-# DBTITLE 1,Get the Latest Return in the Processing Queue
-# MAGIC %sql
-# MAGIC -- Select the date of the interaction, issue category, issue description, and customer name
-# MAGIC SELECT get_customer_by_email
-# MAGIC FROM agents_lab.product.cust_service_data 
-# MAGIC -- Order the results by the interaction date and time in descending order
-# MAGIC ORDER BY date_time DESC
-# MAGIC -- Limit the results to the most recent interaction
-# MAGIC LIMIT 1
-
-# COMMAND ----------
-
 # DBTITLE 1,Create a function registered to Unity Catalog
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE FUNCTION get_customer_by_email(email_input STRING)
+# MAGIC CREATE OR REPLACE FUNCTION get_customer_by_email(email_input STRING COMMENT 'customer email used to retrieve customer information')
 # MAGIC RETURNS TABLE (
 # MAGIC     customer_id BIGINT,
 # MAGIC     first_name STRING,
@@ -84,7 +67,7 @@
 # MAGIC     churn_risk_score BIGINT,
 # MAGIC     customer_value_score BIGINT
 # MAGIC )
-# MAGIC COMMENT 'Returns the customer record matching the provided email address.'
+# MAGIC COMMENT 'Returns the customer record matching the provided email address. Includes its ID, firstname, lastname and more.'
 # MAGIC RETURN (
 # MAGIC     SELECT * FROM customers
 # MAGIC     WHERE email = email_input
@@ -94,7 +77,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Test function call to retrieve latest return
 # MAGIC %sql SELECT * FROM get_customer_by_email('john21@example.net');
 
 # COMMAND ----------
@@ -111,7 +93,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE FUNCTION get_customer_billing_and_subscriptions(customer_id_input BIGINT)
+# MAGIC CREATE OR REPLACE FUNCTION get_customer_billing_and_subscriptions(customer_id_input BIGINT COMMENT 'customer ID used to retrive orders, billing and subscriptiosn')
 # MAGIC RETURNS TABLE (
 # MAGIC     customer_id BIGINT,
 # MAGIC     subscription_id BIGINT,
@@ -167,7 +149,7 @@
 # MAGIC %md
 # MAGIC ---
 # MAGIC
-# MAGIC ## 3. Give the LLM a Python Function to Know Today’s Date
+# MAGIC ## 3. Give the LLM a Python Function to compute Math
 # MAGIC - **Action**: Provide a **Python function** that can supply the Large Language Model (LLM) with the current date.  
 # MAGIC - **Why**: Automating date retrieval helps in scheduling pickups, refund timelines, and communication deadlines.
 # MAGIC
@@ -176,10 +158,30 @@
 # COMMAND ----------
 
 # DBTITLE 1,Very simple Python function
-def get_todays_date() -> str:
-    from datetime import datetime
-    return datetime.now().strftime("%Y-%m-%d")
-print(get_todays_date())
+# -----------------------
+# TOOL 2: evaluate math expression
+# -----------------------
+def calculate_math_expression(expression: str) -> float:
+    """
+    Evaluates a basic math expression safely.
+
+    Args:
+        expression (str): A math expression (e.g., "2 + 3 * (4 - 1)").
+
+    Returns:
+        float: The result of the evaluated expression.
+    """
+    import math
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
+    allowed_names.update({"abs": abs, "round": round})
+
+    try:
+        result = eval(expression, {"__builtins__": None}, allowed_names)
+        return float(result)
+    except Exception as e:
+        raise ValueError(f"Invalid expression: {expression}. Error: {str(e)}")
+
+print(calculate_math_expression("2 + 3 * (4 - 1)"))
 
 # COMMAND ----------
 
@@ -189,23 +191,13 @@ from unitycatalog.ai.core.databricks import DatabricksFunctionClient
 client = DatabricksFunctionClient()
 
 # this will deploy the tool to UC, automatically setting the metadata in UC based on the tool's docstring & typing hints
-python_tool_uc_info = client.create_python_function(func=get_todays_date, catalog=catalog, schema=dbName, replace=True)
+python_tool_uc_info = client.create_python_function(func=calculate_math_expression, catalog=catalog, schema=dbName, replace=True)
 
 # the tool will deploy to a function in UC called `{catalog}.{schema}.{func}` where {func} is the name of the function
 # Print the deployed Unity Catalog function name
 print(f"Deployed Unity Catalog function name: {python_tool_uc_info.full_name}")
-
-# COMMAND ----------
-
-# DBTITLE 1,Let's take a look at our created functions
-from IPython.display import display, HTML
-
-# Retrieve the Databricks host URL
-workspace_url = spark.conf.get('spark.databricks.workspaceUrl')
-
 # Create HTML link to created functions
-html_link = f'<a href="https://{workspace_url}/explore/data/functions/{catalog_name}/{schema_name}/get_todays_date" target="_blank">Go to Unity Catalog to see Registered Functions</a>'
-display(HTML(html_link))
+displayHTML(f'<a href="/explore/data/functions/{catalog}/{dbName}/calculate_math_expression" target="_blank">Go to Unity Catalog to see Registered Functions</a>')
 
 # COMMAND ----------
 
@@ -229,10 +221,5 @@ display(HTML(html_link))
 # MAGIC ## Now lets go over to the AI Playground to see how we can use these functions and assemble our first Agent!
 # MAGIC
 # MAGIC ### The AI Playground can be found on the left navigation bar under 'Machine Learning' or you can use the link created below
-
-# COMMAND ----------
-
-# DBTITLE 1,Create link to AI Playground
-# Create HTML link to AI Playground
-html_link = f'<a href="https://{workspace_url}/ml/playground" target="_blank">Go to AI Playground</a>'
-display(HTML(html_link))
+# MAGIC
+# MAGIC Open the [Playground](/ml/playground) and select the tools we created to test your agent!

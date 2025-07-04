@@ -1,0 +1,15 @@
+config_version_name: model_with_retriever
+input_example:
+- content: Give me the orders for john21@example.net
+  role: user
+llm_endpoint_name: databricks-claude-3-7-sonnet
+retriever_config:
+  description: Retrieves internal documentation about our products, infrastructure,
+    router and other, including features, usage, and troubleshooting. Use this tool
+    for any questions about product documentation.
+  index_name: main_build.dbdemos_ai_agent.knowledge_base_vs_index
+  num_results: 2
+  tool_name: product_technical_docs_retriever
+system_prompt: Your job is to provide customer help. call the tool to answer.
+uc_tool_names:
+- main_build.dbdemos_ai_agent.*

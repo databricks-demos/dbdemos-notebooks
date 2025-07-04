@@ -16,3 +16,4 @@ catalog = "main_build"
 schema = dbName = db = "dbdemos_ai_agent"
 
 volume_name = "raw_data"
+VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"

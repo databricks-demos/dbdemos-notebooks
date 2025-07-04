@@ -11,8 +11,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install databricks-agents mlflow>=3.1.0 databricks-sdk==0.55.0
-# MAGIC # Restart to load the packages into the Python environment
+# MAGIC %pip install -U -qqqq mlflow>=3.1.1 langchain langgraph==0.5.0 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -53,23 +52,34 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Let's now use Databricks built in `ai_extract` function to automatically parse the PDF document for us, making it super easy to extract the information!
+# MAGIC
+# MAGIC *Note: in this case, we have relatively small pdf documents, so we'll merge all the pages in one single value for our RAG system to work properly. Bigger docs might need some pre-processing steps to potentially reduce context size and be able to search/retreive more documents.*
+
+# COMMAND ----------
+
 # MAGIC %sql
-# MAGIC INSERT INTO TABLE knowledge_base (product_name, title, full_guide, file_path)
-# MAGIC SELECT ai_extract.*, full_guide FROM (
-# MAGIC   SELECT 
+# MAGIC INSERT OVERWRITE TABLE knowledge_base (product_name, title, full_guide, file_path)
+# MAGIC SELECT ai_extract.product_name, ai_extract.title, full_guide, file_path
+# MAGIC FROM (
+# MAGIC   SELECT
 # MAGIC     ai_extract(full_guide, array('product_name', 'title')) AS ai_extract,
-# MAGIC     full_guide
+# MAGIC     full_guide,
+# MAGIC     file_path
 # MAGIC   FROM (
-# MAGIC     -- TODO: review why parsed_document:document.pages[*].content isn't working
+# MAGIC      -- TODO: review why parsed_document:document.pages[*].content isn't working
 # MAGIC     SELECT array_join(
 # MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS full_guide,
-# MAGIC             doc_path as file_path
+# MAGIC            path as file_path
 # MAGIC     FROM (
-# MAGIC       SELECT ai_parse_document(content) AS parsed_document
+# MAGIC       SELECT ai_parse_document(content) AS parsed_document, path
 # MAGIC       FROM READ_FILES("/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/", format => 'binaryFile')
 # MAGIC     )
-# MAGIC   ));
+# MAGIC   )
+# MAGIC );
 # MAGIC
+# MAGIC -- Check results
 # MAGIC SELECT * FROM knowledge_base;
 
 # COMMAND ----------
@@ -132,7 +142,7 @@ if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
     source_table_name=source_table_fullname,
     pipeline_type="TRIGGERED",
     primary_key="id",
-    embedding_source_column='content', #The column containing our text
+    embedding_source_column='full_guide', #The column containing our text
     embedding_model_endpoint_name='databricks-gte-large-en' #The embedding endpoint used to create the embeddings
   )
   #Let's wait for the index to be ready and all our embeddings to be created and indexed
@@ -164,21 +174,10 @@ question = "My wifi router gives me error 01, what should I do?"
 
 results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).similarity_search(
   query_text=question,
-  columns=["url", "content"],
+  columns=["id", "full_guide"],
   num_results=1)
 docs = results.get('result', {}).get('data_array', [])
 docs
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox 
-# MAGIC # 2/ Deploy our chatbot model with RAG using LLAMA
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic-chain-1.png?raw=true" style="float: right" width="500px">
-# MAGIC
-# MAGIC We've seen how Databricks makes it easy to ingest and prepare your documents, and deploy a Vector Search index on top of it with just clicks.
-# MAGIC
-# MAGIC Now that our Vector Searc index is ready, let's deploy a langchain application.
 
 # COMMAND ----------
 
@@ -188,16 +187,6 @@ docs
 # MAGIC As any appliaction, a RAG chain needs some configuration for each environement (ex: different catalog for test/prod environement). 
 # MAGIC
 # MAGIC Databricks makes this easy with Chain Configurations. You can use this object to configure any value within your app, including the different system prompts and make it easy to test and deploy newer version with better prompt.
-
-# COMMAND ----------
-
-# For this first basic demo, we'll keep the configuration as a minimum. In real app, you can make all your RAG as a param (such as your prompt template to easily test different prompts!)
-chain_config = {
-    "llm_model_serving_endpoint_name": "databricks-meta-llama-3-3-70b-instruct",  # the foundation model we want to use
-    "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,  # the endoint we want to use for vector search
-    "vector_search_index": f"{catalog}.{db}.{vs_index_fullname}",
-    "llm_prompt_template": """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.\n\nContext: {context}""",
-}
 
 # COMMAND ----------
 
@@ -217,101 +206,63 @@ chain_config = {
 
 # COMMAND ----------
 
-# DBTITLE 1,Very simple Python function
-from databricks.vector_search.client import VectorSearchClient
-from databricks_langchain.vectorstores import DatabricksVectorSearch
-from langchain.schema.runnable import RunnableLambda
-from langchain_core.output_parsers import StrOutputParser
+import yaml, sys, os
+import mlflow
+import mlflow.models
+# Add the ../agent_eval path relative to current working directory
+agent_eval_path = os.path.abspath(os.path.join(os.getcwd(), "../02_agent_eval"))
+#sys.path.append(os.path.join(agent_eval_path, 'agent.py'))
+sys.path.append(agent_eval_path)
+conf_path = os.path.join(agent_eval_path, 'agent_config.yaml')
 
-## Enable MLflow Tracing
-mlflow.langchain.autolog()
-
-## Load the chain's configuration
-model_config = mlflow.models.ModelConfig(development_config=chain_config)
-
-## Turn the Vector Search index into a LangChain retriever
-vector_search_as_retriever = DatabricksVectorSearch(
-    endpoint=model_config.get("vector_search_endpoint_name"),
-    index_name=model_config.get("vector_search_index"),
-    columns=["id", "content", "url"],
-).as_retriever(search_kwargs={"k": 3})
-
-# Method to format the docs returned by the retriever into the prompt (keep only the text from chunks)
-def format_context(docs):
-    chunk_contents = [f"Passage: {d.page_content}\n" for d in docs]
-    return "".join(chunk_contents)
-
-#Let's try our retriever chain:
-relevant_docs = (vector_search_as_retriever | RunnableLambda(format_context)| StrOutputParser()).invoke('How to start a Databricks cluster?')
-
-display_txt_as_html(relevant_docs)
-
-# COMMAND ----------
-
-# DBTITLE 1,Register python function to Unity Catalog
-# MAGIC %md-sandbox
-# MAGIC You can see in the results that Databricks automatically trace your chain details and you can debug each steps and review the documents retrieved.
-# MAGIC
-# MAGIC ## 2.3/ Building Databricks Chat Model to query our demo's Foundational LLM
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic-chain-3.png?raw=true" style="float: right" width="500px">
-# MAGIC
-# MAGIC Our chatbot will be using Meta's Llama open source model. However, it could be utilized with DBRX (_pictured_), or any other LLMs served on Databricks.  
-# MAGIC
-# MAGIC Other types of models that could be utilized include:
-# MAGIC
-# MAGIC - Databricks Foundation models (_what we will use by default in this demo_)
-# MAGIC - Your organization's custom, fine-tuned model
-# MAGIC - An external model provider (_such as Azure OpenAI_)
-# MAGIC
-
-# COMMAND ----------
-
-# DBTITLE 1,Let's take a look at our created functions
-from langchain_core.prompts import ChatPromptTemplate
-from databricks_langchain.chat_models import ChatDatabricks
-from operator import itemgetter
-
-prompt = ChatPromptTemplate.from_messages(
-    [  
-        ("system", model_config.get("llm_prompt_template")), # Contains the instructions from the configuration
-        ("user", "{question}") #user's questions
-    ]
-)
-
-# Our foundation model answering the final prompt
-model = ChatDatabricks(
-    endpoint=model_config.get("llm_model_serving_endpoint_name"),
-    extra_params={"temperature": 0.01, "max_tokens": 500}
-)
-
-#Let's try our prompt:
-answer = (prompt | model | StrOutputParser()).invoke({'question':'How to start a Databricks cluster?', 'context': ''})
-display_txt_as_html(answer)
-
-# COMMAND ----------
-
-# Return the string contents of the most recent messages: [{...}] from the user to be used as input question
-def extract_user_query_string(chat_messages_array):
-    return chat_messages_array[-1]["content"]
-
-# RAG Chain
-chain = (
-    {
-        "question": itemgetter("messages") | RunnableLambda(extract_user_query_string),
-        "context": itemgetter("messages")
-        | RunnableLambda(extract_user_query_string)
-        | vector_search_as_retriever
-        | RunnableLambda(format_context),
+try:
+    config = yaml.safe_load(open(conf_path))
+    config["config_version_name"] = "model_with_retriever"
+    config["retriever_config"] =  {
+      "index_name": vs_index_fullname,
+      "tool_name": "product_technical_docs_retriever",
+      "num_results": 1,
+      "description": "Retrieves internal documentation about our products, infrastructure, router and other, including features, usage, and troubleshooting. Use this tool for any questions about product documentation."
     }
-    | prompt
-    | model
-    | StrOutputParser()
-)
+    yaml.dump(config, open(conf_path, "w"))
+except Exception as e:
+    print(f"Skipped update - ignore for job run - {e}")
+
+model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
 # COMMAND ----------
 
-# Let's give it a try:
-input_example = {"messages": [ {"role": "user", "content": "What is Retrieval-augmented Generation?"}]}
-answer = chain.invoke(input_example)
+import mlflow
+request_example = "How do I restart my WIFI router ADSL-R500?"
+
+# Let's reuse the functions we had in our initial notebooks 02.1_agent_evaluation to load and eval the new version of the model (included in the _resource file)
+logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
+# Load the model and create a prediction function
+loaded_model = mlflow.pyfunc.load_model(f"runs:/{logged_agent_info.run_id}/agent")
+
+#Let's give it a try and make sure our retriever gets called
+answer = predict_wrapper(request_example)
 print(answer)
+
+# COMMAND ----------
+
+from mlflow.genai.scorers import RetrievalGroundedness, RelevanceToQuery, Safety, Guidelines
+
+eval_dataset = mlflow.genai.datasets.get_dataset(f"{catalog}.{dbName}.ai_agent_mlflow_eval")
+
+scorers = [
+    RetrievalGroundedness(),  # Checks if email content is grounded in retrieved data
+    RelevanceToQuery(),  # Checks if email addresses the user's request
+    Safety(),  # Checks for harmful or inappropriate content
+    Guidelines(
+        guidelines="""Reponse must be done without showing reasoning.
+        - don't mention that you need to look up things
+        - do not mention tools or function used
+        - do not tell your intermediate steps or reasoning""",
+        name="steps_and_reasoning",
+    )
+]
+
+print("Running evaluation...")
+with mlflow.start_run(run_name='eval_with_retriever'):
+    results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)

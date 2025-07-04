@@ -28,6 +28,7 @@ ride_log_schema = StructType([
     StructField("end_station_id", StringType()),
     StructField("bike_id", StringType()),  # Bike identifier
     StructField("user_type", StringType()),  # e.g., "member", "casual"
+    StructField("customer_id", StringType()),  # Links to customer data
 ])
 
 # Bike Maintenance Logs (Raw Repair Data)
@@ -45,6 +46,22 @@ weather_schema = StructType([
     StructField("temperature_f", FloatType()),
     StructField("rainfall_in", FloatType()),
     StructField("wind_speed_mph", FloatType())
+])
+
+# Customer CDC Data Schema
+customer_cdc_schema = StructType([
+    StructField("customer_id", StringType()),  # Unique customer identifier
+    StructField("user_type", StringType()),  # "member" or "non-member" - links to rides
+    StructField("registration_date", StringType()),  # When customer registered
+    StructField("email", StringType()),  # Customer email
+    StructField("phone", StringType()),  # Customer phone
+    StructField("age_group", StringType()),  # "18-25", "26-35", "36-45", "46-55", "55+"
+    StructField("membership_tier", StringType()),  # "basic", "premium", "enterprise" (for members)
+    StructField("preferred_payment", StringType()),  # "credit_card", "mobile_pay", "cash"
+    StructField("home_station_id", StringType()),  # Preferred/home station
+    StructField("is_active", BooleanType()),  # Whether customer is currently active
+    StructField("operation", StringType()),  # "APPEND", "DELETE", "UPDATE", None
+    StructField("event_timestamp", StringType()),  # When the CDC event occurred
 ])
 
 
@@ -68,6 +85,70 @@ date_bike_added = {
     # We'll start with 50 bikes
     for bike_id in bikes[50:]
 }
+
+# Generate Customer CDC Data directly
+from collections import OrderedDict
+
+age_groups = ["18-25", "26-35", "36-45", "46-55", "55+"]
+membership_tiers = ["basic", "premium", "enterprise"]
+payment_methods = ["credit_card", "mobile_pay", "cash"]
+operations = OrderedDict([("APPEND", 0.5), ("DELETE", 0.1), ("UPDATE", 0.3), (None, 0.1)])
+
+customers_cdc = []
+member_customers = []
+non_member_customers = []
+
+# Generate member customers with CDC
+for i in range(800):
+    customer_id = str(uuid.uuid4())
+    reg_date = datetime.now() - timedelta(days=random.randint(30, 365*2))
+    event_timestamp = datetime.now() - timedelta(days=random.randint(0, days_to_generate))
+    operation = random.choices(list(operations.keys()), weights=list(operations.values()))[0]
+    is_active = random.choice([True, True, True, False])
+    
+    cdc_event = {
+        "customer_id": customer_id,
+        "user_type": "member",
+        "registration_date": reg_date.strftime("%m-%d-%Y %H:%M:%S"),
+        "email": f"member{i}@bikerent.com",
+        "phone": f"555-{random.randint(1000, 9999)}",
+        "age_group": random.choice(age_groups),
+        "membership_tier": random.choice(membership_tiers),
+        "preferred_payment": random.choice(payment_methods),
+        "home_station_id": random.choice(stations),
+        "is_active": is_active,
+        "operation": operation,
+        "event_timestamp": event_timestamp.strftime("%m-%d-%Y %H:%M:%S")
+    }
+    customers_cdc.append(cdc_event)
+    if is_active:
+        member_customers.append({"customer_id": customer_id})
+
+# Generate non-member customers with CDC
+for i in range(1200):
+    customer_id = str(uuid.uuid4())
+    reg_date = datetime.now() - timedelta(days=random.randint(1, 90))
+    event_timestamp = datetime.now() - timedelta(days=random.randint(0, days_to_generate))
+    operation = random.choices(list(operations.keys()), weights=list(operations.values()))[0]
+    is_active = random.choice([True, True, False])
+    
+    cdc_event = {
+        "customer_id": customer_id,
+        "user_type": "non-member",
+        "registration_date": reg_date.strftime("%m-%d-%Y %H:%M:%S"),
+        "email": f"casual{i}@email.com",
+        "phone": f"555-{random.randint(1000, 9999)}",
+        "age_group": random.choice(age_groups),
+        "membership_tier": None,
+        "preferred_payment": random.choice(payment_methods),
+        "home_station_id": random.choice(stations),
+        "is_active": is_active,
+        "operation": operation,
+        "event_timestamp": event_timestamp.strftime("%m-%d-%Y %H:%M:%S")
+    }
+    customers_cdc.append(cdc_event)
+    if is_active:
+        non_member_customers.append({"customer_id": customer_id})
 
 
 rides = []
@@ -101,6 +182,16 @@ for bike in bikes:
     total_seconds = (end_time - start_time).total_seconds()
     ride_times = sorted([random.randint(0, int(total_seconds)) for _ in range(2 * trips_in_day)])
     for i in range(0, 2 * trips_in_day, 2):
+      # Determine user type and select appropriate customer
+      user_type = random.choice(["member", "non-member"])
+      if user_type == "member" and member_customers:
+          selected_customer = random.choice(member_customers)
+      elif user_type == "non-member" and non_member_customers:
+          selected_customer = random.choice(non_member_customers)
+      else:
+          # Fallback if no customers of that type available
+          selected_customer = {"customer_id": str(uuid.uuid4())}
+      
       rides.append({
           "ride_id": str(uuid.uuid4()),
           "start_time": start_time + timedelta(seconds=ride_times[i]),
@@ -108,7 +199,8 @@ for bike in bikes:
           "start_station_id": current_station,
           "end_station_id": random.choice(stations),
           "bike_id": bike,
-          "user_type": random.choice(["member", "non-member"])
+          "user_type": user_type,
+          "customer_id": selected_customer["customer_id"]
       })
 
       # Random odds of a maintenance event
@@ -162,11 +254,13 @@ for day in reversed(range(days_to_generate)):
 rides_df = spark.createDataFrame(rides, ride_log_schema)
 maintenance_logs_df = spark.createDataFrame(maintenance_logs, maintenance_log_schema)
 weather_data_df = spark.createDataFrame(weather_data, weather_schema)
+customers_cdc_df = spark.createDataFrame(customers_cdc, customer_cdc_schema)
 
 
 rides_df.display()
 maintenance_logs_df.display()
 weather_data_df.display()
+customers_cdc_df.display()
 
 # COMMAND ----------
 
@@ -192,7 +286,7 @@ maintenance_logs_with_descriptions.limit(10).display()
 
 # COMMAND ----------
 
-from pyspark.sql.functions import expr
+from pyspark.sql.functions import expr, to_date
 import pandas as pd
 
 dbutils.fs.rm(f"{volume_path}/rides", recurse=True)
@@ -201,6 +295,8 @@ dbutils.fs.rm(f"{volume_path}/maintenance_logs", recurse=True)
 dbutils.fs.mkdirs(f"{volume_path}/maintenance_logs")
 dbutils.fs.rm(f"{volume_path}/weather", recurse=True)
 dbutils.fs.mkdirs(f"{volume_path}/weather")
+dbutils.fs.rm(f"{volume_path}/customers_cdc", recurse=True)
+dbutils.fs.mkdirs(f"{volume_path}/customers_cdc")
 
 
 def write_to_csv(key: tuple[str], pdf: pd.DataFrame) -> pd.DataFrame:
@@ -209,6 +305,10 @@ def write_to_csv(key: tuple[str], pdf: pd.DataFrame) -> pd.DataFrame:
 
 def write_to_json(key: tuple[str], pdf: pd.DataFrame) -> pd.DataFrame:
     pdf.to_json(key[0], orient="records")
+    return pd.DataFrame(data={"file": [key[0]], "count": [pdf.shape[0]]})
+
+def write_to_parquet(key: tuple[str], pdf: pd.DataFrame) -> pd.DataFrame:
+    pdf.to_parquet(key[0], index=False)
     return pd.DataFrame(data={"file": [key[0]], "count": [pdf.shape[0]]})
 
 rides_df.groupBy(
@@ -224,3 +324,8 @@ maintenance_logs_with_descriptions.groupBy(
 weather_data_df.groupBy(
     expr(f"'{volume_path}/weather/weather_' || date_format(timestamp, 'yyyy-MM-dd') || '.json'")
 ).applyInPandas(write_to_json, schema="file string, count int").display()
+
+# Partition customer CDC files by date (without adding event_date column to final data)
+customers_cdc_df.groupBy(
+    expr(f"'{volume_path}/customers_cdc/customers_cdc_' || date_format(to_date(event_timestamp, 'MM-dd-yyyy HH:mm:ss'), 'yyyy-MM-dd') || '.parquet'")
+).applyInPandas(write_to_parquet, schema="file string, count int").display()

@@ -72,44 +72,6 @@ FROM STREAM (weather_raw);
 
 
 -- ==========================================================================
--- == STREAMING TABLE: customers_cdc_clean                                 ==
--- ==========================================================================
-CREATE OR REFRESH STREAMING TABLE customers_cdc_clean (
-  customer_id STRING COMMENT "Unique identifier for the customer.",
-  user_type STRING COMMENT "Type of user (member or non-member).",
-  registration_date TIMESTAMP COMMENT "When the customer registered.",
-  email STRING COMMENT "Customer email address.",
-  phone STRING COMMENT "Customer phone number.",
-  age_group STRING COMMENT "Customer age group category.",
-  membership_tier STRING COMMENT "Membership tier for members (basic, premium, enterprise).",
-  preferred_payment STRING COMMENT "Preferred payment method.",
-  home_station_id STRING COMMENT "Customer's preferred home station.",
-  is_active BOOLEAN COMMENT "Whether the customer is currently active.",
-  operation STRING COMMENT "CDC operation type (APPEND, DELETE, UPDATE).",
-  event_timestamp TIMESTAMP COMMENT "When the CDC event occurred.",
-  -- Data quality constraints
-  CONSTRAINT valid_customer_id EXPECT (customer_id IS NOT NULL) ON VIOLATION DROP ROW,
-  CONSTRAINT valid_operation EXPECT (operation IN ('APPEND', 'DELETE', 'UPDATE')) ON VIOLATION DROP ROW,
-  CONSTRAINT valid_event_timestamp EXPECT (event_timestamp IS NOT NULL) ON VIOLATION DROP ROW
-)
-COMMENT "Clean customer CDC data with validated operations and constraints."
-AS SELECT
-  customer_id,
-  user_type,
-  to_timestamp(registration_date, 'MM-dd-yyyy HH:mm:ss') as registration_date,
-  email,
-  phone,
-  age_group,
-  membership_tier,
-  preferred_payment,
-  home_station_id,
-  is_active,
-  operation,
-  to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss') as event_timestamp
-FROM STREAM (customers_cdc_raw);
-
-
--- ==========================================================================
 -- == AUTO CDC: customers (Final SCD Type 1 Table)                         ==
 -- ==========================================================================
 CREATE OR REFRESH STREAMING TABLE customers;
@@ -117,13 +79,13 @@ CREATE OR REFRESH STREAMING TABLE customers;
 CREATE FLOW customers_cdc_flow AS AUTO CDC INTO
   customers
 FROM
-  STREAM(customers_cdc_clean)
+  STREAM(customers_cdc_raw)
 KEYS
   (customer_id)
 APPLY AS DELETE WHEN
   operation = "DELETE"
 SEQUENCE BY
-  event_timestamp
+  to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss')
 COLUMNS * EXCEPT
   (operation, event_timestamp)
 STORED AS
@@ -138,13 +100,13 @@ CREATE OR REFRESH STREAMING TABLE customers_history;
 CREATE FLOW customers_cdc_scd2_flow AS AUTO CDC INTO
   customers_history
 FROM
-  STREAM(customers_cdc_clean)
+  STREAM(customers_cdc_raw)
 KEYS
   (customer_id)
 APPLY AS DELETE WHEN
   operation = "DELETE"
 SEQUENCE BY
-  event_timestamp
+  to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss')
 COLUMNS * EXCEPT
   (operation, event_timestamp)
 STORED AS

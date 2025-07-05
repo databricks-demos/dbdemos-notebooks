@@ -73,7 +73,6 @@
 # MAGIC - maintenance_logs
 # MAGIC - rides
 # MAGIC - weather
-# MAGIC - customers_cdc_clean
 # MAGIC - customers (SCD Type 1)
 # MAGIC - customers_history (SCD Type 2)
 # MAGIC     </td>

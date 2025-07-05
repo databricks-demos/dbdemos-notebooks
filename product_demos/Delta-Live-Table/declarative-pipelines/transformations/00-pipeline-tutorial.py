@@ -62,7 +62,7 @@
 
 # MAGIC %md
 # MAGIC ## Creating our silver Streaming Tables enriched with AI
-# MAGIC Take a look at [silver.sql]($./02-silver.sql) to see how we create our silver tables `maintenance_logs`, `rides`, `weather`, `customers_cdc_clean`, `customers` (SCD Type 1), and `customers_history` (SCD Type 2 using Auto CDC).
+# MAGIC Take a look at [silver.sql]($./02-silver.sql) to see how we create our silver tables `maintenance_logs`, `rides`, `weather`, `customers` (SCD Type 1), and `customers_history` (SCD Type 2 using Auto CDC).
 
 # COMMAND ----------
 

@@ -86,27 +86,23 @@ date_bike_added = {
     for bike_id in bikes[50:]
 }
 
-# Generate Customer CDC Data directly
-from collections import OrderedDict
-
+# Generate Customer CDC Data with realistic CDC scenarios
 age_groups = ["18-25", "26-35", "36-45", "46-55", "55+"]
 membership_tiers = ["basic", "premium", "enterprise"]
 payment_methods = ["credit_card", "mobile_pay", "cash"]
-operations = OrderedDict([("APPEND", 0.5), ("DELETE", 0.1), ("UPDATE", 0.3), (None, 0.1)])
 
 customers_cdc = []
-member_customers = []
-non_member_customers = []
+all_customer_ids = []
 
-# Generate member customers with CDC
+# Generate base customers first
+base_customers = []
+
+# Generate 800 member customers
 for i in range(800):
     customer_id = str(uuid.uuid4())
     reg_date = datetime.now() - timedelta(days=random.randint(30, 365*2))
-    event_timestamp = datetime.now() - timedelta(days=random.randint(0, days_to_generate))
-    operation = random.choices(list(operations.keys()), weights=list(operations.values()))[0]
-    is_active = random.choice([True, True, True, False])
     
-    cdc_event = {
+    base_customer = {
         "customer_id": customer_id,
         "user_type": "member",
         "registration_date": reg_date.strftime("%m-%d-%Y %H:%M:%S"),
@@ -116,23 +112,17 @@ for i in range(800):
         "membership_tier": random.choice(membership_tiers),
         "preferred_payment": random.choice(payment_methods),
         "home_station_id": random.choice(stations),
-        "is_active": is_active,
-        "operation": operation,
-        "event_timestamp": event_timestamp.strftime("%m-%d-%Y %H:%M:%S")
+        "is_active": True
     }
-    customers_cdc.append(cdc_event)
-    if is_active:
-        member_customers.append({"customer_id": customer_id})
+    base_customers.append(base_customer)
+    all_customer_ids.append(customer_id)
 
-# Generate non-member customers with CDC
+# Generate 1200 non-member customers
 for i in range(1200):
     customer_id = str(uuid.uuid4())
     reg_date = datetime.now() - timedelta(days=random.randint(1, 90))
-    event_timestamp = datetime.now() - timedelta(days=random.randint(0, days_to_generate))
-    operation = random.choices(list(operations.keys()), weights=list(operations.values()))[0]
-    is_active = random.choice([True, True, False])
     
-    cdc_event = {
+    base_customer = {
         "customer_id": customer_id,
         "user_type": "non-member",
         "registration_date": reg_date.strftime("%m-%d-%Y %H:%M:%S"),
@@ -142,13 +132,79 @@ for i in range(1200):
         "membership_tier": None,
         "preferred_payment": random.choice(payment_methods),
         "home_station_id": random.choice(stations),
-        "is_active": is_active,
-        "operation": operation,
-        "event_timestamp": event_timestamp.strftime("%m-%d-%Y %H:%M:%S")
+        "is_active": True
     }
-    customers_cdc.append(cdc_event)
-    if is_active:
-        non_member_customers.append({"customer_id": customer_id})
+    base_customers.append(base_customer)
+    all_customer_ids.append(customer_id)
+
+# Now generate CDC events for these customers
+for customer in base_customers:
+    customer_id = customer["customer_id"]
+    
+    # Start with APPEND operation (initial insert)
+    initial_event_time = datetime.now() - timedelta(days=random.randint(0, days_to_generate))
+    append_event = customer.copy()
+    append_event.update({
+        "operation": "APPEND",
+        "event_timestamp": initial_event_time.strftime("%m-%d-%Y %H:%M:%S")
+    })
+    customers_cdc.append(append_event)
+    
+    # 10% chance this customer will have additional operations
+    if random.random() < 0.1:
+        # Generate UPDATE operation
+        update_event_time = initial_event_time + timedelta(days=random.randint(1, 30))
+        update_event = customer.copy()
+        
+        # Randomly update some fields
+        if random.random() < 0.3:
+            update_event["email"] = f"updated_{customer['email']}"
+        if random.random() < 0.2:
+            update_event["phone"] = f"555-{random.randint(1000, 9999)}"
+        if random.random() < 0.1:
+            update_event["preferred_payment"] = random.choice(payment_methods)
+        
+        update_event.update({
+            "operation": "UPDATE",
+            "event_timestamp": update_event_time.strftime("%m-%d-%Y %H:%M:%S")
+        })
+        customers_cdc.append(update_event)
+        
+        # 3% chance this customer will also be deleted
+        if random.random() < 0.03:
+            delete_event_time = update_event_time + timedelta(days=random.randint(1, 20))
+            delete_event = update_event.copy()
+            delete_event.update({
+                "operation": "DELETE",
+                "event_timestamp": delete_event_time.strftime("%m-%d-%Y %H:%M:%S")
+            })
+            customers_cdc.append(delete_event)
+
+# Add some standalone operations for variety (5% of total)
+standalone_operations = int(len(base_customers) * 0.05)
+for i in range(standalone_operations):
+    customer_id = str(uuid.uuid4())
+    event_time = datetime.now() - timedelta(days=random.randint(0, days_to_generate))
+    operation = random.choice(["APPEND", "UPDATE", "DELETE"])
+    
+    standalone_event = {
+        "customer_id": customer_id,
+        "user_type": random.choice(["member", "non-member"]),
+        "registration_date": (datetime.now() - timedelta(days=random.randint(1, 365))).strftime("%m-%d-%Y %H:%M:%S"),
+        "email": f"standalone{i}@email.com",
+        "phone": f"555-{random.randint(1000, 9999)}",
+        "age_group": random.choice(age_groups),
+        "membership_tier": random.choice(membership_tiers) if random.random() < 0.4 else None,
+        "preferred_payment": random.choice(payment_methods),
+        "home_station_id": random.choice(stations),
+        "is_active": random.choice([True, False]),
+        "operation": operation,
+        "event_timestamp": event_time.strftime("%m-%d-%Y %H:%M:%S")
+    }
+    customers_cdc.append(standalone_event)
+
+print(f"Generated {len(customers_cdc)} CDC events for {len(base_customers)} base customers")
+print(f"Total customer IDs available for rides: {len(all_customer_ids)}")
 
 
 rides = []
@@ -182,15 +238,9 @@ for bike in bikes:
     total_seconds = (end_time - start_time).total_seconds()
     ride_times = sorted([random.randint(0, int(total_seconds)) for _ in range(2 * trips_in_day)])
     for i in range(0, 2 * trips_in_day, 2):
-      # Determine user type and select appropriate customer
+      # Randomly assign user type and customer ID
       user_type = random.choice(["member", "non-member"])
-      if user_type == "member" and member_customers:
-          selected_customer = random.choice(member_customers)
-      elif user_type == "non-member" and non_member_customers:
-          selected_customer = random.choice(non_member_customers)
-      else:
-          # Fallback if no customers of that type available
-          selected_customer = {"customer_id": str(uuid.uuid4())}
+      customer_id = random.choice(all_customer_ids) if all_customer_ids else str(uuid.uuid4())
       
       rides.append({
           "ride_id": str(uuid.uuid4()),
@@ -200,7 +250,7 @@ for bike in bikes:
           "end_station_id": random.choice(stations),
           "bike_id": bike,
           "user_type": user_type,
-          "customer_id": selected_customer["customer_id"]
+          "customer_id": customer_id
       })
 
       # Random odds of a maintenance event

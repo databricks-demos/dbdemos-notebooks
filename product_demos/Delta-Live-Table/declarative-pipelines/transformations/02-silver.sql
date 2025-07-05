@@ -129,4 +129,25 @@ COLUMNS * EXCEPT
 STORED AS
   SCD TYPE 1;
 
+
+-- ==========================================================================
+-- == AUTO CDC: customers_history (SCD Type 2 Table)                       ==
+-- ==========================================================================
+CREATE OR REFRESH STREAMING TABLE customers_history;
+
+CREATE FLOW customers_cdc_scd2_flow AS AUTO CDC INTO
+  customers_history
+FROM
+  STREAM(customers_cdc_clean)
+KEYS
+  (customer_id)
+APPLY AS DELETE WHEN
+  operation = "DELETE"
+SEQUENCE BY
+  event_timestamp
+COLUMNS * EXCEPT
+  (operation, event_timestamp)
+STORED AS
+  SCD TYPE 2;
+
 -- Next up lets build some aggregations for our dashboard over in 03-gold.sql.

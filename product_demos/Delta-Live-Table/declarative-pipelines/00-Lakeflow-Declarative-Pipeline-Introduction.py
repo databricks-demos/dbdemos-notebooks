@@ -67,14 +67,15 @@
 # MAGIC     </td>
 # MAGIC     <td>
 # MAGIC       <b>Silver: Cleaned and enriched with data quality rules</b><br/>
-# MAGIC       Filter out invalid rides and maintenance logs, enrich data with ride revenue, categorize maintenance issues, and process customer CDC events using Auto CDC for SCD Type 1 tracking.<br/>
+# MAGIC       Filter out invalid rides and maintenance logs, enrich data with ride revenue, categorize maintenance issues, and process customer CDC events using Auto CDC for both SCD Type 1 (current state) and SCD Type 2 (historical tracking).<br/>
 # MAGIC
 # MAGIC Tables in our silver layer:
 # MAGIC - maintenance_logs
 # MAGIC - rides
 # MAGIC - weather
 # MAGIC - customers_cdc_clean
-# MAGIC - customers
+# MAGIC - customers (SCD Type 1)
+# MAGIC - customers_history (SCD Type 2)
 # MAGIC     </td>
 # MAGIC     <td>
 # MAGIC       <b>Gold: Curated for analytics & AI.</b><br>

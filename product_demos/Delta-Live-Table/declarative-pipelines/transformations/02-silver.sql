@@ -72,44 +72,35 @@ FROM STREAM (weather_raw);
 
 
 -- ==========================================================================
--- == AUTO CDC: customers (Final SCD Type 1 Table)                         ==
+-- == AUTO CDC: customers (SCD Type 2 Table)                               ==
 -- ==========================================================================
-CREATE OR REFRESH STREAMING TABLE customers;
+CREATE OR REFRESH STREAMING TABLE customers (
+  customer_id STRING COMMENT "Unique identifier for the customer",
+  user_type STRING COMMENT "Type of user: member or non-member", 
+  registration_date STRING COMMENT "Date when customer registered for the service",
+  email STRING COMMENT "Customer email address",
+  phone STRING COMMENT "Customer phone number",
+  age_group STRING COMMENT "Customer age group (18-25, 26-35, 36-45, 46-55, 55+)",
+  membership_tier STRING COMMENT "Membership tier for members (basic, premium, enterprise)",
+  preferred_payment STRING COMMENT "Preferred payment method (credit_card, mobile_pay, cash)",
+  home_station_id STRING COMMENT "Preferred or home station identifier",
+  is_active BOOLEAN COMMENT "Whether the customer account is currently active"
+)
+COMMENT "Customer data with SCD Type 2 tracking for maintaining complete change history";
 
 CREATE FLOW customers_cdc_flow AS AUTO CDC INTO
   customers
 FROM
   STREAM(customers_cdc_raw)
 KEYS
-  (customer_id)
+  (customer_id)  -- Primary key(s) to identify unique records
 APPLY AS DELETE WHEN
-  operation = "DELETE"
+  operation = "DELETE"  -- Condition to apply deletes based on operation column
 SEQUENCE BY
-  to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss')
+  to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss')  -- Column to order changes chronologically
 COLUMNS * EXCEPT
-  (operation, event_timestamp)
+  (operation, event_timestamp)  -- Include all columns except CDC metadata
 STORED AS
-  SCD TYPE 1;
-
-
--- ==========================================================================
--- == AUTO CDC: customers_history (SCD Type 2 Table)                       ==
--- ==========================================================================
-CREATE OR REFRESH STREAMING TABLE customers_history;
-
-CREATE FLOW customers_cdc_scd2_flow AS AUTO CDC INTO
-  customers_history
-FROM
-  STREAM(customers_cdc_raw)
-KEYS
-  (customer_id)
-APPLY AS DELETE WHEN
-  operation = "DELETE"
-SEQUENCE BY
-  to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss')
-COLUMNS * EXCEPT
-  (operation, event_timestamp)
-STORED AS
-  SCD TYPE 2;
+  SCD TYPE 2;  -- Maintain historical versions of records with start/end timestamps
 
 -- Next up lets build some aggregations for our dashboard over in 03-gold.sql.

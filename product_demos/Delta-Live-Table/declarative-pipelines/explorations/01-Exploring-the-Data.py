@@ -94,6 +94,16 @@ print(filtered_df.count())
 
 # MAGIC %md
 # MAGIC
+# MAGIC ### Understanding Change Data Capture (CDC) with AUTO CDC
+# MAGIC
+# MAGIC AUTO CDC is a declarative API in Lakeflow Declarative Pipelines that simplifies change data capture processing. 
+# MAGIC
+# MAGIC Key benefits of AUTO CDC:
+# MAGIC - **Automatic ordering**: Handles records that arrive out of chronological order
+# MAGIC - **Built-in SCD support**: Easily implement Type 1 or Type 2 slowly changing dimensions
+# MAGIC - **Declarative syntax**: Simple SQL-based configuration without complex merge logic
+# MAGIC - **Operation handling**: Supports INSERT, UPDATE, DELETE, and TRUNCATE operations
+# MAGIC
 # MAGIC Let's explore the distribution of CDC operations to understand the types of changes happening to customer data:
 
 # COMMAND ----------

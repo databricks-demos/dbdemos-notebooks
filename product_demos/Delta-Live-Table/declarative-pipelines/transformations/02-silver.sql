@@ -99,7 +99,7 @@ APPLY AS DELETE WHEN
 SEQUENCE BY
   to_timestamp(event_timestamp, 'MM-dd-yyyy HH:mm:ss')  -- Column to order changes chronologically
 COLUMNS * EXCEPT
-  (operation, event_timestamp)  -- Include all columns except CDC metadata
+  (operation, event_timestamp, _rescued_data)  -- Include all columns except CDC metadata and rescued data
 STORED AS
   SCD TYPE 2;  -- Maintain historical versions of records with start/end timestamps
 

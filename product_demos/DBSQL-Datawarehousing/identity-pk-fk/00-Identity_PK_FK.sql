@@ -40,20 +40,6 @@
 
 -- COMMAND ----------
 
--- MAGIC %md-sandbox
--- MAGIC ## Cluster setup for UC
--- MAGIC
--- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/uc/uc-cluster-setup-single-user.png" style="float: right"/>
--- MAGIC
--- MAGIC
--- MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
--- MAGIC
--- MAGIC Go in the compute page, create a new cluster.
--- MAGIC
--- MAGIC Select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
-
--- COMMAND ----------
-
 -- DBTITLE 1,Environment Setup. You need the permission to create a catalog and schema in your Unity Catalog metastore.
 -- MAGIC %run ./_resources/00-setup
 

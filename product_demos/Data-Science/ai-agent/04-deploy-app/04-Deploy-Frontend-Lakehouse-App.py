@@ -26,7 +26,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-init
+# MAGIC %run ../_resources/01-setup
 
 # COMMAND ----------
 
@@ -37,106 +37,30 @@
 
 # COMMAND ----------
 
-MODEL_NAME = "dbdemos_ai_agent_demo"
-endpoint_name = f'agents_{catalog}-{db}-{MODEL_NAME}'[:60]
+import yaml
 
 # Our frontend application will hit the model endpoint we deployed.
 # Because dbdemos let you change your catalog and database, let's make sure we deploy the app with the proper endpoint name
 yaml_app_config = {"command": ["uvicorn", "main:app", "--workers", "1"],
-                    "env": [{"name": "MODEL_SERVING_ENDPOINT", "value": endpoint_name}]
+                    "env": [{"name": "MODEL_SERVING_ENDPOINT", "value": ENDPOINT_NAME}]
                   }
 try:
     with open('chatbot_app/app.yaml', 'w') as f:
         yaml.dump(yaml_app_config, f)
-except:
-    print('pass to work on build job')
+except Exception as e:
+    print(f'pass to work on build job - {e}')
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Capturing feedback straight to MLFlow
+# MAGIC
+# MAGIC With MLFLow 3, it's now easy to directly capture feedback (thumb up/down) from your application!
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Let's now create our chatbot application using Gradio
-
-# COMMAND ----------
-
-# TODO : improve with https://www.gradio.app/guides/agents-and-tool-usage
-
-# COMMAND ----------
-
-# MAGIC %%writefile chatbot_app/main.py
-# MAGIC from fastapi import FastAPI
-# MAGIC import gradio as gr
-# MAGIC import os
-# MAGIC from gradio.themes.utils import sizes
-# MAGIC from databricks.sdk import WorkspaceClient
-# MAGIC from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
-# MAGIC
-# MAGIC app = FastAPI()
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC # your endpoint will directly be setup with proper permissions when you deploy your app
-# MAGIC w = WorkspaceClient()
-# MAGIC available_endpoints = [x.name for x in w.serving_endpoints.list()]
-# MAGIC
-# MAGIC
-# MAGIC def respond(message, history, dropdown):
-# MAGIC     if len(message.strip()) == 0:
-# MAGIC         return "ERROR the question should not be empty"
-# MAGIC     try:
-# MAGIC         messages = []
-# MAGIC         if history:
-# MAGIC             for human, assistant in history:
-# MAGIC                 messages.append(ChatMessage(content=human, role=ChatMessageRole.USER))
-# MAGIC                 messages.append(
-# MAGIC                     ChatMessage(content=assistant, role=ChatMessageRole.ASSISTANT)
-# MAGIC                 )
-# MAGIC         messages.append(ChatMessage(content=message, role=ChatMessageRole.USER))
-# MAGIC         response = w.serving_endpoints.query(
-# MAGIC             name=dropdown,
-# MAGIC             messages=messages,
-# MAGIC             temperature=1.0,
-# MAGIC             stream=False,
-# MAGIC         )
-# MAGIC     except Exception as error:
-# MAGIC         return f"ERROR requesting endpoint {dropdown}: {error}"
-# MAGIC     return response.choices[0].message.content
-# MAGIC
-# MAGIC
-# MAGIC theme = gr.themes.Soft(
-# MAGIC     text_size=sizes.text_sm,
-# MAGIC     radius_size=sizes.radius_sm,
-# MAGIC     spacing_size=sizes.spacing_sm,
-# MAGIC )
-# MAGIC
-# MAGIC demo = gr.ChatInterface(
-# MAGIC     respond,
-# MAGIC     chatbot=gr.Chatbot(
-# MAGIC         show_label=False, container=False, show_copy_button=True, bubble_full_width=True
-# MAGIC     ),
-# MAGIC     textbox=gr.Textbox(placeholder="What is RAG?", container=False, scale=7),
-# MAGIC     title="Databricks App RAG demo - Chat with your Databricks assistant",
-# MAGIC     description="This chatbot is a demo example for the dbdemos llm chatbot. <br>It answers with the help of Databricks Documentation saved in a Knowledge database.<br/>This content is provided as a LLM RAG educational example, without support. It is using DBRX, can hallucinate and should not be used as production content.<br>Please review our dbdemos license and terms for more details.",
-# MAGIC     examples=[
-# MAGIC         ["What is DBRX?"],
-# MAGIC         ["How can I start a Databricks cluster?"],
-# MAGIC         ["What is a Databricks Cluster Policy?"],
-# MAGIC         ["How can I track billing usage on my workspaces?"],
-# MAGIC     ],
-# MAGIC     cache_examples=False,
-# MAGIC     theme=theme,
-# MAGIC     retry_btn=None,
-# MAGIC     undo_btn=None,
-# MAGIC     clear_btn="Clear",
-# MAGIC     additional_inputs=gr.Dropdown(
-# MAGIC         choices=available_endpoints,
-# MAGIC         value=os.environ["MODEL_SERVING_ENDPOINT"],
-# MAGIC         label="Serving Endpoint",
-# MAGIC     ),
-# MAGIC     additional_inputs_accordion="Settings",
-# MAGIC )
-# MAGIC
-# MAGIC demo.queue(default_concurrency_limit=100)
-# MAGIC app = gr.mount_gradio_app(app, demo, path="/")
 
 # COMMAND ----------
 
@@ -155,8 +79,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.apps import App, AppResource, AppResourceServingEndpoint, AppResourceServingEndpointServingEndpointPermission, AppDeployment
 
 w = WorkspaceClient()
-
-app_name = "dbdemos-rag-chatbot-app"
+app_name = "dbdemos-ai-agent-app"
 
 # COMMAND ----------
 
@@ -165,7 +88,7 @@ app_name = "dbdemos-rag-chatbot-app"
 
 # COMMAND ----------
 
-serving_endpoint = AppResourceServingEndpoint(name=endpoint_name,
+serving_endpoint = AppResourceServingEndpoint(name=ENDPOINT_NAME,
                                               permission=AppResourceServingEndpointServingEndpointPermission.CAN_QUERY
                                               )
 
@@ -191,9 +114,7 @@ except Exception as e:
 
 # COMMAND ----------
 
-deployment = AppDeployment(
-  source_code_path=os.path.join(os.getcwd(), 'chatbot_app')
-)
+deployment = AppDeployment(source_code_path=os.path.join(os.getcwd(), 'chatbot_app'))
 
 app_details = w.apps.deploy_and_wait(app_name=app_name, app_deployment=deployment)
 
@@ -223,6 +144,6 @@ w.apps.get(name=app_name).url
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Next: ready to take it to a next level?
+# MAGIC ## Next: ready to take it to a next level? Let's monitor our agent performance in production
 # MAGIC
-# MAGIC Open the [03-advanced-app/01-PDF-Advanced-Data-Preparation]($../03-advanced-app/01-PDF-Advanced-Data-Preparation) notebook series to learn more about unstructured data, advanced chain, model evaluation and monitoring.
+# MAGIC Open the [05-production-monitoring/05.production-monitoring]($../05-production-monitoring/05.production-monitoring) notebook to learn how to monitor your endpoint and evaluate it while in production!

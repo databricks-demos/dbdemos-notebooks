@@ -1,22 +1,17 @@
 # Databricks notebook source
-# MAGIC %md
-# MAGIC # Hands-On Lab: Building Agent Systems with Databricks
+# MAGIC %md-sandbox
+# MAGIC # Building your first Agent Systems with Databricks
 # MAGIC
-# MAGIC ## Part 1 - Architect Your First Agent
-# MAGIC This first agent will follow the workflow of a customer service representative to illustrate the various agent capabilites. 
-# MAGIC We'll focus around processing product returns as this gives us a tangible set of steps to follow.
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/ai-agent-functions.png?raw=true" style="float: right" width="700px">
+# MAGIC LLMs are powerful to answer general knowledge, but don't have any information on your own business.
 # MAGIC
-# MAGIC ### 1.1 Build Simple Tools
-# MAGIC - **SQL Functions**: Create queries that access data critical to steps in the customer service workflow for processing a return.
-# MAGIC - **Simple Python Function**: Create and register a Python function to overcome some common limitations of language models.
+# MAGIC Databricks makes it easy to develop custom tools which can be called by your LLM, creating a complete agent with reasoning capability.
 # MAGIC
-# MAGIC ### 1.2 Integrate with an LLM [AI Playground]
-# MAGIC - Combine the tools you created with a Language Model (LLM) in the AI Playground.
 # MAGIC
-# MAGIC ### 1.3 Test the Agent [AI Playground]
-# MAGIC - Ask the agent a question and observe the response.
-# MAGIC - Dive deeper into the agent’s performance by exploring MLflow traces.
-# MAGIC
+# MAGIC ### Build Simple UC Tools
+# MAGIC In this notebook, we'll register the following to Unity Catalogs:
+# MAGIC - **SQL Functions**: Create queries that access customer information, order and subscriptions.
+# MAGIC - **Simple Python Function**: Create and register a Python function doing math operations to overcome some common limitations of language models.
 
 # COMMAND ----------
 
@@ -32,17 +27,13 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Customer Service
-# MAGIC
-# MAGIC Below is a structured outline of the **key steps** a customer service agent would typically follow when **processing a return**. This workflow ensures consistency and clarity across your support team.
-# MAGIC
-# MAGIC ---
 # MAGIC
 # MAGIC ## 1. Get the customer details based on its email
-# MAGIC - **Action**: Identify and retrieve the customer
-# MAGIC - **Why**: get customer information based on its ID
 # MAGIC
-# MAGIC ---
+# MAGIC Let's add a function to retrieve a customer detail based on its email.
+# MAGIC
+# MAGIC *Note: realtime postgres tables could be used to provide low latencies for point-queries like these. However, to keep this demo simple, we'll use a SQL endpoint. Using a SQL endpoint is also a very good way to provide analytics capabilities to your agent!*
+# MAGIC
 
 # COMMAND ----------
 
@@ -82,13 +73,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ---
 # MAGIC
 # MAGIC ## 2. Retrieve all billing informations
-# MAGIC - **Action**: Access the internal knowledge base or policy documents related to returns, refunds, and exchanges.  
-# MAGIC - **Why**: Verifying you’re in compliance with company guidelines prevents potential errors and conflicts.
-# MAGIC
-# MAGIC ---
+# MAGIC Let's add a function to get all the customer orders and subscriptions. This function will take a customer ID as input and return som aggregation to filter all the past billing informations and current subscriptions.
 
 # COMMAND ----------
 
@@ -147,13 +134,11 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ---
 # MAGIC
 # MAGIC ## 3. Give the LLM a Python Function to compute Math
-# MAGIC - **Action**: Provide a **Python function** that can supply the Large Language Model (LLM) with the current date.  
-# MAGIC - **Why**: Automating date retrieval helps in scheduling pickups, refund timelines, and communication deadlines.
+# MAGIC LLMs typically struggle to run any advance math. Let's add a tool to let the LLM compute any math expression, using python directly.
 # MAGIC
-# MAGIC *Note: This is of course a very heavy way to get the date as you can simply add it to your prompt, but this example shows you how to implement your own python functions in a sandboxed, safe runtime for your agents:*
+# MAGIC Databricks makes it easy, running safe, sandboxed python functions:
 
 # COMMAND ----------
 
@@ -166,7 +151,7 @@ def calculate_math_expression(expression: str) -> float:
     Evaluates a basic math expression safely.
 
     Args:
-        expression (str): A math expression (e.g., "2 + 3 * (4 - 1)").
+        expression (str): A math expression (e.g., "sqrt(2 + 3 * (4 - 1)), using python math functions.").
 
     Returns:
         float: The result of the evaluated expression.
@@ -217,9 +202,39 @@ displayHTML(f'<a href="/explore/data/functions/{catalog}/{dbName}/calculate_math
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Now lets go over to the AI Playground to see how we can use these functions and assemble our first Agent!
+# MAGIC %md-sandbox
 # MAGIC
-# MAGIC ### The AI Playground can be found on the left navigation bar under 'Machine Learning' or you can use the link created below
+# MAGIC ## 4: Let's go over to the AI Playground to see how we can use these functions and assemble our first Agent!
 # MAGIC
 # MAGIC Open the [Playground](/ml/playground) and select the tools we created to test your agent!
+# MAGIC
+# MAGIC <div style="float: right; width: 70%;">
+# MAGIC   <img 
+# MAGIC     src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/\
+# MAGIC cross_demo_assets/AI_Agent_GIFs/AI_agent_function_selection.gif" 
+# MAGIC     alt="Function Selection" 
+# MAGIC     width="100%"
+# MAGIC   >
+# MAGIC </div>
+# MAGIC
+# MAGIC ### Location Guide
+# MAGIC
+# MAGIC Your functions are organized in Unity Catalog using this structure:
+# MAGIC
+# MAGIC #### Example Path:
+# MAGIC `my_catalog.my_schema.my_awesome_function`
+# MAGIC
+# MAGIC 💡 Note: Replace the example names with your actual catalog and schema names.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## What's next: Evaluation
+# MAGIC
+# MAGIC Our agent is now ready and leveraging our tools to properly answer our questions.
+# MAGIC
+# MAGIC But how can we make sure it's working properly, and more importantly will still work well for future questions and modifications?
+# MAGIC
+# MAGIC To do so, we need to build an Evaluation dataset and leverage MLFlow to automatically analyze our agent!
+# MAGIC
+# MAGIC Open the [02_agent_eval/02.1_agent_evaluation]($../02_agent_eval/02.1_agent_evaluation) notebook to see how to deploy your agent using Langchain and run your first evaluations!

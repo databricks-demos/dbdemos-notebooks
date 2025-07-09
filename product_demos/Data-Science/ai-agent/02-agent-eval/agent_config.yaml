@@ -1,0 +1,9 @@
+config_version_name: first_config
+input_example:
+- content: Give me the orders for john21@example.net
+  role: user
+llm_endpoint_name: databricks-claude-3-7-sonnet
+retriever_config: null
+system_prompt: Your job is to provide customer help. call the tool to answer.
+uc_tool_names:
+- main_build.dbdemos_ai_agent.*

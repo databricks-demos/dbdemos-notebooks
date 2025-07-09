@@ -17,3 +17,7 @@ schema = dbName = db = "dbdemos_ai_agent"
 
 volume_name = "raw_data"
 VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"
+
+MODEL_NAME = "dbdemos_ai_agent_demo"
+ENDPOINT_NAME = f'{MODEL_NAME}_{catalog}_{db}'[:60]
+

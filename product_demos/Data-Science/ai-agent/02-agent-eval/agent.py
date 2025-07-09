@@ -24,12 +24,21 @@ from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt.tool_node import ToolNode
+import uuid
 
-# Enable autologging and UC tool setup
+# Automatically log LangChain events to MLflow
 mlflow.langchain.autolog()
+
+# Set up Databricks Function client for Unity Catalog function toolkit
 set_uc_function_client(DatabricksFunctionClient())
 
 class ToolCallingAgent(ResponsesAgent):
+    """
+    Agent class using LangGraph and MLflow to orchestrate tool-calling behavior
+    based on user queries and long-running interactions. Supports tool chaining,
+    conversational history, summarization, and streaming output.
+    """
+
     def __init__(
         self,
         uc_tool_names: Sequence[str] = ("main_build.dbdemos_ai_agent.*",),
@@ -38,10 +47,12 @@ class ToolCallingAgent(ResponsesAgent):
         retriever_config: Optional[dict] = None,
         max_history_messages: int = 20,
     ):
+        # Initialize LLM and tools from Unity Catalog and optionally Vector Search
         self.llm_endpoint_name = llm_endpoint_name
         self.llm = ChatDatabricks(endpoint=llm_endpoint_name)
         self.tools: List[BaseTool] = UCFunctionToolkit(function_names=list(uc_tool_names)).tools
 
+        # Optionally add a vector search tool to the agent
         if retriever_config:
             self.tools.append(
                 VectorSearchRetrieverTool(
@@ -57,6 +68,10 @@ class ToolCallingAgent(ResponsesAgent):
         self.graph: CompiledStateGraph = self._build_graph(system_prompt)
 
     def _build_graph(self, system_prompt: Optional[str]) -> CompiledStateGraph:
+        """
+        Construct a LangGraph-based loop: [agent -> tool -> agent -> ...] until no tool calls.
+        """
+
         model = self.llm.bind_tools(self.tools)
 
         def should_continue(state: dict):
@@ -66,6 +81,7 @@ class ToolCallingAgent(ResponsesAgent):
                   else None)
             return "continue" if tc else "end"
 
+        # Optionally prepend system prompt
         pre = RunnableLambda(lambda s: [{"role": "system", "content": system_prompt}] + s["messages"]) if system_prompt \
               else RunnableLambda(lambda s: s["messages"])
         runnable = pre | model
@@ -75,6 +91,7 @@ class ToolCallingAgent(ResponsesAgent):
             return {"messages": state["messages"] + [ai_msg]}
 
         def call_tool(state, config):
+            # Use LangGraph tool node to execute any tools requested
             tool_node = ToolNode(self.tools)
             result = tool_node.invoke(state, config)
             tool_messages = result.get("messages", [])
@@ -82,6 +99,7 @@ class ToolCallingAgent(ResponsesAgent):
                 raise ValueError("Expected ToolMessage list in tool node result")
             return {"messages": state["messages"] + tool_messages}
 
+        # Define graph structure
         graph = StateGraph(dict)
         graph.add_node("agent", RunnableLambda(call_agent))
         graph.add_node("tools", RunnableLambda(call_tool))
@@ -91,9 +109,11 @@ class ToolCallingAgent(ResponsesAgent):
         return graph.compile()
 
     def _mlflow_messages_to_dicts(self, messages: Sequence[Any]) -> List[Dict[str, str]]:
+        # Convert MLflow message objects to simple {role, content} dictionaries
         return [{"role": m.role, "content": m.content,} for m in messages]
 
     def _summarize_history(self, messages: List[Dict[str, str]]) -> str:
+        # Summarize older chat history using LLM if the message count exceeds max_history
         llm = ChatDatabricks(endpoint=self.llm_endpoint_name)
         prompt = "Summarize the following conversation between a user and an assistant:\n\n"
         for m in messages:
@@ -103,6 +123,7 @@ class ToolCallingAgent(ResponsesAgent):
         return response.content if hasattr(response, "content") else str(response)
 
     def _truncate_and_summarize_history(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        # If history is too long, summarize older messages and keep the recent ones
         if len(messages) <= self.max_history_messages:
             return messages
         to_summarize = messages[:-self.max_history_messages]
@@ -119,20 +140,34 @@ class ToolCallingAgent(ResponsesAgent):
             for node_out in event.values():
                 for msg in node_out.get("messages", []):
                     if isinstance(msg, AIMessage):
-                        content, msg_id = msg.content, getattr(msg, "id", "")
+                        # Ensure every message has a unique id
+                        if not hasattr(msg, "id") or not msg.id:
+                            msg.id = str(uuid.uuid4())
+                        content, msg_id = msg.content, msg.id
                     elif isinstance(msg, ToolMessage):
-                        content, msg_id = msg.content, getattr(msg, "tool_call_id", "")
+                        if not hasattr(msg, "tool_call_id") or not msg.tool_call_id:
+                            msg.tool_call_id = str(uuid.uuid4())
+                        content, msg_id = msg.content, msg.tool_call_id
                     else:
-                        content, msg_id = msg.get("content"), msg.get("id", "")
+                        content, msg_id = msg.get("content"), msg.get("id", str(uuid.uuid4()))
                     yield content, msg_id
 
+
+    @mlflow.trace(span_type=SpanType.AGENT)
     def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
+        """
+        Non-streaming predict call for synchronous APIs (returns full response).
+        """
         items = []
         for content, msg_id in self._stream_events(request):
             items.append(self.create_text_output_item(text=content, id=msg_id or ""))
         return ResponsesAgentResponse(output=items)
 
+    @mlflow.trace(span_type=SpanType.AGENT)
     def predict_stream(self, request: ResponsesAgentRequest):
+        """
+        Streaming predict call for real-time apps (yields deltas + final message).
+        """
         for content, msg_id in self._stream_events(request):
             yield ResponsesAgentStreamEvent(**self.create_text_delta(delta=content, item_id=msg_id or ""))
             yield ResponsesAgentStreamEvent(
@@ -141,6 +176,9 @@ class ToolCallingAgent(ResponsesAgent):
             )
 
     def get_resources(self):
+        """
+        Declare all external tools and endpoints used, for audit/visualization.
+        """
         res = [DatabricksServingEndpoint(endpoint_name=self.llm.endpoint)]
         for t in self.tools:
             if isinstance(t, VectorSearchRetrieverTool):
@@ -149,9 +187,10 @@ class ToolCallingAgent(ResponsesAgent):
                 res.append(DatabricksFunction(function_name=t.uc_function_name))
         return res
 
-# Example config loading
-model_config = mlflow.models.ModelConfig(development_config='../02_agent_eval/agent_config.yaml')
+# Load configuration from YAML (for local dev or MLF model eval)
+model_config = mlflow.models.ModelConfig(development_config='../02-agent-eval/agent_config.yaml')
 
+# Instantiate agent
 AGENT = ToolCallingAgent(
     uc_tool_names=model_config.get('uc_tool_names'),
     llm_endpoint_name=model_config.get('llm_endpoint_name'),
@@ -160,4 +199,5 @@ AGENT = ToolCallingAgent(
     max_history_messages=20
 )
 
+# Register the agent with MLflow
 mlflow.models.set_model(AGENT)

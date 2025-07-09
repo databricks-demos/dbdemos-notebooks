@@ -3,37 +3,105 @@ import gradio as gr
 import os
 from gradio.themes.utils import sizes
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
 
 app = FastAPI()
 
-# your endpoint will directly be setup with proper permissions when you deploy your app
+print(gr.__version__)
 w = WorkspaceClient()
 available_endpoints = [x.name for x in w.serving_endpoints.list()]
-
+#available_endpoints = [os.environ["MODEL_SERVING_ENDPOINT"]]
 
 def respond(message, history, dropdown):
     if len(message.strip()) == 0:
-        return "ERROR the question should not be empty"
-    try:
-        messages = []
-        if history:
-            for human, assistant in history:
-                messages.append(ChatMessage(content=human, role=ChatMessageRole.USER))
-                messages.append(
-                    ChatMessage(content=assistant, role=ChatMessageRole.ASSISTANT)
-                )
-        messages.append(ChatMessage(content=message, role=ChatMessageRole.USER))
-        response = w.serving_endpoints.query(
-            name=dropdown,
-            messages=messages,
-            temperature=1.0,
-            stream=False,
-        )
-    except Exception as error:
-        return f"ERROR requesting endpoint {dropdown}: {error}"
-    return response.choices[0].message.content
+        yield [
+            *history,
+            gr.ChatMessage(
+                content="ERROR the question should not be empty.",
+                role="assistant",
+                metadata={"title": "⚠️ Error"}
+            )
+        ]
+        return
 
+    try:
+        input_message = [{
+            "content": message,
+            "role": "user",
+            "type": "message"
+        }]
+        # Show "thinking" step
+        yield [
+            *history,
+            gr.ChatMessage(content=message, role="user"),
+            gr.ChatMessage(
+                content="Agent is reasoning and using tools...",
+                role="assistant",
+                metadata={"title": "🛠️ Agent Reasoning", "status": "pending"}
+            )
+        ]
+
+        response = w.api_client.do(
+            'POST',
+            f'/serving-endpoints/{dropdown}/invocations',
+            body={'input': input_message}
+        )
+        output_messages = response['output']
+
+        # Collect all reasoning/tool steps for the tooltip
+        thoughts = []
+        for msg in output_messages[:-1]:
+            if msg['role'] == 'assistant' and msg['content']:
+                for content in msg['content']:
+                    if content['type'] == 'output_text':
+                        text = content['text']
+                        # Skip empty or duplicate user prompts
+                        if text.strip() and text.strip() != message.strip():
+                            thoughts.append(text.strip())
+
+        # Get only the last assistant message as the final answer
+        final_msg = ""
+        if output_messages:
+            last_msg = output_messages[-1]
+            if last_msg['role'] == 'assistant' and last_msg['content']:
+                for content in last_msg['content']:
+                    if content['type'] == 'output_text':
+                        final_msg = content['text'].strip()
+
+        # Build the chat messages: show only the answer, with a collapsible tooltip for reasoning
+        chat_msgs = [
+            *history,
+            gr.ChatMessage(content=message, role="user"),
+        ]
+        if thoughts:
+            chat_msgs.append(
+                gr.ChatMessage(
+                    content="\n\n".join(thoughts),
+                    role="assistant",
+                    metadata={
+                        "title": "🧠 Agent Reasoning & Tool Usage",
+                        "status": "done"
+                    }
+                )
+            )
+        if final_msg:
+            chat_msgs.append(
+                gr.ChatMessage(
+                    content=final_msg,
+                    role="assistant"
+                )
+            )
+        yield chat_msgs
+
+    except Exception as error:
+        yield [
+            *history,
+            gr.ChatMessage(content=message, role="user"),
+            gr.ChatMessage(
+                content=f"ERROR requesting endpoint {dropdown}: {error}",
+                role="assistant",
+                metadata={"title": "⚠️ Error"}
+            )
+        ]
 
 theme = gr.themes.Soft(
     text_size=sizes.text_sm,
@@ -42,24 +110,28 @@ theme = gr.themes.Soft(
 )
 
 demo = gr.ChatInterface(
-    respond,
+    fn=respond,
     chatbot=gr.Chatbot(
-        show_label=False, container=False, show_copy_button=True, bubble_full_width=True
+        show_label=False,
+        container=False,
+        show_copy_button=True,
+        bubble_full_width=True,
+        type="messages"  # Enables metadata/thoughts display
     ),
-    textbox=gr.Textbox(placeholder="What is RAG?", container=False, scale=7),
-    title="Databricks App RAG demo - Chat with your Databricks assistant",
-    description="This chatbot is a demo example for the dbdemos llm chatbot. <br>It answers with the help of Databricks Documentation saved in a Knowledge database.<br/>This content is provided as a LLM RAG educational example, without support. It is using DBRX, can hallucinate and should not be used as production content.<br>Please review our dbdemos license and terms for more details.",
+    textbox=gr.Textbox(placeholder="Ask about customer data...", container=False, scale=7),
+    title="Databricks AI Agent Demo - Customer Data Assistant",
+    description=(
+        "This AI agent can help you query customer data and provide insights. <br>"
+        "It uses tools to access databases and can answer questions about customers, their segments, and business metrics.<br/>"
+        "This is a demo example showing AI agent capabilities with Databricks."
+    ),
     examples=[
-        ["What is DBRX?"],
-        ["How can I start a Databricks cluster?"],
-        ["What is a Databricks Cluster Policy?"],
-        ["How can I track billing usage on my workspaces?"],
+        ["Give me the information about john21@example.net"],
+        ["What are the step-by-step instructions for updating the firmware on my SAT-SURVEY-2024 system?"],
+        ["Summarize all subscriptions held by john21@example.net"]
     ],
     cache_examples=False,
     theme=theme,
-    retry_btn=None,
-    undo_btn=None,
-    clear_btn="Clear",
     additional_inputs=gr.Dropdown(
         choices=available_endpoints,
         value=os.environ["MODEL_SERVING_ENDPOINT"],
@@ -69,4 +141,4 @@ demo = gr.ChatInterface(
 )
 
 demo.queue(default_concurrency_limit=100)
-app = gr.mount_gradio_app(app, demo, path="/")
+demo.launch(server_name="0.0.0.0", server_port=8000)

@@ -213,3 +213,10 @@ SELECT * FROM fact_sales
 -- MAGIC Next Steps:
 -- MAGIC - Try DBSQL query & dashboard editors
 -- MAGIC - Plug your BI tools (Tableau, PowerBI ...) to query these tables directly!
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## What's next:
+-- MAGIC
+-- MAGIC Discover more warehouse capabilities: open [01-Advanced-SQL-Warehouse]($./01-Advanced-SQL-Warehouse) to see how to create stored proc, sql variable, loops and more!

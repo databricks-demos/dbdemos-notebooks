@@ -314,22 +314,22 @@ customers_cdc_df.display()
 
 # COMMAND ----------
 
-maintenance_logs_with_descriptions = spark.sql(
+from pyspark.sql.functions import expr
+
+maintenance_logs_with_descriptions = maintenance_logs_df.selectExpr(
+    "* EXCEPT(issue_description)",
     """
-select
-  * except (issue_description),
-  case 
-    when rand() > 0.95 then "Broken" -- Inject some random bad data
-    when rand() > 0.95 then null
-    else ai_query(
-      "databricks-meta-llama-3-3-70b-instruct",
-      "You are a user of a bicycle rental service that rents bikes by the hour. The bike you just rented has an issue with the " || issue_description || " . You are writing a report of the issue with your bike. Your response should be 2 to 3 sentences. The response should be informal and terse. Your response should not include the bike number.",
-      modelParameters => named_struct("temperature", 2, "top_k", 100)
-  ) end as issue_description
-from
-  {maintenance_logs}
-""",
-    maintenance_logs=maintenance_logs_df,
+    CASE 
+      WHEN rand() > 0.95 THEN 'Broken'
+      WHEN rand() > 0.95 THEN NULL
+      ELSE ai_query(
+        'databricks-meta-llama-3-3-70b-instruct',
+        'You are a user of a bicycle rental service that rents bikes by the hour. The bike you just rented has an issue with the ' || issue_description || 
+        ' . You are writing a report of the issue with your bike. Your response should be 2 to 3 sentences. The response should be informal and terse. Your response should not include the bike number.',
+        named_struct('temperature', 2, 'top_k', 100)
+      )
+    END AS issue_description
+    """
 )
 
 maintenance_logs_with_descriptions.limit(10).display()

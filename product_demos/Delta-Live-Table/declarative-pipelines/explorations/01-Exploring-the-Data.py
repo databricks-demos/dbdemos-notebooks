@@ -87,6 +87,38 @@ print(filtered_df.count())
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/customers_cdc/*.parquet", format => "parquet") limit 10
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ### Understanding Change Data Capture (CDC) with AUTO CDC
+# MAGIC
+# MAGIC AUTO CDC is a declarative API in Lakeflow Declarative Pipelines that simplifies change data capture processing. 
+# MAGIC
+# MAGIC Key benefits of AUTO CDC:
+# MAGIC - **Automatic ordering**: Handles records that arrive out of chronological order
+# MAGIC - **Built-in SCD support**: Easily implement Type 1 or Type 2 slowly changing dimensions
+# MAGIC - **Declarative syntax**: Simple SQL-based configuration without complex merge logic
+# MAGIC - **Operation handling**: Supports INSERT, UPDATE, DELETE, and TRUNCATE operations
+# MAGIC
+# MAGIC Let's explore the distribution of CDC operations to understand the types of changes happening to customer data:
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select 
+# MAGIC   operation,
+# MAGIC   count(*) as count,
+# MAGIC   round(count(*) * 100.0 / sum(count(*)) over(), 1) as percentage
+# MAGIC from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/customers_cdc/*.parquet", format => "parquet") 
+# MAGIC group by operation
+# MAGIC order by count desc
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ### Next: Building our Declarative Pipeline
 # MAGIC We now have a good idea of our raw data and the queries we'll have to do!

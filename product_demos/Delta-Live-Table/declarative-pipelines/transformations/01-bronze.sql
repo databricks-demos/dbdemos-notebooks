@@ -25,4 +25,12 @@ COMMENT "Raw weather data streamed in from JSON files."
 AS SELECT * FROM 
   STREAM READ_FILES("/Volumes/${catalog}/${schema}/raw_data/weather/*.json", FORMAT => "json");
 
+-- ==========================================================================
+-- == Incrementally load RAW CUSTOMER CDC from PARQUET                     ==
+-- ==========================================================================
+CREATE OR REFRESH STREAMING TABLE CUSTOMERS_CDC_RAW
+COMMENT "Raw customer CDC data streamed in from Parquet files for Auto CDC processing."
+AS SELECT * FROM 
+  STREAM READ_FILES("/Volumes/${catalog}/${schema}/raw_data/customers_cdc/*.parquet", FORMAT => "parquet");
+
 -- Next up, let's clean up our data for our silver layer in 02-silver.sql

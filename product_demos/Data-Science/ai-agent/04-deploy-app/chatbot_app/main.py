@@ -1,27 +1,33 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
+from pydantic import BaseModel
+from enum import Enum
+from typing import Optional
 import gradio as gr
 import os
 from gradio.themes.utils import sizes
 from databricks.sdk import WorkspaceClient
+import mlflow
+mlflow.set_tracking_uri("databricks")
 
+# --- FastAPI setup ---
 app = FastAPI()
+router = APIRouter()
+app.include_router(router)
 
-print(gr.__version__)
+# --- Databricks Model Serving setup ---
 w = WorkspaceClient()
 available_endpoints = [x.name for x in w.serving_endpoints.list()]
-#available_endpoints = [os.environ["MODEL_SERVING_ENDPOINT"]]
 
+# --- Gradio Chatbot Logic ---
 def respond(message, history, dropdown):
     if len(message.strip()) == 0:
-        yield [
+        return [
             *history,
             gr.ChatMessage(
                 content="ERROR the question should not be empty.",
-                role="assistant",
-                metadata={"title": "⚠️ Error"}
+                role="assistant"
             )
         ]
-        return
 
     try:
         input_message = [{
@@ -29,36 +35,25 @@ def respond(message, history, dropdown):
             "role": "user",
             "type": "message"
         }]
-        # Show "thinking" step
-        yield [
-            *history,
-            gr.ChatMessage(content=message, role="user"),
-            gr.ChatMessage(
-                content="Agent is reasoning and using tools...",
-                role="assistant",
-                metadata={"title": "🛠️ Agent Reasoning", "status": "pending"}
-            )
-        ]
-
+        
         response = w.api_client.do(
             'POST',
             f'/serving-endpoints/{dropdown}/invocations',
             body={'input': input_message}
         )
+        print(f"Response: {response}")
         output_messages = response['output']
-
-        # Collect all reasoning/tool steps for the tooltip
+        trace_id = response.get('custom_outputs').get('trace_id')
+        print(f"Trace ID: {trace_id}")
         thoughts = []
         for msg in output_messages[:-1]:
             if msg['role'] == 'assistant' and msg['content']:
                 for content in msg['content']:
                     if content['type'] == 'output_text':
                         text = content['text']
-                        # Skip empty or duplicate user prompts
                         if text.strip() and text.strip() != message.strip():
                             thoughts.append(text.strip())
 
-        # Get only the last assistant message as the final answer
         final_msg = ""
         if output_messages:
             last_msg = output_messages[-1]
@@ -67,78 +62,130 @@ def respond(message, history, dropdown):
                     if content['type'] == 'output_text':
                         final_msg = content['text'].strip()
 
-        # Build the chat messages: show only the answer, with a collapsible tooltip for reasoning
         chat_msgs = [
             *history,
-            gr.ChatMessage(content=message, role="user"),
+            gr.ChatMessage(
+                content=message,
+                role="user"
+            )
         ]
         if thoughts:
             chat_msgs.append(
-                gr.ChatMessage(
-                    content="\n\n".join(thoughts),
-                    role="assistant",
-                    metadata={
-                        "title": "🧠 Agent Reasoning & Tool Usage",
-                        "status": "done"
-                    }
-                )
+                gr.ChatMessage(content="\n\n".join(thoughts),role="assistant")
             )
         if final_msg:
             chat_msgs.append(
                 gr.ChatMessage(
                     content=final_msg,
-                    role="assistant"
+                    role="assistant",
+                    options=[{"value": trace_id, "label": "trace_id"}] if trace_id else []
                 )
             )
-        yield chat_msgs
+        print(f"Chat messages: {chat_msgs}")
+        return chat_msgs
 
     except Exception as error:
-        yield [
+        return [
             *history,
             gr.ChatMessage(content=message, role="user"),
             gr.ChatMessage(
                 content=f"ERROR requesting endpoint {dropdown}: {error}",
-                role="assistant",
-                metadata={"title": "⚠️ Error"}
+                role="assistant"
             )
         ]
 
+# --- Gradio UI with Feedback Buttons ---
 theme = gr.themes.Soft(
     text_size=sizes.text_sm,
     radius_size=sizes.radius_sm,
     spacing_size=sizes.spacing_sm,
 )
 
-demo = gr.ChatInterface(
-    fn=respond,
-    chatbot=gr.Chatbot(
+with gr.Blocks(theme=theme) as demo:
+    gr.Markdown(
+        """
+        # Databricks AI Agent Demo - Customer Data Assistant
+
+        This AI agent can help you query customer data and provide insights.  
+        It uses tools to access databases and can answer questions about customers, their segments, and business metrics.  
+        This is a demo example showing AI agent capabilities with Databricks.
+        """
+    )
+
+    endpoint_dropdown = gr.Dropdown(
+        choices=available_endpoints,
+        value=os.environ["MODEL_SERVING_ENDPOINT"],
+        label="Serving Endpoint"
+    )
+
+    chatbot = gr.Chatbot(
         show_label=False,
         container=False,
         show_copy_button=True,
-        bubble_full_width=True,
-        type="messages"  # Enables metadata/thoughts display
-    ),
-    textbox=gr.Textbox(placeholder="Ask about customer data...", container=False, scale=7),
-    title="Databricks AI Agent Demo - Customer Data Assistant",
-    description=(
-        "This AI agent can help you query customer data and provide insights. <br>"
-        "It uses tools to access databases and can answer questions about customers, their segments, and business metrics.<br/>"
-        "This is a demo example showing AI agent capabilities with Databricks."
-    ),
-    examples=[
-        ["Give me the information about john21@example.net"],
-        ["What are the step-by-step instructions for updating the firmware on my SAT-SURVEY-2024 system?"],
-        ["Summarize all subscriptions held by john21@example.net"]
-    ],
-    cache_examples=False,
-    theme=theme,
-    additional_inputs=gr.Dropdown(
-        choices=available_endpoints,
-        value=os.environ["MODEL_SERVING_ENDPOINT"],
-        label="Serving Endpoint",
-    ),
-    additional_inputs_accordion="Settings",
-)
+        type="messages"
+    )
+    textbox = gr.Textbox(
+        placeholder="Ask about customer data...",
+        container=False,
+        scale=7
+    )
+
+    feedback_output = gr.Markdown(visible=False)
+
+    # --- Feedback Handler: Extract trace_id from options ---
+    def handle_feedback(history, like_data: gr.LikeData):
+        idx = like_data.index
+        msg = history[idx]
+        trace_id = None
+
+        # Extract trace_id from options
+        if 'options' in msg:
+            for option in msg["options"]:
+                if option.get("label") == "trace_id":
+                    trace_id = option.get("value")
+                break
+
+        if not trace_id:
+            return gr.Markdown("No trace ID found for this message.", visible=True)
+        try:
+            mlflow.log_feedback(
+                trace_id=trace_id,
+                name='user_feedback',
+                value=True if like_data.liked else False,
+                rationale=None,
+                source=mlflow.entities.AssessmentSource(
+                    source_type='HUMAN',
+                    source_id='user',
+                ),
+            )
+            return gr.Markdown(f"Thank you for your feedback - sent to MLflow: {trace_id}", visible=True)
+        except Exception as e:
+            return gr.Markdown(f"Error submitting feedback: {str(e)}", visible=True)
+
+    def chat_submit(message, history, endpoint):
+        return respond(message, history, endpoint)
+
+    with gr.Row():
+        chatbot
+        feedback_output
+
+    textbox.submit(
+        chat_submit,
+        [textbox, chatbot, endpoint_dropdown],
+        chatbot
+    )
+
+    # Attach feedback handler (history, like_data)
+    chatbot.like(handle_feedback, chatbot, feedback_output)
+
+    gr.Examples(
+        examples=[
+            ["Give me the information about john21@example.net"],
+            ["What are the step-by-step instructions for updating the firmware on my SAT-SURVEY-2024 system?"],
+            ["Summarize all subscriptions held by john21@example.net"]
+        ],
+        inputs=[textbox]
+    )
 
 demo.queue(default_concurrency_limit=100)
 demo.launch(server_name="0.0.0.0", server_port=8000)

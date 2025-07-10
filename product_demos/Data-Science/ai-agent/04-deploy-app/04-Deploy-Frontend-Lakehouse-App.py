@@ -53,14 +53,39 @@ except Exception as e:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Capturing feedback straight to MLFlow
+# MAGIC ## Capturing feedback through MLFlow Tracing and Feedback API
 # MAGIC
 # MAGIC With MLFLow 3, it's now easy to directly capture feedback (thumb up/down) from your application!
+# MAGIC
+# MAGIC First, in your agent endpoint (or your application), make sure you capture the trace_id as part of your answer with `mlflow.get_current_active_span().trace_id`:
+# MAGIC
+# MAGIC
+# MAGIC ```
+# MAGIC     @mlflow.trace(span_type=SpanType.AGENT)
+# MAGIC     def predict(self, request: ResponsesAgentRequest):
+# MAGIC       return ResponsesAgentResponse(output=items, custom_outputs = {"trace_id": mlflow.get_current_active_span().trace_id})
+# MAGIC ```
+# MAGIC
+# MAGIC
+# MAGIC Then, simply use the `mlflow-tracing` in your chatbot backend to send emit the trace with the user feedback:
+# MAGIC
+# MAGIC
+# MAGIC ```
+# MAGIC mlflow.log_feedback(
+# MAGIC                 trace_id=trace_id, #the trace id capture, typically tr-xxxxx
+# MAGIC                 name='user_feedback',
+# MAGIC                 value=True if like_data.liked else False,
+# MAGIC                 rationale=None,
+# MAGIC                 source=mlflow.entities.AssessmentSource(source_type='HUMAN', source_id='user')
+# MAGIC             )
+# MAGIC ```
+# MAGIC
+# MAGIC *Note: you can also manage your own IDs - see the [feedback documentation](https://docs.databricks.com/aws/en/mlflow3/genai/tracing/collect-user-feedback/) for more details*
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Let's now create our chatbot application using Gradio
+# MAGIC ## Let's now create our chatbot application using Gradio using Databricks Applications
 
 # COMMAND ----------
 

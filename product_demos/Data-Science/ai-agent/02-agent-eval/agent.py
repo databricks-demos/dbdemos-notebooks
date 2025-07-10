@@ -161,7 +161,13 @@ class ToolCallingAgent(ResponsesAgent):
         items = []
         for content, msg_id in self._stream_events(request):
             items.append(self.create_text_output_item(text=content, id=msg_id or ""))
-        return ResponsesAgentResponse(output=items)
+        return ResponsesAgentResponse(output=items, custom_outputs = {"trace_id": self.get_active_trace_id()})
+
+    def get_active_trace_id(self):
+      active_span = mlflow.get_current_active_span()
+      if active_span:
+        return active_span.trace_id
+      return None
 
     @mlflow.trace(span_type=SpanType.AGENT)
     def predict_stream(self, request: ResponsesAgentRequest):
@@ -172,7 +178,8 @@ class ToolCallingAgent(ResponsesAgent):
             yield ResponsesAgentStreamEvent(**self.create_text_delta(delta=content, item_id=msg_id or ""))
             yield ResponsesAgentStreamEvent(
                 type="response.output_item.done",
-                item=self.create_text_output_item(text=content, id=msg_id or "")
+                item=self.create_text_output_item(text=content, id=msg_id or ""), 
+                custom_outputs = {"trace_id": self.get_active_trace_id()}
             )
 
     def get_resources(self):

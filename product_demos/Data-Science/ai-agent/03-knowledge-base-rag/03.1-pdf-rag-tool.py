@@ -208,14 +208,8 @@ docs
 
 # COMMAND ----------
 
-import yaml, sys, os
-import mlflow
-import mlflow.models
-# Add the ../agent_eval path relative to current working directory
-agent_eval_path = os.path.abspath(os.path.join(os.getcwd(), "../02_agent_eval"))
-#sys.path.append(os.path.join(agent_eval_path, 'agent.py'))
-sys.path.append(agent_eval_path)
-conf_path = os.path.join(agent_eval_path, 'agent_config.yaml')
+import yaml
+mlflow.set_experiment(os.getcwd().rsplit("/", 1)[0]+"/02-agent-eval/02.1_agent_evaluation")
 
 try:
     config = yaml.safe_load(open(conf_path))

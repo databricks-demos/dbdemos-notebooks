@@ -10,4 +10,4 @@
 # COMMAND ----------
 
 catalog = "main__build"
-dbName = db = "dbdemos_pk_fk"
+dbName = db = "dbdemos_sql_warehouse"

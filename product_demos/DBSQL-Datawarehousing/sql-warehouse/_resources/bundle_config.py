@@ -6,14 +6,14 @@
 # COMMAND ----------
 
 {
-  "name": "identity-pk-fk",
+  "name": "sql-warehouse", 
   "category": "DBSQL",
   "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
-  "default_schema": "dbdemos_pk_fk",
-  "title": "Data Warehousing with Identity, Primary Key & Foreign Key",
-  "description": "Define your schema with auto incremental column and Primary + Foreign Key. Ideal for Data Warehouse & BI support!",
+  "default_schema": "dbdemos_sql_warehouse",
+  "title": "Data Warehousing with Identity, PK/FK, Stored Proc and loops",
+  "description": "Explore the latest SQL warehouse capabilities: incremental column and Primary + Foreign Key, strored procedure, loops and more!",
   "fullDescription": "To simplify SQL operations and support migrations from on-prem and alternative warehouse, Databricks Lakehouse now provide convenient ways to build Entity Relationship Diagrams that are simple to maintain and evolve. In this demo, we'll cover:<ul><li>The ability to automatically generate auto-incrementing identify columns. Just insert data and the engine will automatically increment the ID.</li><li>Support for defining primary key</li><li>Support for defining foreign key constraints.</li></ul>Databricks Lakehouse is the best Datawarehouse!",
   "usecase": "Data Warehousing & BI",
   "products": ["Databricks SQL", "Dashboard", "Delta Lake"],
@@ -48,7 +48,15 @@
       "add_cluster_setup_cell": True, 
       "title":  "Identify column, PK & FK", 
       "description": "Define your schema with auto incremental column and Primary + Foreign Key."
-    }
+    },
+    {
+      "path": "01-Advanced-SQL-Warehouse", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True, 
+      "title":  "Stored proc and Loops", 
+      "description": "Explore most advanced Databricks SQL capabilities"
+    }    
   ],
   "cluster": {
       "spark_conf": {

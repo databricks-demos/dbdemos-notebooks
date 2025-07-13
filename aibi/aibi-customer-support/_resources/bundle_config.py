@@ -8,7 +8,7 @@
 {
     "name": "aibi-customer-support",
     "category": "AI-BI",
-    "title": "AI/BI: Customer Support Performance Review",
+    "title": "AI/BI: AI-Assisted Customer Support Performance Review",
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_aibi_customer_support",
@@ -30,7 +30,7 @@
     "pipelines": [],
     "dashboards": [
       {
-        "name": "[dbdemos] AIBI - Customer Support Team Review",
+        "name": "[dbdemos] AIBI - AI-Assisted Customer Support Team Review",
         "id": "customer-support"
       }
     ],
@@ -85,6 +85,7 @@
             agent_group STRING COMMENT 'Represents the group of agents responsible for the ticket, providing a way to analyze performance and workload.',
             agent_name STRING COMMENT 'Identifies the individual agent responsible for the ticket, allowing tracking of individual agent performance.',
             agent_interactions DOUBLE COMMENT 'Represents the number of interactions the agent has had with the customer, giving insight into the complexity of the issue and the agents workload.',
+            ai_suggestion_accepted INTEGER COMMENT 'Indicates whether the AI-generated suggestion was accepted by the customer.',
             PRIMARY KEY (ticket_id) RELY
         )
         USING delta COMMENT 'The agents_clean table contains information about the customer support agents and their interactions with customers. It includes details such as the number of interactions per agent and the agent group they belong to. This data can be used to analyze agent performance, identify high-performing and low-performing groups, and optimize agent allocation for better customer support. Additionally, it can help in identifying potential training needs for individual agents or groups.';
@@ -103,6 +104,13 @@
             country STRING COMMENT 'Identifies the country where the ticket was generated, providing information about the geographical location of the customer or system.',
             latitude DOUBLE COMMENT 'Represents the latitude of the customer or system location, providing more precise information about the geographical location.',
             longitude DOUBLE COMMENT 'Represents the longitude of the customer or system location, providing more precise information about the geographical location.',
+            operational_cost DOUBLE COMMENT 'Represents the operational cost associated with the ticket',
+            compliance_greeting STRING COMMENT 'Represents the compliance status of the ticket',
+            compliance_data_leak STRING COMMENT 'Represents the data leak status of the ticket',
+            call_sentiment_score DOUBLE COMMENT 'Represents the sentiment score of the customer support conversation',
+            compliance_score DOUBLE COMMENT 'Represents the compliance score of the ticket',    
+            transcript_compliance STRING COMMENT 'Contains the compliance status of the customer support conversation',
+            csat_score DOUBLE COMMENT 'The CSAT score of the ticket',
             PRIMARY KEY (ticket_id) RELY
         ) USING delta COMMENT 'The tickets_clean table contains customer support tickets that have been cleaned and preprocessed. It includes details such as ticket status, priority, source, topic, and geographical location. This data can be used for monitoring and managing customer support tickets, tracking ticket resolution times, and analyzing customer support patterns based on factors like ticket source, priority, and geographical location. This information can help improve customer support processes and identify potential areas for improvement.';
         """,
@@ -116,6 +124,9 @@
             resolution_time TIMESTAMP COMMENT 'The actual time taken to resolve the ticket.',
             sla_for_resolution STRING COMMENT 'The SLA achieved for resolving the ticket.',
             survey_results DOUBLE COMMENT 'The survey results for the customers experience with the support ticket, measured on a numerical scale.',
+            sla_penalty_cost DOUBLE COMMENT 'The penalty incurred for not meeting the SLA for resolving the ticket.',
+            clv_risk DOUBLE COMMENT 'The customer lifetime value (CLV) risk associated with the ticket.',
+            interaction_notes STRING COMMENT 'Contains any additional notes or comments related to the agent\'s interactions with the customer.',
             PRIMARY KEY (ticket_id) RELY
         )
         USING delta COMMENT 'The sla_clean table contains information about the Service Level Agreements (SLAs) for customer support tickets. It includes details about the expected SLAs for first response and resolution, as well as the actual SLAs achieved. This data can be used to assess the performance of customer support teams, identify bottlenecks, and track improvements in SLAs over time. Additionally, survey results are included to provide feedback on the quality of customer support.';
@@ -124,17 +135,32 @@
       [
         """
         INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean
-        SELECT ticket_id, agent_group, agent_name, try_cast(agent_interactions AS DOUBLE) AS agent_interactions
+        SELECT ticket_id, agent_group, agent_name, try_cast(agent_interactions AS DOUBLE) AS agent_interactions, ai_suggestion_accepted
         FROM `{{CATALOG}}`.`{{SCHEMA}}`.agents_bronze;
         """,
         """
         INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean
         SELECT ticket_id, status, priority, source, topic, created_time, close_time, product_group, support_level, country, try_cast(latitude AS DOUBLE) AS latitude, try_cast(longitude AS DOUBLE) AS longitude
+        , try_cast(operational_cost AS DOUBLE) AS operational_cost
+        , call_transcript
+        , compliance_greeting
+        , compliance_data_leak
+        , call_sentiment_score
+        , compliance_score
+        , csat_score
         FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze;
         """,
         """
         INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean
-        SELECT ticket_id, expected_sla_to_resolve, expected_sla_to_first_response, first_response_time, sla_for_first_response, resolution_time, sla_for_resolution, try_cast(survey_results AS DOUBLE) AS survey_results
+        SELECT ticket_id, expected_sla_to_resolve, expected_sla_to_first_response
+        , first_response_time
+        , sla_for_first_response
+        , resolution_time
+        , sla_for_resolution
+        , try_cast(survey_results AS DOUBLE) AS survey_results
+        , try_cast(sla_penalty_cost AS DOUBLE) AS sla_penalty_cost
+        , try_cast(clv_risk AS DOUBLE) AS clv_risk
+        , interaction_notes
         FROM `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze;
         """
       ],

@@ -226,7 +226,11 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # COMMAND ----------
 
 # AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col') or c == 'split'][0]
+### Get all columns that star with _automl_split_col or split. It's possible that both exist.
+split_cols = [c for c in df_loaded.columns if c.startswith('_automl_split_col') or c == 'split']
+
+### Use one of these to determine the split
+split_col = split_cols[0]
 
 # AutoML completed train - validation - test split internally and used split to specify the set
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
@@ -234,13 +238,16 @@ split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
 split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
 # Separate target co# Separate target column from features and drop split
-X_train = split_train_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
+### Make sure that all columns meant for splits are dropped
+X_train = split_train_df.drop([target_col] + [c for c in split_cols], errors='ignore', axis=1)
 y_train = split_train_df[target_col]
 
-X_val = split_val_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
+### Make sure that all columns meant for splits are dropped
+X_val = split_val_df.drop([target_col] + [c for c in split_cols], errors='ignore', axis=1)
 y_val = split_val_df[target_col]
 
-X_test = split_test_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
+### Make sure that all columns meant for splits are dropped
+X_test = split_test_df.drop([target_col] + [c for c in split_cols], errors='ignore', axis=1)
 y_test = split_test_df[target_col]
 
 if len(X_val) == 0: #hack for the demo to support all version - don't do that in production

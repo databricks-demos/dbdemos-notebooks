@@ -21,8 +21,8 @@
 # MAGIC * **Incremental** & **cost-efficient** ingestion (removes unnecessary listing or state handling)
 # MAGIC * **Simple** and **resilient** operation: no tuning or manual code required
 # MAGIC * Scalable to **billions of files**
-# MAGIC   * Using incremental listing (recommended, relies on filename order)
-# MAGIC   * Leveraging notification + message queue (when incremental listing can't be used)
+# MAGIC   * Using incremental listing (deprecated, relies on filename order)
+# MAGIC   * Leveraging notification + message queue (recommended)
 # MAGIC * **Schema inference** and **schema evolution** are handled out of the box for most formats (csv, json, avro, images...)
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -175,12 +175,12 @@ new_row.write.format("json").mode("append").save(volume_folder + "/user_json")
 # MAGIC
 # MAGIC To solve this issue and support an efficient listing, Databricks autoloader offers two modes:
 # MAGIC
-# MAGIC - Incremental listing with `cloudFiles.useIncrementalListing` (recommended), based on the alphabetical order of the file's path to only scan new data: (`ingestion_path/YYYY-MM-DD`)
-# MAGIC - Notification system, which sets up a managed cloud notification system sending new file name to a queue (when we can't rely on file name order). See `cloudFiles.useNotifications` for more details.
+# MAGIC - Incremental listing with `cloudFiles.useIncrementalListing` (deprecated), based on the alphabetical order of the file's path to only scan new data: (`ingestion_path/YYYY-MM-DD`)
+# MAGIC - Notification system, which sets up a managed cloud notification system sending new file name to a queue (recommended). See `cloudFiles.useNotifications` for more details.
 # MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/autoloader-mode.png" width="700"/>
 # MAGIC
-# MAGIC Use the incremental listing option whenever possible. Databricks Auto Loader will try to auto-detect and use the incremental approach when possible.
+# MAGIC Use the notification system option whenever possible.
 
 # COMMAND ----------
 

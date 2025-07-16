@@ -1,6 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow to load our model
-# MAGIC %pip install mlflow==2.22.0
+# MAGIC %pip install mlflow==3.1.0
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
 # MAGIC dbutils.library.restartPython()
 
@@ -18,10 +18,7 @@
 # COMMAND ----------
 
 import mlflow
-mlflow.set_registry_uri('databricks-uc')
-#                                                                                                                        Stage/version  
-#                                                                                           Model name                          |        
-#                                                                                               |                               |        
+mlflow.set_registry_uri('databricks-uc')     
 predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
 spark.udf.register("predict_maintenance", predict_maintenance_udf)
 

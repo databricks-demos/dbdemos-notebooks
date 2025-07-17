@@ -41,7 +41,7 @@ if reset_all_data or DBDemos.is_any_folder_empty([folder+"/historical_turbine_st
   parent_count = path[path.rfind("lakehouse-iot-platform"):].count('/') - 1
   prefix = "./" if parent_count == 0 else parent_count*"../"
   prefix = f'{prefix}_resources/'
-  dbutils.notebook.run(prefix+"01-load-data", 600, {"reset_all_data": dbutils.widgets.get("reset_all_data"), "catalog": catalog, "db": db})
+  dbutils.notebook.run(prefix+"01-load-data", 600, {"catalog": catalog, "db": db})
 else:
   print("data already existing. Run with reset_all_data=true to force a data cleanup for your local demo.")
 

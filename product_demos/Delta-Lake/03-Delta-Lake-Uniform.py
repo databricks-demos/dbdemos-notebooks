@@ -46,8 +46,13 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ##  Create a UniForm-enabled Delta table
+
+# COMMAND ----------
+
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS user_uniform ( id BIGINT, firstname STRING, lastname STRING, email STRING)
+# MAGIC CREATE OR REPLACE TABLE user_uniform ( id BIGINT, firstname STRING, lastname STRING, email STRING)
 # MAGIC     TBLPROPERTIES ('delta.universalFormat.enabledFormats' = 'iceberg', 
 # MAGIC                    'delta.enableIcebergCompatV2' = 'true')
 
@@ -57,6 +62,24 @@
 # MAGIC INSERT INTO user_uniform SELECT id, firstname, lastname, email FROM user_delta;  
 # MAGIC
 # MAGIC SELECT * FROM user_uniform;
+
+# COMMAND ----------
+
+# DBTITLE 1,Check if relevant Uniform property is present in table
+spark.sql("""
+SHOW TBLPROPERTIES user_uniform
+""").filter("key LIKE 'delta.universalFormat%' OR key LIKE 'delta_uniform_%'").display()
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC update user_uniform set firstname = 'John_c' where id < 100
+
+# COMMAND ----------
+
+# DBTITLE 1,Run Describe extended to Fetch Metdata Location
+# MAGIC %sql
+# MAGIC describe extended user_uniform
 
 # COMMAND ----------
 
@@ -72,15 +95,22 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SHOW TBLPROPERTIES user_uniform;
+# MAGIC %md
+# MAGIC ### Upgrade Existing Table to UniForm (Optional)
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# If needed, upgrade legacy Delta tables using REORG
+spark.sql("""
+REORG TABLE user_uniform
+ APPLY (UPGRADE UNIFORM(ICEBERG_COMPAT_VERSION=2)) """)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Access your Delta Lake table using Iceberg REST Catalog API
-# MAGIC
-# MAGIC Our Delta Lake table is now available by any system reading Iceberg tables, such as native Iceberg reader or external system like Big Query.
 # MAGIC
 # MAGIC If you're using an external storage, Databricks expose the table information through:
 
@@ -118,6 +148,52 @@ table_info['delta_uniform_iceberg']
 # MAGIC ```
 # MAGIC
 # MAGIC For more details, see [the Uniform Documentation](https://docs.databricks.com/en/delta/uniform.html)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Uniform works only with Unity Catalog and not HMS
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC use catalog hive_metastore;
+# MAGIC use schema default;
+# MAGIC
+# MAGIC create external table user_uniform_hms location '/tmp/dbdemos/user_uniform_hms' as select * from main__build.dbdemos_delta_lake.user_uniform
+
+# COMMAND ----------
+
+# DBTITLE 1,ALTER table to Iceberg on HMS table gives error
+# MAGIC %sql
+# MAGIC ALTER table user_uniform_hms set TBLPROPERTIES ('delta.columnMapping.mode' = 'name', 'delta.universalFormat.enabledFormats' = 'iceberg')
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Uniform Limitations
+# MAGIC
+# MAGIC Go to Limitations : https://docs.databricks.com/aws/en/delta/uniform#limitations
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# DBTITLE 1,Uniform Doesn't work with Deletion Vectors
+# MAGIC %sql
+# MAGIC use main__build.dbdemos_delta_lake;
+# MAGIC create table user_uniform_dv as select * from user_delta
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC alter table user_uniform_dv set tblproperties ('delta.enableDeletionVectors' = true)
+
+# COMMAND ----------
+
+# DBTITLE 1,Gives error as DV should be disabled
+# MAGIC %sql
+# MAGIC ALTER table user_uniform_dv set TBLPROPERTIES ('delta.columnMapping.mode' = 'name', 'delta.universalFormat.enabledFormats' = 'iceberg', 'delta.enableIcebergCompatV2' = 'true')
 
 # COMMAND ----------
 

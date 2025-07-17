@@ -3,7 +3,7 @@ input_example:
 - content: Give me the orders for john21@example.net
   role: user
 llm_endpoint_name: databricks-claude-3-7-sonnet
-mlflow_xp_id: d101c89cbb0f48bf93de60ce5db5ea00
+max_history_messages: 20
 retriever_config: null
 system_prompt: Your job is to provide customer help. call the tool to answer.
 uc_tool_names:

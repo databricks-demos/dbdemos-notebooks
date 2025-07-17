@@ -1,210 +1,221 @@
-from typing import Any, Generator, Optional, Sequence, List, Dict
-import mlflow
-from mlflow.entities import SpanType
-from mlflow.pyfunc import ResponsesAgent
-from mlflow.types.responses import ResponsesAgentRequest, ResponsesAgentResponse, ResponsesAgentStreamEvent
+import json
+from typing import Annotated, Any, Generator, Optional, Sequence, TypedDict, Union
+from uuid import uuid4
 
+import mlflow
 from databricks_langchain import (
     ChatDatabricks,
+    UCFunctionToolkit,
     VectorSearchRetrieverTool,
     DatabricksFunctionClient,
-    UCFunctionToolkit,
-    set_uc_function_client
+    set_uc_function_client,
 )
 
-from mlflow.models.resources import DatabricksFunction, DatabricksServingEndpoint
-from unitycatalog.ai.langchain.toolkit import UnityCatalogTool
-
-from langchain_core.messages.ai import AIMessage
-from langchain_core.messages.tool import ToolMessage
-from langchain_core.runnables import RunnableLambda
 from langchain_core.language_models import LanguageModelLike
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    BaseMessage,
+    convert_to_openai_messages,
+)
+from langchain_core.runnables import RunnableConfig, RunnableLambda
 from langchain_core.tools import BaseTool
 
 from langgraph.graph import END, StateGraph
-from langgraph.graph.state import CompiledStateGraph
+from langgraph.graph.message import add_messages
 from langgraph.prebuilt.tool_node import ToolNode
-import uuid
 
-# Automatically log LangChain events to MLflow
+from mlflow.entities import SpanType
+from mlflow.pyfunc import ResponsesAgent
+from mlflow.models import ModelConfig
+from mlflow.models.resources import DatabricksFunction, DatabricksServingEndpoint
+from mlflow.types.responses import (
+    ResponsesAgentRequest,
+    ResponsesAgentResponse,
+    ResponsesAgentStreamEvent,
+)
+
+# Enable MLflow LangChain auto-trace
 mlflow.langchain.autolog()
 
-# Set up Databricks Function client for Unity Catalog function toolkit
+# Required to use Unity Catalog UDFs as tools
 set_uc_function_client(DatabricksFunctionClient())
 
-class ToolCallingAgent(ResponsesAgent):
-    """
-    Agent class using LangGraph and MLflow to orchestrate tool-calling behavior
-    based on user queries and long-running interactions. Supports tool chaining,
-    conversational history, summarization, and streaming output.
-    """
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+    custom_inputs: Optional[dict[str, Any]]
+    custom_outputs: Optional[dict[str, Any]]
 
+
+def create_tool_calling_agent(
+    model: LanguageModelLike,
+    tools: Union[ToolNode, Sequence[BaseTool]],
+    system_prompt: Optional[str] = None,
+):
+    model = model.bind_tools(tools)
+
+    def should_continue(state: AgentState):
+        last = state["messages"][-1]
+        return "continue" if isinstance(last, AIMessage) and last.tool_calls else "end"
+
+    pre = (
+        RunnableLambda(lambda s: [{"role": "system", "content": system_prompt}] + s["messages"])
+        if system_prompt
+        else RunnableLambda(lambda s: s["messages"])
+    )
+    model_runnable = pre | model
+
+    def call_model(state: AgentState, config: RunnableConfig):
+        return {"messages": [model_runnable.invoke(state, config)]}
+
+    graph = StateGraph(AgentState)
+    graph.add_node("agent", RunnableLambda(call_model))
+    graph.add_node("tools", ToolNode(tools))
+    graph.set_entry_point("agent")
+    graph.add_conditional_edges("agent", should_continue, {"continue": "tools", "end": END})
+    graph.add_edge("tools", "agent")
+
+    return graph.compile()
+
+
+class LangGraphResponsesAgent(ResponsesAgent):
     def __init__(
         self,
         uc_tool_names: Sequence[str] = ("main_build.dbdemos_ai_agent.*",),
-        llm_endpoint_name: str = "databricks-claude-sonnet-4",
+        llm_endpoint_name: str = "databricks-meta-llama-3-70b-instruct",
         system_prompt: Optional[str] = None,
         retriever_config: Optional[dict] = None,
         max_history_messages: int = 20,
     ):
-        # Initialize LLM and tools from Unity Catalog and optionally Vector Search
         self.llm_endpoint_name = llm_endpoint_name
-        self.llm = ChatDatabricks(endpoint=llm_endpoint_name)
-        self.tools: List[BaseTool] = UCFunctionToolkit(function_names=list(uc_tool_names)).tools
+        self.system_prompt = system_prompt
+        self.max_history_messages = max_history_messages
 
-        # Optionally add a vector search tool to the agent
+        self.llm = ChatDatabricks(endpoint=llm_endpoint_name)
+        self.tools: list[BaseTool] = UCFunctionToolkit(function_names=list(uc_tool_names)).tools
+
         if retriever_config:
             self.tools.append(
                 VectorSearchRetrieverTool(
                     index_name=retriever_config.get("index_name"),
-                    name=retriever_config.get("tool_name"),
-                    description=retriever_config.get("description"),
-                    num_results=retriever_config.get("num_results"),
+                    name=retriever_config.get("tool_name", "retriever"),
+                    description=retriever_config.get("description", "Vector search tool"),
+                    num_results=retriever_config.get("num_results", 3),
                 )
             )
 
-        self.max_history_messages = max_history_messages
-        self.system_prompt = system_prompt
-        self.graph: CompiledStateGraph = self._build_graph(system_prompt)
+        self.agent = create_tool_calling_agent(self.llm, self.tools, system_prompt)
 
-    def _build_graph(self, system_prompt: Optional[str]) -> CompiledStateGraph:
-        """
-        Construct a LangGraph-based loop: [agent -> tool -> agent -> ...] until no tool calls.
-        """
+    def _responses_to_cc(self, message: dict[str, Any]) -> list[dict[str, Any]]:
+        msg_type = message.get("type")
+        if msg_type == "function_call":
+            return [{
+                "role": "assistant",
+                "content": "tool_call",
+                "tool_calls": [{
+                    "id": message["call_id"],
+                    "type": "function",
+                    "function": {
+                        "arguments": message["arguments"],
+                        "name": message["name"],
+                    },
+                }],
+            }]
+        elif msg_type == "message" and isinstance(message["content"], list):
+            return [{"role": message["role"], "content": content["text"]} for content in message["content"]]
+        elif msg_type == "reasoning":
+            return [{"role": "assistant", "content": json.dumps(message["summary"])}]
+        elif msg_type == "function_call_output":
+            return [{
+                "role": "tool",
+                "content": message["output"],
+                "tool_call_id": message["call_id"],
+            }]
+        filtered = {k: v for k, v in message.items() if k in {"role", "content", "name", "tool_calls", "tool_call_id"}}
+        return [filtered] if filtered else []
 
-        model = self.llm.bind_tools(self.tools)
-
-        def should_continue(state: dict):
-            last = state["messages"][-1]
-            tc = (last.get("tool_calls") if isinstance(last, dict)
-                  else last.tool_calls if isinstance(last, AIMessage)
-                  else None)
-            return "continue" if tc else "end"
-
-        # Optionally prepend system prompt
-        pre = RunnableLambda(lambda s: [{"role": "system", "content": system_prompt}] + s["messages"]) if system_prompt \
-              else RunnableLambda(lambda s: s["messages"])
-        runnable = pre | model
-
-        def call_agent(state, config):
-            ai_msg = runnable.invoke(state, config)
-            return {"messages": state["messages"] + [ai_msg]}
-
-        def call_tool(state, config):
-            # Use LangGraph tool node to execute any tools requested
-            tool_node = ToolNode(self.tools)
-            result = tool_node.invoke(state, config)
-            tool_messages = result.get("messages", [])
-            if not all(isinstance(m, ToolMessage) for m in tool_messages):
-                raise ValueError("Expected ToolMessage list in tool node result")
-            return {"messages": state["messages"] + tool_messages}
-
-        # Define graph structure
-        graph = StateGraph(dict)
-        graph.add_node("agent", RunnableLambda(call_agent))
-        graph.add_node("tools", RunnableLambda(call_tool))
-        graph.set_entry_point("agent")
-        graph.add_conditional_edges("agent", should_continue, {"continue": "tools", "end": END})
-        graph.add_edge("tools", "agent")
-        return graph.compile()
-
-    def _mlflow_messages_to_dicts(self, messages: Sequence[Any]) -> List[Dict[str, str]]:
-        # Convert MLflow message objects to simple {role, content} dictionaries
-        return [{"role": m.role, "content": m.content,} for m in messages]
-
-    def _summarize_history(self, messages: List[Dict[str, str]]) -> str:
-        # Summarize older chat history using LLM if the message count exceeds max_history
-        llm = ChatDatabricks(endpoint=self.llm_endpoint_name)
-        prompt = "Summarize the following conversation between a user and an assistant:\n\n"
-        for m in messages:
-            prompt += f"{m['role'].capitalize()}: {m['content']}\n"
-        prompt += "\nSummary:"
-        response = llm.invoke([{"role": "user", "content": prompt}])
-        return response.content if hasattr(response, "content") else str(response)
-
-    def _truncate_and_summarize_history(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
-        # If history is too long, summarize older messages and keep the recent ones
-        if len(messages) <= self.max_history_messages:
-            return messages
-        to_summarize = messages[:-self.max_history_messages]
-        recent = messages[-self.max_history_messages:]
-        summary = self._summarize_history(to_summarize)
-        summarized_history = [{"role": "system", "content": f"Summary of earlier conversation: {summary}"}] + recent
-        return summarized_history
-
-    def _stream_events(self, request: ResponsesAgentRequest):
-        full_history = self._mlflow_messages_to_dicts(request.input)
-        processed_history = self._truncate_and_summarize_history(full_history)
-        state = {"messages": processed_history}
-        for event in self.graph.stream(state, stream_mode="updates"):
-            for node_out in event.values():
-                for msg in node_out.get("messages", []):
-                    if isinstance(msg, AIMessage):
-                        # Ensure every message has a unique id
-                        if not hasattr(msg, "id") or not msg.id:
-                            msg.id = str(uuid.uuid4())
-                        content, msg_id = msg.content, msg.id
-                    elif isinstance(msg, ToolMessage):
-                        if not hasattr(msg, "tool_call_id") or not msg.tool_call_id:
-                            msg.tool_call_id = str(uuid.uuid4())
-                        content, msg_id = msg.content, msg.tool_call_id
-                    else:
-                        content, msg_id = msg.get("content"), msg.get("id", str(uuid.uuid4()))
-                    yield content, msg_id
-
+    def _langchain_to_responses(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        for message in messages:
+            message = message.model_dump()
+            if message["type"] == "ai":
+                if tool_calls := message.get("tool_calls"):
+                    return [
+                        self.create_function_call_item(
+                            id=message.get("id") or str(uuid4()),
+                            call_id=tc["id"],
+                            name=tc["name"],
+                            arguments=json.dumps(tc["args"]),
+                        )
+                        for tc in tool_calls
+                    ]
+                mlflow.update_current_trace(response_preview=message["content"])
+                return [self.create_text_output_item(
+                    text=message["content"],
+                    id=message.get("id") or str(uuid4())
+                )]
+            elif message["type"] == "tool":
+                return [self.create_function_call_output_item(
+                    call_id=message["tool_call_id"],
+                    output=message["content"]
+                )]
+        return []
 
     @mlflow.trace(span_type=SpanType.AGENT)
     def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
-        """
-        Non-streaming predict call for synchronous APIs (returns full response).
-        """
-        items = []
-        for content, msg_id in self._stream_events(request):
-            items.append(self.create_text_output_item(text=content, id=msg_id or ""))
-        return ResponsesAgentResponse(output=items, custom_outputs = {"trace_id": self.get_active_trace_id()})
-
-    def get_active_trace_id(self):
-      active_span = mlflow.get_current_active_span()
-      if active_span:
-        return active_span.trace_id
-      return None
+        outputs = [
+            event.item for event in self.predict_stream(request)
+            if event.type == "response.output_item.done"
+        ]
+        return ResponsesAgentResponse(output=outputs, custom_outputs=request.custom_inputs)
 
     @mlflow.trace(span_type=SpanType.AGENT)
-    def predict_stream(self, request: ResponsesAgentRequest):
-        """
-        Streaming predict call for real-time apps (yields deltas + final message).
-        """
-        for content, msg_id in self._stream_events(request):
-            yield ResponsesAgentStreamEvent(**self.create_text_delta(delta=content, item_id=msg_id or ""))
-            yield ResponsesAgentStreamEvent(
-                type="response.output_item.done",
-                item=self.create_text_output_item(text=content, id=msg_id or ""), 
-                custom_outputs = {"trace_id": self.get_active_trace_id()}
-            )
+    def predict_stream(
+        self, request: ResponsesAgentRequest,
+    ) -> Generator[ResponsesAgentStreamEvent, None, None]:
+        cc_msgs = []
+        mlflow.update_current_trace(request_preview=request.input[0].content)
+        for msg in request.input:
+            cc_msgs.extend(self._responses_to_cc(msg.model_dump()))
 
+        # Limit history to the most recent max_history_messages
+        if len(cc_msgs) > self.max_history_messages:
+            cc_msgs = cc_msgs[-self.max_history_messages:]
+        for event in self.agent.stream({"messages": cc_msgs}, stream_mode=["updates", "messages"]):
+            if event[0] == "updates":
+                for node_data in event[1].values():
+                    for item in self._langchain_to_responses(node_data["messages"]):
+                        yield ResponsesAgentStreamEvent(type="response.output_item.done", item=item)
+            elif event[0] == "messages":
+                try:
+                    chunk = event[1][0]
+                    if isinstance(chunk, AIMessageChunk) and (content := chunk.content):
+                        yield ResponsesAgentStreamEvent(
+                            **self.create_text_delta(delta=content, item_id=chunk.id),
+                        )
+                except Exception:
+                    pass
+                
     def get_resources(self):
-        """
-        Declare all external tools and endpoints used, for audit/visualization.
-        """
         res = [DatabricksServingEndpoint(endpoint_name=self.llm.endpoint)]
         for t in self.tools:
             if isinstance(t, VectorSearchRetrieverTool):
                 res.extend(t.resources)
-            elif isinstance(t, UnityCatalogTool):
+            elif hasattr(t, "uc_function_name"):
                 res.append(DatabricksFunction(function_name=t.uc_function_name))
         return res
 
-# Load configuration from YAML (for local dev or MLF model eval)
-model_config = mlflow.models.ModelConfig(development_config='../02-agent-eval/agent_config.yaml')
+
+# Load configuration values from YAML
+model_config = ModelConfig(development_config="../02-agent-eval/agent_config.yaml")
 
 # Instantiate agent
-AGENT = ToolCallingAgent(
-    uc_tool_names=model_config.get('uc_tool_names'),
-    llm_endpoint_name=model_config.get('llm_endpoint_name'),
-    system_prompt=model_config.get('system_prompt'),
-    retriever_config=model_config.get('retriever_config'),
-    max_history_messages=20
+AGENT = LangGraphResponsesAgent(
+    uc_tool_names=model_config.get("uc_tool_names"),
+    llm_endpoint_name=model_config.get("llm_endpoint_name"),
+    system_prompt=model_config.get("system_prompt"),
+    retriever_config=model_config.get("retriever_config"),
+    max_history_messages=model_config.get("max_history_messages"),
 )
 
-# Register the agent with MLflow
+# Register agent with MLflow for inference
 mlflow.models.set_model(AGENT)

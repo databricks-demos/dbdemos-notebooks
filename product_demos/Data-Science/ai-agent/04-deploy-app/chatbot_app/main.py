@@ -35,15 +35,42 @@ def respond(message, history, dropdown):
             "role": "user",
             "type": "message"
         }]
-        
+        """
+        TODO IRVIN
+        replace w.api_client.do( by: 
+        import mlflow
+import mlflow.deployments
+
+client = mlflow.deployments.get_deploy_client("databricks")
+
+input_message = [{
+            "content": "test",
+            "role": "user",
+            "type": "message"
+        }]
+
+response = client.predict(
+  # Endpoint from above.
+  endpoint=ENDPOINT_NAME,
+  inputs={'input': input_message, "databricks_options": {
+      # Return the trace so we can get the trace_id for logging feedback.
+      "return_trace": True
+    }}
+)
+response
+and also the trace id shouldn't be in         trace_id = response.get('custom_outputs').get('trace_id') anymore (we are removing custom_output)
+
+        """
         response = w.api_client.do(
             'POST',
             f'/serving-endpoints/{dropdown}/invocations',
             body={'input': input_message}
         )
         print(f"Response: {response}")
+        
         output_messages = response['output']
-        trace_id = response.get('custom_outputs').get('trace_id')
+        """TODO IRVIN: change here 
+        trace_id = response.get('custom_outputs').get('trace_id') """
         print(f"Trace ID: {trace_id}")
         thoughts = []
         for msg in output_messages[:-1]:

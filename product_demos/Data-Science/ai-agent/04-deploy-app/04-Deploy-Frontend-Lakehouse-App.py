@@ -57,13 +57,18 @@ except Exception as e:
 # MAGIC
 # MAGIC With MLFLow 3, it's now easy to directly capture feedback (thumb up/down) from your application!
 # MAGIC
-# MAGIC First, in your agent endpoint (or your application), make sure you capture the trace_id as part of your answer with `mlflow.get_current_active_span().trace_id`:
-# MAGIC
-# MAGIC
 # MAGIC ```
-# MAGIC     @mlflow.trace(span_type=SpanType.AGENT)
-# MAGIC     def predict(self, request: ResponsesAgentRequest):
-# MAGIC       return ResponsesAgentResponse(output=items, custom_outputs = {"trace_id": mlflow.get_current_active_span().trace_id})
+# MAGIC client = mlflow.deployments.get_deploy_client("databricks")
+# MAGIC
+# MAGIC input_message = [{"content": "test", "role": "user", "type": "message"}]
+# MAGIC
+# MAGIC response = client.predict(
+# MAGIC   endpoint=ENDPOINT_NAME,
+# MAGIC   inputs={'input': input_message, "databricks_options": {
+# MAGIC       # Return the trace so we can get the trace_id for logging feedback.
+# MAGIC       "return_trace": True
+# MAGIC     }}
+# MAGIC )
 # MAGIC ```
 # MAGIC
 # MAGIC
@@ -72,7 +77,7 @@ except Exception as e:
 # MAGIC
 # MAGIC ```
 # MAGIC mlflow.log_feedback(
-# MAGIC                 trace_id=trace_id, #the trace id capture, typically tr-xxxxx
+# MAGIC                 trace_id=trace_id, #the trace id present in the response, typically tr-xxxxx
 # MAGIC                 name='user_feedback',
 # MAGIC                 value=True if like_data.liked else False,
 # MAGIC                 rationale=None,

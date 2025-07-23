@@ -6,29 +6,30 @@
 # MAGIC
 # MAGIC ## Optimizing our bike rental business - ETL pipeline
 # MAGIC Our fictional company operates bike rental stations across the city. The primary goal of this data pipeline is to transform raw operational data—such as ride logs, maintenance records, and weather information—into a structured and refined format, enabling comprehensive analytics. <br/>
-# MAGIC This allows us to track key business metrics like total revenue, forecast future earnings, understand revenue contributions from members versus non-members, and crucially, identify and quantify revenue loss due to maintenance issues. 
+# MAGIC This allows us to track key business metrics like total revenue, forecast future earnings, understand revenue contributions from members versus non-members, analyze customer behavior and lifetime value, and crucially, identify and quantify revenue loss due to maintenance issues. 
 # MAGIC
 # MAGIC By providing these insights, the pipeline empowers us to optimize operations, improve bike availability, and ultimately maximize profitability.
 # MAGIC
-# MAGIC We'll be using as input a raw dataset containing information coming from our ride tracking system as well as data from our maintenence system as well as some weather data. Our goal is to ingest this data in near real time and build table for our analyst team while ensuring data quality.
+# MAGIC We'll be using as input a raw dataset containing information coming from our ride tracking system as well as data from our maintenence system, weather data, and customer CDC events. Our goal is to ingest this data in near real time and build table for our analyst team while ensuring data quality.
 # MAGIC
 # MAGIC ### Getting started with the new pipeline editor
 # MAGIC Databricks provides a [rich editor](https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-0.png?raw=true) to help you build and navigate through your different pipeline steps! 
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-Lakeflow-Declarative-Pipeline-Introduction&demo_name=declarative-pipelines&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=00-Lakeflow-Declarative-Pipeline-Introduction&demo_name=declarative-pipelines&event=VIEW">
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC #### 1/ Exploring the data
-# MAGIC First, open the [notebook in the Exploration folder]($./explorations/Exploring the Data) to discover our dataset.
+# MAGIC First, open the [notebook in the Exploration folder]($./explorations/01-Exploring-the-Data) to discover our dataset.
 # MAGIC
-# MAGIC We'll consume data from 3 sources, all available to us as raw CSV or JSON file in our schema volume:
+# MAGIC We'll consume data from 4 sources, all available to us as raw CSV or JSON file in our schema volume:
 # MAGIC
 # MAGIC - **maintenance_logs** (all the maintenance details, as csv files)
 # MAGIC - **rides** (the ride informations, including comments from users using the mobile application)
 # MAGIC - **weather** (current and forecast, as JSON file)
+# MAGIC - **customers** (customer CDC data for Auto CDC processing, as parquet files)
 # MAGIC
 
 # COMMAND ----------
@@ -62,15 +63,17 @@
 # MAGIC - maintenance_logs_raw
 # MAGIC - rides_raw
 # MAGIC - weather_raw
+# MAGIC - customers_cdc_raw
 # MAGIC     </td>
 # MAGIC     <td>
 # MAGIC       <b>Silver: Cleaned and enriched with data quality rules</b><br/>
-# MAGIC       Filter out invalid rides and to make sure our maintenance logs include useful information. Additionally we enrich our raw data with details like ride revenue and categorize our maintenance logs by what type of issue happened.<br/>
+# MAGIC       Filter out invalid rides and maintenance logs, enrich data with ride revenue, categorize maintenance issues, and process customer CDC events using Auto CDC for SCD Type 2 (historical tracking).<br/>
 # MAGIC
 # MAGIC Tables in our silver layer:
 # MAGIC - maintenance_logs
 # MAGIC - rides
 # MAGIC - weather
+# MAGIC - customers (SCD Type 2)
 # MAGIC     </td>
 # MAGIC     <td>
 # MAGIC       <b>Gold: Curated for analytics & AI.</b><br>

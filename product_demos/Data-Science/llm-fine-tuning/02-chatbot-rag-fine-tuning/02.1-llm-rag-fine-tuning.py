@@ -6,6 +6,10 @@
 # MAGIC RAG and Instruction fine-tuning work together! If you have a relevant RAG use-case, you can start with RAG leveraging a foundational model, and then specialize your model if your corpus is specific to your business (ex: not part of the foundation model training) or need specific behavior (ex: answer to a specific task such as entity extraction)
 # MAGIC
 # MAGIC Start with RAG on a Foundation Model, evaluate how your model is working and where it can be improved, and build a Fine Tuned dataset accordingly!
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=02.1-llm-rag-fine-tuning&demo_name=llm-fine-tuning&event=VIEW">
+# MAGIC
 
 # COMMAND ----------
 

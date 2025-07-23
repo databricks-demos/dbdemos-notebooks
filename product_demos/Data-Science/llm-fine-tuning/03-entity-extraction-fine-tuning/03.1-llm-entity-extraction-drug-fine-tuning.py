@@ -6,6 +6,9 @@
 # MAGIC Fine tuning an open-source model on a medical Named Entity Recognition task will make the model output
 # MAGIC 1. More accurate, and
 # MAGIC 2. More efficient, reducing model serving expenses
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=03.1-llm-entity-extraction-drug-fine-tuning&demo_name=llm-fine-tuning&event=VIEW">
 
 # COMMAND ----------
 

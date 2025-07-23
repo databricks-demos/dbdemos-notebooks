@@ -11,7 +11,7 @@
 # MAGIC Having a notebook on the side to test SQL queries interactively can be very handy to accelerate exploration and build your pipelines faster!
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01-Exploring-the-Data&demo_name=declarative-pipelines&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-Exploring-the-Data&demo_name=declarative-pipelines&event=VIEW">
 
 # COMMAND ----------
 
@@ -52,26 +52,22 @@ for table in os.listdir(raw_data_volume):
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv", format => "csv") where
-# MAGIC   maintenance_id is null or bike_id is null or reported_time is null or resolved_time is null or issue_description is null limit 10
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC Yup, it looks like there's some instances where the `issue_description` fields include a newline character. Let's tell `read_files` that records may span multiple lines and see if that fixes the issue. 
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select count(*) from read_files(
-# MAGIC     "/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv",
-# MAGIC     format => "csv",
-# MAGIC     multiLine => true -- multiLine tells read_files that there may be records that span multiple lines
-# MAGIC   )
-# MAGIC where
-# MAGIC   maintenance_id is null or bike_id is null or reported_time is null or resolved_time is null or issue_description is null
+from pyspark.sql.functions import expr
+# note - in python for now to avoid temp FAILED_READ_FILE.NO_HINT issue
+df = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("multiLine", "true") \
+    .load("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv")
+
+filtered_df = df.filter(expr("maintenance_id IS NULL OR bike_id IS NULL OR reported_time IS NULL OR resolved_time IS NULL"))
+
+print(filtered_df.count())
 
 # COMMAND ----------
 
@@ -88,6 +84,38 @@ for table in os.listdir(raw_data_volume):
 
 # MAGIC %sql
 # MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/weather/*.json", format => "json") limit 10
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/customers_cdc/*.parquet", format => "parquet") limit 10
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ### Understanding Change Data Capture (CDC) with AUTO CDC
+# MAGIC
+# MAGIC AUTO CDC is a declarative API in Lakeflow Declarative Pipelines that simplifies change data capture processing. 
+# MAGIC
+# MAGIC Key benefits of AUTO CDC:
+# MAGIC - **Automatic ordering**: Handles records that arrive out of chronological order
+# MAGIC - **Built-in SCD support**: Easily implement Type 1 or Type 2 slowly changing dimensions
+# MAGIC - **Declarative syntax**: Simple SQL-based configuration without complex merge logic
+# MAGIC - **Operation handling**: Supports INSERT, UPDATE, DELETE, and TRUNCATE operations
+# MAGIC
+# MAGIC Let's explore the distribution of CDC operations to understand the types of changes happening to customer data:
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select 
+# MAGIC   operation,
+# MAGIC   count(*) as count,
+# MAGIC   round(count(*) * 100.0 / sum(count(*)) over(), 1) as percentage
+# MAGIC from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/customers_cdc/*.parquet", format => "parquet") 
+# MAGIC group by operation
+# MAGIC order by count desc
 
 # COMMAND ----------
 

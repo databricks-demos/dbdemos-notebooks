@@ -7,6 +7,9 @@ import os
 from gradio.themes.utils import sizes
 from databricks.sdk import WorkspaceClient
 import mlflow
+from mlflow.deployments import get_deploy_client ## I.U. 
+import json ## I.U added this to get output. 
+
 mlflow.set_tracking_uri("databricks")
 
 # --- FastAPI setup ---
@@ -20,58 +23,27 @@ available_endpoints = [x.name for x in w.serving_endpoints.list()]
 
 # --- Gradio Chatbot Logic ---
 def respond(message, history, dropdown):
-    if len(message.strip()) == 0:
-        return [
-            *history,
-            gr.ChatMessage(
-                content="ERROR the question should not be empty.",
-                role="assistant"
-            )
-        ]
-
     try:
+        client = get_deploy_client("databricks")
         input_message = [{
             "content": message,
             "role": "user",
             "type": "message"
         }]
-        """
-        TODO IRVIN
-        replace w.api_client.do( by: 
-        import mlflow
-import mlflow.deployments
 
-client = mlflow.deployments.get_deploy_client("databricks")
-
-input_message = [{
-            "content": "test",
-            "role": "user",
-            "type": "message"
-        }]
-
-response = client.predict(
-  # Endpoint from above.
-  endpoint=ENDPOINT_NAME,
-  inputs={'input': input_message, "databricks_options": {
-      # Return the trace so we can get the trace_id for logging feedback.
-      "return_trace": True
-    }}
-)
-response
-and also the trace id shouldn't be in         trace_id = response.get('custom_outputs').get('trace_id') anymore (we are removing custom_output)
-
-        """
-        response = w.api_client.do(
-            'POST',
-            f'/serving-endpoints/{dropdown}/invocations',
-            body={'input': input_message}
+        response = client.predict(
+        endpoint=ENDPOINT_NAME,
+        inputs={'input': input_message, "databricks_options": {
+            # Return the trace so we can get the trace_id for logging feedback.
+            "return_trace": True
+            }}
         )
         print(f"Response: {response}")
-        
         output_messages = response['output']
-        """TODO IRVIN: change here 
-        trace_id = response.get('custom_outputs').get('trace_id') """
+        trace_id = response.get("databricks_output", {}).get("trace", {}).get("info", {}).get("trace_id") # I.U. now we have databricks output to get the trace id. 
+
         print(f"Trace ID: {trace_id}")
+
         thoughts = []
         for msg in output_messages[:-1]:
             if msg['role'] == 'assistant' and msg['content']:
@@ -108,8 +80,10 @@ and also the trace id shouldn't be in         trace_id = response.get('custom_ou
                     options=[{"value": trace_id, "label": "trace_id"}] if trace_id else []
                 )
             )
+
         print(f"Chat messages: {chat_msgs}")
         return chat_msgs
+    
 
     except Exception as error:
         return [

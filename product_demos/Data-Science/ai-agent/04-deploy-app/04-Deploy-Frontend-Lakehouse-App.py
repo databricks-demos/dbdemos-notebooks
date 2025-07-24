@@ -13,7 +13,7 @@
 # MAGIC
 # MAGIC
 # MAGIC <div style="background-color: #d4e7ff; padding: 10px; border-radius: 15px;">
-# MAGIC <strong>Note:</strong> Lakehouse apps are in preview, reach-out your Databricks Account team for more details and to enable it.
+# MAGIC <strong>Note:</strong> In this example, we'll deploy the app using the endpoint. However, if the only use-case is the app itself, you can also directly package your MLFlow Chat Agent within your application, and remove the endpoint entirely!
 # MAGIC </div>
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
@@ -33,7 +33,7 @@
 # MAGIC %md
 # MAGIC ## Add your application configuration
 # MAGIC
-# MAGIC Lakehouse apps let you work with any python framework. For our small demo, we will create a small configuration file containing the model serving endpoint name used for our demo and save it in the `chatbot_app/app.yaml` file.
+# MAGIC Lakehouse apps allow you to work with any Python framework. For our demo, we'll create a simple configuration file containing the model serving endpoint name and save it as `chatbot_app/app.yaml`.
 
 # COMMAND ----------
 
@@ -65,7 +65,7 @@ except Exception as e:
 # MAGIC response = client.predict(
 # MAGIC   endpoint=ENDPOINT_NAME,
 # MAGIC   inputs={'input': input_message, "databricks_options": {
-# MAGIC       # Return the trace so we can get the trace_id for logging feedback.
+# MAGIC       # Return the trace so we can get the trace_id for logging feedback. (return only the id for faster results)
 # MAGIC       "return_trace": True
 # MAGIC     }}
 # MAGIC )

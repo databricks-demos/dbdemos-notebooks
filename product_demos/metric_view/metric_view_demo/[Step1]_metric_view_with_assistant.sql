@@ -223,9 +223,8 @@
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC dbutils.widgets.text("catalog", "") ## Enter the catalog name in which the metric view was created
--- MAGIC dbutils.widgets.text("schema", "") ## Enter the schema name in which the metric view was created
+CREATE WIDGET TEXT catalog DEFAULT 'main';
+CREATE WIDGET TEXT schema DEFAULT 'default';
 
 -- COMMAND ----------
 

@@ -6,9 +6,9 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC dbutils.widgets.text("catalog", "") ## Enter the catalog name in which the metric view will be created
--- MAGIC dbutils.widgets.text("schema", "") ## Enter the schema name in which the metric view will be created
--- MAGIC dbutils.widgets.text("metric_view_name", "") ## Enter the metric view name that will be created
+-- MAGIC dbutils.widgets.text("catalog", "main") ## Enter the catalog name in which the metric view will be created
+-- MAGIC dbutils.widgets.text("schema", "default") ## Enter the schema name in which the metric view will be created
+-- MAGIC dbutils.widgets.text("metric_view_name", "orders_metric_view_sql") ## Enter the metric view name that will be created
 
 -- COMMAND ----------
 

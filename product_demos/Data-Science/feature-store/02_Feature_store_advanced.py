@@ -330,6 +330,7 @@ for dep in env['dependencies']:
     if isinstance(dep, dict) and 'pip' in dep:
         dep['pip'] = [pkg for pkg in dep['pip'] if not pkg.startswith('mlflow==')]
         dep['pip'].insert(0, 'mlflow=='+mlflow.__version__)
+        dep['pip'].insert(1, 'numpy<2.0') # avoid compatibility issues with numpy
 
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model_advanced", experiment_id=summary_cl.experiment.experiment_id) as run:

@@ -253,7 +253,7 @@ GROUP BY ALL;
 -- 1. Every analyst has to remember how to translate o_orderstatus
 -- 2. Different analysts might translate them differently, causing confusion
 -- 3. These translations need to be repeated in every query
--- 4. Definitions of Total Price per customer might vary from one analysis to another
+-- 4. Definitions of Total Price per customer might vary from one analyst to another
 
 -- COMMAND ----------
 
@@ -267,9 +267,9 @@ FROM
 GROUP BY
   ALL;
 
--- 1. No more CASE statements for device_type or cust_segment
+-- 1. No more CASE statements for defined dimensions
 -- 2. Business-friendly dimension names that everyone understands
--- 3. The translations happen ONCE in the Metric View definition, not in every query
+-- 3. The translations happen once in the Metric View definition, not in every query
 -- 4. Different teams will all use the same translations
 
 -- COMMAND ----------
@@ -283,19 +283,27 @@ GROUP BY
 
 -- WITHOUT METRIC VIEWS: Complex window functions required
 
+WITH lag_data AS (
+  SELECT
+    date_trunc('month', o_orderdate) AS `Order Month`,
+    LAG(SUM(o_totalprice)) OVER (
+        ORDER BY date_trunc('month', o_orderdate)
+      ) AS previous_month_total_amount
+  FROM
+    samples.tpch.orders
+  WHERE
+    date_trunc('month', o_orderdate) > '1997-11-01T00:00:00.000+00:00'
+  GROUP BY
+    date_trunc('month', o_orderdate)
+  ORDER BY
+    `Order Month`
+)
 SELECT
-  date_trunc('month', o_orderdate) AS `Order Month`,
-  LAG(SUM(o_totalprice)) OVER (
-      ORDER BY date_trunc('month', o_orderdate)
-    ) AS previous_month_total_amount
+  *
 FROM
-  samples.tpch.orders
+  lag_data
 WHERE
-  date_trunc('month', o_orderdate) > '1998-01-01T00:00:00.000+00:00'
-GROUP BY
-  date_trunc('month', o_orderdate)
-ORDER BY
-  `Order Month`;
+  previous_month_total_amount IS NOT null;
 
 -- 1. Window functions like this require SQL expertise
 -- 2. Business users typically don't know how to write these
@@ -310,7 +318,7 @@ SELECT
   MEASURE(`Total Amount for previous month`)
 FROM
   IDENTIFIER(:catalog || '.' || :schema || '.orders_metric_view')
-WHERE `Order Month` > '1998-01-01T00:00:00.000+00:00'
+WHERE `Order Month` >= '1998-01-01T00:00:00.000+00:00'
 GROUP BY ALL
 ORDER BY `Order Month`;
 

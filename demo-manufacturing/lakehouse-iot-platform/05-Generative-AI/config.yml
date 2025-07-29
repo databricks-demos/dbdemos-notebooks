@@ -14,6 +14,6 @@ agent_prompt: "Act as an assistant for wind turbine maintenance technicians.\n\n
 llm_endpoint: databricks-meta-llama-3-3-70b-instruct
 tools:
 - main_build.dbdemos_iot_platform.turbine_specifications_retriever
-- main_build.dbdemos_iot_platform.turbine_maintenance_reports_retriever
 - main_build.dbdemos_iot_platform.turbine_maintenance_predictor
+- main_build.dbdemos_iot_platform.turbine_maintenance_guide_retriever
 warehouse_id: 9be8079d873b30a6

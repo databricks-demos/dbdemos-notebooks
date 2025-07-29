@@ -69,6 +69,15 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Make sure to add the vector index turbine_maintenance_guide_vs_index directly and not use the hosted functions tab
+# MAGIC
+# MAGIC <img src="https://docs.databricks.com/aws/en/assets/images/playground-add-vector-search-tool-54316b8fd82e5ae1f64c8c5b16212a58.png" style="float: right; width: 600px; margin-left: 10px">
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Make sure you add a proper system prompt so that your agent knows how to use the AI function you provided.
 # MAGIC
 # MAGIC Here is an example:
@@ -125,6 +134,22 @@
 # MAGIC 3. Close this notebook. You may proceeed to using the "driver" and "agent" notebooks from here. 
 # MAGIC
 # MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Important for the Vector Index
+# MAGIC
+# MAGIC Within the VectorSearchRetrieverTool in your driver notebook add the content you would normally add to a function like tool_name, tool_description and num_results before executing it.
+# MAGIC
+# MAGIC ```
+# MAGIC VectorSearchRetrieverTool(
+# MAGIC         index_name=<<Your Index>>,
+# MAGIC         tool_name="turbine_maintenance_guide_retriever",
+# MAGIC         tool_description="Returns one mantainance report based on asked question",
+# MAGIC         num_results=1
+# MAGIC     )
+# MAGIC ```
 
 # COMMAND ----------
 

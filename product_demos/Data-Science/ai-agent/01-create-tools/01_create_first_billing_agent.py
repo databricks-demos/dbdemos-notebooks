@@ -12,6 +12,9 @@
 # MAGIC In this notebook, we'll register the following to Unity Catalogs:
 # MAGIC - **SQL Functions**: Create queries that access customer information, order and subscriptions.
 # MAGIC - **Simple Python Function**: Create and register a Python function doing math operations to overcome some common limitations of language models.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=01_create_first_billing_agent&demo_name=ai-agent&event=VIEW">
 
 # COMMAND ----------
 

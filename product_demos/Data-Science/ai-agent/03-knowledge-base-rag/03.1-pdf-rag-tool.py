@@ -9,6 +9,15 @@
 # MAGIC Thanksfully, all this information is available to us as PDF. These pdf are stored in our volume. 
 # MAGIC
 # MAGIC We'll parse them and save them in our Vector Search, and then add a retriever to our agent to improve its capabilities!
+# MAGIC
+# MAGIC
+# MAGIC <div style="background-color: #d4e7ff; padding: 10px; border-radius: 15px;">
+# MAGIC <strong>Note:</strong> Coming soon, we'll show how to add a Knowledge base in a few clicks leveraging Databricks Agents!
+# MAGIC </div>
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=03.1-pdf-rag-tool&demo_name=ai-agent&event=VIEW">
+# MAGIC
 
 # COMMAND ----------
 

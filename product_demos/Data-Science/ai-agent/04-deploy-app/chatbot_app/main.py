@@ -7,8 +7,8 @@ import os
 from gradio.themes.utils import sizes
 from databricks.sdk import WorkspaceClient
 import mlflow
-from mlflow.deployments import get_deploy_client ## I.U. 
-import json ## I.U added this to get output. 
+from mlflow.deployments import get_deploy_client
+import json
 
 mlflow.set_tracking_uri("databricks")
 
@@ -23,6 +23,15 @@ available_endpoints = [x.name for x in w.serving_endpoints.list()]
 
 # --- Gradio Chatbot Logic ---
 def respond(message, history, dropdown):
+    if len(message.strip()) == 0:
+        return [
+            *history,
+            gr.ChatMessage(
+                content="ERROR the question should not be empty.",
+                role="assistant"
+            )
+        ]
+
     try:
         client = get_deploy_client("databricks")
         input_message = [{
@@ -32,34 +41,43 @@ def respond(message, history, dropdown):
         }]
 
         response = client.predict(
-        endpoint=ENDPOINT_NAME,
-        inputs={'input': input_message, "databricks_options": {
-            # Return the trace so we can get the trace_id for logging feedback.
-            "return_trace": True
+            endpoint=dropdown,
+            inputs={'input': input_message, "databricks_options": {
+                "return_trace": True
             }}
         )
         print(f"Response: {response}")
         output_messages = response['output']
-        trace_id = response.get("databricks_output", {}).get("trace", {}).get("info", {}).get("trace_id") # I.U. now we have databricks output to get the trace id. 
-
+        trace_id = response.get("databricks_output", {}).get("trace", {}).get("info", {}).get("trace_id")
         print(f"Trace ID: {trace_id}")
-
         thoughts = []
-        for msg in output_messages[:-1]:
-            if msg['role'] == 'assistant' and msg['content']:
+        final_msg = ""
+
+        # First pass: collect function calls and outputs as thoughts
+        for msg in output_messages:
+            if msg.get('type') == 'function_call':
+                function_name = msg.get('name', 'Unknown function')
+                thoughts.append(f"🔧 Calling function: {function_name}")
+
+            elif msg.get('type') == 'function_call_output':
+                try:
+                    output_data = json.loads(msg.get('output', '{}'))
+                    if 'value' in output_data:
+                        thoughts.append(f"📊 Function returned data")
+                except Exception:
+                    thoughts.append("📊 Function completed")
+
+        # Second pass: find the final assistant message
+        for msg in output_messages:
+            if msg.get('role') == 'assistant' and msg.get('content'):
                 for content in msg['content']:
                     if content['type'] == 'output_text':
-                        text = content['text']
-                        if text.strip() and text.strip() != message.strip():
-                            thoughts.append(text.strip())
-
-        final_msg = ""
-        if output_messages:
-            last_msg = output_messages[-1]
-            if last_msg['role'] == 'assistant' and last_msg['content']:
-                for content in last_msg['content']:
-                    if content['type'] == 'output_text':
-                        final_msg = content['text'].strip()
+                        text = content['text'].strip()
+                        if text and text != message.strip():
+                            final_msg = text
+                            break
+                if final_msg:
+                    break
 
         chat_msgs = [
             *history,
@@ -68,10 +86,18 @@ def respond(message, history, dropdown):
                 role="user"
             )
         ]
+
+        # Updated: Use the metadata={'title': ...} for thoughts, for Gradio built-in accordion styling
         if thoughts:
+            thoughts_text = "\n\n".join(thoughts)
             chat_msgs.append(
-                gr.ChatMessage(content="\n\n".join(thoughts),role="assistant")
+                gr.ChatMessage(
+                    content=thoughts_text,
+                    role="assistant",
+                    metadata={"title": "🤔 Agent Thoughts"}
+                )
             )
+
         if final_msg:
             chat_msgs.append(
                 gr.ChatMessage(
@@ -80,10 +106,8 @@ def respond(message, history, dropdown):
                     options=[{"value": trace_id, "label": "trace_id"}] if trace_id else []
                 )
             )
-
         print(f"Chat messages: {chat_msgs}")
         return chat_msgs
-    
 
     except Exception as error:
         return [
@@ -125,11 +149,14 @@ with gr.Blocks(theme=theme) as demo:
         show_copy_button=True,
         type="messages"
     )
-    textbox = gr.Textbox(
-        placeholder="Ask about customer data...",
-        container=False,
-        scale=7
-    )
+    
+    with gr.Row():
+        textbox = gr.Textbox(
+            placeholder="Ask about customer data...",
+            container=False,
+            scale=7
+        )
+        send_button = gr.Button("Send", variant="primary")
 
     feedback_output = gr.Markdown(visible=False)
 
@@ -171,6 +198,12 @@ with gr.Blocks(theme=theme) as demo:
         feedback_output
 
     textbox.submit(
+        chat_submit,
+        [textbox, chatbot, endpoint_dropdown],
+        chatbot
+    )
+    
+    send_button.click(
         chat_submit,
         [textbox, chatbot, endpoint_dropdown],
         chatbot

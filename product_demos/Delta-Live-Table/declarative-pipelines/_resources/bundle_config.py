@@ -175,7 +175,7 @@
           "event_log": {
               "catalog": "{{CATALOG}}",
               "schema": "{{SCHEMA}}",
-              "name": "event_logs"
+              "name": "pipeline_bike_event_logs"
           },
           "configuration": {
             "catalog": "{{CATALOG}}",

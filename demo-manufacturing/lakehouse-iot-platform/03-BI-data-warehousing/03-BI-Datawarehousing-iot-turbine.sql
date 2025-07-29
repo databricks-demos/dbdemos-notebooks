@@ -135,16 +135,16 @@
 -- MAGIC
 -- MAGIC ### Materialized view
 -- MAGIC
--- MAGIC Avoid expensive queries and materialize your tables. The engine will recompute only what's required when your data get updated. 
+-- MAGIC Avoid expensive queries and materialize your tables. The engine will recompute only what's required when your data get updated. The best way to do so is using (Lakeflow) Declarative pipelines as shown here: <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL) 
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC # Taking our analysis one step further: Predicting Churn
+-- MAGIC # Taking our analysis one step further: Predicting Turbine Failures
 -- MAGIC
--- MAGIC Being able to run analysis on our past data already gives us a lot of insight. We can better understand which customers are churning evaluate the churn impact.
+-- MAGIC Being able to run analysis on our past data already gives us a lot of insight. We can better understand which turbines resulting in failures and needed mantainance.
 -- MAGIC
--- MAGIC However, knowing that we have churn isn't enough. We now need to take it to the next level and build a predictive model to determine our customers at risk of churn to be able to increase our revenue.
+-- MAGIC However, knowing that we had failures is not enough. We now need to take it to the next level and build a predictive model to determine our turbines at risk of failures to improve our operation and downtime of turbines.
 -- MAGIC
 -- MAGIC Let's see how this can be done with [Databricks Machine Learning notebook]($../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance) | go [Go back to the introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

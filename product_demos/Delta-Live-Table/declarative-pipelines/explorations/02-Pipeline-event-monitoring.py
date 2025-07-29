@@ -22,7 +22,7 @@
 # MAGIC SELECT
 # MAGIC   *
 # MAGIC FROM
-# MAGIC   main__build.dbdemos_pipeline_bike.event_logs
+# MAGIC   main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs
 # MAGIC limit 10
 
 # COMMAND ----------
@@ -51,7 +51,7 @@
 # MAGIC   details:flow_definition.flow_type,
 # MAGIC   details:flow_definition.schema,
 # MAGIC   details:flow_definition
-# MAGIC FROM main__build.dbdemos_pipeline_bike.event_logs
+# MAGIC FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs
 # MAGIC WHERE details:flow_definition IS NOT NULL
 # MAGIC ORDER BY timestamp
 # MAGIC
@@ -66,7 +66,7 @@
 # MAGIC   ex.value:passed_records::long as passed_records,
 # MAGIC   ex.value:failed_records::long as failed_records
 # MAGIC from
-# MAGIC   main__build.dbdemos_pipeline_bike.event_logs e,
+# MAGIC   main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e,
 # MAGIC   lateral variant_explode(parse_json(e.details:flow_progress:data_quality:expectations:[ * ])) as ex
 # MAGIC where
 # MAGIC   e.event_type = "flow_progress"

@@ -40,18 +40,18 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with Delta Live Tables
+-- MAGIC # Simplify Ingestion and Transformation with (Lakeflow) Declarative Pipelines
 -- MAGIC
 -- MAGIC <img style="float: right" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_john.png" />
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our IOT platform. <br>
 -- MAGIC We'll ingest and clean our raw data sources to prepare the tables required for our BI & ML workload.
 -- MAGIC
--- MAGIC Databricks simplifies this task with Delta Live Table (DLT) by making Data Engineering accessible to all.
+-- MAGIC Databricks simplifies this task with (Lakeflow) Declarative Pipelines by making Data Engineering accessible to all.
 -- MAGIC
--- MAGIC DLT allows Data Analysts to create advanced pipeline with plain SQL.
+-- MAGIC (Lakeflow) Declarative Pipelines allows Data Analysts to create advanced pipeline with plain SQL.
 -- MAGIC
--- MAGIC ## Delta Live Table: A simple way to build and manage data pipelines for fresh, high quality data!
+-- MAGIC ## (Lakeflow) Declarative Pipeline: A simple way to build and manage data pipelines for fresh, high quality data!
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
@@ -95,9 +95,9 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC ## Building a Delta Live Table pipeline to ingest IOT sensor and detect faulty equipments
+-- MAGIC ## Building a (Lakeflow) Declarative Pipeline to ingest IOT sensor and detect faulty equipments
 -- MAGIC
--- MAGIC In this example, we'll implement a end 2 end DLT pipeline consuming our Wind Turbine sensor data. <br/>
+-- MAGIC In this example, we'll implement a end 2 end (Lakeflow) Declarative Pipeline consuming our Wind Turbine sensor data. <br/>
 -- MAGIC We'll use the medaillon architecture but we could build star schema, data vault or any other modelisation.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our predictive maintenance analysis.
@@ -120,7 +120,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your DLT Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine Delta Live Table pipeline</a> to see it in action.<br/>
+-- MAGIC Your (Lakeflow) Declarative Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine (Lakeflow) Declarative Pipeline</a> to see it in action.<br/>
 -- MAGIC
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed with dbdemos, this might take a few minutes... Check installation logs for more details)*
 
@@ -166,7 +166,13 @@ CREATE STREAMING TABLE turbine (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine details, with location, wind turbine model type etc"
-AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT
+  *
+FROM STREAM READ_FILES(
+    "/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine",
+    format => "json",
+    inferColumnTypes => true
+)
 
 -- COMMAND ----------
 
@@ -176,7 +182,13 @@ CREATE STREAMING TABLE sensor_bronze (
   CONSTRAINT correct_energy EXPECT (energy IS NOT NULL and energy > 0) ON VIOLATION DROP ROW
 )
 COMMENT "Raw sensor data coming from json files ingested in incremental with Auto Loader: vibration, energy produced etc. 1 point every X sec per sensor."
-AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data", "parquet", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT
+  * 
+FROM STREAM READ_FILES(
+    "/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data",
+    format => "parquet",
+    inferColumnTypes => true
+)
 
 -- COMMAND ----------
 
@@ -185,13 +197,13 @@ CREATE STREAMING TABLE historical_turbine_status (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Turbine status to be used as label in our predictive maintenance model (to know which turbine is potentially faulty)"
-AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status", "json", map("cloudFiles.inferColumnTypes" , "true"))
-
--- COMMAND ----------
-
-CREATE STREAMING TABLE parts 
-COMMENT "Turbine parts from our manufacturing system"
-AS SELECT * FROM cloud_files("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/parts", "json", map("cloudFiles.inferColumnTypes" , "true"))
+AS SELECT
+  *
+FROM STREAM READ_FILES(
+    "/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status",
+    format => "json",
+    inferColumnTypes => true
+)
 
 -- COMMAND ----------
 
@@ -228,7 +240,7 @@ SELECT turbine_id,
       percentile_approx(sensor_D, array(0.1, 0.3, 0.6, 0.8, 0.95)) as percentiles_sensor_D,
       percentile_approx(sensor_E, array(0.1, 0.3, 0.6, 0.8, 0.95)) as percentiles_sensor_E,
       percentile_approx(sensor_F, array(0.1, 0.3, 0.6, 0.8, 0.95)) as percentiles_sensor_F
-  FROM LIVE.sensor_bronze GROUP BY hourly_timestamp, turbine_id
+  FROM sensor_bronze GROUP BY hourly_timestamp, turbine_id
 
 -- COMMAND ----------
 
@@ -247,9 +259,9 @@ SELECT turbine_id,
 CREATE MATERIALIZED VIEW turbine_training_dataset 
 COMMENT "Hourly sensor stats, used to describe signal and detect anomalies"
 AS
-SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F) AS sensor_vector, * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM LIVE.sensor_hourly m
-    INNER JOIN LIVE.turbine t USING (turbine_id)
-    INNER JOIN LIVE.historical_turbine_status s ON m.turbine_id = s.turbine_id AND from_unixtime(s.start_time) < m.hourly_timestamp AND from_unixtime(s.end_time) > m.hourly_timestamp
+SELECT CONCAT(t.turbine_id, '-', s.start_time) AS composite_key, array(std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F) AS sensor_vector, * except(t._rescued_data, s._rescued_data, m.turbine_id) FROM sensor_hourly m
+    INNER JOIN turbine t USING (turbine_id)
+    INNER JOIN historical_turbine_status s ON m.turbine_id = s.turbine_id AND from_unixtime(s.start_time) < m.hourly_timestamp AND from_unixtime(s.end_time) > m.hourly_timestamp
 
 -- COMMAND ----------
 
@@ -292,11 +304,11 @@ CREATE MATERIALIZED VIEW turbine_current_features
 COMMENT "Wind turbine features based on model prediction"
 AS
 WITH latest_metrics AS (
-  SELECT *, ROW_NUMBER() OVER(PARTITION BY turbine_id, hourly_timestamp ORDER BY hourly_timestamp DESC) AS row_number FROM LIVE.sensor_hourly
+  SELECT *, ROW_NUMBER() OVER(PARTITION BY turbine_id, hourly_timestamp ORDER BY hourly_timestamp DESC) AS row_number FROM sensor_hourly
 )
 SELECT * EXCEPT(m.row_number,_rescued_data, percentiles_sensor_A,percentiles_sensor_B, percentiles_sensor_C, percentiles_sensor_D, percentiles_sensor_E, percentiles_sensor_F) 
 FROM latest_metrics m
-   INNER JOIN LIVE.turbine t USING (turbine_id)
+   INNER JOIN turbine t USING (turbine_id)
    WHERE m.row_number=1 and turbine_id is not null
 
 -- COMMAND ----------
@@ -307,14 +319,14 @@ COMMENT "Wind turbine last status based on model prediction"
 AS
 SELECT *, 
     predict_maintenance(hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, location, model, state) as prediction 
-  FROM LIVE.turbine_current_features
+  FROM turbine_current_features
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## Conclusion
--- MAGIC Our <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">DLT Data Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
+-- MAGIC Our <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
 -- MAGIC
 -- MAGIC
 -- MAGIC For more details on model training, open the [model training notebook]($../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance)

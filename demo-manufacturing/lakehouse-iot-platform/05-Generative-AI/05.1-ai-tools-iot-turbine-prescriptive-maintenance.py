@@ -89,7 +89,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install mlflow==2.22.0 databricks-vectorsearch==0.49 databricks-feature-engineering==0.8.0 databricks-sdk==0.40.0
+# MAGIC %pip install mlflow==3.1.1 databricks-vectorsearch==0.57 databricks-feature-engineering==0.12.1 databricks-sdk==0.59.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -189,6 +189,7 @@
 # MAGIC CREATE OR REPLACE FUNCTION turbine_specifications_retriever(turbine_id STRING)
 # MAGIC RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
 # MAGIC LANGUAGE SQL
+# MAGIC COMMENT 'Returns the specifications of one specific turbine based on its turbine id'
 # MAGIC RETURN (
 # MAGIC   SELECT struct(turbine_id, hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, country, lat, location, long, model, state)
 # MAGIC   FROM turbine_current_features
@@ -224,7 +225,7 @@
 
 # MAGIC %md 
 # MAGIC
-# MAGIC ### 2.1. Parse and save our PDF text
+# MAGIC ### 3.1. Parse and save our PDF text
 # MAGIC Let's start by parsing the maintenance guide documents, saved as pdf in our volume:
 
 # COMMAND ----------
@@ -241,29 +242,55 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Read the pdf and
+# MAGIC %md
+# MAGIC Let's use first the _ai_parse_document_ function (one of many ai functions we offer on Databricks out of the box) to extract the information from the pdf documents as a table. You can read more about the function here: https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_parse_document
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TEMP VIEW parsed_docs AS
+# MAGIC SELECT ai_parse_document(content) AS parsed_document
+# MAGIC FROM READ_FILES("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/maintenance_guide", format => 'binaryFile');
+# MAGIC
+# MAGIC SELECT * FROM parsed_docs
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC The parsed document is generated as a JSON as Variant type. Let's concat the text into one cell removing the json structure which will be our final guide. Variant allows as to have flexible schemas within our data. Processing the Variant columns is a bit different though. See for more here: https://docs.databricks.com/aws/en/semi-structured/variant
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TEMP VIEW transformed_docs AS
+# MAGIC SELECT array_join(
+# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS full_guide
+# MAGIC FROM parsed_docs;
+# MAGIC
+# MAGIC SELECT * FROM transformed_docs
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Finally we generate our table extracting some additional information from the guides like EAN, weight, component_type and component_name. Also for this task we are using one of our ai functions _ai_extract_. See more here: https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_extract
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC INSERT OVERWRITE TABLE turbine_maintenance_guide (EAN, weight, component_type, component_name, full_guide)
 # MAGIC SELECT ai_extract.*, full_guide FROM (
 # MAGIC   SELECT 
-# MAGIC     ai_extract(full_guide, array('EAN', 'weight', 'component_type', 'component_name')) AS ai_extract,
-# MAGIC     full_guide
-# MAGIC   FROM (
-# MAGIC     -- TODO: review why parsed_document:document.pages[*].content isn't working
-# MAGIC     SELECT array_join(
-# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS full_guide
-# MAGIC     FROM (
-# MAGIC       SELECT ai_parse_document(content) AS parsed_document
-# MAGIC       FROM READ_FILES("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/maintenance_guide", format => 'binaryFile')
-# MAGIC     )
-# MAGIC   ));
+# MAGIC       ai_extract(full_guide, array('EAN', 'weight', 'component_type', 'component_name')) AS ai_extract,
+# MAGIC       full_guide
+# MAGIC   FROM transformed_docs
+# MAGIC );
 # MAGIC
 # MAGIC SELECT * FROM turbine_maintenance_guide
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### 2.2. Creating the Vector Search endpoint
+# MAGIC ### 3.2. Creating the Vector Search endpoint
 # MAGIC
 # MAGIC Let's create a new Vector search endpoint. You can also use the [UI under Compute](#/setting/clusters/vector-search) to directly create your endpoint.
 
@@ -283,7 +310,7 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ### 2.3 Creating the Vector Search Index
+# MAGIC ### 3.3 Creating the Vector Search Index
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/index_creation.gif?raw=true" width="600px" style="float: right; margin-left: 10px">
 # MAGIC
@@ -304,7 +331,7 @@ vs_index_fullname = f"{catalog}.{db}.turbine_maintenance_guide_vs_index"
 
 if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
   print(f"Creating index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
-  index = vsc.create_delta_sync_index(
+  index = vsc.create_delta_sync_index_and_wait(
     endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
     source_table_name=f"{catalog}.{db}.turbine_maintenance_guide",
     index_name=vs_index_fullname,
@@ -320,8 +347,10 @@ else:
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### 2.4 Create our tool
+# MAGIC ### 3.4 Create our tool
 # MAGIC Below, we utilize the _VECTOR\_SEARCH_ SQL function from Databricks to easily set up our maintenance reports retriever function. Our agent will utilize this function in the subsequent steps!
+# MAGIC
+# MAGIC **In our Agent we will not leverage the function instead we can directly integrate the vector index into the agent as the SQL function for authentification is not currently supported within the agent.**
 
 # COMMAND ----------
 
@@ -330,6 +359,7 @@ spark.sql(f"""
 CREATE OR REPLACE FUNCTION turbine_maintenance_guide_retriever(question STRING)
 RETURNS ARRAY<STRING>
 LANGUAGE SQL
+COMMENT 'Returns one mantainance report based on asked question'
 RETURN (
   SELECT collect_list(full_guide) FROM VECTOR_SEARCH(index => '{catalog}.{schema}.turbine_maintenance_guide_vs_index', query => question, num_results => 1) ) """)
 

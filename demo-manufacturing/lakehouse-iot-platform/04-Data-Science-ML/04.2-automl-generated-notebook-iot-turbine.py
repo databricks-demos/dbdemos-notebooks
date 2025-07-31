@@ -20,7 +20,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.22.0 cloudpickle==2.2.1 databricks-sdk==0.40.0
+# MAGIC %pip install mlflow==3.1.1 cloudpickle==2.2.1 databricks-sdk==0.59.0
 # MAGIC # hardcode the ml 16.4 LTS libraries versions here for demo stability
 # MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==2.2.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl networkx==3.2.1
 # MAGIC dbutils.library.restartPython()
@@ -231,7 +231,7 @@ preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_t
 # COMMAND ----------
 
 # AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col')][0]
+split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col') or c == 'split'][0]
 
 split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
 split_val_df = df_loaded.loc[df_loaded[split_col] == "val"]

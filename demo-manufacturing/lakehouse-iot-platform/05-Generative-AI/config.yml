@@ -15,5 +15,5 @@ llm_endpoint: databricks-meta-llama-3-3-70b-instruct
 tools:
 - main_build.dbdemos_iot_platform.turbine_specifications_retriever
 - main_build.dbdemos_iot_platform.turbine_maintenance_predictor
-- main_build.dbdemos_iot_platform.turbine_maintenance_guide_retriever
+- main_build.dbdemos_iot_platform.turbine_maintenance_guide_vs_index
 warehouse_id: 9be8079d873b30a6

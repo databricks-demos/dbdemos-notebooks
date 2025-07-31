@@ -144,7 +144,7 @@
 # MAGIC
 # MAGIC ```
 # MAGIC VectorSearchRetrieverTool(
-# MAGIC         index_name=<<Your Index>>,
+# MAGIC         index_name=<<Your Index e.g. turbine_maintenance_guide_vs_index>>,
 # MAGIC         tool_name="turbine_maintenance_guide_retriever",
 # MAGIC         tool_description="Returns one mantainance report based on asked question",
 # MAGIC         num_results=1

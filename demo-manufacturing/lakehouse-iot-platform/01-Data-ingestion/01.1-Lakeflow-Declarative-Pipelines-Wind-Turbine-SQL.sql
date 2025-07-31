@@ -169,7 +169,7 @@ COMMENT "Turbine details, with location, wind turbine model type etc"
 AS SELECT
   *
 FROM STREAM READ_FILES(
-    "/Volumes/nikkthegreek_demo/iotdemo/turbine_raw_landing/turbine",
+    "/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine",
     format => "json",
     inferColumnTypes => true
 )
@@ -185,7 +185,7 @@ COMMENT "Raw sensor data coming from json files ingested in incremental with Aut
 AS SELECT
   * 
 FROM STREAM READ_FILES(
-    "/Volumes/nikkthegreek_demo/iotdemo/turbine_raw_landing/incoming_data",
+    "/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data",
     format => "parquet",
     inferColumnTypes => true
 )
@@ -200,7 +200,7 @@ COMMENT "Turbine status to be used as label in our predictive maintenance model 
 AS SELECT
   *
 FROM STREAM READ_FILES(
-    "/Volumes/nikkthegreek_demo/iotdemo/turbine_raw_landing/historical_turbine_status",
+    "/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status",
     format => "json",
     inferColumnTypes => true
 )

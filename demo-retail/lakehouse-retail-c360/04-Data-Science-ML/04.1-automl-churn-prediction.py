@@ -82,7 +82,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.22.0 databricks-feature-store==0.17.0
+# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.22.0 databricks-feature-store==0.17.0 # keep mlflow at 2.22.0 for now to work with databricks-feature-store 
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -47,7 +47,7 @@
     },
     {
       "path": "02_Feature_store_advanced", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - advanced", 
@@ -67,7 +67,7 @@
     "spark_conf": {
         "spark.master": "local[*, 4]"
     },
-    "spark_version": "14.3.x-cpu-ml-scala2.12",
+    "spark_version": "16.4.x-cpu-ml-scala2.12",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER"
   }  

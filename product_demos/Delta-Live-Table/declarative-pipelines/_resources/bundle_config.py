@@ -176,10 +176,15 @@
               "catalog": "{{CATALOG}}",
               "schema": "{{SCHEMA}}",
               "name": "event_logs"
+          },
+          "configuration": {
+            "catalog": "{{CATALOG}}",
+            "schema": "{{SCHEMA}}"
           }
         }
       }
     ],
     "dashboards": [{"name": "[dbdemos] LDP - Bike Rental Business Insights",  "id": "bike-rental"},
+                   {"name": "[dbdemos] LDP - Bike Operational insights",  "id": "operational"},
                    {"name": "[dbdemos] LDP - Bike Data Monitoring",  "id": "data-quality"}]
   }

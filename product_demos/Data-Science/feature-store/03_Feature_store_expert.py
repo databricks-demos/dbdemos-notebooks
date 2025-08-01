@@ -22,6 +22,9 @@
 # MAGIC * Send realtime REST queries for live inference.
 # MAGIC
 # MAGIC *Note: For more detail on this notebook, you can read the [Databricks blog post](https://www.databricks.com/blog/best-practices-realtime-feature-computation-databricks) .*
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=03_Feature_store_expert&demo_name=feature-store&event=VIEW">
 
 # COMMAND ----------
 

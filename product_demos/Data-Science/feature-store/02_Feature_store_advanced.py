@@ -12,6 +12,9 @@
 # MAGIC - Introduce timestamp key, to simplify temporal feature management
 # MAGIC - Use AutoML to create the best model for us
 # MAGIC - Online table, synchronizing Databricks Delta Table with a real time, low latency table automatically used by your model to lookup features.
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=02_Feature_store_advanced&demo_name=feature-store&event=VIEW">
 
 # COMMAND ----------
 
@@ -25,7 +28,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Review our silver data
-# MAGIC %sql SELECT * FROM travel_purchase
+# MAGIC %sql SELECT * FROM travel_purchase limit 10
 
 # COMMAND ----------
 
@@ -96,7 +99,7 @@ def create_user_features(travel_purchase_df):
 
 
 user_features_df = create_user_features(spark.table('travel_purchase'))
-display(user_features_df)
+display(user_features_df.limit(100))
 
 # COMMAND ----------
 
@@ -117,7 +120,7 @@ def create_destination_features(travel_purchase_df):
           .select("destination_id", "ts", "sum_clicks_7d", "sum_impressions_7d")
     )  
 destination_features_df = create_destination_features(spark.table('travel_purchase'))
-display(destination_features_df)
+display(destination_features_df.limit(10))
 
 # COMMAND ----------
 
@@ -202,7 +205,7 @@ ground_truth_df = spark.table('travel_purchase').select('user_id', 'destination_
 training_labels_df = ground_truth_df.where("ts < '2022-11-23'")
 test_labels_df = ground_truth_df.where("ts >= '2022-11-23'")
 
-display(test_labels_df)
+display(test_labels_df.limit(100))
 
 # COMMAND ----------
 
@@ -235,7 +238,7 @@ training_set = fe.create_training_set(
 )
 
 training_pd = training_set.load_df()
-display(training_pd)
+display(training_pd.limit(100))
 
 # COMMAND ----------
 
@@ -375,7 +378,7 @@ from databricks.feature_engineering import FeatureEngineeringClient
 fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 batch_scoring = test_labels_df.select('user_id', 'destination_id', 'ts', 'purchased')
 scored_df = fe.score_batch(model_uri=f"models:/{model_full_name}@{production_alias}", df=batch_scoring, result_type="boolean")
-display(scored_df)
+display(scored_df.limit(100))
 
 # COMMAND ----------
 

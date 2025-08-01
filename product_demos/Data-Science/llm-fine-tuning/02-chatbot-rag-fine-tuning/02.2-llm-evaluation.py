@@ -12,6 +12,10 @@
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-fine-tuning/databricks-llm-fine-tuning-eval-judge.png?raw=true" width="1200px">
 # MAGIC
 # MAGIC To do so, we need to create an evaluation dataset and have our RAG application call the 2 models we want to benchmark: a baseline vs the fine-tuned one. This will let us appreciate how Fine Tuning improved our model performance!
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=02.2-llm-evaluation&demo_name=llm-fine-tuning&event=VIEW">
+# MAGIC
 
 # COMMAND ----------
 

@@ -62,6 +62,8 @@
 # MAGIC </div>
 # MAGIC
 # MAGIC **Databricks empowers Liza with a Data + AI platform for Prescriptive Maintenance.** Let’s explore how to deploy this in production.
+# MAGIC
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.1-ai-tools-iot-turbine-prescriptive-maintenance&demo_name=lakehouse-iot-platform&event=VIEW">
 
 # COMMAND ----------
 

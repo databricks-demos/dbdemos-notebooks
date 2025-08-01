@@ -59,6 +59,14 @@
       "description": "Leverage the Lakehouse AI capabilities to forecast your usage"
     },
     {
+      "path": "01-billing-tables/03-python-forecast-billing-tables", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": True, 
+      "title":  "Forecast your consumption", 
+      "description": "Python version - Leverage the Lakehouse AI capabilities to forecast your usage"
+    },
+    {
       "path": "02-audit-logs-tables/02-audit-log", 
       "pre_run": False, 
       "publish_on_website": True, 
@@ -95,7 +103,7 @@
             {
                 "task_key": "init_data",
                 "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/01-billing-tables/02-forecast-billing-tables",
+                    "notebook_path": "{{DEMO_FOLDER}}/01-billing-tables/03-python-forecast-billing-tables",
                     "source": "WORKSPACE",
                     "base_parameters": {"catalog": "main", "schema": "billing_forecast"}
                 },

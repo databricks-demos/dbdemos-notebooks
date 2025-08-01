@@ -49,8 +49,21 @@ tools = []
 
 # You can use UDFs in Unity Catalog as agent tools
 uc_tool_names = config.get("tools")
-uc_toolkit = UCFunctionToolkit(function_names=uc_tool_names)
+uc_toolkit = UCFunctionToolkit(function_names=uc_tool_names[0:2])
 tools.extend(uc_toolkit.tools)
+
+# Create and include a retriever tool for each vector search index
+# See https://learn.microsoft.com/azure/databricks/generative-ai/agent-framework/unstructured-retrieval-tools
+# for details
+vector_search_index_tools = [
+    VectorSearchRetrieverTool(
+        index_name=uc_tool_names[2],
+        tool_name="turbine_maintenance_guide_retriever",
+        tool_description="Returns one mantainance report based on asked question",
+        num_results=1
+    )
+]
+tools.extend(vector_search_index_tools)
 
 
 #####################

@@ -187,6 +187,10 @@
 
 # MAGIC %md
 # MAGIC ## 2.1. Create a lakebase
+# MAGIC
+# MAGIC Lakebase is a new feature provided by Databricks adding support for transactional (OLTP) databases to perform as in our case transactional reads. You can discover more here: https://learn.microsoft.com/en-us/azure/databricks/oltp/
+# MAGIC
+# MAGIC Let's create first a so called snyced table running on the OLTP database before creating our retriever.
 
 # COMMAND ----------
 

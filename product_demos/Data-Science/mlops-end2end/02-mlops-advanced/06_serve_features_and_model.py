@@ -27,11 +27,19 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install Databricks Python SDK [for MLR < 13.3] and MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet databricks-sdk==0.40.0 mlflow==2.22.0
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC databricks-feature-engineering==0.13.0a3
+# MAGIC mlflow==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a3 mlflow --upgrade
 # MAGIC
 # MAGIC
-# MAGIC dbutils.library.restartPython()
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -39,8 +47,15 @@
 
 # COMMAND ----------
 
+dbutils.widgets.text("model_name", "", "Model Name") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.dropdown("drop_online_store", "False", ["True", "False"], "Reset Online Table(s)")
+dbutils.widgets.dropdown("smoke_test", "False", ["True", "False"], "Smoke Test Flag")
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC # Serve features with Databricks online tables
+# MAGIC # Serve features with Databricks Lakebase's Online Tables (`beta`)
 # MAGIC
 # MAGIC To serve prediction queries with low latency, publish the features to Databricks online tables and serve them in real time to the model.
 # MAGIC
@@ -48,9 +63,22 @@
 
 # COMMAND ----------
 
+is_smoke_test = dbutils.widgets.get("smoke_test") == "True"
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC
-# MAGIC ## Enable Change-Data-Feed on Feature Table for performance considerations
+# MAGIC ## Create Databricks Online Feature Store
+# MAGIC
+# MAGIC You can create an online table from the Catalog Explorer UI, or by using the API. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/aws/en/machine-learning/feature-store/online-feature-store)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-feature-store)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ### Enable Change-Data-Feed on Feature Table for performance considerations
 # MAGIC
 # MAGIC An online table is a read-only copy of a Delta Table stored in row-oriented format optimized for online access. 
 # MAGIC
@@ -65,17 +93,8 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC ### Create the Online Table
-# MAGIC
-# MAGIC You can create an online table from the Catalog Explorer UI, or by using the API. The steps are described below. For more details, see the Databricks documentation ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#create)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#create)). For information about required permissions, see Permissions ([AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#user-permissions)|[Azure](https://learn.microsoft.com/azure/databricks/machine-learning/feature-store/online-tables#user-permissions)).
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC #### OPTION 1: Use the Catalog Explorer UI
-# MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the **Create** menu, select **Online table**.
+# MAGIC ### OPTION 1: Use the Catalog Explorer UI
+# MAGIC In Catalog Explorer, navigate to the source table that you want to sync to an online table. From the **Create** menu, select **Synched table**.
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -109,112 +128,68 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### OPTION 2: Use the Databricks SDK 
+# MAGIC ### OPTION 2: Use the Databricks Feature Engineering SDK 
 # MAGIC
-# MAGIC The other alternative is the Databricks' python-sdk [AWS](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html#api-sdk) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/machine-learning/feature-store/online-tables). Let's  first define the table specifications, then create the table.
+# MAGIC The other alternative is the [Databricks Feature Engineering SDK](https://api-docs.databricks.com/python/feature-engineering/latest/index.html). Let's  first define the table specifications, then create the table.
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
+from databricks.feature_engineering import FeatureEngineeringClient
 
 
-# Create workspace client for the Databricks Python SDK
-w = WorkspaceClient()
+# Initialize the client
+fe = FeatureEngineeringClient()
 
-# COMMAND ----------
+# Set Online Store Name
+online_store_name = "fe_shared_demo" # mlops-churn-advanced"
 
-# DBTITLE 1,Drop any existing online table (optional)
-from pprint import pprint
-
-
-try:
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-  
-  # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
-
-  # Wait for deletion to complete
-  while online_table_specs is not None:
-    online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-
-except Exception as e:
-  pprint(e)
+# Check if exists
+online_store = fe.get_online_store(name=online_store_name)
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the online table specification
-from databricks.sdk.service.catalog import (
-    OnlineTable,
-    OnlineTableSpec,
-    OnlineTableSpecTriggeredSchedulingPolicy,
-)
+from time import time
 
 
-# Create an online table specification
-churn_features_online_store_spec = OnlineTableSpec(
-    primary_key_columns=["customer_id"],
-    timeseries_key="transaction_ts",
-    source_table_full_name=f"{catalog}.{db}.advanced_churn_feature_table",
-    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict(
-        {"triggered": "true"}
-    ),
-)
+if online_store:
+  print(f"Online store exists:")
+  print(f"Store: {online_store.name}, State: {online_store.state}, Capacity: {online_store.capacity}")
 
-churn_features_online_table = OnlineTable.from_dict(
-    {
-        "name": f"{catalog}.{db}.advanced_churn_feature_table_online_table",
-        "spec": churn_features_online_store_spec.as_dict(),
-    }
-)
+  # Update the capacity of online store
+  # updated_store = fe.update_online_store(
+  #     name=online_store_name,
+  #     capacity="CU_2"  # Upgrade to higher capacity
+  # )
 
-# COMMAND ----------
+  if dbutils.widgets.get("drop_online_store") == "True" and not is_smoke_test:
+    # Drop & wait
+    fe.delete_online_store(name=online_store_name)
+    time.sleep(60)
 
-# DBTITLE 1,Create the online table
-from databricks.sdk.service.catalog import OnlineTable
+    print(f"Dropping/Recreating it.")
+    online_store = fe.create_online_store(
+      name=online_store_name,
+      capacity="CU_1"
+    )
 
-
-# Create the online table
-w.online_tables.create_and_wait(table = churn_features_online_table)
+elif not online_store and not is_smoke_test:
+  # Create an online store with specified capacity & wait
+  print(f"Creating Online store: {online_store_name}")
+  online_store = fe.create_online_store(
+      name=online_store_name,
+      capacity="CU_1"  # Valid options: "CU_1", "CU_2", "CU_4", "CU_8"
+  )
 
 # COMMAND ----------
 
-# DBTITLE 1,Check the status of the online table
-from pprint import pprint
-
-
-try:
-  online_table_exist = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-  pprint(online_table_exist)
-except Exception as e:
-  pprint(e)
-
-pprint(online_table_exist.status.detailed_state)
-
-# COMMAND ----------
-
-# DBTITLE 1,Wait for Online Table to be ready
-from pprint import pprint
-
-
-ready_state = online_table_exist.status.detailed_state.ONLINE_NO_PENDING_UPDATE
-current_state = online_table_exist.status.detailed_state
-
-try:
-  while current_state != ready_state:
-    ol_table_create = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-    current_state = ol_table_create.status.detailed_state
-except Exception as e:
-  pprint(e)
-
-pprint(current_state)
-print("Online table is ready.")
-
-# COMMAND ----------
-
-# DBTITLE 1,Refresh online table (optional in case new data was added or offline table was dropped and re-created with new data))
-# Trigger an online table refresh by calling the pipeline API
-# w.pipelines.start_update(pipeline_id=online_table_spec.pipeline_id, full_refresh=True)
+if not is_smoke_test:
+    print(f"Publishing feature table to online store...")
+    publish_state = fe.publish_table(
+        online_store=online_store,
+        source_table_name=f"{catalog}.{db}.advanced_churn_feature_table",
+        online_table_name=f"{catalog}.{db}.advanced_churn_feature_online_table",
+        # streaming=True
+    )
 
 # COMMAND ----------
 
@@ -271,18 +246,14 @@ print("Online table is ready.")
 
 # COMMAND ----------
 
-endpoint_name = "advanced_mlops_churn_ep"
+endpoint_name = "advanced_mlops_churn_aeh"
 
 # Fully qualified model name
-model_name = f"{catalog}.{db}.advanced_mlops_churn"
-model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
+# model_name = f"{catalog}.{db}.advanced_mlops_churn"
+# model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
-# COMMAND ----------
-
-# Promote Champion model to Production
-client.set_registered_model_alias(name=model_name, alias="Production", version=model_version)
-
-print(f"Promoting {model_name} versions {model_version} from Champion to Production")
+model_name = dbutils.widgets.get("model_name")
+model_version = dbutils.widgets.get("model_version") # Should pull @Champion Model by default
 
 # COMMAND ----------
 
@@ -354,15 +325,22 @@ served_model_name =  model_name.split('.')[-1]
 
 from databricks.sdk.service.serving import EndpointCoreConfigInput
 
+
 endpoint_config_dict = {
-    "served_models": [
+    "served_entities": [
         # Add models to be served to this list
         {
-            "model_name": model_name,
-            "model_version": model_version,
+            "entity_name": model_name,
+            "entity_version": model_version,
             "scale_to_zero_enabled": True,
             "workload_size": "Small",
         },
+        # {
+        #     "entity_name": model_name,
+        #     "entity_version": model_version_b,
+        #     "scale_to_zero_enabled": True,
+        #     "workload_size": "Small",
+        # },
     ],
     "traffic_config": {
         "routes": [
@@ -370,12 +348,13 @@ endpoint_config_dict = {
             # Make sure that traffic_percentage adds up to 100 over all served models
             # Naming convention for served_model_name: <registered_model_name>-<model_version>
             {"served_model_name": f"{served_model_name}-{model_version}", "traffic_percentage": 100},
+            # {"served_model_name": f"{served_model_name}-{model_version_b}", "traffic_percentage": 10},
         ]
     },
     "auto_capture_config":{
         "catalog_name": catalog,
         "schema_name": db,
-        "table_name_prefix": "advanced_churn_served"
+        "table_name_prefix": "advanced_churn_served_v2"
     }
 }
 
@@ -384,28 +363,28 @@ endpoint_config = EndpointCoreConfigInput.from_dict(endpoint_config_dict)
 # COMMAND ----------
 
 from databricks.sdk.service.serving import EndpointTag
+from databricks.sdk.errors import ResourceDoesNotExist
 
-try:
-  # Create and do not wait. Check the readiness of the endpoint in the next cell.
-  w.serving_endpoints.create(
-    name=endpoint_name,
-    config=endpoint_config,
-    tags=[EndpointTag.from_dict({"key": "dbdemos", "value": "advanced_mlops_churn"})]
-  )
-  
-  print(f"Creating endpoint {endpoint_name} with models {model_name} version {model_version}")
 
-except Exception as e:
-  if f"Endpoint with name '{endpoint_name}' already exists" in e.args[0]:
-    print(f"Endpoint with name {endpoint_name} already exists, updating it with model {model_name}-{model_version} ({str(e)})")
-
+if not is_smoke_test:
+  try:
+    # Update with new model version
     w.serving_endpoints.update_config(
+        name=endpoint_name,
+        served_entities=endpoint_config.served_entities,
+        traffic_config=endpoint_config.traffic_config
+      )
+    
+    print(f"Updating endpoint {endpoint_name} with models {model_name} version {model_version}")
+
+  except ResourceDoesNotExist:
+    w.serving_endpoints.create(
       name=endpoint_name,
-      served_models=endpoint_config.served_models,
-      traffic_config=endpoint_config.traffic_config
+      config=endpoint_config,
+      tags=[EndpointTag.from_dict({"key": "dbdemos", "value": "advanced_mlops_churn"})]
     )
-  else:
-    raise(e)
+    
+    print(f"Creating endpoint {endpoint_name} with models {model_name} version {model_version}")
 
 # COMMAND ----------
 
@@ -418,10 +397,12 @@ except Exception as e:
 
 from datetime import timedelta
 
-# Wait for the endpoint to be ready or finish updating
-endpoint = w.serving_endpoints.wait_get_serving_endpoint_not_updating(endpoint_name, timeout=timedelta(minutes=120))
 
-assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.ready.value == "READY" , "Endpoint not ready or failed"
+if not is_smoke_test:
+  # Wait for the endpoint to be ready or finish updating
+  endpoint = w.serving_endpoints.wait_get_serving_endpoint_not_updating(endpoint_name, timeout=timedelta(minutes=30))
+
+  assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.ready.value == "READY" , "Endpoint not ready or failed"
 
 # COMMAND ----------
 
@@ -435,8 +416,8 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
-# MAGIC     {"customer_id": "0002-ORFBO", "scoring_timestamp": "2024-09-10"},
-# MAGIC     {"customer_id": "0003-MKNFE", "scoring_timestamp": "2024-9-10"}
+# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23"},
+# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23"}
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
@@ -457,9 +438,10 @@ assert endpoint.state.config_update.value == "NOT_UPDATING" and endpoint.state.r
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 from mlflow.models import Model
 
+
 # Setting these variables again in case the user skipped running the cells to deploy the model
-endpoint_name = "advanced_mlops_churn_ep"
-model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
+endpoint_name = "advanced_mlops_churn_aeh"
+# model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
 p = ModelsArtifactRepository(f"models:/{model_name}/{model_version}").download_artifacts("") 
 input_example =  Model.load(p).load_input_example(p)
@@ -467,11 +449,12 @@ input_example =  Model.load(p).load_input_example(p)
 if input_example:
   # Only works if model NOT logged with feature store client
   dataframe_records =  [{input_example.to_dict(orient='records')}]
+  
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {"customer_id": "0002-ORFBO", "transaction_ts": "2024-09-10"},
-    {"customer_id": "0003-MKNFE", "transaction_ts": "2024-09-10"}
+    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23"},
+    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23"}
   ]
 
 # COMMAND ----------
@@ -479,8 +462,9 @@ else:
 # DBTITLE 1,Query endpoint
 import time
 
+
 # Wait 60 seconds for the endpoint so that the endpoint is fully ready to handle errors in the next command
-time.sleep(60)
+# time.sleep(60)
 
 print("Churn inference:")
 response = w.serving_endpoints.query(name=f"{endpoint_name}", dataframe_records=dataframe_records)

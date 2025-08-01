@@ -55,12 +55,7 @@
 
 # COMMAND ----------
 
-# MAGIC  %pip install mlflow==2.22.0 databricks-sdk>=0.40.0
-# MAGIC  dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/00-setup $adv_mlops=true 
+# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=false
 
 # COMMAND ----------
 

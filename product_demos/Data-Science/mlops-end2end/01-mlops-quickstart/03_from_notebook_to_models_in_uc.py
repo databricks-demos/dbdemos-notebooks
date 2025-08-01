@@ -34,7 +34,9 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.22.0
+# MAGIC %pip install --quiet mlflow
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -52,6 +54,7 @@
 
 import mlflow
 
+
 churn_experiment_name = "churn_auto_ml"
 model_name = f"{catalog}.{db}.mlops_churn"
 print(f"Finding best run from {churn_experiment_name}_* and pushing new model version to {model_name}")
@@ -67,7 +70,7 @@ best_model = mlflow.search_runs(
   experiment_ids=experiment_id,
   order_by=["metrics.test_f1_score DESC"],
   max_results=1,
-  filter_string="status = 'FINISHED' and run_name='mlops_best_run'" #filter on mlops_best_run to always use the notebook 02 to have a more predictable demo
+  filter_string="status = 'FINISHED' and run_name='light_gbm_baseline'" #filter on mlops_best_run to always use the notebook 02 to have a more predictable demo
 )
 # Optional: Load MLflow Experiment as a spark df and see all runs
 # df = spark.read.format("mlflow-experiment").load(experiment_id)
@@ -102,6 +105,7 @@ model_details = mlflow.register_model(f"runs:/{run_id}/sklearn_model", model_nam
 # COMMAND ----------
 
 from mlflow import MlflowClient
+
 
 client = MlflowClient()
 
@@ -140,9 +144,9 @@ client.set_model_version_tag(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Set the latest model version as the Challenger model
+# MAGIC ## Set the latest model version as the Baseline/Challenger model
 # MAGIC
-# MAGIC We will set this newly registered model version as the __Challenger__ model. Challenger models are candidate models to replace the Champion model, which is the model currently in use.
+# MAGIC We will set this newly registered model version as the __Challenger__ _(or __Baseline__) model_. Challenger models are candidate models to replace the Champion model, which is the model currently in use.
 # MAGIC
 # MAGIC We will use the model's alias to indicate the stage it is at in its lifecycle.
 
@@ -151,7 +155,7 @@ client.set_model_version_tag(
 # Set this version as the Challenger model, using its model alias
 client.set_registered_model_alias(
   name=model_name,
-  alias="Challenger",
+  alias="Challenger", # Baseline
   version=model_details.version
 )
 

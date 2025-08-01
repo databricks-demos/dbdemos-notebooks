@@ -9,9 +9,7 @@
 # MAGIC In order to simulate some data drifts, we will use [_dbldatagen_ library](https://github.com/databrickslabs/dbldatagen), a Databricks Labs project which is a Python library for generating synthetic data using Spark.
 # MAGIC
 # MAGIC We will simulate label drift using the data generator package.
-# MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors.
-# MAGIC
-# MAGIC _We will set all labels to True_
+# MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors. _We will create both label and prediction drifts_
 
 # COMMAND ----------
 
@@ -30,11 +28,20 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC databricks-sdk==0.60.0
+# MAGIC mlflow-skinny==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
 # DBTITLE 1,Install needed package
-# MAGIC %pip install -qU databricks-sdk==0.40.0 dbldatagen mlflow==2.22.0
+# MAGIC %pip install --quiet databricks-sdk mlflow-skinny --upgrade dbldatagen
 # MAGIC
 # MAGIC
-# MAGIC dbutils.library.restartPython()
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -74,7 +81,7 @@ refresh_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.advanc
 
 while refresh_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
   refresh_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.advanced_churn_inference_table", refresh_id=refresh_info.refresh_id)
-  time.sleep(30)
+  time.sleep(180)
 
 # COMMAND ----------
 
@@ -143,7 +150,7 @@ SELECT
   Model_Version AS `Model Id`
 FROM {profile_table_name}
 WHERE
-  window.start >= "2024-06-01"
+  window.start >= "2025-06-28"
 	AND log_type = "INPUT"
   AND column_name = ":table"
   AND slice_key is null
@@ -171,7 +178,7 @@ drift_metrics_df = spark.sql(f"""
 FROM {drift_table_name}
 WHERE
   column_name IN ('prediction', 'churn')
-  AND window.start >= "2024-06-01"
+  AND window.start >= "2025-06-30"
   AND slice_key is null
   AND slice_value is null
   AND Model_Version = '{model_id}'
@@ -186,6 +193,8 @@ display(drift_metrics_df )
 
 # DBTITLE 1,Unstack dataframe
 from pyspark.sql.functions import first
+
+
 # If no drift on the label or prediction, we skip it
 if not drift_metrics_df.isEmpty():
     unstacked_drift_metrics_df = (

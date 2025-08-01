@@ -185,6 +185,72 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## 2.1. Create a lakebase
+
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.database import DatabaseInstance
+from databricks.sdk.service.database import SyncedDatabaseTable, SyncedTableSpec, NewPipelineSpec, SyncedTableSchedulingPolicy
+
+# Initialize the Workspace client
+w = WorkspaceClient()
+
+# COMMAND ----------
+
+# Create a database instance
+instance = w.database.create_database_instance(
+    DatabaseInstance(
+        name="iot-database-instance",
+        capacity="CU_1"
+    )
+)
+
+print(f"Created database instance: {instance.name}")
+print(f"Connection endpoint: {instance.read_write_dns}")
+
+# COMMAND ----------
+
+# Create a synced table in a standard UC catalog
+synced_table = w.database.create_synced_database_table(
+    SyncedDatabaseTable(
+        name=f"{catalog}.{db}.iot-database-instance",  # Full three-part name
+        database_instance_name="aapo",  # Required for standard catalogs
+        logical_database_name="iot_db",  # Required for standard catalogs
+        spec=SyncedTableSpec(
+            source_table_full_name=f"{catalog}.{db}.turbine_current_features",
+            primary_key_columns=["turbine_id"],
+            scheduling_policy=SyncedTableSchedulingPolicy.SNAPSHOT,
+            timeseries_key="hourly_timestamp",
+            create_database_objects_if_missing=True,  # Create database/schema if needed
+            new_pipeline_spec=NewPipelineSpec(
+                storage_catalog="storage_catalog",
+                storage_schema="storage_schema"
+            )
+        ),
+    )
+)
+print(f"Created synced table: {synced_table.name}")
+
+# Check the status of a synced table
+synced_table_name = f"{catalog}.{db}.turbine_current_features_synced"
+status = w.database.get_synced_database_table(name=synced_table_name)
+print(f"Synced table status: {status.data_synchronization_status.detailed_state}")
+print(f"Status message: {status.data_synchronization_status.message}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 2.2. Create the retriever
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE FUNCTION turbine_specifications_retriever(turbine_id STRING)
 # MAGIC RETURNS STRUCT<turbine_id STRING, hourly_timestamp STRING, avg_energy DOUBLE, std_sensor_A DOUBLE, std_sensor_B DOUBLE, std_sensor_C DOUBLE, std_sensor_D DOUBLE, std_sensor_E DOUBLE, std_sensor_F DOUBLE, country STRING, lat STRING, location STRING, long STRING, model STRING, state STRING>
@@ -192,7 +258,7 @@
 # MAGIC COMMENT 'Returns the specifications of one specific turbine based on its turbine id'
 # MAGIC RETURN (
 # MAGIC   SELECT struct(turbine_id, hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, country, lat, location, long, model, state)
-# MAGIC   FROM turbine_current_features
+# MAGIC   FROM turbine_current_features_synced2
 # MAGIC   WHERE turbine_id = turbine_specifications_retriever.turbine_id
 # MAGIC   LIMIT 1
 # MAGIC );

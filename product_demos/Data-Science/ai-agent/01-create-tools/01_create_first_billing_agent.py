@@ -30,10 +30,23 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC Generate synthetic data we're going to use with our agents.
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/02-data-generation
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/03-doc-pdf-documentation
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC
-# MAGIC ## 1. Get the customer details based on its email
+# MAGIC ## 1. Get the customer details based on their email
 # MAGIC
-# MAGIC Let's add a function to retrieve a customer detail based on its email.
+# MAGIC Let's add a function to retrieve a customer detail based on their email.
 # MAGIC
 # MAGIC *Note: realtime postgres tables could be used to provide low latencies for point-queries like these. However, to keep this demo simple, we'll use a SQL endpoint. Using a SQL endpoint is also a very good way to provide analytics capabilities to your agent!*
 # MAGIC
@@ -169,7 +182,7 @@ def calculate_math_expression(expression: str) -> float:
     except Exception as e:
         raise ValueError(f"Invalid expression: {expression}. Error: {str(e)}")
 
-print(calculate_math_expression("2 + 3 * (4 - 1)"))
+print(calculate_math_expression("6 + 3 * (13 - 1)"))
 
 # COMMAND ----------
 

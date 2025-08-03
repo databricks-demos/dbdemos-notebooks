@@ -188,9 +188,11 @@
 # MAGIC %md
 # MAGIC ## 2.1. Create a lakebase
 # MAGIC
-# MAGIC Lakebase is a new feature provided by Databricks adding support for transactional (OLTP) databases to perform as in our case transactional reads. You can discover more here: https://learn.microsoft.com/en-us/azure/databricks/oltp/
+# MAGIC Lakebase is a new feature provided by Databricks adding support for transactional (OLTP) databases to perform as in our case transactional reads. Without any manual effort or delta table is synced to a managed postgress database for transactional operations. You can discover more here: https://learn.microsoft.com/en-us/azure/databricks/oltp/
 # MAGIC
 # MAGIC Let's create first a so called snyced table running on the OLTP database before creating our retriever.
+# MAGIC
+# MAGIC Hereby we are using the Python SDK. You can also perform those steps using the UI following the Docu above or the Demo here: https://www.databricks.com/resources/demos/tours/appdev/databricks-lakebase?itm_data=demo_center
 
 # COMMAND ----------
 
@@ -203,13 +205,21 @@ w = WorkspaceClient()
 
 # COMMAND ----------
 
-# Create a database instance
-instance = w.database.create_database_instance(
-    DatabaseInstance(
-        name="iot-database-instance",
-        capacity="CU_1"
-    )
-)
+# Get instance if already exists
+try:
+    instance = w.database.get_database_instance("iot-database-instance")
+
+# Create a database instance if not exists
+except Exception as e:
+    if "Resource not found" in str(e):
+        instance = w.database.create_database_instance(
+            DatabaseInstance(
+                name="iot-database-instance",
+                capacity="CU_1"
+            )
+        )
+    else:
+        raise e
 
 print(f"Created database instance: {instance.name}")
 print(f"Connection endpoint: {instance.read_write_dns}")
@@ -219,8 +229,8 @@ print(f"Connection endpoint: {instance.read_write_dns}")
 # Create a synced table in a standard UC catalog
 synced_table = w.database.create_synced_database_table(
     SyncedDatabaseTable(
-        name=f"{catalog}.{db}.iot-database-instance",  # Full three-part name
-        database_instance_name="aapo",  # Required for standard catalogs
+        name=f"{catalog}.{db}.turbine_current_features_synced",  # Full three-part name
+        database_instance_name="iot-database-instance",  # Required for standard catalogs
         logical_database_name="iot_db",  # Required for standard catalogs
         spec=SyncedTableSpec(
             source_table_full_name=f"{catalog}.{db}.turbine_current_features",
@@ -246,11 +256,6 @@ print(f"Status message: {status.data_synchronization_status.message}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ## 2.2. Create the retriever
 
 # COMMAND ----------
@@ -262,7 +267,7 @@ print(f"Status message: {status.data_synchronization_status.message}")
 # MAGIC COMMENT 'Returns the specifications of one specific turbine based on its turbine id'
 # MAGIC RETURN (
 # MAGIC   SELECT struct(turbine_id, hourly_timestamp, avg_energy, std_sensor_A, std_sensor_B, std_sensor_C, std_sensor_D, std_sensor_E, std_sensor_F, country, lat, location, long, model, state)
-# MAGIC   FROM turbine_current_features_synced2
+# MAGIC   FROM turbine_current_features_synced
 # MAGIC   WHERE turbine_id = turbine_specifications_retriever.turbine_id
 # MAGIC   LIMIT 1
 # MAGIC );

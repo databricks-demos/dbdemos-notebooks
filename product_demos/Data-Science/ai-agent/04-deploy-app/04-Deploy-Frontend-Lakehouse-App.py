@@ -37,6 +37,10 @@
 
 # COMMAND ----------
 
+print(f"The Databricks APP will be using the following model serving endpoint: {ENDPOINT_NAME}")
+
+# COMMAND ----------
+
 import yaml
 
 # Our frontend application will hit the model endpoint we deployed.
@@ -141,6 +145,13 @@ except Exception as e:
 
 # MAGIC %md 
 # MAGIC Once the app is created, we can (re)deploy the code as following:
+
+# COMMAND ----------
+
+import mlflow
+
+xp_name = os.getcwd().rsplit("/", 1)[0]+"/03-knowledge-base-rag/03.1-pdf-rag-tool"
+mlflow.set_experiment(xp_name)
 
 # COMMAND ----------
 

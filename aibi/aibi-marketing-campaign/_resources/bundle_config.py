@@ -64,6 +64,44 @@
       ],
       [
         "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.metrics_daily_rolling AS SELECT CAST(event_date AS date) AS date, count(distinct case when event_type = 'click' then contact_id end) as unique_clicks, SUM(CASE WHEN event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered, SUM(CASE WHEN event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent, SUM(CASE WHEN event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens, SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks, SUM(CASE WHEN event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts, SUM(CASE WHEN event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam FROM `{{CATALOG}}`.`{{SCHEMA}}`.events GROUP BY date"
+      ],
+      [
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns IS 'The table contains data related to marketing campaigns. It includes details such as campaign identifiers, names, descriptions, and the email subject lines used. Additionally, it tracks the cost of each campaign, the duration (start and end dates), and the mailing lists associated with them. This data can be used for analyzing campaign performance, budgeting, and understanding audience engagement.'",
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts IS 'The table contains information about contacts associated with prospects. It includes details such as the contacts department, job title, and the source of their information. This data can be used for managing relationships with prospects, analyzing communication preferences, and understanding the demographics of contacts. Additionally, the opted-out flag helps in compliance with marketing regulations.'",
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events IS 'The table captures data related to marketing events associated with campaigns. It includes details such as the unique event identifier, the campaign and contact involved, the type of event (like opens or clicks), and the date of the event. This data can be used for analyzing campaign performance, understanding user engagement, and optimizing marketing strategies.'",
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks IS 'The table contains feedback data related to marketing campaigns. It includes information about the campaign ID, the contact who provided the feedback, and the feedback itself. This data can be used to analyze customer sentiments regarding specific campaigns, track the effectiveness of marketing efforts, and identify areas for improvement based on customer input.'",
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues IS 'The table contains data related to customer complaints associated with marketing campaigns. It includes information on the campaign ID, the types of complaints received (such as GDPR or CAN-SPAM Act), and the contact ID of the individual submitting the issue. This data can be used to analyze complaint trends, assess compliance with regulations, and improve campaign strategies.'",
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.metrics_daily_rolling IS 'The table contains metrics related to email campaign performance. It includes data on unique clicks, total delivered emails, total sent emails, total opens, total clicks, total opt-outs, and total spam reports, all organized by date. This information can be used to evaluate the effectiveness of email marketing strategies, track engagement levels, and identify areas for improvement in future campaigns.'",
+        "COMMENT ON TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects IS 'The table contains information about business prospects, including their unique identifiers, names, annual revenues, employee counts, and industry sectors. It also includes geographical details such as country, city, and postal code. This data can be used for market analysis, lead generation, and understanding the potential customer base.'"
+      ],
+      [
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns ALTER COLUMN campaign_id SET NOT NULL",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns ADD CONSTRAINT campaigns_pk PRIMARY KEY(campaign_id)",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ALTER COLUMN contact_id SET NOT NULL",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ADD CONSTRAINT contact_pk PRIMARY KEY(contact_id)",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ALTER COLUMN event_id SET NOT NULL",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ADD CONSTRAINT event_pk PRIMARY KEY(event_id)",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects ALTER COLUMN prospect_id SET NOT NULL",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects ADD CONSTRAINT prospect_pk PRIMARY KEY(prospect_id)",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ADD CONSTRAINT contact_prospect_fk FOREIGN KEY(prospect_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.prospects NOT ENFORCED RELY",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ADD CONSTRAINT event_campaign_fK FOREIGN KEY(campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns NOT ENFORCED RELY",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ADD CONSTRAINT event_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks ADD CONSTRAINT feedback_campaign_fk FOREIGN KEY(campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns NOT ENFORCED RELY",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks ADD CONSTRAINT feedback_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues ADD CONSTRAINT issue_campaign_fk FOREIGN KEY(campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns NOT ENFORCED RELY",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues ADD CONSTRAINT issue_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY"
+      ],
+      [
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues SET TAGS ('system.Certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns SET TAGS ('system.Certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events SET TAGS ('system.Certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts SET TAGS ('system.Certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks SET TAGS ('system.Certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects SET TAGS ('system.Certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.metrics_daily_rolling SET TAGS ('system.Certified')"
+      ],
+      [
+        "CREATE FUNCTION `{{CATALOG}}`.`{{SCHEMA}}`.get_highest_ctr() RETURNS TABLE(campaign_id INT, campaign_name STRING, ctr DOUBLE) OMMENT 'Function that extracts the campaign with the highest click through rate ever' RETURN SELECT campaign_id, campaign_name, ctr FROM (SELECT e.campaign_id, c.campaign_name, try_divide(SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END), SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END)) AS ctr FROM `{{CATALOG}}`.`{{SCHEMA}}`.`events` e INNER JOIN `{{CATALOG}}`.`{{SCHEMA}}`.`campaigns` c ON e.campaign_id = c.campaign_id WHERE e.event_type IN ('delivered', 'click') GROUP BY e.campaign_id, c.campaign_name ORDER BY ctr DESC LIMIT 1)"
       ]
   ],
   "genie_rooms":[
@@ -88,7 +126,15 @@
             "content": "SELECT e.campaign_id, first(c.campaign_name) as campaign_name, first(c.campaign_description) as campaign_description, first(c.subject_line) as subject_line, first(c.template) as template, first(c.cost) as cost, first(c.start_date) as start_date, first(c.end_date) as end_date, to_timestamp(first(c.start_date)) as _start_date, to_timestamp(first(c.end_date)) as _end_date, SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent, SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered, SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam, SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens, SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts, SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks, count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks, unique_clicks / total_delivered as ctr, format_number(ctr, '##.##%') as ctr_p, total_delivered / total_sent as delivery_rate, format_number(delivery_rate, '##.##%') as delivery_rate_p, total_optouts / total_delivered as optouts_rate, format_number(optouts_rate, '##.##%') as optouts_rate_p, total_spam / total_delivered as spam_rate, format_number(spam_rate, '##.##%') as spam_rate_p, sum(p.employees) as total_employees FROM {{CATALOG}}.{{SCHEMA}}.events e INNER JOIN {{CATALOG}}.{{SCHEMA}}.campaigns c on e.campaign_id = c.campaign_id INNER JOIN {{CATALOG}}.{{SCHEMA}}.contacts ct on e.contact_id = ct.contact_id INNER JOIN {{CATALOG}}.{{SCHEMA}}.prospects p on ct.prospect_id = p.prospect_id GROUP BY e.campaign_id HAVING _start_date >= :start_date AND _end_date <= :end_date ORDER BY ctr desc, cost ASC LIMIT 20"
         }
     ],
-     "instructions": "If a customer ask a forecast, leverage the sql fonction ai_forecast",
+     "instructions": 
+       [
+         "If a customer ask a forecast, leverage the sql fonction ai_forecast",
+         "The mailing_list column in the campaigns table contains all the contact_ids of the contacts to whom the campaign was sent.",
+         "When you do joins between tables consider the foreign keys references."
+       ]
+     "function_names": [
+          "{{CATALOG}}.{{SCHEMA}}.get_highest_ctr"
+        ], 
      "curated_questions": [
         "How has the total number of emails sent, delivered, and the unique clicks evolved over the last six months?",
         "Which industries have shown the highest engagement rates with marketing campaigns?",

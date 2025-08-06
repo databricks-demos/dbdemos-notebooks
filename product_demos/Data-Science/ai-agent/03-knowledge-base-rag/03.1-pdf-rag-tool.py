@@ -22,7 +22,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install -U -qqqq mlflow>=3.1.1 langchain langgraph==0.5.0 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
+# MAGIC %pip install -U -qqqq mlflow>=3.1.1 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -38,15 +38,25 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC LIST '/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/'
+volume_path = f'/Volumes/{catalog}/{dbName}/{volume_name}/pdf_documentation'
+volume_path
+
+# COMMAND ----------
+
+display(spark.sql(f"""
+SELECT
+  path
+FROM
+  READ_FILES('{volume_path}', format => 'binaryFile')
+"""))
 
 # COMMAND ----------
 
 # DBTITLE 1,let's try our ai_parse_document function
-# MAGIC %sql
-# MAGIC SELECT ai_parse_document(content) AS parsed_document
-# MAGIC   FROM READ_FILES("/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/", format => 'binaryFile') limit #
+display(spark.sql(f"""
+SELECT ai_parse_document(content) AS parsed_document
+  FROM READ_FILES('{volume_path}', format => 'binaryFile') limit 2
+  """))
 
 # COMMAND ----------
 
@@ -74,31 +84,35 @@
 # MAGIC
 # MAGIC Let's now use Databricks built in `ai_parse_document` function to automatically parse the PDF document for us, making it super easy to extract the information!
 # MAGIC
-# MAGIC *Note: in this case, we have relatively small pdf documents, so we'll merge all the pages in one single value for our RAG system to work properly. Bigger docs might need some pre-processing steps to potentially reduce context size and be able to search/retreive more documents, adding potential pre-processing steps, for example ensuring the WIFI Router model is present in all the chunk to keep the vector search more relevant.*
+# MAGIC *Note: in this case, we have relatively small pdf documents, so we'll merge all the pages of the document in one single text field for our RAG system to work properly. Bigger docs might need some pre-processing steps to potentially reduce context size and be able to search/retreive more documents, adding potential pre-processing steps, for example ensuring the WIFI Router model is present in all the chunk to keep the vector search more relevant.*
+
+# COMMAND ----------
+
+display(spark.sql(f"""
+INSERT OVERWRITE TABLE knowledge_base (product_name, title, content, doc_uri)
+SELECT ai_extract.product_name, ai_extract.title, content, doc_uri
+FROM (
+  SELECT
+    ai_extract(content, array('product_name', 'title')) AS ai_extract,
+    content,
+    doc_uri
+  FROM (
+     -- TODO: review why parsed_document:document.pages[*].content isn't working
+    SELECT array_join(
+            transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
+           path as doc_uri
+    FROM (
+      SELECT ai_parse_document(content) AS parsed_document, path
+      FROM READ_FILES('{volume_path}', format => 'binaryFile') 
+      -- LIMIT 5 -- YOU CAN ADD LIMIT TO LIMIT COST FOR THE DEMO - DROP IT IN REAL WORKLOAD
+    )
+  )
+);
+"""))
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC INSERT OVERWRITE TABLE knowledge_base (product_name, title, content, doc_uri)
-# MAGIC SELECT ai_extract.product_name, ai_extract.title, content, doc_uri
-# MAGIC FROM (
-# MAGIC   SELECT
-# MAGIC     ai_extract(content, array('product_name', 'title')) AS ai_extract,
-# MAGIC     content,
-# MAGIC     doc_uri
-# MAGIC   FROM (
-# MAGIC      -- TODO: review why parsed_document:document.pages[*].content isn't working
-# MAGIC     SELECT array_join(
-# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
-# MAGIC            path as doc_uri
-# MAGIC     FROM (
-# MAGIC       SELECT ai_parse_document(content) AS parsed_document, path
-# MAGIC       FROM READ_FILES("/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/", format => 'binaryFile') 
-# MAGIC       LIMIT 5 -- ADD LIMIT TO LIMIT COST FOR THE DEMO - DROP IT IN REAL WORKLOAD
-# MAGIC     )
-# MAGIC   )
-# MAGIC );
-# MAGIC
 # MAGIC -- Check results
 # MAGIC SELECT * FROM knowledge_base;
 
@@ -142,9 +156,9 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 # MAGIC
 # MAGIC Note that Databricks provides 3 type of vector search:
 # MAGIC
-# MAGIC * Managed embedding: Databricks creates the embeddings for you from a text field and Databricks synchronize the Delta table to your index (what we'll use)
-# MAGIC * Self managed embeddings: You compute the embeddings yourself and save them to your Delta table  and Databricks synchronize the Delta table to your index
-# MAGIC * Direct access: you manage the VS indexation yourself (no Delta table)
+# MAGIC * **Managed embeddings**: Databricks creates the embeddings for you from a text field and Databricks synchronize the Delta table to your index (what we'll use)
+# MAGIC * **Self managed embeddings**: You compute the embeddings yourself and save them to your Delta table  and Databricks synchronize the Delta table to your index
+# MAGIC * **Direct access**: you manage the VS indexation yourself (no Delta table)
 # MAGIC
 # MAGIC This can be done using the API, or in a few clicks within the Unity Catalog Explorer menu:
 # MAGIC
@@ -157,9 +171,9 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 from databricks.sdk import WorkspaceClient
 
 #The table we'd like to index
-source_table_fullname = f"{catalog}.{db}.knowledge_base"
+source_table_fullname = f"{catalog}.{dbName}.knowledge_base"
 # Where we want to store our index
-vs_index_fullname = f"{catalog}.{db}.knowledge_base_vs_index"
+vs_index_fullname = f"{catalog}.{dbName}.knowledge_base_vs_index"
 
 if not index_exists(vsc, VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname):
   print(f"Creating index {vs_index_fullname} on endpoint {VECTOR_SEARCH_ENDPOINT_NAME}...")
@@ -218,37 +232,73 @@ docs
 # COMMAND ----------
 
 import yaml
-mlflow.set_experiment(os.getcwd().rsplit("/", 1)[0]+"/02-agent-eval/02.1_agent_evaluation")
+import mlflow
 
-try:
-    config = yaml.safe_load(open(conf_path))
-    config["config_version_name"] = "model_with_retriever"
-    config["retriever_config"] =  {
+conf_path = 'agent_config.yaml'
+# This must be a tool-enabled model
+LLM_ENDPOINT_NAME = 'databricks-claude-3-7-sonnet'
+
+rag_chain_config = {
+    "config_version_name": "model_with_retriever",
+    "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],
+    "uc_tool_names": [f"{catalog}.{dbName}.*"],
+    "system_prompt": "You are a telco assistant. Call the appropriate tool to help the user with billing, support, or account info. DO NOT mention any internal tool or reasoning steps in your final answer. Do not say according to records or imply that you are looking up information.",
+    "llm_endpoint_name": LLM_ENDPOINT_NAME,
+    "max_history_messages": 20,
+    "retriever_config": {
       "index_name": vs_index_fullname,
       "tool_name": "product_technical_docs_retriever",
       "num_results": 1,
-      "description": "Retrieves internal documentation about our products, infrastructure, router and other, including features, usage, and troubleshooting. Use this tool for any questions about product documentation."
+      "description": "Retrieves internal documentation about our products, infrastructure, router and other, including features, usage, and troubleshooting. Use this tool for any questions about product documentation or product issues."
     }
-    yaml.dump(config, open(conf_path, "w"))
-except Exception as e:
-    print(f"Skipped update - ignore for job run - {e}")
+}
+try:
+    with open(conf_path, 'w') as f:
+        yaml.dump(rag_chain_config, f)
+except:
+    print('pass to work on build job')
 
 model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
 # COMMAND ----------
 
-import mlflow
 from agent import AGENT 
+
+request_example = "How do I restart my WIFI router ADSL-R500?"
+answer = AGENT.predict({"input":[{"role": "user", "content": request_example}]})
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Now log the new agent in the MLflow model registry using `mlflow.pyfunc.log_model()` as in the notebook `02.1_agent evaluation`.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC To ensure correct setup of authentication for the Databricks Model Serving infrastructure/service account used to deploy a model serving endpoint, you need specify required resources when you register the model in MLflow. The model serving principal needs access to a Unity Catalog entities such as a registered model, table, or Vector Search index referenced during model loading or inference.
+
+# COMMAND ----------
+
+# Agent automatically captures required resources for agent execution
+for r in AGENT.get_resources():
+  print(f"Resource: {type(r).__name__}:{r.name}")
+
+# COMMAND ----------
+
+from mlflow.models.resources import DatabricksVectorSearchIndex, DatabricksServingEndpoint
+
 request_example = "How do I restart my WIFI router ADSL-R500?"
 
-# Let's reuse the functions we had in our initial notebooks 02.1_agent_evaluation to load and eval the new version of the model (included in the _resource file)
-logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
-# Load the model and create a prediction function
-loaded_model = mlflow.pyfunc.load_model(f"runs:/{logged_agent_info.run_id}/agent")
-
-#Let's give it a try and make sure our retriever gets called
-answer = predict_wrapper(request_example)
-print(answer)
+with mlflow.start_run(run_name=model_config.get('config_version_name')):
+  logged_agent_info = mlflow.pyfunc.log_model(
+    name="agent",
+    python_model="agent.py",
+    model_config="agent_config.yaml",
+    input_example={"input": [{"role": "user", "content": request_example}]},
+     # Determine resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough for deployment
+    resources=AGENT.get_resources(),
+    extra_pip_requirements=["databricks-connect"]
+    )
 
 # COMMAND ----------
 
@@ -291,9 +341,9 @@ question_guidelines = """
 evals = generate_evals_df(
     docs,
     # The total number of evals to generate. The method attempts to generate evals that have full coverage over the documents
-    # provided. If this number is less than the number of documents, is less than the number of documents,
+    # provided. If this number is less than the number of documents,
     # some documents will not have any evaluations generated. See "How num_evals is used" below for more details.
-    num_evals=5,
+    num_evals=40,
     # A set of guidelines that help guide the synthetic generation. These are free-form strings that will be used to prompt the generation.
     agent_description=agent_description,
     question_guidelines=question_guidelines
@@ -319,12 +369,23 @@ print("Added records to the evaluation dataset.")
 # COMMAND ----------
 
 from mlflow.genai.scorers import RetrievalGroundedness, RelevanceToQuery, Safety, Guidelines
+import pandas as pd
 
 eval_dataset = mlflow.genai.datasets.get_dataset(f"{catalog}.{dbName}.ai_agent_mlflow_eval")
 
 #Get the same scorers as previously (function is defined in _resources/01-setup, similar to the previous step)
 scorers = get_scorers()
 
+# Load the model and create a prediction function
+loaded_model = mlflow.pyfunc.load_model(f"runs:/{logged_agent_info.run_id}/agent")
+def predict_wrapper(question):
+    # Format for chat-style models
+    model_input = pd.DataFrame({
+        "input": [[{"role": "user", "content": question}]]
+    })
+    response = loaded_model.predict(model_input)
+    return response['output'][-1]['content'][-1]['text']
+    
 print("Running evaluation...")
 with mlflow.start_run(run_name='eval_with_retriever'):
     results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
@@ -345,10 +406,8 @@ UC_MODEL_NAME = f"{catalog}.{dbName}.{MODEL_NAME}"
 # register the model to UC
 client = MlflowClient()
 uc_registered_model_info = mlflow.register_model(model_uri=logged_agent_info.model_uri, name=UC_MODEL_NAME, tags={"model": "customer_support_agent", "model_version": "with_retriever"})
-client.set_registered_model_alias(name=UC_MODEL_NAME, alias="model-to-deploy", version=uc_registered_model_info.version)
 
-# Create HTML link to created agent
-displayHTML(f'<a href="/explore/data/models/{catalog}/{dbName}/{MODEL_NAME}" target="_blank">Open Unity Catalog to see Registered Agent</a>')
+client.set_registered_model_alias(name=UC_MODEL_NAME, alias="model-to-deploy", version=uc_registered_model_info.version)
 
 # COMMAND ----------
 
@@ -356,8 +415,7 @@ from databricks import agents
 # Deploy the model to the review app and a model serving endpoint
 endpoint_name = f'{MODEL_NAME}_{catalog}_{db}'[:60]
 
-if len(agents.get_deployments(model_name=UC_MODEL_NAME, model_version=uc_registered_model_info.version)) == 0:
-  agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, endpoint_name=endpoint_name, tags = {"project": "dbdemos"})
+agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, endpoint_name=endpoint_name, tags = {"project": "dbdemos"})
 
 # COMMAND ----------
 

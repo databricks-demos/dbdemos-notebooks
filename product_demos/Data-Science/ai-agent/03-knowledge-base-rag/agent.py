@@ -206,7 +206,7 @@ class LangGraphResponsesAgent(ResponsesAgent):
 
 
 # Load configuration values from YAML
-model_config = ModelConfig(development_config="agent_config.yaml")
+model_config = ModelConfig(development_config="./agent_config.yaml")
 
 # Instantiate agent
 AGENT = LangGraphResponsesAgent(

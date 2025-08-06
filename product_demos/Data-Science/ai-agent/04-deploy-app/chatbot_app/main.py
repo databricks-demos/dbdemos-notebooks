@@ -50,6 +50,7 @@ def respond(message, history, dropdown):
         output_messages = response['output']
         trace_id = response.get("databricks_output", {}).get("trace", {}).get("info", {}).get("trace_id")
         print(f"Trace ID: {trace_id}")
+
         thoughts = []
         final_msg = ""
 
@@ -163,15 +164,11 @@ with gr.Blocks(theme=theme) as demo:
     # --- Feedback Handler: Extract trace_id from options ---
     def handle_feedback(history, like_data: gr.LikeData):
         idx = like_data.index
-        msg = history[idx]
-        trace_id = None
+
+        print(f"History in handle_feedback: {history}")
 
         # Extract trace_id from options
-        if 'options' in msg:
-            for option in msg["options"]:
-                if option.get("label") == "trace_id":
-                    trace_id = option.get("value")
-                break
+        trace_id = next((v.get('value') for m in history if m['role'] == 'assistant' for v in m['options'] if v.get('label') == 'trace_id'), None)
 
         if not trace_id:
             return gr.Markdown("No trace ID found for this message.", visible=True)

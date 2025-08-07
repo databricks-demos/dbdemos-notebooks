@@ -157,7 +157,7 @@
             "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_clicks FROM `{{CATALOG}}`.`{{SCHEMA}}`.`events` e INNER JOIN `{{CATALOG}}`.`{{SCHEMA}}`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = 'click' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY total_clicks DESC LIMIT 1"
         },
         {
-          "question_text":"What is the total number of opens for each campaign?",
+          "question_text":"What is the total number of opens for each campaign? Order by campaign id",
           "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_opens FROM `{{CATALOG}}`.`{{SCHEMA}}`.`events` e INNER JOIN `{{CATALOG}}`.`{{SCHEMA}}`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = 'html_open' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY e.`campaign_id`"
         },
         {
@@ -165,7 +165,7 @@
           "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_opens FROM `{{CATALOG}}`.`{{SCHEMA}}`.`events` e INNER JOIN `{{CATALOG}}`.`{{SCHEMA}}`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = 'html_open' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY total_opens DESC LIMIT 1"
         },
         {
-          "question_text":"What is the total number of clicks for each campaign?",
+          "question_text":"What is the total number of clicks for each campaign? Order by campaign id",
           "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_clicks FROM `{{CATALOG}}`.`{{SCHEMA}}`.`events` e INNER JOIN `{{CATALOG}}`.`{{SCHEMA}}`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = ''click'' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY e.`campaign_id`"
         }
     ]

@@ -30,20 +30,6 @@
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.core import ApiClient
-
-w = WorkspaceClient()
-api_client = ApiClient()
-
-get_flag_response = api_client.do("GET", "/api/2.0/workspace-conf", {"keys": "enableGitProxy"})
-get_cluster_id_response = api_client.do("GET", "/api/2.0/workspace-conf", {"keys": "gitProxyClusterId"})
-
-print(f"Get enableGitProxy response: {get_flag_response}")
-print(f"Get gitProxyClusterId response: {get_cluster_id_response}")
-
-# COMMAND ----------
-
 # DBTITLE 1,Data initialization - run the cell to prepare the demo data.
 # MAGIC %run ./_resources/00-setup $reset_all_data=false
 

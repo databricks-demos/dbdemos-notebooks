@@ -8,12 +8,6 @@
 # MAGIC </br>
 # MAGIC
 # MAGIC
-# MAGIC Your data lives everywhere. Your insights shouldn't.
-# MAGIC
-# MAGIC In today's complex data landscape, critical business intelligence is often scattered across countless systems – from enterprise applications and databases to streaming feeds, APIs, and beyond. This fragmentation creates silos, delays insights, and hinders innovation.
-# MAGIC
-# MAGIC The Databricks Data Intelligence Platform changes that.
-# MAGIC
 # MAGIC With the Databricks Data Intelligence Platform, you can effortlessly ingest data from virtually any source, unifying your entire data estate into a single, intelligent foundation. Whether it's batch, streaming, or change data capture (CDC), we provide robust, scalable, and easy-to-use tools to bring all your data into the Lakehouse.
 # MAGIC
 # MAGIC Key capabilities include:
@@ -47,9 +41,9 @@
 # MAGIC
 # MAGIC Want to try Lakeflow Connect? Check these Product Tours:
 # MAGIC
-# MAGIC [**Ingest from Salesforce:**](https://app.getreprise.com/launch/BXZjz8X/): Seamlessly integrates Salesforce CRM data (including custom objects and formula fields) with Databricks for analytics and AI.
+# MAGIC [**Ingest from Salesforce:**](https://app.getreprise.com/launch/BXZjz8X/) Seamlessly integrates Salesforce CRM data (including custom objects and formula fields) with Databricks for analytics and AI.
 # MAGIC
-# MAGIC [**Ingest Workday Reports:**](https://app.getreprise.com/launch/ryNY32X/): Quickly ingest and manage Workday data, as well as databases, cloud, and local files, with simple pipeline configuration.
+# MAGIC [**Ingest Workday Reports:**](https://app.getreprise.com/launch/ryNY32X/) Quickly ingest and manage Workday data, as well as databases, cloud, and local files, with simple pipeline configuration.
 
 # COMMAND ----------
 

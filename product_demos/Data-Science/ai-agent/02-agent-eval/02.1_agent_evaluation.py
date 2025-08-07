@@ -245,7 +245,7 @@ scorers = get_scorers()
 
 # COMMAND ----------
 
-with mlflow.start_run(run_name='first_eval'):
+with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
     results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
 
 # COMMAND ----------
@@ -276,12 +276,6 @@ try:
     yaml.dump(config, open("agent_config.yaml", "w"))
 except Exception as e:
     print(f"Skipped update - ignore for job run - {e}")
-
-# COMMAND ----------
-
-# run the evaluation again - still the old prompt
-with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
-    results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
 
 # COMMAND ----------
 

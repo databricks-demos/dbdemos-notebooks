@@ -34,14 +34,6 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/02-data-generation
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/03-doc-pdf-documentation
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC ## 1. Get the customer details based on their email

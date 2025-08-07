@@ -38,25 +38,15 @@
 
 # COMMAND ----------
 
-volume_path = f'/Volumes/{catalog}/{dbName}/{volume_name}/pdf_documentation'
-volume_path
-
-# COMMAND ----------
-
-display(spark.sql(f"""
-SELECT
-  path
-FROM
-  READ_FILES('{volume_path}', format => 'binaryFile')
-"""))
+# MAGIC %sql
+# MAGIC SELECT path FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
 # COMMAND ----------
 
 # DBTITLE 1,let's try our ai_parse_document function
-display(spark.sql(f"""
-SELECT ai_parse_document(content) AS parsed_document
-  FROM READ_FILES('{volume_path}', format => 'binaryFile') limit 2
-  """))
+# MAGIC %sql
+# MAGIC SELECT ai_parse_document(content) AS parsed_document
+# MAGIC   FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
 # COMMAND ----------
 
@@ -88,32 +78,30 @@ SELECT ai_parse_document(content) AS parsed_document
 
 # COMMAND ----------
 
-display(spark.sql(f"""
-INSERT OVERWRITE TABLE knowledge_base (product_name, title, content, doc_uri)
-SELECT ai_extract.product_name, ai_extract.title, content, doc_uri
-FROM (
-  SELECT
-    ai_extract(content, array('product_name', 'title')) AS ai_extract,
-    content,
-    doc_uri
-  FROM (
-     -- TODO: review why parsed_document:document.pages[*].content isn't working
-    SELECT array_join(
-            transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
-           path as doc_uri
-    FROM (
-      SELECT ai_parse_document(content) AS parsed_document, path
-      FROM READ_FILES('{volume_path}', format => 'binaryFile') 
-      -- LIMIT 5 -- YOU CAN ADD LIMIT TO LIMIT COST FOR THE DEMO - DROP IT IN REAL WORKLOAD
-    )
-  )
-);
-"""))
+# MAGIC %sql
+# MAGIC INSERT OVERWRITE TABLE knowledge_base (product_name, title, content, doc_uri)
+# MAGIC SELECT ai_extract.product_name, ai_extract.title, content, doc_uri
+# MAGIC FROM (
+# MAGIC   SELECT
+# MAGIC     ai_extract(content, array('product_name', 'title')) AS ai_extract,
+# MAGIC     content,
+# MAGIC     doc_uri
+# MAGIC   FROM (
+# MAGIC     SELECT array_join(
+# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
+# MAGIC            path as doc_uri
+# MAGIC     FROM (
+# MAGIC       SELECT ai_parse_document(content) AS parsed_document, path
+# MAGIC       FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') 
+# MAGIC       LIMIT 5 -- ADDED FIX LIMIT FOR DEMO COST - DROP IT IN REAL WORKLOAD
+# MAGIC     )
+# MAGIC   )
+# MAGIC );
 
 # COMMAND ----------
 
+# DBTITLE 1,Check results
 # MAGIC %sql
-# MAGIC -- Check results
 # MAGIC SELECT * FROM knowledge_base;
 
 # COMMAND ----------
@@ -231,32 +219,28 @@ docs
 
 # COMMAND ----------
 
-import yaml
 import mlflow
+import yaml, sys, os
+import mlflow.models
+# Add the ../agent_eval path relative to current working directory
+agent_eval_path = os.path.abspath(os.path.join(os.getcwd(), "../02-agent_eval"))
+sys.path.append(agent_eval_path)
+# Let's also use the same experiment as in our previous notebook to keep all the trace in a single place
+mlflow.set_experiment(agent_eval_path+"/02.1_agent_evaluation")
+conf_path = os.path.join(agent_eval_path, 'agent_config.yaml')
 
-conf_path = 'agent_config.yaml'
-# This must be a tool-enabled model
-LLM_ENDPOINT_NAME = 'databricks-claude-3-7-sonnet'
-
-rag_chain_config = {
-    "config_version_name": "model_with_retriever",
-    "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],
-    "uc_tool_names": [f"{catalog}.{dbName}.*"],
-    "system_prompt": "You are a telco assistant. Call the appropriate tool to help the user with billing, support, or account info. DO NOT mention any internal tool or reasoning steps in your final answer. Do not say according to records or imply that you are looking up information.",
-    "llm_endpoint_name": LLM_ENDPOINT_NAME,
-    "max_history_messages": 20,
-    "retriever_config": {
-      "index_name": vs_index_fullname,
-      "tool_name": "product_technical_docs_retriever",
-      "num_results": 1,
-      "description": "Retrieves internal documentation about our products, infrastructure, router and other, including features, usage, and troubleshooting. Use this tool for any questions about product documentation or product issues."
-    }
-}
 try:
-    with open(conf_path, 'w') as f:
-        yaml.dump(rag_chain_config, f)
-except:
-    print('pass to work on build job')
+    config = yaml.safe_load(open(conf_path))
+    config["config_version_name"] = "model_with_retriever"
+    config["retriever_config"] =  {
+        "index_name": vs_index_fullname,
+        "tool_name": "product_technical_docs_retriever",
+        "num_results": 1,
+        "description": "Retrieves internal documentation about our products, infrastructure, router and other, including features, usage, and troubleshooting. Use this tool for any questions about product documentation or product issues."
+    }
+    yaml.dump(config, open(conf_path, "w"))
+except Exception as e:
+    print(f"Skipped update - ignore for job run - {e}")
 
 model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
@@ -264,6 +248,7 @@ model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
 from agent import AGENT 
 
+#Let's try our retriever to make sure we know have access to the wifi router pdf guide
 request_example = "How do I restart my WIFI router ADSL-R500?"
 answer = AGENT.predict({"input":[{"role": "user", "content": request_example}]})
 
@@ -274,20 +259,11 @@ answer = AGENT.predict({"input":[{"role": "user", "content": request_example}]})
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC To ensure correct setup of authentication for the Databricks Model Serving infrastructure/service account used to deploy a model serving endpoint, you need specify required resources when you register the model in MLflow. The model serving principal needs access to a Unity Catalog entities such as a registered model, table, or Vector Search index referenced during model loading or inference.
-
-# COMMAND ----------
-
-# Agent automatically captures required resources for agent execution
+# Agent captures required resources for agent execution, note that it now has the VS index referenced
 for r in AGENT.get_resources():
   print(f"Resource: {type(r).__name__}:{r.name}")
 
 # COMMAND ----------
-
-from mlflow.models.resources import DatabricksVectorSearchIndex, DatabricksServingEndpoint
-
-request_example = "How do I restart my WIFI router ADSL-R500?"
 
 with mlflow.start_run(run_name=model_config.get('config_version_name')):
   logged_agent_info = mlflow.pyfunc.log_model(
@@ -343,7 +319,8 @@ evals = generate_evals_df(
     # The total number of evals to generate. The method attempts to generate evals that have full coverage over the documents
     # provided. If this number is less than the number of documents,
     # some documents will not have any evaluations generated. See "How num_evals is used" below for more details.
-    num_evals=40,
+    num_evals=10
+    ,
     # A set of guidelines that help guide the synthetic generation. These are free-form strings that will be used to prompt the generation.
     agent_description=agent_description,
     question_guidelines=question_guidelines
@@ -408,6 +385,7 @@ client = MlflowClient()
 uc_registered_model_info = mlflow.register_model(model_uri=logged_agent_info.model_uri, name=UC_MODEL_NAME, tags={"model": "customer_support_agent", "model_version": "with_retriever"})
 
 client.set_registered_model_alias(name=UC_MODEL_NAME, alias="model-to-deploy", version=uc_registered_model_info.version)
+displayHTML(f'<a href="/explore/data/models/{catalog}/{dbName}/{MODEL_NAME}" target="_blank">Open Unity Catalog to see Registered Agent</a>')
 
 # COMMAND ----------
 
@@ -415,7 +393,8 @@ from databricks import agents
 # Deploy the model to the review app and a model serving endpoint
 endpoint_name = f'{MODEL_NAME}_{catalog}_{db}'[:60]
 
-agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, endpoint_name=endpoint_name, tags = {"project": "dbdemos"})
+if len(agents.get_deployments(model_name=UC_MODEL_NAME, model_version=uc_registered_model_info.version)) == 0:
+  agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, endpoint_name=endpoint_name, tags = {"project": "dbdemos"})
 
 # COMMAND ----------
 

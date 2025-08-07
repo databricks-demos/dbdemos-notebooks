@@ -61,7 +61,7 @@
       "description": "Start here to explore the Data Intelligence Platform."
     },
     {
-      "path": "01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL", 
+      "path": "01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -69,7 +69,7 @@
       "description": "SQL DLT pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.2-DLT-Wind-Turbine-SQL-UDF", 
+      "path": "01-Data-ingestion/01.2-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL-UDF", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -290,12 +290,12 @@
         "libraries": [
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-DLT-Wind-Turbine-SQL"
+                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL"
                 }
             },
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-DLT-Wind-Turbine-SQL-UDF"
+                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL-UDF"
                 }
             }
         ],

@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.22.0 databricks-sdk==0.40.0
+# MAGIC %pip install mlflow==3.1.1 databricks-sdk==0.59.0
 
 # COMMAND ----------
 
@@ -163,7 +163,6 @@ while client.get_endpoint(MODEL_SERVING_ENDPOINT_NAME)['state']['config_update']
 # DBTITLE 1,Call the REST API deployed using standard python
 from mlflow import deployments
 
-
 def score_model(dataset):
   client = mlflow.deployments.get_deploy_client("databricks")
   predictions = client.predict(endpoint=MODEL_SERVING_ENDPOINT_NAME, inputs=dataset.to_dict(orient='split'))
@@ -171,6 +170,54 @@ def score_model(dataset):
 dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPandas()
 #Deploy your model and uncomment to run your inferences live!
 #score_model(dataset)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Another way to run inference is the use of ai_query. ai_query is one of multiple Databricks SQL ai function that allows you to invoke a machine learning model serving endpoint directly from SQL queries.
+# MAGIC It sends structured input data to the specified model endpoint and returns predictions as part of your query results.
+# MAGIC Benefits:
+# MAGIC - Enables seamless integration of ML predictions into SQL analytics workflows.
+# MAGIC - Allows batch scoring on large datasets using SQL.
+# MAGIC - Simplifies operationalization of ML models for business users and analysts.
+# MAGIC - Reduces the need for custom Python code to call model endpoints.
+# MAGIC
+# MAGIC Find out more here: https://docs.databricks.com/aws/en/large-language-models/ai-functions
+# MAGIC
+# MAGIC Example usage in Databricks SQL:
+# MAGIC ```
+# MAGIC SELECT *, ai_query(
+# MAGIC         'model_serving_endpoint_name',
+# MAGIC         named_struct(
+# MAGIC             'feature1', feature1,
+# MAGIC             'feature2', feature2,
+# MAGIC             ...
+# MAGIC         ),
+# MAGIC         'STRING'
+# MAGIC     ) as prediction
+# MAGIC FROM your_table
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT *, ai_query(
+# MAGIC         'dbdemos_iot_turbine_prediction_endpoint', 
+# MAGIC         named_struct(
+# MAGIC             'hourly_timestamp', hourly_timestamp,
+# MAGIC             'avg_energy', avg_energy,
+# MAGIC             'std_sensor_A', std_sensor_A,
+# MAGIC             'std_sensor_B', std_sensor_B,
+# MAGIC             'std_sensor_C', std_sensor_C,
+# MAGIC             'std_sensor_D', std_sensor_D,
+# MAGIC             'std_sensor_E', std_sensor_E,
+# MAGIC             'std_sensor_F', std_sensor_F,
+# MAGIC             'location', location,
+# MAGIC             'model', model,
+# MAGIC             'state', state),
+# MAGIC         'STRING'
+# MAGIC     ) as prediction
+# MAGIC FROM turbine_hourly_features
 
 # COMMAND ----------
 

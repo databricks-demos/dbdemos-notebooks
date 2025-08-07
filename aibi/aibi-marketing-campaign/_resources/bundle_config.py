@@ -146,7 +146,17 @@
         "Which industries have shown the highest engagement rates with marketing campaigns?",
         "Which subject lines for my campaigns led to the most number of opens?",
         "Which campaigns had the strongest click-through rates (CTR)?"
-       ]
+       ],
+     "benchmarks": [
+        {
+            "question_text": "Prova A",
+            "answer_text": "Risposta prova A"
+        },
+        {
+            "question_text": "Prova B",
+            "answer_text": "Risposta prova B"
+        }
+    ]
     }
   ]
 }

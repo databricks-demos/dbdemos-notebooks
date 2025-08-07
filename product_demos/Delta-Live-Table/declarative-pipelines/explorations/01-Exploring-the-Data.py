@@ -54,20 +54,13 @@ for table in os.listdir(raw_data_volume):
 
 # MAGIC %md
 # MAGIC
-# MAGIC Yup, it looks like there's some instances where the `issue_description` fields include a newline character. Let's tell `read_files` that records may span multiple lines and see if that fixes the issue. 
+# MAGIC Yup, it looks like there's some instances where the `issue_description` fields include a newline character. We can use `multiline => true` to tell `read_files` that records may span multiple lines and see if that fixes the issue. 
 
 # COMMAND ----------
 
-from pyspark.sql.functions import expr
-# note - in python for now to avoid temp FAILED_READ_FILE.NO_HINT issue
-df = spark.read.format("csv") \
-    .option("header", "true") \
-    .option("multiLine", "true") \
-    .load("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv")
-
-filtered_df = df.filter(expr("maintenance_id IS NULL OR bike_id IS NULL OR reported_time IS NULL OR resolved_time IS NULL"))
-
-print(filtered_df.count())
+# MAGIC %sql
+# MAGIC select * from read_files("/Volumes/main__build/dbdemos_pipeline_bike/raw_data/maintenance_logs/*.csv", format => "csv", multiline => true)
+# MAGIC where maintenance_id is null or bike_id is null or reported_time is null or resolved_time is null
 
 # COMMAND ----------
 

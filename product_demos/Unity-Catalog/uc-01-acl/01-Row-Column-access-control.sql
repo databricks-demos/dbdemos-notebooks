@@ -34,20 +34,6 @@
 
 -- COMMAND ----------
 
--- MAGIC %md-sandbox
--- MAGIC ### 1.1 Cluster setup for UC
--- MAGIC
--- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_shared.png?raw=true" width="500px" style="float: right"/>
--- MAGIC
--- MAGIC To be able to run this demo, make sure you create a cluster with the shared security mode enabled.
--- MAGIC
--- MAGIC 1. Go in the compute page, create a new cluster
--- MAGIC 2. Under **"Access mode"**, select **"Shared"**
--- MAGIC
--- MAGIC Just like dynamic views, Row Level and Column Level access control are only supported on Shared clusters for now (will soon be available everywhere).
-
--- COMMAND ----------
-
 -- MAGIC %md 
 -- MAGIC ### 1.2 This demo uses groups to showcase fine grained access control.
 -- MAGIC
@@ -244,7 +230,7 @@ SELECT DISTINCT(country) FROM customers;
 -- create a SQL function for a simple column mask:
 CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
 RETURN 
-  IF(is_account_group_member('bu_admin'), column_value, "****");
+  case when is_account_group_member('bu_admin') then column_value else  "****" END;
    
 GRANT ALL PRIVILEGES ON FUNCTION simple_mask TO `account users`; --only for demo, don't do that in prod as everybody could change the function
 
@@ -265,6 +251,10 @@ CREATE OR REPLACE TABLE
     `name` STRING, 
     ssn STRING MASK simple_mask);
 
+
+-- ALTER TABLE patient_ssn ALTER COLUMN ssn SET MASK simple_mask;
+
+
 GRANT ALL PRIVILEGES ON TABLE patient_ssn TO `account users`; --only for demo, don't do that in prod as everybody could change the function
 
 -- COMMAND ----------
@@ -274,6 +264,7 @@ INSERT INTO
   patient_ssn
 values
   ("Jane Doe", "111-11-1111"),
+  ("Joane Doe", "123-12-1234"),
   ("Joe Doe", "222-33-4444");
 
 -- COMMAND ----------

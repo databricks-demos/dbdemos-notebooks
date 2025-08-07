@@ -2,7 +2,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Databricks Unity Catalog - Table ACL
 -- MAGIC
--- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/uc-base-0.png?raw=true" style="float: right" width="500px"/> 
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_2.png?raw=true" style="float: right" width="500px">
 -- MAGIC
 -- MAGIC The main feature of Unity Catalog is to provide you an easy way to setup Table ACL (Access Control Level), but also build Dynamic Views based on each individual permission.
 -- MAGIC
@@ -21,20 +21,6 @@
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=00-UC-Table-ACL&demo_name=uc-01-acl&event=VIEW">
-
--- COMMAND ----------
-
--- MAGIC %md-sandbox
--- MAGIC ## Cluster setup for UC
--- MAGIC
--- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/clusters_assigned.png?raw=true" style="float: right" width="500px"/>
--- MAGIC
--- MAGIC
--- MAGIC To be able to run this demo, make sure you create a cluster with the security mode enabled.
--- MAGIC
--- MAGIC Go in the compute page, create a new cluster.
--- MAGIC
--- MAGIC Under "Access mode", select "Single User" and your UC-user (the user needs to exist at the workspace and the account level)
 
 -- COMMAND ----------
 

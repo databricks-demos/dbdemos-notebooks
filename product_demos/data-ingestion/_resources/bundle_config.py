@@ -45,7 +45,7 @@
       "path": "00-Ingestion-data-introduction",
       "pre_run": True, 
       "publish_on_website": True, 
-      "add_cluster_setup_cell": True",
+      "add_cluster_setup_cell": True,
       "title": "Data Ingestion with Databricks",
       "description": "Introduction to data ingestion with Databricks"
     },

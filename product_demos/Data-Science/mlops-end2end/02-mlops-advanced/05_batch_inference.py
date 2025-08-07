@@ -13,11 +13,19 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.12.1
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC databricks-feature-engineering==0.13.0a3
+# MAGIC mlflow==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a3 mlflow --upgrade
 # MAGIC
 # MAGIC
-# MAGIC dbutils.library.restartPython()
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -26,7 +34,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ##Deploying the model for batch inferences
+# MAGIC ## Consume/Use the model for batch inferences
 # MAGIC
 # MAGIC <!--img style="float: right; margin-left: 20px" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn_batch_inference.gif" /-->
 # MAGIC
@@ -38,17 +46,22 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Run inferences
+env_manager = "virtual_env" # For fe.score_batch() function - if running on Serverless
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Batch inference on the Champion model
+# MAGIC ## Batch inference on the Champion model
 # MAGIC
 # MAGIC We are ready to run inference on the Champion model. We will leverage the feature engineering client's `score_batch` method and generate predictions for our customer records.
 # MAGIC
 # MAGIC For simplicity, we assume that features have been pre-computed for all new customer records and already stored in a feature table. These are typically done by separate feature engineering pipelines.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Reproduce inference env in notebook _(OPTIONNAL)_
+# MAGIC ONLY if you plan on executing the batch inference in the default Serverless environment defined here (`env_manager="local"`), otherwise no need as inference can run on a virtual environment (`env_manager="virtual_env"`) pulled from the model requirements artifacts.
 
 # COMMAND ----------
 
@@ -60,6 +73,8 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_m
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
+# MAGIC
+# MAGIC
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -68,24 +83,38 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_m
 
 # COMMAND ----------
 
-# DBTITLE 1,In a python notebook
-from databricks.feature_engineering import FeatureEngineeringClient
-import pyspark.sql.functions as F
+env_manager = "local"
 
+# COMMAND ----------
 
-# Load customer features to be scored
-inference_df = spark.read.table("advanced_churn_cust_ids")
+# MAGIC %md
+# MAGIC ### Use built-in `fe.score_batch()` on model uri
+# MAGIC Pull new labels/customer_ids to score and run inference locally using spark()
 
-fe = FeatureEngineeringClient()
+# COMMAND ----------
+
+# DBTITLE 1,Set model alias to use for batch inference
+model_alias = "Champion" # "Challenger"
 
 # Fully qualified model name
 model_name = f"{catalog}.{db}.advanced_mlops_churn"
 
 # Model URI
-model_uri = f"models:/{model_name}@Champion"
+model_uri = f"models:/{model_name}@{model_alias}"
+# model_uri = f"models:/{model_name}/{model_version}"
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient
+
+
+fe = FeatureEngineeringClient()
+
+# Load customer features to be scored
+inference_df = spark.read.table("advanced_churn_cust_ids")
 
 # Batch score
-preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string")
+preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string", env_manager="virtualenv")
 display(preds_df)
 
 # COMMAND ----------
@@ -111,29 +140,26 @@ display(preds_df)
 # COMMAND ----------
 
 from mlflow import MlflowClient
-from datetime import datetime
 
 
 client = MlflowClient()
 
 model = client.get_registered_model(name=model_name)
-model_version = int(client.get_model_version_by_alias(name=model_name, alias="Champion").version)
+model_version = client.get_model_version_by_alias(name=model_name, alias=model_alias).version
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 from datetime import datetime, timedelta
+from pyspark.sql import functions as F
 
 
-offline_inference_df = preds_df.withColumn("model_name", F.lit(model_name)) \
-                              .withColumn("model_version", F.lit(model_version)) \
-                              .withColumn("model_alias", F.lit("Champion")) \
-                              .withColumn("inference_timestamp", F.lit(datetime.now()- timedelta(days=2)))
+offline_inference_df = preds_df.withColumn("model_version", F.lit(model_version)) \
+                              .withColumn("inference_timestamp", F.lit(datetime.now())) # - timedelta(days=1)))
 
-offline_inference_df.write.mode("overwrite") \
+offline_inference_df.write.mode("append") \
                     .saveAsTable("advanced_churn_offline_inference")
 
-display(offline_inference_df)
+# display(offline_inference_df)
 
 # COMMAND ----------
 

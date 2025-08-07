@@ -227,7 +227,7 @@
                     "depends_on": [{"task_key": "qs_feature_engineering"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/02_automl_best_run",
+                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/02_train_lightGBM",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -249,11 +249,11 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "qs_batch_inference",
-                    "depends_on": [{"task_key": "qs_challenger_validation"}],
+                    "task_key": "qs_challenger_validation",
+                    "depends_on": [{"task_key": "qs_register_model"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/05_batch_inference",
+                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/04_challenger_validation",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -262,11 +262,11 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "qs_challenger_validation",
-                    "depends_on": [{"task_key": "qs_register_model"}],
+                    "task_key": "qs_batch_inference",
+                    "depends_on": [{"task_key": "qs_challenger_validation"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/04_challenger_validation",
+                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/05_batch_inference",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -304,7 +304,7 @@
                     "depends_on": [{"task_key": "adv_feature_engineering"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_model_training_hpo_optuna",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -317,7 +317,20 @@
                     "depends_on": [{"task_key": "adv_training"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03a_create_deployment_job",
+                        "source": "WORKSPACE"
+                    },
+                    "job_cluster_key": "Shared_job_cluster",
+                    "timeout_seconds": 0,
+                    "email_notifications": {},
+                    "webhook_notifications": {}
+                },
+                {
+                    "task_key": "adv_register_model2",
+                    "depends_on": [{"task_key": "adv_register_model"}],
+                    "run_if": "ALL_SUCCESS",
+                    "notebook_task": {
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03b_from_notebook_to_models_in_uc",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -327,10 +340,23 @@
                 },
                 {
                     "task_key": "adv_validate",
-                    "depends_on": [{"task_key": "adv_register_model"}],
+                    "depends_on": [{"task_key": "adv_register_model2"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04a_challenger_validation",
+                        "source": "WORKSPACE"
+                    },
+                    "job_cluster_key": "Shared_job_cluster",
+                    "timeout_seconds": 0,
+                    "email_notifications": {},
+                    "webhook_notifications": {}
+                },
+                {
+                    "task_key": "adv_validate2",
+                    "depends_on": [{"task_key": "adv_validate"}],
+                    "run_if": "ALL_SUCCESS",
+                    "notebook_task": {
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04b_challenger_approval",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -340,7 +366,7 @@
                 },
                 {
                     "task_key": "adv_batch_inference",
-                    "depends_on": [{"task_key": "adv_validate"}],
+                    "depends_on": [{"task_key": "adv_validate2"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
                         "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",

@@ -3442,7 +3442,7 @@
     },
     {
       "name": "2834d734",
-      "displayName": "CTA Device",
+      "displayName": "CTA Details",
       "layout": [
         {
           "widget": {
@@ -3452,6 +3452,23 @@
                 "name": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f0720915b51ae49c337bbf4668ff7a_cta",
                 "query": {
                   "datasetName": "ce1eec28",
+                  "fields": [
+                    {
+                      "name": "cta",
+                      "expression": "`cta`"
+                    },
+                    {
+                      "name": "cta_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_cta",
+                "query": {
+                  "datasetName": "023bfe11",
                   "fields": [
                     {
                       "name": "cta",
@@ -3475,6 +3492,11 @@
                     "fieldName": "cta",
                     "displayName": "cta",
                     "queryName": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f0720915b51ae49c337bbf4668ff7a_cta"
+                  },
+                  {
+                    "fieldName": "cta",
+                    "displayName": "cta",
+                    "queryName": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_cta"
                   }
                 ]
               },
@@ -3486,7 +3508,7 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
+            "y": 2,
             "width": 2,
             "height": 1
           }
@@ -3534,15 +3556,60 @@
               },
               "frame": {
                 "showTitle": true,
-                "showDescription": false
+                "showDescription": false,
+                "title": "CTA over Devices"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
               }
             }
           },
           "position": {
-            "x": 0,
-            "y": 1,
-            "width": 6,
-            "height": 6
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 7
           }
         },
         {
@@ -3587,7 +3654,10 @@
                   "scale": {
                     "type": "quantitative"
                   },
-                  "displayName": "Count of event_id"
+                  "axis": {
+                    "title": "Click Count"
+                  },
+                  "displayName": "Click Count"
                 },
                 "color": {
                   "fieldName": "cta",
@@ -3596,14 +3666,88 @@
                   },
                   "displayName": "cta"
                 }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "CTA types clicks over time"
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 7,
+            "y": 9,
             "width": 6,
             "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "fc149eaa",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "023bfe11",
+                  "fields": [
+                    {
+                      "name": "cta",
+                      "expression": "`cta`"
+                    },
+                    {
+                      "name": "sum(unique_clicks)",
+                      "expression": "SUM(`unique_clicks`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cta",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "cta"
+                },
+                "y": {
+                  "fieldName": "sum(unique_clicks)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of unique_clicks"
+                }
+              },
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "aa49c825",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Call To Action Deep dive\n",
+                "CTA analysis over time and devices"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
           }
         }
       ],

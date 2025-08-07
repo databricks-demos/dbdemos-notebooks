@@ -157,15 +157,15 @@
             "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_clicks FROM `main`.`dbdemos_aibi_cme_marketing_campaign`.`events` e INNER JOIN `main`.`dbdemos_aibi_cme_marketing_campaign`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = 'click' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY total_clicks DESC LIMIT 1"
         },
         {
-          "question_text":"What is the total number of opens for each campaign?"
+          "question_text":"What is the total number of opens for each campaign?",
           "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_opens FROM `main`.`dbdemos_aibi_cme_marketing_campaign`.`events` e INNER JOIN `main`.`dbdemos_aibi_cme_marketing_campaign`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = 'html_open' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY e.`campaign_id`"
         },
         {
-          "question_text":"Which campaign had the max total number of opens? Give me the top 1"
+          "question_text":"Which campaign had the max total number of opens? Give me the top 1",
           "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_opens FROM `main`.`dbdemos_aibi_cme_marketing_campaign`.`events` e INNER JOIN `main`.`dbdemos_aibi_cme_marketing_campaign`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = 'html_open' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY total_opens DESC LIMIT 1"
         },
         {
-          "question_text":"What is the total number of clicks for each campaign?"
+          "question_text":"What is the total number of clicks for each campaign?",
           "answer_text": "SELECT e.`campaign_id`, c.`campaign_name`, COUNT(*) as total_clicks FROM `main`.`dbdemos_aibi_cme_marketing_campaign`.`events` e INNER JOIN `main`.`dbdemos_aibi_cme_marketing_campaign`.`campaigns` c ON e.`campaign_id` = c.`campaign_id` WHERE e.`event_type` = ''click'' GROUP BY e.`campaign_id`, c.`campaign_name` ORDER BY e.`campaign_id`"
         }
     ]

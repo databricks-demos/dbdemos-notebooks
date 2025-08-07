@@ -137,7 +137,7 @@
          "If a customer ask a forecast, leverage the sql fonction ai_forecast",
          "The mailing_list column in the campaigns table contains all the contact_ids of the contacts to whom the campaign was sent.",
          "When you do joins between tables consider the foreign keys references."
-       ]
+       ],
      "function_names": [
           "{{CATALOG}}.{{SCHEMA}}.get_highest_ctr"
         ], 

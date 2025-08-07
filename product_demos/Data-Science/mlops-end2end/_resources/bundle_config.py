@@ -69,12 +69,12 @@
             "parameters": {"force_refresh_automl": "true"}
         },
         {
-            "path": "01-mlops-quickstart/02_automl_best_run",
+            "path": "01-mlops-quickstart/02_train_lightGBM",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
-            "title": "Train ML model using AutoML best run",
-            "description": "Leverage Auto-ML generated notebook to build the best model out of the bpox."
+            "title": "Train ML model",
+            "description": "Leverage XGBoost to build a first ML model."
         },
         {
             "path": "01-mlops-quickstart/03_from_notebook_to_models_in_uc",
@@ -118,15 +118,15 @@
             "description": "Create and save your features to Feature store."
         },
         {
-            "path": "02-mlops-advanced/02_automl_champion",
+            "path": "02-mlops-advanced/02_model_training_hpo_optuna",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
-            "title": "Train ML model using AutoML best run",
-            "description": "Leverage Auto-ML generated notebook to build the best model out of the bpox."
+            "title": "Train a better ML model",
+            "description": "Leverage Optuna to fine tune hyperparameter and deploy a new model."
         },
         {
-            "path": "02-mlops-advanced/03_from_notebook_to_models_in_uc",
+            "path": "02-mlops-advanced/03a_create_deployment_job",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
@@ -134,12 +134,28 @@
             "description": "Leverage MLFlow to find your best training run and save as Challenger"
         },
         {
-            "path": "02-mlops-advanced/04_challenger_validation",
+            "path": "02-mlops-advanced/03b_from_notebook_to_models_in_uc",
+            "pre_run": True,
+            "publish_on_website": True,
+            "add_cluster_setup_cell": True,
+            "title": "Deploy new model",
+            "description": "Deploy the model to UC"
+        },
+        {
+            "path": "02-mlops-advanced/04a_challenger_validation",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
             "title": "Validate your Challenger model",
             "description": "Test your challenger model and move it as Champion."
+        },
+        {
+            "path": "02-mlops-advanced/04b_challenger_approval",
+            "pre_run": True,
+            "publish_on_website": True,
+            "add_cluster_setup_cell": True,
+            "title": "Approve your Challenger model",
+            "description": "New model approval."
         },
         {
             "path": "02-mlops-advanced/05_batch_inference",
@@ -148,6 +164,14 @@
             "add_cluster_setup_cell": True,
             "title": "Run inference",
             "description": "Leverage your ML model within inference pipelines."
+        },
+        {
+            "path": "02-mlops-advanced/06_serve_features_and_model",
+            "pre_run": False,
+            "publish_on_website": True,
+            "add_cluster_setup_cell": False,
+            "title": "Serve feature & model in real time serving endpoint",
+            "description": "Create online table & serve model in a serverless endpoint"
         },
         {
             "path": "02-mlops-advanced/07_model_monitoring",
@@ -164,14 +188,6 @@
             "add_cluster_setup_cell": True,
             "title": "Generate synthetic inference ata & detect drift",
             "description": "Create synthetic data and detect drift"
-        },
-        {
-            "path": "02-mlops-advanced/06_serve_features_and_model",
-            "pre_run": False,
-            "publish_on_website": True,
-            "add_cluster_setup_cell": False,
-            "title": "Serve feature & model in real time serving endpoint",
-            "description": "Create online table & serve model in a serverless endpoint"
         }
     ],
     "init_job": {

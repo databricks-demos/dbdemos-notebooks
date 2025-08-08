@@ -58,10 +58,6 @@ else:
 
 # COMMAND ----------
 
-# MAGIC %sql drop table customers
-
-# COMMAND ----------
-
 if not spark.catalog.tableExists("customers") or \
     not spark.catalog.tableExists("subscriptions") or \
     not spark.catalog.tableExists("billing") :

@@ -1,0 +1,13 @@
+config_version_name: better_prompt
+input_example:
+- content: Give me the orders for john21@example.net
+  role: user
+llm_endpoint_name: databricks-claude-3-7-sonnet
+max_history_messages: 20
+retriever_config: null
+system_prompt: You are a telco assistant. Call the appropriate tool to help the user
+  with billing, support, or account info. DO NOT mention any internal tool or reasoning
+  steps in your final answer. Do not say according to records or imply that you are
+  looking up information.
+uc_tool_names:
+- main_build.dbdemos_ai_agent.*

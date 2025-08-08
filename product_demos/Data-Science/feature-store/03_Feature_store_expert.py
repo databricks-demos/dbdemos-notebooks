@@ -302,7 +302,7 @@ try:
     #Make sure all users can access dbdemos shared experiment
     DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 except Exception as e:
-    if "cannot import name 'automl'" in str(e):
+    if "cannot import name 'automl'" in str(e) or 'method_whitelist' in str(e):
         # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
         # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
         summary_cl = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_features_df.toPandas(), model_name="automl_mockup_expert", target_col="purchased")
@@ -339,6 +339,13 @@ artifacts_path = mlflow.artifacts.download_artifacts(run_id=summary_cl.best_tria
 env = mlflow.pyfunc.get_default_conda_env()
 with open(artifacts_path+"model/requirements.txt", 'r') as f:
     env['dependencies'][-1]['pip'] = f.read().split('\n')
+
+#Just ensure that MLFLOW version is at the latest to avoid package version conflict
+for dep in env['dependencies']:
+    if isinstance(dep, dict) and 'pip' in dep:
+        dep['pip'] = [pkg for pkg in dep['pip'] if not pkg.startswith('mlflow==')]
+        dep['pip'].insert(0, 'mlflow=='+mlflow.__version__)
+        dep['pip'].insert(1, 'numpy<2.0') # avoid compatibility issues with numpy
 
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model_expert", experiment_id=summary_cl.experiment.experiment_id) as run:
@@ -451,8 +458,8 @@ def create_online_table(table_name, pks, timeseries_key=None):
         print(f"Creating online table for {online_table_name}...")
         spark.sql(f'ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
         spec = c.OnlineTableSpec(source_table_full_name=table_name, primary_key_columns=pks, run_triggered=c.OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}), timeseries_key=timeseries_key)
-        online_table = c.OnlineTable(name = online_table_name, spec=spec)
-        w.online_tables.create(online_table)
+        online_table = c.OnlineTable(name=online_table_name, spec=spec)
+        w.online_tables.create(table=online_table)
 
 wait_tables = []
 wait_tables.append(create_online_table(f"{catalog}.{db}.user_features",                 ["user_id"], "ts"))
@@ -578,7 +585,7 @@ print(f'Compute the propensity score for these customers: {lookup_keys}')
 
 def query_endpoint(url, lookup_keys):
     return requests.request(method='POST', headers=WorkspaceClient().config.authenticate(), url=url, json={'dataframe_records': lookup_keys}).json()
-query_endpoint(ep.url+"/invocations", lookup_keys)
+query_endpoint(ep.url, lookup_keys)
 
 # COMMAND ----------
 

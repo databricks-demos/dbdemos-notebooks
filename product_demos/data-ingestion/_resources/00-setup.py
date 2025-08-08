@@ -5,7 +5,7 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 # COMMAND ----------
 
 catalog = "main__build"
-schema = dbName = db = "dbdemos_autoloader"
+schema = dbName = db = "dbdemos_data_ingestion"
 
 volume_name = "raw_data"
 
@@ -39,7 +39,7 @@ if reset_all_data or DBDemos.is_folder_empty(volume_folder+"/user_json"):
   prefix = ''
   if not folder_path.endswith('_resources'):
     prefix = './_resources/'
-  dbutils.notebook.run(prefix+"./01-load-data", 120, {"volume_folder": volume_folder})
+  dbutils.notebook.run(prefix+"./01-load-data", 300, {"volume_folder": volume_folder})
 else:
   print("data already existing. Run with reset_all_data=true to force a data cleanup for your local demo.")
   

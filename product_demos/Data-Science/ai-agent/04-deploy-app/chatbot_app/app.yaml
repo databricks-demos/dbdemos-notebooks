@@ -1,0 +1,8 @@
+command:
+- uvicorn
+- main:app
+- --workers
+- '1'
+env:
+- name: MODEL_SERVING_ENDPOINT
+  value: dbdemos_ai_agent_demo_main_build_dbdemos_ai_agent

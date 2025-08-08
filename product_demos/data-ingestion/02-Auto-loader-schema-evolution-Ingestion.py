@@ -53,7 +53,7 @@ bronzeDF = (spark.readStream \
                 .option("cloudFiles.maxFilesPerTrigger", "1")  #demo only, remove in real stream
                 .schema("address string, creation_date string, firstname string, lastname string, id bigint")
                 .load(volume_folder+'/user_json'))
-display(bronzeDF, checkpointLocation = get_chkp_folder())
+display(bronzeDF)
 
 # COMMAND ----------
 
@@ -78,7 +78,7 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.schemaLocation", volume_folder+'/inferred_schema')
                 .option("cloudFiles.inferColumnTypes", "true")
                 .load(volume_folder+'/user_json'))
-display(bronzeDF, checkpointLocation = get_chkp_folder())
+display(bronzeDF)
 
 # COMMAND ----------
 
@@ -96,7 +96,7 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.inferColumnTypes", "true")
                 .option("cloudFiles.schemaHints", "id bigint")
                 .load(volume_folder+'/user_json'))
-display(bronzeDF, checkpointLocation = get_chkp_folder())
+display(bronzeDF)
 
 # COMMAND ----------
 
@@ -113,7 +113,7 @@ def get_stream():
                 .option("cloudFiles.inferColumnTypes", "true")
                 .option("cloudFiles.schemaHints", "id bigint")
                 .load(volume_folder+'/user_json'))
-display(get_stream(), checkpointLocation = get_chkp_folder())
+display(get_stream())
 
 # COMMAND ----------
 
@@ -132,7 +132,7 @@ incorrect_data.write.format("json").mode("append").save(volume_folder + "/user_j
 
 wait_for_rescued_data()
 # Start the stream and filter on on the rescue column to see how the incorrect data is captured
-display(get_stream().filter("_rescued_data is not null"), checkpointLocation = get_chkp_folder())
+display(get_stream().filter("_rescued_data is not null"))
 
 # COMMAND ----------
 
@@ -159,13 +159,13 @@ new_row.write.format("json").mode("append").save(volume_folder + "/user_json")
 # COMMAND ----------
 
 # Existing stream wil fail with: org.apache.spark.sql.catalyst.util.UnknownFieldException: Encountered unknown field(s) during parsing: {"new_column":"test new column value"}
-# UNCOMMENT_FOR_DEMO display(get_stream(), checkpointLocation = get_chkp_folder())
+# UNCOMMENT_FOR_DEMO display(get_stream())
 
 # COMMAND ----------
 
 # We just have to restart it to capture the new data. Let's filter on the new column to make sure we have the proper row 
 # (re-run the cell)
-# UNCOMMENT_FOR_DEMO display(get_stream().filter('new_column is not null'), checkpointLocation = get_chkp_folder())
+# UNCOMMENT_FOR_DEMO display(get_stream().filter('new_column is not null'))
 
 # COMMAND ----------
 
@@ -239,8 +239,9 @@ def start_stream_restart_on_schema_evolution():
       else:
         raise e
 
-#Note: serverless doesn't support timeless streaming. See https://docs.databricks.com/en/compute/serverless/limitations.html#streaming
-# You can use the writeStream.trigger(availableNow=True) option instead
+#Careful - this will run forever do not forget to stop your job/notebook after you tried!
+# Seeing [INFINITE_STREAMING_TRIGGER_NOT_SUPPORTED] ? Interactive serverless isn't designed for unlimited streaming. See https://docs.databricks.com/en/compute/serverless/limitations.html#streaming
+# Use a classic cluster, or you can use the writeStream.trigger(availableNow=True) option instead, or move your code to a Declarative Pipeline!
 #start_stream_restart_on_schema_evolution()
 
 # COMMAND ----------

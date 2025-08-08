@@ -2,7 +2,7 @@
 # MAGIC %md-sandbox
 # MAGIC # Build and Evaluate your AI Agent Systems with Databricks and MLFlow
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/agent-demo-1.png?raw=true" width="800px" style="float: right">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/agent-demo-0.png?raw=true" width="800px" style="float: right">
 # MAGIC
 # MAGIC Databricks makes it easy to create and register your own Agents and tools to manipulate your data, and also any other external system (from openai agent sdk, claude agents to MCP servers).
 # MAGIC

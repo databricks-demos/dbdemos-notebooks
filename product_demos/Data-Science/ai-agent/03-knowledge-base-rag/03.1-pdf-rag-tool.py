@@ -230,9 +230,14 @@ mlflow.set_experiment(agent_eval_path+"/02.1_agent_evaluation")
 conf_path = os.path.join(agent_eval_path, 'agent_config.yaml')
 
 try:
-    config = yaml.safe_load(open(conf_path))
-    config["config_version_name"] = "model_with_retriever"
-    config["retriever_config"] =  {
+    config = {
+        "config_version_name": "model_with_retriever",
+        "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],
+        "uc_tool_names": [f"{catalog}.{dbName}.*"],
+        "system_prompt": "Your job is to provide customer help. call the tool to answer.",
+        "llm_endpoint_name": LLM_ENDPOINT_NAME,
+        "max_history_messages": 20,
+        "retriever_config": {
         "index_name": vs_index_fullname,
         "tool_name": "product_technical_docs_retriever",
         "num_results": 1,

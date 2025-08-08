@@ -53,9 +53,6 @@
 import yaml
 import mlflow
 
-# This must be a tool-enabled model
-LLM_ENDPOINT_NAME = 'databricks-claude-3-7-sonnet'
-
 rag_chain_config = {
     "config_version_name": "first_config",
     "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],

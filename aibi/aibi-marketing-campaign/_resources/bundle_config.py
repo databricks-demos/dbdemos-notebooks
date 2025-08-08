@@ -132,12 +132,11 @@
             "content": "SELECT e.campaign_id, first(c.campaign_name) as campaign_name, first(c.campaign_description) as campaign_description, first(c.subject_line) as subject_line, first(c.template) as template, first(c.cost) as cost, first(c.start_date) as start_date, first(c.end_date) as end_date, to_timestamp(first(c.start_date)) as _start_date, to_timestamp(first(c.end_date)) as _end_date, SUM(CASE WHEN e.event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent, SUM(CASE WHEN e.event_type = 'delivered' THEN 1 ELSE 0 END) AS total_delivered, SUM(CASE WHEN e.event_type = 'spam' THEN 1 ELSE 0 END) AS total_spam, SUM(CASE WHEN e.event_type = 'html_open' THEN 1 ELSE 0 END) AS total_opens, SUM(CASE WHEN e.event_type = 'optout_click' THEN 1 ELSE 0 END) AS total_optouts, SUM(CASE WHEN e.event_type = 'click' THEN 1 ELSE 0 END) AS total_clicks, count(distinct case when e.event_type = 'click' then e.contact_id end) as unique_clicks, unique_clicks / total_delivered as ctr, format_number(ctr, '##.##%') as ctr_p, total_delivered / total_sent as delivery_rate, format_number(delivery_rate, '##.##%') as delivery_rate_p, total_optouts / total_delivered as optouts_rate, format_number(optouts_rate, '##.##%') as optouts_rate_p, total_spam / total_delivered as spam_rate, format_number(spam_rate, '##.##%') as spam_rate_p, sum(p.employees) as total_employees FROM {{CATALOG}}.{{SCHEMA}}.events e INNER JOIN {{CATALOG}}.{{SCHEMA}}.campaigns c on e.campaign_id = c.campaign_id INNER JOIN {{CATALOG}}.{{SCHEMA}}.contacts ct on e.contact_id = ct.contact_id INNER JOIN {{CATALOG}}.{{SCHEMA}}.prospects p on ct.prospect_id = p.prospect_id GROUP BY e.campaign_id HAVING _start_date >= :start_date AND _end_date <= :end_date ORDER BY ctr desc, cost ASC LIMIT 20"
         }
     ],
-     "instructions": 
-       [
-         "If a customer ask a forecast, leverage the sql fonction ai_forecast",
-         "The mailing_list column in the campaigns table contains all the contact_ids of the contacts to whom the campaign was sent.",
-         "When you do joins between tables consider the foreign keys references."
-       ],
+     "instructions": "If a customer ask a forecast, leverage the sql fonction ai_forecast.\nThe mailing_list column in the campaigns table contains all the contact_ids of the contacts to whom the campaign was sent.\nWhen you do joins between tables consider the foreign keys references.",
+      
+      "function_names": [
+        "{{CATALOG}}.{{SCHEMA}}.get_highest_ctr"
+      ],
      "curated_questions": [
         "How has the total number of emails sent, delivered, and the unique clicks evolved over the last six months?",
         "Which industries have shown the highest engagement rates with marketing campaigns?",

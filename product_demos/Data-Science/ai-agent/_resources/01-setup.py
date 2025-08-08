@@ -214,6 +214,7 @@ def patched_set_experiment(experiment_name_or_path):
         _original_set_experiment(experiment_name_or_path)
     except RestException as e:
         if "experiment creation is not permitted in a repo" in str(e):
+            from databricks.sdk import WorkspaceClient
             fallback_path = "/Shared/dbdemos/ai-agent"
             fallback_path_xp = fallback_path+"/ai_agent_experiment"
             w = WorkspaceClient()
@@ -223,7 +224,7 @@ def patched_set_experiment(experiment_name_or_path):
             
             # Create fallback experiment if it doesn't exist
             try:
-                mlflow.get_experiment_by_name(fallback_path) or mlflow.create_experiment(fallback_path)
+                mlflow.get_experiment_by_name(fallback_path_xp) or mlflow.create_experiment(fallback_path_xp)
             except Exception as create_err:
                 print(f"❌ Failed to create fallback experiment: {create_err}")
                 raise create_err

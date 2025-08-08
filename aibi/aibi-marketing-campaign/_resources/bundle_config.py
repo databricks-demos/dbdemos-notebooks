@@ -138,9 +138,6 @@
          "The mailing_list column in the campaigns table contains all the contact_ids of the contacts to whom the campaign was sent.",
          "When you do joins between tables consider the foreign keys references."
        ],
-     "function_names": [
-          "{{CATALOG}}.{{SCHEMA}}.get_highest_ctr"
-        ], 
      "curated_questions": [
         "How has the total number of emails sent, delivered, and the unique clicks evolved over the last six months?",
         "Which industries have shown the highest engagement rates with marketing campaigns?",

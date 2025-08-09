@@ -162,7 +162,7 @@ select * from user_delta where id in (1 ,2, 99999)
 
 -- COMMAND ----------
 
-ALTER TABLE user_delta ADD CONSTRAINT id_not_null CHECK (id is not null);
+ALTER TABLE user_delta DROP CONSTRAINT IF EXISTS id_not_null; ALTER TABLE user_delta ADD CONSTRAINT id_not_null CHECK (id is not null);
 
 -- COMMAND ----------
 

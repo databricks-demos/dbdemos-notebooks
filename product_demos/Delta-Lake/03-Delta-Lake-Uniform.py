@@ -152,26 +152,9 @@ table_info['delta_uniform_iceberg']
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Uniform works only with Unity Catalog and not HMS
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC use catalog hive_metastore;
-# MAGIC use schema default;
-# MAGIC
-# MAGIC create external table user_uniform_hms location '/tmp/dbdemos/user_uniform_hms' as select * from main__build.dbdemos_delta_lake.user_uniform
-
-# COMMAND ----------
-
-# DBTITLE 1,ALTER table to Iceberg on HMS table gives error
-# MAGIC %sql
-# MAGIC ALTER table user_uniform_hms set TBLPROPERTIES ('delta.columnMapping.mode' = 'name', 'delta.universalFormat.enabledFormats' = 'iceberg')
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ### Uniform Limitations
+# MAGIC
+# MAGIC Note: Uniform works only with Unity Catalog and not HMS
 # MAGIC
 # MAGIC Go to Limitations : https://docs.databricks.com/aws/en/delta/uniform#limitations
 # MAGIC
@@ -179,21 +162,9 @@ table_info['delta_uniform_iceberg']
 
 # COMMAND ----------
 
-# DBTITLE 1,Uniform Doesn't work with Deletion Vectors
+# DBTITLE 1,DV can be disabled if needed:
 # MAGIC %sql
-# MAGIC use main__build.dbdemos_delta_lake;
-# MAGIC create table user_uniform_dv as select * from user_delta
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC alter table user_uniform_dv set tblproperties ('delta.enableDeletionVectors' = true)
-
-# COMMAND ----------
-
-# DBTITLE 1,Gives error as DV should be disabled
-# MAGIC %sql
-# MAGIC ALTER table user_uniform_dv set TBLPROPERTIES ('delta.columnMapping.mode' = 'name', 'delta.universalFormat.enabledFormats' = 'iceberg', 'delta.enableIcebergCompatV2' = 'true')
+# MAGIC -- ALTER table user_uniform_dv set TBLPROPERTIES ('delta.columnMapping.mode' = 'name', 'delta.universalFormat.enabledFormats' = 'iceberg', 'delta.enableIcebergCompatV2' = 'true')
 
 # COMMAND ----------
 

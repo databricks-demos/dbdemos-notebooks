@@ -268,8 +268,8 @@ for r in AGENT.get_resources():
 with mlflow.start_run(run_name=model_config.get('config_version_name')):
   logged_agent_info = mlflow.pyfunc.log_model(
     name="agent",
-    python_model="agent.py",
-    model_config="agent_config.yaml",
+    python_model=agent_eval_path+"/agent.py",
+    model_config=conf_path,
     input_example={"input": [{"role": "user", "content": request_example}]},
      # Determine resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough for deployment
     resources=AGENT.get_resources(),

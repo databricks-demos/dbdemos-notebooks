@@ -1,5 +1,27 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
+# MAGIC <div style="
+# MAGIC   background-color: #ffe6e6;
+# MAGIC   border: 2px solid #ff4d4d;
+# MAGIC   border-radius: 8px;
+# MAGIC   padding: 16px;
+# MAGIC   font-family: Arial, sans-serif;
+# MAGIC   color: #660000;
+# MAGIC ">
+# MAGIC   <h3 style="margin-top: 0; color: #b30000;">⚠ This Demo is getting old!</h3>
+# MAGIC   <p>
+# MAGIC     Databricks is moving fast — it’s now easier than ever to deploy <strong>multi-agent systems</strong> 
+# MAGIC     and run evals with <strong>MLflow 3.0</strong>.
+# MAGIC   </p>
+# MAGIC   <p>
+# MAGIC     Install <code>dbdemos</code> <strong>ai-agent</strong> demos to explore the latest features.<br>
+# MAGIC     <em>This content will be deprecated soon.</em>
+# MAGIC   </p>
+# MAGIC </div>
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
 # MAGIC
 # MAGIC # 1/ Deploying our first RAG application with Mosaic AI Agent Framework & Agent Evaluation
 # MAGIC

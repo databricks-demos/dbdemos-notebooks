@@ -12,6 +12,8 @@
 # MAGIC
 # MAGIC Lineage takes into account the Table ACLs present in Unity Catalog. If a user is not allowed to see a table at a certain point of the graph, its information are redacted, but they can still see that a upstream or downstream table is present.
 # MAGIC
+# MAGIC Lineage can also include external assets and workflows that are run outside of Databricks. This external lineage metadata feature is in Public Preview. See [Bring your own data lineage](https://docs.databricks.com/aws/en/data-governance/unity-catalog/external-lineage).
+# MAGIC
 # MAGIC ## Working with Lineage
 # MAGIC
 # MAGIC No modifications are needed to the existing code to generate the lineage. As long as you operate with tables saved in the Unity Catalog, Databricks will capture all lineage informations for you.
@@ -42,7 +44,7 @@
 
 # COMMAND ----------
 
-# MAGIC %sql 
+# MAGIC %sql
 # MAGIC SELECT CURRENT_CATALOG()
 
 # COMMAND ----------
@@ -93,21 +95,20 @@ price = spark.read.table("price")
 dinner_price = dinner.join(price, on="recipe_id")
 dinner_price.write.mode("overwrite").saveAsTable("dinner_price")
 
-
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## 4/ Visualize Table Lineage
 # MAGIC
-# MAGIC The Lineage can be visualized in the `Data Explorer` of the part of the Workspace dedicated to the `SQL Persona`.
+# MAGIC The Lineage can be visualized by clicking the 
 # MAGIC
-# MAGIC 1. Select the `Catalog`
-# MAGIC 1. Select the `Schema`
-# MAGIC 1. Select the `Table`
-# MAGIC 1. Select the `Lineage` tab on the right part of the page
-# MAGIC 1. You can visualize the full lineage by pressing the `See Lineage Graph` button
-# MAGIC 1. By default the graph is condensed. By clicking on the boxes you can expand them and visualize the full lineage.
-# MAGIC
+# MAGIC 1. Select the `Catalog` explorer icon 
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/icon/catalog-explorer-icon.png?raw=true" width="25"/>
+# MAGIC 2. Search for `uc_lineage` in the search tab
+# MAGIC 3. Click the kebab menu on any of these tables `dinner`, `menu` or `price` under the `dbdemos_uc_lineage` schema
+# MAGIC 4. Click the `Open in Catalog Explorer` option
+# MAGIC 5. Click the `Lineage` tab
+# MAGIC 6. Explore the page, feel free to click the `See Lineage Graph` option as well.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/uc/lineage/lineage-table.gif?raw=true"/>
 
@@ -116,9 +117,9 @@ dinner_price.write.mode("overwrite").saveAsTable("dinner_price")
 # MAGIC %md 
 # MAGIC ## 5/ Visualize Column Lineage
 # MAGIC
-# MAGIC The Lineage is alos available for the Column. This is very useful to track column dependencies and be able to find GDPR, including by API.
+# MAGIC The Lineage is also available for the Column. This is very useful to track column dependencies and be able to find GDPR, including by API.
 # MAGIC
-# MAGIC You can access the column lineage by clicking on any of the column name. In this case we see that the menu comes from 3 other columns of the menu table:
+# MAGIC You can access the column lineage by clicking the `+` icon at the end of the table box boundary. In this case we see that the menu comes from 3 other columns of the menu table:
 # MAGIC <br/><br/>
 # MAGIC
 # MAGIC
@@ -130,7 +131,9 @@ dinner_price.write.mode("overwrite").saveAsTable("dinner_price")
 # MAGIC
 # MAGIC ## 6/ Lineage Permission Model
 # MAGIC
-# MAGIC Lineage graphs share the same permission model as Unity Catalog. If a user does not have the SELECT privilege on the table, they will not be able to explore the lineage.
+# MAGIC Lineage graphs share the same permission model as Unity Catalog. If a user does not have the `BROWSE` or `SELECT` privilege on a table, they cannot explore its lineage. 
+# MAGIC
+# MAGIC Lineage graphs display Unity Catalog objects across all workspaces attached to the metastore, as long as the user has adequate object permissions.
 
 # COMMAND ----------
 

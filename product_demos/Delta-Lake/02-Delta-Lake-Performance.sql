@@ -117,6 +117,41 @@ ALTER TABLE user_clustering CLUSTER BY NONE;
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ### Cluster by Auto
+-- MAGIC
+-- MAGIC In Databricks Runtime 15.4 LTS and above, you can enable automatic liquid clustering for Unity Catalog managed Delta tables. With automatic liquid clustering enabled, Databricks intelligently chooses clustering keys to optimize query performance. You enable automatic liquid clustering using the CLUSTER BY AUTO clause.
+-- MAGIC
+-- MAGIC When enabled, automatic key selection and clustering operations run asynchronously as a maintenance operation and require that predictive optimization is enabled for the table.
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Using CLUSTER BY AUTO
+ALTER TABLE user_clustering CLUSTER BY AUTO;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Ensuring That predeitive optimization is enabled at UC
+DESCRIBE EXTENDED user_clustering
+
+--Predictive Optimization	ENABLE (inherited from METASTORE unity-catalog-demo)
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Do the first time manual clustering/optimize
+OPTIMIZE user_clustering;
+
+-- COMMAND ----------
+
+VACUUM user_clustering;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Auto Liquid Clustering will dynamically change the cluster keys based on the read/write pattern on the table based on column filters, merge keys etc
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ###![](https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-tiny-logo.png) Compacting without Liquid Clustering
 -- MAGIC
 -- MAGIC While recommended to accelerate your queries, some tables might not always have Liquid Clustering enabled.

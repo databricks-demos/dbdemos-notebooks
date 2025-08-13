@@ -53,9 +53,6 @@
 import yaml
 import mlflow
 
-# This must be a tool-enabled model
-LLM_ENDPOINT_NAME = 'databricks-claude-3-7-sonnet'
-
 rag_chain_config = {
     "config_version_name": "first_config",
     "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],
@@ -123,7 +120,7 @@ def log_customer_support_agent_model(resources, request_example):
             model_config="agent_config.yaml",
             input_example={"input": [{"role": "user", "content": request_example}]},
             resources=resources, # Determine Databricks resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough at deployment time
-            extra_pip_requirements=["databricks-connect"]
+            extra_pip_requirements=["databricks-connect", "databricks-feature-engineering==0.12.1"]
         )
 logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
 

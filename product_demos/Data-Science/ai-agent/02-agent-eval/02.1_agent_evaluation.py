@@ -120,7 +120,7 @@ def log_customer_support_agent_model(resources, request_example):
             model_config="agent_config.yaml",
             input_example={"input": [{"role": "user", "content": request_example}]},
             resources=resources, # Determine Databricks resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough at deployment time
-            extra_pip_requirements=["databricks-connect"]
+            extra_pip_requirements=["databricks-connect", "databricks-feature-engineering==0.12.1"]
         )
 logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
 

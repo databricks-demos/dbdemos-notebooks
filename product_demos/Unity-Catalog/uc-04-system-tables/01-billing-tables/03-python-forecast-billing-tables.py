@@ -27,7 +27,8 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install prophet==1.1.6
+# MAGIC %pip install prophet==1.1.2 holidays==0.23
+# MAGIC %restart_python
 
 # COMMAND ----------
 

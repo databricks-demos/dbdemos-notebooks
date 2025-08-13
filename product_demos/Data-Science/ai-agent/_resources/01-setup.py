@@ -58,10 +58,6 @@ else:
 
 # COMMAND ----------
 
-# MAGIC %sql drop table customers
-
-# COMMAND ----------
-
 if not spark.catalog.tableExists("customers") or \
     not spark.catalog.tableExists("subscriptions") or \
     not spark.catalog.tableExists("billing") :
@@ -203,3 +199,40 @@ def wait_for_model_serving_endpoint_to_be_ready(ep_name):
         else:
           break
     raise Exception(f"Couldn't start the endpoint, timeout, please check your endpoint for more details: {state}")
+
+# COMMAND ----------
+
+import mlflow
+from mlflow.exceptions import RestException
+
+# Save original function
+_original_set_experiment = mlflow.set_experiment
+
+# Define patched version
+def patched_set_experiment(experiment_name_or_path):
+    try:
+        _original_set_experiment(experiment_name_or_path)
+    except RestException as e:
+        if "experiment creation is not permitted in a repo" in str(e):
+            from databricks.sdk import WorkspaceClient
+            fallback_path = "/Shared/dbdemos/ai-agent"
+            fallback_path_xp = fallback_path+"/ai_agent_experiment"
+            w = WorkspaceClient()
+            w.workspace.mkdirs(fallback_path)
+            print(f"mlflow.set_experiment('{experiment_name_or_path}') failed due to repo path (probably as job).")
+            print(f"Falling back to: {fallback_path} - see code patched in _resource/01-setup")
+            
+            # Create fallback experiment if it doesn't exist
+            try:
+                mlflow.get_experiment_by_name(fallback_path_xp) or mlflow.create_experiment(fallback_path_xp)
+            except Exception as create_err:
+                print(f"❌ Failed to create fallback experiment: {create_err}")
+                raise create_err
+
+            # Call original on fallback
+            _original_set_experiment(fallback_path)
+        else:
+            raise
+
+# Apply monkey patch
+mlflow.set_experiment = patched_set_experiment

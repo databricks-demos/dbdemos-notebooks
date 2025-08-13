@@ -239,9 +239,10 @@ def start_stream_restart_on_schema_evolution():
       else:
         raise e
 
+#Careful - this will run forever do not forget to stop your job/notebook after you tried!
 # Seeing [INFINITE_STREAMING_TRIGGER_NOT_SUPPORTED] ? Interactive serverless isn't designed for unlimited streaming. See https://docs.databricks.com/en/compute/serverless/limitations.html#streaming
 # Use a classic cluster, or you can use the writeStream.trigger(availableNow=True) option instead, or move your code to a Declarative Pipeline!
-start_stream_restart_on_schema_evolution()
+#start_stream_restart_on_schema_evolution()
 
 # COMMAND ----------
 

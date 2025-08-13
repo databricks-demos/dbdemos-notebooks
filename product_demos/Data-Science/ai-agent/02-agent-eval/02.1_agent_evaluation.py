@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
+# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -52,9 +52,6 @@
 # DBTITLE 1,update our configuration file
 import yaml
 import mlflow
-
-# This must be a tool-enabled model
-LLM_ENDPOINT_NAME = 'databricks-claude-3-7-sonnet'
 
 rag_chain_config = {
     "config_version_name": "first_config",

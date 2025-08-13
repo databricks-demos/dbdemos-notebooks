@@ -114,7 +114,7 @@
     },
     {
       "path": "06-improving-business-kpis/06-business-dashboard",
-      "pre_run": True,
+      "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Track your agent business impact",

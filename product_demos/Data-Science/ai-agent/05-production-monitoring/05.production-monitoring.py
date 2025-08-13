@@ -123,7 +123,7 @@ def get_or_create_monitor():
 
 # monitor will create a run that will be refreshed periodically (small cost incures). 
 # uncomment to create the monitor in your experiment!
-get_or_create_monitor()
+# get_or_create_monitor()
 
 # COMMAND ----------
 

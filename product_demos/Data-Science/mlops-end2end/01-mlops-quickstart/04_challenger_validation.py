@@ -17,6 +17,14 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## General Validation Checks
@@ -37,8 +45,10 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.22.0
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -48,12 +58,15 @@
 
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 
+
 requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
-# MAGIC dbutils.library.restartPython()
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -119,12 +132,12 @@ client.set_model_version_tag(name=model_name, version=str(model_details.version)
 # COMMAND ----------
 
 model_run_id = model_details.run_id
-f1_score = mlflow.get_run(model_run_id).data.metrics['test_f1_score']
+f1_score = mlflow.get_run(model_run_id).data.metrics['val_f1_score']
 
 try:
     #Compare the challenger f1 score to the existing champion if it exists
     champion_model = client.get_model_version_by_alias(model_name, "Champion")
-    champion_f1 = mlflow.get_run(champion_model.run_id).data.metrics['test_f1_score']
+    champion_f1 = mlflow.get_run(champion_model.run_id).data.metrics['val_f1_score']
     print(f'Champion f1 score: {champion_f1}. Challenger f1 score: {f1_score}.')
     metric_f1_passed = f1_score >= champion_f1
 except:
@@ -147,6 +160,8 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 # COMMAND ----------
 
 import pyspark.sql.functions as F
+
+
 #get our validation dataset:
 validation_df = spark.table('mlops_churn_training').filter("split='validate'")
 
@@ -160,6 +175,7 @@ def predict_churn(validation_df, model_alias):
 import pandas as pd
 import plotly.express as px
 from sklearn.metrics import confusion_matrix
+
 
 #Note: this is over-simplified and depends on your use-case, but the idea is to evaluate our model against business metrics
 cost_of_customer_churn = 2000 #in dollar

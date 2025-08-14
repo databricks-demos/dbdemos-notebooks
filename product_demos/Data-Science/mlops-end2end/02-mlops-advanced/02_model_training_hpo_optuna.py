@@ -416,10 +416,7 @@ try:
   experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
 
 except:
-  with mlflow.start_run(run_name="dummy-run") as current_run:
-    # Dummy run to create notebook experiment if it doesn't exist
-    experiment_id = current_run.info.experiment_id
-    mlflow.end_run()
+  experiment_id = mlflow.create_experiment(name=experiment_name, tags={"dbdemos":"advanced"})
 
 # COMMAND ----------
 

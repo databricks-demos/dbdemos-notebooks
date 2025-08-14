@@ -10,9 +10,19 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python SDK
-# MAGIC %pip install --quiet mlflow==2.22.0 databricks-automl-runtime==0.2.21
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -71,6 +81,7 @@ display(telcoDF)
 # DBTITLE 1,Define featurization function
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
+
 
 def clean_churn_features(dataDF: DataFrame) -> DataFrame:
   """
@@ -157,83 +168,7 @@ spark.sql(f"""COMMENT ON TABLE {catalog}.{db}.mlops_churn_training IS \'The feat
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC
-# MAGIC ## Accelerating Churn model creation using Databricks AutoML
-# MAGIC ### A glass-box solution that empowers data teams without taking away control
-# MAGIC
-# MAGIC Databricks simplify model creation and MLOps. However, bootstrapping new ML projects can still be long and inefficient.
-# MAGIC
-# MAGIC Instead of creating the same boilerplate for each new project, Databricks AutoML can automatically generate state of the art models for Classifications, regression, and forecast.
-# MAGIC
-# MAGIC
-# MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
-# MAGIC
-# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
-# MAGIC
-# MAGIC Models can be directly deployed or leverage generated notebooks to bootstrap projects with best practices, saving you weeks of effort.
-# MAGIC
-# MAGIC ### Using Databricks AutoML with our Churn dataset
-# MAGIC
-# MAGIC AutoML is available in the "Machine Learning" space. All we have to do is start a new AutoML experiment and select the table we just created (`dbdemos.schema.mlops_churn_training`).
-# MAGIC
-# MAGIC Our prediction target is the `churn` column.
-# MAGIC
-# MAGIC Click on Start, and Databricks will do the rest.
-# MAGIC
-# MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
-
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC #### Using AutoML with labeled feature tables
+# MAGIC ### Train a base model
 # MAGIC
-# MAGIC [AutoML](https://docs.databricks.com/en/machine-learning/automl/how-automl-works.html) works on an input table with prepared features and the corresponding labels. For this quickstart demo, this is what we will be doing. We run AutoML on the table `dbdemos.schema.mlops_churn_training` and capture the table lineage at training time.
-# MAGIC
-# MAGIC #### Using AutoML with tables in the Feature Store
-# MAGIC
-# MAGIC AutoML also works with tables containing only the ground-truth labels and joining them with feature tables in the Feature Store. This will be illustrated in a more advanced demo.
-# MAGIC
-# MAGIC You can join/use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html#automl-experiment-with-feature-store-example-notebook)
-# MAGIC * Select the table containing the ground-truth labels
-# MAGIC * Join remaining features from the feature table
-
-# COMMAND ----------
-
-# DBTITLE 1,Run 'baseline' autoML experiment in the background
-from datetime import datetime
-xp_path = f"/Users/{current_user}/dbdemos_mlops"
-xp_name = f"dbdemos_automl_churn_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-churn_features = churn_features.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
-try: 
-    from databricks import automl 
-    # Add/Force semantic data types for specific columns (to facilitate autoML and make sure it doesn't interpret it as categorical)
-    automl_run = automl.classify(
-        experiment_name = xp_name,
-        experiment_dir = xp_path,
-        dataset = churn_features,
-        target_col = "churn",
-        split_col = "split", #This required DBRML 15.3+
-        timeout_minutes = 10,
-        exclude_cols ='customer_id'
-    )
-    #Make sure all users can access dbdemos shared experiment
-    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
-
-except Exception as e: 
-    if "cannot import name 'automl'" in str(e) or 'method_whitelist' in str(e):
-        # Note: cannot import name 'automl' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
-        # adding a temporary workaround to make sure this works well for now -- ignore this for classic run
-        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", churn_features.toPandas(), model_name="sklearn_model", target_col = "churn") 
-    else: 
-        raise e
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Using the generated notebook to build our model
-# MAGIC
-# MAGIC Next step: [Explore the generated Auto-ML notebook]($./02_automl_best_run)
-# MAGIC
-# MAGIC **Note:**
-# MAGIC For demo purposes, run the above notebook to create and register a new version of the model from your autoML experiment and label/alias the model as "Champion"
+# MAGIC Next step: [Train a lightGBM model]($./02_train_lightGBM)

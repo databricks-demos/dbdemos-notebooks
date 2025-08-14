@@ -13,9 +13,19 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.22.0
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -41,14 +51,22 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### First let's re-install the model's requirements
+
+# COMMAND ----------
+
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
 
 requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
-# MAGIC dbutils.library.restartPython()
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -67,6 +85,8 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 
 # DBTITLE 1,In a Python notebook
 import mlflow
+
+
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
 # Load champion model as a Spark UDF. You can use virtual env manager for the demo to avoid version conflict (you can remove the pip install above with virtual env)

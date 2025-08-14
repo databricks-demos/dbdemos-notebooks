@@ -236,17 +236,18 @@ RETURN (
       ],[
           """
           CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.`cost_metrics`
+          WITH METRICS
+          LANGUAGE YAML
           AS $$
           version: 0.1
 
           source: | 
             SELECT sla_clean.*,
-            agents_clean.*,
-            tickets_clean.*
+                  agents_clean.*,
+                  tickets_clean.*
             FROM {{CATALOG}}.{{SCHEMA}}.sla_clean  
-            join {{CATALOG}}.{{SCHEMA}}.agents_clean USING (ticket_id)  
-            join {{CATALOG}}.{{SCHEMA}}.tickets_clean  USING (ticket_id)
-
+            JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean USING (ticket_id)  
+            JOIN {{CATALOG}}.{{SCHEMA}}.tickets_clean USING (ticket_id)
 
           dimensions:
             - name: Agent Group
@@ -255,14 +256,15 @@ RETURN (
               expr: product_group
             - name: Country
               expr: country
+
           measures:
             - name: Total Operational Cost
-              expr: SUM(tickets_clean.operational_cost)
+              expr: SUM(source.operational_cost)
             - name: Total SLA Penalty Cost
-              expr: SUM(sla_clean.sla_penalty_cost)
+              expr: SUM(source.sla_penalty_cost)
             - name: Average CLV Risk
-              expr: AVG(sla_clean.clv_risk)
-          $$
+              expr: AVG(source.clv_risk)
+          $$;
           """
       ]
     ],

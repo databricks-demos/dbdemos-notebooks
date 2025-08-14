@@ -6,14 +6,14 @@
       "queryLines": [
         "WITH TopTopics AS (\n",
         "    SELECT topic \n",
-        "    FROM `axel_richier`.`aibi_customer_support_update`.tickets_clean \n",
+        "    FROM `main`.`dbdemos_aibi_customer_support`.tickets_clean \n",
         "    \n",
         "    GROUP BY topic ORDER BY COUNT(ticket_id) DESC LIMIT 10\n",
         "    ), \n",
         "    \n",
         "    TopCountries AS (\n",
         "        SELECT country \n",
-        "        FROM `axel_richier`.`aibi_customer_support_update`.tickets_clean \n",
+        "        FROM `main`.`dbdemos_aibi_customer_support`.tickets_clean \n",
         "       -- WHERE country not in ('Japan','Australia') -- for map rendering\n",
         "        --WHERE COUNTRY IN ('United States', 'France', 'Germany', 'Italy', 'Spain', 'United Kingdom', 'Canada', 'Australia', 'Japan','Netherlands')\n",
         "        GROUP BY country ORDER BY COUNT(ticket_id) DESC --LIMIT 10\n",
@@ -23,9 +23,9 @@
         ", dayname(close_time) as day_of_week\n",
         ", hour(close_time) as hour_of_day \n",
         "--, (s.resolution_time + CASE WHEN t.support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400))) ELSE 0 END)  AS adjusted_resolution_time \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.sla_clean s \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.agents_clean a USING (ticket_id) \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.tickets_clean t USING (ticket_id) \n",
+        "FROM `main`.`dbdemos_aibi_customer_support`.sla_clean s \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.agents_clean a USING (ticket_id) \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.tickets_clean t USING (ticket_id) \n",
         "Where t.country IN (SELECT country FROM TopCountries)  "
       ],
       "columns": [
@@ -41,9 +41,9 @@
       "displayName": "Support by Volume",
       "queryLines": [
         "SELECT t.country, COUNT(s.ticket_id) AS support_volume \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.sla_clean s \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.agents_clean a ON s.ticket_id = a.ticket_id \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.tickets_clean t ON s.ticket_id = t.ticket_id \n",
+        "FROM `main`.`dbdemos_aibi_customer_support`.sla_clean s \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.agents_clean a ON s.ticket_id = a.ticket_id \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.tickets_clean t ON s.ticket_id = t.ticket_id \n",
         "GROUP BY t.country;"
       ]
     },
@@ -52,10 +52,10 @@
       "displayName": "Support by Topic",
       "queryLines": [
         "SELECT t.topic, COUNT(s.ticket_id) AS support_volume, (COUNT(s.ticket_id) * 100.0 / (SELECT COUNT(*) \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.tickets_clean)) AS percentage \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.sla_clean s \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.agents_clean a ON s.ticket_id = a.ticket_id \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.tickets_clean t ON s.ticket_id = t.ticket_id \n",
+        "FROM `main`.`dbdemos_aibi_customer_support`.tickets_clean)) AS percentage \n",
+        "FROM `main`.`dbdemos_aibi_customer_support`.sla_clean s \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.agents_clean a ON s.ticket_id = a.ticket_id \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.tickets_clean t ON s.ticket_id = t.ticket_id \n",
         "GROUP BY t.topic;"
       ]
     },
@@ -66,9 +66,9 @@
         "SELECT SUM(CASE WHEN t.status = 'In progress' THEN 1 ELSE 0 END) AS in_progress_tickets\n",
         ", SUM(CASE WHEN t.status = 'Closed' THEN 1 ELSE 0 END) AS closed_tickets\n",
         ", SUM(CASE WHEN t.status = 'Resolved' THEN 1 ELSE 0 END) AS resolved_tickets \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.sla_clean s \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.agents_clean a ON s.ticket_id = a.ticket_id \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.tickets_clean t ON s.ticket_id = t.ticket_id\n"
+        "FROM `main`.`dbdemos_aibi_customer_support`.sla_clean s \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.agents_clean a ON s.ticket_id = a.ticket_id \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.tickets_clean t ON s.ticket_id = t.ticket_id\n"
       ],
       "columns": [
         {
@@ -87,9 +87,9 @@
         "  close_time,\n",
         "  sum(t.operational_cost) over (partition by a.agent_group order by close_time) as cumulative_cost\n",
         "  \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.sla_clean s \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.agents_clean a USING (ticket_id) \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.tickets_clean t USING (ticket_id)\n",
+        "FROM `main`.`dbdemos_aibi_customer_support`.sla_clean s \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.agents_clean a USING (ticket_id) \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.tickets_clean t USING (ticket_id)\n",
         "ORDER BY\n",
         "  a.agent_group,\n",
         "  close_time;"
@@ -100,8 +100,8 @@
       "displayName": "Satisfaction",
       "queryLines": [
         "select s.interaction_notes,t.call_sentiment_score,count(*) nb\n",
-        "from axel_richier.aibi_customer_support_update.tickets_clean t\n",
-        "join axel_richier.aibi_customer_support_update.sla_clean s USING (ticket_id)\n",
+        "from main.dbdemos_aibi_customer_support.tickets_clean t\n",
+        "join main.dbdemos_aibi_customer_support.sla_clean s USING (ticket_id)\n",
         "group by s.interaction_notes, t.call_sentiment_score"
       ]
     },
@@ -109,7 +109,7 @@
       "name": "a4934b9c",
       "displayName": "tickets_clean",
       "queryLines": [
-        "SELECT * FROM axel_richier.aibi_customer_support_update.tickets_clean t\n"
+        "SELECT * FROM main.dbdemos_aibi_customer_support.tickets_clean t\n"
       ]
     },
     {
@@ -123,21 +123,21 @@
         "FROM (\n",
         "    WITH TopTopics AS (\n",
         "    SELECT topic \n",
-        "    FROM `axel_richier`.`aibi_customer_support_update`.tickets_clean \n",
+        "    FROM `main`.`dbdemos_aibi_customer_support`.tickets_clean \n",
         "    GROUP BY topic ORDER BY COUNT(ticket_id) DESC --LIMIT 10\n",
         "    ), \n",
         "    \n",
         "    TopCountries AS (\n",
         "        SELECT country \n",
-        "        FROM `axel_richier`.`aibi_customer_support_update`.tickets_clean \n",
+        "        FROM `main`.`dbdemos_aibi_customer_support`.tickets_clean \n",
         "        GROUP BY country ORDER BY COUNT(ticket_id) DESC LIMIT 5\n",
         "    ) \n",
         "    \n",
         "SELECT s.*, a.* except(a.ticket_id), t.* except(t.ticket_id),resolution_time  as adjusted_resolution_time\n",
         "--, (s.resolution_time + CASE WHEN t.support_level = 'Tier 2' THEN FLOOR(3000 + (RAND() * (3000 - 2400))) ELSE 0 END)  AS adjusted_resolution_time \n",
-        "FROM `axel_richier`.`aibi_customer_support_update`.sla_clean s \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.agents_clean a USING (ticket_id) \n",
-        "JOIN `axel_richier`.`aibi_customer_support_update`.tickets_clean t USING (ticket_id) \n",
+        "FROM `main`.`dbdemos_aibi_customer_support`.sla_clean s \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.agents_clean a USING (ticket_id) \n",
+        "JOIN `main`.`dbdemos_aibi_customer_support`.tickets_clean t USING (ticket_id) \n",
         "\n",
         "WHERE t.topic IN (SELECT topic FROM TopTopics) AND t.country IN (SELECT country FROM TopCountries) AND   s.resolution_time != 0\n",
         ") GROUP BY 1\n",

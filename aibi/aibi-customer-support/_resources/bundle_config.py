@@ -235,7 +235,7 @@ RETURN (
         """
       ],[
           """
-          ALTER VIEW `{{CATALOG}}`.`{{SCHEMA}}`.`cost_metrics`
+          CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.`cost_metrics`
           AS $$
           version: 0.1
 

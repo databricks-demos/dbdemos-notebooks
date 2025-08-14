@@ -112,7 +112,6 @@
               compliance_data_leak STRING COMMENT 'Represents the data leak status of the ticket',
               call_sentiment_score DOUBLE COMMENT 'Represents the sentiment score of the customer support conversation',
               compliance_score DOUBLE COMMENT 'Represents the compliance score of the ticket',    
-              --transcript_compliance STRING COMMENT 'Contains the compliance status of the customer support conversation',
               csat_score DOUBLE COMMENT 'The CSAT score of the ticket',
               first_time_resolution BOOLEAN COMMENT 'Indicates whether the ticket was resolved in the first attempt or not',
               agent_experience_level INTEGER COMMENT 'Represents the experience level of the agent who handled the ticket',
@@ -168,8 +167,7 @@
         , compliance_greeting
         , compliance_data_leak
         , call_sentiment_score
-        , compliance_score--
-        , transcript_compliance
+        , compliance_score
         , csat_score
         , first_time_resolution
         , agent_experience_level

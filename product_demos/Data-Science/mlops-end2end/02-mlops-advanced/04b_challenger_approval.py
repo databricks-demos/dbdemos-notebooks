@@ -6,7 +6,7 @@
 # MAGIC
 # MAGIC It will enable having a "Human-In-The-Loop" to approve a new model version _OPTIONNAL_ as part of the model's [deployment job](https://docs.databricks.com/aws/en/mlflow/deployment-job)
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-4.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-4b-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC *Note: In a typical mlops setup, this would run as part of an automated deployment job to validate a new model. We'll run this demo as an interactive notebook.*
 # MAGIC

@@ -15,7 +15,7 @@ is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 
-catalog = "main__build"
+catalog = "amine_elhelou" # "main__build"
 dbName = db = "dbdemos_mlops"
 
 # COMMAND ----------

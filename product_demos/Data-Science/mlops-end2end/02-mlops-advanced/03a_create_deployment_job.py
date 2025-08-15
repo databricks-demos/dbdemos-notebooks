@@ -1,6 +1,22 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Model Deployment Job creation (programmatically)
+# MAGIC # Create MLflow3.0 Model Deployment Job
+# MAGIC Our first step is to analyze the data and build the features we'll use to train our model. Let's see how this can be done.
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-3a-v2.png?raw=true" width="1200">
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_feature_prep&dt=MLOPS">
+# MAGIC <!-- [metadata={"description":"MLOps end2end workflow: Feature engineering",
+# MAGIC  "authors":["quentin.ambard@databricks.com"],
+# MAGIC  "db_resources":{},
+# MAGIC   "search_tags":{"vertical": "retail", "step": "Data Engineering", "components": ["feature store"]},
+# MAGIC                  "canonicalUrl": {"AWS": "", "Azure": "", "GCP": ""}}] -->
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Define tasks and create programmatically
 # MAGIC Running this notebook will create a Databricks Job templated as a MLflow 3.0 Deployment Job. This job will have three tasks: Evaluation, Approval_Check, and Deployment. The Evaluation task will evaluate the model on a dataset, the Approval_Check task will check if the model has been approved for deployment using UC Tags and the Approval button in the UC Model UI, and the Deployment task will deploy the feature to the Online Store and model to a serving endpoint.
 # MAGIC
 # MAGIC <img src="https://docs.databricks.com/aws/en/assets/images/deployment-job-create-ui-c43b64da503e3f0babcb9ff81a78610d.png" width="1200">

@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC We'll run a couple of trainings to test different models
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-2.png?raw=True" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-2-v2.png?raw=True" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_auto_ml&dt=MLOPS">
@@ -416,10 +416,7 @@ try:
   experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
 
 except:
-  with mlflow.start_run(run_name="dummy-run") as current_run:
-    # Dummy run to create notebook experiment if it doesn't exist
-    experiment_id = current_run.info.experiment_id
-    mlflow.end_run()
+  experiment_id = mlflow.create_experiment(name=experiment_name, tags={"dbdemos":"advanced"})
 
 # COMMAND ----------
 

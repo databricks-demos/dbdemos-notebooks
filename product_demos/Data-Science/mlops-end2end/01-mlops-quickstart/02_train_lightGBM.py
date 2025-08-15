@@ -4,15 +4,22 @@
 # MAGIC
 # MAGIC For this quickstart demo, we're going to train a base `LightGBM` model.
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-2.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-2-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable the collection or disable the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02_automl_best_run&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
-# DBTITLE 1,Install MLflow version for UC [for MLR < 15.2]
-# MAGIC %pip install --quiet lightgbm mlflow
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow==3.1.4
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet lightgbm mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -28,24 +35,24 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Set MLflow experiment
 import mlflow
-xp_path = f"/Users/{current_user}/dbdemos_mlops"
 
 
-#Added for the demo purpose
-xp = mlflow.search_experiments(filter_string=f"name LIKE '/Shared/dbdemos/experiments/mlops%'", order_by=["last_update_time DESC"])[0]
+xp_name = "dbdemos_mlops_churn_demo_quickstart"
+xp_path = f"/Users/{current_user}/"
 
-# Use MLflow to track experiments
-mlflow.set_experiment(experiment_id=xp.experiment_id)
+experiment_name = f"{xp_path}/{xp_name}" # Point to given experiment (Staging/Prod)
+# experiment_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get() # Point to local/notebook experiment (Dev)
 
-#Run containing the data analysis notebook to get the data from artifact
-data_run = mlflow.search_runs(filter_string="tags.mlflow.source.name='Notebook: DataExploration'").iloc[0].to_dict()
+try:
+  experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
 
-#get best run id (this notebook)
-df = mlflow.search_runs(filter_string="metrics.val_f1_score < 1")
-run = df.sort_values(by="metrics.val_f1_score", ascending=False).iloc[0].to_dict()
+except:
+  experiment_id = mlflow.create_experiment(name=experiment_name, tags={"dbdemos":"quickstart"})
 
-target_col = "churn"
+print(f"Experiment name: {experiment_name}")
+print(f"Experiment ID: {experiment_id}")
 
 # COMMAND ----------
 
@@ -80,22 +87,8 @@ src_dataset = mlflow.data.load_delta(table_name=f"{catalog}.{db}.mlops_churn_tra
 
 # COMMAND ----------
 
-import mlflow
-import os
-import uuid
-import shutil
-import pandas as pd
-
-
-input_temp_dir = os.path.join(os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8])
-os.makedirs(input_temp_dir)
-
-# Download the artifact and read it into a Pandas DataFrame
-input_data_path = mlflow.artifacts.download_artifacts(run_id=data_run['run_id'], artifact_path="data", dst_path=input_temp_dir)
-df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
-
-# Delete the temp data
-shutil.rmtree(input_temp_dir)
+# DBTITLE 1,Load training dataset
+df_loaded = src_dataset.df
 
 # Preview data
 display(df_loaded.head(5))
@@ -203,27 +196,12 @@ preprocessor = ColumnTransformer(transformers, remainder="drop", sparse_threshol
 
 # COMMAND ----------
 
-# AutoML completed train - validation - test split internally and used _automl_split_col_xxxx to specify the set
-split_col = [c for c in df_loaded.columns if c.startswith('_automl_split_col') or c == 'split'][0]
+from sklearn.model_selection import train_test_split
 
-# AutoML completed train - validation - test split internally and used split to specify the set
-split_train_df = df_loaded.loc[df_loaded[split_col] == "train"]
-split_val_df = df_loaded.loc[df_loaded[split_col] == "validate"]
-split_test_df = df_loaded.loc[df_loaded[split_col] == "test"]
 
-# Separate target co# Separate target column from features and drop split
-X_train = split_train_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
-y_train = split_train_df[target_col]
-
-X_val = split_val_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
-y_val = split_val_df[target_col]
-
-X_test = split_test_df.drop([target_col, "split", split_col], errors='ignore', axis=1)
-y_test = split_test_df[target_col]
-
-if len(X_val) == 0: #hack for the demo to support all version - don't do that in production
-    X_val = X_test
-    y_val = y_test
+label_col = "churn"
+X = df_loaded.toPandas()
+X_train, X_val, Y_train, Y_val = train_test_split(X.drop(label_col, axis=1), X[label_col], test_size=0.3, random_state=42)
 
 # COMMAND ----------
 
@@ -258,7 +236,7 @@ from sklearn.pipeline import Pipeline
 
 
 def train_fn(params):
-  with mlflow.start_run(experiment_id=run['experiment_id'], run_name=params["run_name"]) as mlflow_run:
+  with mlflow.start_run(experiment_id=experiment_id, run_name=params["run_name"]) as mlflow_run:
     lgbmc_classifier = LGBMClassifier(**params)
 
     model = Pipeline([
@@ -269,8 +247,8 @@ def train_fn(params):
     # Enable automatic logging of input samples, metrics, parameters, and models
     mlflow.sklearn.autolog(log_models=False, silent=True)
 
-    model.fit(X_train, y_train)
-    signature = infer_signature(X_train, y_train)
+    model.fit(X_train, Y_train)
+    signature = infer_signature(X_train, Y_train)
     mlflow.sklearn.log_model(model, "sklearn_model", input_example=X_train.iloc[0].to_dict(), signature=signature)
 
     # Log training dataset object to capture upstream data lineage
@@ -282,8 +260,8 @@ def train_fn(params):
     pyfunc_model = PyFuncModel(model_meta=mlflow_model, model_impl=model)
     training_eval_result = mlflow.evaluate(
         model=pyfunc_model,
-        data=X_train.assign(**{str(target_col):y_train}),
-        targets=target_col,
+        data=X_train.assign(**{str(label_col):Y_train}),
+        targets=label_col,
         model_type="classifier",
         evaluator_config = {"log_model_explainability": False,
                             "metric_prefix": "training_" , "pos_label": "Yes" }
@@ -293,35 +271,22 @@ def train_fn(params):
     # Log metrics for the validation set
     val_eval_result = mlflow.evaluate(
         model=pyfunc_model,
-        data=X_val.assign(**{str(target_col):y_val}),
-        targets=target_col,
+        data=X_val.assign(**{str(label_col):Y_val}),
+        targets=label_col,
         model_type="classifier",
         evaluator_config = {"log_model_explainability": False,
                             "metric_prefix": "val_" , "pos_label": "Yes" }
     )
     sklr_val_metrics = val_eval_result.metrics
 
-    # Log metrics for the test set
-    test_eval_result = mlflow.evaluate(
-        model=pyfunc_model,
-        data=X_test.assign(**{str(target_col):y_test}),
-        targets=target_col,
-        model_type="classifier",
-        evaluator_config = {"log_model_explainability": False,
-                            "metric_prefix": "test_" , "pos_label": "Yes" }
-    )
-    sklr_test_metrics = test_eval_result.metrics
-
     loss = -sklr_val_metrics["val_f1_score"]
 
     # Truncate metric key names so they can be displayed together
     sklr_val_metrics = {k.replace("val_", ""): v for k, v in sklr_val_metrics.items()}
-    sklr_test_metrics = {k.replace("test_", ""): v for k, v in sklr_test_metrics.items()}
 
     return {
       "loss": loss,
       "val_metrics": sklr_val_metrics,
-      "test_metrics": sklr_test_metrics,
       "model": model,
       "run": mlflow_run,
     }

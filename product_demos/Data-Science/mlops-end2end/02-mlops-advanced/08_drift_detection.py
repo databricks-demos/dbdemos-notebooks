@@ -9,14 +9,9 @@
 # MAGIC In order to simulate some data drifts, we will use [_dbldatagen_ library](https://github.com/databrickslabs/dbldatagen), a Databricks Labs project which is a Python library for generating synthetic data using Spark.
 # MAGIC
 # MAGIC We will simulate label drift using the data generator package.
-# MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors. _We will create both label and prediction drifts_
-
-# COMMAND ----------
-
-# MAGIC %md
+# MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors. _We will create both label and prediction drifts_.
 # MAGIC
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-8.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-8-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F07_retrain_automl&dt=MLOPS">

@@ -24,8 +24,6 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet databricks-feature-engineering --upgrade
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

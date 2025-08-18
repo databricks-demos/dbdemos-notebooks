@@ -16,18 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Last environment tested:
-# MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a3
-# MAGIC mlflow==3.1.4
-# MAGIC ```
-
-# COMMAND ----------
-
 # MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a3 mlflow --upgrade lightgbm optuna
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

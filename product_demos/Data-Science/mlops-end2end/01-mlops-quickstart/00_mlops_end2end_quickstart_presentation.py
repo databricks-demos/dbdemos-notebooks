@@ -61,8 +61,6 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow --upgrade
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

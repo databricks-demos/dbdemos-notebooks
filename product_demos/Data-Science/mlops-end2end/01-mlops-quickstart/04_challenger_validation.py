@@ -17,14 +17,6 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Last environment tested:
-# MAGIC ```
-# MAGIC mlflow==3.1.4
-# MAGIC ```
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## General Validation Checks
@@ -46,8 +38,6 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow --upgrade
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -64,8 +54,6 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

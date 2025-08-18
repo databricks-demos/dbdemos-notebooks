@@ -10,18 +10,8 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Last environment tested:
-# MAGIC ```
-# MAGIC mlflow==3.1.4
-# MAGIC ```
-
-# COMMAND ----------
-
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python SDK
 # MAGIC %pip install --quiet mlflow --upgrade
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

@@ -7,7 +7,7 @@
 # MAGIC We'll walk through the process step by step, with **GIFs** to guide you along the way. By the end, you'll have a working AI Agent powered by your own functions, ready to deploy and use. Let's get started!
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.2-Agent-Creation-Guide&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05.1-AI-Functions-Creation&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
 
 # COMMAND ----------
 
@@ -102,11 +102,41 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ### What's next after you finish this notebook?
-# MAGIC * 🔍 **Agent Evaluation:** Test and validate performance
-# MAGIC * 🌟 **Agent Deployment:** Place your agent in a Databricks App or in the Playground for others to use!
-# MAGIC * ⚙️ **Additional Agent Features:** _and much more!_
+# MAGIC <div style="font-family: system-ui, sans-serif; line-height: 1.6;">
 # MAGIC
+# MAGIC <h2 style="margin-bottom:0.5em;">🚀 What's Next After You Finish This Notebook?</h2>
+# MAGIC
+# MAGIC <h3 style="margin-top:1em;">🧠 AI Bricks: Smarter, Automated Agent Bricks</h3>
+# MAGIC
+# MAGIC <p>
+# MAGIC Databricks Agent Bricks is a revolutionary feature that lets you build and deploy enterprise-grade AI agents—fast. 
+# MAGIC It auto-optimizes agents for your business data, supports multi-agent orchestration, generates synthetic test data, 
+# MAGIC and ensures compliance with Unity Catalog.
+# MAGIC </p>
+# MAGIC
+# MAGIC <p>
+# MAGIC 🔗 <a href="https://www.databricks.com/product/artificial-intelligence/agent-bricks" target="_blank">
+# MAGIC <strong>Read the Documentation</strong></a>
+# MAGIC </p>
+# MAGIC
+# MAGIC <p align="center">
+# MAGIC   <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/cross_demo_assets/AI_agent_bricks_selection.gif" 
+# MAGIC        alt="AI Agent Bricks Selection" 
+# MAGIC        style="border-radius: 12px; max-width: 80%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+# MAGIC </p>
+# MAGIC
+# MAGIC <h4>💡 Why It Matters for Credit Decisioning</h4>
+# MAGIC <ul>
+# MAGIC   <li>✅ Automate document review and underwriting</li>
+# MAGIC   <li>✅ Improve fraud detection and compliance</li>
+# MAGIC   <li>✅ Easily scale smarter decision processes</li>
+# MAGIC </ul>
+# MAGIC
+# MAGIC <p>
+# MAGIC With Agent Bricks, you can upgrade your current workflows to fully autonomous, self-improving systems—right from Databricks.
+# MAGIC </p>
+# MAGIC
+# MAGIC </div>
 
 # COMMAND ----------
 

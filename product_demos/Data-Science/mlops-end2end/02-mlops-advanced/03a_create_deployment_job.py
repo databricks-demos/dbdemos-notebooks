@@ -31,17 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Last environment tested:
-# MAGIC ```
-# MAGIC mlflow==3.1.4
-# MAGIC ```
-
-# COMMAND ----------
-
 # MAGIC %pip install --quiet mlflow --upgrade
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

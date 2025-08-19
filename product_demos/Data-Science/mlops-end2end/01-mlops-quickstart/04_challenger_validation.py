@@ -46,8 +46,11 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow --upgrade
+<<<<<<< HEAD
 # MAGIC
 # MAGIC
+=======
+>>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -64,8 +67,11 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
+<<<<<<< HEAD
 # MAGIC
 # MAGIC
+=======
+>>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------

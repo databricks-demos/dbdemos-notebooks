@@ -382,8 +382,8 @@
                     "job_cluster_key": "Shared_job_cluster",
                     "new_cluster": {
                         "performance_target": "STANDARD"
-                    },
-                },
+                    }
+                }
             ],
             "format": "MULTI_TASK"
         }
@@ -452,7 +452,7 @@
                             "timeout_seconds": 0,
                             "email_notifications": {},
                             "webhook_notifications": {}
-                        },
+                        }
                     ],
                     "job_clusters": [
                         {

@@ -61,8 +61,11 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow --upgrade
+<<<<<<< HEAD
 # MAGIC
 # MAGIC
+=======
+>>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------

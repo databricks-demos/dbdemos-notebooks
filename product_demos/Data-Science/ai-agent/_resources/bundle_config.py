@@ -67,7 +67,7 @@
     {
       "path": "02-agent-eval/agent.py",
       "pre_run": False,
-      "publish_on_website": True,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
       "title":  "Your Langchain Agent",
       "description": "Custom MLFlow flavor model for our langchain agent."
@@ -79,14 +79,6 @@
       "add_cluster_setup_cell": False,
       "title":  "Build a PDF knowledge base",
       "description": "Add a RAG to your agent using Vector Search."
-    },
-    {
-      "path": "01-create-tools/01_create_first_billing_agent",
-      "pre_run": True,
-      "publish_on_website": True,
-      "add_cluster_setup_cell": False,
-      "title":  "Create your first Agent",
-      "description": "Deploy your first agent using UC functions."
     },
     {
       "path": "04-deploy-app/04-Deploy-Frontend-Lakehouse-App",

@@ -23,19 +23,8 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Last environment tested:
-# MAGIC ```
-# MAGIC databricks-sdk==0.60.0
-# MAGIC mlflow-skinny==3.1.4
-# MAGIC ```
-
-# COMMAND ----------
-
 # DBTITLE 1,Install needed package
 # MAGIC %pip install --quiet databricks-sdk mlflow-skinny --upgrade dbldatagen
-# MAGIC
-# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

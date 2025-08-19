@@ -20,8 +20,11 @@
 
 # DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python SDK
 # MAGIC %pip install --quiet mlflow --upgrade
+<<<<<<< HEAD
 # MAGIC
 # MAGIC
+=======
+>>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------

@@ -11,6 +11,7 @@
 
 # COMMAND ----------
 
+<<<<<<< HEAD
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
@@ -22,6 +23,9 @@
 # MAGIC %pip install --quiet lightgbm mlflow --upgrade
 # MAGIC
 # MAGIC
+=======
+# MAGIC %pip install --quiet lightgbm mlflow --upgrade
+>>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -40,7 +44,11 @@ import mlflow
 
 
 xp_name = "dbdemos_mlops_churn_demo_quickstart"
+<<<<<<< HEAD
 xp_path = f"/Users/{current_user}/"
+=======
+xp_path = f"/Users/{current_user}"
+>>>>>>> mlops_merge
 
 experiment_name = f"{xp_path}/{xp_name}" # Point to given experiment (Staging/Prod)
 # experiment_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get() # Point to local/notebook experiment (Dev)

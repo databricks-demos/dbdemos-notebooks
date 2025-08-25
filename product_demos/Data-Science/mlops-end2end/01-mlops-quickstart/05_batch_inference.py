@@ -16,7 +16,7 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.1.4
+# MAGIC mlflow==3.3.0
 # MAGIC ```
 
 # COMMAND ----------

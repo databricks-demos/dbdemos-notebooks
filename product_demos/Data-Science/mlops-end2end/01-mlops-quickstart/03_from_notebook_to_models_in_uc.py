@@ -36,19 +36,16 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.1.4
+# MAGIC mlflow==3.3.0
 # MAGIC ```
 
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
 # MAGIC %pip install --quiet mlflow --upgrade
-<<<<<<< HEAD
 # MAGIC
 # MAGIC
-=======
->>>>>>> mlops_merge
-# MAGIC dbutils.library.restartPython()
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -63,6 +60,10 @@
 
 # COMMAND ----------
 
+model_name = f"{catalog}.{db}.mlops_churn"
+
+# COMMAND ----------
+
 print(f"Finding best run from {xp_name} and pushing new model version to {model_name}")
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
 
@@ -70,18 +71,13 @@ mlflow.set_experiment(f"{xp_path}/{xp_name}")
 
 import mlflow
 
-<<<<<<< HEAD
 
-=======
->>>>>>> mlops_merge
 xp_name = "dbdemos_mlops_churn_demo_quickstart"
-model_name = f"{catalog}.{db}.mlops_churn"
 print(f"Finding best run from {xp_name}_* and pushing new model version to {model_name}")
 xp_path = f"/Users/{current_user}"
-<<<<<<< HEAD
-=======
+
 mlflow.set_experiment(f"{xp_path}/{xp_name}")
->>>>>>> mlops_merge
+
 
 experiment_id = mlflow.search_experiments(filter_string=f"name LIKE '{xp_path}/{xp_name}%'", order_by=["last_update_time DESC"])[0].experiment_id
 print(experiment_id)

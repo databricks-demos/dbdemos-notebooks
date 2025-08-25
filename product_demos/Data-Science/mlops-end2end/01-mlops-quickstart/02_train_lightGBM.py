@@ -11,11 +11,10 @@
 
 # COMMAND ----------
 
-<<<<<<< HEAD
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.1.4
+# MAGIC mlflow==3.3.0
 # MAGIC ```
 
 # COMMAND ----------
@@ -23,9 +22,6 @@
 # MAGIC %pip install --quiet lightgbm mlflow --upgrade
 # MAGIC
 # MAGIC
-=======
-# MAGIC %pip install --quiet lightgbm mlflow --upgrade
->>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -42,24 +38,18 @@
 # DBTITLE 1,Set MLflow experiment
 import mlflow
 
-
 xp_name = "dbdemos_mlops_churn_demo_quickstart"
-<<<<<<< HEAD
-xp_path = f"/Users/{current_user}/"
-=======
 xp_path = f"/Users/{current_user}"
->>>>>>> mlops_merge
 
-experiment_name = f"{xp_path}/{xp_name}" # Point to given experiment (Staging/Prod)
-# experiment_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get() # Point to local/notebook experiment (Dev)
+experiment_name = f"{xp_path}/{xp_name}"
 
 try:
   experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
 
-except:
+except Exception as e:
+  print(f"Creating experiment: {experiment_name}")
   experiment_id = mlflow.create_experiment(name=experiment_name, tags={"dbdemos":"quickstart"})
 
-print(f"Experiment name: {experiment_name}")
 print(f"Experiment ID: {experiment_id}")
 
 # COMMAND ----------
@@ -96,7 +86,7 @@ src_dataset = mlflow.data.load_delta(table_name=f"{catalog}.{db}.mlops_churn_tra
 # COMMAND ----------
 
 # DBTITLE 1,Load training dataset
-df_loaded = src_dataset.df
+df_loaded = src_dataset.df.filter("split = 'train'").drop("customer_id", "split")
 
 # Preview data
 display(df_loaded.head(5))
@@ -193,10 +183,8 @@ preprocessor = ColumnTransformer(transformers, remainder="drop", sparse_threshol
 
 # MAGIC %md
 # MAGIC ## Train - Validation - Test Split
-# MAGIC The input data is split by AutoML into 3 sets:
-# MAGIC - Train (60% of the dataset used to train the model)
+# MAGIC - Train (80% of the dataset used to train the model)
 # MAGIC - Validation (20% of the dataset used to tune the hyperparameters of the model)
-# MAGIC - Test (20% of the dataset used to report the true performance of the model on an unseen dataset)
 # MAGIC
 # MAGIC
 # MAGIC We use this column to split the dataset into the above three sets.
@@ -209,7 +197,7 @@ from sklearn.model_selection import train_test_split
 
 label_col = "churn"
 X = df_loaded.toPandas()
-X_train, X_val, Y_train, Y_val = train_test_split(X.drop(label_col, axis=1), X[label_col], test_size=0.3, random_state=42)
+X_train, X_val, Y_train, Y_val = train_test_split(X.drop(label_col, axis=1), X[label_col], test_size=0.2, random_state=42)
 
 # COMMAND ----------
 

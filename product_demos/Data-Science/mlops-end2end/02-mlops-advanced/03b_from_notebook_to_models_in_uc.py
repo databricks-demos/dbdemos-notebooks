@@ -34,6 +34,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -63,7 +65,7 @@ from datetime import datetime
 from datetime import timedelta
 
 
-# Let's get our best ml run
+# Let's get our best ml run (for Demo Purposes - in reality one would be searching accross multiple runs)
 best_run_name = "mlops-hpo-best-run" # "smoke-test"
 
 best_model = mlflow.search_runs(

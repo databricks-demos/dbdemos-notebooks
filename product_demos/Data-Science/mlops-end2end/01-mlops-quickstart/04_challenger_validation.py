@@ -20,7 +20,7 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.1.4
+# MAGIC mlflow==3.3.0
 # MAGIC ```
 
 # COMMAND ----------
@@ -46,11 +46,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow --upgrade
-<<<<<<< HEAD
 # MAGIC
 # MAGIC
-=======
->>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -67,11 +64,8 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
-<<<<<<< HEAD
 # MAGIC
 # MAGIC
-=======
->>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -168,13 +162,13 @@ client.set_model_version_tag(name=model_name, version=model_details.version, key
 import pyspark.sql.functions as F
 
 
-#get our validation dataset:
-validation_df = spark.table('mlops_churn_training').filter("split='validate'")
+# Get the eval dataset:
+eval_df = spark.table('mlops_churn_training').filter("split='test'")
 
-#Call the model with the given alias and return the prediction
-def predict_churn(validation_df, model_alias):
+# Call the model with the given alias and return the prediction
+def predict_churn(df, model_alias):
     model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.mlops_churn@{model_alias}") #Use env_manager="virtualenv" to recreate a venv with the same python version if needed
-    return validation_df.withColumn('predictions', model(*model.metadata.get_input_schema().input_names()))
+    return df.withColumn('predictions', model(*model.metadata.get_input_schema().input_names()))
 
 # COMMAND ----------
 
@@ -194,7 +188,7 @@ cost_false_positive = -cost_of_discount #doesn't churn, we gave the discount for
 
 def get_model_value_in_dollar(model_alias):
     # Convert preds_df to Pandas DataFrame
-    model_predictions = predict_churn(validation_df, model_alias).toPandas()
+    model_predictions = predict_churn(eval_df, model_alias).toPandas()
     # Calculate the confusion matrix
     tn, fp, fn, tp = confusion_matrix(model_predictions['churn'], model_predictions['predictions']).ravel()
     return tn * cost_true_negative+ fp * cost_false_positive + fn * cost_false_negative + tp * cost_true_positive

@@ -13,18 +13,14 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.1.4
+# MAGIC mlflow==3.3.0
 # MAGIC ```
 
 # COMMAND ----------
 
-# DBTITLE 1,Install latest feature engineering client for UC [for MLR < 13.2] and databricks python SDK
 # MAGIC %pip install --quiet mlflow --upgrade
-<<<<<<< HEAD
 # MAGIC
 # MAGIC
-=======
->>>>>>> mlops_merge
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -145,12 +141,11 @@ display(churn_features)
 
 # COMMAND ----------
 
-# Specify train-val-test split
-train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
+# Specify train-test split
+train_ratio, test_ratio = 0.8, 0.2
 churn_features = (churn_features.withColumn("random", F.rand(seed=42))
                                 .withColumn("split",
                                             F.when(F.col("random") < train_ratio, "train")
-                                            .when(F.col("random") < train_ratio + val_ratio, "validate")
                                             .otherwise("test"))
                                 .drop("random"))
 

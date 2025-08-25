@@ -55,7 +55,14 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=false
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=true
 
 # COMMAND ----------
 

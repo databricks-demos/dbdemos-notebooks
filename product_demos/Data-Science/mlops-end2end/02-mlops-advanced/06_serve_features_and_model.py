@@ -27,7 +27,18 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a3 mlflow --upgrade
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC databricks-feature-engineering==0.13.0a5
+# MAGIC mlflow==3.3.0
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 mlflow --upgrade
+# MAGIC
+# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -405,8 +416,8 @@ if not is_smoke_test:
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
-# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23"},
-# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23"}
+# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23", "split":"test"},
+# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23","split":"test"}
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
@@ -442,8 +453,8 @@ if input_example:
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23"},
-    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23"}
+    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23", "split":"test"},
+    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23", "split":"test"}
   ]
 
 # COMMAND ----------

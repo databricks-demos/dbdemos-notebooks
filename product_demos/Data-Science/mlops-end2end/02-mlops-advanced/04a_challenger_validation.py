@@ -35,7 +35,18 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a3 mlflow --upgrade
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC databricks-feature-engineering==0.13.0a5
+# MAGIC mlflow==3.3.0
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 mlflow --upgrade
+# MAGIC
+# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------

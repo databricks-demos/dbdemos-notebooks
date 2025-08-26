@@ -410,7 +410,7 @@ class NoneValuePruner(BasePruner):
 
 objective_fn = ObjectiveOptuna(X_train, Y_train, preprocessor, pos_label_in=pos_label)
 study_debug = optuna.create_study(direction="maximize", study_name="test_debug", sampler=optuna_sampler, pruner= NoneValuePruner())
-study_debug.optimize(objective_fn, n_trials=16, n_jobs=-1)
+study_debug.optimize(objective_fn, n_trials=8, n_jobs=-1)
 
 # COMMAND ----------
 

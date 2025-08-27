@@ -18,12 +18,14 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a3
+# MAGIC databricks-feature-engineering==0.13.0a5
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 --upgrade
+# MAGIC
+# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -158,7 +160,7 @@ import pyspark.sql.functions as F
 
 
 # Best practice: specify train-test split as categorical label (to be used by model validation jobs and baseline drift detection)
-train_ratio, test_ratio = 0.9, 0.1
+train_ratio, test_ratio = 0.8, 0.2
 
 churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
                         .withColumn("random", F.rand(seed=42)) \

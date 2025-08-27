@@ -117,7 +117,6 @@ def delete_feature_store_table(catalog, db, feature_table_name):
 # COMMAND ----------
 
 # This setup is used in the quickstart demo only
-
 quickstart_training_table_name = "mlops_churn_training"
 quickstart_unlabelled_table_name = "mlops_churn_inference"
 
@@ -147,7 +146,7 @@ if setup_adv_inference_data:
     # Drop the label column for inference
     # This seems to be writing to the wrong table. Comment out first to test writing to advanced_churn_cust_ids.
     #spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
-    spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
+    spark.read.table("advanced_churn_label_table").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
   else:
     print("Label table `advanced_churn_label_table` doesn't exist, please run the notebook '01_feature_engineering'")
 

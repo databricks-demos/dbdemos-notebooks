@@ -5,8 +5,9 @@
 
 #Note: we do not recommend to change the catalog here as it won't impact all the demo resources such as DLT pipeline and Dashboards.
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("lakehouse-retail-c360", catalog="..", schema="...")
-catalog = "main__build"
-schema = dbName = db = "dbdemos_pipeline_bike"
+parameters = dbutils.widgets.getAll()
+catalog = parameters.get("catalog", "main__build")
+schema = dbName = db = parameters.get("schema", "dbdemos_pipeline_bike")
 
 volume_name = "raw_data"
 

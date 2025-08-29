@@ -1,0 +1,78 @@
+# Databricks Asset Bundle configuration, more info here: https://docs.databricks.com/en/dev-tools/bundles/settings.html
+bundle:
+  name: "pipeline-bike"
+
+# Variables for re-use across the bundle
+variables:
+  catalog:
+    description: Default catalog that pipeline will publish assets to
+    default: <replace with your catalog>
+  schema:
+    description: Default schema that pipeline will publish assets to when no schema is specified in code
+    default: <replace with your schema>
+
+
+# Targets that you can deploy into
+# These can be different workspaces or different configurations of the pipeline
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: <replace with your workspace>
+
+
+# Resources included in this bundle, in this case just our pipeline
+resources:
+  pipelines:
+    # The resource name used here is used to reference this pipeline elsewhere in your DAB if needed
+    pipeline_resource_name:
+      # Available options for resources are found in the REST API Documentation: https://docs.databricks.com/api/workspace/pipelines/create
+      name: pipeline-bike
+      root_path: ./
+      development: true
+      serverless: true
+
+      # Configuration values that are availble inside the pipeline (see transformations/01-bronze.sql)
+      configuration:
+        catalog: ${var.catalog}
+        schema: ${var.schema}
+
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+
+      # Files to include in the pipeline, relative to the .yml file
+      # To include all files in a folder you can use the ** syntax
+      libraries:
+        - glob:
+            include: ./transformations/02-silver.sql
+        - glob:
+            include: ./transformations/03-gold.sql
+        - glob:
+            include: ./transformations/01-bronze.sql
+      
+      # What table to write the event log to for this pipeline
+      event_log:
+        catalog: ${var.catalog}
+        schema: ${var.schema}
+        name: pipeline_bike_event_logs
+  jobs:
+    # Define a job to generate bike data and initiate a pipeline run
+    generate_bike_data:
+      name: init-pipeline-bike
+      tasks:
+        - task_key: generate_data
+          notebook_task:
+            notebook_path: ./_resources/01-Bike-Data-generator.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+        - task_key: start_dlt_pipeline
+          depends_on:
+            - task_key: generate_data
+          pipeline_task:
+            # Reference the pipeline we defined above using the resource name
+            pipeline_id: ${resources.pipelines.pipeline_resource_name.id}
+            full_refresh: true
+
+      

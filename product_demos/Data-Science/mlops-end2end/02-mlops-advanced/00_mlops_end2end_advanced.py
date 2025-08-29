@@ -48,19 +48,21 @@
 # MAGIC
 # MAGIC <br>
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-0.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-0-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00_mlops_end2end_quickstart_presentation&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC  %pip install mlflow==2.22.0 databricks-sdk>=0.40.0
-# MAGIC  dbutils.library.restartPython()
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $adv_mlops=true 
+# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=true
 
 # COMMAND ----------
 

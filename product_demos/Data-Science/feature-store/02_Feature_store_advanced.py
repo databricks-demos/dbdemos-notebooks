@@ -273,7 +273,7 @@ try:
     #Make sure all users can access dbdemos shared experiment
     DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 except Exception as e:
-    if "cannot import name 'automl'" in str(e):
+    if "cannot import name 'automl'" in str(e) or 'method_whitelist' in str(e):
         # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
         # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
         summary_cl = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", training_pd.toPandas(), model_name="automl_mockup", target_col="purchased")
@@ -330,6 +330,7 @@ for dep in env['dependencies']:
     if isinstance(dep, dict) and 'pip' in dep:
         dep['pip'] = [pkg for pkg in dep['pip'] if not pkg.startswith('mlflow==')]
         dep['pip'].insert(0, 'mlflow=='+mlflow.__version__)
+        dep['pip'].insert(1, 'numpy<2.0') # avoid compatibility issues with numpy
 
 #Create a new run in the same experiment as our automl run.
 with mlflow.start_run(run_name="best_fs_model_advanced", experiment_id=summary_cl.experiment.experiment_id) as run:

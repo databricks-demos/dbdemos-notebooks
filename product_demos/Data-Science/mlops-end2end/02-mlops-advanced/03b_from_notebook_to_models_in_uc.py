@@ -16,7 +16,7 @@
 # MAGIC
 # MAGIC We will look at how we test and promote a new __Challenger__ model as a candidate to replace an existing __Champion__ model.
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-3.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-3b-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=03_from_notebook_to_models_in_uc&demo_name=mlops-end2end&event=VIEW">
@@ -29,14 +29,14 @@
 # MAGIC
 # MAGIC Unity Catalog proposes free-text model alias, i.e., `Baseline`, `Challenger`, `Champion`, along with tagging.
 # MAGIC
-# MAGIC Users with appropriate permissions can create models, modify aliases and tags, use models, etc.
+# MAGIC Users with appropriate permissions can create models, modify aliases and tags and **CREATE MODEL VERSION**s which would trigger Deployment jobs.
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.22.0
+# MAGIC %pip install --quiet mlflow --upgrade
 # MAGIC
 # MAGIC
-# MAGIC dbutils.library.restartPython()
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -61,11 +61,17 @@ mlflow.set_experiment(f"{xp_path}/{xp_name}")
 
 # COMMAND ----------
 
-# Let's get our best ml run
+from datetime import datetime
+from datetime import timedelta
+
+
+# Let's get our best ml run (for Demo Purposes - in reality one would be searching accross multiple runs)
+best_run_name = "mlops-hpo-best-run" # "smoke-test"
+
 best_model = mlflow.search_runs(
   order_by=["metrics.test_f1_score DESC"],
   max_results=1,
-  filter_string="status = 'FINISHED' and run_name='mlops_best_run'" #filter on mlops_best_run to always use the notebook 02 to have a more predictable demo
+  filter_string=f"status = 'FINISHED' and run_name='{best_run_name}'" # and start_time >= {(datetime.today() - timedelta(hours=1)).toordinal()}" 
 )
 # Optional: Load MLflow Experiment as a spark df and see all runs
 # df = spark.read.format("mlflow-experiment").load(experiment_id)
@@ -77,18 +83,24 @@ best_model
 
 # COMMAND ----------
 
-print(f"Registering model to {catalog}.{db}.advanced_mlops_churn")
-
 # Get the run id from the best model
 run_id = best_model.iloc[0]['run_id']
 
+# OR
+# run_id = "" For demo purposes if you want to promote your own run: Copy/Past your latest run_id here
+
+# COMMAND ----------
+
 # Register best model from experiments run to MLflow model registry
+print(f"Registering model to {catalog}.{db}.advanced_mlops_churn")
 model_details = mlflow.register_model(f"runs:/{run_id}/model", f"{catalog}.{db}.advanced_mlops_churn")
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC At this point the model does not yet have any aliases or description that indicates its lifecycle and meta-data/info.  Let's update this information.
+# MAGIC
+# MAGIC **NOTE: This should trigger a new run for the Model Deployment Job previously created programmatically.**
 
 # COMMAND ----------
 
@@ -102,7 +114,7 @@ model_details = mlflow.register_model(f"runs:/{run_id}/model", f"{catalog}.{db}.
 from mlflow import MlflowClient
 
 
-client = MlflowClient()
+client = MlflowClient(registry_uri="databricks-uc")
 
 # The main model description, typically done once.
 client.update_registered_model(
@@ -126,14 +138,6 @@ client.update_model_version(
   name=model_details.name,
   version=model_details.version,
   description=version_desc
-)
-
-# We can also tag the model version with the F1 score for visibility
-client.set_model_version_tag(
-  name=model_details.name,
-  version=model_details.version,
-  key="f1_score",
-  value=f"{round(best_score,4)}"
 )
 
 # COMMAND ----------
@@ -177,8 +181,8 @@ client.set_registered_model_alias(
 # MAGIC %md
 # MAGIC ## Next: Validation of the Challenger model
 # MAGIC
-# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook, so the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook and the validation process has been automated as part of a Lakeflow job (aka "Deployment Job").
 # MAGIC
 # MAGIC If the model passes all the tests, it'll be promoted to `Champion`.
 # MAGIC
-# MAGIC Next: Find out how the model is being tested before being promoted as `Champion` [using the model validation notebook]($./04_challenger_validation)
+# MAGIC Next: Find out how the model is being tested before being promoted as `Champion` **via CODE** [using the model `Evaluation` notebook]($./04a_challenger_validation)

@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv
+# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -58,7 +58,7 @@ rag_chain_config = {
     "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],
     "uc_tool_names": [f"{catalog}.{dbName}.*"],
     "system_prompt": "Your job is to provide customer help. call the tool to answer.",
-    "llm_endpoint_name": "databricks-claude-3-7-sonnet",
+    "llm_endpoint_name": LLM_ENDPOINT_NAME,
     "max_history_messages": 20,
     "retriever_config": None
 }
@@ -168,6 +168,10 @@ print(answer)
 
 # COMMAND ----------
 
+# MAGIC %run ../_resources/04-eval-dataset-generation
+
+# COMMAND ----------
+
 eval_example = spark.read.json(f"/Volumes/{catalog}/{dbName}/{volume_name}/eval_dataset")
 display(eval_example)
 
@@ -217,11 +221,12 @@ def get_scorers():
         RelevanceToQuery(),  # Checks if email addresses the user's request
         Safety(),  # Checks for harmful or inappropriate content
         Guidelines(
-            guidelines="""Reponse must be done without showing reaso
-            ning.
+            guidelines="""
+            Reponse must be done without showing reasoning.
             - don't mention that you need to look up things
             - do not mention tools or function used
-            - do not tell your intermediate steps or reasoning""",
+            - do not tell your intermediate steps or reasoning
+            """,
             name="steps_and_reasoning",
         )
     ]
@@ -237,7 +242,7 @@ scorers = get_scorers()
 
 # COMMAND ----------
 
-with mlflow.start_run(run_name='first_eval'):
+with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
     results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
 
 # COMMAND ----------
@@ -263,7 +268,7 @@ try:
     config["config_version_name"] = "better_prompt"
     config["system_prompt"] = (
         "You are a telco assistant. Call the appropriate tool to help the user with billing, support, or account info. "
-        "DO NOT mention any internal tool or reasoning steps in your final answer."
+        "DO NOT mention any internal tool or reasoning steps in your final answer. Do not say according to records or imply that you are looking up information."
     )
     yaml.dump(config, open("agent_config.yaml", "w"))
 except Exception as e:
@@ -271,11 +276,13 @@ except Exception as e:
 
 # COMMAND ----------
 
-with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
-    results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
-
-# Let's relog our agent to capture the new prompt
+# Let's relog our agent in MLflow to capture the new prompt
 logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
+
+# COMMAND ----------
+
+with mlflow.start_run(run_name='eval_with_reasoning_instructions'):
+    results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
 
 # COMMAND ----------
 

@@ -2,7 +2,7 @@
 # MAGIC %md-sandbox
 # MAGIC # Build and Evaluate your AI Agent Systems with Databricks and MLFlow
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/agent-demo-1.png?raw=true" width="800px" style="float: right">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/agent-demo-0.png?raw=true" width="800px" style="float: right">
 # MAGIC
 # MAGIC Databricks makes it easy to create and register your own Agents and tools to manipulate your data, and also any other external system (from openai agent sdk, claude agents to MCP servers).
 # MAGIC
@@ -26,8 +26,11 @@
 # MAGIC Let's start by creating our first tools. We'll create a few functions to help your customer support team to find customer information, and register them in your Catalog/Schema. 
 # MAGIC
 # MAGIC Remember, this could be any functions!
-# MAGIC
-# MAGIC Open [01-create-tools/01_create_first_billing_agent]($./01-create-tools/01_create_first_billing_agent) to get started
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Open [01-create-tools/01_create_first_billing_agent]($.01-create-tools/01_create_first_billing_agent) to get started
 
 # COMMAND ----------
 
@@ -39,7 +42,10 @@
 # MAGIC Now that our tools are ready, we'll create an Agent using Langchain and give equip the agent with the tools we previously created!
 # MAGIC
 # MAGIC Once our agent created, we'll start running a first Evaluation round against an existing evaluation dataset, and improve our prompt to make it better and have better eval metrics!
-# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC Open [02-agent-eval/02.1_agent_evaluation]($./02-agent-eval/02.1_agent_evaluation) to deploy and evaluate your agent.
 
 # COMMAND ----------

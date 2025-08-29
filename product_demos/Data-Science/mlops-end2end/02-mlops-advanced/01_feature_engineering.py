@@ -1,13 +1,9 @@
 # Databricks notebook source
-#dbutils.widgets.dropdown("force_refresh_automl", "true", ["false", "true"], "Restart AutoML run")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC # Churn Prediction Feature Engineering
 # MAGIC Our first step is to analyze the data and build the features we'll use to train our model. Let's see how this can be done.
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-1.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/advanced/banners/mlflow-uc-end-to-end-advanced-1-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fmlops%2F02_feature_prep&dt=MLOPS">
@@ -19,8 +15,18 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow==2.22.0 databricks-feature-engineering==0.12.1
-# MAGIC dbutils.library.restartPython()
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC databricks-feature-engineering==0.13.0a5
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -87,6 +93,8 @@ def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
 # COMMAND ----------
 
 # DBTITLE 1,Define featurization function
+spark.conf.set("spark.sql.ansi.enabled", "false")
+
 def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   """
   Simple cleaning function leveraging the Pandas API
@@ -151,18 +159,17 @@ display(churn_features_n_predsDF)
 import pyspark.sql.functions as F
 
 
-# Best practice: specify train-val-test split as categorical label (to be used by automl and/or model validation jobs)
-train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
+# Best practice: specify train-test split as categorical label (to be used by model validation jobs and baseline drift detection)
+train_ratio, test_ratio = 0.8, 0.2
 
 churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
                         .withColumn("random", F.rand(seed=42)) \
                         .withColumn("split",
                                     F.when(F.col("random") < train_ratio, "train")
-                                    .when(F.col("random") < train_ratio + val_ratio, "validate")
                                     .otherwise("test")) \
                         .drop("random") \
                         .write.format("delta") \
-                        .mode("overwrite").option("overwriteSchema", "true") \
+                        .mode("append").option("overwriteSchema", "true") \
                         .saveAsTable(f"advanced_churn_label_table")
 
 churn_featuresDF = churn_features_n_predsDF.drop("churn")
@@ -170,7 +177,7 @@ churn_featuresDF = churn_features_n_predsDF.drop("churn")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Add primary key constraints to the label table for feature lookup
+# MAGIC ### Add primary key constraints to the label table for building/constructing training datasets _(OPTIONAL)_
 
 # COMMAND ----------
 
@@ -206,32 +213,6 @@ churn_featuresDF = churn_features_n_predsDF.drop("churn")
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC
-# MAGIC First, since we are creating the feature table from scratch, we want to ensure that our environment is clean and any previously created offline/online feature tables are deleted.
-
-# COMMAND ----------
-
-# DBTITLE 1,Drop any existing online table (optional)
-from pprint import pprint
-from databricks.sdk import WorkspaceClient
-
-
-# Create a workspace client instance
-w = WorkspaceClient()
-
-# Remove any existing online feature table
-try:
-  online_table_specs = w.online_tables.get(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-  # Drop existing online feature table
-  w.online_tables.delete(f"{catalog}.{db}.advanced_churn_feature_table_online_table")
-  print(f"Dropping online feature table: {catalog}.{db}.advanced_churn_feature_table_online_table")
-
-except Exception as e:
-  pprint(e)
-
-# COMMAND ----------
-
 # DBTITLE 1,Drop the feature table if it already exists
 # MAGIC %sql
 # MAGIC -- We are creating the feature table from scratch.
@@ -249,6 +230,7 @@ fe = FeatureEngineeringClient()
 # COMMAND ----------
 
 # DBTITLE 1,Create "feature"/UC table
+# One-Time operation
 churn_feature_table = fe.create_table(
   name="advanced_churn_feature_table", # f"{catalog}.{dbName}.{feature_table_name}"
   primary_keys=["customer_id", "transaction_ts"],
@@ -343,8 +325,8 @@ fe.write_table(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Using the AutoML-generated notebook to build our model
+# MAGIC ### OR train a model with Hyper-Parameter-Optimization
 # MAGIC
-# MAGIC We have pre-run AutoML, which generated the notebook that trained the best model in the AutoML run. We take this notebook and improve on the model.
+# MAGIC We'll use mlflow's `optuna` native integration
 # MAGIC
-# MAGIC Next step: [Explore the modified version of the notebook generated from Auto-ML]($./02_automl_champion)
+# MAGIC Next step: [Train a model using HPO]($./02_model_training_hpo_optuna)

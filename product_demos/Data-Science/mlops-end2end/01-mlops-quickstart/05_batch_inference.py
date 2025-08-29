@@ -6,16 +6,26 @@
 # MAGIC
 # MAGIC With Models in Unity Catalog, they can be loaded for use in batch inference pipelines. The generated predictions can used to devise customer retention strategies or be used for analytics. The model in use is the __Champion__ model, and we will load this for use in our pipeline.
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-5.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-5-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable the collection or disable the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=05_batch_inference&demo_name=mlops-end2end&event=VIEW">
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow==3.3.0
+# MAGIC ```
+
+# COMMAND ----------
+
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow==2.22.0
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -41,14 +51,22 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### First let's re-install the model's requirements
+
+# COMMAND ----------
+
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
 
 requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
 
 # COMMAND ----------
 
 # MAGIC %pip install --quiet -r $requirements_path
-# MAGIC dbutils.library.restartPython()
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -67,6 +85,8 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 
 # DBTITLE 1,In a Python notebook
 import mlflow
+
+
 # Load customer features to be scored
 inference_df = spark.read.table(f"mlops_churn_inference")
 # Load champion model as a Spark UDF. You can use virtual env manager for the demo to avoid version conflict (you can remove the pip install above with virtual env)

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Let's install mlflow to load our model
-# MAGIC %pip install mlflow==2.22.0
+# MAGIC %pip install mlflow==3.1.0
 # MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
 # MAGIC dbutils.library.restartPython()
 
@@ -9,7 +9,7 @@
 # MAGIC %md #Registering python UDF to a SQL function
 # MAGIC This is a companion notebook to load the wind turbine prediction model as a spark udf and save it as a SQL function
 # MAGIC  
-# MAGIC Make sure you add this notebook in your DLT job to have access to the `get_turbine_status` function. (Currently mixing python in a SQL DLT notebook won't run the python)
+# MAGIC Make sure you add this notebook in your (Lakeflow) Declarative Pipelines job to have access to the `get_turbine_status` function. (Currently mixing python in a SQL (Lakeflow) Declarative Pipelines notebook won't run the python)
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -18,10 +18,7 @@
 # COMMAND ----------
 
 import mlflow
-mlflow.set_registry_uri('databricks-uc')
-#                                                                                                                        Stage/version  
-#                                                                                           Model name                          |        
-#                                                                                               |                               |        
+mlflow.set_registry_uri('databricks-uc')     
 predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
 spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
@@ -29,7 +26,7 @@ spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # MAGIC %md ### Setting up the DLT 
 # MAGIC
-# MAGIC This notebook must be included in your DLT "libraries" parameter:
+# MAGIC This notebook must be included in your (Lakeflow) Declarative Pipeline "libraries" parameter:
 # MAGIC
 # MAGIC ```
 # MAGIC {

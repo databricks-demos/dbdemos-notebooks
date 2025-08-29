@@ -123,7 +123,23 @@
       "description": "Run interactive queries on top of your data"
     },
     {
-      "path": "05-Workflow-Orchestration/05-Workflow-Orchestration-credit-decisioning", 
+      "path": "05-Generative-AI/05.1-AI-Functions-Creation", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "GenAI Functions", 
+      "description": "Utilize Databricks AI functions to generate automated fraud report generation."
+    },    
+    {
+      "path": "05-Generative-AI/05.2-Agent-Creation-Guide", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Create an agent", 
+      "description": "Define an AI agent with the functions you defined in notebook 04.1"
+    },      
+    {
+      "path": "06-Workflow-Orchestration/06-Workflow-Orchestration-credit-decisioning", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -234,7 +250,22 @@
                     "no_alert_for_canceled_runs": false,
                     "alert_on_last_attempt": false
                 }
-            }
+            },
+            {
+                "task_key": "create_ai_functions",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/05-Generative-AI/05.1-AI-Functions-Creation",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                      {
+                          "task_key": "explainability_and_fairness"
+                      }
+                  ]
+            }  
         ],
         "job_clusters": [
             {

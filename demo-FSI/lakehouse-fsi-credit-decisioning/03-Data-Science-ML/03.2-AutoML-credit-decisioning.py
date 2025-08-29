@@ -202,7 +202,7 @@ try:
     #Make sure all users can access dbdemos shared experiment
     DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
 except Exception as e:
-    if "cannot import name 'automl'" in str(e):
+    if "cannot import name 'automl'" in str(e) or 'method_whitelist' in str(e):
         # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
         # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
         automl_run = DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", train_df.sample(0.1).toPandas(), model_name=model_name, target_col="defaulted")

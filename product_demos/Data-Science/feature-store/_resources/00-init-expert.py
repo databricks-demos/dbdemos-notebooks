@@ -205,12 +205,12 @@ destination_location_df.write.mode('overwrite').saveAsTable('destination_locatio
 def wait_for_feature_endpoint_to_start(fe, endpoint_name: str):
     for i in range (100):
         ep = fe.get_feature_serving_endpoint(name=endpoint_name)
-        if ep.state == 'IN_PROGRESS':
+        if ep.state['config_update'] == 'IN_PROGRESS':
             if i % 10 == 0:
                 print(f"deployment in progress, please wait for your feature serving endpoint to be deployed {ep}")
             time.sleep(5)
         else:
-            if ep.state != 'READY':
+            if ep.state['ready'] != 'READY':
                 raise Exception(f"Endpoint is in abnormal state: {ep}")
             print(f"Endpoint {endpoint_name} ready - {ep}")
             return ep

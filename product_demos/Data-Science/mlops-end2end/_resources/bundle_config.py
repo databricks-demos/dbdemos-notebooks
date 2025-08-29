@@ -65,16 +65,15 @@
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
             "title": "Feature engineering & Feature store for Auto-ML",
-            "description": "Create and save your features to Feature store.",
-            "parameters": {"force_refresh_automl": "true"}
+            "description": "Create and save your features to Feature store."
         },
         {
-            "path": "01-mlops-quickstart/02_automl_best_run",
+            "path": "01-mlops-quickstart/02_train_lightGBM",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
-            "title": "Train ML model using AutoML best run",
-            "description": "Leverage Auto-ML generated notebook to build the best model out of the bpox."
+            "title": "Train ML model",
+            "description": "Leverage XGBoost to build a first ML model."
         },
         {
             "path": "01-mlops-quickstart/03_from_notebook_to_models_in_uc",
@@ -118,15 +117,15 @@
             "description": "Create and save your features to Feature store."
         },
         {
-            "path": "02-mlops-advanced/02_automl_champion",
+            "path": "02-mlops-advanced/02_model_training_hpo_optuna",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
-            "title": "Train ML model using AutoML best run",
-            "description": "Leverage Auto-ML generated notebook to build the best model out of the bpox."
+            "title": "Train a better ML model",
+            "description": "Leverage Optuna to fine tune hyperparameter and deploy a new model."
         },
         {
-            "path": "02-mlops-advanced/03_from_notebook_to_models_in_uc",
+            "path": "02-mlops-advanced/03a_create_deployment_job",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
@@ -134,12 +133,28 @@
             "description": "Leverage MLFlow to find your best training run and save as Challenger"
         },
         {
-            "path": "02-mlops-advanced/04_challenger_validation",
+            "path": "02-mlops-advanced/03b_from_notebook_to_models_in_uc",
+            "pre_run": True,
+            "publish_on_website": True,
+            "add_cluster_setup_cell": True,
+            "title": "Deploy new model",
+            "description": "Deploy the model to UC"
+        },
+        {
+            "path": "02-mlops-advanced/04a_challenger_validation",
             "pre_run": True,
             "publish_on_website": True,
             "add_cluster_setup_cell": True,
             "title": "Validate your Challenger model",
             "description": "Test your challenger model and move it as Champion."
+        },
+        {
+            "path": "02-mlops-advanced/04b_challenger_approval",
+            "pre_run": True,
+            "publish_on_website": True,
+            "add_cluster_setup_cell": True,
+            "title": "Approve your Challenger model",
+            "description": "New model approval."
         },
         {
             "path": "02-mlops-advanced/05_batch_inference",
@@ -148,6 +163,14 @@
             "add_cluster_setup_cell": True,
             "title": "Run inference",
             "description": "Leverage your ML model within inference pipelines."
+        },
+        {
+            "path": "02-mlops-advanced/06_serve_features_and_model",
+            "pre_run": False,
+            "publish_on_website": True,
+            "add_cluster_setup_cell": False,
+            "title": "Serve feature & model in real time serving endpoint",
+            "description": "Create online table & serve model in a serverless endpoint"
         },
         {
             "path": "02-mlops-advanced/07_model_monitoring",
@@ -164,14 +187,6 @@
             "add_cluster_setup_cell": True,
             "title": "Generate synthetic inference ata & detect drift",
             "description": "Create synthetic data and detect drift"
-        },
-        {
-            "path": "02-mlops-advanced/06_serve_features_and_model",
-            "pre_run": False,
-            "publish_on_website": True,
-            "add_cluster_setup_cell": False,
-            "title": "Serve feature & model in real time serving endpoint",
-            "description": "Create online table & serve model in a serverless endpoint"
         }
     ],
     "init_job": {
@@ -211,7 +226,7 @@
                     "depends_on": [{"task_key": "qs_feature_engineering"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/02_automl_best_run",
+                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/02_train_lightGBM",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -233,11 +248,11 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "qs_batch_inference",
-                    "depends_on": [{"task_key": "qs_challenger_validation"}],
+                    "task_key": "qs_challenger_validation",
+                    "depends_on": [{"task_key": "qs_register_model"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/05_batch_inference",
+                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/04_challenger_validation",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -246,11 +261,11 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "qs_challenger_validation",
-                    "depends_on": [{"task_key": "qs_register_model"}],
+                    "task_key": "qs_batch_inference",
+                    "depends_on": [{"task_key": "qs_challenger_validation"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/04_challenger_validation",
+                        "notebook_path": "{{DEMO_FOLDER}}/01-mlops-quickstart/05_batch_inference",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -288,7 +303,7 @@
                     "depends_on": [{"task_key": "adv_feature_engineering"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_model_training_hpo_optuna",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -301,7 +316,7 @@
                     "depends_on": [{"task_key": "adv_training"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03a_create_deployment_job",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -310,11 +325,11 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "adv_validate",
+                    "task_key": "adv_register_model2",
                     "depends_on": [{"task_key": "adv_register_model"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
-                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03b_from_notebook_to_models_in_uc",
                         "source": "WORKSPACE"
                     },
                     "job_cluster_key": "Shared_job_cluster",
@@ -324,7 +339,7 @@
                 },
                 {
                     "task_key": "adv_batch_inference",
-                    "depends_on": [{"task_key": "adv_validate"}],
+                    "depends_on": [{"task_key": "adv_register_model2"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
                         "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",
@@ -366,19 +381,7 @@
                 {
                     "job_cluster_key": "Shared_job_cluster",
                     "new_cluster": {
-                        "spark_version": "16.4.x-cpu-ml-scala2.12",
-                        "spark_conf": {
-                            "spark.master": "local[*, 4]",
-                            "spark.databricks.cluster.profile": "singleNode"
-                        },
-                        "custom_tags": {"ResourceClass": "SingleNode"},
-                        "spark_env_vars": {
-                            "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                        },
-                        "enable_elastic_disk": True,
-                        "data_security_mode": "SINGLE_USER",
-                        "runtime_engine": "STANDARD",
-                        "num_workers": 0
+                        "performance_target": "STANDARD"
                     }
                 }
             ],
@@ -429,7 +432,7 @@
                             ],
                             "run_if": "ALL_SUCCESS",
                             "notebook_task": {
-                                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_automl_champion",
+                                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/02_model_training_hpo_optuna",
                                 "source": "WORKSPACE"
                             },
                             "job_cluster_key": "mlops_batch_inference_cluster",
@@ -442,20 +445,7 @@
                             "depends_on": [{"task_key": "Model_training"}],
                             "run_if": "ALL_SUCCESS",
                             "notebook_task": {
-                                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03_from_notebook_to_models_in_uc",
-                                "source": "WORKSPACE"
-                            },
-                            "job_cluster_key": "mlops_batch_inference_cluster",
-                            "timeout_seconds": 0,
-                            "email_notifications": {},
-                            "webhook_notifications": {}
-                        },
-                        {
-                            "task_key": "Challenger_validation",
-                            "depends_on": [{"task_key": "Register_model"}],
-                            "run_if": "ALL_SUCCESS",
-                            "notebook_task": {
-                                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04_challenger_validation",
+                                "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/03b_from_notebook_to_models_in_uc",
                                 "source": "WORKSPACE"
                             },
                             "job_cluster_key": "mlops_batch_inference_cluster",
@@ -468,20 +458,7 @@
                         {
                             "job_cluster_key": "mlops_batch_inference_cluster",
                             "new_cluster": {
-                                "cluster_name": "",
-                                "spark_version": "16.4.x-cpu-ml-scala2.12",
-                                "spark_conf": {
-                                    "spark.master": "local[*, 4]",
-                                    "spark.databricks.cluster.profile": "singleNode"
-                                },
-                                "custom_tags": {"ResourceClass": "SingleNode"},
-                                "spark_env_vars": {
-                                    "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                                },
-                                "enable_elastic_disk": True,
-                                "data_security_mode": "SINGLE_USER",
-                                "runtime_engine": "STANDARD",
-                                "num_workers": 0
+                                "performance_target": "STANDARD"
                             }
                         }
                     ],

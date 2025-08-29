@@ -40,7 +40,7 @@
 # MAGIC * invoking a trained ML model as a pySpark UDF
 # MAGIC
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-0.png?raw=true" width="1200">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/mlops/mlops-uc-end2end-0-v2.png?raw=true" width="1200">
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable the collection or disable the tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00_mlops_end2end_quickstart_presentation&demo_name=mlops-end2end&event=VIEW">
@@ -60,7 +60,10 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.22.0
+# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 

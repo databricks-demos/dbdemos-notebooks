@@ -2,7 +2,7 @@
   "datasets": [
     {
       "name": "8ab1ca38",
-      "displayName": "metrics_rolling",
+      "displayName": "Metrics Rolling Over Time",
       "queryLines": [
         "select \n",
         "    date,\n",
@@ -66,7 +66,7 @@
     },
     {
       "name": "d9196d0a",
-      "displayName": "breakdown",
+      "displayName": "Metrics Breakdown per Campaign",
       "queryLines": [
         "SELECT \n",
         "    e.campaign_id,\n",
@@ -140,7 +140,7 @@
     },
     {
       "name": "023bfe11",
-      "displayName": "cta_top20",
+      "displayName": "Call To Action Top 20",
       "queryLines": [
         "WITH CampaignData AS (\n",
         "    SELECT \n",
@@ -203,7 +203,7 @@
     },
     {
       "name": "09d20820",
-      "displayName": "events_high_ctr",
+      "displayName": "Events Click Trough Rate",
       "queryLines": [
         "SELECT \n",
         "    e.*,\n",
@@ -255,7 +255,7 @@
     },
     {
       "name": "31bd8516",
-      "displayName": "breakdown_top20",
+      "displayName": "Metrics Breakdown per Campaign Top 20",
       "queryLines": [
         "SELECT \n",
         "    e.campaign_id,\n",
@@ -332,14 +332,14 @@
     },
     {
       "name": "078f943d",
-      "displayName": "issues",
+      "displayName": "Issues",
       "queryLines": [
         "select * from main.dbdemos_aibi_cme_marketing_campaign.issues"
       ]
     },
     {
       "name": "72b7d899",
-      "displayName": "metrics_agg",
+      "displayName": "Key Metrics Aggregated",
       "queryLines": [
         "SELECT \n",
         "    SUM(CASE WHEN event_type = 'sent' THEN 1 ELSE 0 END) AS total_sent,\n",
@@ -396,13 +396,33 @@
     },
     {
       "name": "073eed09",
-      "displayName": "events",
+      "displayName": "Events",
       "queryLines": [
         "SELECT \n",
-        "    e.*,\n",
-        "    c.*,\n",
-        "    ct.*,\n",
-        "    p.*\n",
+        "    e.event_id,\n",
+        "    e.event_type,\n",
+        "    e.event_date,\n",
+        "    e.metadata,\n",
+        "    c.campaign_name,\n",
+        "    c.campaign_description,\n",
+        "    c.subject_line,\n",
+        "    c.template,\n",
+        "    c.cost,\n",
+        "    c.start_date,\n",
+        "    c.end_date,\n",
+        "    c.mailing_list,\n",
+        "    ct.department,\n",
+        "    ct.job_title,\n",
+        "    ct.source,\n",
+        "    ct.device,\n",
+        "    ct.opted_out,\n",
+        "    p.name,\n",
+        "    p.annual_revenue,\n",
+        "    p.employees,\n",
+        "    p.industry,\n",
+        "    p.country,\n",
+        "    p.city,\n",
+        "    p.postcode\n",
         "FROM \n",
         "    main.dbdemos_aibi_cme_marketing_campaign.events e\n",
         "INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.campaigns c on e.campaign_id = c.campaign_id\n",
@@ -410,7 +430,7 @@
         "INNER JOIN main.dbdemos_aibi_cme_marketing_campaign.prospects p on ct.prospect_id = p.prospect_id\n",
         "WHERE\n",
         "    e.event_date >= :start_date AND\n",
-        "    e.event_date <= :end_date\n"
+        "    e.event_date <= :end_date"
       ],
       "parameters": [
         {
@@ -447,86 +467,9 @@
     },
     {
       "name": "6467b8cb",
-      "displayName": "feedbacks",
+      "displayName": "Feedbacks",
       "queryLines": [
         "select *, ai_analyze_sentiment(feedbacks) as sentiment from main.dbdemos_aibi_cme_marketing_campaign.feedbacks"
-      ]
-    },
-    {
-      "name": "ce1eec28",
-      "displayName": "contact_behaviour",
-      "queryLines": [
-        "WITH Analysis AS (\n",
-        "    SELECT \n",
-        "        e.contact_id,\n",
-        "        e.event_id,\n",
-        "        e.event_type,\n",
-        "        CAST(e.event_date AS DATE) AS event_date,\n",
-        "        c.device,\n",
-        "        c.department,\n",
-        "        e.metadata,\n",
-        "        c.job_title\n",
-        "    FROM \n",
-        "        main.dbdemos_aibi_cme_marketing_campaign.events AS e\n",
-        "    INNER JOIN \n",
-        "        main.dbdemos_aibi_cme_marketing_campaign.contacts c \n",
-        "    ON \n",
-        "        e.contact_id = c.contact_id\n",
-        ")\n",
-        "SELECT \n",
-        "    contact_id,\n",
-        "    event_id,\n",
-        "    event_type,\n",
-        "    event_date,\n",
-        "    device,\n",
-        "    department,\n",
-        "    job_title,\n",
-        "    EXPLODE(COLLECT_SET(metadata.cta)) AS cta\n",
-        "FROM \n",
-        "    Analysis\n",
-        "WHERE  \n",
-        "    event_date >= :start_date AND\n",
-        "    event_date <= :end_date\n",
-        "GROUP BY \n",
-        "    contact_id,\n",
-        "    event_id,\n",
-        "    event_type,\n",
-        "    event_date,\n",
-        "    device,\n",
-        "    department,\n",
-        "    job_title"
-      ],
-      "parameters": [
-        {
-          "displayName": "start_date",
-          "keyword": "start_date",
-          "dataType": "DATE",
-          "defaultSelection": {
-            "values": {
-              "dataType": "DATE",
-              "values": [
-                {
-                  "value": "2023-09-01T00:00:00.000"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "end_date",
-          "keyword": "end_date",
-          "dataType": "DATE",
-          "defaultSelection": {
-            "values": {
-              "dataType": "DATE",
-              "values": [
-                {
-                  "value": "now-90d/d"
-                }
-              ]
-            }
-          }
-        }
       ]
     }
   ],
@@ -541,7 +484,7 @@
             "multilineTextboxSpec": {
               "lines": [
                 "# AIBI DBDemos - Analyse your Email Campaigns!\n",
-                "Databricks makes it easy to build ultra-personalized email campaign leveraging GenAI, and track their effectiveness!"
+                "Databricks makes it easy to build ultra-personalized email campaign leveraging GenAI, and track their effectiveness."
               ]
             }
           },
@@ -590,71 +533,9 @@
           },
           "position": {
             "x": 1,
-            "y": 3,
+            "y": 17,
             "width": 1,
             "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "ce932488",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "31bd8516",
-                  "fields": [
-                    {
-                      "name": "ctr",
-                      "expression": "`ctr`"
-                    },
-                    {
-                      "name": "template",
-                      "expression": "`template`"
-                    }
-                  ],
-                  "disaggregated": true
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "pie",
-              "encodings": {
-                "angle": {
-                  "fieldName": "ctr",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "CTR"
-                },
-                "color": {
-                  "fieldName": "template",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "template"
-                },
-                "label": {
-                  "show": false
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Top Templates",
-                "showDescription": true,
-                "description": "Performance of different email templates"
-              }
-            }
-          },
-          "position": {
-            "x": 4,
-            "y": 6,
-            "width": 2,
-            "height": 5
           }
         },
         {
@@ -695,7 +576,7 @@
           },
           "position": {
             "x": 5,
-            "y": 3,
+            "y": 17,
             "width": 1,
             "height": 2
           }
@@ -705,13 +586,13 @@
             "name": "a6534c36",
             "multilineTextboxSpec": {
               "lines": [
-                "### Metrics"
+                "### Overall Key Metrics"
               ]
             }
           },
           "position": {
             "x": 0,
-            "y": 2,
+            "y": 16,
             "width": 6,
             "height": 1
           }
@@ -730,16 +611,16 @@
                       "expression": "`campaign_name`"
                     },
                     {
-                      "name": "ctr",
-                      "expression": "`ctr`"
-                    },
-                    {
                       "name": "sum(cost)",
                       "expression": "SUM(`cost`)"
                     },
                     {
                       "name": "weekly(start_date)",
                       "expression": "DATE_TRUNC(\"WEEK\", `start_date`)"
+                    },
+                    {
+                      "name": "ctr",
+                      "expression": "`ctr`"
                     }
                   ],
                   "disaggregated": false
@@ -799,9 +680,9 @@
           },
           "position": {
             "x": 0,
-            "y": 6,
-            "width": 2,
-            "height": 12
+            "y": 3,
+            "width": 4,
+            "height": 13
           }
         },
         {
@@ -841,7 +722,7 @@
           },
           "position": {
             "x": 0,
-            "y": 3,
+            "y": 17,
             "width": 1,
             "height": 2
           }
@@ -881,7 +762,7 @@
           },
           "position": {
             "x": 3,
-            "y": 3,
+            "y": 17,
             "width": 1,
             "height": 2
           }
@@ -923,7 +804,7 @@
           },
           "position": {
             "x": 4,
-            "y": 3,
+            "y": 17,
             "width": 1,
             "height": 2
           }
@@ -939,7 +820,7 @@
           },
           "position": {
             "x": 0,
-            "y": 5,
+            "y": 2,
             "width": 6,
             "height": 1
           }
@@ -981,27 +862,387 @@
           },
           "position": {
             "x": 2,
-            "y": 3,
+            "y": 17,
             "width": 1,
             "height": 2
           }
         },
         {
           "widget": {
-            "name": "724cbe52",
+            "name": "659438aa",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "023bfe11",
+                  "datasetName": "31bd8516",
                   "fields": [
                     {
-                      "name": "cta",
-                      "expression": "`cta`"
+                      "name": "template",
+                      "expression": "`template`"
                     },
                     {
-                      "name": "sum(unique_clicks)",
-                      "expression": "SUM(`unique_clicks`)"
+                      "name": "sum(spam_rate)",
+                      "expression": "SUM(`spam_rate`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "template",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "template"
+                },
+                "y": {
+                  "fieldName": "sum(spam_rate)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Spam Rate"
+                  },
+                  "displayName": "Spam Rate"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Top Templates Spam Rate"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 10,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "392b4c1a",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "31bd8516",
+                  "fields": [
+                    {
+                      "name": "avg(ctr)",
+                      "expression": "AVG(`ctr`)"
+                    },
+                    {
+                      "name": "template",
+                      "expression": "`template`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "funnel",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg(ctr)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "CTR"
+                  },
+                  "displayName": "CTR"
+                },
+                "y": {
+                  "fieldName": "template",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "axis": {
+                    "title": "Template"
+                  },
+                  "displayName": "Template"
+                }
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "CTR by Template"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 2,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "b143601d",
+      "displayName": "Top Campaigns Deep Dive",
+      "layout": [
+        {
+          "widget": {
+            "name": "d8ede884",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Top 20 Campaigns Metrics"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "fc424ffa",
+            "queries": [
+              {
+                "name": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f084b5230a1dd19883d1d4eb97323f_campaign_name",
+                "query": {
+                  "datasetName": "31bd8516",
+                  "fields": [
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    },
+                    {
+                      "name": "campaign_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f084b5230a1df3a38ad156896edeaa_campaign_name",
+                "query": {
+                  "datasetName": "073eed09",
+                  "fields": [
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    },
+                    {
+                      "name": "campaign_name_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "campaign_name",
+                    "displayName": "campaign_name",
+                    "queryName": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f084b5230a1dd19883d1d4eb97323f_campaign_name"
+                  },
+                  {
+                    "fieldName": "campaign_name",
+                    "displayName": "campaign_name",
+                    "queryName": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f084b5230a1df3a38ad156896edeaa_campaign_name"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Campaign Name"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "96c19e06",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "31bd8516",
+                  "fields": [
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    },
+                    {
+                      "name": "cost",
+                      "expression": "`cost`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "campaign_name",
+                  "axis": {
+                    "title": "Campaign Name"
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  },
+                  "displayName": "Campaign Name"
+                },
+                "y": {
+                  "fieldName": "cost",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Cost"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Campaign Cost"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "e49386eb",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "31bd8516",
+                  "fields": [
+                    {
+                      "name": "sum(total_sent)",
+                      "expression": "SUM(`total_sent`)"
+                    },
+                    {
+                      "name": "template",
+                      "expression": "`template`"
                     }
                   ],
                   "disaggregated": false
@@ -1013,62 +1254,53 @@
               "widgetType": "pie",
               "encodings": {
                 "angle": {
-                  "fieldName": "sum(unique_clicks)",
+                  "fieldName": "sum(total_sent)",
                   "scale": {
                     "type": "quantitative"
                   },
-                  "axis": {
-                    "title": "Unique Clicks",
-                    "hideTitle": true
-                  },
-                  "displayName": "Unique Clicks"
+                  "displayName": "Total sent"
                 },
                 "color": {
-                  "fieldName": "cta",
+                  "fieldName": "template",
                   "scale": {
                     "type": "categorical"
                   },
-                  "displayName": "Call-to-action type"
-                },
-                "label": {
-                  "show": false
+                  "displayName": "template"
                 }
               },
               "frame": {
                 "showTitle": true,
-                "title": "Top Call-to-action",
-                "showDescription": true,
-                "description": "Buttons or links had the highest click-through rates"
+                "title": "Email Sent by Template"
               }
             }
           },
           "position": {
-            "x": 2,
-            "y": 6,
-            "width": 2,
-            "height": 5
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 7
           }
         },
         {
           "widget": {
-            "name": "4d01a76f",
+            "name": "1b83a66a",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "31bd8516",
+                  "datasetName": "073eed09",
                   "fields": [
                     {
-                      "name": "sum(total_opens)",
-                      "expression": "SUM(`total_opens`)"
+                      "name": "event_type",
+                      "expression": "`event_type`"
                     },
                     {
-                      "name": "ctr",
-                      "expression": "`ctr`"
+                      "name": "weekly(event_date)",
+                      "expression": "DATE_TRUNC(\"WEEK\", `event_date`)"
                     },
                     {
-                      "name": "subject_line",
-                      "expression": "`subject_line`"
+                      "name": "count(event_id)",
+                      "expression": "COUNT(`event_id`)"
                     }
                   ],
                   "disaggregated": false
@@ -1077,47 +1309,59 @@
             ],
             "spec": {
               "version": 3,
-              "widgetType": "heatmap",
+              "widgetType": "bar",
               "encodings": {
                 "x": {
-                  "fieldName": "ctr",
+                  "fieldName": "weekly(event_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Event Date"
+                  },
+                  "displayName": "Event Date"
+                },
+                "y": {
+                  "fieldName": "count(event_id)",
                   "scale": {
                     "type": "quantitative"
                   },
-                  "displayName": "Click-Through Rate"
+                  "displayName": "Count of Events"
                 },
-                "y": {
-                  "fieldName": "subject_line",
+                "color": {
+                  "fieldName": "event_type",
                   "scale": {
                     "type": "categorical"
                   },
-                  "displayName": "Subject Line"
-                },
-                "color": {
-                  "fieldName": "sum(total_opens)",
-                  "scale": {
-                    "type": "quantitative",
-                    "colorRamp": {
-                      "mode": "scheme",
-                      "scheme": "blues"
-                    }
-                  },
-                  "displayName": "Opens"
+                  "displayName": "event_type"
                 }
               },
-              "frame": {
-                "showTitle": true,
-                "title": "Top Subject Lines",
-                "showDescription": true,
-                "description": "Subject lines resulted in the highest open rates / clicks"
+              "mark": {
+                "layout": "group"
               }
             }
           },
           "position": {
-            "x": 2,
-            "y": 11,
-            "width": 4,
-            "height": 7
+            "x": 0,
+            "y": 10,
+            "width": 6,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "7bb36b2a",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Campaign Timeline"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 6,
+            "height": 1
           }
         }
       ],
@@ -2094,6 +2338,301 @@
       "pageType": "PAGE_TYPE_CANVAS"
     },
     {
+      "name": "002e4280",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "add87561",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_start_date",
+                "query": {
+                  "datasetName": "72b7d899",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_start_date",
+                "query": {
+                  "datasetName": "8ab1ca38",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_start_date",
+                "query": {
+                  "datasetName": "d9196d0a",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_start_date",
+                "query": {
+                  "datasetName": "073eed09",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_start_date",
+                "query": {
+                  "datasetName": "31bd8516",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_start_date",
+                "query": {
+                  "datasetName": "09d20820",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_start_date",
+                "query": {
+                  "datasetName": "023bfe11",
+                  "parameters": [
+                    {
+                      "name": "start_date",
+                      "keyword": "start_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_start_date"
+                  },
+                  {
+                    "parameterName": "start_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_start_date"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Start Date"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "8d82521a",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_end_date",
+                "query": {
+                  "datasetName": "72b7d899",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_end_date",
+                "query": {
+                  "datasetName": "8ab1ca38",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_end_date",
+                "query": {
+                  "datasetName": "d9196d0a",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_end_date",
+                "query": {
+                  "datasetName": "073eed09",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_end_date",
+                "query": {
+                  "datasetName": "31bd8516",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_end_date",
+                "query": {
+                  "datasetName": "09d20820",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_end_date",
+                "query": {
+                  "datasetName": "023bfe11",
+                  "parameters": [
+                    {
+                      "name": "end_date",
+                      "keyword": "end_date"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_end_date"
+                  },
+                  {
+                    "parameterName": "end_date",
+                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_end_date"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "End Date"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    },
+    {
       "name": "be11df30",
       "displayName": "Metrics & Trends",
       "layout": [
@@ -2112,53 +2651,6 @@
             "y": 0,
             "width": 6,
             "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "de8db3a6",
-            "queries": [
-              {
-                "name": "dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_campaign_name",
-                "query": {
-                  "datasetName": "d9196d0a",
-                  "fields": [
-                    {
-                      "name": "campaign_name",
-                      "expression": "`campaign_name`"
-                    },
-                    {
-                      "name": "campaign_name_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-multi-select",
-              "encodings": {
-                "fields": [
-                  {
-                    "fieldName": "campaign_name",
-                    "displayName": "campaign_name",
-                    "queryName": "dashboards/01ef0256742115c9a42d7c2f43ed6545/datasets/01ef030d673a1367b0abb4dbfcf9e7cd_campaign_name"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "campaigns"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 3,
-            "height": 1
           }
         },
         {
@@ -2919,9 +3411,9 @@
           },
           "position": {
             "x": 0,
-            "y": 21,
+            "y": 20,
             "width": 6,
-            "height": 17
+            "height": 8
           }
         },
         {
@@ -3001,7 +3493,7 @@
           },
           "position": {
             "x": 0,
-            "y": 3,
+            "y": 2,
             "width": 6,
             "height": 6
           }
@@ -3055,7 +3547,7 @@
           },
           "position": {
             "x": 0,
-            "y": 15,
+            "y": 14,
             "width": 6,
             "height": 6
           }
@@ -3121,633 +3613,9 @@
           },
           "position": {
             "x": 0,
-            "y": 9,
+            "y": 8,
             "width": 6,
             "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "5d37b50c",
-            "multilineTextboxSpec": {
-              "lines": [
-                "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Marketing-campaign&demo_name=aibi-marketing-campaign&event=DASHBOARD_VIEW)"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 38,
-            "width": 6,
-            "height": 1
-          }
-        }
-      ],
-      "pageType": "PAGE_TYPE_CANVAS"
-    },
-    {
-      "name": "002e4280",
-      "displayName": "Global Filters",
-      "layout": [
-        {
-          "widget": {
-            "name": "add87561",
-            "queries": [
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_start_date",
-                "query": {
-                  "datasetName": "72b7d899",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_start_date",
-                "query": {
-                  "datasetName": "8ab1ca38",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_start_date",
-                "query": {
-                  "datasetName": "d9196d0a",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_start_date",
-                "query": {
-                  "datasetName": "073eed09",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_start_date",
-                "query": {
-                  "datasetName": "31bd8516",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_start_date",
-                "query": {
-                  "datasetName": "09d20820",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_start_date",
-                "query": {
-                  "datasetName": "023bfe11",
-                  "parameters": [
-                    {
-                      "name": "start_date",
-                      "keyword": "start_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-date-picker",
-              "encodings": {
-                "fields": [
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_start_date"
-                  },
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_start_date"
-                  },
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_start_date"
-                  },
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_start_date"
-                  },
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_start_date"
-                  },
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_start_date"
-                  },
-                  {
-                    "parameterName": "start_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_start_date"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Start Date"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 0,
-            "width": 1,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "8d82521a",
-            "queries": [
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_end_date",
-                "query": {
-                  "datasetName": "72b7d899",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_end_date",
-                "query": {
-                  "datasetName": "8ab1ca38",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_end_date",
-                "query": {
-                  "datasetName": "d9196d0a",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_end_date",
-                "query": {
-                  "datasetName": "073eed09",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_end_date",
-                "query": {
-                  "datasetName": "31bd8516",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_end_date",
-                "query": {
-                  "datasetName": "09d20820",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_end_date",
-                "query": {
-                  "datasetName": "023bfe11",
-                  "parameters": [
-                    {
-                      "name": "end_date",
-                      "keyword": "end_date"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-date-picker",
-              "encodings": {
-                "fields": [
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6113384a87426f25a4159_end_date"
-                  },
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6109e8524b15a586a815c_end_date"
-                  },
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610eca013a330d88a3f2a_end_date"
-                  },
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611409c3be8381ab5820f_end_date"
-                  },
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb611198454525b96a26728_end_date"
-                  },
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb6110ca78f575297b4cfdf_end_date"
-                  },
-                  {
-                    "parameterName": "end_date",
-                    "queryName": "parameter_dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_end_date"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "End Date"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 1,
-            "height": 2
-          }
-        }
-      ],
-      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
-    },
-    {
-      "name": "2834d734",
-      "displayName": "CTA Details",
-      "layout": [
-        {
-          "widget": {
-            "name": "25d3b8ec",
-            "queries": [
-              {
-                "name": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f0720915b51ae49c337bbf4668ff7a_cta",
-                "query": {
-                  "datasetName": "ce1eec28",
-                  "fields": [
-                    {
-                      "name": "cta",
-                      "expression": "`cta`"
-                    },
-                    {
-                      "name": "cta_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              },
-              {
-                "name": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_cta",
-                "query": {
-                  "datasetName": "023bfe11",
-                  "fields": [
-                    {
-                      "name": "cta",
-                      "expression": "`cta`"
-                    },
-                    {
-                      "name": "cta_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
-              "encodings": {
-                "fields": [
-                  {
-                    "fieldName": "cta",
-                    "displayName": "cta",
-                    "queryName": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f0720915b51ae49c337bbf4668ff7a_cta"
-                  },
-                  {
-                    "fieldName": "cta",
-                    "displayName": "cta",
-                    "queryName": "dashboards/01f06e53bdb51b8798c7993262e58d96/datasets/01f06e53bdb610febbac5c8fa1b642dd_cta"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Contact Action"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 2,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "acab77f4",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "ce1eec28",
-                  "fields": [
-                    {
-                      "name": "device",
-                      "expression": "`device`"
-                    },
-                    {
-                      "name": "count(event_id)",
-                      "expression": "COUNT(`event_id`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "device",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "device"
-                },
-                "y": {
-                  "fieldName": "count(event_id)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "displayName": "Total Actions"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "showDescription": false,
-                "title": "CTA over Devices"
-              },
-              "mark": {
-                "colors": [
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 3
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 2
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 3
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 4
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 5
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 6
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 7
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 8
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 9
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 10
-                  }
-                ]
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 2,
-            "width": 3,
-            "height": 7
-          }
-        },
-        {
-          "widget": {
-            "name": "9c731085",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "ce1eec28",
-                  "fields": [
-                    {
-                      "name": "cta",
-                      "expression": "`cta`"
-                    },
-                    {
-                      "name": "weekly(event_date)",
-                      "expression": "DATE_TRUNC(\"WEEK\", `event_date`)"
-                    },
-                    {
-                      "name": "count(event_id)",
-                      "expression": "COUNT(`event_id`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "weekly(event_date)",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "event_date"
-                },
-                "y": {
-                  "fieldName": "count(event_id)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "axis": {
-                    "title": "Click Count"
-                  },
-                  "displayName": "Click Count"
-                },
-                "color": {
-                  "fieldName": "cta",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "cta"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "CTA types clicks over time"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 9,
-            "width": 6,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "fc149eaa",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "023bfe11",
-                  "fields": [
-                    {
-                      "name": "cta",
-                      "expression": "`cta`"
-                    },
-                    {
-                      "name": "sum(unique_clicks)",
-                      "expression": "SUM(`unique_clicks`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "cta",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "cta"
-                },
-                "y": {
-                  "fieldName": "sum(unique_clicks)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "displayName": "Sum of unique_clicks"
-                }
-              },
-              "frame": {
-                "showTitle": true
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 3,
-            "width": 3,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "aa49c825",
-            "multilineTextboxSpec": {
-              "lines": [
-                "## Call To Action Deep dive\n",
-                "CTA analysis over time and devices"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 0,
-            "width": 6,
-            "height": 2
           }
         }
       ],
@@ -3757,35 +3625,31 @@
   "uiSettings": {
     "theme": {
       "canvasBackgroundColor": {
-        "light": "#FFFFFF",
-        "dark": "#11171C"
+        "light": "#F9F7F4",
+        "dark": "#1B3139"
       },
       "widgetBackgroundColor": {
-        "light": "#FFFFFF",
-        "dark": "#11171C"
-      },
-      "widgetBorderColor": {
-        "light": "#FFFFFF",
-        "dark": "#11171C"
+        "light": "#EEEDE9",
+        "dark": "#0B2026"
       },
       "fontColor": {
-        "light": "#11171C",
-        "dark": "#E8ECF0"
+        "light": "#1B3139",
+        "dark": "#F9F7F4"
       },
       "selectionColor": {
-        "light": "#2272B4",
-        "dark": "#8ACAFF"
+        "light": "#FF3621",
+        "dark": "#FF3621"
       },
       "visualizationColors": [
-        "#077A9D",
+        "#1B5162",
+        "#FF3621",
         "#FFAB00",
         "#00A972",
-        "#FF3621",
-        "#8BCAE7",
-        "#AB4057",
-        "#99DDB4",
-        "#FCA4A1",
-        "#919191",
+        "#98102A",
+        "#A0ACBE",
+        "#FF9E94",
+        "#FFCC66",
+        "#70C4AB",
         "#BF7080"
       ],
       "widgetHeaderAlignment": "LEFT"

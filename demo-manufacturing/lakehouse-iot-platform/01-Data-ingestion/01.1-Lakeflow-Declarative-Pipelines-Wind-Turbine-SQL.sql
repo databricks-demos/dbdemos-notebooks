@@ -1,4 +1,13 @@
 -- Databricks notebook source
+-- MAGIC %md
+-- MAGIC # Note
+-- MAGIC
+-- MAGIC This notebook walks you through the code of a SQL Lakeflow Declarative Pipeline. Due to massive improvements recently the Standard of setting up declarative pipelines changed together with the UI. Check for the most recent pipeline standards new-pipeline-editor-python and new-pipeline-editor-sql directories. 
+-- MAGIC
+-- MAGIC You can also find more here: https://learn.microsoft.com/en-us/azure/databricks/dlt/dlt-multi-file-editor and follow the "Open an existing ETL pipeline" section.
+
+-- COMMAND ----------
+
 -- MAGIC %md-sandbox
 -- MAGIC # Data engineering with Databricks - Building our Manufacturing IOT platform
 -- MAGIC

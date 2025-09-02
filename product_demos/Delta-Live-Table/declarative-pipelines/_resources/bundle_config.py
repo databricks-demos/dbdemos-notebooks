@@ -79,6 +79,22 @@
         "add_cluster_setup_cell": False,
         "title":  "Gold SQL tables", 
         "description": "Final aggregation layer, for ML and BI usage."
+      },
+      {
+        "path": "deployment/01-Using-DABs", 
+        "pre_run": False, 
+        "publish_on_website": True, 
+        "add_cluster_setup_cell": False,
+        "title":  "Using Databricks Asset Bundles", 
+        "description": "Deploy your pipeline using Databricks Asset Bundles."
+      },
+      {
+        "path": "deployment/databricks.yml", 
+        "pre_run": False, 
+        "publish_on_website": False, 
+        "add_cluster_setup_cell": False,
+        "title":  "Databricks Asset Bundle", 
+        "description": "Example Databricks Asset Bundle"
       }
     ],
     "init_job": {

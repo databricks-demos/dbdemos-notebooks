@@ -279,6 +279,7 @@ preprocessor = ColumnTransformer(transformers, remainder="drop", sparse_threshol
 # MAGIC
 # MAGIC
 # MAGIC We will leverage the new `MLflowStorage` and `MlflowSparkStudy` objects.
+# MAGIC We will leverage the new `MLflowStorage` and `MlflowSparkStudy` objects.
 
 # COMMAND ----------
 
@@ -367,13 +368,17 @@ class ObjectiveOptuna(object):
     
     this_model.fit(self.X_train, self.Y_train)
 
-    # Predict on validation set
-    y_val_pred = this_model.predict(self.X_val)
+      # Predict on validation set
+      y_val_pred = this_model.predict(self.X_val)
 
-    # Calculate and return F1-Score
-    f1_score_binary= f1_score(self.Y_val, y_val_pred, average="binary", pos_label=self.pos_label)
+      # Calculate and return F1-Score
+      f1_score_binary= f1_score(self.Y_val, y_val_pred, average="binary", pos_label=self.pos_label)
 
-    return f1_score_binary
+      return f1_score_binary
+    
+    except Exception as e:
+      print(e)
+      return float("-inf")
 
 # COMMAND ----------
 
@@ -439,8 +444,11 @@ experiment_name = f"{xp_path}/{xp_name}" # Point to given experiment (Staging/Pr
 
 try:
   print(f"Loading experiment: {experiment_name}")
+  print(f"Loading experiment: {experiment_name}")
   experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
 
+except Exception as e:
+  print(f"Creating experiment: {experiment_name}")
 except Exception as e:
   print(f"Creating experiment: {experiment_name}")
   experiment_id = mlflow.create_experiment(name=experiment_name, tags={"dbdemos":"advanced"})
@@ -449,6 +457,7 @@ except Exception as e:
 
 import mlflow
 from mlflow.optuna.storage import MlflowStorage
+from mlflow.pyspark.optuna.study import MlflowSparkStudy
 from mlflow.pyspark.optuna.study import MlflowSparkStudy
 
 
@@ -503,6 +512,7 @@ def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_te
     # Kick distributed HPO as nested runs
     objective_fn = ObjectiveOptuna(X_train, Y_train, preprocessor_in, rng_seed_in, pos_label_in)
     mlflow_optuna_study = MlflowSparkStudy(
+        pruner=optuna_pruner_in,
         pruner=optuna_pruner_in,
         sampler=optuna_sampler_in,
         study_name=run_name,
@@ -587,6 +597,7 @@ def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_te
 # COMMAND ----------
 
 # Invoke training function which will be distributed accross workers/nodes
+distributed_study = optuna_hpo_fn(
 distributed_study = optuna_hpo_fn(
   n_trials=32, # Decrease this for live demo purposes
   X_train=X_train,

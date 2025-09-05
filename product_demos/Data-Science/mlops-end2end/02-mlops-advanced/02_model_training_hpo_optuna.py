@@ -279,7 +279,7 @@ preprocessor = ColumnTransformer(transformers, remainder="drop", sparse_threshol
 # MAGIC
 # MAGIC
 # MAGIC We will leverage the new `MLflowStorage` and `MlflowSparkStudy` objects.
-# MAGIC We will leverage the new `MLflowStorage` and `MlflowSparkStudy` objects.
+
 
 # COMMAND ----------
 
@@ -368,6 +368,7 @@ class ObjectiveOptuna(object):
     
     this_model.fit(self.X_train, self.Y_train)
 
+
     # Predict on validation set
     y_val_pred = this_model.predict(self.X_val)
 
@@ -442,7 +443,6 @@ try:
   print(f"Loading experiment: {experiment_name}")
   experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
 
-
 except Exception as e:
   print(f"Creating experiment: {experiment_name}")
   experiment_id = mlflow.create_experiment(name=experiment_name, tags={"dbdemos":"advanced"})
@@ -476,6 +476,7 @@ mlflow_optuna_study_debug = MlflowSparkStudy(
 mlflow_optuna_study_debug._directions = ["maximize"]
 
 mlflow_optuna_study_debug.optimize(objective_fn, n_trials=8, n_jobs=4)
+
 
 # COMMAND ----------
 

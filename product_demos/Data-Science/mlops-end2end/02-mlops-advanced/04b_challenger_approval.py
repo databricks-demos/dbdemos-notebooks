@@ -16,7 +16,9 @@
 # COMMAND ----------
 
 # MAGIC %pip install --quiet mlflow-skinny --upgrade --pre
-# MAGIC dbutils.library.restartPython()
+# MAGIC
+# MAGIC
+# MAGIC %restart_python
 
 # COMMAND ----------
 

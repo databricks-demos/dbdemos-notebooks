@@ -144,16 +144,13 @@ if setup_adv_inference_data:
     # if not spark.catalog.tableExists(f"advanced_churn_cust_ids"):
     print("Creating table with customer records for inference...")
     # Drop the label column for inference
-    # This seems to be writing to the wrong table. Comment out first to test writing to advanced_churn_cust_ids.
-    #spark.read.table("advanced_churn_label_table").drop("churn","split").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("churn_label_table")
-    spark.read.table("advanced_churn_label_table").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
+    spark.read.table("advanced_churn_label_table").drop("churn").write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("advanced_churn_cust_ids")
   else:
     print("Label table `advanced_churn_label_table` doesn't exist, please run the notebook '01_feature_engineering'")
 
 # COMMAND ----------
 
 # DBTITLE 1,Generate inference synthetic data
-gen_synthetic_data = False
 def generate_synthetic(inference_table):
   import dbldatagen as dg
   import pyspark.sql.types
@@ -161,17 +158,17 @@ def generate_synthetic(inference_table):
   from datetime import datetime, timedelta
 
   model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version
-  n_days_to_back_fill = 2 # Change this
+  n_days_to_back_fill = 30 # Change this
 
   # Column definitions are based on original dataset schema
   generation_spec = (
     dg.DataGenerator(sparkSession=spark, 
                     name='synthetic_data', 
-                    rows=3000,
+                    rows=7000*n_days_to_back_fill,
                     random=True,
                     )
     .withColumn('customer_id', 'string', template=r'dddd-AAAA')
-    .withColumn('transaction_ts', 'timestamp', begin=(datetime.now() + timedelta(days=-30)), end=(datetime.now() + timedelta(days=-1)), interval="1 hour")
+    .withColumn('transaction_ts', 'timestamp', begin=(datetime.now() + timedelta(days=-n_days_to_back_fill)), end=datetime.now(), interval="1 hour")
     .withColumn('gender', 'string', values=['Female', 'Male'], random=True, weights=[0.5, 0.5])
     .withColumn('senior_citizen', 'string', values=['No', 'Yes'], random=True, weights=[0.85, 0.15])
     .withColumn('partner', 'string', values=['No', 'Yes'], random=True, weights=[0.5, 0.5])

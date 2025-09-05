@@ -30,13 +30,13 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a5
-# MAGIC mlflow==3.3.0
+# MAGIC databricks-feature-engineering==0.13.0a8
+# MAGIC mlflow==3.3.2
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 mlflow --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -49,6 +49,7 @@
 
 dbutils.widgets.text("model_name", "", "Model Name") # Will be populated from Deployment Jobs Parameters
 dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.text("online_store_name", "fe_shared_demo", "Online Store Name")
 dbutils.widgets.dropdown("drop_online_store", "False", ["True", "False"], "Reset Online Table(s)")
 dbutils.widgets.dropdown("smoke_test", "False", ["True", "False"], "Smoke Test Flag")
 
@@ -141,7 +142,7 @@ from databricks.feature_engineering import FeatureEngineeringClient
 fe = FeatureEngineeringClient()
 
 # Set Online Store Name
-online_store_name = "fe_shared_demo" # mlops-churn-advanced"
+online_store_name = dbutils.widgets.get("online_store_name") # mlops-churn-advanced"
 
 # Check if exists
 online_store = fe.get_online_store(name=online_store_name)
@@ -182,14 +183,31 @@ elif not online_store and not is_smoke_test:
 
 # COMMAND ----------
 
+import time
+
+
 if not is_smoke_test:
     print(f"Publishing feature table to online store...")
-    publish_state = fe.publish_table(
-        online_store=online_store,
-        source_table_name=f"{catalog}.{db}.advanced_churn_feature_table",
-        online_table_name=f"{catalog}.{db}.advanced_churn_feature_online_table",
-        # streaming=True
-    )
+    max_retries = 5
+    retry_count = 0
+    while retry_count < max_retries:
+        try:
+            publish_state = fe.publish_table(
+                online_store=online_store,
+                source_table_name=f"{catalog}.{db}.advanced_churn_feature_table",
+                online_table_name=f"{catalog}.{db}.advanced_churn_feature_online_table",
+                # streaming=True
+            )
+            break
+        except Exception as e:
+            if "feature sync is currently in progress" in str(e):
+                print("Feature sync in progress, retrying...")
+                retry_count += 1
+                time.sleep(10)  # Wait for 10 seconds before retrying
+            else:
+                raise e
+    else:
+        print("Failed to publish after multiple retries.")
 
 # COMMAND ----------
 
@@ -354,7 +372,7 @@ endpoint_config_dict = {
     "auto_capture_config":{
         "catalog_name": catalog,
         "schema_name": db,
-        "table_name_prefix": "advanced_churn_served_v2"
+        "table_name_prefix": "advanced_churn_served"
     }
 }
 
@@ -416,8 +434,8 @@ if not is_smoke_test:
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
-# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23", "split":"test"},
-# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23","split":"test"}
+# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-08-19", "split":"test"},
+# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-08-19", "split":"test"}
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
@@ -453,8 +471,8 @@ if input_example:
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23", "split":"test"},
-    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23", "split":"test"}
+    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-08-19", "split":"test"},
+    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-08-19", "split":"test"}
   ]
 
 # COMMAND ----------

@@ -22,4 +22,4 @@ MODEL_NAME = "dbdemos_ai_agent_demo"
 ENDPOINT_NAME = f'{MODEL_NAME}_{catalog}_{db}'[:60]
 
 # This must be a tool-enabled model
-LLM_ENDPOINT_NAME = 'databricks-claude-3-7-sonnet'
+LLM_ENDPOINT_NAME = 'databricks-llama-4-maverick'

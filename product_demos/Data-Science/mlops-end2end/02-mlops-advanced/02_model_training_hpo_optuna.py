@@ -279,7 +279,7 @@ preprocessor = ColumnTransformer(transformers, remainder="drop", sparse_threshol
 # MAGIC
 # MAGIC
 # MAGIC We will leverage the new `MLflowStorage` and `MlflowSparkStudy` objects.
-
+# MAGIC
 
 # COMMAND ----------
 
@@ -595,7 +595,7 @@ distributed_study = optuna_hpo_fn(
   X_train=X_train,
   X_test=X_test,
   Y_train=Y_train,
-        Y_test=Y_test,
+  Y_test=Y_test,
   training_set_specs_in=training_set_specs,
   preprocessor_in=preprocessor,
   experiment_id=experiment_id,
@@ -604,6 +604,7 @@ distributed_study = optuna_hpo_fn(
   run_name="mlops-hpo-best-run", # "smoke-test"
   optuna_sampler_in=optuna_sampler,
   optuna_pruner_in=NoneValuePruner(),
+  n_jobs = 2, # Set this to number of physical cores
 )
 
 # COMMAND ----------

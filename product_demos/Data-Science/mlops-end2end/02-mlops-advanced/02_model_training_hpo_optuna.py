@@ -497,7 +497,7 @@ from mlflow.pyfunc import PyFuncModel
 from mlflow import pyfunc
 
 
-def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_test: pd.DataFrame, Y_test: pd.Series, training_set_specs_in, preprocessor_in: ColumnTransformer, experiment_id: str, pos_label_in: str = pos_label, rng_seed_in: int = 2025, run_name:str = "spark-mlflow-tuning", optuna_sampler_in: optuna.samplers.TPESampler = optuna_sampler, optuna_pruner_in: optuna.pruners.BasePruner = None, n_jobs: int = 4) -> optuna.study.study.Study:
+def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_test: pd.DataFrame, Y_test: pd.Series, training_set_specs_in, preprocessor_in: ColumnTransformer, experiment_id: str, pos_label_in: str = pos_label, rng_seed_in: int = 2025, run_name:str = "spark-mlflow-tuning", optuna_sampler_in: optuna.samplers.TPESampler = optuna_sampler, optuna_pruner_in: optuna.pruners.BasePruner = None, n_jobs: int = 2) -> optuna.study.study.Study:
     """
     Increasing `n_jobs` may cause experiment to fail due to failed trials which return None and can't be pruned/caught in parallel mode
     """
@@ -594,7 +594,7 @@ distributed_study = optuna_hpo_fn(
   X_train=X_train,
   X_test=X_test,
   Y_train=Y_train,
-        Y_test=Y_test,
+  Y_test=Y_test,
   training_set_specs_in=training_set_specs,
   preprocessor_in=preprocessor,
   experiment_id=experiment_id,

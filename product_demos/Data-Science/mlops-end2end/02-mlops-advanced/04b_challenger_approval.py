@@ -22,6 +22,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
+
+# COMMAND ----------
+
 dbutils.widgets.text("model_name", f"{catalog}.{db}.advanced_mlops_churn", "Model Name") # Will be populated from Deployment Jobs Parameters
 dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
 dbutils.widgets.text("approval_tag_name", "Approval_Check", "Approval Tag to check")

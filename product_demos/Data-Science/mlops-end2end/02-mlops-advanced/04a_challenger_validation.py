@@ -56,7 +56,7 @@
 # COMMAND ----------
 
 dbutils.widgets.text("model_name", f"{catalog}.{db}.advanced_mlops_churn", "Model Name") # Will be populated from Deployment Jobs Parameters
-dbutils.widgets.text("model_version", "", "Model Version") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
 
 # COMMAND ----------
 

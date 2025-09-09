@@ -23,8 +23,18 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC DBR/MLR16.4LTS (Recommended)
+# MAGIC ```
+
+# COMMAND ----------
+
 # DBTITLE 1,Install needed package
 # MAGIC %pip install --quiet databricks-sdk mlflow-skinny --upgrade dbldatagen
+# MAGIC
+# MAGIC
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -254,3 +264,7 @@ print(f"Total number of joint violations: {all_violations_count}")
 
 # DBTITLE 1,Exit notebook by setting a task value
 dbutils.jobs.taskValues.set(key = 'all_violations_count', value = all_violations_count)
+
+# COMMAND ----------
+
+

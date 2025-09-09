@@ -1,0 +1,14 @@
+# The main pipeline for cdc_dabs
+resources:
+  pipelines:
+    cdc_dabs_pipeline:
+      name: cdc_dabs_pipeline
+      catalog: dbacademy
+      schema: cdc_dabs_${bundle.target}
+      serverless: true
+      libraries:
+        - notebook:
+            path: ../src/pipeline.ipynb
+
+      configuration:
+        bundle.sourcePath: ${workspace.file_path}/src

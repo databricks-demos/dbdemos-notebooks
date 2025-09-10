@@ -41,6 +41,27 @@ mlflow.langchain.autolog()
 # Required to use Unity Catalog UDFs as tools
 set_uc_function_client(DatabricksFunctionClient())
 
+###########################
+# MCP Tool Wrapper
+###########################
+
+class MCPToolWrapper(BaseTool):
+    """Wrap a Databricks MCP tool as a LangChain BaseTool"""
+
+    def __init__(self, name: str, description: str, server_url: str, ws_client: WorkspaceClient):
+        super().__init__(name=name, description=description, args_schema=dict)
+        self.server_url = server_url
+        self.ws_client = ws_client
+
+    def _run(self, **kwargs) -> str:
+        mcp_client = DatabricksMCPClient(server_url=self.server_url, workspace_client=self.ws_client)
+        response = mcp_client.call_tool(self.name, kwargs)
+        return "".join([c.text for c in response.content])
+    
+###########################
+# Agent State and Graph
+###########################
+
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
     custom_inputs: Optional[dict[str, Any]]
@@ -103,6 +124,17 @@ class LangGraphResponsesAgent(ResponsesAgent):
                     num_results=retriever_config.get("num_results", 3),
                 )
             )
+        
+        # Managed MCP tools
+        if mcp_server_urls:
+            ws_client = WorkspaceClient()
+            for server_url in mcp_server_urls:
+                try:
+                    mcp_client = DatabricksMCPClient(server_url=server_url, workspace_client=ws_client)
+                    for tool_def in mcp_client.list_tools():
+                        self.tools.append(MCPToolWrapper(tool_def.name, tool_def.description or tool_def.name, server_url, ws_client))
+                except Exception as e:
+                    print(f"Error loading MCP tools from {server_url}: {e}")
 
         self.agent = create_tool_calling_agent(self.llm, self.tools, system_prompt)
 
@@ -202,6 +234,8 @@ class LangGraphResponsesAgent(ResponsesAgent):
                 res.extend(t.resources)
             elif hasattr(t, "uc_function_name"):
                 res.append(DatabricksFunction(function_name=t.uc_function_name))
+            elif isinstance(t, MCPToolWrapper):
+                res.append(DatabricksMCPClient(server_url=t.server_url, workspace_client=t.ws_client))
         return res
 
 

@@ -11,3 +11,5 @@ system_prompt: You are a telco assistant. Call the appropriate tool to help the 
   looking up information.
 uc_tool_names:
 - main_build.dbdemos_ai_agent.*
+mcp_server_urls:
+  - "https://<your-databricks-workspace>/api/2.0/mcp/functions/system/ai"

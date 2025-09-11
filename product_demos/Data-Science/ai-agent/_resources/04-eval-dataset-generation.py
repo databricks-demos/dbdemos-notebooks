@@ -86,7 +86,7 @@ df_clean.createOrReplaceTempView("customer_test_questions")
 final_df_raw = spark.sql("""
 SELECT 
   question,
-  AI_QUERY("databricks-claude-3-7-sonnet", prompt) AS expected_facts_json
+  AI_QUERY("databricks-llama-4-maverick", prompt) AS expected_facts_json
 FROM customer_test_questions
 """)
 
@@ -107,4 +107,5 @@ eval_df.write.format('json').mode("overwrite").save(f"/Volumes/{catalog}/{dbName
 
 # COMMAND ----------
 
-display(eval_df)
+# The display command can be skipped, since it isn't shown on the calling noterbook and just costs time...
+# display(eval_df)

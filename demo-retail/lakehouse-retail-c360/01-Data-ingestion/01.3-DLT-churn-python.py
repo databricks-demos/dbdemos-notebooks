@@ -332,7 +332,7 @@ def churn_prediction():
 # MAGIC
 # MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 # MAGIC
-# MAGIC Jump to the [Governance with Unity Catalog notebook]($../00-churn-introduction-lakehouse) or [Go back to the introduction]($../00-churn-introduction-lakehouse)
+# MAGIC Jump to the [Governance with Unity Catalog notebook]($../02-Data-governance/02.1-UC-data-governance-security-churn) or [Go back to the introduction]($../00-churn-introduction-lakehouse)
 
 # COMMAND ----------
 

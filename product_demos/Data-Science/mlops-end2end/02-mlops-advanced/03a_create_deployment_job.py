@@ -183,7 +183,13 @@ try:
       client.update_registered_model(model_name, deployment_job_id="") # Unlink current job
       client.update_registered_model(model_name, deployment_job_id=job_id) # Link new one
 
-except mlflow.exceptions.RestException:
-  # Create Empty Model placeholder and Link job
-  print("Model does not exist - Creating model and linking job")
-  client.create_registered_model(model_name, deployment_job_id=job_id)
+except mlflow.exceptions.RestException as e:
+  if "PERMISSION_DENIED" in str(e):
+        print(f"Permission denied on model `{model_name}` - Deployment Job NOT UPDATED.")
+        # Optionally, handle or re-raise
+        pass
+
+  else:
+    # Create Empty Model placeholder and Link job
+    print("Model does not exist - Creating model and linking job")
+    client.create_registered_model(model_name, deployment_job_id=job_id)

@@ -8,9 +8,18 @@
 
 -- COMMAND ----------
 
--- !!! Before performing any data analysis, make sure to run the pipeline to materialize the sample datasets. The tables referenced in this notebook depend on that step.
+--Explore raw historical turbine status data
 
-USE CATALOG `<Your Catalog>`;
-USE SCHEMA `<Your Schema>`;
+SELECT * FROM json.`/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status`
 
-SELECT * from `sensor_bronze`;
+-- COMMAND ----------
+
+--Explore raw sensor data
+SELECT * FROM parquet.`/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data`
+
+-- COMMAND ----------
+
+--Explore raw turbine data
+
+SELECT * FROM json.`/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine`
+

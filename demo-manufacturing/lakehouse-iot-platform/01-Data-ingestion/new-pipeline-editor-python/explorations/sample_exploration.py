@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-#Explore raw turbine status data
+#Explore raw historical turbine status data
 
 sdf = spark.read.format("json").load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status")
 display(sdf)
@@ -21,12 +21,8 @@ display(sdf)
 
 # COMMAND ----------
 
-#Explore raw turbine status data
+#Explore raw turbine data
 
-sdf = spark.read.format("json").load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status")
+sdf = spark.read.format("json").load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine")
 display(sdf)
 
-spark.readStream.format("cloudFiles")
-        .option("cloudFiles.format", "json")
-        .option("cloudFiles.inferColumnTypes", "true")
-        .load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine")

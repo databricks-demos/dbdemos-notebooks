@@ -8,6 +8,25 @@
 
 # COMMAND ----------
 
-# !!! Before performing any data analysis, make sure to run the pipeline to materialize the sample datasets. The tables referenced in this notebook depend on that step.
+#Explore raw turbine status data
 
-display(spark.sql("SELECT * FROM <Your Catalog>.<Your Schema>.sensor_bronze"))
+sdf = spark.read.format("json").load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status")
+display(sdf)
+
+# COMMAND ----------
+
+#Explore raw sensor data
+sdf = spark.read.format("parquet").load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/incoming_data")
+display(sdf)
+
+# COMMAND ----------
+
+#Explore raw turbine status data
+
+sdf = spark.read.format("json").load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/historical_turbine_status")
+display(sdf)
+
+spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "json")
+        .option("cloudFiles.inferColumnTypes", "true")
+        .load("/Volumes/main_build/dbdemos_iot_platform/turbine_raw_landing/turbine")

@@ -22,7 +22,7 @@ select CURRENT_CATALOG() as catalog, CURRENT_SCHEMA() as schema
 -- MAGIC
 -- MAGIC Leveraging the Assistant and UI streamlines the process, making it accessible for technical and non-technical users.
 -- MAGIC
--- MAGIC <img src="../_resources/create_mv_assistant.gif" style="float: right" width="1200px"/> 
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/retail/lakehouse-churn/create_mv_assistant.gif" style="float: right" width="1200px"/>
 -- MAGIC
 -- MAGIC Open the source table and ask the assistant to "give me the metric views definition for this table"`. You can even open the assistant generated YAML in a metric view editor.
 -- MAGIC

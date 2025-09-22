@@ -17,6 +17,7 @@ reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 
 catalog = "main__build"
 dbName = db = "dbdemos_mlops"
+online_store_name = "shared_online_store" # "fe_shared_demo"
 
 # COMMAND ----------
 

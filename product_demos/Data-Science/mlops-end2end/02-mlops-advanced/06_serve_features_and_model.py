@@ -49,7 +49,7 @@
 
 dbutils.widgets.text("model_name", f"{catalog}.{db}.advanced_mlops_churn", "Model Name") # Will be populated from Deployment Jobs Parameters
 dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
-dbutils.widgets.text("online_store_name", "fe_shared_demo", "Online Store Name")
+dbutils.widgets.text("online_store_name", online_store_name, "Online Store Name")
 dbutils.widgets.dropdown("drop_online_store", "False", ["True", "False"], "Reset Online Table(s)")
 dbutils.widgets.dropdown("smoke_test", "False", ["True", "False"], "Smoke Test Flag")
 

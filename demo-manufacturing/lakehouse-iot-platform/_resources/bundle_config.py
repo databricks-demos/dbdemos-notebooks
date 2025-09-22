@@ -303,6 +303,50 @@
         "catalog": "{{CATALOG}}",
         "target": "{{SCHEMA}}"
       }
+    },
+    {
+      "id": "ldp-sql",
+      "run_after_creation": False,
+      "definition": {
+        "name": "new-pipeline-editor-sqls",
+        "libraries": [
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-sqls/transformations/**"
+            }
+          }
+        ],
+        "schema": "{{SCHEMA}}",
+        "continuous": False,
+        "development": True,
+        "photon": True,
+        "channel": "CURRENT",
+        "catalog": "{{CATALOG}}",
+        "serverless": True,
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-sqls"
+      }
+    },
+    {
+      "id": "ldp-python",
+      "run_after_creation": False,
+      "definition": {
+        "name": "new-pipeline-editor-python",
+        "libraries": [
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-python/transformations/**"
+            }
+          }
+        ],
+        "schema": "{{SCHEMA}}",
+        "continuous": False,
+        "development": True,
+        "photon": True,
+        "channel": "CURRENT",
+        "catalog": "{{CATALOG}}",
+        "serverless": True,
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-python"
+      }
     }
   ],
   "dashboards": [{"name": "[dbdemos] IOT - Turbine analysis",                    "id": "turbine-analysis"},

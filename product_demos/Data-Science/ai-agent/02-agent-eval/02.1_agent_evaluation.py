@@ -281,6 +281,9 @@ logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), requ
 
 # COMMAND ----------
 
+# Load the model to be used in evaluation via `predict_wrapper`
+loaded_model = mlflow.pyfunc.load_model(f"runs:/{logged_agent_info.run_id}/agent")
+
 with mlflow.start_run(run_name='eval_with_reasoning_instructions'):
     results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)
 

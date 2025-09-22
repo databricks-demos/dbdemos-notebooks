@@ -1,24 +1,26 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC # Implement CDC: Change Data Capture
-# MAGIC ## Use-case: Synchronize your SQL Database with your Lakehouse
+# MAGIC # Implement CDC: Change Data Capture with Serverless
+# MAGIC ## Use-case: Synchronize your SQL Database with your Lakehouse using Serverless Compute
 # MAGIC
-# MAGIC Delta Lake is an <a href="https://delta.io/" target="_blank">open-source</a> storage layer with Transactional capabilities and increased Performances. 
+# MAGIC Delta Lake is an <a href="https://delta.io/" target="_blank">open-source</a> storage layer with transactional capabilities and increased performance. 
 # MAGIC
-# MAGIC Delta lake is designed to support CDC workload by providing support for UPDATE / DELETE and MERGE operation.
+# MAGIC Delta Lake is designed to support CDC workloads by providing support for UPDATE / DELETE and MERGE operations.
 # MAGIC
-# MAGIC In addition, Delta table can support CDC to capture internal changes and propagate the changes downstream.
+# MAGIC In addition, Delta tables can support Change Data Feed (CDF) to capture internal changes and propagate them downstream.
 # MAGIC
-# MAGIC Note that this is a fairly advaned demo. Before going into this content, we recommend you get familiar with Delta Lake `dbdemos.install('delta-lake')`.
+# MAGIC This demo showcases modern CDC patterns using **Serverless Compute** for cost-effective, auto-scaling data processing.
 # MAGIC
-# MAGIC ## Simplifying CDC with Delta Live Table
+# MAGIC Note that this is a fairly advanced demo. Before diving into this content, we recommend getting familiar with Delta Lake: `dbdemos.install('delta-lake')`.
 # MAGIC
-# MAGIC As you'll see, implementing a CDC pipeline from scratch is slightly advanced. 
+# MAGIC ## Simplifying CDC with Delta Live Tables
 # MAGIC
-# MAGIC To simplify these operation & implement a full CDC flow with SQL expression, we strongly advise to use Delta Live Table with `APPLY CHANGES`: `dbdemos.install('delta-live-table')` (including native SCDT2 support)
+# MAGIC As you'll see, implementing a CDC pipeline from scratch requires careful handling of deduplication and merge logic. 
 # MAGIC
-# MAGIC As you'll see, `APPLY CHANGES` handles the MERGE INTO + DEDUPLICATION complexity for you. 
+# MAGIC To simplify these operations & implement a full CDC flow with SQL expressions, we strongly recommend using Delta Live Tables with `APPLY CHANGES`: `dbdemos.install('delta-live-table')` (including native SCD Type 2 support)
+# MAGIC
+# MAGIC The `APPLY CHANGES` functionality handles the MERGE INTO + DEDUPLICATION complexity automatically. 
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -36,9 +38,17 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## CDC flow
+# MAGIC ## CDC flow with Serverless Compute
 # MAGIC
-# MAGIC Here is the flow we'll implement, consuming CDC data from an external database. Note that the incoming could be any format, including message queue such as Kafka.
+# MAGIC Here is the flow we'll implement, consuming CDC data from an external database using **Serverless Compute** for cost-effective, auto-scaling processing. 
+# MAGIC
+# MAGIC Note that the incoming data could be any format, including message queues such as Kafka.
+# MAGIC
+# MAGIC **Key Serverless Benefits:**
+# MAGIC - Automatic scaling based on workload
+# MAGIC - Pay only for compute used during processing
+# MAGIC - No cluster management overhead
+# MAGIC - Optimized for batch processing with `availableNow` triggers
 # MAGIC
 # MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-0.png" alt='Make all your data ready for BI and ML'/>
 
@@ -72,16 +82,16 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 bronzeDF = (spark.readStream
                 .format("cloudFiles")
                 .option("cloudFiles.format", "csv")
-                #.option("cloudFiles.maxFilesPerTrigger", "1") #Simulate streaming, remove in production
                 .option("cloudFiles.inferColumnTypes", "true")
                 .option("cloudFiles.schemaLocation",  raw_data_location+"/stream/schema_cdc_raw")
                 .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
+                .option("cloudFiles.useNotifications", "false")  # Optimized for serverless
+                .option("cloudFiles.includeExistingFiles", "true")  # Process all files on first run
                 .load(raw_data_location+'/user_csv'))
 
 (bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
-        .trigger(processingTime='10 seconds')
-        #.trigger(availableNow=True) --use this trigger on serverless
+        .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
         .table("clients_cdc"))
 
 time.sleep(20)
@@ -89,8 +99,13 @@ time.sleep(20)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- let's make sure our table has the proper compaction settings to support streaming
-# MAGIC ALTER TABLE clients_cdc SET TBLPROPERTIES (delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC -- Optimize table properties for serverless streaming and performance
+# MAGIC ALTER TABLE clients_cdc SET TBLPROPERTIES (
+# MAGIC   delta.autoOptimize.optimizeWrite = true, 
+# MAGIC   delta.autoOptimize.autoCompact = true,
+# MAGIC   delta.targetFileSize = '128MB',
+# MAGIC   delta.tuneFileSizesForRewrites = true
+# MAGIC );
 # MAGIC
 # MAGIC SELECT * FROM clients_cdc order by id asc ;
 
@@ -109,9 +124,15 @@ time.sleep(20)
 
 # DBTITLE 1,We can now create our client table using standard SQL command
 # MAGIC %sql 
-# MAGIC -- we can add NOT NULL in our ID field (or even more advanced constraint)
+# MAGIC -- Create silver table with optimized settings for serverless and CDC
 # MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (id BIGINT NOT NULL, name STRING, address STRING, email STRING, operation STRING) 
-# MAGIC   TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC   TBLPROPERTIES (
+# MAGIC     delta.enableChangeDataFeed = true, 
+# MAGIC     delta.autoOptimize.optimizeWrite = true, 
+# MAGIC     delta.autoOptimize.autoCompact = true,
+# MAGIC     delta.targetFileSize = '128MB',
+# MAGIC     delta.tuneFileSizesForRewrites = true
+# MAGIC   );
 
 # COMMAND ----------
 
@@ -137,8 +158,7 @@ def merge_stream(df, i):
      .writeStream
        .foreachBatch(merge_stream)
        .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
-       .trigger(processingTime='10 seconds')
-       #.trigger(availableNow=True) --use this trigger on serverless
+       .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
      .start())
 
 time.sleep(20)
@@ -228,7 +248,7 @@ last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).
 print(f"our Delta table last version is {last_version}, let's select the last changes to see our DELETE and UPDATE operations (last 2 versions):")
 
 changes = spark.read.format("delta") \
-                    .option("readChangeData", "true") \
+                    .option("readChangeFeed", "true") \
                     .option("startingVersion", int(last_version) -1) \
                     .table("retail_client_silver")
 display(changes)
@@ -247,9 +267,15 @@ display(changes)
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's create or final GOLD table: retail_client_gold
+# DBTITLE 1,Let's create our final GOLD table: retail_client_gold
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING)
+# MAGIC   TBLPROPERTIES (
+# MAGIC     delta.autoOptimize.optimizeWrite = true, 
+# MAGIC     delta.autoOptimize.autoCompact = true,
+# MAGIC     delta.targetFileSize = '128MB',
+# MAGIC     delta.tuneFileSizesForRewrites = true
+# MAGIC   );
 
 # COMMAND ----------
 
@@ -277,15 +303,14 @@ def upsertToDelta(data, batchId):
 
 
 (spark.readStream
-       .option("readChangeData", "true")
+       .option("readChangeFeed", "true")  # Updated to use correct option name
        .option("startingVersion", 1)
        .table("retail_client_silver")
        .withColumn("gold_data", lit("Delta CDF is Awesome"))
       .writeStream
         .foreachBatch(upsertToDelta)
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
-        .trigger(processingTime='10 seconds')
-        #.trigger(availableNow=True) --use this trigger on serverless
+        .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
       .start())
 
 time.sleep(20)

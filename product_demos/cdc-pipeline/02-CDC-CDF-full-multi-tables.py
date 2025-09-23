@@ -102,25 +102,25 @@ def generate_user_cdc_record(operation_type="UPDATE", user_id=None):
     operations = {
         "INSERT": {
             "id": user_id,
-            "username": f"user_{user_id}_{random.randint(1,99)}",
+            "name": f"user_{user_id}_{random.randint(1,99)}",
             "email": f"user{user_id}@company{random.randint(1,10)}.com",
-            "status": random.choice(["active", "pending", "suspended"]),
+            "address": f"Address_{random.randint(1,999)} Street",
             "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "operation": "INSERT"
         },
         "UPDATE": {
             "id": user_id,
-            "username": f"updated_user_{user_id}",
+            "name": f"updated_user_{user_id}",
             "email": f"updated.user{user_id}@newcompany{random.randint(1,5)}.com",
-            "status": random.choice(["active", "inactive", "premium"]),
+            "address": f"Updated_Address_{random.randint(1,999)} Avenue",
             "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "operation": "UPDATE"
         },
         "DELETE": {
             "id": user_id,
-            "username": None,
+            "name": None,
             "email": None,
-            "status": None,
+            "address": None,
             "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "operation": "DELETE"
         }
@@ -596,7 +596,7 @@ for iteration in range(1, 4):  # Monitor 3 iterations
         # Show latest silver records
         print("   📝 Latest Records:")
         latest_users = spark.sql("""
-            SELECT id, username, email, status 
+            SELECT id, name, email 
             FROM silver_users 
             ORDER BY id DESC 
             LIMIT 2
@@ -604,7 +604,7 @@ for iteration in range(1, 4):  # Monitor 3 iterations
         if latest_users:
             print("      👥 Latest Users:")
             for row in latest_users:
-                print(f"         ID: {row['id']}, User: {row['username']}, Status: {row['status']}")
+                print(f"         ID: {row['id']}, User: {row['name']}, Email: {row['email']}")
         
         latest_transactions = spark.sql("""
             SELECT id, user_id, amount, currency, transaction_type 

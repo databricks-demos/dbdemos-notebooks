@@ -65,7 +65,7 @@ select CURRENT_CATALOG() as catalog, CURRENT_SCHEMA() as schema
 
 -- MAGIC %md
 -- MAGIC ## Edit the Metric View
--- MAGIC - Click Edit. This will take you to the YAML edit page. Let's enhance the UC metric view to look like this [YAML]($../_resources/churn_users_mteric_view.yaml).
+-- MAGIC - Click Edit. This will take you to the YAML edit page. Let's enhance the UC metric view to look like this [YAML]($churn_users_mteric_view.yaml).
 -- MAGIC
 -- MAGIC - Explanation of the fields:
 -- MAGIC 1.  **Filters**: Filters are optional conditions, like the WHERE clause in SQL. Let’s add a filter to the UC metrics view. This filter will apply to all queries inside that view, working like a global filter.

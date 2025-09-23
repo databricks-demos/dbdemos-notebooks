@@ -126,6 +126,14 @@
       "description": "Metric views in Unity Catalog simplify access to key business KPIs."
     },
     {
+      "path": "02-Data-governance/churn_users_mteric_view.yaml",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "Metric view YAML for churn_users table",
+      "description": "Metric view definition as a YAML for main.dbdemos_retail_c360.churn_users."
+    },
+    {
       "path": "04-Data-Science-ML/04.1-automl-churn-prediction", 
       "pre_run": True, 
       "publish_on_website": True, 

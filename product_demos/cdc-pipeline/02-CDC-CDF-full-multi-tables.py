@@ -510,29 +510,136 @@ print(f"\n📈 Performance Metrics:")
 print(f"🔹 Total processing time: {total_time:.2f} seconds")
 print(f"🔹 Parallel execution efficiency: {(processing_time/total_time)*100:.1f}%")
 
-# Show results for each table
-print("\n📊 Table states after processing:")
-try:
-    # Check bronze tables
-    for table in ["users", "transactions"]:
-        bronze_table = f"bronze_{table}"
-        try:
-            count = spark.sql(f"SELECT COUNT(*) as count FROM {bronze_table}").collect()[0]['count']
-            print(f"📁 {bronze_table}: {count} records")
-        except:
-            print(f"📁 {bronze_table}: Table not found or empty")
+# Show results with multi-table growth monitoring
+print("\n📊 Monitoring multi-table growth over time...")
+print("💡 Watch how serverless compute handles growing data across multiple tables")
+
+# Function to get all table sizes
+def get_all_table_sizes():
+    sizes = {}
+    tables = ["users", "transactions"]
     
-    print("\n🥈 Silver tables:")
-    for table in ["users", "transactions"]:
+    for table in tables:
+        bronze_table = f"bronze_{table}"
         silver_table = f"silver_{table}"
+        
         try:
-            count = spark.sql(f"SELECT COUNT(*) as count FROM {silver_table}").collect()[0]['count']
-            print(f"📁 {silver_table}: {count} records")
+            sizes[f"{table}_bronze"] = spark.sql(f"SELECT COUNT(*) as count FROM {bronze_table}").collect()[0]['count']
         except:
-            print(f"📁 {silver_table}: Table not found or empty")
+            sizes[f"{table}_bronze"] = 0
             
-except Exception as e:
-    print(f"⚠️ Error checking table states: {e}")
+        try:
+            sizes[f"{table}_silver"] = spark.sql(f"SELECT COUNT(*) as count FROM {silver_table}").collect()[0]['count']
+        except:
+            sizes[f"{table}_silver"] = 0
+    
+    return sizes
+
+# Monitor multi-table growth over multiple iterations
+print("🔍 Multi-Table Growth Monitoring:")
+print("=" * 80)
+
+for iteration in range(1, 4):  # Monitor 3 iterations
+    print(f"\n📈 Iteration {iteration} - {datetime.now().strftime('%H:%M:%S')}")
+    
+    # Get current sizes
+    sizes = get_all_table_sizes()
+    
+    print("🥉 Bronze Tables (Raw CDC):")
+    print(f"   👥 Users: {sizes['users_bronze']:,} records")
+    print(f"   💳 Transactions: {sizes['transactions_bronze']:,} records")
+    print(f"   📊 Total Bronze: {sizes['users_bronze'] + sizes['transactions_bronze']:,} records")
+    
+    print("🥈 Silver Tables (Materialized):")
+    print(f"   👥 Users: {sizes['users_silver']:,} records")
+    print(f"   💳 Transactions: {sizes['transactions_silver']:,} records")
+    print(f"   📊 Total Silver: {sizes['users_silver'] + sizes['transactions_silver']:,} records")
+    
+    # Calculate growth if not first iteration
+    if iteration > 1:
+        users_bronze_growth = sizes['users_bronze'] - previous_sizes['users_bronze']
+        users_silver_growth = sizes['users_silver'] - previous_sizes['users_silver']
+        transactions_bronze_growth = sizes['transactions_bronze'] - previous_sizes['transactions_bronze']
+        transactions_silver_growth = sizes['transactions_silver'] - previous_sizes['transactions_silver']
+        
+        print("   📊 Growth Since Last Check:")
+        print(f"      👥 Users: Bronze +{users_bronze_growth}, Silver +{users_silver_growth}")
+        print(f"      💳 Transactions: Bronze +{transactions_bronze_growth}, Silver +{transactions_silver_growth}")
+        
+        total_growth = (users_bronze_growth + users_silver_growth + 
+                       transactions_bronze_growth + transactions_silver_growth)
+        print(f"      🎯 Total Growth: +{total_growth} records across all tables")
+    
+    # Show recent activity details
+    print("   🔍 Recent Activity:")
+    try:
+        # Users operations
+        users_ops = spark.sql("""
+            SELECT operation, COUNT(*) as count 
+            FROM bronze_users 
+            GROUP BY operation 
+            ORDER BY operation
+        """).collect()
+        users_summary = {row['operation']: row['count'] for row in users_ops}
+        print(f"      👥 Users Operations: {users_summary}")
+        
+        # Transactions operations  
+        trans_ops = spark.sql("""
+            SELECT operation, COUNT(*) as count 
+            FROM bronze_transactions 
+            GROUP BY operation 
+            ORDER BY operation
+        """).collect()
+        trans_summary = {row['operation']: row['count'] for row in trans_ops}
+        print(f"      💳 Transactions Operations: {trans_summary}")
+        
+        # Show latest silver records
+        print("   📝 Latest Records:")
+        latest_users = spark.sql("""
+            SELECT id, username, email, status 
+            FROM silver_users 
+            ORDER BY id DESC 
+            LIMIT 2
+        """).collect()
+        if latest_users:
+            print("      👥 Latest Users:")
+            for row in latest_users:
+                print(f"         ID: {row['id']}, User: {row['username']}, Status: {row['status']}")
+        
+        latest_transactions = spark.sql("""
+            SELECT id, user_id, amount, currency, transaction_type 
+            FROM silver_transactions 
+            ORDER BY id DESC 
+            LIMIT 2
+        """).collect()
+        if latest_transactions:
+            print("      💳 Latest Transactions:")
+            for row in latest_transactions:
+                print(f"         ID: {row['id']}, User: {row['user_id']}, Amount: {row['amount']} {row['currency']}")
+                
+    except Exception as e:
+        print(f"   ⚠️ Error showing details: {e}")
+    
+    previous_sizes = sizes
+    
+    # Wait for next iteration (except on last one)
+    if iteration < 3:
+        print(f"   ⏳ Waiting 40 seconds for more multi-table CDC data...")
+        print("   💰 Serverless compute: Zero cost during wait - only pay for processing!")
+        time.sleep(40)
+        
+        # Process new data across all tables
+        print(f"   🔄 Processing new multi-table data (Iteration {iteration + 1})...")
+        trigger_multi_table_cdc_pipeline()
+
+print("\n" + "=" * 80)
+print("✅ Multi-table growth monitoring completed!")
+print("📈 Key Multi-Table Observations:")
+print("   🔹 Multiple tables grow independently with different patterns")
+print("   🔹 Serverless compute scales automatically across all tables")
+print("   🔹 Parallel processing efficiency demonstrated")
+print("   🔹 Cost optimization: Pay only for actual multi-table processing")
+print("   🔹 Real-world enterprise CDC patterns with table relationships")
 
 # COMMAND ----------
 

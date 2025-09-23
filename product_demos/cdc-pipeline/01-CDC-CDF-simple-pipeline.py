@@ -572,14 +572,93 @@ time.sleep(35)
 # Process any new data
 trigger_cdc_pipeline()
 
-# Show results
-print("\n📊 Current table states after processing:")
-print("Bronze table:")
-display(spark.sql("SELECT COUNT(*) as bronze_count FROM clients_cdc"))
-print("Silver table:")
-display(spark.sql("SELECT COUNT(*) as silver_count FROM retail_client_silver ORDER BY id DESC LIMIT 10"))
-print("Gold table:")
-display(spark.sql("SELECT COUNT(*) as gold_count FROM retail_client_gold ORDER BY id DESC LIMIT 10"))
+# Show results with table growth monitoring
+print("\n📊 Monitoring table growth over time...")
+print("💡 Watch how serverless compute handles growing data volumes efficiently")
+
+# Function to get table sizes
+def get_table_sizes():
+    sizes = {}
+    try:
+        sizes['bronze'] = spark.sql("SELECT COUNT(*) as count FROM clients_cdc").collect()[0]['count']
+    except:
+        sizes['bronze'] = 0
+    try:
+        sizes['silver'] = spark.sql("SELECT COUNT(*) as count FROM retail_client_silver").collect()[0]['count']
+    except:
+        sizes['silver'] = 0
+    try:
+        sizes['gold'] = spark.sql("SELECT COUNT(*) as count FROM retail_client_gold").collect()[0]['count']
+    except:
+        sizes['gold'] = 0
+    return sizes
+
+# Monitor table growth over multiple iterations
+print("🔍 Table Size Growth Monitoring:")
+print("=" * 60)
+
+for iteration in range(1, 4):  # Monitor 3 iterations
+    print(f"\n📈 Iteration {iteration} - {datetime.now().strftime('%H:%M:%S')}")
+    
+    # Get current sizes
+    sizes = get_table_sizes()
+    print(f"🥉 Bronze (Raw CDC): {sizes['bronze']:,} records")
+    print(f"🥈 Silver (Materialized): {sizes['silver']:,} records") 
+    print(f"🥇 Gold (Enhanced): {sizes['gold']:,} records")
+    
+    # Calculate growth if not first iteration
+    if iteration > 1:
+        growth_bronze = sizes['bronze'] - previous_sizes['bronze']
+        growth_silver = sizes['silver'] - previous_sizes['silver']
+        growth_gold = sizes['gold'] - previous_sizes['gold']
+        
+        print(f"   📊 Growth: Bronze +{growth_bronze}, Silver +{growth_silver}, Gold +{growth_gold}")
+    
+    # Show recent records
+    print("   🔍 Latest Records:")
+    try:
+        latest_bronze = spark.sql("""
+            SELECT operation, COUNT(*) as count 
+            FROM clients_cdc 
+            GROUP BY operation 
+            ORDER BY operation
+        """).collect()
+        operations_summary = {row['operation']: row['count'] for row in latest_bronze}
+        print(f"   📁 Operations: {operations_summary}")
+        
+        # Show latest silver records
+        latest_silver = spark.sql("""
+            SELECT id, name, email 
+            FROM retail_client_silver 
+            ORDER BY id DESC 
+            LIMIT 3
+        """).collect()
+        if latest_silver:
+            print("   📝 Latest Silver Records:")
+            for row in latest_silver:
+                print(f"      ID: {row['id']}, Name: {row['name']}, Email: {row['email']}")
+    except Exception as e:
+        print(f"   ⚠️ Error showing details: {e}")
+    
+    previous_sizes = sizes
+    
+    # Wait for next iteration (except on last one)
+    if iteration < 3:
+        print(f"   ⏳ Waiting 40 seconds for more CDC data...")
+        print("   💰 Serverless compute: No costs during wait time!")
+        time.sleep(40)
+        
+        # Process new data
+        print(f"   🔄 Processing new data (Iteration {iteration + 1})...")
+        trigger_cdc_pipeline()
+
+print("\n" + "=" * 60)
+print("✅ Table growth monitoring completed!")
+print("📈 Key Observations:")
+print("   🔹 Tables grow incrementally with each CDC batch")
+print("   🔹 Serverless compute scales automatically with data volume")
+print("   🔹 Cost efficiency: Pay only during processing, not waiting")
+print("   🔹 Real-time CDC processing with delta architecture")
 
 # COMMAND ----------
 

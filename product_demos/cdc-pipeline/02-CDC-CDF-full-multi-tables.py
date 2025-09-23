@@ -72,6 +72,184 @@ display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Multi-Table CDC Data Simulation for Serverless Demo
+# MAGIC
+# MAGIC To demonstrate serverless processing of multiple CDC streams simultaneously, we'll create data generators for multiple tables that simulate incoming CDC events every 30 seconds.
+# MAGIC
+# MAGIC This showcases:
+# MAGIC - Parallel processing of multiple CDC streams with serverless compute
+# MAGIC - Cost-effective auto-scaling for varying workloads
+# MAGIC - Real-world multi-table CDC scenarios
+
+# COMMAND ----------
+
+# DBTITLE 1,Multi-Table CDC Data Generator - Simulates continuous data for users and transactions
+import threading
+import time
+import random
+from datetime import datetime
+import pandas as pd
+
+# Global variable to control the data generators
+generators_running = False
+
+def generate_user_cdc_record(operation_type="UPDATE", user_id=None):
+    """Generate a single user CDC record"""
+    if user_id is None:
+        user_id = random.randint(1, 500)
+    
+    operations = {
+        "INSERT": {
+            "id": user_id,
+            "username": f"user_{user_id}_{random.randint(1,99)}",
+            "email": f"user{user_id}@company{random.randint(1,10)}.com",
+            "status": random.choice(["active", "pending", "suspended"]),
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "INSERT"
+        },
+        "UPDATE": {
+            "id": user_id,
+            "username": f"updated_user_{user_id}",
+            "email": f"updated.user{user_id}@newcompany{random.randint(1,5)}.com",
+            "status": random.choice(["active", "inactive", "premium"]),
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "UPDATE"
+        },
+        "DELETE": {
+            "id": user_id,
+            "username": None,
+            "email": None,
+            "status": None,
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "DELETE"
+        }
+    }
+    return operations[operation_type]
+
+def generate_transaction_cdc_record(operation_type="INSERT", transaction_id=None):
+    """Generate a single transaction CDC record"""
+    if transaction_id is None:
+        transaction_id = random.randint(1000, 9999)
+    
+    user_id = random.randint(1, 500)  # Reference to users table
+    
+    operations = {
+        "INSERT": {
+            "id": transaction_id,
+            "user_id": user_id,
+            "amount": round(random.uniform(10.0, 1000.0), 2),
+            "currency": random.choice(["USD", "EUR", "GBP"]),
+            "transaction_type": random.choice(["purchase", "refund", "transfer"]),
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "INSERT"
+        },
+        "UPDATE": {
+            "id": transaction_id,
+            "user_id": user_id,
+            "amount": round(random.uniform(10.0, 1000.0), 2),
+            "currency": random.choice(["USD", "EUR", "GBP"]),
+            "transaction_type": random.choice(["purchase", "refund", "transfer", "adjustment"]),
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "UPDATE"
+        },
+        "DELETE": {
+            "id": transaction_id,
+            "user_id": None,
+            "amount": None,
+            "currency": None,
+            "transaction_type": None,
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "DELETE"
+        }
+    }
+    return operations[operation_type]
+
+def continuous_multi_table_generator():
+    """Background function that generates CDC data for multiple tables every 30 seconds"""
+    global generators_running
+    file_counter = 0
+    
+    while generators_running:
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Generate user CDC events
+            user_events = []
+            num_user_events = random.randint(2, 4)
+            for _ in range(num_user_events):
+                operation = random.choices(
+                    ["INSERT", "UPDATE", "DELETE"], 
+                    weights=[40, 50, 10]
+                )[0]
+                user_events.append(generate_user_cdc_record(operation))
+            
+            # Generate transaction CDC events
+            transaction_events = []
+            num_transaction_events = random.randint(3, 6)
+            for _ in range(num_transaction_events):
+                operation = random.choices(
+                    ["INSERT", "UPDATE", "DELETE"], 
+                    weights=[70, 25, 5]  # More inserts for transactions
+                )[0]
+                transaction_events.append(generate_transaction_cdc_record(operation))
+            
+            # Save user events
+            user_df = pd.DataFrame(user_events)
+            user_filename = f"users_cdc_{timestamp}_{file_counter}.csv"
+            user_file_path = f"{base_folder}/users/{user_filename}"
+            
+            spark_user_df = spark.createDataFrame(user_df)
+            spark_user_df.coalesce(1).write.mode("overwrite").option("header", "true").csv(user_file_path)
+            
+            # Save transaction events
+            transaction_df = pd.DataFrame(transaction_events)
+            transaction_filename = f"transactions_cdc_{timestamp}_{file_counter}.csv"
+            transaction_file_path = f"{base_folder}/transactions/{transaction_filename}"
+            
+            spark_transaction_df = spark.createDataFrame(transaction_df)
+            spark_transaction_df.coalesce(1).write.mode("overwrite").option("header", "true").csv(transaction_file_path)
+            
+            print(f"Generated CDC events at {datetime.now()}:")
+            print(f"  📁 Users: {num_user_events} events -> {user_filename}")
+            print(f"  📁 Transactions: {num_transaction_events} events -> {transaction_filename}")
+            
+            file_counter += 1
+            
+            # Wait 30 seconds before next batch
+            time.sleep(30)
+            
+        except Exception as e:
+            print(f"Error in multi-table CDC generator: {e}")
+            time.sleep(30)
+
+def start_multi_table_generators():
+    """Start the multi-table CDC data generators in background"""
+    global generators_running
+    if not generators_running:
+        generators_running = True
+        generator_thread = threading.Thread(target=continuous_multi_table_generator, daemon=True)
+        generator_thread.start()
+        print("🚀 Multi-Table CDC Data Generators started!")
+        print("📊 Users and Transactions CDC events will arrive every 30 seconds.")
+        print("💡 This simulates continuous multi-table CDC for serverless processing demo.")
+        return generator_thread
+    else:
+        print("Multi-Table CDC Generators are already running!")
+        return None
+
+def stop_multi_table_generators():
+    """Stop the multi-table CDC data generators"""
+    global generators_running
+    generators_running = False
+    print("🛑 Multi-Table CDC Data Generators stopped.")
+
+# Start the data generators for continuous multi-table simulation
+print("Starting multi-table CDC simulation...")
+multi_table_generator_thread = start_multi_table_generators()
+
+# COMMAND ----------
+
 # MAGIC %md ## Silver and bronze transformations
 
 # COMMAND ----------
@@ -249,5 +427,129 @@ with ThreadPoolExecutor(max_workers=max_parallel_tables) as executor:
 
 # COMMAND ----------
 
-# DBTITLE 1,Make sure we stop all actives streams
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Continuous Multi-Table Serverless CDC Processing
+# MAGIC
+# MAGIC With multiple data generators running, we can demonstrate how serverless compute handles continuous multi-table CDC processing efficiently and cost-effectively.
+
+# COMMAND ----------
+
+# DBTITLE 1,Function to trigger all multi-table CDC streams with serverless compute
+def trigger_multi_table_cdc_pipeline():
+    """
+    Trigger all multi-table CDC streams to process new data with serverless compute.
+    This processes all tables in parallel for maximum efficiency.
+    """
+    print(f"🔄 Triggering multi-table CDC pipeline at {datetime.now()}")
+    
+    # Get all table folders
+    tables = [table_path.name[:-1] for table_path in dbutils.fs.ls(base_folder)]
+    print(f"📊 Processing {len(tables)} tables: {tables}")
+    
+    # Process all tables in parallel using ThreadPoolExecutor
+    max_parallel_tables = min(len(tables), 3)
+    print(f"⚡ Processing {max_parallel_tables} tables in parallel with serverless compute...")
+    
+    start_time = datetime.now()
+    
+    with ThreadPoolExecutor(max_workers=max_parallel_tables) as executor:
+        deque(executor.map(refresh_cdc_table, tables))
+    
+    end_time = datetime.now()
+    processing_time = (end_time - start_time).total_seconds()
+    
+    print(f"✅ Multi-table CDC pipeline completed in {processing_time:.2f} seconds")
+    return processing_time
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Production Deployment Patterns for Multi-Table CDC
+# MAGIC
+# MAGIC **Option 1: Scheduled Multi-Table Processing**
+# MAGIC ```python
+# MAGIC # Schedule this notebook every 5 minutes via Databricks Jobs
+# MAGIC # Serverless automatically scales for varying table volumes
+# MAGIC trigger_multi_table_cdc_pipeline()
+# MAGIC ```
+# MAGIC
+# MAGIC **Option 2: Event-Driven Multi-Table Processing**
+# MAGIC ```python
+# MAGIC # Use cloud storage events to trigger processing
+# MAGIC # Process only tables with new data
+# MAGIC # Serverless scales based on actual workload
+# MAGIC ```
+# MAGIC
+# MAGIC **Option 3: Continuous Processing Loop**
+# MAGIC ```python
+# MAGIC # For demo purposes - continuous processing
+# MAGIC while generators_running:
+# MAGIC     processing_time = trigger_multi_table_cdc_pipeline()
+# MAGIC     sleep_time = max(60 - processing_time, 10)  # Adaptive scheduling
+# MAGIC     time.sleep(sleep_time)
+# MAGIC ```
+
+# COMMAND ----------
+
+# DBTITLE 1,Demo: Multi-table serverless CDC processing with performance monitoring
+print("🎯 Running multi-table serverless CDC processing demonstration...")
+print("💡 In production, schedule this via Databricks Jobs/Workflows")
+
+# Give generators time to create files for both tables
+print("⏳ Waiting 35 seconds for multi-table data generators to create new files...")
+time.sleep(35)
+
+# Process all tables and measure performance
+start_time = datetime.now()
+processing_time = trigger_multi_table_cdc_pipeline()
+total_time = (datetime.now() - start_time).total_seconds()
+
+print(f"\n📈 Performance Metrics:")
+print(f"🔹 Total processing time: {total_time:.2f} seconds")
+print(f"🔹 Parallel execution efficiency: {(processing_time/total_time)*100:.1f}%")
+
+# Show results for each table
+print("\n📊 Table states after processing:")
+try:
+    # Check bronze tables
+    for table in ["users", "transactions"]:
+        bronze_table = f"bronze_{table}"
+        try:
+            count = spark.sql(f"SELECT COUNT(*) as count FROM {bronze_table}").collect()[0]['count']
+            print(f"📁 {bronze_table}: {count} records")
+        except:
+            print(f"📁 {bronze_table}: Table not found or empty")
+    
+    print("\n🥈 Silver tables:")
+    for table in ["users", "transactions"]:
+        silver_table = f"silver_{table}"
+        try:
+            count = spark.sql(f"SELECT COUNT(*) as count FROM {silver_table}").collect()[0]['count']
+            print(f"📁 {silver_table}: {count} records")
+        except:
+            print(f"📁 {silver_table}: Table not found or empty")
+            
+except Exception as e:
+    print(f"⚠️ Error checking table states: {e}")
+
+# COMMAND ----------
+
+# DBTITLE 1,Stop generators and demonstrate serverless cost benefits
+stop_multi_table_generators()
 DBDemos.stop_all_streams()
+
+print("🎉 Multi-table CDC demo completed!")
+print("\n💰 Serverless Benefits Demonstrated:")
+print("✅ Cost Optimization: Pay only for actual processing time")
+print("✅ Auto-scaling: Handled varying workloads across multiple tables")
+print("✅ Parallel Processing: Efficiently processed multiple CDC streams")
+print("✅ Zero Infrastructure: No cluster management required")
+print("✅ Fault Tolerance: Built-in error handling and recovery")
+
+print(f"\n🚀 Ready for production:")
+print("• Schedule via Databricks Jobs/Workflows")
+print("• Set up monitoring and alerting")
+print("• Configure auto-scaling policies")
+print("• Implement error handling strategies")

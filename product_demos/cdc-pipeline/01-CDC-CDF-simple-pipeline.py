@@ -78,6 +78,125 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Continuous CDC Data Simulation for Serverless Demo
+# MAGIC
+# MAGIC To demonstrate how serverless compute handles continuous CDC data ingestion, we'll create a data generator that simulates incoming CDC events every 30 seconds.
+# MAGIC
+# MAGIC This allows us to:
+# MAGIC - Show serverless auto-scaling capabilities
+# MAGIC - Demonstrate cost-effective processing with `availableNow` triggers
+# MAGIC - Simulate real-world continuous CDC scenarios
+
+# COMMAND ----------
+
+# DBTITLE 1,CDC Data Generator - Simulates continuous data arrival every 30 seconds
+import threading
+import time
+import random
+from datetime import datetime
+import pandas as pd
+
+# Global variable to control the data generator
+generator_running = False
+
+def generate_cdc_record(operation_type="UPDATE", user_id=None):
+    """Generate a single CDC record"""
+    if user_id is None:
+        user_id = random.randint(1, 1000)
+    
+    operations = {
+        "INSERT": {
+            "id": user_id,
+            "name": f"User_{user_id}_{random.randint(1,99)}",
+            "address": f"Address_{random.randint(1,999)} Street",
+            "email": f"user{user_id}@company{random.randint(1,10)}.com",
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "INSERT"
+        },
+        "UPDATE": {
+            "id": user_id,
+            "name": f"Updated_User_{user_id}",
+            "address": f"New_Address_{random.randint(1,999)} Avenue",
+            "email": f"updated.user{user_id}@newcompany{random.randint(1,5)}.com",
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "UPDATE"
+        },
+        "DELETE": {
+            "id": user_id,
+            "name": None,
+            "address": None,
+            "email": None,
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "DELETE"
+        }
+    }
+    return operations[operation_type]
+
+def continuous_cdc_generator():
+    """Background function that generates CDC data every 30 seconds"""
+    global generator_running
+    file_counter = 0
+    
+    while generator_running:
+        try:
+            # Generate 3-5 random CDC events
+            num_events = random.randint(3, 5)
+            cdc_events = []
+            
+            for _ in range(num_events):
+                # Random operation type with weighted probability
+                operation = random.choices(
+                    ["INSERT", "UPDATE", "DELETE"], 
+                    weights=[50, 40, 10]  # More inserts/updates than deletes
+                )[0]
+                cdc_events.append(generate_cdc_record(operation))
+            
+            # Create DataFrame and save as CSV
+            df = pd.DataFrame(cdc_events)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"cdc_events_{timestamp}_{file_counter}.csv"
+            file_path = f"{raw_data_location}/user_csv/{filename}"
+            
+            # Convert to Spark DataFrame and save
+            spark_df = spark.createDataFrame(df)
+            spark_df.coalesce(1).write.mode("overwrite").option("header", "true").csv(file_path)
+            
+            print(f"Generated {num_events} CDC events at {datetime.now()}: {filename}")
+            file_counter += 1
+            
+            # Wait 30 seconds before next batch
+            time.sleep(30)
+            
+        except Exception as e:
+            print(f"Error in CDC generator: {e}")
+            time.sleep(30)  # Continue even if there's an error
+
+def start_cdc_generator():
+    """Start the CDC data generator in background"""
+    global generator_running
+    if not generator_running:
+        generator_running = True
+        generator_thread = threading.Thread(target=continuous_cdc_generator, daemon=True)
+        generator_thread.start()
+        print("🚀 CDC Data Generator started! New data will arrive every 30 seconds.")
+        print("💡 This simulates continuous CDC events for serverless processing demonstration.")
+        return generator_thread
+    else:
+        print("CDC Generator is already running!")
+        return None
+
+def stop_cdc_generator():
+    """Stop the CDC data generator"""
+    global generator_running
+    generator_running = False
+    print("🛑 CDC Data Generator stopped.")
+
+# Start the data generator for continuous simulation
+data_generator_thread = start_cdc_generator()
+
+# COMMAND ----------
+
 # DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
 bronzeDF = (spark.readStream
                 .format("cloudFiles")
@@ -351,5 +470,125 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,Make sure we stop all actives streams
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Continuous Serverless CDC Processing
+# MAGIC
+# MAGIC With the data generator running, you can now demonstrate continuous serverless CDC processing. Here's how to set up a production-like continuous pipeline:
+
+# COMMAND ----------
+
+# DBTITLE 1,Function to trigger all streams with serverless compute
+def trigger_cdc_pipeline():
+    """
+    Trigger all CDC streams to process new data with serverless compute.
+    This function can be called periodically (every minute, 5 minutes, etc.)
+    """
+    print(f"🔄 Triggering CDC pipeline at {datetime.now()}")
+    
+    # Stop any existing streams first
+    DBDemos.stop_all_streams()
+    time.sleep(5)
+    
+    # Restart bronze layer (Auto Loader)
+    bronzeDF = (spark.readStream
+                    .format("cloudFiles")
+                    .option("cloudFiles.format", "csv")
+                    .option("cloudFiles.inferColumnTypes", "true")
+                    .option("cloudFiles.schemaLocation",  raw_data_location+"/stream/schema_cdc_raw")
+                    .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
+                    .option("cloudFiles.useNotifications", "false")
+                    .option("cloudFiles.includeExistingFiles", "true")
+                    .load(raw_data_location+'/user_csv'))
+
+    (bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
+            .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
+            .trigger(availableNow=True)
+            .table("clients_cdc")
+            .awaitTermination())
+    
+    # Restart silver layer (MERGE operations)
+    (spark.readStream
+           .table("clients_cdc")
+         .writeStream
+           .foreachBatch(merge_stream)
+           .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
+           .trigger(availableNow=True)
+         .start()
+         .awaitTermination())
+    
+    # Restart gold layer (CDF processing)
+    (spark.readStream
+           .option("readChangeFeed", "true")
+           .option("startingVersion", 1)
+           .table("retail_client_silver")
+           .withColumn("gold_data", lit("Delta CDF is Awesome"))
+          .writeStream
+            .foreachBatch(upsertToDelta)
+            .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
+            .trigger(availableNow=True)
+          .start()
+          .awaitTermination())
+    
+    print("✅ CDC pipeline completed processing available data")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Production Deployment Options
+# MAGIC
+# MAGIC **Option 1: Scheduled Databricks Job**
+# MAGIC ```python
+# MAGIC # Schedule this notebook to run every 5 minutes using Databricks Jobs
+# MAGIC # The data generator creates new files every 30 seconds
+# MAGIC # Serverless compute will auto-scale and process all available data
+# MAGIC trigger_cdc_pipeline()
+# MAGIC ```
+# MAGIC
+# MAGIC **Option 2: Continuous Loop (for demo purposes)**
+# MAGIC ```python
+# MAGIC # Run continuous processing loop
+# MAGIC while generator_running:
+# MAGIC     trigger_cdc_pipeline()
+# MAGIC     time.sleep(60)  # Process every minute
+# MAGIC ```
+# MAGIC
+# MAGIC **Option 3: Event-Driven Processing**
+# MAGIC - Use cloud storage notifications
+# MAGIC - Trigger via REST API
+# MAGIC - Integrate with orchestration tools (Airflow, etc.)
+
+# COMMAND ----------
+
+# DBTITLE 1,Demo: Run one iteration of the serverless CDC pipeline
+print("🎯 Running one iteration of serverless CDC processing...")
+print("💡 In production, schedule this via Databricks Jobs every few minutes")
+
+# Give the data generator time to create some files
+print("⏳ Waiting 35 seconds for data generator to create new files...")
+time.sleep(35)
+
+# Process any new data
+trigger_cdc_pipeline()
+
+# Show results
+print("\n📊 Current table states after processing:")
+print("Bronze table:")
+display(spark.sql("SELECT COUNT(*) as bronze_count FROM clients_cdc"))
+print("Silver table:")
+display(spark.sql("SELECT COUNT(*) as silver_count FROM retail_client_silver ORDER BY id DESC LIMIT 10"))
+print("Gold table:")
+display(spark.sql("SELECT COUNT(*) as gold_count FROM retail_client_gold ORDER BY id DESC LIMIT 10"))
+
+# COMMAND ----------
+
+# DBTITLE 1,Stop the data generator and cleanup streams
+stop_cdc_generator()
 DBDemos.stop_all_streams()
+
+print("🎉 Demo completed! You've seen how serverless compute handles continuous CDC processing:")
+print("✅ Cost-effective: Pay only for actual processing time")
+print("✅ Auto-scaling: Automatically scales based on data volume") 
+print("✅ Simplified ops: No cluster management required")
+print("✅ Reliable: Built-in fault tolerance and automatic restarts")

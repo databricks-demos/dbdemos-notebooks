@@ -75,7 +75,7 @@ display(dbutils.fs.ls(base_folder))
 # MAGIC %md
 # MAGIC ## Multi-Table CDC Data Simulation for Serverless Demo
 # MAGIC
-# MAGIC To demonstrate serverless processing of multiple CDC streams simultaneously, we'll create data generators for multiple tables that simulate incoming CDC events every 30 seconds.
+# MAGIC To demonstrate serverless processing of multiple CDC streams simultaneously, we'll create data generators for multiple tables that simulate incoming CDC events every 120 seconds.
 # MAGIC
 # MAGIC This showcases:
 # MAGIC - Parallel processing of multiple CDC streams with serverless compute
@@ -84,7 +84,7 @@ display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
 
-# DBTITLE 1,Multi-Table CDC Data Generator - Simulates continuous data for users and transactions
+# DBTITLE 1,Multi-Table CDC Data Generator - Simulates continuous data every 120 seconds
 import threading
 import time
 import random
@@ -166,7 +166,7 @@ def generate_transaction_cdc_record(operation_type="INSERT", transaction_id=None
     return operations[operation_type]
 
 def continuous_multi_table_generator():
-    """Background function that generates CDC data for multiple tables every 30 seconds"""
+    """Background function that generates CDC data for multiple tables every 120 seconds"""
     global generators_running
     file_counter = 0
     
@@ -216,12 +216,12 @@ def continuous_multi_table_generator():
             
             file_counter += 1
             
-            # Wait 30 seconds before next batch
-            time.sleep(30)
+            # Wait 120 seconds before next batch
+            time.sleep(120)
             
         except Exception as e:
             print(f"Error in multi-table CDC generator: {e}")
-            time.sleep(30)
+            time.sleep(120)
 
 def start_multi_table_generators():
     """Start the multi-table CDC data generators in background"""
@@ -231,7 +231,7 @@ def start_multi_table_generators():
         generator_thread = threading.Thread(target=continuous_multi_table_generator, daemon=True)
         generator_thread.start()
         print("🚀 Multi-Table CDC Data Generators started!")
-        print("📊 Users and Transactions CDC events will arrive every 30 seconds.")
+        print("📊 Users and Transactions CDC events will arrive every 120 seconds.")
         print("💡 This simulates continuous multi-table CDC for serverless processing demo.")
         return generator_thread
     else:
@@ -498,8 +498,8 @@ print("🎯 Running multi-table serverless CDC processing demonstration...")
 print("💡 In production, schedule this via Databricks Jobs/Workflows")
 
 # Give generators time to create files for both tables
-print("⏳ Waiting 35 seconds for multi-table data generators to create new files...")
-time.sleep(35)
+print("⏳ Waiting 125 seconds for multi-table data generators to create new files...")
+time.sleep(125)
 
 # Process all tables and measure performance
 start_time = datetime.now()
@@ -624,9 +624,9 @@ for iteration in range(1, 4):  # Monitor 3 iterations
     
     # Wait for next iteration (except on last one)
     if iteration < 3:
-        print(f"   ⏳ Waiting 40 seconds for more multi-table CDC data...")
+        print(f"   ⏳ Waiting 125 seconds for more multi-table CDC data...")
         print("   💰 Serverless compute: Zero cost during wait - only pay for processing!")
-        time.sleep(40)
+        time.sleep(125)
         
         # Process new data across all tables
         print(f"   🔄 Processing new multi-table data (Iteration {iteration + 1})...")

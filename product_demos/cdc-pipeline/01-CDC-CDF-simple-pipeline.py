@@ -81,7 +81,7 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 # MAGIC %md
 # MAGIC ## Continuous CDC Data Simulation for Serverless Demo
 # MAGIC
-# MAGIC To demonstrate how serverless compute handles continuous CDC data ingestion, we'll create a data generator that simulates incoming CDC events every 30 seconds.
+# MAGIC To demonstrate how serverless compute handles continuous CDC data ingestion, we'll create a data generator that simulates incoming CDC events every 120 seconds.
 # MAGIC
 # MAGIC This allows us to:
 # MAGIC - Show serverless auto-scaling capabilities
@@ -90,7 +90,7 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 
 # COMMAND ----------
 
-# DBTITLE 1,CDC Data Generator - Simulates continuous data arrival every 30 seconds
+# DBTITLE 1,CDC Data Generator - Simulates continuous data arrival every 120 seconds
 import threading
 import time
 import random
@@ -165,12 +165,12 @@ def continuous_cdc_generator():
             print(f"Generated {num_events} CDC events at {datetime.now()}: {filename}")
             file_counter += 1
             
-            # Wait 30 seconds before next batch
-            time.sleep(30)
+            # Wait 120 seconds before next batch
+            time.sleep(120)
             
         except Exception as e:
             print(f"Error in CDC generator: {e}")
-            time.sleep(30)  # Continue even if there's an error
+            time.sleep(120)  # Continue even if there's an error
 
 def start_cdc_generator():
     """Start the CDC data generator in background"""
@@ -179,7 +179,7 @@ def start_cdc_generator():
         generator_running = True
         generator_thread = threading.Thread(target=continuous_cdc_generator, daemon=True)
         generator_thread.start()
-        print("🚀 CDC Data Generator started! New data will arrive every 30 seconds.")
+        print("🚀 CDC Data Generator started! New data will arrive every 120 seconds.")
         print("💡 This simulates continuous CDC events for serverless processing demonstration.")
         return generator_thread
     else:
@@ -541,7 +541,7 @@ def trigger_cdc_pipeline():
 # MAGIC **Option 1: Scheduled Databricks Job**
 # MAGIC ```python
 # MAGIC # Schedule this notebook to run every 5 minutes using Databricks Jobs
-# MAGIC # The data generator creates new files every 30 seconds
+# MAGIC # The data generator creates new files every 120 seconds
 # MAGIC # Serverless compute will auto-scale and process all available data
 # MAGIC trigger_cdc_pipeline()
 # MAGIC ```
@@ -566,8 +566,8 @@ print("🎯 Running one iteration of serverless CDC processing...")
 print("💡 In production, schedule this via Databricks Jobs every few minutes")
 
 # Give the data generator time to create some files
-print("⏳ Waiting 35 seconds for data generator to create new files...")
-time.sleep(35)
+print("⏳ Waiting 125 seconds for data generator to create new files...")
+time.sleep(125)
 
 # Process any new data
 trigger_cdc_pipeline()
@@ -644,9 +644,9 @@ for iteration in range(1, 4):  # Monitor 3 iterations
     
     # Wait for next iteration (except on last one)
     if iteration < 3:
-        print(f"   ⏳ Waiting 40 seconds for more CDC data...")
+        print(f"   ⏳ Waiting 125 seconds for more CDC data...")
         print("   💰 Serverless compute: No costs during wait time!")
-        time.sleep(40)
+        time.sleep(125)
         
         # Process new data
         print(f"   🔄 Processing new data (Iteration {iteration + 1})...")

@@ -264,6 +264,14 @@ dbutils.fs.rm(f"{raw_data_location}/cdc_full", True)
 # Stream using Auto Loader to ingest raw files and load them into Delta tables with serverless compute
 def update_bronze_layer(path, bronze_table):
   print(f"Ingesting RAW CDC data for {bronze_table} and building bronze layer with serverless...")
+  
+  # Drop existing table if it exists to avoid schema conflicts
+  try:
+    spark.sql(f"DROP TABLE IF EXISTS {bronze_table}")
+    print(f"🔄 Dropped existing {bronze_table} table to avoid schema conflicts")
+  except:
+    pass
+  
   (spark.readStream
           .format("cloudFiles")
           .option("cloudFiles.format", "csv")
@@ -278,7 +286,7 @@ def update_bronze_layer(path, bronze_table):
        .withColumn("processing_time", current_timestamp())  # Track when processed
        .writeStream
           .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{bronze_table}")
-          .option("mergeSchema", "true")
+          .option("mergeSchema", "true")  # Enable schema evolution for new columns
           .trigger(availableNow=True)  # Process only new data since last checkpoint
           .table(bronze_table).awaitTermination())
 
@@ -326,6 +334,7 @@ def update_silver_layer(bronze_table, silver_table):
        .writeStream
          .foreachBatch(merge_stream)
          .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{silver_table}")
+         .option("mergeSchema", "true")  # Enable schema evolution for silver layer
          .trigger(availableNow=True)  # Process only new data since last checkpoint
          .start().awaitTermination())
 
@@ -454,6 +463,9 @@ def trigger_multi_table_cdc_pipeline():
     This processes all tables in parallel for maximum efficiency.
     """
     print(f"🔄 Triggering multi-table CDC pipeline at {datetime.now()}")
+    
+    # Enable automatic schema merging for MERGE operations across all tables
+    spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
     
     # Get all table folders
     tables = [table_path.name[:-1] for table_path in dbutils.fs.ls(base_folder)]

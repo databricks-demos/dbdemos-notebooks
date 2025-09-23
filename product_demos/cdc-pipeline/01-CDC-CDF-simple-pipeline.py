@@ -32,6 +32,14 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Configure Schema Evolution for CDC Processing
+# Enable automatic schema merging for all Delta operations to handle schema changes
+spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+spark.conf.set("spark.sql.streaming.schemaInference", "true")
+print("✅ Schema evolution enabled for seamless CDC processing")
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/delta_cdf.png" alt='Delta Lake Change Data Feed'/>
 
@@ -198,6 +206,13 @@ data_generator_thread = start_cdc_generator()
 # COMMAND ----------
 
 # DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
+# Drop existing table if it exists to avoid schema conflicts
+try:
+    spark.sql("DROP TABLE IF EXISTS clients_cdc")
+    print("🔄 Dropped existing clients_cdc table to avoid schema conflicts")
+except:
+    pass
+
 bronzeDF = (spark.readStream
                 .format("cloudFiles")
                 .option("cloudFiles.format", "csv")
@@ -208,8 +223,11 @@ bronzeDF = (spark.readStream
                 .option("cloudFiles.includeExistingFiles", "true")  # Process all files on first run
                 .load(raw_data_location+'/user_csv'))
 
-(bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
+(bronzeDF.withColumn("file_name", col("_metadata.file_path"))
+        .withColumn("processing_time", current_timestamp())  # Add processing timestamp
+        .writeStream
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
+        .option("mergeSchema", "true")  # Enable schema evolution
         .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
         .table("clients_cdc"))
 
@@ -277,6 +295,7 @@ def merge_stream(df, i):
      .writeStream
        .foreachBatch(merge_stream)
        .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
+       .option("mergeSchema", "true")  # Enable schema evolution for silver layer
        .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
      .start())
 
@@ -429,6 +448,7 @@ def upsertToDelta(data, batchId):
       .writeStream
         .foreachBatch(upsertToDelta)
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
+        .option("mergeSchema", "true")  # Enable schema evolution for gold layer
         .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
       .start())
 
@@ -494,11 +514,15 @@ def trigger_cdc_pipeline():
     """
     print(f"🔄 Triggering CDC pipeline at {datetime.now()}")
     
+    # Enable automatic schema merging for MERGE operations
+    spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+    
     # Stop any existing streams first
     DBDemos.stop_all_streams()
     time.sleep(5)
     
     # Restart bronze layer (Auto Loader) - only process new files since last checkpoint
+    print("   🔄 Processing new files for bronze layer...")
     bronzeDF = (spark.readStream
                     .format("cloudFiles")
                     .option("cloudFiles.format", "csv")
@@ -514,6 +538,7 @@ def trigger_cdc_pipeline():
             .withColumn("processing_time", current_timestamp())  # Track when processed
             .writeStream
             .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
+            .option("mergeSchema", "true")  # Enable schema evolution for new columns
             .trigger(availableNow=True)  # Process only available new data
             .table("clients_cdc")
             .awaitTermination())
@@ -525,6 +550,7 @@ def trigger_cdc_pipeline():
          .writeStream
            .foreachBatch(merge_stream)
            .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
+           .option("mergeSchema", "true")  # Enable schema evolution for silver layer
            .trigger(availableNow=True)  # Process only new CDC records since last checkpoint
          .start()
          .awaitTermination())
@@ -540,6 +566,7 @@ def trigger_cdc_pipeline():
           .writeStream
             .foreachBatch(upsertToDelta)
             .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
+            .option("mergeSchema", "true")  # Enable schema evolution for gold layer
             .trigger(availableNow=True)  # Process only new changes since last checkpoint
           .start()
           .awaitTermination())

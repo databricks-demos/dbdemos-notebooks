@@ -271,13 +271,15 @@ def update_bronze_layer(path, bronze_table):
           .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
           .option("cloudFiles.inferColumnTypes", "true")
           .option("cloudFiles.useNotifications", "false")  # Optimized for serverless
-          .option("cloudFiles.includeExistingFiles", "true")  # Process all files on first run
+          .option("cloudFiles.includeExistingFiles", "false")  # Only new files after checkpoint
+          .option("cloudFiles.maxFilesPerTrigger", "10")  # Process in batches for efficiency
           .load(path)
        .withColumn("file_name", col("_metadata.file_path"))
+       .withColumn("processing_time", current_timestamp())  # Track when processed
        .writeStream
           .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{bronze_table}")
           .option("mergeSchema", "true")
-          .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
+          .trigger(availableNow=True)  # Process only new data since last checkpoint
           .table(bronze_table).awaitTermination())
 
 # COMMAND ----------
@@ -318,12 +320,13 @@ def update_silver_layer(bronze_table, silver_table):
         .whenNotMatchedInsert("updates.operation != 'DELETE'", values=columns_to_update) \
         .execute()
     
+  print(f"Processing new CDC records for {silver_table}...")
   (spark.readStream
          .table(bronze_table)
        .writeStream
          .foreachBatch(merge_stream)
          .option("checkpointLocation", f"{raw_data_location}/cdc_full/checkpoints/{silver_table}")
-         .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
+         .trigger(availableNow=True)  # Process only new data since last checkpoint
          .start().awaitTermination())
 
 # COMMAND ----------
@@ -337,6 +340,7 @@ def update_silver_layer(bronze_table, silver_table):
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 from delta.tables import *
+from pyspark.sql.functions import current_timestamp
  
 def refresh_cdc_table(table):
   """
@@ -430,9 +434,16 @@ with ThreadPoolExecutor(max_workers=max_parallel_tables) as executor:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Continuous Multi-Table Serverless CDC Processing
+# MAGIC ## Continuous Multi-Table Serverless CDC Processing with Incremental Processing
 # MAGIC
-# MAGIC With multiple data generators running, we can demonstrate how serverless compute handles continuous multi-table CDC processing efficiently and cost-effectively.
+# MAGIC With multiple data generators running, we can demonstrate how serverless compute handles continuous multi-table CDC processing efficiently and cost-effectively. The pipeline processes **only newly arrived data** across all tables.
+# MAGIC
+# MAGIC **Multi-Table Incremental Processing:**
+# MAGIC - ✅ **Per-Table Checkpoints**: Each table tracks its own processing progress
+# MAGIC - ✅ **Parallel Incremental Processing**: Multiple tables process only new data simultaneously
+# MAGIC - ✅ **Independent Scaling**: Each table scales based on its own data volume
+# MAGIC - ✅ **No Cross-Table Reprocessing**: Changes in one table don't affect others
+# MAGIC - ✅ **Efficient Resource Usage**: Pay only for actual new data processing
 
 # COMMAND ----------
 

@@ -134,7 +134,7 @@ def generate_cdc_record(operation_type="UPDATE", user_id=None):
     return operations[operation_type]
 
 def continuous_cdc_generator():
-    """Background function that generates CDC data every 30 seconds"""
+    """Background function that generates CDC data every 120 seconds"""
     global generator_running
     file_counter = 0
     
@@ -399,7 +399,7 @@ display(changes)
 # COMMAND ----------
 
 from pyspark.sql.window import Window
-from pyspark.sql.functions import dense_rank, regexp_replace, lit, col
+from pyspark.sql.functions import dense_rank, regexp_replace, lit, col, current_timestamp
 
 #Function to upsert `microBatchOutputDF` into Delta table using MERGE
 def upsertToDelta(data, batchId):
@@ -473,9 +473,16 @@ time.sleep(20)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Continuous Serverless CDC Processing
+# MAGIC ## Continuous Serverless CDC Processing with Incremental Data Processing
 # MAGIC
-# MAGIC With the data generator running, you can now demonstrate continuous serverless CDC processing. Here's how to set up a production-like continuous pipeline:
+# MAGIC With the data generator running, you can now demonstrate continuous serverless CDC processing. The pipeline is designed to process **only newly arrived data** using checkpoints and streaming offsets.
+# MAGIC
+# MAGIC **Key Incremental Processing Features:**
+# MAGIC - ✅ **Auto Loader Checkpoints**: Only new files since last processing
+# MAGIC - ✅ **Streaming Offsets**: Only new CDC records since last checkpoint  
+# MAGIC - ✅ **Change Data Feed**: Only new changes since last processed version
+# MAGIC - ✅ **Efficient Processing**: No reprocessing of historical data
+# MAGIC - ✅ **Cost Optimization**: Pay only for new data processing
 
 # COMMAND ----------
 
@@ -491,7 +498,7 @@ def trigger_cdc_pipeline():
     DBDemos.stop_all_streams()
     time.sleep(5)
     
-    # Restart bronze layer (Auto Loader)
+    # Restart bronze layer (Auto Loader) - only process new files since last checkpoint
     bronzeDF = (spark.readStream
                     .format("cloudFiles")
                     .option("cloudFiles.format", "csv")
@@ -499,35 +506,41 @@ def trigger_cdc_pipeline():
                     .option("cloudFiles.schemaLocation",  raw_data_location+"/stream/schema_cdc_raw")
                     .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
                     .option("cloudFiles.useNotifications", "false")
-                    .option("cloudFiles.includeExistingFiles", "true")
+                    .option("cloudFiles.includeExistingFiles", "false")  # Only new files after checkpoint
+                    .option("cloudFiles.maxFilesPerTrigger", "10")  # Process in batches for efficiency
                     .load(raw_data_location+'/user_csv'))
 
-    (bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
+    (bronzeDF.withColumn("file_name", col("_metadata.file_path"))
+            .withColumn("processing_time", current_timestamp())  # Track when processed
+            .writeStream
             .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
-            .trigger(availableNow=True)
+            .trigger(availableNow=True)  # Process only available new data
             .table("clients_cdc")
             .awaitTermination())
     
-    # Restart silver layer (MERGE operations)
+    # Restart silver layer (MERGE operations) - only process new CDC records
+    print("   🔄 Processing new CDC records for silver layer...")
     (spark.readStream
            .table("clients_cdc")
          .writeStream
            .foreachBatch(merge_stream)
            .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
-           .trigger(availableNow=True)
+           .trigger(availableNow=True)  # Process only new CDC records since last checkpoint
          .start()
          .awaitTermination())
     
-    # Restart gold layer (CDF processing)
+    # Restart gold layer (CDF processing) - only process new changes since last checkpoint
+    print("   🔄 Processing new changes for gold layer using Change Data Feed...")
     (spark.readStream
            .option("readChangeFeed", "true")
-           .option("startingVersion", 1)
+           # No startingVersion specified - will automatically start from checkpoint
            .table("retail_client_silver")
            .withColumn("gold_data", lit("Delta CDF is Awesome"))
+           .withColumn("cdf_processing_time", current_timestamp())  # Track CDF processing time
           .writeStream
             .foreachBatch(upsertToDelta)
             .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
-            .trigger(availableNow=True)
+            .trigger(availableNow=True)  # Process only new changes since last checkpoint
           .start()
           .awaitTermination())
     

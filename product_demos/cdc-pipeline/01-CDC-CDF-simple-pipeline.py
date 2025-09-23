@@ -34,7 +34,7 @@
 
 # DBTITLE 1,Configure Schema Evolution for CDC Processing
 # Enable automatic schema merging for all Delta operations to handle schema changes
-spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+# Schema evolution is handled automatically by mergeSchema=true in writeStream operations
 spark.conf.set("spark.sql.streaming.schemaInference", "true")
 print("✅ Schema evolution enabled for seamless CDC processing")
 
@@ -515,7 +515,7 @@ def trigger_cdc_pipeline():
     print(f"🔄 Triggering CDC pipeline at {datetime.now()}")
     
     # Enable automatic schema merging for MERGE operations
-    spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+    # Schema evolution is handled automatically by mergeSchema=true in writeStream operations
     
     # Stop any existing streams first
     DBDemos.stop_all_streams()

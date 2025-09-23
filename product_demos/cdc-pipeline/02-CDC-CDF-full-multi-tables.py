@@ -51,7 +51,7 @@
 # MAGIC **Schema evolution is handled automatically by**:
 # MAGIC - **Auto Loader**: Automatically detects and handles schema changes at the bronze layer
 # MAGIC - **Delta `mergeSchema` option**: Enables schema evolution during writes
-# MAGIC - **`spark.databricks.delta.schema.autoMerge.enabled`**: Supports schema evolution for MERGE operations (Silver layer)
+# MAGIC - **`mergeSchema=true` option**: Supports schema evolution for MERGE operations (Silver layer)
 # MAGIC
 # MAGIC **Serverless Benefits for Schema Evolution**:
 # MAGIC - Auto Loader with serverless handles schema inference efficiently
@@ -378,9 +378,10 @@ def refresh_cdc_table(table):
     # - Continuing with other tables vs stopping entire pipeline
     raise Exception(error_msg) from e
   
-# Enable Schema evolution during merges (to capture new columns)  
-# Uncomment the line below if you need automatic schema merging during MERGE operations
-# spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+# Schema evolution is handled automatically by:
+# - Auto Loader with mergeSchema=true option
+# - Delta table mergeSchema=true in writeStream operations
+# - No additional configuration needed for modern Databricks Runtime
 
 # Iterate over all table folders and process them in parallel using serverless compute
 tables = [table_path.name[:-1] for table_path in dbutils.fs.ls(base_folder)]
@@ -465,7 +466,7 @@ def trigger_multi_table_cdc_pipeline():
     print(f"🔄 Triggering multi-table CDC pipeline at {datetime.now()}")
     
     # Enable automatic schema merging for MERGE operations across all tables
-    spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
+    # Schema evolution is handled automatically by mergeSchema=true in writeStream operations
     
     # Get all table folders
     tables = [table_path.name[:-1] for table_path in dbutils.fs.ls(base_folder)]

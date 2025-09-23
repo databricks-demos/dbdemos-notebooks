@@ -12,6 +12,9 @@
 # MAGIC 3. **🥇 Step 3**: Create Silver layer with MERGE operations
 # MAGIC 4. **🚀 Step 4**: Implement Gold layer with Change Data Feed (CDF)
 # MAGIC 5. **📊 Step 5**: Monitor and optimize with serverless compute
+# MAGIC 6. **📊 Step 6**: Data sharing and Datamesh organization
+# MAGIC 7. **📊 Step 7**: Data ready for BI & ML use cases
+# MAGIC 8. **📊 Step 8**: Next steps and production deployment
 # MAGIC
 # MAGIC ### Progress Tracking:
 # MAGIC - ✅ **Step 1**: CDC data simulation setup
@@ -19,6 +22,9 @@
 # MAGIC - ⏳ **Step 3**: Silver layer implementation
 # MAGIC - ⏳ **Step 4**: Gold layer implementation
 # MAGIC - ⏳ **Step 5**: Monitoring and optimization
+# MAGIC - ⏳ **Step 6**: Data sharing and Datamesh
+# MAGIC - ⏳ **Step 7**: BI & ML readiness
+# MAGIC - ⏳ **Step 8**: Next steps and deployment
 # MAGIC
 # MAGIC ### Key Benefits of Serverless CDC:
 # MAGIC - 💰 **Cost-effective**: Pay only for compute time used
@@ -41,6 +47,11 @@
 # COMMAND ----------
 
 # MAGIC %run ./_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# DBTITLE 1,Import Required Functions
+from pyspark.sql.functions import current_timestamp, col
 
 # COMMAND ----------
 
@@ -228,7 +239,7 @@ data_generator_thread = start_cdc_generator()
 
 # COMMAND ----------
 
-# DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
+# DBTITLE 1,🥉 Step 1.4: Create Bronze Delta Table
 # Drop existing table if it exists to avoid schema conflicts
 try:
     spark.sql("DROP TABLE IF EXISTS clients_cdc")
@@ -305,7 +316,7 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,And run our MERGE statement the upsert the CDC information in our final table
+# DBTITLE 1,🥈 Step 2.2: Implement MERGE Operations
 #for each batch / incremental update from the raw cdc table, we'll run a MERGE on the silver table
 def merge_stream(df, i):
   df.createOrReplaceTempView("clients_cdc_microbatch")
@@ -341,12 +352,12 @@ time.sleep(20)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Testing the first CDC layer
+# MAGIC ### 🥈 Step 2.3: Test CDC Layer
 # MAGIC Let's send a new CDC entry to simulate an update and a DELETE for the ID 1 and 2
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's UPDATE id=1 and DELETE the row with id=2
+# DBTITLE 1,🥈 Step 2.4: Simulate CDC Operations
 # MAGIC %sql 
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
 # MAGIC             (1000, "Quentin", "Paris 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
@@ -360,7 +371,7 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,Wait a few seconds for the stream to catch the new entry in the CDC table and check the results in the main table
+# DBTITLE 1,🥈 Step 2.5: Verify CDC Processing Results
 # MAGIC %sql 
 # MAGIC select * from retail_client_silver where id in (1000, 2000);
 # MAGIC -- Note that ID 1000 has been updated, and ID 2000 is deleted
@@ -391,8 +402,8 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ### Working with Delta Lake CDF
+# MAGIC %md
+# MAGIC ### 🥇 Step 3.1: Working with Delta Lake CDF
 
 # COMMAND ----------
 
@@ -405,7 +416,8 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md #### Delta CDF table_changes output
+# MAGIC %md
+# MAGIC #### 🥇 Step 3.2: Delta CDF table_changes Output
 # MAGIC Table Changes provides back 4 cdc types in the "_change_type" column:
 # MAGIC
 # MAGIC | CDC Type             | Description                                                               |
@@ -419,7 +431,7 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,Getting the last modifications with the Python API
+# DBTITLE 1,🥇 Step 3.3: Get Modifications with Python API
 from delta.tables import *
 
 #Let's get the last table version to only see the last update mofications
@@ -447,7 +459,7 @@ display(changes)
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's create our final GOLD table: retail_client_gold
+# DBTITLE 1,🥇 Step 3.4: Create Gold Table
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING)
 # MAGIC   TBLPROPERTIES (
@@ -502,35 +514,6 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ### Support for data sharing and Datamesh organization
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/delta-cdf-datamesh.png" style="float:right; margin-right: 50px" width="300px" />
-# MAGIC
-# MAGIC As we've seen during this demo, you can track all the changes (INSERT/UPDATE/DELETE) from any Detlta table using the CDC option.
-# MAGIC
-# MAGIC It's then easy to subscribe the table modifications as an incremental process.
-# MAGIC
-# MAGIC This makes the Data Mesh implementation easy: each Mesh can publish a set of tables, and other meshes can subscribe the original changes.
-# MAGIC
-# MAGIC They are then in charge of propagating the changes (ex GDPR DELETE) to their own Data Mesh
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ## Data is now ready for BI & ML use-case !
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-4.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
-# MAGIC
-# MAGIC We now have our final table, updated based on the initial CDC information we receive.
-# MAGIC
-# MAGIC As next step, we can leverage Databricks Lakehouse platform to start creating SQL queries / dashboards or ML models
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Next step: [Implement a CDC pipeline for multiple tables]($./02-CDC-CDF-full-multi-tables)
-
-# COMMAND ----------
 
 # COMMAND ----------
 
@@ -548,7 +531,7 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,Function to trigger all streams with serverless compute
+# DBTITLE 1,🚀 Step 4.1: Serverless Pipeline Trigger Function
 def trigger_cdc_pipeline():
     """
     Trigger all CDC streams to process new data with serverless compute.
@@ -744,7 +727,7 @@ print("   🔹 Real-time CDC processing with delta architecture")
 
 # COMMAND ----------
 
-# DBTITLE 1,Stop the data generator and cleanup streams
+# DBTITLE 1,📊 Step 5.1: Cleanup and Stop Data Generator
 stop_cdc_generator()
 DBDemos.stop_all_streams()
 
@@ -753,3 +736,46 @@ print("✅ Cost-effective: Pay only for actual processing time")
 print("✅ Auto-scaling: Automatically scales based on data volume") 
 print("✅ Simplified ops: No cluster management required")
 print("✅ Reliable: Built-in fault tolerance and automatic restarts")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 📊 Step 6: Data Sharing and Datamesh Organization
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/delta-cdf-datamesh.png" style="float:right; margin-right: 50px" width="300px" />
+# MAGIC
+# MAGIC ### Key Benefits:
+# MAGIC - 🔄 **Change Tracking**: Track all INSERT/UPDATE/DELETE operations from any Delta table
+# MAGIC - 📡 **Incremental Processing**: Subscribe to table modifications as incremental processes
+# MAGIC - 🏗️ **Data Mesh Ready**: Each mesh can publish tables, others can subscribe to changes
+# MAGIC - 🛡️ **GDPR Compliance**: Propagate changes (e.g., GDPR DELETE) across data meshes
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 📊 Step 7: Data Ready for BI & ML Use Cases
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-4.png" alt='BI and ML Ready' style='float: right' width='600'/>
+# MAGIC
+# MAGIC ### What's Available:
+# MAGIC - 📊 **Business Intelligence**: Create SQL queries and dashboards
+# MAGIC - 🤖 **Machine Learning**: Build ML models on clean, up-to-date data
+# MAGIC - 🔄 **Real-time Analytics**: Access to latest data changes
+# MAGIC - 📈 **Data Quality**: Clean, deduplicated, and validated data
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 📊 Step 8: Next Steps
+# MAGIC
+# MAGIC ### Continue Your CDC Journey:
+# MAGIC - 🔗 **[Multi-Table CDC Pipeline]($./02-CDC-CDF-full-multi-tables)**: Scale to multiple tables
+# MAGIC - 🏗️ **[Delta Live Tables]($./dlt-cdc)**: Simplified CDC with `APPLY CHANGES`
+# MAGIC - 📚 **[Delta Lake Demo]($./delta-lake)**: Deep dive into Delta Lake features
+# MAGIC - 🚀 **[Auto Loader Demo]($./auto-loader)**: Advanced file ingestion patterns
+# MAGIC
+# MAGIC ### Production Deployment:
+# MAGIC - 📅 **Schedule Jobs**: Use Databricks Jobs for automated processing
+# MAGIC - 📊 **Monitor Performance**: Set up alerts and dashboards
+# MAGIC - 🔒 **Security**: Implement proper access controls and data governance
+# MAGIC - 💰 **Cost Optimization**: Monitor and optimize serverless compute usage

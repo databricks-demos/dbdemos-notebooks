@@ -1,20 +1,39 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC # Full demo: Change Data Capture on multiple tables with Serverless
-# MAGIC ## Use-case: Synchronize all your ELT tables with your Lakehouse using Serverless Compute
+# MAGIC # Multi-Table CDC Pipeline Demo: Change Data Capture with Serverless Compute
+# MAGIC ## Step-by-Step Guide to Building a Scalable Multi-Table CDC Pipeline
 # MAGIC
-# MAGIC We previously saw how to synchronize a single table. However, real use-cases typically include multiple tables that need to be ingested and synchronized.
+# MAGIC This demo shows you how to build a **multi-table Change Data Capture (CDC)** pipeline using **Databricks Serverless Compute** for cost-effective, auto-scaling data processing.
 # MAGIC
-# MAGIC These tables are stored in different folders having the following layout:
+# MAGIC ### What You'll Learn:
+# MAGIC 1. **🔄 Step 1**: Set up multi-table CDC data simulation
+# MAGIC 2. **🥉 Step 2**: Build parallel Bronze layers with Auto Loader
+# MAGIC 3. **🥈 Step 3**: Create parallel Silver layers with MERGE operations
+# MAGIC 4. **🚀 Step 4**: Monitor and optimize multi-table processing
+# MAGIC 5. **📊 Step 5**: Scale to production with serverless compute
 # MAGIC
-# MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-full.png">
+# MAGIC ### Progress Tracking:
+# MAGIC - ✅ **Step 1**: Multi-table CDC data simulation setup
+# MAGIC - ⏳ **Step 2**: Parallel Bronze layer implementation
+# MAGIC - ⏳ **Step 3**: Parallel Silver layer implementation
+# MAGIC - ⏳ **Step 4**: Multi-table processing monitoring
+# MAGIC - ⏳ **Step 5**: Production scaling and optimization
 # MAGIC
-# MAGIC **A note on Delta Live Tables**:<br/>
-# MAGIC *Delta Live Tables have been designed to simplify this process and handle concurrent execution properly, without requiring you to start multiple streams in parallel.*<br/>
-# MAGIC *We strongly recommend looking at the DLT CDC demo to simplify such pipeline implementation: `dbdemos.install('dlt-cdc')`*
+# MAGIC ### Key Benefits of Serverless Multi-Table CDC:
+# MAGIC - 💰 **Cost-effective**: Pay only for compute time used across all tables
+# MAGIC - 🚀 **Auto-scaling**: Automatically scales based on total workload
+# MAGIC - ⚡ **Parallel Processing**: Process multiple tables simultaneously
+# MAGIC - 🔄 **Incremental**: Only processes new/changed data per table
+# MAGIC - 📊 **Monitoring**: Track processing across all tables
 # MAGIC
-# MAGIC In this notebook, we'll see how this can be accomplished using **Serverless Compute** with Python & standard streaming APIs (without DLT) for cost-effective, auto-scaling processing.
+# MAGIC ### Prerequisites:
+# MAGIC - Completed the single-table CDC demo: `01-CDC-CDF-simple-pipeline.py`
+# MAGIC - Understanding of parallel processing concepts
+# MAGIC
+# MAGIC ---
+# MAGIC
+# MAGIC **💡 Alternative Approach**: For production multi-table CDC pipelines, consider using **Delta Live Tables** with `APPLY CHANGES` for simplified implementation: `dbdemos.install('dlt-cdc')`
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=02-CDC-CDF-full-multi-tables&demo_name=cdc-pipeline&event=VIEW">
@@ -26,65 +45,68 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Running streams in parallel with Serverless Compute
+# MAGIC ## 📋 Multi-Table CDC Pipeline Architecture Overview
 # MAGIC
-# MAGIC Each table will be saved as a distinct table, using a distinct Spark Structured Streaming stream.
+# MAGIC Here's the complete multi-table CDC pipeline we'll build using **Serverless Compute**:
 # MAGIC
-# MAGIC To implement an efficient pipeline, we process multiple streams in parallel using a ThreadPoolExecutor with multiple threads, each processing a stream.
+# MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-full.png">
 # MAGIC
-# MAGIC **Serverless Optimization**: We're using `availableNow=True` triggers to process all available data and then shut down automatically. This approach is ideal for:
-# MAGIC - **Cost efficiency**: Pay only for actual compute time used
-# MAGIC - **Auto-scaling**: Serverless automatically scales resources based on workload
-# MAGIC - **Batch processing**: Process all available data efficiently without continuous resource usage
+# MAGIC ### Pipeline Flow:
+# MAGIC 1. **📥 Data Sources**: Multiple CDC streams from different tables
+# MAGIC 2. **🥉 Bronze Layers**: Parallel raw data ingestion with Auto Loader
+# MAGIC 3. **🥈 Silver Layers**: Parallel data cleaning and deduplication
+# MAGIC 4. **📊 Analytics**: Real-time insights across all tables
 # MAGIC
-# MAGIC For scheduled processing (e.g., hourly), you can trigger this notebook via Databricks Jobs or Workflows.
+# MAGIC ### Key Serverless Benefits:
+# MAGIC - 💰 **Cost Efficiency**: Pay only for actual compute time used
+# MAGIC - 🚀 **Auto-scaling**: Serverless automatically scales resources based on workload
+# MAGIC - ⚡ **Parallel Processing**: Process multiple tables simultaneously
+# MAGIC - 🔄 **Batch Processing**: Process all available data efficiently without continuous resource usage
 # MAGIC
-# MAGIC *Note: The exact number of parallel streams depends on your table count, data volumes, and desired processing time. Serverless compute handles resource scaling automatically.*
+# MAGIC **💡 Note**: For scheduled processing (e.g., hourly), trigger this notebook via Databricks Jobs or Workflows.
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Schema evolution with Serverless
+# MAGIC %md
+# MAGIC ## 🔄 Step 1: Schema Evolution with Serverless Compute
 # MAGIC
-# MAGIC By organizing the raw incoming CDC files with one folder per table, we can easily iterate over folders and pick up new tables without modification.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Handle schema changes across multiple tables automatically
+# MAGIC - **Technology**: Auto Loader with serverless compute
+# MAGIC - **Benefits**: Zero-downtime schema evolution
 # MAGIC
-# MAGIC **Schema evolution is handled automatically by**:
-# MAGIC - **Auto Loader**: Automatically detects and handles schema changes at the bronze layer
-# MAGIC - **Delta `mergeSchema` option**: Enables schema evolution during writes
-# MAGIC - **`mergeSchema=true` option**: Supports schema evolution for MERGE operations (Silver layer)
+# MAGIC ### Key Features:
+# MAGIC - 🔄 **Auto Loader**: Automatically detects and handles schema changes at the bronze layer
+# MAGIC - 📊 **Delta `mergeSchema`**: Enables schema evolution during writes
+# MAGIC - 🚀 **Serverless**: No cluster configuration required for schema evolution
+# MAGIC - ⚡ **Auto Recovery**: Automatic recovery from schema change events
 # MAGIC
-# MAGIC **Serverless Benefits for Schema Evolution**:
-# MAGIC - Auto Loader with serverless handles schema inference efficiently
-# MAGIC - No cluster configuration required for schema evolution
-# MAGIC - Automatic recovery from schema change events
-# MAGIC
-# MAGIC Using these options, we'll capture new tables and table schema evolution without code changes.
-# MAGIC
-# MAGIC *Note: Auto Loader may pause a stream if a schema change occurs and will automatically recover during the next trigger. This works perfectly with serverless `availableNow` triggers.*
-# MAGIC
-# MAGIC *Alternative pattern: Redirect all CDC events to a single message queue (with table name as message attribute), then dispatch messages to different Silver tables.*
+# MAGIC **💡 Note**: Auto Loader may pause a stream if a schema change occurs and will automatically recover during the next trigger. This works perfectly with serverless `availableNow` triggers.
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's explore our raw cdc data. We have 2 tables we want to sync (transactions and users)
+# DBTITLE 1,📊 Step 1.1: Explore Multi-Table CDC Data Structure
+print("🔍 Exploring our multi-table CDC data structure...")
+print("We have 2 tables we want to sync: transactions and users")
 base_folder = f"{raw_data_location}/cdc"
 display(dbutils.fs.ls(base_folder))
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Multi-Table CDC Data Simulation for Serverless Demo
+# MAGIC ## 🎯 Step 1.2: Set Up Multi-Table CDC Data Simulation
 # MAGIC
-# MAGIC To demonstrate serverless processing of multiple CDC streams simultaneously, we'll create data generators for multiple tables that simulate incoming CDC events every 120 seconds.
+# MAGIC To demonstrate serverless processing of multiple CDC streams simultaneously, we'll create data generators for multiple tables that simulate incoming CDC events every 60 seconds.
 # MAGIC
-# MAGIC This showcases:
-# MAGIC - Parallel processing of multiple CDC streams with serverless compute
-# MAGIC - Cost-effective auto-scaling for varying workloads
-# MAGIC - Real-world multi-table CDC scenarios
+# MAGIC ### Why This Matters:
+# MAGIC - 🚀 **Parallel Processing**: Shows how serverless handles multiple streams simultaneously
+# MAGIC - 💰 **Cost Efficiency**: Demonstrates auto-scaling for varying workloads
+# MAGIC - 🔄 **Real-world Simulation**: Mimics multi-table CDC scenarios
+# MAGIC - 📊 **Monitoring**: Enables cross-table processing visualization
 
 # COMMAND ----------
 
-# DBTITLE 1,Multi-Table CDC Data Generator - Simulates continuous data every 120 seconds
+# DBTITLE 1,🎯 Step 1.2: Multi-Table CDC Data Generator Implementation
 import threading
 import time
 import random
@@ -166,7 +188,7 @@ def generate_transaction_cdc_record(operation_type="INSERT", transaction_id=None
     return operations[operation_type]
 
 def continuous_multi_table_generator():
-    """Background function that generates CDC data for multiple tables every 120 seconds"""
+    """Background function that generates CDC data for multiple tables every 60 seconds"""
     global generators_running
     file_counter = 0
     
@@ -216,12 +238,12 @@ def continuous_multi_table_generator():
             
             file_counter += 1
             
-            # Wait 120 seconds before next batch
-            time.sleep(120)
+            # Wait 60 seconds before next batch
+            time.sleep(60)
             
         except Exception as e:
             print(f"Error in multi-table CDC generator: {e}")
-            time.sleep(120)
+            time.sleep(60)
 
 def start_multi_table_generators():
     """Start the multi-table CDC data generators in background"""
@@ -231,7 +253,7 @@ def start_multi_table_generators():
         generator_thread = threading.Thread(target=continuous_multi_table_generator, daemon=True)
         generator_thread.start()
         print("🚀 Multi-Table CDC Data Generators started!")
-        print("📊 Users and Transactions CDC events will arrive every 120 seconds.")
+        print("📊 Users and Transactions CDC events will arrive every 60 seconds.")
         print("💡 This simulates continuous multi-table CDC for serverless processing demo.")
         return generator_thread
     else:
@@ -517,13 +539,13 @@ def trigger_multi_table_cdc_pipeline():
 
 # COMMAND ----------
 
-# DBTITLE 1,Demo: Multi-table serverless CDC processing with performance monitoring
+# DBTITLE 1,🚀 Step 4: Complete Multi-Table CDC Pipeline Demo
 print("🎯 Running multi-table serverless CDC processing demonstration...")
 print("💡 In production, schedule this via Databricks Jobs/Workflows")
 
 # Give generators time to create files for both tables
-print("⏳ Waiting 125 seconds for multi-table data generators to create new files...")
-time.sleep(125)
+print("⏳ Waiting 65 seconds for multi-table data generators to create new files...")
+time.sleep(65)
 
 # Process all tables and measure performance
 start_time = datetime.now()
@@ -648,9 +670,9 @@ for iteration in range(1, 4):  # Monitor 3 iterations
     
     # Wait for next iteration (except on last one)
     if iteration < 3:
-        print(f"   ⏳ Waiting 125 seconds for more multi-table CDC data...")
+        print(f"   ⏳ Waiting 65 seconds for more multi-table CDC data...")
         print("   💰 Serverless compute: Zero cost during wait - only pay for processing!")
-        time.sleep(125)
+        time.sleep(65)
         
         # Process new data across all tables
         print(f"   🔄 Processing new multi-table data (Iteration {iteration + 1})...")

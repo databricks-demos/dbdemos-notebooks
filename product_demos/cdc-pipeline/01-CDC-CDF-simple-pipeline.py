@@ -1,26 +1,38 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC # Implement CDC: Change Data Capture with Serverless
-# MAGIC ## Use-case: Synchronize your SQL Database with your Lakehouse using Serverless Compute
+# MAGIC # CDC Pipeline Demo: Change Data Capture with Serverless Compute
+# MAGIC ## Step-by-Step Guide to Building a Cost-Effective CDC Pipeline
 # MAGIC
-# MAGIC Delta Lake is an <a href="https://delta.io/" target="_blank">open-source</a> storage layer with transactional capabilities and increased performance. 
+# MAGIC This demo shows you how to build a **Change Data Capture (CDC)** pipeline using **Databricks Serverless Compute** for cost-effective, auto-scaling data processing.
 # MAGIC
-# MAGIC Delta Lake is designed to support CDC workloads by providing support for UPDATE / DELETE and MERGE operations.
+# MAGIC ### What You'll Learn:
+# MAGIC 1. **🥉 Step 1**: Set up CDC data simulation
+# MAGIC 2. **🥈 Step 2**: Build Bronze layer with Auto Loader
+# MAGIC 3. **🥇 Step 3**: Create Silver layer with MERGE operations
+# MAGIC 4. **🚀 Step 4**: Implement Gold layer with Change Data Feed (CDF)
+# MAGIC 5. **📊 Step 5**: Monitor and optimize with serverless compute
 # MAGIC
-# MAGIC In addition, Delta tables can support Change Data Feed (CDF) to capture internal changes and propagate them downstream.
+# MAGIC ### Progress Tracking:
+# MAGIC - ✅ **Step 1**: CDC data simulation setup
+# MAGIC - ⏳ **Step 2**: Bronze layer implementation
+# MAGIC - ⏳ **Step 3**: Silver layer implementation
+# MAGIC - ⏳ **Step 4**: Gold layer implementation
+# MAGIC - ⏳ **Step 5**: Monitoring and optimization
 # MAGIC
-# MAGIC This demo showcases modern CDC patterns using **Serverless Compute** for cost-effective, auto-scaling data processing.
+# MAGIC ### Key Benefits of Serverless CDC:
+# MAGIC - 💰 **Cost-effective**: Pay only for compute time used
+# MAGIC - 🚀 **Auto-scaling**: Automatically scales based on workload
+# MAGIC - ⚡ **Fast processing**: Optimized for batch processing with `availableNow` triggers
+# MAGIC - 🔄 **Incremental**: Only processes new/changed data
 # MAGIC
-# MAGIC Note that this is a fairly advanced demo. Before diving into this content, we recommend getting familiar with Delta Lake: `dbdemos.install('delta-lake')`.
+# MAGIC ### Prerequisites:
+# MAGIC - Basic understanding of Delta Lake: `dbdemos.install('delta-lake')`
+# MAGIC - Familiarity with Structured Streaming concepts
 # MAGIC
-# MAGIC ## Simplifying CDC with Delta Live Tables
+# MAGIC ---
 # MAGIC
-# MAGIC As you'll see, implementing a CDC pipeline from scratch requires careful handling of deduplication and merge logic. 
-# MAGIC
-# MAGIC To simplify these operations & implement a full CDC flow with SQL expressions, we strongly recommend using Delta Live Tables with `APPLY CHANGES`: `dbdemos.install('delta-live-table')` (including native SCD Type 2 support)
-# MAGIC
-# MAGIC The `APPLY CHANGES` functionality handles the MERGE INTO + DEDUPLICATION complexity automatically. 
+# MAGIC **💡 Alternative Approach**: For production CDC pipelines, consider using **Delta Live Tables** with `APPLY CHANGES` for simplified implementation: `dbdemos.install('delta-live-table')` 
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -35,8 +47,7 @@
 # DBTITLE 1,Configure Schema Evolution for CDC Processing
 # Enable automatic schema merging for all Delta operations to handle schema changes
 # Schema evolution is handled automatically by mergeSchema=true in writeStream operations
-spark.conf.set("spark.sql.streaming.schemaInference", "true")
-print("✅ Schema evolution enabled for seamless CDC processing")
+# Schema inference is handled automatically by Auto Loader with cloudFiles.inferColumnTypes=true
 
 # COMMAND ----------
 
@@ -46,59 +57,71 @@ print("✅ Schema evolution enabled for seamless CDC processing")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## CDC flow with Serverless Compute
+# MAGIC ## 📋 CDC Pipeline Architecture Overview
 # MAGIC
-# MAGIC Here is the flow we'll implement, consuming CDC data from an external database using **Serverless Compute** for cost-effective, auto-scaling processing. 
+# MAGIC Here's the complete CDC pipeline we'll build using **Serverless Compute**:
 # MAGIC
-# MAGIC Note that the incoming data could be any format, including message queues such as Kafka.
+# MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-0.png" alt='CDC Pipeline Architecture'/>
 # MAGIC
-# MAGIC **Key Serverless Benefits:**
-# MAGIC - Automatic scaling based on workload
-# MAGIC - Pay only for compute used during processing
-# MAGIC - No cluster management overhead
-# MAGIC - Optimized for batch processing with `availableNow` triggers
+# MAGIC ### Pipeline Flow:
+# MAGIC 1. **📥 Data Source**: CDC events from external database (simulated)
+# MAGIC 2. **🥉 Bronze Layer**: Raw CDC data ingestion with Auto Loader
+# MAGIC 3. **🥈 Silver Layer**: Cleaned, deduplicated data with MERGE operations
+# MAGIC 4. **🥇 Gold Layer**: Business-ready data with Change Data Feed (CDF)
+# MAGIC 5. **📊 Analytics**: Real-time insights and reporting
 # MAGIC
-# MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-0.png" alt='Make all your data ready for BI and ML'/>
+# MAGIC **💡 Note**: The incoming data could be any format, including message queues like Kafka.
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Bronze: Incremental data loading using Auto Loader
+# MAGIC %md
+# MAGIC ## 🥉 Step 1: Bronze Layer - Raw Data Ingestion
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-1.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-1.png" alt='Bronze Layer' style='float: right' width='600'/>
 # MAGIC
-# MAGIC Working with external system can be challenging due to schema update. The external database can have schema update, adding or modifying columns, and our system must be robust against these changes.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Ingest raw CDC data from external sources
+# MAGIC - **Technology**: Auto Loader with serverless compute
+# MAGIC - **Benefits**: Automatic schema evolution and incremental processing
 # MAGIC
-# MAGIC Databricks Autoloader (`cloudFiles`) handles schema inference and evolution out of the box.
+# MAGIC ### Key Features:
+# MAGIC - 🔄 **Schema Evolution**: Handles database schema changes automatically
+# MAGIC - 📈 **Incremental Processing**: Only processes new files
+# MAGIC - ⚡ **Serverless Scaling**: Auto-scales based on data volume
+# MAGIC - 💰 **Cost Efficient**: Pay only for processing time
 # MAGIC
-# MAGIC For more details on Auto Loader, run `dbdemos.install('auto-loader')`
+# MAGIC **💡 Learn More**: For detailed Auto Loader concepts, run `dbdemos.install('auto-loader')`
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's explore our incoming data. We receive CSV files with client information
+# DBTITLE 1,📊 Step 1.1: Explore Incoming CDC Data
+print("🔍 Exploring our incoming CDC data structure...")
 cdc_raw_data = spark.read.option('header', "true").csv(raw_data_location+'/user_csv')
 display(cdc_raw_data)
 
 # COMMAND ----------
 
-# DBTITLE 1,Our CDC is sending 3 type of operation: APPEND, DELETE and UPDATE
+# DBTITLE 1,📊 Step 1.2: Understand CDC Operation Types
+print("🔍 Understanding CDC operation types...")
+print("Our CDC system sends 3 types of operations:")
 display(cdc_raw_data.dropDuplicates(['operation']))
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Continuous CDC Data Simulation for Serverless Demo
+# MAGIC ## 🎯 Step 1.3: Set Up Continuous CDC Data Simulation
 # MAGIC
-# MAGIC To demonstrate how serverless compute handles continuous CDC data ingestion, we'll create a data generator that simulates incoming CDC events every 120 seconds.
+# MAGIC To demonstrate serverless compute capabilities, we'll create a data generator that simulates incoming CDC events every 60 seconds.
 # MAGIC
-# MAGIC This allows us to:
-# MAGIC - Show serverless auto-scaling capabilities
-# MAGIC - Demonstrate cost-effective processing with `availableNow` triggers
-# MAGIC - Simulate real-world continuous CDC scenarios
+# MAGIC ### Why This Matters:
+# MAGIC - 🚀 **Auto-scaling**: Shows how serverless scales with workload
+# MAGIC - 💰 **Cost Efficiency**: Demonstrates `availableNow` trigger benefits
+# MAGIC - 🔄 **Real-world Simulation**: Mimics continuous CDC scenarios
+# MAGIC - 📊 **Monitoring**: Enables table growth visualization
 
 # COMMAND ----------
 
-# DBTITLE 1,CDC Data Generator - Simulates continuous data arrival every 120 seconds
+# DBTITLE 1,🎯 Step 1.3: CDC Data Generator Implementation
 import threading
 import time
 import random
@@ -173,12 +196,12 @@ def continuous_cdc_generator():
             print(f"Generated {num_events} CDC events at {datetime.now()}: {filename}")
             file_counter += 1
             
-            # Wait 120 seconds before next batch
-            time.sleep(120)
+            # Wait 60 seconds before next batch
+            time.sleep(60)
             
         except Exception as e:
             print(f"Error in CDC generator: {e}")
-            time.sleep(120)  # Continue even if there's an error
+            time.sleep(60)  # Continue even if there's an error
 
 def start_cdc_generator():
     """Start the CDC data generator in background"""
@@ -187,7 +210,7 @@ def start_cdc_generator():
         generator_running = True
         generator_thread = threading.Thread(target=continuous_cdc_generator, daemon=True)
         generator_thread.start()
-        print("🚀 CDC Data Generator started! New data will arrive every 120 seconds.")
+        print("🚀 CDC Data Generator started! New data will arrive every 60 seconds.")
         print("💡 This simulates continuous CDC events for serverless processing demonstration.")
         return generator_thread
     else:
@@ -248,18 +271,27 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Silver: Materialize the table
+# MAGIC %md
+# MAGIC ## 🥈 Step 2: Silver Layer - Data Cleaning and Deduplication
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-2.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-2.png" alt='Silver Layer' style='float: right' width='600'/>
 # MAGIC
-# MAGIC The silver `retail_client_silver` table will contains the most up to date view. It'll be a replicat of the original MYSQL table.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Clean, deduplicate, and standardize CDC data
+# MAGIC - **Technology**: Delta MERGE operations with serverless compute
+# MAGIC - **Benefits**: Idempotent processing and data quality
 # MAGIC
-# MAGIC Because we'll propagate the `MERGE` operations downstream to the `GOLD` layer, we need to enable Delta Lake CDF: `delta.enableChangeDataFeed = true`
+# MAGIC ### Key Features:
+# MAGIC - 🔄 **Idempotent**: Safe to run multiple times
+# MAGIC - ⚡ **Serverless**: Auto-scales with data volume
+# MAGIC - 💰 **Cost Efficient**: Only processes new/changed data
+# MAGIC - 📊 **CDF Enabled**: Tracks changes for downstream processing
+# MAGIC
+# MAGIC **💡 Note**: We enable Change Data Feed (CDF) to track modifications for the Gold layer.
 
 # COMMAND ----------
 
-# DBTITLE 1,We can now create our client table using standard SQL command
+# DBTITLE 1,🥈 Step 2.1: Create Silver Table with CDF Enabled
 # MAGIC %sql 
 # MAGIC -- Create silver table with optimized settings for serverless and CDC
 # MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (id BIGINT NOT NULL, name STRING, address STRING, email STRING, operation STRING) 
@@ -335,12 +367,21 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Gold: capture and propagate Silver modifications downstream
+# MAGIC %md
+# MAGIC ## 🥇 Step 3: Gold Layer - Business-Ready Data with Change Data Feed
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-3.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-3.png" alt='Gold Layer' style='float: right' width='600'/>
 # MAGIC
-# MAGIC We need to add a final Gold layer based on the data from the Silver table. If a row is DELETED or UPDATED in the SILVER layer, we want to apply the same modification in the GOLD layer.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Create business-ready data from Silver layer changes
+# MAGIC - **Technology**: Change Data Feed (CDF) with serverless compute
+# MAGIC - **Benefits**: Real-time propagation of Silver layer modifications
+# MAGIC
+# MAGIC ### How It Works:
+# MAGIC - 📊 **CDF Tracking**: Monitors all changes in Silver table
+# MAGIC - 🔄 **Real-time Sync**: Applies DELETEs and UPDATEs to Gold layer
+# MAGIC - ⚡ **Serverless**: Auto-scales based on change volume
+# MAGIC - 💰 **Cost Efficient**: Only processes actual changes
 # MAGIC
 # MAGIC To do so, we need to capture all the tables changes from the SILVER layer and incrementally replicate the changes to the GOLD layer.
 # MAGIC
@@ -393,7 +434,8 @@ display(changes)
 
 # COMMAND ----------
 
-# MAGIC %md ### Synchronizing our downstream GOLD table based from the Silver changes
+# MAGIC %md
+# MAGIC ### 🥇 Step 3.1: Synchronize Gold Table with Silver Changes
 # MAGIC
 # MAGIC Let's now say that we want to perform another table enhancement and propagate these changes downstream.
 # MAGIC
@@ -581,7 +623,7 @@ def trigger_cdc_pipeline():
 # MAGIC **Option 1: Scheduled Databricks Job**
 # MAGIC ```python
 # MAGIC # Schedule this notebook to run every 5 minutes using Databricks Jobs
-# MAGIC # The data generator creates new files every 120 seconds
+# MAGIC # The data generator creates new files every 60 seconds
 # MAGIC # Serverless compute will auto-scale and process all available data
 # MAGIC trigger_cdc_pipeline()
 # MAGIC ```
@@ -601,13 +643,13 @@ def trigger_cdc_pipeline():
 
 # COMMAND ----------
 
-# DBTITLE 1,Demo: Run one iteration of the serverless CDC pipeline
+# DBTITLE 1,🚀 Step 4: Complete CDC Pipeline Demo
 print("🎯 Running one iteration of serverless CDC processing...")
 print("💡 In production, schedule this via Databricks Jobs every few minutes")
 
 # Give the data generator time to create some files
-print("⏳ Waiting 125 seconds for data generator to create new files...")
-time.sleep(125)
+print("⏳ Waiting 65 seconds for data generator to create new files...")
+time.sleep(65)
 
 # Process any new data
 trigger_cdc_pipeline()
@@ -684,9 +726,9 @@ for iteration in range(1, 4):  # Monitor 3 iterations
     
     # Wait for next iteration (except on last one)
     if iteration < 3:
-        print(f"   ⏳ Waiting 125 seconds for more CDC data...")
+        print(f"   ⏳ Waiting 65 seconds for more CDC data...")
         print("   💰 Serverless compute: No costs during wait time!")
-        time.sleep(125)
+        time.sleep(65)
         
         # Process new data
         print(f"   🔄 Processing new data (Iteration {iteration + 1})...")

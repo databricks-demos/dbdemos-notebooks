@@ -111,6 +111,8 @@ fe = FeatureEngineeringClient()
 
 # Load customer features to be scored
 inference_df = spark.read.table("advanced_churn_cust_ids")
+# Reduce the amount of inferences for the demo to run faster
+inference_df = inference_df.limit(100)
 
 # Batch score
 preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string", env_manager=env_manager)

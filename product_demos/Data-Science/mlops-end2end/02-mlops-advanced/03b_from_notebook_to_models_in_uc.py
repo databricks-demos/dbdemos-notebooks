@@ -24,6 +24,14 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow==3.3.2
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## How to use Models in Unity Catalog
 # MAGIC Typically, data scientists who use MLflow will conduct many experiments, each with a number of runs that track and log metrics and parameters. During this development cycle, they will select the best run within an experiment and register its model to Unity Catalog.  Think of this as **committing** the model to the Unity Catalog, much as you would commit code to a version control system.
 # MAGIC

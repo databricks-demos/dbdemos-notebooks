@@ -16,13 +16,13 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a5
-# MAGIC mlflow==3.3.0
+# MAGIC databricks-feature-engineering==0.13.0a8
+# MAGIC mlflow==3.3.2
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 mlflow --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -46,10 +46,6 @@
 
 # COMMAND ----------
 
-env_manager = "virtual_env" # For fe.score_batch() function - if running on Serverless
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Batch inference on the Champion model
 # MAGIC
@@ -61,29 +57,32 @@ env_manager = "virtual_env" # For fe.score_batch() function - if running on Serv
 
 # MAGIC %md
 # MAGIC ### Reproduce inference env in notebook _(OPTIONNAL)_
-# MAGIC ONLY if you plan on executing the batch inference in the default Serverless environment defined here (`env_manager="local"`), otherwise no need as inference can run on a virtual environment (`env_manager="virtual_env"`) pulled from the model requirements artifacts.
+# MAGIC ONLY if you plan on executing the batch inference in the default Serverless environment defined here (`env_manager="local"`), otherwise no need as inference can run on a virtual environment (`env_manager="virtual_env" or "uv"`) pulled from the model requirements artifacts or if the same MLR version was used for training this model version.
 
 # COMMAND ----------
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-
-
-requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Challenger").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
-
-# COMMAND ----------
-
+# MAGIC %md
+# MAGIC ```python
+# MAGIC from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+# MAGIC
+# MAGIC
+# MAGIC requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.advanced_mlops_churn@Champion").download_artifacts(artifact_path="requirements.txt") # download model from remote registry
+# MAGIC ```
+# MAGIC -----------------------------------------------------------------
+# MAGIC ```bash
 # MAGIC %pip install --quiet -r $requirements_path
 # MAGIC
 # MAGIC
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
+# MAGIC %restart_python
+# MAGIC ```
+# MAGIC ----------------------------------------------------------------
+# MAGIC ```bash
 # MAGIC %run ../_resources/00-setup $adv_mlops=true $setup_adv_inference_data=true
+# MAGIC ```
 
 # COMMAND ----------
 
-env_manager = "local"
+env_manager = "virtualenv" # For fe.score_batch() function - set to "local" if NOT running on Serverless AND/OR pip installing all model artifacts
 
 # COMMAND ----------
 
@@ -112,9 +111,11 @@ fe = FeatureEngineeringClient()
 
 # Load customer features to be scored
 inference_df = spark.read.table("advanced_churn_cust_ids")
+# Reduce the amount of inferences for the demo to run faster
+inference_df = inference_df.limit(100)
 
 # Batch score
-preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string", env_manager="virtualenv")
+preds_df = fe.score_batch(df=inference_df, model_uri=model_uri, result_type="string", env_manager=env_manager)
 display(preds_df)
 
 # COMMAND ----------
@@ -153,10 +154,12 @@ from datetime import datetime, timedelta
 from pyspark.sql import functions as F
 
 
-offline_inference_df = preds_df.withColumn("model_version", F.lit(model_version)) \
+offline_inference_df = preds_df.drop("split") \
+                              .withColumn("model_version", F.lit(model_version)) \
                               .withColumn("inference_timestamp", F.lit(datetime.now())) # - timedelta(days=1)))
 
 offline_inference_df.write.mode("append") \
+                    .option("overwriteSchema", True) \
                     .saveAsTable("advanced_churn_offline_inference")
 
 # display(offline_inference_df)

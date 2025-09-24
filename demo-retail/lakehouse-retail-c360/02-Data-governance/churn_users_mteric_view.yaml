@@ -1,0 +1,61 @@
+version: 0.1
+source: main.dbdemos_retail_c360.churn_users
+
+filter: last_activity_date >= '2020-01-01'
+
+joins:
+  - name: churn_orders
+    source: main.dbdemos_retail_c360.churn_orders
+    using: ["user_id"]
+
+dimensions:
+  - name: Age Group
+    expr: age_group
+
+  - name: Canal
+    expr: canal
+
+  - name: Country
+    expr: country
+
+  - name: Order Creation Date
+    expr: churn_orders.creation_date
+
+  - name: Last Activity Date
+    expr: date_trunc('day', last_activity_date)
+
+  - name: Gender
+    expr: CASE
+            WHEN gender = 0 THEN 'Female'
+            WHEN gender = 1 THEN 'Male'
+            ELSE 'Other'
+          END
+
+measures:
+  - name: Total Users
+    expr: COUNT(DISTINCT user_id)
+
+  - name: Average Age Group
+    expr: AVG(age_group)
+
+  - name: Active Users
+    expr: COUNT(DISTINCT user_id) FILTER (WHERE last_activity_date > CURRENT_DATE - INTERVAL 3 YEARS)
+
+  - name: Churned Users
+    expr: COUNT(DISTINCT user_id) FILTER (WHERE churn = 1)
+
+  - name: Churn Rate
+    expr: COUNT(DISTINCT user_id) FILTER (WHERE churn = 1) / COUNT(DISTINCT user_id)
+
+  - name: Churn Rate Percentage
+    expr: (MEASURE(`Churned Users`) / MEASURE(`Total Users`)) * 100
+
+  - name: Total Order Amount
+    expr: SUM(churn_orders.amount)
+
+  - name: Trailing 30-Day Active Users
+    expr: COUNT(DISTINCT user_id)
+    window:
+      - order: Last Activity Date
+        range: trailing 30 day
+        semiadditive: last

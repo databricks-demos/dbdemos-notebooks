@@ -18,12 +18,12 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a5
+# MAGIC databricks-feature-engineering==0.13.0a8
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

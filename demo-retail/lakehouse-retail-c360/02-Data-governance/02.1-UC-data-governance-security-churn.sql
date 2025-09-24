@@ -249,8 +249,8 @@ SELECT * FROM churn_users_protected
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC # Next: Start building analysis with Databricks SQL
+-- MAGIC # Next: Start building semantic layer with Databricks SQL
 -- MAGIC
--- MAGIC Now that these tables are available in our Lakehouse and secured, let's see how our Data Analyst team can start leveraging them to run BI workloads
+-- MAGIC Now that these tables are available in our Lakehouse and secured, let's see how we can define our business semantics using metric views.
 -- MAGIC
--- MAGIC Jump to the [BI / Data warehousing notebook]($../03-BI-data-warehousing/03-BI-Datawarehousing) or [Go back to the introduction]($../00-churn-introduction-lakehouse)
+-- MAGIC Jump to the [UC / Metric views notebook]($02.2-UC-metric-views) or [Go back to the introduction]($../00-churn-introduction-lakehouse)

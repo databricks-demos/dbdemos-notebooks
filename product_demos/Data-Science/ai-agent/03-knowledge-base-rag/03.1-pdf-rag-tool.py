@@ -88,7 +88,7 @@
 # MAGIC     doc_uri
 # MAGIC   FROM (
 # MAGIC     SELECT array_join(
-# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
+# MAGIC             transform(parsed_document:document.elements::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
 # MAGIC            path as doc_uri
 # MAGIC     FROM (
 # MAGIC       SELECT ai_parse_document(content) AS parsed_document, path

@@ -25,7 +25,7 @@
         {"title": "Delta Live Tables pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/dlt-loans-dlt-0.png"},
         {"title": "Databricks SQL Dashboard: DLT Data Quality Stats", "url": "https://www.dbdemos.ai/assets/img/dbdemos/dlt-loans-dashboard-0.png"}
     ],
-    "bundle": True,
+    "bundle": False,
     "tags": [{"dlt": "Delta Live Tables"}],
     "notebooks": [
       {

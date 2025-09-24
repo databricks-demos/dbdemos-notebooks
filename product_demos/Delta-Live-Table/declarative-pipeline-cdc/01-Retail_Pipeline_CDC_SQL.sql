@@ -1,7 +1,7 @@
 -- Databricks notebook source
 -- MAGIC %md
 -- MAGIC
--- MAGIC # Implement CDC In DLT Pipeline: Change Data Capture
+-- MAGIC # Implement CDC with Lakeflow Declarative Pipelines
 -- MAGIC
 -- MAGIC ## Importance of Change Data Capture (CDC)
 -- MAGIC
@@ -31,7 +31,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### Materializing table from CDC events with Delta Live Table
+-- MAGIC ### Materializing table from CDC events with Lakeflow Declarative Pipelines
 -- MAGIC
 -- MAGIC In this example, we'll synchronize data from the Customers table in our MySQL database.
 -- MAGIC
@@ -39,15 +39,15 @@
 -- MAGIC - Using Autoloader we incrementally load the messages from cloud object storage, and stores the raw messages them in the `customers_cdc`. Autoloader will take care of infering the schema and handling schema evolution for us.
 -- MAGIC - Then we'll add a view `customers_cdc_clean` to check the quality of our data, using expectation, and then build dashboards to track data quality. As example the ID should never be null as we'll use it to run our upsert operations.
 -- MAGIC - Finally we perform the APPLY CHANGES INTO (doing the upserts) on the cleaned cdc data to apply the changes to the final `customers` table
--- MAGIC - Extra: we'll also see how DLT can simply create Slowly Changing Dimention of type 2 (SCD2) to keep track of all the changes 
+-- MAGIC - Extra: we'll also see how Lakeflow Declarative Pipelines can simply create Slowly Changing Dimention of type 2 (SCD2) to keep track of all the changes 
 -- MAGIC
 -- MAGIC Here is the flow we'll implement, consuming CDC data from an external database. Note that the incoming could be any format, including message queue such as Kafka.
 -- MAGIC
 -- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/cdc_dlt/cdc_dlt_pipeline_0.png" width="1100"/>
 -- MAGIC
--- MAGIC ## Accessing the DLT pipeline
+-- MAGIC ## Accessing the Lakeflow Declarative Pipeline
 -- MAGIC
--- MAGIC Your pipeline has been created! You can directly access the <a dbdemos-pipeline-id="dlt-cdc" href="/#joblist/pipelines/c1ccc647-74e6-4754-9c61-6f2691456a73">Delta Live Table Pipeline for CDC</a>.
+-- MAGIC Your pipeline has been created! You can directly access the <a dbdemos-pipeline-id="dlt-cdc" href="/#joblist/pipelines/c1ccc647-74e6-4754-9c61-6f2691456a73">Lakeflow Declarative Pipelines for CDC</a>.
 
 -- COMMAND ----------
 
@@ -65,8 +65,17 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Input data from CDC
--- %python #Uncomment to explore the content 
--- display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers"))
+-- MAGIC %python
+-- MAGIC display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers"))
+
+-- COMMAND ----------
+
+-- MAGIC %md 
+-- MAGIC ## Ready to implement your pipeline ? 
+-- MAGIC
+-- MAGIC Open [transformations/01-sql_cdc_pipeline.sql]($./transformations/01-sql_cdc_pipeline.sql) to get started and explore how to do CDC with LDP!
+-- MAGIC
+-- MAGIC The sql script implements the following steps:
 
 -- COMMAND ----------
 
@@ -88,13 +97,6 @@
 
 -- COMMAND ----------
 
--- DBTITLE 1,Let's ingest our incoming data using Autoloader (cloudFiles)
-CREATE STREAMING TABLE customers_cdc 
-COMMENT "New customer data incrementally ingested from cloud object storage landing zone"
-AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers", "json", map("cloudFiles.inferColumnTypes", "true"));
-
--- COMMAND ----------
-
 -- MAGIC %md-sandbox
 -- MAGIC ### 2/ Cleanup & expectations to track data quality
 -- MAGIC
@@ -112,19 +114,6 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/cust
 
 -- COMMAND ----------
 
--- DBTITLE 1,Silver Layer - Cleansed Table (Impose Constraints)
--- this could also be a VIEW
-CREATE STREAMING TABLE customers_cdc_clean(
-  CONSTRAINT valid_id EXPECT (id IS NOT NULL) ON VIOLATION DROP ROW,
-  CONSTRAINT valid_operation EXPECT (operation IN ('APPEND', 'DELETE', 'UPDATE')) ON VIOLATION DROP ROW,
-  CONSTRAINT valid_json_schema EXPECT (_rescued_data IS NULL) ON VIOLATION DROP ROW
-)
-COMMENT "Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type"
-AS SELECT * 
-FROM STREAM(live.customers_cdc);
-
--- COMMAND ----------
-
 -- MAGIC %md-sandbox
 -- MAGIC ### 3/ Materializing the silver table with APPLY CHANGES
 -- MAGIC
@@ -134,22 +123,7 @@ FROM STREAM(live.customers_cdc);
 -- MAGIC
 -- MAGIC This is non trivial to implement manually. You need to consider things like data deduplication to keep the most recent row.
 -- MAGIC
--- MAGIC Thanksfully Delta Live Table solve theses challenges out of the box with the `APPLY CHANGE` operation
-
--- COMMAND ----------
-
--- DBTITLE 1,Create the target customers table 
-CREATE STREAMING TABLE customers
-  COMMENT "Clean, materialized customers";
-
--- COMMAND ----------
-
-APPLY CHANGES INTO live.customers
-FROM stream(live.customers_cdc_clean)
-  KEYS (id)
-  APPLY AS DELETE WHEN operation = "DELETE"
-  SEQUENCE BY operation_date --primary key, auto-incrementing ID of any kind that can be used to identity order of events, or timestamp
-  COLUMNS * EXCEPT (operation, operation_date, _rescued_data);  
+-- MAGIC Thanksfully Lakeflow Declarative Pipeline solve theses challenges out of the box with the `APPLY CHANGE` operation
 
 -- COMMAND ----------
 
@@ -166,13 +140,14 @@ FROM stream(live.customers_cdc_clean)
 -- MAGIC * History: you want to keep an history of all the changes from your table
 -- MAGIC * Traceability: you want to see which operation
 -- MAGIC
--- MAGIC #### SCD2 with DLT
+-- MAGIC #### SCD2 with Lakeflow Declarative Pipelines
 -- MAGIC
 -- MAGIC Delta support CDF (Change Data Flow) and `table_change` can be used to query the table modification in a SQL/python. However, CDF main use-case is to capture changes in a pipeline and not create a full view of the table changes from the begining. 
 -- MAGIC
 -- MAGIC Things get especially complex to implement if you have out of order events. If you need to sequence your changes by a timestamp and receive a modification which happened in the past, then you not only need to append a new entry in your SCD table, but also update the previous entries.  
 -- MAGIC
--- MAGIC Delta Live Table makes all this logic super simple and let you create a separate table containing all the modifications, from the begining of the time. This table can then be used at scale, with specific partitions / zorder columns if required. Out of order fields will be handled out of the box based on the _sequence_by 
+-- MAGIC Delta
+-- MAGIC  Live Table makes all this logic super simple and let you create a separate table containing all the modifications, from the begining of the time. This table can then be used at scale, with specific partitions / zorder columns if required. Out of order fields will be handled out of the box based on the _sequence_by 
 -- MAGIC
 -- MAGIC To create a SCD2 table, all we have to do is leverage the `APPLY CHANGES` with the extra option: `STORED AS {SCD TYPE 1 | SCD TYPE 2 [WITH {TIMESTAMP|VERSION}}]`
 -- MAGIC
@@ -180,39 +155,25 @@ FROM stream(live.customers_cdc_clean)
 
 -- COMMAND ----------
 
--- create the table
-CREATE STREAMING TABLE SCD2_customers
-  COMMENT "Slowly Changing Dimension Type 2 for customers";
-
--- store all changes as SCD2
-APPLY CHANGES INTO live.SCD2_customers
-FROM stream(live.customers_cdc_clean)
-  KEYS (id)
-  APPLY AS DELETE WHEN operation = "DELETE"
-  SEQUENCE BY operation_date 
-  COLUMNS * EXCEPT (operation, operation_date, _rescued_data)
-  STORED AS SCD TYPE 2 ;
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC ### Conclusion 
--- MAGIC We now have <a dbdemos-pipeline-id="dlt-cdc" href="/#joblist/pipelines/c1ccc647-74e6-4754-9c61-6f2691456a73">our DLT pipeline</a> up & ready! Our `customers` table is materialize and we can start building BI report to analyze and improve our business. It also open the door to Data Science and ML use-cases such as customer churn, segmentation etc.
-
--- COMMAND ----------
-
--- MAGIC %md-sandbox
--- MAGIC ### Monitoring your data quality metrics with Delta Live Table
--- MAGIC
--- MAGIC <img style="float:right" width="500" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
--- MAGIC
--- MAGIC Delta Live Tables tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
--- MAGIC
--- MAGIC This let you build custom dashboards to track those metrics.
--- MAGIC
--- MAGIC <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>
+-- MAGIC We now have <a dbdemos-pipeline-id="dlt-cdc" href="/#joblist/pipelines/c1ccc647-74e6-4754-9c61-6f2691456a73">our Lakeflow Declarative Pipeline</a> up & ready! Our `customers` table is materialize and we can start building BI report to analyze and improve our business. It also open the door to Data Science and ML use-cases such as customer churn, segmentation etc.
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC For more detail on how to analyse Expectation metrics, open the [03-Retail_DLT_CDC_Monitoring]($./03-Retail_DLT_CDC_Monitoring) notebook.
+-- MAGIC
+-- MAGIC # Going further: implementing a CDC pipeline using Declarative Pipeline for N tables
+-- MAGIC
+-- MAGIC We saw previously how to setup a CDC pipeline for a single table. However, real-life database typically involve multiple tables, with 1 CDC folder per table.
+-- MAGIC
+-- MAGIC Operating and ingesting all these tables at scale is quite challenging. You need to start multiple table ingestion at the same time, working with threads, handling errors, restart where you stopped, deal with merge manually.
+-- MAGIC
+-- MAGIC Thankfully, your pipeline takes care of that for you. We can leverage python loops to naturally iterate over the folders (see the [documentation](https://docs.databricks.com/aws/en/dlt/) for more details)
+-- MAGIC
+-- MAGIC DLT engine will handle the parallelization whenever possible, and autoscale based on your data volume.
+-- MAGIC
+-- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/cdc_dlt_pipeline_full.png" width="1000"/>
+-- MAGIC
+-- MAGIC
+-- MAGIC Open the [transformations/02-full_python_pipeline.py]($./transformations/02-full_python_pipeline.py) to see how it's done!

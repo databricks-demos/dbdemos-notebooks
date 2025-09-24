@@ -312,7 +312,7 @@ time.sleep(10)
 
 # COMMAND ----------
 
-# MAGIC %sql
+# MAGIC %sql 
 # MAGIC -- Create silver table with optimized settings for serverless and CDC
 # MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (id BIGINT NOT NULL, name STRING, address STRING, email STRING, operation STRING) 
 # MAGIC   TBLPROPERTIES (
@@ -414,8 +414,24 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ### Step 4.1: Working with Delta Lake CDF
+# MAGIC %md 
+# MAGIC ### Step 4.1: Understanding Change Data Feed (CDF) vs Non-CDF Processing
+# MAGIC
+# MAGIC **🔍 Key Difference**: CDF only processes **actual changes**, while non-CDF processes **all data**.
+# MAGIC
+# MAGIC #### **Non-CDF Approach (Inefficient)**:
+# MAGIC - 📊 **Processes**: Entire table every time
+# MAGIC - 💰 **Cost**: High - reprocesses unchanged data
+# MAGIC - ⏱️ **Time**: Slow - scans all records
+# MAGIC - 🔄 **Example**: If table has 1M records, processes all 1M even for 1 change
+# MAGIC
+# MAGIC #### **CDF Approach (Efficient)**:
+# MAGIC - 📊 **Processes**: Only changed records
+# MAGIC - 💰 **Cost**: Low - only pays for actual changes
+# MAGIC - ⏱️ **Time**: Fast - processes only deltas
+# MAGIC - 🔄 **Example**: If table has 1M records but only 5 changed, processes only 5 records
+# MAGIC
+# MAGIC **💡 CDF Benefits**: Up to 99%+ reduction in processing volume for incremental changes!
 
 # COMMAND ----------
 
@@ -443,26 +459,62 @@ time.sleep(20)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Step 4.2: Get The Latest Records Updates with Python API
+# MAGIC ### Step 4.2: Demonstrate CDF vs Non-CDF Processing Volume
+# MAGIC
+# MAGIC Let's show the actual difference in processing volume between CDF and non-CDF approaches.
 
 # COMMAND ----------
 
 from delta.tables import *
 
-#Let's get the last table version to only see the last update mofications
-last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).head()["version"])
-print(f"our Delta table last version is {last_version}, let's select the last changes to see our DELETE and UPDATE operations (last 2 versions):")
+# Let's demonstrate the processing volume difference
+print("🔍 Demonstrating CDF vs Non-CDF Processing Volume")
+print("=" * 60)
 
+# Get total records in silver table
+total_silver_records = spark.sql("SELECT COUNT(*) as count FROM retail_client_silver").collect()[0]['count']
+print(f"📊 Total records in Silver table: {total_silver_records:,}")
+
+# Get latest table version
+last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).head()["version"])
+print(f"📈 Latest table version: {last_version}")
+
+# Show what CDF would process (only changes from last 2 versions)
+print(f"\n🔄 CDF Processing (Efficient):")
 changes = spark.read.format("delta") \
                     .option("readChangeFeed", "true") \
                     .option("startingVersion", int(last_version) -1) \
                     .table("retail_client_silver")
-display(changes)
+
+cdf_records = changes.count()
+print(f"   📊 Records to process: {cdf_records:,}")
+print(f"   💰 Processing efficiency: {((total_silver_records - cdf_records) / total_silver_records * 100):.1f}% reduction")
+print(f"   ⚡ Speed improvement: {total_silver_records / max(cdf_records, 1):.1f}x faster")
+
+# Show what non-CDF would process (entire table)
+print(f"\n🔄 Non-CDF Processing (Inefficient):")
+print(f"   📊 Records to process: {total_silver_records:,}")
+print(f"   💰 Processing efficiency: 0% reduction (processes everything)")
+print(f"   ⚡ Speed improvement: 1x (baseline)")
+
+print(f"\n💡 Key Insight: CDF processes {cdf_records:,} records instead of {total_silver_records:,} records")
+print(f"   That's a {((total_silver_records - cdf_records) / total_silver_records * 100):.1f}% reduction in processing volume!")
+
+# Display the actual changes
+print(f"\n📋 Actual Changes Detected:")
+display(changes.select("_change_type", "id", "name", "email").orderBy("id"))
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Step 4.3: Synchronize Gold Table with Silver Changes
+# MAGIC ### Step 4.3: Gold Layer Processing with CDF Efficiency
+# MAGIC
+# MAGIC Now let's implement the Gold layer using CDF to demonstrate the efficiency gains:
+# MAGIC
+# MAGIC **🎯 What We're Building**: Gold layer that only processes **actual changes** from Silver layer
+# MAGIC **📊 Processing Volume**: Only changed records, not entire table
+# MAGIC **💰 Cost Impact**: Significant reduction in compute costs
+# MAGIC **⚡ Performance**: Much faster processing times
 # MAGIC
 # MAGIC Let's now say that we want to perform another table enhancement and propagate these changes downstream.
 # MAGIC
@@ -474,7 +526,7 @@ display(changes)
 
 # COMMAND ----------
 
-# DBTITLE 1,Create Gold Table
+# DBTITLE 1,Step 4.4: Create Gold Table with Processing Volume Tracking
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING)
 # MAGIC   TBLPROPERTIES (
@@ -489,16 +541,32 @@ display(changes)
 from pyspark.sql.window import Window
 from pyspark.sql.functions import dense_rank, regexp_replace, lit, col, current_timestamp
 
-#Function to upsert `microBatchOutputDF` into Delta table using MERGE
+# Function to upsert `microBatchOutputDF` into Delta table using MERGE
+# This function demonstrates CDF efficiency by processing only changed records
 def upsertToDelta(data, batchId):
-  #First we need to deduplicate based on the id and take the most recent update
+  print(f"🔄 Processing batch {batchId} with CDF efficiency...")
+  
+  # Count records being processed
+  records_to_process = data.count()
+  print(f"   📊 Records in this batch: {records_to_process:,}")
+  
+  # First we need to deduplicate based on the id and take the most recent update
   windowSpec = Window.partitionBy("id").orderBy(col("_commit_version").desc())
-  #Select only the first value 
-  #getting the latest change is still needed if the cdc contains multiple time the same id. We can rank over the id and get the most recent _commit_version
+  # Select only the first value 
+  # getting the latest change is still needed if the cdc contains multiple time the same id. We can rank over the id and get the most recent _commit_version
   data_deduplicated = data.withColumn("rank", dense_rank().over(windowSpec)).where("rank = 1 and _change_type!='update_preimage'").drop("_commit_version", "rank")
 
-  #Add some data cleaning for the gold layer to remove quotes from the address
+  # Add some data cleaning for the gold layer to remove quotes from the address
   data_deduplicated = data_deduplicated.withColumn("address", regexp_replace(col("address"), "\"", ""))
+  
+  # Count deduplicated records
+  deduplicated_count = data_deduplicated.count()
+  print(f"   📊 Records after deduplication: {deduplicated_count:,}")
+  
+  # Show processing efficiency
+  if records_to_process > 0:
+    efficiency = ((records_to_process - deduplicated_count) / records_to_process * 100)
+    print(f"   💰 Deduplication efficiency: {efficiency:.1f}% reduction")
   
   #run the merge in the gold table directly
   (DeltaTable.forName(spark, "retail_client_gold").alias("target")
@@ -508,6 +576,12 @@ def upsertToDelta(data, batchId):
       .whenNotMatchedInsertAll("source._change_type != 'delete'")
       .execute())
 
+  print(f"   ✅ Batch {batchId} completed - processed {deduplicated_count:,} records efficiently")
+
+
+# Start the CDF stream with processing volume tracking
+print("🚀 Starting Gold layer CDF stream with processing volume tracking...")
+print("💡 This will show you exactly how many records are processed vs. total table size")
 
 (spark.readStream
        .option("readChangeFeed", "true")  # Updated to use correct option name
@@ -519,13 +593,33 @@ def upsertToDelta(data, batchId):
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
         .option("mergeSchema", "true")  # Enable schema evolution for gold layer
         .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
-      .start())
-
-time.sleep(20)
+      .start()
+      .awaitTermination())
 
 # COMMAND ----------
 
-# MAGIC %sql SELECT * FROM retail_client_gold
+# MAGIC %sql 
+# MAGIC -- Show the final Gold table results
+# MAGIC SELECT * FROM retail_client_gold ORDER BY id;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 4.5: CDF Processing Volume Summary
+# MAGIC
+# MAGIC **🎯 What We Just Demonstrated**:
+# MAGIC - **CDF Processing**: Only processed actual changes from Silver layer
+# MAGIC - **Volume Efficiency**: Dramatically reduced processing volume
+# MAGIC - **Cost Savings**: Significant reduction in compute costs
+# MAGIC - **Performance**: Much faster processing times
+# MAGIC
+# MAGIC **📊 Key Metrics**:
+# MAGIC - **Total Silver Records**: Shows full table size
+# MAGIC - **CDF Records Processed**: Shows only changed records
+# MAGIC - **Efficiency Gain**: Percentage reduction in processing volume
+# MAGIC - **Speed Improvement**: Multiplier for processing speed
+# MAGIC
+# MAGIC **💡 Real-World Impact**: In production, this can mean processing 1,000 records instead of 1,000,000 records for incremental updates!
 
 # COMMAND ----------
 

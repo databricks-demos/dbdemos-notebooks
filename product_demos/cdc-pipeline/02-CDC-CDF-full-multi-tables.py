@@ -690,7 +690,7 @@ for iteration in range(1, 4):  # Monitor 3 iterations
                 print(f"         ID: {row['id']}, User: {row['name']}, Email: {row['email']}")
         
         latest_transactions = spark.sql("""
-            SELECT id, user_id, amount, currency, transaction_type 
+            SELECT id, amount, item_count 
             FROM silver_transactions 
             ORDER BY id DESC 
             LIMIT 2
@@ -698,7 +698,7 @@ for iteration in range(1, 4):  # Monitor 3 iterations
         if latest_transactions:
             print("      💳 Latest Transactions:")
             for row in latest_transactions:
-                print(f"         ID: {row['id']}, User: {row['user_id']}, Amount: {row['amount']} {row['currency']}")
+                print(f"         ID: {row['id']}, Amount: {row['amount']}, Items: {row['item_count']}")
                 
     except Exception as e:
         print(f"   ⚠️ Error showing details: {e}")

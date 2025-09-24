@@ -6,38 +6,27 @@
 # COMMAND ----------
 
 {
-  "name": "dlt-unit-test",
+  "name": "declarative-pipeline-unit-test",
   "category": "data-engineering",
-  "title": "Unit Testing Delta Live Table (DLT) for production-grade pipelines",
+  "title": "Unit Testing Declarative Pipeline for production-grade pipelines",
   "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
-  "default_schema": "dbdemos_dlt_unit_test",
-  "description": "Deploy robust Delta Live Table pipelines with unit tests leveraging expectation.",
-  "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Delta Live Table let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your DLT pipeline and make it composable, easily switching input data with your test data.",
-  "usecase": "Data Engineering",
-  "products": ["Delta Live Tables", "Delta Lake"],
-  "related_links": [
-      {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"},
-      {"title": "Databricks Delta Live Tables: 1B records for under $1", "url": "https://www.databricks.com/blog/2023/04/14/how-we-performed-etl-one-billion-records-under-1-delta-live-tables.html"}],
-  "recommended_items": ["dlt-loans", "dlt-cdc", "delta-lake"],
-  "demo_assets": [
-      {"title": "Delta Live Table pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/dlt-unit-test-dlt-0.png"},
-      {"title": "Databricks SQL Dashboard: DLT Data Quality Stats", "url": "https://www.dbdemos.ai/assets/img/dbdemos/dlt-unit-test-dashboard-0.png"}
-  ],
+  "default_schema": "dbdemos_ldp_unit_test",
+  "description": "Deploy robust pipelines with unit tests leveraging expectation.",
+  "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Lakeflow Declarative Pipeline let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your LDP pipeline and make it composable, easily switching input data with your test data.",
   "bundle": True,
-  "tags": [{"dlt": "Delta Live Table"}],
   "notebooks": [
     {
-      "path": "DLT-pipeline-to-test", 
+      "path": "LDP-pipeline-to-test", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "DLT Pipeline to test", 
+      "title":  "LDP to test", 
       "description": "Definition of the pipeline we want to test."
     },
     {
-      "path": "ingestion_profile/DLT-ingest_prod", 
+      "path": "ingestion_profile/LDP-ingest_prod", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -45,7 +34,7 @@
       "description": "Define the production data source (ex: kafka)"
     },
     {
-      "path": "ingestion_profile/DLT-ingest_test", 
+      "path": "ingestion_profile/LDP-ingest_test", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -53,15 +42,15 @@
       "description": "Define the test data source (ex: csv file crafted to validate our tests)"
     },
     {
-      "path": "test/DLT-Test-Dataset-setup", 
+      "path": "test/LDP-Test-Dataset-setup", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Test dataset creation", 
-      "description": "Craft the data required for the tests (used by 'DLT-ingest_test')"
+      "description": "Craft the data required for the tests (used by 'LDP-ingest_test')"
     },
     {
-      "path": "test/DLT-Tests", 
+      "path": "test/LDP-Tests", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -71,7 +60,7 @@
   ],
   "init_job": {
     "settings": {
-        "name": "field_demos_dlt_unit_test_init_{{CURRENT_USER_NAME}}",
+        "name": "field_demos_ldp_unit_test_init_{{CURRENT_USER_NAME}}",
         "email_notifications": {
             "no_alert_for_skipped_runs": False
         },
@@ -81,7 +70,7 @@
             {
                 "task_key": "init_data",
                 "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/test/DLT-Test-Dataset-setup",
+                    "notebook_path": "{{DEMO_FOLDER}}/test/LDP-Test-Dataset-setup",
                     "source": "WORKSPACE"
                 },
                 "job_cluster_key": "Shared_job_cluster",
@@ -89,7 +78,7 @@
                 "email_notifications": {}
             },
             {
-                "task_key": "start_dlt_pipeline",
+                "task_key": "start_ldp_pipeline",
                 "pipeline_task": {
                     "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-test}}",
                     "full_refresh": true
@@ -142,7 +131,7 @@
   },
   "pipelines": [
     {
-      "id": "dlt-test",
+      "id": "ldp-test",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -163,21 +152,21 @@
         "libraries": [
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/DLT-pipeline-to-test"
+                    "path": "{{DEMO_FOLDER}}/LDP-pipeline-to-test"
                 }
             },
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/ingestion_profile/DLT-ingest_test"
+                    "path": "{{DEMO_FOLDER}}/ingestion_profile/LDP-ingest_test"
                 }
             },
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/test/DLT-Tests"
+                    "path": "{{DEMO_FOLDER}}/test/LDP-Tests"
                 }
             }
         ],
-        "name": "dbdemos_dlt_unit_test_{{CATALOG}}_{{SCHEMA}}",
+        "name": "dbdemos_ldp_unit_test_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
         "target": "{{SCHEMA}}"
       }

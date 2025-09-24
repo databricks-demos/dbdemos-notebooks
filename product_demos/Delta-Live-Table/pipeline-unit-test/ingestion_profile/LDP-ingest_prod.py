@@ -23,13 +23,13 @@
 # MAGIC
 # MAGIC In prod, we'll be using the autoloader to our prod landing folder. 
 # MAGIC
-# MAGIC To give more flexibility in our deployment, we'll go further and set the location as a DLT parameter
+# MAGIC To give more flexibility in our deployment, we'll go further and set the location as a LDP parameter
 
 # COMMAND ----------
 
 # DBTITLE 1,Ingest raw User stream data in incremental mode
 import dlt
-DEFAULT_LANDING_PATH = "/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/prod"
+DEFAULT_LANDING_PATH = "/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/prod"
 
 @dlt.view(comment="Raw user data - Production")
 def raw_user_data():

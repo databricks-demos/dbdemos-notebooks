@@ -36,7 +36,7 @@ def raw_user_data():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "json")
       .option("cloudFiles.schemaHints", "id int")
-      .load(f"/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_json/*.json"))
+      .load(f"/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/users_json/*.json"))
 
 # COMMAND ----------
 
@@ -46,4 +46,4 @@ def raw_spend_data():
   return (spark.readStream.format("cloudFiles")
     .option("cloudFiles.format","csv")
     .option("cloudFiles.schemaHints", "id int, age int, annual_income float, spending_core float")
-    .load(f"/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/spend_csv/*.csv"))
+    .load(f"/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/spend_csv/*.csv"))

@@ -4,17 +4,17 @@
 # MAGIC
 # MAGIC We have 2 files that we'll be using as dataset saved in git within the project (you can open them directly under the `dataset` folder). 
 # MAGIC
-# MAGIC All we have to do is move these local files to our blob storage so that we can read them within our DLT test pipeline.
+# MAGIC All we have to do is move these local files to our blob storage so that we can read them within our LDP test pipeline.
 # MAGIC
 # MAGIC *Note: We could also have used Faker to generate them dynamically.*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=DLT-Test-Dataset-setup&demo_name=dlt-unit-test&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=LDP-Test-Dataset-setup&demo_name=dlt-unit-test&event=VIEW">
 
 # COMMAND ----------
 
 catalog = "main__build"
-schema = dbName = db = "dbdemos_dlt_unit_test"
+schema = dbName = db = "dbdemos_ldp_unit_test"
 volume_name = "raw_data"
 
 # COMMAND ----------
@@ -30,13 +30,13 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # DBTITLE 1,Move our test resources to DBFS for tests
 #We could use repo arbitrary files, but we'll prefer working without files to support workpsace (non repo) deployment too.
-#dbutils.fs.rm("/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/customers/users_json", True)
-#dbutils.fs.mkdirs("/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_json")
-#dbutils.fs.mkdirs("/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/spend_csv")
+#dbutils.fs.rm("/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/customers/users_json", True)
+#dbutils.fs.mkdirs("/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/users_json")
+#dbutils.fs.mkdirs("/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/spend_csv")
 
 #import shutil
-#shutil.copyfile("./dataset/users.json", "/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_json/users.json")
-#shutil.copyfile("./dataset/spend.csv", "/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/spend_csv/spend.csv")
+#shutil.copyfile("./dataset/users.json", "/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/users_json/users.json")
+#shutil.copyfile("./dataset/spend.csv", "/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/spend_csv/spend.csv")
 
 
 spend_csv = """id,age,annual_income,spending_core
@@ -47,7 +47,7 @@ spend_csv = """id,age,annual_income,spending_core
 ,95,847.5,840.9
 invalid_id,1,514.5,284.5"""
 
-dbutils.fs.put('/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/spend_csv/spend.csv', spend_csv, True)
+dbutils.fs.put('/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/spend_csv/spend.csv', spend_csv, True)
     
 users_json = """{"id":1,"email":"joneschristina@example.org","creation_date":"11-28-2021 12:08:46","last_activity_date":"08-20-2021 08:24:44","firstname":"Randall","lastname":"Espinoza","address":"71571 Jennifer Creek - East John, CO 81653","city":"Port Nicholas","last_ip":"22.207.225.77","postcode":"62389"}
 {"id":4,"email":"christybautista@example.net","creation_date":"06-30-2022 22:51:30","last_activity_date":"08-22-2021 17:25:06","firstname":"Jose","lastname":"Bell","address":"865 Young Crest - Lake Adriennebury, VA 67749","city":"Brownstad","last_ip":"159.111.101.250","postcode":"52432"}
@@ -57,7 +57,7 @@ users_json = """{"id":1,"email":"joneschristina@example.org","creation_date":"11
 {"email":"davidporter@example.com","creation_date":"05-28-2022 09:54:50","last_activity_date":"12-18-2021 21:48:48","firstname":"Jeremy","lastname":"Knight","address":"06183 Acevedo Bypass - Petermouth, ME 34177","city":"West Brianburgh","last_ip":"53.240.159.208","postcode":"73380"}
 {"id":"invalid ID","email":"margaret84@example.com","creation_date":"12-20-2021 19:57:28","last_activity_date":"07-27-2021 09:39:28","firstname":"Angela","lastname":"Adams","address":"098 Daniel Ferry Suite 565 - South Andrea, ND 36326","city":"New Mariafort","last_ip":"7.176.250.65","postcode":"21300"}"""
 
-dbutils.fs.put('/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_json/users.json', users_json, True)
+dbutils.fs.put('/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/users_json/users.json', users_json, True)
 
 # COMMAND ----------
 
@@ -72,7 +72,7 @@ dbutils.fs.put('/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_j
 
 # COMMAND ----------
 
-# MAGIC %fs head /Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_json/users.json
+# MAGIC %fs head /Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/users_json/users.json
 
 # COMMAND ----------
 
@@ -88,7 +88,7 @@ dbutils.fs.put('/Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/users_j
 
 # COMMAND ----------
 
-# MAGIC %fs head /Volumes/main__build/dbdemos_dlt_unit_test/raw_data/test/spend_csv/spend.csv
+# MAGIC %fs head /Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/spend_csv/spend.csv
 
 # COMMAND ----------
 

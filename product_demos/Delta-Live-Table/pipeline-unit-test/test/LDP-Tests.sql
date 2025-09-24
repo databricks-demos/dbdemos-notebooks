@@ -1,19 +1,19 @@
 -- Databricks notebook source
 -- MAGIC %md 
--- MAGIC # Testing our DLT pipeline
+-- MAGIC # Testing our LDP
 -- MAGIC
--- MAGIC Tests can be added directly as expectation within DLT.
+-- MAGIC Tests can be added directly as expectation within LDP.
 -- MAGIC
--- MAGIC This is typically done using a companion notebook and creating a test version of the DLT pipeline.
+-- MAGIC This is typically done using a companion notebook and creating a test version of the LDP .
 -- MAGIC
--- MAGIC The test DLT pipeline will consume a small test datasets that we'll use to perform cheks on the output: given a specific input, we test the transformation logic by ensuring the output is correct, adding wrong data as input to cover all cases.
+-- MAGIC The test LDP will consume a small test datasets that we'll use to perform cheks on the output: given a specific input, we test the transformation logic by ensuring the output is correct, adding wrong data as input to cover all cases.
 -- MAGIC
--- MAGIC By leveraging expectations, we can simply run a test DLT pipeline. If the pipeline fail, this means that our tests are failing and something is incorrect.
+-- MAGIC By leveraging expectations, we can simply run a test LDP pipeline. If the pipeline fail, this means that our tests are failing and something is incorrect.
 -- MAGIC
 -- MAGIC <img style="float: right" width="1000px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/dlt-advanecd/DLT-advanced-unit-test-3.png"/>
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=DLT-Tests&demo_name=dlt-unit-test&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=LDP-Tests&demo_name=dlt-unit-test&event=VIEW">
 
 -- COMMAND ----------
 
@@ -30,11 +30,11 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's make sure incorrect input rows (bad schema) are dropped
-CREATE TEMPORARY LIVE TABLE TEST_user_bronze_dlt (
+CREATE TEMPORARY LIVE TABLE TEST_user_bronze_ldp (
   CONSTRAINT incorrect_data_removed EXPECT (not_empty_rescued_data = 0) ON VIOLATION FAIL UPDATE
 )
 COMMENT "TEST: bronze table properly drops row with incorrect schema"
-AS SELECT count(*) as not_empty_rescued_data from live.user_bronze_dlt  where _rescued_data is not null or email='margaret84@example.com'
+AS SELECT count(*) as not_empty_rescued_data from user_bronze_ldp  where _rescued_data is not null or email='margaret84@example.com'
 
 -- COMMAND ----------
 
@@ -49,7 +49,7 @@ AS SELECT count(*) as not_empty_rescued_data from live.user_bronze_dlt  where _r
 
 -- COMMAND ----------
 
-CREATE TEMPORARY LIVE TABLE TEST_user_silver_dlt_anonymize (
+CREATE TEMPORARY LIVE TABLE TEST_user_silver_ldp_anonymize (
   CONSTRAINT keep_all_rows              EXPECT (num_rows = 4)      ON VIOLATION FAIL UPDATE, 
   CONSTRAINT email_should_be_anonymized EXPECT (clear_email = 0)  ON VIOLATION FAIL UPDATE,
   CONSTRAINT null_ids_removed           EXPECT (null_id_count = 0) ON VIOLATION FAIL UPDATE  
@@ -57,9 +57,9 @@ CREATE TEMPORARY LIVE TABLE TEST_user_silver_dlt_anonymize (
 COMMENT "TEST: check silver table removes null ids and anonymize emails"
 AS (
   WITH
-   rows_test  AS (SELECT count(*) AS num_rows       FROM live.user_silver_dlt),
-   email_test AS (SELECT count(*) AS clear_email    FROM live.user_silver_dlt  WHERE email LIKE '%@%'),
-   id_test    AS (SELECT count(*) AS null_id_count  FROM live.user_silver_dlt  WHERE id IS NULL)
+   rows_test  AS (SELECT count(*) AS num_rows       FROM user_silver_ldp),
+   email_test AS (SELECT count(*) AS clear_email    FROM user_silver_ldp  WHERE email LIKE '%@%'),
+   id_test    AS (SELECT count(*) AS null_id_count  FROM user_silver_ldp  WHERE id IS NULL)
   SELECT * from email_test, id_test, rows_test)
 
 -- COMMAND ----------
@@ -71,11 +71,11 @@ AS (
 
 -- COMMAND ----------
 
-CREATE TEMPORARY LIVE TABLE TEST_user_gold_dlt (
+CREATE TEMPORARY LIVE TABLE TEST_user_gold_ldp (
   CONSTRAINT pk_must_be_unique EXPECT (duplicate = 1) ON VIOLATION FAIL UPDATE
 )
 COMMENT "TEST: check that gold table only contains unique customer id"
-AS SELECT count(*) as duplicate, id FROM live.user_gold_dlt GROUP BY id
+AS SELECT count(*) as duplicate, id FROM user_gold_ldp GROUP BY id
 
 -- COMMAND ----------
 

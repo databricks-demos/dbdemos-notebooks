@@ -10,21 +10,10 @@
 # MAGIC 1. **🔄 Step 1**: Set up multi-table CDC data simulation
 # MAGIC 2. **🥉 Step 2**: Build parallel Bronze layers with Auto Loader
 # MAGIC 3. **🥈 Step 3**: Create parallel Silver layers with MERGE operations
-# MAGIC 4. **🚀 Step 4**: Monitor and optimize multi-table processing
-# MAGIC 5. **📊 Step 5**: Scale to production with serverless compute
-# MAGIC 6. **📊 Step 6**: Multi-table CDC benefits and advantages
-# MAGIC 7. **📊 Step 7**: Production deployment strategies
-# MAGIC 8. **📊 Step 8**: Next steps and advanced patterns
+# MAGIC 4. **🚀 Step 4**: Implement Gold layer with Change Data Feed (CDF)
+# MAGIC 5. **📊 Step 5**: Test Continuous multi-table CDC Data processing
 # MAGIC
-# MAGIC ### Progress Tracking:
-# MAGIC - ✅ **Step 1**: Multi-table CDC data simulation setup
-# MAGIC - ⏳ **Step 2**: Parallel Bronze layer implementation
-# MAGIC - ⏳ **Step 3**: Parallel Silver layer implementation
-# MAGIC - ⏳ **Step 4**: Multi-table processing monitoring
-# MAGIC - ⏳ **Step 5**: Production scaling and optimization
-# MAGIC - ⏳ **Step 6**: Multi-table benefits and advantages
-# MAGIC - ⏳ **Step 7**: Production deployment strategies
-# MAGIC - ⏳ **Step 8**: Next steps and advanced patterns
+# MAGIC
 # MAGIC
 # MAGIC ### Key Benefits of Serverless Multi-Table CDC:
 # MAGIC - 💰 **Cost-effective**: Pay only for compute time used across all tables
@@ -79,24 +68,16 @@ from pyspark.sql.functions import current_timestamp, col
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 🔄 Step 1: Schema Evolution with Serverless Compute
+# MAGIC ## 🔄 Step 1: Set up multi-table CDC data simulation
 # MAGIC
-# MAGIC ### What We're Building:
-# MAGIC - **Purpose**: Handle schema changes across multiple tables automatically
-# MAGIC - **Technology**: Auto Loader with serverless compute
-# MAGIC - **Benefits**: Zero-downtime schema evolution
-# MAGIC
-# MAGIC ### Key Features:
-# MAGIC - 🔄 **Auto Loader**: Automatically detects and handles schema changes at the bronze layer
-# MAGIC - 📊 **Delta `mergeSchema`**: Enables schema evolution during writes
-# MAGIC - 🚀 **Serverless**: No cluster configuration required for schema evolution
-# MAGIC - ⚡ **Auto Recovery**: Automatic recovery from schema change events
-# MAGIC
-# MAGIC **💡 Note**: Auto Loader may pause a stream if a schema change occurs and will automatically recover during the next trigger. This works perfectly with serverless `availableNow` triggers.
 
 # COMMAND ----------
 
-# DBTITLE 1,📊 Step 1.1: Explore Multi-Table CDC Data Structure
+# MAGIC %md
+# MAGIC ### Step 1.1: Explore Multi-Table CDC Data Structure
+
+# COMMAND ----------
+
 print("🔍 Exploring our multi-table CDC data structure...")
 print("We have 2 tables we want to sync: transactions and users")
 base_folder = f"{raw_data_location}/cdc"
@@ -105,7 +86,7 @@ display(dbutils.fs.ls(base_folder))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 🎯 Step 1.2: Set Up Multi-Table CDC Data Simulation
+# MAGIC ### Step 1.2: Set Up Data Simulation
 # MAGIC
 # MAGIC To demonstrate serverless processing of multiple CDC streams simultaneously, we'll create data generators for multiple tables that simulate incoming CDC events every 60 seconds.
 # MAGIC
@@ -283,7 +264,8 @@ multi_table_generator_thread = start_multi_table_generators()
 
 # COMMAND ----------
 
-# MAGIC %md ## Silver and bronze transformations
+# MAGIC %md 
+# MAGIC ## **🥉 Step 2**: Build parallel Bronze layers with Auto Loader
 
 # COMMAND ----------
 
@@ -325,7 +307,17 @@ def update_bronze_layer(path, bronze_table):
 
 # COMMAND ----------
 
-# DBTITLE 1,🥈 Step 3.1: Silver Layer with MERGE Operations
+# MAGIC %md
+# MAGIC ## **🥈 Step 3**: Create parallel Silver layers with MERGE operations
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 3.1 Silver Layer with MERGE Operations 
+# MAGIC
+
+# COMMAND ----------
+
 # Stream incrementally loading new data from the bronze CDC table and merging them in the Silver table
 def update_silver_layer(bronze_table, silver_table):
   print(f"Ingesting {bronze_table} updates and materializing silver layer using MERGE statement with serverless...")
@@ -373,7 +365,7 @@ def update_silver_layer(bronze_table, silver_table):
 
 # COMMAND ----------
 
-# MAGIC %md ## Starting all the streams
+# MAGIC %md ### 3.2 Starting all the streams
 # MAGIC
 # MAGIC We can now iterate over the folders to start the bronze & silver streams for each table.
 
@@ -430,6 +422,11 @@ with ThreadPoolExecutor(max_workers=max_parallel_tables) as executor:
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### 3.3 Check the Resulting Silver Tables
+
+# COMMAND ----------
+
 # MAGIC %sql select * from bronze_users
 
 # COMMAND ----------
@@ -448,7 +445,7 @@ with ThreadPoolExecutor(max_workers=max_parallel_tables) as executor:
 # MAGIC All our silver tables are now materialized using CDC events with **Serverless Compute**! You can now build additional transformations (gold layer) based on your business requirements.
 # MAGIC
 # MAGIC ### Production readiness with Serverless
-# MAGIC 
+# MAGIC
 # MAGIC **Error Handling Strategies**:
 # MAGIC - Capture and handle exceptions in each stream properly
 # MAGIC - Send notifications when a table encounters errors while continuing to process others
@@ -473,10 +470,8 @@ with ThreadPoolExecutor(max_workers=max_parallel_tables) as executor:
 
 # COMMAND ----------
 
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC ## Continuous Multi-Table Serverless CDC Processing with Incremental Processing
+# MAGIC ## 5. Test Continuous Multi-Table Serverless CDC Processing
 # MAGIC
 # MAGIC With multiple data generators running, we can demonstrate how serverless compute handles continuous multi-table CDC processing efficiently and cost-effectively. The pipeline processes **only newly arrived data** across all tables.
 # MAGIC
@@ -518,34 +513,6 @@ def trigger_multi_table_cdc_pipeline():
     
     print(f"✅ Multi-table CDC pipeline completed in {processing_time:.2f} seconds")
     return processing_time
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Production Deployment Patterns for Multi-Table CDC
-# MAGIC
-# MAGIC **Option 1: Scheduled Multi-Table Processing**
-# MAGIC ```python
-# MAGIC # Schedule this notebook every 5 minutes via Databricks Jobs
-# MAGIC # Serverless automatically scales for varying table volumes
-# MAGIC trigger_multi_table_cdc_pipeline()
-# MAGIC ```
-# MAGIC
-# MAGIC **Option 2: Event-Driven Multi-Table Processing**
-# MAGIC ```python
-# MAGIC # Use cloud storage events to trigger processing
-# MAGIC # Process only tables with new data
-# MAGIC # Serverless scales based on actual workload
-# MAGIC ```
-# MAGIC
-# MAGIC **Option 3: Continuous Processing Loop**
-# MAGIC ```python
-# MAGIC # For demo purposes - continuous processing
-# MAGIC while generators_running:
-# MAGIC     processing_time = trigger_multi_table_cdc_pipeline()
-# MAGIC     sleep_time = max(60 - processing_time, 10)  # Adaptive scheduling
-# MAGIC     time.sleep(sleep_time)
-# MAGIC ```
 
 # COMMAND ----------
 
@@ -720,8 +687,6 @@ print("• Implement error handling strategies")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 📊 Step 6: Multi-Table CDC Benefits
-# MAGIC
 # MAGIC ### Key Advantages:
 # MAGIC - 🔄 **Parallel Processing**: Multiple tables processed simultaneously
 # MAGIC - 📊 **Scalable Architecture**: Easy to add new tables to the pipeline
@@ -732,8 +697,6 @@ print("• Implement error handling strategies")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 📊 Step 7: Production Deployment
-# MAGIC
 # MAGIC ### Deployment Options:
 # MAGIC - 📅 **Scheduled Jobs**: Use Databricks Jobs for automated processing
 # MAGIC - 🔄 **Workflows**: Orchestrate complex multi-table pipelines
@@ -747,7 +710,6 @@ print("• Implement error handling strategies")
 # MAGIC ## 📊 Step 8: Next Steps
 # MAGIC
 # MAGIC ### Continue Your CDC Journey:
-# MAGIC - 🔗 **[Single Table CDC]($./01-CDC-CDF-simple-pipeline)**: Review single-table patterns
 # MAGIC - 🏗️ **[Delta Live Tables]($./dlt-cdc)**: Simplified multi-table CDC with `APPLY CHANGES`
 # MAGIC - 📚 **[Delta Lake Demo]($./delta-lake)**: Deep dive into Delta Lake features
 # MAGIC - 🚀 **[Auto Loader Demo]($./auto-loader)**: Advanced file ingestion patterns

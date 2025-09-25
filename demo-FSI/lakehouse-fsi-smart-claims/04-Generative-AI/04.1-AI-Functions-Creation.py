@@ -148,7 +148,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM get_claim_details("6a365ec8-4def-4b4e-910f-0a9a033aab82")
+# MAGIC SELECT * FROM get_claim_details("553b6891-37cb-406b-9b59-e97d4e47b8e1")
 
 # COMMAND ----------
 
@@ -272,7 +272,7 @@ spark.sql(f"""
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT generate_claim_summary("6a365ec8-4def-4b4e-910f-0a9a033aab82", "102085055", "VWPW11K78W108679", "59700", "Multi-vehicle Collision", "2016-10-20", "Major Damage", "35", "true", "VOLKSWAGEN", "GOLF", "2008", "COMP", "30000", "MANHATTAN", "LOWER MANHATTAN") AS claim_summary
+# MAGIC SELECT generate_claim_summary("553b6891-37cb-406b-9b59-e97d4e47b8e1",	"102107383",	"WBAHT1102H5H73209",	"51570",	"Parked Car",	"2018-07-15",	"Major Damage",	"38",	"false",	"BMW", "X1",	"2017",	"COMP",	"170000",	"QUEENS",	"SOUTHEAST QUEENS") AS claim_summary
 
 # COMMAND ----------
 

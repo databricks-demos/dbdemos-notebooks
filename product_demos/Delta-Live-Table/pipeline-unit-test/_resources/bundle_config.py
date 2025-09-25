@@ -131,7 +131,7 @@
   },
   "pipelines": [
     {
-      "id": "ldp-test",
+      "id": "dlt-test",
       "run_after_creation": False,
       "definition": {
         "clusters": [

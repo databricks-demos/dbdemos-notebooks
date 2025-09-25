@@ -22,7 +22,7 @@
       {"title": "Free Dolly", "url": "https://www.databricks.com/blog/2023/04/12/dolly-first-open-commercially-viable-instruction-tuned-llm"}],
   "recommended_items": ["sql-ai-functions", "feature-store", "mlops-end2end"],
   "demo_assets": [],
-  "bundle": True,
+  "bundle": False,
   "tags": [{"ds": "Data Science"}],
   "notebooks": [
     {

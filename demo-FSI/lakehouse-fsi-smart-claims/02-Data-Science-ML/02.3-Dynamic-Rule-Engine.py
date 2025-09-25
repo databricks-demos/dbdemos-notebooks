@@ -98,9 +98,9 @@ insert_rule('exceeds policy amount', 'valid_amount', exceeds_policy_amount, 'HIG
 # COMMAND ----------
 
 severity_mismatch = '''
-CASE WHEN    damage_prediction.label="major" AND incident_severity > 0.8 THEN  "Severity matches the report"
-       WHEN  damage_prediction.label="minor" AND incident_severity > 0.6 THEN  "Severity matches the report"
-       WHEN  damage_prediction.label="ok" AND incident_severity > 0.4 THEN  "Severity matches the report"
+CASE WHEN    damage_prediction.label="major" AND damage_prediction.score > 0.8 THEN  "Severity matches the report"
+       WHEN  damage_prediction.label="minor" AND damage_prediction.score > 0.6 THEN  "Severity matches the report"
+       WHEN  damage_prediction.label="ok" AND damage_prediction.score > 0.4 THEN  "Severity matches the report"
        ELSE "Severity does not match"
 END 
 '''

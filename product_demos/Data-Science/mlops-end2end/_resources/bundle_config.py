@@ -381,7 +381,21 @@
                 {
                     "job_cluster_key": "Shared_job_cluster",
                     "new_cluster": {
-                        "performance_target": "STANDARD"
+                        "spark_version": "16.4.x-cpu-ml-scala2.12",
+                        "spark_conf": {
+                            "spark.master": "local[*, 4]",
+                            "spark.databricks.cluster.profile": "singleNode"
+                        },
+                        "custom_tags": {
+                            "ResourceClass": "SingleNode"
+                        },
+                        "spark_env_vars": {
+                            "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                        },
+                        "enable_elastic_disk": true,
+                        "data_security_mode": "SINGLE_USER",
+                        "runtime_engine": "STANDARD",
+                        "num_workers": 0
                     }
                 }
             ],
@@ -458,7 +472,19 @@
                         {
                             "job_cluster_key": "mlops_batch_inference_cluster",
                             "new_cluster": {
-                                "performance_target": "STANDARD"
+                                "spark_version": "16.4.x-cpu-ml-scala2.12",
+                                "spark_conf": {
+                                    "spark.master": "local[*, 4]",
+                                    "spark.databricks.cluster.profile": "singleNode"
+                                },
+                                "custom_tags": {"ResourceClass": "SingleNode"},
+                                "spark_env_vars": {
+                                    "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                                },
+                                "enable_elastic_disk": True,
+                                "data_security_mode": "SINGLE_USER",
+                                "runtime_engine": "STANDARD",
+                                "num_workers": 0
                             }
                         }
                     ],

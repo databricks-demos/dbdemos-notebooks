@@ -46,7 +46,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=false
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 

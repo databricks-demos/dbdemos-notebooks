@@ -40,7 +40,7 @@ logging.getLogger("mlflow").setLevel(logging.ERROR)
 
 # COMMAND ----------
 
-DBDemos.setup_schema(catalog, db, reset_all_data)
+DBDemos.setup_schema(catalog, db, False)
 
 # COMMAND ----------
 

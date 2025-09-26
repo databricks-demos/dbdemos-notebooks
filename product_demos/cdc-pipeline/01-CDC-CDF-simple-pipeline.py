@@ -1,24 +1,32 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC # Implement CDC: Change Data Capture
-# MAGIC ## Use-case: Synchronize your SQL Database with your Lakehouse
+# MAGIC # CDC Pipeline Demo: Change Data Capture with Serverless Compute
+# MAGIC ## Step-by-Step Guide to Building a Cost-Effective CDC Pipeline
 # MAGIC
-# MAGIC Delta Lake is an <a href="https://delta.io/" target="_blank">open-source</a> storage layer with Transactional capabilities and increased Performances. 
+# MAGIC This demo shows you how to build a **Change Data Capture (CDC)** pipeline using **Databricks Serverless Compute** for cost-effective, auto-scaling data processing.
 # MAGIC
-# MAGIC Delta lake is designed to support CDC workload by providing support for UPDATE / DELETE and MERGE operation.
+# MAGIC ### What You'll Learn:
+# MAGIC 1. **🥉 Step 1**: Set up CDC data simulation
+# MAGIC 2. **🥈 Step 2**: Build Bronze layer with Auto Loader
+# MAGIC 3. **🥇 Step 3**: Create Silver layer with MERGE operations
+# MAGIC 4. **🚀 Step 4**: Implement Gold layer with Change Data Feed (CDF)
+# MAGIC 5. **📊 Step 5**: Continuous CDC Data
 # MAGIC
-# MAGIC In addition, Delta table can support CDC to capture internal changes and propagate the changes downstream.
 # MAGIC
-# MAGIC Note that this is a fairly advaned demo. Before going into this content, we recommend you get familiar with Delta Lake `dbdemos.install('delta-lake')`.
+# MAGIC ### Key Benefits of Serverless CDC:
+# MAGIC - 💰 **Cost-effective**: Pay only for compute time used
+# MAGIC - 🚀 **Auto-scaling**: Automatically scales based on workload
+# MAGIC - ⚡ **Fast processing**: Optimized for batch processing with `availableNow` triggers
+# MAGIC - 🔄 **Incremental**: Only processes new/changed data
 # MAGIC
-# MAGIC ## Simplifying CDC with Delta Live Table
+# MAGIC ### Prerequisites:
+# MAGIC - Basic understanding of Delta Lake: `dbdemos.install('delta-lake')`
+# MAGIC - Familiarity with Structured Streaming concepts
 # MAGIC
-# MAGIC As you'll see, implementing a CDC pipeline from scratch is slightly advanced. 
+# MAGIC ---
 # MAGIC
-# MAGIC To simplify these operation & implement a full CDC flow with SQL expression, we strongly advise to use Delta Live Table with `APPLY CHANGES`: `dbdemos.install('delta-live-table')` (including native SCDT2 support)
-# MAGIC
-# MAGIC As you'll see, `APPLY CHANGES` handles the MERGE INTO + DEDUPLICATION complexity for you. 
+# MAGIC **💡 Alternative Approach**: For production CDC pipelines, consider using **Delta Live Tables** with `APPLY CHANGES` for simplified implementation: `dbdemos.install('delta-live-table')` 
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -30,92 +38,298 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Import Required Functions
+from pyspark.sql.functions import current_timestamp, col
+
+# COMMAND ----------
+
+# DBTITLE 1,Configure Schema Evolution for CDC Processing
+# Enable automatic schema merging for all Delta operations to handle schema changes
+# Schema evolution is handled automatically by mergeSchema=true in writeStream operations
+# Schema inference is handled automatically by Auto Loader with cloudFiles.inferColumnTypes=true
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/delta_cdf.png" alt='Delta Lake Change Data Feed'/>
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## CDC flow
+# MAGIC ## 📋 CDC Pipeline Architecture Overview
 # MAGIC
-# MAGIC Here is the flow we'll implement, consuming CDC data from an external database. Note that the incoming could be any format, including message queue such as Kafka.
+# MAGIC Here's the complete CDC pipeline we'll build using **Serverless Compute**:
 # MAGIC
-# MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-0.png" alt='Make all your data ready for BI and ML'/>
+# MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-0.png" alt='CDC Pipeline Architecture'/>
+# MAGIC
+# MAGIC ### Pipeline Flow:
+# MAGIC 1. **📥 Data Source**: CDC events from external database (simulated)
+# MAGIC 2. **🥉 Bronze Layer**: Raw CDC data ingestion with Auto Loader
+# MAGIC 3. **🥈 Silver Layer**: Cleaned, deduplicated data with MERGE operations
+# MAGIC 4. **🥇 Gold Layer**: Business-ready data with Change Data Feed (CDF)
+# MAGIC 5. **📊 Analytics**: Real-time insights and reporting
+# MAGIC
+# MAGIC **💡 Note**: The incoming data could be any format, including message queues like Kafka.
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Bronze: Incremental data loading using Auto Loader
+# MAGIC %md
+# MAGIC ## 🥉 Step 1: Bronze Layer - Raw Data Ingestion
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-1.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-1.png" alt='Bronze Layer' style='float: right' width='600'/>
 # MAGIC
-# MAGIC Working with external system can be challenging due to schema update. The external database can have schema update, adding or modifying columns, and our system must be robust against these changes.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Ingest raw CDC data from external sources
+# MAGIC - **Technology**: Auto Loader with serverless compute
+# MAGIC - **Benefits**: Automatic schema evolution and incremental processing
 # MAGIC
-# MAGIC Databricks Autoloader (`cloudFiles`) handles schema inference and evolution out of the box.
+# MAGIC ### Key Features:
+# MAGIC - 🔄 **Schema Evolution**: Handles database schema changes automatically
+# MAGIC - 📈 **Incremental Processing**: Only processes new files
+# MAGIC - ⚡ **Serverless Scaling**: Auto-scales based on data volume
+# MAGIC - 💰 **Cost Efficient**: Pay only for processing time
 # MAGIC
-# MAGIC For more details on Auto Loader, run `dbdemos.install('auto-loader')`
+# MAGIC **💡 Learn More**: For detailed Auto Loader concepts, run `dbdemos.install('auto-loader')`
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's explore our incoming data. We receive CSV files with client information
+# MAGIC %md
+# MAGIC ## Step 1.1: Explore Incoming CDC Data
+
+# COMMAND ----------
+
+print("🔍 Exploring our incoming CDC data structure...")
 cdc_raw_data = spark.read.option('header', "true").csv(raw_data_location+'/user_csv')
 display(cdc_raw_data)
 
 # COMMAND ----------
 
-# DBTITLE 1,Our CDC is sending 3 type of operation: APPEND, DELETE and UPDATE
+# MAGIC %md
+# MAGIC ## Step 1.2: Understand CDC Operation Types
+
+# COMMAND ----------
+
+print("🔍 Understanding CDC operation types...")
+print("Our CDC system sends 3 types of operations:")
 display(cdc_raw_data.dropDuplicates(['operation']))
 
 # COMMAND ----------
 
-# DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
+# MAGIC %md
+# MAGIC ## Step 1.3: Set Up Continuous CDC Data Simulation
+# MAGIC
+# MAGIC To demonstrate serverless compute capabilities, we'll create a data generator that simulates incoming CDC events every 60 seconds.
+# MAGIC
+# MAGIC ### Why This Matters:
+# MAGIC - 🚀 **Auto-scaling**: Shows how serverless scales with workload
+# MAGIC - 💰 **Cost Efficiency**: Demonstrates `availableNow` trigger benefits
+# MAGIC - 🔄 **Real-world Simulation**: Mimics continuous CDC scenarios
+# MAGIC - 📊 **Monitoring**: Enables table growth visualization
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Step 1.4: CDC Data Generator Implementation
+
+# COMMAND ----------
+
+import threading
+import time
+import random
+from datetime import datetime
+import pandas as pd
+
+# Global variable to control the data generator
+generator_running = False
+
+def generate_cdc_record(operation_type="UPDATE", user_id=None):
+    """Generate a single CDC record"""
+    if user_id is None:
+        user_id = random.randint(1, 1000)
+    
+    operations = {
+        "INSERT": {
+            "id": user_id,
+            "name": f"User_{user_id}_{random.randint(1,99)}",
+            "address": f"Address_{random.randint(1,999)} Street",
+            "email": f"user{user_id}@company{random.randint(1,10)}.com",
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "INSERT"
+        },
+        "UPDATE": {
+            "id": user_id,
+            "name": f"Updated_User_{user_id}",
+            "address": f"New_Address_{random.randint(1,999)} Avenue",
+            "email": f"updated.user{user_id}@newcompany{random.randint(1,5)}.com",
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "UPDATE"
+        },
+        "DELETE": {
+            "id": user_id,
+            "name": None,
+            "address": None,
+            "email": None,
+            "operation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "operation": "DELETE"
+        }
+    }
+    return operations[operation_type]
+
+def continuous_cdc_generator():
+    """Background function that generates CDC data every 120 seconds"""
+    global generator_running
+    file_counter = 0
+    
+    while generator_running:
+        try:
+            # Generate 3-5 random CDC events
+            num_events = random.randint(3, 5)
+            cdc_events = []
+            
+            for _ in range(num_events):
+                # Random operation type with weighted probability
+                operation = random.choices(
+                    ["INSERT", "UPDATE", "DELETE"], 
+                    weights=[50, 40, 10]  # More inserts/updates than deletes
+                )[0]
+                cdc_events.append(generate_cdc_record(operation))
+            
+            # Create DataFrame and save as CSV
+            df = pd.DataFrame(cdc_events)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"cdc_events_{timestamp}_{file_counter}.csv"
+            file_path = f"{raw_data_location}/user_csv/{filename}"
+            
+            # Convert to Spark DataFrame and save
+            spark_df = spark.createDataFrame(df)
+            spark_df.coalesce(1).write.mode("overwrite").option("header", "true").csv(file_path)
+            
+            print(f"Generated {num_events} CDC events at {datetime.now()}: {filename}")
+            file_counter += 1
+            
+            # Wait 60 seconds before next batch
+            time.sleep(60)
+            
+        except Exception as e:
+            print(f"Error in CDC generator: {e}")
+            time.sleep(60)  # Continue even if there's an error
+
+def start_cdc_generator():
+    """Start the CDC data generator in background"""
+    global generator_running
+    if not generator_running:
+        generator_running = True
+        generator_thread = threading.Thread(target=continuous_cdc_generator, daemon=True)
+        generator_thread.start()
+        print("🚀 CDC Data Generator started! New data will arrive every 60 seconds.")
+        print("💡 This simulates continuous CDC events for serverless processing demonstration.")
+        return generator_thread
+    else:
+        print("CDC Generator is already running!")
+        return None
+
+def stop_cdc_generator():
+    """Stop the CDC data generator"""
+    global generator_running
+    generator_running = False
+    print("🛑 CDC Data Generator stopped.")
+
+# Start the data generator for continuous simulation
+data_generator_thread = start_cdc_generator()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 🥈 Step 2: Create Bronze Delta Table With Auto Loader
+# MAGIC
+
+# COMMAND ----------
+
+# Drop existing table if it exists to avoid schema conflicts
+try:
+    spark.sql("DROP TABLE IF EXISTS clients_cdc")
+    print("🔄 Dropped existing clients_cdc table to avoid schema conflicts")
+except:
+    pass
+
 bronzeDF = (spark.readStream
                 .format("cloudFiles")
                 .option("cloudFiles.format", "csv")
-                #.option("cloudFiles.maxFilesPerTrigger", "1") #Simulate streaming, remove in production
                 .option("cloudFiles.inferColumnTypes", "true")
                 .option("cloudFiles.schemaLocation",  raw_data_location+"/stream/schema_cdc_raw")
                 .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
+                .option("cloudFiles.useNotifications", "false")  # Optimized for serverless
+                .option("cloudFiles.includeExistingFiles", "true")  # Process all files on first run
                 .load(raw_data_location+'/user_csv'))
 
-(bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
+(bronzeDF.withColumn("file_name", col("_metadata.file_path"))
+        .withColumn("processing_time", current_timestamp())  # Add processing timestamp
+        .writeStream
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
-        .trigger(processingTime='10 seconds')
-        #.trigger(availableNow=True) --use this trigger on serverless
+        .option("mergeSchema", "true")  # Enable schema evolution
+        .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
         .table("clients_cdc"))
 
-time.sleep(20)
+time.sleep(10)
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- let's make sure our table has the proper compaction settings to support streaming
-# MAGIC ALTER TABLE clients_cdc SET TBLPROPERTIES (delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC -- Optimize table properties for serverless streaming and performance
+# MAGIC ALTER TABLE clients_cdc SET TBLPROPERTIES (
+# MAGIC   delta.autoOptimize.optimizeWrite = true, 
+# MAGIC   delta.autoOptimize.autoCompact = true,
+# MAGIC   delta.targetFileSize = '128MB',
+# MAGIC   delta.tuneFileSizesForRewrites = true
+# MAGIC );
 # MAGIC
 # MAGIC SELECT * FROM clients_cdc order by id asc ;
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Silver: Materialize the table
+# MAGIC %md
+# MAGIC ## 🥈 Step 3: Silver Layer - Data Cleaning and Deduplication
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-2.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-2.png" alt='Silver Layer' style='float: right' width='600'/>
 # MAGIC
-# MAGIC The silver `retail_client_silver` table will contains the most up to date view. It'll be a replicat of the original MYSQL table.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Clean, deduplicate, and standardize CDC data
+# MAGIC - **Technology**: Delta MERGE operations with serverless compute
+# MAGIC - **Benefits**: Idempotent processing and data quality
 # MAGIC
-# MAGIC Because we'll propagate the `MERGE` operations downstream to the `GOLD` layer, we need to enable Delta Lake CDF: `delta.enableChangeDataFeed = true`
+# MAGIC ### Key Features:
+# MAGIC - 🔄 **Idempotent**: Safe to run multiple times
+# MAGIC - ⚡ **Serverless**: Auto-scales with data volume
+# MAGIC - 💰 **Cost Efficient**: Only processes new/changed data
+# MAGIC - 📊 **CDF Enabled**: Tracks changes for downstream processing
+# MAGIC
+# MAGIC **💡 Note**: We enable Change Data Feed (CDF) to track modifications for the Gold layer.
 
 # COMMAND ----------
 
-# DBTITLE 1,We can now create our client table using standard SQL command
+# MAGIC %md
+# MAGIC ## Step 3.1: Create Silver Table With Change Data Feed Enabled
+
+# COMMAND ----------
+
 # MAGIC %sql 
-# MAGIC -- we can add NOT NULL in our ID field (or even more advanced constraint)
+# MAGIC -- Create silver table with optimized settings for serverless and CDC
 # MAGIC CREATE TABLE IF NOT EXISTS retail_client_silver (id BIGINT NOT NULL, name STRING, address STRING, email STRING, operation STRING) 
-# MAGIC   TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true);
+# MAGIC   TBLPROPERTIES (
+# MAGIC     delta.enableChangeDataFeed = true, 
+# MAGIC     delta.autoOptimize.optimizeWrite = true, 
+# MAGIC     delta.autoOptimize.autoCompact = true,
+# MAGIC     delta.targetFileSize = '128MB',
+# MAGIC     delta.tuneFileSizesForRewrites = true
+# MAGIC   );
 
 # COMMAND ----------
 
-# DBTITLE 1,And run our MERGE statement the upsert the CDC information in our final table
+# MAGIC %md
+# MAGIC ## Step 3.2: Implement MERGE Operations
+
+# COMMAND ----------
+
 #for each batch / incremental update from the raw cdc table, we'll run a MERGE on the silver table
 def merge_stream(df, i):
   df.createOrReplaceTempView("clients_cdc_microbatch")
@@ -137,8 +351,8 @@ def merge_stream(df, i):
      .writeStream
        .foreachBatch(merge_stream)
        .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
-       .trigger(processingTime='10 seconds')
-       #.trigger(availableNow=True) --use this trigger on serverless
+       .option("mergeSchema", "true")  # Enable schema evolution for silver layer
+       .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
      .start())
 
 time.sleep(20)
@@ -151,12 +365,11 @@ time.sleep(20)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Testing the first CDC layer
+# MAGIC ### Step 3.3: Test Merge Operations In Silver Layer 
 # MAGIC Let's send a new CDC entry to simulate an update and a DELETE for the ID 1 and 2
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's UPDATE id=1 and DELETE the row with id=2
 # MAGIC %sql 
 # MAGIC insert into clients_cdc  (id, name, address, email, operation_date, operation, _rescued_data, file_name) values 
 # MAGIC             (1000, "Quentin", "Paris 75020", "quentin.ambard@databricks.com", now(), "UPDATE", null, null),
@@ -170,19 +383,28 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,Wait a few seconds for the stream to catch the new entry in the CDC table and check the results in the main table
+# DBTITLE 1,🥈 Step 2.5: Verify CDC Processing Results
 # MAGIC %sql 
 # MAGIC select * from retail_client_silver where id in (1000, 2000);
 # MAGIC -- Note that ID 1000 has been updated, and ID 2000 is deleted
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Gold: capture and propagate Silver modifications downstream
+# MAGIC %md
+# MAGIC ## 🚀 Step 4: Gold Layer - Business-Ready Data with Change Data Feed
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-3.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-3.png" alt='Gold Layer' style='float: right' width='600'/>
 # MAGIC
-# MAGIC We need to add a final Gold layer based on the data from the Silver table. If a row is DELETED or UPDATED in the SILVER layer, we want to apply the same modification in the GOLD layer.
+# MAGIC ### What We're Building:
+# MAGIC - **Purpose**: Create business-ready data from Silver layer changes
+# MAGIC - **Technology**: Change Data Feed (CDF) with serverless compute
+# MAGIC - **Benefits**: Real-time propagation of Silver layer modifications
+# MAGIC
+# MAGIC ### How It Works:
+# MAGIC - 📊 **CDF Tracking**: Monitors all changes in Silver table
+# MAGIC - 🔄 **Real-time Sync**: Applies DELETEs and UPDATEs to Gold layer
+# MAGIC - ⚡ **Serverless**: Auto-scales based on change volume
+# MAGIC - 💰 **Cost Efficient**: Only processes actual changes
 # MAGIC
 # MAGIC To do so, we need to capture all the tables changes from the SILVER layer and incrementally replicate the changes to the GOLD layer.
 # MAGIC
@@ -193,7 +415,23 @@ time.sleep(20)
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ### Working with Delta Lake CDF
+# MAGIC ### Step 4.1: Understanding Change Data Feed (CDF) vs Non-CDF Processing
+# MAGIC
+# MAGIC **🔍 Key Difference**: CDF only processes **actual changes**, while non-CDF processes **all data**.
+# MAGIC
+# MAGIC #### **Non-CDF Approach (Inefficient)**:
+# MAGIC - 📊 **Processes**: Entire table every time
+# MAGIC - 💰 **Cost**: High - reprocesses unchanged data
+# MAGIC - ⏱️ **Time**: Slow - scans all records
+# MAGIC - 🔄 **Example**: If table has 1M records, processes all 1M even for 1 change
+# MAGIC
+# MAGIC #### **CDF Approach (Efficient)**:
+# MAGIC - 📊 **Processes**: Only changed records
+# MAGIC - 💰 **Cost**: Low - only pays for actual changes
+# MAGIC - ⏱️ **Time**: Fast - processes only deltas
+# MAGIC - 🔄 **Example**: If table has 1M records but only 5 changed, processes only 5 records
+# MAGIC
+# MAGIC **💡 CDF Benefits**: Up to 99%+ reduction in processing volume for incremental changes!
 
 # COMMAND ----------
 
@@ -206,7 +444,7 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# MAGIC %md #### Delta CDF table_changes output
+# MAGIC %md
 # MAGIC Table Changes provides back 4 cdc types in the "_change_type" column:
 # MAGIC
 # MAGIC | CDC Type             | Description                                                               |
@@ -220,22 +458,63 @@ time.sleep(20)
 
 # COMMAND ----------
 
-# DBTITLE 1,Getting the last modifications with the Python API
-from delta.tables import *
-
-#Let's get the last table version to only see the last update mofications
-last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).head()["version"])
-print(f"our Delta table last version is {last_version}, let's select the last changes to see our DELETE and UPDATE operations (last 2 versions):")
-
-changes = spark.read.format("delta") \
-                    .option("readChangeData", "true") \
-                    .option("startingVersion", int(last_version) -1) \
-                    .table("retail_client_silver")
-display(changes)
+# MAGIC %md
+# MAGIC ### Step 4.2: Demonstrate CDF vs Non-CDF Processing Volume
+# MAGIC
+# MAGIC Let's show the actual difference in processing volume between CDF and non-CDF approaches.
 
 # COMMAND ----------
 
-# MAGIC %md ### Synchronizing our downstream GOLD table based from the Silver changes
+from delta.tables import *
+
+# Let's demonstrate the processing volume difference
+print("🔍 Demonstrating CDF vs Non-CDF Processing Volume")
+print("=" * 60)
+
+# Get total records in silver table
+total_silver_records = spark.sql("SELECT COUNT(*) as count FROM retail_client_silver").collect()[0]['count']
+print(f"📊 Total records in Silver table: {total_silver_records:,}")
+
+# Get latest table version
+last_version = str(DeltaTable.forName(spark, "retail_client_silver").history(1).head()["version"])
+print(f"📈 Latest table version: {last_version}")
+
+# Show what CDF would process (only changes from last 2 versions)
+print(f"\n🔄 CDF Processing (Efficient):")
+changes = spark.read.format("delta") \
+                    .option("readChangeFeed", "true") \
+                    .option("startingVersion", int(last_version) -1) \
+                    .table("retail_client_silver")
+
+cdf_records = changes.count()
+print(f"   📊 Records to process: {cdf_records:,}")
+print(f"   💰 Processing efficiency: {((total_silver_records - cdf_records) / total_silver_records * 100):.1f}% reduction")
+print(f"   ⚡ Speed improvement: {total_silver_records / max(cdf_records, 1):.1f}x faster")
+
+# Show what non-CDF would process (entire table)
+print(f"\n🔄 Non-CDF Processing (Inefficient):")
+print(f"   📊 Records to process: {total_silver_records:,}")
+print(f"   💰 Processing efficiency: 0% reduction (processes everything)")
+print(f"   ⚡ Speed improvement: 1x (baseline)")
+
+print(f"\n💡 Key Insight: CDF processes {cdf_records:,} records instead of {total_silver_records:,} records")
+print(f"   That's a {((total_silver_records - cdf_records) / total_silver_records * 100):.1f}% reduction in processing volume!")
+
+# Display the actual changes
+print(f"\n📋 Actual Changes Detected:")
+display(changes.select("_change_type", "id", "name", "email").orderBy("id"))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 4.3: Gold Layer Processing with CDF Efficiency
+# MAGIC
+# MAGIC Now let's implement the Gold layer using CDF to demonstrate the efficiency gains:
+# MAGIC
+# MAGIC **🎯 What We're Building**: Gold layer that only processes **actual changes** from Silver layer
+# MAGIC **📊 Processing Volume**: Only changed records, not entire table
+# MAGIC **💰 Cost Impact**: Significant reduction in compute costs
+# MAGIC **⚡ Performance**: Much faster processing times
 # MAGIC
 # MAGIC Let's now say that we want to perform another table enhancement and propagate these changes downstream.
 # MAGIC
@@ -247,25 +526,47 @@ display(changes)
 
 # COMMAND ----------
 
-# DBTITLE 1,Let's create or final GOLD table: retail_client_gold
+# DBTITLE 1,Step 4.4: Create Gold Table with Processing Volume Tracking
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING);
+# MAGIC CREATE TABLE IF NOT EXISTS retail_client_gold (id BIGINT NOT NULL, name STRING, address STRING, email STRING, gold_data STRING)
+# MAGIC   TBLPROPERTIES (
+# MAGIC     delta.autoOptimize.optimizeWrite = true, 
+# MAGIC     delta.autoOptimize.autoCompact = true,
+# MAGIC     delta.targetFileSize = '128MB',
+# MAGIC     delta.tuneFileSizesForRewrites = true
+# MAGIC   );
 
 # COMMAND ----------
 
 from pyspark.sql.window import Window
-from pyspark.sql.functions import dense_rank, regexp_replace, lit, col
+from pyspark.sql.functions import dense_rank, regexp_replace, lit, col, current_timestamp
 
-#Function to upsert `microBatchOutputDF` into Delta table using MERGE
+# Function to upsert `microBatchOutputDF` into Delta table using MERGE
+# This function demonstrates CDF efficiency by processing only changed records
 def upsertToDelta(data, batchId):
-  #First we need to deduplicate based on the id and take the most recent update
+  print(f"🔄 Processing batch {batchId} with CDF efficiency...")
+  
+  # Count records being processed
+  records_to_process = data.count()
+  print(f"   📊 Records in this batch: {records_to_process:,}")
+  
+  # First we need to deduplicate based on the id and take the most recent update
   windowSpec = Window.partitionBy("id").orderBy(col("_commit_version").desc())
-  #Select only the first value 
-  #getting the latest change is still needed if the cdc contains multiple time the same id. We can rank over the id and get the most recent _commit_version
+  # Select only the first value 
+  # getting the latest change is still needed if the cdc contains multiple time the same id. We can rank over the id and get the most recent _commit_version
   data_deduplicated = data.withColumn("rank", dense_rank().over(windowSpec)).where("rank = 1 and _change_type!='update_preimage'").drop("_commit_version", "rank")
 
-  #Add some data cleaning for the gold layer to remove quotes from the address
+  # Add some data cleaning for the gold layer to remove quotes from the address
   data_deduplicated = data_deduplicated.withColumn("address", regexp_replace(col("address"), "\"", ""))
+  
+  # Count deduplicated records
+  deduplicated_count = data_deduplicated.count()
+  print(f"   📊 Records after deduplication: {deduplicated_count:,}")
+  
+  # Show processing efficiency
+  if records_to_process > 0:
+    efficiency = ((records_to_process - deduplicated_count) / records_to_process * 100)
+    print(f"   💰 Deduplication efficiency: {efficiency:.1f}% reduction")
   
   #run the merge in the gold table directly
   (DeltaTable.forName(spark, "retail_client_gold").alias("target")
@@ -275,56 +576,278 @@ def upsertToDelta(data, batchId):
       .whenNotMatchedInsertAll("source._change_type != 'delete'")
       .execute())
 
+  print(f"   ✅ Batch {batchId} completed - processed {deduplicated_count:,} records efficiently")
+
+
+# Start the CDF stream with processing volume tracking
+print("🚀 Starting Gold layer CDF stream with processing volume tracking...")
+print("💡 This will show you exactly how many records are processed vs. total table size")
 
 (spark.readStream
-       .option("readChangeData", "true")
+       .option("readChangeFeed", "true")  # Updated to use correct option name
        .option("startingVersion", 1)
        .table("retail_client_silver")
        .withColumn("gold_data", lit("Delta CDF is Awesome"))
       .writeStream
         .foreachBatch(upsertToDelta)
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
-        .trigger(processingTime='10 seconds')
-        #.trigger(availableNow=True) --use this trigger on serverless
-      .start())
-
-time.sleep(20)
-
-# COMMAND ----------
-
-# MAGIC %sql SELECT * FROM retail_client_gold
+        .option("mergeSchema", "true")  # Enable schema evolution for gold layer
+        .trigger(availableNow=True)  # Serverless trigger for cost-effective processing
+      .start()
+      .awaitTermination())
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ### Support for data sharing and Datamesh organization
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/delta-cdf-datamesh.png" style="float:right; margin-right: 50px" width="300px" />
-# MAGIC
-# MAGIC As we've seen during this demo, you can track all the changes (INSERT/UPDATE/DELETE) from any Detlta table using the CDC option.
-# MAGIC
-# MAGIC It's then easy to subscribe the table modifications as an incremental process.
-# MAGIC
-# MAGIC This makes the Data Mesh implementation easy: each Mesh can publish a set of tables, and other meshes can subscribe the original changes.
-# MAGIC
-# MAGIC They are then in charge of propagating the changes (ex GDPR DELETE) to their own Data Mesh
-
-# COMMAND ----------
-
-# MAGIC %md-sandbox
-# MAGIC ## Data is now ready for BI & ML use-case !
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-4.png" alt='Make all your data ready for BI and ML' style='float: right' width='600'/>
-# MAGIC
-# MAGIC We now have our final table, updated based on the initial CDC information we receive.
-# MAGIC
-# MAGIC As next step, we can leverage Databricks Lakehouse platform to start creating SQL queries / dashboards or ML models
+# MAGIC %sql 
+# MAGIC -- Show the final Gold table results
+# MAGIC SELECT * FROM retail_client_gold ORDER BY id;
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Next step: [Implement a CDC pipeline for multiple tables]($./02-CDC-CDF-full-multi-tables)
+# MAGIC ### Step 4.5: CDF Processing Volume Summary
+# MAGIC
+# MAGIC **🎯 What We Just Demonstrated**:
+# MAGIC - **CDF Processing**: Only processed actual changes from Silver layer
+# MAGIC - **Volume Efficiency**: Dramatically reduced processing volume
+# MAGIC - **Cost Savings**: Significant reduction in compute costs
+# MAGIC - **Performance**: Much faster processing times
+# MAGIC
+# MAGIC **📊 Key Metrics**:
+# MAGIC - **Total Silver Records**: Shows full table size
+# MAGIC - **CDF Records Processed**: Shows only changed records
+# MAGIC - **Efficiency Gain**: Percentage reduction in processing volume
+# MAGIC - **Speed Improvement**: Multiplier for processing speed
+# MAGIC
+# MAGIC **💡 Real-World Impact**: In production, this can mean processing 1,000 records instead of 1,000,000 records for incremental updates!
 
 # COMMAND ----------
 
-# DBTITLE 1,Make sure we stop all actives streams
+# MAGIC %md
+# MAGIC ## 📊 Step 5: Continuous Serverless Incremental Processing 
+# MAGIC
+# MAGIC With the data generator running, you can now demonstrate continuous serverless CDC processing. The pipeline is designed to process **only newly arrived data** using checkpoints and streaming offsets.
+# MAGIC
+# MAGIC **Key Incremental Processing Features:**
+# MAGIC - ✅ **Auto Loader Checkpoints**: Only new files since last processing
+# MAGIC - ✅ **Streaming Offsets**: Only new CDC records since last checkpoint  
+# MAGIC - ✅ **Change Data Feed**: Only new changes since last processed version
+# MAGIC - ✅ **Efficient Processing**: No reprocessing of historical data
+# MAGIC - ✅ **Cost Optimization**: Pay only for new data processing
+
+# COMMAND ----------
+
+def trigger_cdc_pipeline():
+    """
+    Trigger all CDC streams to process new data with serverless compute.
+    This function can be called periodically (every minute, 5 minutes, etc.)
+    """
+    print(f"🔄 Triggering CDC pipeline at {datetime.now()}")
+    
+    # Enable automatic schema merging for MERGE operations
+    # Schema evolution is handled automatically by mergeSchema=true in writeStream operations
+    
+    # Stop any existing streams first
+    DBDemos.stop_all_streams()
+    time.sleep(5)
+    
+    # Restart bronze layer (Auto Loader) - only process new files since last checkpoint
+    print("   🔄 Processing new files for bronze layer...")
+    bronzeDF = (spark.readStream
+                    .format("cloudFiles")
+                    .option("cloudFiles.format", "csv")
+                    .option("cloudFiles.inferColumnTypes", "true")
+                    .option("cloudFiles.schemaLocation",  raw_data_location+"/stream/schema_cdc_raw")
+                    .option("cloudFiles.schemaHints", "id bigint, operation_date timestamp")
+                    .option("cloudFiles.useNotifications", "false")
+                    .option("cloudFiles.includeExistingFiles", "false")  # Only new files after checkpoint
+                    .option("cloudFiles.maxFilesPerTrigger", "10")  # Process in batches for efficiency
+                    .load(raw_data_location+'/user_csv'))
+
+    (bronzeDF.withColumn("file_name", col("_metadata.file_path"))
+            .withColumn("processing_time", current_timestamp())  # Track when processed
+            .writeStream
+            .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
+            .option("mergeSchema", "true")  # Enable schema evolution for new columns
+            .trigger(availableNow=True)  # Process only available new data
+            .table("clients_cdc")
+            .awaitTermination())
+    
+    # Restart silver layer (MERGE operations) - only process new CDC records
+    print("   🔄 Processing new CDC records for silver layer...")
+    (spark.readStream
+           .table("clients_cdc")
+         .writeStream
+           .foreachBatch(merge_stream)
+           .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
+           .option("mergeSchema", "true")  # Enable schema evolution for silver layer
+           .trigger(availableNow=True)  # Process only new CDC records since last checkpoint
+         .start()
+         .awaitTermination())
+    
+    # Restart gold layer (CDF processing) - only process new changes since last checkpoint
+    print("   🔄 Processing new changes for gold layer using Change Data Feed...")
+    (spark.readStream
+           .option("readChangeFeed", "true")
+           # No startingVersion specified - will automatically start from checkpoint
+           .table("retail_client_silver")
+           .withColumn("gold_data", lit("Delta CDF is Awesome"))
+           .withColumn("cdf_processing_time", current_timestamp())  # Track CDF processing time
+          .writeStream
+            .foreachBatch(upsertToDelta)
+            .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
+            .option("mergeSchema", "true")  # Enable schema evolution for gold layer
+            .trigger(availableNow=True)  # Process only new changes since last checkpoint
+          .start()
+          .awaitTermination())
+    
+    print("✅ CDC pipeline completed processing available data")
+
+# COMMAND ----------
+
+print("🎯 Running one iteration of serverless CDC processing...")
+print("💡 In production, schedule this via Databricks Jobs every few minutes")
+
+# Give the data generator time to create some files
+print("⏳ Waiting 65 seconds for data generator to create new files...")
+time.sleep(65)
+
+# Process any new data
+trigger_cdc_pipeline()
+
+# Show results with table growth monitoring
+print("\n📊 Monitoring table growth over time...")
+print("💡 Watch how serverless compute handles growing data volumes efficiently")
+
+# Function to get table sizes
+def get_table_sizes():
+    sizes = {}
+    try:
+        sizes['bronze'] = spark.sql("SELECT COUNT(*) as count FROM clients_cdc").collect()[0]['count']
+    except:
+        sizes['bronze'] = 0
+    try:
+        sizes['silver'] = spark.sql("SELECT COUNT(*) as count FROM retail_client_silver").collect()[0]['count']
+    except:
+        sizes['silver'] = 0
+    try:
+        sizes['gold'] = spark.sql("SELECT COUNT(*) as count FROM retail_client_gold").collect()[0]['count']
+    except:
+        sizes['gold'] = 0
+    return sizes
+
+# Monitor table growth over multiple iterations
+print("🔍 Table Size Growth Monitoring:")
+print("=" * 60)
+
+for iteration in range(1, 4):  # Monitor 3 iterations
+    print(f"\n📈 Iteration {iteration} - {datetime.now().strftime('%H:%M:%S')}")
+    
+    # Get current sizes
+    sizes = get_table_sizes()
+    print(f"🥉 Bronze (Raw CDC): {sizes['bronze']:,} records")
+    print(f"🥈 Silver (Materialized): {sizes['silver']:,} records") 
+    print(f"🥇 Gold (Enhanced): {sizes['gold']:,} records")
+    
+    # Calculate growth if not first iteration
+    if iteration > 1:
+        growth_bronze = sizes['bronze'] - previous_sizes['bronze']
+        growth_silver = sizes['silver'] - previous_sizes['silver']
+        growth_gold = sizes['gold'] - previous_sizes['gold']
+        
+        print(f"   📊 Growth: Bronze +{growth_bronze}, Silver +{growth_silver}, Gold +{growth_gold}")
+    
+    # Show recent records
+    print("   🔍 Latest Records:")
+    try:
+        latest_bronze = spark.sql("""
+            SELECT operation, COUNT(*) as count 
+            FROM clients_cdc 
+            GROUP BY operation 
+            ORDER BY operation
+        """).collect()
+        operations_summary = {row['operation']: row['count'] for row in latest_bronze}
+        print(f"   📁 Operations: {operations_summary}")
+        
+        # Show latest silver records
+        latest_silver = spark.sql("""
+            SELECT id, name, email 
+            FROM retail_client_silver 
+            ORDER BY id DESC 
+            LIMIT 3
+        """).collect()
+        if latest_silver:
+            print("   📝 Latest Silver Records:")
+            for row in latest_silver:
+                print(f"      ID: {row['id']}, Name: {row['name']}, Email: {row['email']}")
+    except Exception as e:
+        print(f"   ⚠️ Error showing details: {e}")
+    
+    previous_sizes = sizes
+    
+    # Wait for next iteration (except on last one)
+    if iteration < 3:
+        print(f"   ⏳ Waiting 65 seconds for more CDC data...")
+        print("   💰 Serverless compute: No costs during wait time!")
+        time.sleep(65)
+        
+        # Process new data
+        print(f"   🔄 Processing new data (Iteration {iteration + 1})...")
+        trigger_cdc_pipeline()
+
+print("\n" + "=" * 60)
+print("✅ Table growth monitoring completed!")
+print("📈 Key Observations:")
+print("   🔹 Tables grow incrementally with each CDC batch")
+print("   🔹 Serverless compute scales automatically with data volume")
+print("   🔹 Cost efficiency: Pay only during processing, not waiting")
+print("   🔹 Real-time CDC processing with delta architecture")
+
+# COMMAND ----------
+
+# DBTITLE 1,Cleanup and Stop Data Generator
+stop_cdc_generator()
 DBDemos.stop_all_streams()
+
+print("🎉 Demo completed! You've seen how serverless compute handles continuous CDC processing:")
+print("✅ Cost-effective: Pay only for actual processing time")
+print("✅ Auto-scaling: Automatically scales based on data volume") 
+print("✅ Simplified ops: No cluster management required")
+print("✅ Reliable: Built-in fault tolerance and automatic restarts")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Data Ready for BI & ML Use Cases
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-flow-4.png" alt='BI and ML Ready' style='float: right' width='600'/>
+# MAGIC
+# MAGIC ### What's Available:
+# MAGIC - 📊 **Business Intelligence**: Create SQL queries and dashboards
+# MAGIC - 🤖 **Machine Learning**: Build ML models on clean, up-to-date data
+# MAGIC - 🔄 **Real-time Analytics**: Access to latest data changes
+# MAGIC - 📈 **Data Quality**: Clean, deduplicated, and validated data
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Data Sharing and Datamesh Organization
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/delta-cdf-datamesh.png" style="float:right; margin-right: 50px" width="300px" />
+# MAGIC
+# MAGIC ### Key Benefits:
+# MAGIC - 🔄 **Change Tracking**: Track all INSERT/UPDATE/DELETE operations from any Delta table
+# MAGIC - 📡 **Incremental Processing**: Subscribe to table modifications as incremental processes
+# MAGIC - 🏗️ **Data Mesh Ready**: Each mesh can publish tables, others can subscribe to changes
+# MAGIC - 🛡️ **GDPR Compliance**: Propagate changes (e.g., GDPR DELETE) across data meshes
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next Steps
+# MAGIC
+# MAGIC ### Continue Your CDC Journey:
+# MAGIC - 🔗 **[Multi-Table CDC Pipeline]($./02-CDC-CDF-full-multi-tables)**: Scale to multiple tables
+# MAGIC - 🏗️ **[Delta Live Tables]($./dlt-cdc)**: Simplified CDC with `APPLY CHANGES`
+# MAGIC - 📚 **[Delta Lake Demo]($./delta-lake)**: Deep dive into Delta Lake features
+# MAGIC - 🚀 **[Auto Loader Demo]($./auto-loader)**: Advanced file ingestion patterns

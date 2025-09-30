@@ -18,8 +18,8 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
-for f in dbutils.fs.ls(volume_folder):
-  dbutils.fs.rm(f.path, True)  
+# for f in dbutils.fs.ls(volume_folder):
+#   dbutils.fs.rm(f.path, True)  
 #dbutils.fs.rm(volume_folder, True)
 
 # COMMAND ----------

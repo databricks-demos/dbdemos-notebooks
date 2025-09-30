@@ -1,0 +1,9 @@
+command: ["uvicorn", "app.main:app"]
+
+env:
+  - name: 'ENV'
+    value: 'dev'
+  - name: 'DATABRICKS_HOST'
+    value: 'https://xxx.com'
+  - name: 'DATABRICKS_TOKEN'
+    value: 'xxx'

@@ -1,0 +1,5 @@
+command: ["uvicorn", "app.main:app"]
+
+env:
+  - name: 'ENV'
+    value: 'prod'

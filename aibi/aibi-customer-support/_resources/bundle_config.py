@@ -38,20 +38,17 @@
       {
         "source_folder": "aibi/dbdemos_aibi_customer_support/agents_bronze",
         "source_format": "parquet",
-        "target_volume_folder": "agents_bronze",
-        "target_format": "parquet"
+        "target_volume_folder": "agents_bronze"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_customer_support/tickets_bronze",
         "source_format": "parquet",
-        "target_volume_folder": "tickets_bronze",
-        "target_format": "parquet"
+        "target_volume_folder": "tickets_bronze"
       },
       {
         "source_folder": "aibi/dbdemos_aibi_customer_support/sla_bronze",
         "source_format": "parquet",
-        "target_volume_folder": "sla_bronze",
-        "target_format": "parquet"
+        "target_volume_folder": "sla_bronze"
       }      
     ],
     "sql_queries": [
@@ -344,6 +341,9 @@ ORDER BY violation_percentage DESC;
         "function_names": [
           "{{CATALOG}}.{{SCHEMA}}.get_top_agents_by_survey_score"
         ],         
+        "metrics": {"yaml": """
+                    
+                    """}
         "curated_questions": [
             "Proportion of tickets per month that violate first response SLA",
             "Agent performance by tickets closed per month",

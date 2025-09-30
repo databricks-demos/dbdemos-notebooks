@@ -1,0 +1,16 @@
+__pycache__
+frontend/dist
+backend/app_local.yaml
+app_local.yaml
+.env
+.app.yaml
+.eggs
+.DS_Store
+build
+dist
+*.egg-info/
+backend/__pycache__
+.idea
+
+
+

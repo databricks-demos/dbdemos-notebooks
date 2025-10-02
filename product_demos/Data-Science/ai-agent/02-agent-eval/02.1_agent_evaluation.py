@@ -46,22 +46,6 @@
 
 # COMMAND ----------
 
-import yaml
-from agent import MCPAgent
-
-with open("agent_config.yaml") as f:
-    config = yaml.safe_load(f)
-
-mcp_servers = config.get("mcp_servers", [])
-
-AGENT = MCPAgent(mcp_servers=mcp_servers)
-
-print("Loaded tools:", AGENT.list_tools())
-
-
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## 1/ Build and register our agent
 # MAGIC

@@ -1,15 +1,20 @@
-config_version_name: better_prompt
+config_version_name: model_with_retriever_and_mcp
 input_example:
 - content: Give me the orders for john21@example.net
   role: user
 llm_endpoint_name: databricks-claude-3-7-sonnet
 max_history_messages: 20
-retriever_config: null
+mcp_server_urls: https://adb-984752964297111.11.azuredatabricks.net/api/2.0/mcp/functions/system/ai
+retriever_config:
+  description: Retrieves internal documentation about our products, infrastructure,
+    router and other, including features, usage, and troubleshooting. Use this tool
+    for any questions about product documentation or product issues.
+  index_name: natyra_demo.ai-agent-mcp.knowledge_base_vs_index
+  num_results: 1
+  tool_name: product_technical_docs_retriever
 system_prompt: You are a telco assistant. Call the appropriate tool to help the user
   with billing, support, or account info. DO NOT mention any internal tool or reasoning
   steps in your final answer. Do not say according to records or imply that you are
   looking up information.
 uc_tool_names:
-- main_build.dbdemos_ai_agent.*
-mcp_server_urls:
-  - "https://<your-databricks-workspace>/api/2.0/mcp/functions/system/ai"
+- natyra_demo.ai-agent-mcp.*

@@ -39,14 +39,14 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT path FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
+# MAGIC SELECT path FROM READ_FILES('/Volumes/natyra_demo/ai-agent-mcp/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
 # COMMAND ----------
 
 # DBTITLE 1,let's try our ai_parse_document function
 # MAGIC %sql
 # MAGIC SELECT ai_parse_document(content) AS parsed_document
-# MAGIC   FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
+# MAGIC   FROM READ_FILES('/Volumes/natyra_demo/ai-agent-mcp/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
 # COMMAND ----------
 
@@ -92,7 +92,7 @@
 # MAGIC            path as doc_uri
 # MAGIC     FROM (
 # MAGIC       SELECT ai_parse_document(content) AS parsed_document, path
-# MAGIC       FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') 
+# MAGIC       FROM READ_FILES('/Volumes/natyra_demo/ai-agent-mcp/raw_data/pdf_documentation/', format => 'binaryFile') 
 # MAGIC       LIMIT 5 -- ADDED FIX LIMIT FOR DEMO COST - DROP IT IN REAL WORKLOAD
 # MAGIC     )
 # MAGIC   )

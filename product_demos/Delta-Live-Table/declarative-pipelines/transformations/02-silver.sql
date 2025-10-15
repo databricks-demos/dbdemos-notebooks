@@ -84,7 +84,9 @@ CREATE OR REFRESH STREAMING TABLE customers (
   membership_tier STRING COMMENT "Membership tier for members (basic, premium, enterprise)",
   preferred_payment STRING COMMENT "Preferred payment method (credit_card, mobile_pay, cash)",
   home_station_id STRING COMMENT "Preferred or home station identifier",
-  is_active BOOLEAN COMMENT "Whether the customer account is currently active"
+  is_active BOOLEAN COMMENT "Whether the customer account is currently active",
+  __START_AT TIMESTAMP COMMENT "The timestamp when this record became active",
+  __END_AT TIMESTAMP COMMENT "The timestamp when this record became inactive"
 )
 COMMENT "Customer data with SCD Type 2 tracking for maintaining complete change history";
 

@@ -312,11 +312,8 @@
         "libraries": [
           {
             "glob": {
-<<<<<<< HEAD
               "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - SDP-sqls/transformations/**"
-=======
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - sdp-sqls/transformations/**"
->>>>>>> main
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - SDP-sqls/transformations/**"
             }
           }
         ],
@@ -327,11 +324,8 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-<<<<<<< HEAD
         "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - SDP-sqls"
-=======
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - sdp-sqls"
->>>>>>> main
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - SDP-sqls"
       }
     },
     {
@@ -342,11 +336,8 @@
         "libraries": [
           {
             "glob": {
-<<<<<<< HEAD
               "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - SDP-python/transformations/**"
-=======
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - sdp-python/transformations/**"
->>>>>>> main
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - SDP-python/transformations/**"
             }
           }
         ],
@@ -357,11 +348,8 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-<<<<<<< HEAD
         "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - SDP-python"
-=======
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - sdp-python"
->>>>>>> main
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - SDP-python"
       }
     }
   ],

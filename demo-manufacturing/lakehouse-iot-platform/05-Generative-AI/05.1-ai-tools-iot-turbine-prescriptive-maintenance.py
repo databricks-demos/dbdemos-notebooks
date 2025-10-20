@@ -339,7 +339,7 @@ print(f"Status message: {status.data_synchronization_status.message}")
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TEMP VIEW transformed_docs AS
 # MAGIC SELECT array_join(
-# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS full_guide
+# MAGIC             transform(parsed_document:document.elements::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS full_guide
 # MAGIC FROM parsed_docs;
 # MAGIC
 # MAGIC SELECT * FROM transformed_docs

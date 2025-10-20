@@ -8,7 +8,7 @@
 # MAGIC * **Notebooks**: Databricks notebooks are often a key part of data engineering and data science workflows. You can use version control for notebooks, and also validate and test them as part of a CI/CD pipeline. You can run automated tests against notebooks to check whether they are functioning as expected.
 # MAGIC * **Libraries**: Manage the library dependencies required to run your deployed code. Use version control on libraries and include them in automated testing and validation.
 # MAGIC * **Workflows**: Lakeflow Jobs are comprised of jobs that allow you to schedule and run automated tasks using notebooks or Spark jobs.
-# MAGIC * **Data pipelines**: You can also include data pipelines in CI/CD automation, using Lakeflow Declarative Pipelines, the framework in Databricks for declaring data pipelines.
+# MAGIC * **Data pipelines**: You can also include data pipelines in CI/CD automation, using Spark Declarative Pipelines, the framework in Databricks for declaring data pipelines.
 # MAGIC * **Infrastructure**: Infrastructure configuration includes definitions and provisioning information for clusters, workspaces, and storage for target environments. Infrastructure changes can be validated and tested as part of a CI/CD pipeline, ensuring that they are consistent and error-free.
 # MAGIC
 # MAGIC ## Example Development Workflow

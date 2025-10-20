@@ -116,9 +116,9 @@
 
 # MAGIC %md  
 # MAGIC
-# MAGIC Open the [Delta Live Table SQL Pipeline notebook]($./01-Data-Ingestion/01.1-DLT-Ingest-Policy-Claims). 
+# MAGIC Open the [Spark Declarative Pipelines SQL Pipeline notebook]($./01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims). 
 # MAGIC
-# MAGIC This will create a <a dbdemos-pipeline-id="dlt-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">DLT Pipeline</a> running in batch or streaming.
+# MAGIC This will create a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">SDP Pipeline</a> running in batch or streaming.
 # MAGIC
 # MAGIC ### Security and Governance with Unity Catalog
 # MAGIC
@@ -190,8 +190,8 @@
 # MAGIC   * All data personas to work collaboratively on a single platform contributing to a single pipeline
 # MAGIC   * All big data architecture paradigms including streaming, ML, BI, DE & Ops are supported on a single platform - no need to stitch services!
 # MAGIC * End to End <b> Workflow Pipelines </b> are easier to create, monitor and maintain
-# MAGIC   * Multi-task Workflows accommodate multiple node types (notebooks, DLT, ML tasks, QL dashboard and support repair&run & compute sharing)
-# MAGIC   * DLT pipelines offer quality constraints and faster path to flip dev workloads to production
+# MAGIC   * Multi-task Workflows accommodate multiple node types (notebooks, SDP, ML tasks, QL dashboard and support repair&run & compute sharing)
+# MAGIC   * SDP pipelines offer quality constraints and faster path to flip dev workloads to production
 # MAGIC   * Robust, Scalable, and fully automated via REST APIs thereby improving team agility and productivity
 # MAGIC * Supports all <b> BI & AI </b> workloads
 # MAGIC   * Models are created, managed with MLFlow for easy reproducibility and audibility

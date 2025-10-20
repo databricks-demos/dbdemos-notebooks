@@ -44,7 +44,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & DLT
+-- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & SDP
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_1.png?raw=true" style="float: right" width="500px">
 -- MAGIC
@@ -66,7 +66,7 @@
 -- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks. 
 -- MAGIC
 -- MAGIC
--- MAGIC ## 2/ Prepare and transform your data with DLT
+-- MAGIC ## 2/ Prepare and transform your data with SDP
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
@@ -99,10 +99,10 @@
 
 -- COMMAND ----------
 
--- MAGIC %md 
--- MAGIC ## Building a DLT pipeline to analyze and reduce churn
+-- MAGIC %md
+-- MAGIC ## Building an SDP pipeline to analyze and reduce churn
 -- MAGIC
--- MAGIC In this example, we'll implement a end-to-end DLT pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modelisation.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our customer churn prediction.
 -- MAGIC
@@ -117,7 +117,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your DLT Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn DLT pipeline</a> to see it in action.<br/>
+-- MAGIC Your SDP Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn SDP pipeline</a> to see it in action.<br/>
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 -- COMMAND ----------
@@ -196,7 +196,7 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_retail_c360/c360/user
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboards are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
--- MAGIC For more advanced DLT capabilities run `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')` for CDC/SCDT2 example.
+-- MAGIC For more advanced SDP capabilities run `dbdemos.install('sdp-loans')` or `dbdemos.install('sdp-cdc')` for CDC/SCDT2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 
@@ -297,7 +297,7 @@ AS
 -- COMMAND ----------
 
 -- DBTITLE 1,Load the model as SQL function
---Loaded in 01.2-DLT-churn-Python-UDF
+--Loaded in 01.2-SDP-churn-Python-UDF
 --
 --%python
 --import mlflow
@@ -321,7 +321,7 @@ COMMENT "Customer at risk of churn"
 -- MAGIC
 -- MAGIC As you can see, building Data Pipelines with Databricks lets you focus on your business implementation while the engine solves all of the hard data engineering work for you.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn DLT pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn SDP pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 
@@ -335,12 +335,12 @@ COMMENT "Customer at risk of churn"
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Optional: Checking your data quality metrics with DLT
--- MAGIC DLT tracks all of your data quality metrics. You can leverage the expectations directly as SQL tables with Databricks SQL to track your expectation metrics and send alerts as required. This lets you build the following dashboards:
+-- MAGIC ## Optional: Checking your data quality metrics with SDP
+-- MAGIC SDP tracks all of your data quality metrics. You can leverage the expectations directly as SQL tables with Databricks SQL to track your expectation metrics and send alerts as required. This lets you build the following dashboards:
 -- MAGIC
 -- MAGIC <img width="1000" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-dlt-stat.png?raw=true">
 -- MAGIC
--- MAGIC <a dbdemos-dashboard-id="dlt-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>
+-- MAGIC <a dbdemos-dashboard-id="sdp-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>
 
 -- COMMAND ----------
 

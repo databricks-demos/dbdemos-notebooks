@@ -89,7 +89,7 @@ for table in os.listdir(raw_data_volume):
 # MAGIC
 # MAGIC ### Understanding Change Data Capture (CDC) with AUTO CDC
 # MAGIC
-# MAGIC AUTO CDC is a declarative API in Lakeflow Declarative Pipelines that simplifies change data capture processing. 
+# MAGIC AUTO CDC is a declarative API in Spark Declarative Pipelines that simplifies change data capture processing. 
 # MAGIC
 # MAGIC Key benefits of AUTO CDC:
 # MAGIC - **Automatic ordering**: Handles records that arrive out of chronological order
@@ -124,4 +124,4 @@ for table in os.listdir(raw_data_volume):
 # MAGIC
 # MAGIC ### Alternative: learn how to track your Declarative Pipeline data quality
 # MAGIC
-# MAGIC Lakeflow Declarative Pipelines makes it easy to track your data quality and set alerts when something is wrong! Open the [02-Pipeline-event-monitoring]($./02-Pipeline-event-monitoring) notebook for more details.
+# MAGIC Spark Declarative Pipelines makes it easy to track your data quality and set alerts when something is wrong! Open the [02-Pipeline-event-monitoring]($./02-Pipeline-event-monitoring) notebook for more details.

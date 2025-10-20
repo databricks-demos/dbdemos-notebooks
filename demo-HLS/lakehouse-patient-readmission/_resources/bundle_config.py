@@ -14,17 +14,17 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_hls_readmission",
   "description": "Build your data platform and personalized health care to reduce readmission risk",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we’ll show you how to build an end-to-end Health Car data platform to ingest patient and encounter informations. <br/>We will focus on predicting and explaining patient readmission risk to improve care quality. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest health care data (from Synthea), and then transform them to the OMOP data model using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build patient Cohorts and Leverage Databricks SQL and the warehouse endpoints to visualize our population.</li><li>Build a Machine Learning model with Databricks AutoML to predict 30 days patient readmission risk</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we’ll show you how to build an end-to-end Health Car data platform to ingest patient and encounter informations. <br/>We will focus on predicting and explaining patient readmission risk to improve care quality. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest health care data (from Synthea), and then transform them to the OMOP data model using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build patient Cohorts and Leverage Databricks SQL and the warehouse endpoints to visualize our population.</li><li>Build a Machine Learning model with Databricks AutoML to predict 30 days patient readmission risk</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "usecase": "Lakehouse Platform",
-  "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
+  "products": ["Spark Declarative Pipelines", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Databricks for Financial Services", "url": "https://www.databricks.com/solutions/industries/financial-services"}],
   "recommended_items": ["lakehouse-iot-platform", "lakehouse-fsi-fraud", "lakehouse-retail-c360"],
   "demo_assets": [
-      {"title": "Delta Live Table pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dlt-0.png"},
+      {"title": "Spark Declarative Pipelines pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dlt-0.png"},
       {"title": "Databricks SQL Dashboard: Credit Decisioning", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dashboard-0.png"}],   "bundle": True,
-  "tags": [{"dlt": "Delta Live Table"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
+  "tags": [{"dlt": "Spark Declarative Pipelines"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
   "notebooks": [
     {
       "path": "_resources/00-generate-synthea-data", 
@@ -67,12 +67,12 @@
       "description": "Introduction notebook, start here to implement your HLS Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01.1-DLT-patient-readmission-SQL", 
+      "path": "01-Data-Ingestion/01.1-SDP-patient-readmission-SQL", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Ingest patient & encounter data with Delta Live Table", 
-      "description": "SQL DLT pipeline to ingest patient data & build clean tables."
+      "title":  "Ingest patient & encounter data with Spark Declarative Pipelines", 
+      "description": "SQL SDP pipeline to ingest patient data & build clean tables."
     },
     {
       "path": "02-Data-Governance/02-Data-Governance-patient-readmission", 
@@ -272,7 +272,7 @@
   }, 
   "pipelines": [
     {
-      "id": "dlt-patient-readmission",
+      "id": "sdp-patient-readmission",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -296,7 +296,7 @@
                     "path": "{{DEMO_FOLDER}}/_resources/01-load-data"
                 },
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-DLT-patient-readmission-SQL"
+                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-SDP-patient-readmission-SQL"
                 }
             }
         ],

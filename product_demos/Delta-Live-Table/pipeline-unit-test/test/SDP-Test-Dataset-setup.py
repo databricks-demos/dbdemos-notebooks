@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC We have 2 files that we'll be using as dataset saved in git within the project (you can open them directly under the `dataset` folder). 
 # MAGIC
-# MAGIC All we have to do is move these local files to our blob storage so that we can read them within our LDP test pipeline.
+# MAGIC All we have to do is move these local files to our blob storage so that we can read them within our SDP test pipeline.
 # MAGIC
 # MAGIC *Note: We could also have used Faker to generate them dynamically.*
 # MAGIC

@@ -24,7 +24,7 @@ spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # COMMAND ----------
 
-# MAGIC %md ### Setting up the DLT 
+# MAGIC %md ### Setting up the SDP 
 # MAGIC
 # MAGIC This notebook must be included in your (Lakeflow) Declarative Pipeline "libraries" parameter:
 # MAGIC

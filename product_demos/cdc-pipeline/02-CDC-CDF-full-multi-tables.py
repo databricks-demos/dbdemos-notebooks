@@ -10,11 +10,11 @@
 # MAGIC
 # MAGIC <img width="1000px" src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/product/Delta-Lake-CDC-CDF/cdc-full.png">
 # MAGIC
-# MAGIC **A note on Delta Live Table**:<br/>
-# MAGIC *Delta Live Table has been designed to simplify this process and handle concurrent execution properly, without having you to start multiple stream in parallel.*<br/>
-# MAGIC *We strongly advise to have a look at the DLT CDC demo to simplify such pipeline implementation: `dbdemos.instal('dlt-cdc')`*
+# MAGIC **A note on Spark Declarative Pipelines**:<br/>
+# MAGIC *Spark Declarative Pipelines has been designed to simplify this process and handle concurrent execution properly, without having you to start multiple stream in parallel.*<br/>
+# MAGIC *We strongly advise to have a look at the SDP CDC demo to simplify such pipeline implementation: `dbdemos.instal('dlt-cdc')`*
 # MAGIC
-# MAGIC In this notebook, we'll see how this can be done using Python & standard streaming APIs (without DLT).
+# MAGIC In this notebook, we'll see how this can be done using Python & standard streaming APIs (without SDP).
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=02-CDC-CDF-full-multi-tables&demo_name=cdc-pipeline&event=VIEW">
@@ -183,8 +183,8 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 # MAGIC ### Production readiness
 # MAGIC Error and exception in each stream should be properly captured. Multiple strategy exist: send a notification when a table has some error and continue processing the others, stop the entire job, define table "priorities" etc.
 # MAGIC
-# MAGIC ### Delta Live Table
-# MAGIC To simplify these operations & error handling, we strongly advise you to run your CDC pipelines on top of Delta Live Table: `dbdemos.install('delta-live-table')`
+# MAGIC ### Spark Declarative Pipelines
+# MAGIC To simplify these operations & error handling, we strongly advise you to run your CDC pipelines on top of Spark Declarative Pipelines: `dbdemos.install('delta-live-table')`
 
 # COMMAND ----------
 

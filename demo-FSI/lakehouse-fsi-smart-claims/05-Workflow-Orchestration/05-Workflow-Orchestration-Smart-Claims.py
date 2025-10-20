@@ -13,7 +13,7 @@
 # MAGIC
 # MAGIC In our case, we decided that the best tradoff is to ingest new data every hours.
 # MAGIC
-# MAGIC To do so, we'll need an orchestrator to schedule the data ingestion (trigger the DLT pipeline) every hour, and then call our model to infere the image severity. 
+# MAGIC To do so, we'll need an orchestrator to schedule the data ingestion (trigger the SDP pipeline) every hour, and then call our model to infere the image severity. 
 # MAGIC
 # MAGIC Ultimately, we could even refresh our DBSQL Dashboard!
 # MAGIC
@@ -30,7 +30,7 @@
 # MAGIC
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Delta Live Tables and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -57,14 +57,14 @@
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Delta Live Tables
+# MAGIC * Spark Declarative Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
 # MAGIC * dbt
 # MAGIC * ...
 # MAGIC
-# MAGIC In this example, can see our several tasks, one of which is DLT flow:
+# MAGIC In this example, can see our several tasks, one of which is SDP flow:
 # MAGIC
 # MAGIC * Start the workflow to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)

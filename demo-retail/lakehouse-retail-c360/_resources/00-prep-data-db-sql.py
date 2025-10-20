@@ -12,7 +12,7 @@ from pyspark.sql.functions import row_number, sha1, col, initcap, to_timestamp
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Load dataset for the DLT data quality dashboard
+# MAGIC ## Load dataset for the SDP data quality dashboard
 
 # COMMAND ----------
 

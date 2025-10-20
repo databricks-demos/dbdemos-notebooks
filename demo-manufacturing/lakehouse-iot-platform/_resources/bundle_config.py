@@ -13,20 +13,20 @@
   "default_schema": "dbdemos_iot_platform",
   "default_catalog": "main",
   "title": "Data Intelligence Platform for IoT & Prescriptive Maintenance",
-  "description": "Detect faulty wind turbine and generate work orders: Ingestion (DLT), BI, Predictive Maintenance (ML), Prescriptive Maintenance (GenAI), Governance (UC), Orchestration",
-    "fullDescription": "The Databricks Data Intelligence Platform allows your entire organization to use data and AI. It’s built on a lakehouse to provide an open, unified foundation for all data and governance, and is powered by a Data Intelligence Engine that understands the uniqueness of your data. In this demo, we'll show you how to build an IOT platform for prescriptive maintenance, ingesting sensor data from our wind turbine farm in realtime. We'll be able to deliver data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end data intelligence platform: <ul><li>Ingest data from external systems in streaming (sensors/ERP and then transform it using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security</li><li>Leverage Databricks SQL and the warehouse endpoints to build dashboards to analyze the ingested data and our wind farm productivity</li><li>Build a Machine Learning model with Databricks AutoML to detect faulty wind turbines and trigger predictive maintenance operations</li><li Build an AI agent with the Mosaic AI Agent Framework to generate prescriptive work orders for wind turbines detected to be faulty</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "description": "Detect faulty wind turbine and generate work orders: Ingestion (SDP), BI, Predictive Maintenance (ML), Prescriptive Maintenance (GenAI), Governance (UC), Orchestration",
+    "fullDescription": "The Databricks Data Intelligence Platform allows your entire organization to use data and AI. It’s built on a lakehouse to provide an open, unified foundation for all data and governance, and is powered by a Data Intelligence Engine that understands the uniqueness of your data. In this demo, we'll show you how to build an IOT platform for prescriptive maintenance, ingesting sensor data from our wind turbine farm in realtime. We'll be able to deliver data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end data intelligence platform: <ul><li>Ingest data from external systems in streaming (sensors/ERP and then transform it using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security</li><li>Leverage Databricks SQL and the warehouse endpoints to build dashboards to analyze the ingested data and our wind farm productivity</li><li>Build a Machine Learning model with Databricks AutoML to detect faulty wind turbines and trigger predictive maintenance operations</li><li Build an AI agent with the Mosaic AI Agent Framework to generate prescriptive work orders for wind turbines detected to be faulty</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "usecase": "Data Intelligence Platform",
-  "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
+  "products": ["Spark Declarative Pipelines", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Databricks for Manufacturing", "url": "https://www.databricks.com/solutions/industries/manufacturing-industry-solutions"}],
   "recommended_items": ["lakehouse-fsi-credit", "lakehouse-fsi-fraud", "lakehouse-retail-c360"],
   "demo_assets": [
-      {"title": "Delta Live Tables pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-iot-platform-dlt-0.png"},
+      {"title": "Spark Declarative Pipelines pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-iot-platform-dlt-0.png"},
       {"title": "Databricks SQL Dashboard: Wind Turbine predictive Maintenance", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-iot-platform-dashboard-0.png"},
       {"title": "Databricks SQL Dashboard: Turbine Analysis", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-iot-platform-dashboard-1.png"}], 
   "bundle": True,
-  "tags": [{"dlt": "Delta Live Table"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
+  "tags": [{"dlt": "Spark Declarative Pipelines"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
   "notebooks": [
     {
       "path": "_resources/00-setup", 
@@ -65,15 +65,15 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with Delta Live Table", 
-      "description": "SQL DLT pipeline to ingest data & build clean tables."
+      "title":  "Ingest data with Spark Declarative Pipelines", 
+      "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
       "path": "01-Data-ingestion/01.2-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL-UDF", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with DLT-companion UDF", 
+      "title":  "Ingest data with SDP-companion UDF", 
       "description": "Loads ML model as UDF in python."
     },
     {
@@ -82,7 +82,7 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Alternative: Ingest data with Spark+Delta", 
-      "description": "Build a complete ingestion pipeline using spark API (alternative to DLT)"
+      "description": "Build a complete ingestion pipeline using spark API (alternative to SDP)"
     },
     {
       "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine", 
@@ -269,7 +269,7 @@
   }, 
   "pipelines": [
     {
-      "id": "dlt-iot-wind-turbine",
+      "id": "sdp-iot-wind-turbine",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -305,14 +305,14 @@
       }
     },
     {
-      "id": "ldp-sql",
+      "id": "sdp-sql",
       "run_after_creation": False,
       "definition": {
         "name": "new-pipeline-editor-sqls",
         "libraries": [
           {
             "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-sqls/transformations/**"
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - sdp-sqls/transformations/**"
             }
           }
         ],
@@ -323,18 +323,18 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-sqls"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - sdp-sqls"
       }
     },
     {
-      "id": "ldp-python",
+      "id": "sdp-python",
       "run_after_creation": False,
       "definition": {
         "name": "new-pipeline-editor-python",
         "libraries": [
           {
             "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-python/transformations/**"
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - sdp-python/transformations/**"
             }
           }
         ],
@@ -345,7 +345,7 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - ldp-python"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - sdp-python"
       }
     }
   ],

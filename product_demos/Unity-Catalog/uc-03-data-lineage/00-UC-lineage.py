@@ -27,7 +27,7 @@
 # MAGIC - Permissions are required on notebooks, jobs, or dashboards as per workspace access control settings.
 # MAGIC - For UC-enabled pipelines, users must have `CAN VIEW` permission on the pipeline.
 # MAGIC - Streaming lineage between Delta tables requires DBR `11.3 LTS+`.
-# MAGIC - Column lineage for Lakeflow Declarative Pipelines requires DBR `13.3 LTS+`.
+# MAGIC - Column lineage for Spark Declarative Pipelines requires DBR `13.3 LTS+`.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&notebook=00-UC-lineage&demo_name=uc-03-UC-lineage&event=VIEW">

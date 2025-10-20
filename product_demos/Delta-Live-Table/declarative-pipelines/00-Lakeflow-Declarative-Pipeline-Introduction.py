@@ -41,7 +41,7 @@
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC **Your Lakeflow Declarative Pipeline has been installed and started for you!** Open the <a dbdemos-pipeline-id="pipeline-bike" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Bike Rental Declarative Pipeline</a> to see it in action.<br/>
+# MAGIC **Your Spark Declarative Pipelines has been installed and started for you!** Open the <a dbdemos-pipeline-id="pipeline-bike" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Bike Rental Declarative Pipeline</a> to see it in action.<br/>
 # MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 # COMMAND ----------

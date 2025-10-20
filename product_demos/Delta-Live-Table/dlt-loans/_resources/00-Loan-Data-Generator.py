@@ -4,10 +4,10 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Data generator for DLT pipeline
+# MAGIC # Data generator for SDP pipeline
 # MAGIC This notebook will generate data in the given storage path to simulate a data flow. 
 # MAGIC
-# MAGIC **Make sure the storage path matches what you defined in your DLT pipeline as input.**
+# MAGIC **Make sure the storage path matches what you defined in your SDP pipeline as input.**
 # MAGIC
 # MAGIC 1. Run Cmd 2 to show widgets
 # MAGIC 2. Specify Storage path in widget

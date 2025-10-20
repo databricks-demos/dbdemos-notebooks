@@ -4,9 +4,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Scoring the Accident Images with Delta Live Table
+# MAGIC # Scoring the Accident Images with Spark Declarative Pipelines
 # MAGIC
-# MAGIC This notebook demonstrates how to do the scoring using Delta Live Table
+# MAGIC This notebook demonstrates how to do the scoring using Spark Declarative Pipelines
 
 # COMMAND ----------
 

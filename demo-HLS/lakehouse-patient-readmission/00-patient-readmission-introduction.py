@@ -86,16 +86,16 @@
 # MAGIC It provides many functionalities *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
 # MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 # MAGIC
-# MAGIC ### Simplify ingestion with Delta Live Tables (DLT)
+# MAGIC ### Simplify ingestion with Spark Declarative Pipelines (SDP)
 # MAGIC
-# MAGIC Databricks simplifies data ingestion and transformation with Delta Live Tables by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
+# MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC
-# MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Delta Live Table pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-DLT-patient-readmission-SQL) *(python DLT notebook alternative coming soon).* <br>
-# MAGIC   For more details on DLT: `dbdemos.install('dlt-loan')` or `dbdemos.install('dlt-cdc')`
+# MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-SDP-patient-readmission-SQL) *(python SDP notebook alternative coming soon).* <br>
+# MAGIC   For more details on SDP: `dbdemos.install('sdp-loan')` or `dbdemos.install('sdp-cdc')`
 
 # COMMAND ----------
 

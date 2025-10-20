@@ -37,7 +37,7 @@
 # MAGIC Now that our model was created and deployed in production within the MLFlow registry.
 # MAGIC
 # MAGIC <br/>
-# MAGIC We can now easily load it calling the `Production` stage, and use it in any Data Engineering pipeline (a job running every night, in streaming or even within a Delta Live Table pipeline).
+# MAGIC We can now easily load it calling the `Production` stage, and use it in any Data Engineering pipeline (a job running every night, in streaming or even within a Spark Declarative Pipelines pipeline).
 # MAGIC
 # MAGIC <br/>
 # MAGIC

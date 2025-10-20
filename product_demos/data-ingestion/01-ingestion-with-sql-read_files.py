@@ -6,7 +6,7 @@
 # MAGIC
 # MAGIC It supports ad-hoc exploration and incremental ingestion, including with `STREAMING TABLES`, and automatically infers schema and handles directories or patterns.
 # MAGIC
-# MAGIC *Note: Lakeflow Declarative Pipelines use read_files to easily load file data into tables, powering both batch and streaming workflows.*
+# MAGIC *Note: Spark Declarative Pipelines use read_files to easily load file data into tables, powering both batch and streaming workflows.*
 # MAGIC
 # MAGIC For more details, open [the read_files documentation](https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files).
 

@@ -1,4 +1,4 @@
--- CDC pipeline with Lakeflow Declarative Pipeline --
+-- CDC pipeline with Spark Declarative Pipelines --
 
 -- ---------------------------------------
 -- 1/ Ingesting data with Autoloader

@@ -73,9 +73,9 @@
 
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC ## Building a Delta Live Table pipeline to analyze and reduce fraud detection in real-time
+-- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze and reduce fraud detection in real-time
 -- MAGIC
--- MAGIC In this example, we'll implement a end 2 end DLT pipeline consuming our banking transactions information. We'll use the medaillon architecture but we could build star schema, data vault or any other modelisation.
+-- MAGIC In this example, we'll implement a end 2 end SDP pipeline consuming our banking transactions information. We'll use the medaillon architecture but we could build star schema, data vault or any other modelisation.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader and enrich this information.
 -- MAGIC
@@ -94,7 +94,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your DLT Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Delta Live Table pipeline</a> to see it in action.<br/>
+-- MAGIC Your SDP Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Spark Declarative Pipelines pipeline</a> to see it in action.<br/>
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 -- COMMAND ----------
@@ -175,7 +175,7 @@ AS
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
--- MAGIC For more advanced DLT capabilities run `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')` for CDC/SCDT2 example.
+-- MAGIC For more advanced SDP capabilities run `dbdemos.install('sdp-loans')` or `dbdemos.install('sdp-cdc')` for CDC/SCDT2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 
@@ -230,7 +230,7 @@ FROM live.silver_transactions t
 -- MAGIC
 -- MAGIC The table is now ready for our Data Scientist to train a model detecting fraud risk.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="dlt-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Spark Declarative Pipelines pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 

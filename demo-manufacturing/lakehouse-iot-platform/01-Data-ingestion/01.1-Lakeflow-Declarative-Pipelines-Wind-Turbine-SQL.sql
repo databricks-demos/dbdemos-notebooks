@@ -2,7 +2,7 @@
 -- MAGIC %md
 -- MAGIC # Note
 -- MAGIC
--- MAGIC This notebook walks you through the code of a SQL Lakeflow Declarative Pipeline. Due to massive improvements recently the Standard of setting up declarative pipelines changed together with the UI. Check for the most recent pipeline standards new-pipeline-editor-python and new-pipeline-editor-sql directories. 
+-- MAGIC This notebook walks you through the code of a SQL Spark Declarative Pipelines. Due to massive improvements recently the Standard of setting up declarative pipelines changed together with the UI. Check for the most recent pipeline standards new-pipeline-editor-python and new-pipeline-editor-sql directories. 
 -- MAGIC
 -- MAGIC You can also find more here: https://learn.microsoft.com/en-us/azure/databricks/dlt/dlt-multi-file-editor and follow the "Open an existing ETL pipeline" section.
 
@@ -129,7 +129,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your (Lakeflow) Declarative Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine (Lakeflow) Declarative Pipeline</a> to see it in action.<br/>
+-- MAGIC Your (Lakeflow) Declarative Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine (Lakeflow) Declarative Pipeline</a> to see it in action.<br/>
 -- MAGIC
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed with dbdemos, this might take a few minutes... Check installation logs for more details)*
 
@@ -335,7 +335,7 @@ SELECT *,
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## Conclusion
--- MAGIC Our <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
+-- MAGIC Our <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
 -- MAGIC
 -- MAGIC
 -- MAGIC For more details on model training, open the [model training notebook]($../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance)

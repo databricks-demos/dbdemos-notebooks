@@ -1,14 +1,14 @@
 -- Databricks notebook source
 -- MAGIC %md 
--- MAGIC # Testing our LDP
+-- MAGIC # Testing our SDP
 -- MAGIC
 -- MAGIC Tests can be added directly as expectation within LDP.
 -- MAGIC
--- MAGIC This is typically done using a companion notebook and creating a test version of the LDP .
+-- MAGIC This is typically done using a companion notebook and creating a test version of the SDP .
 -- MAGIC
--- MAGIC The test LDP will consume a small test datasets that we'll use to perform cheks on the output: given a specific input, we test the transformation logic by ensuring the output is correct, adding wrong data as input to cover all cases.
+-- MAGIC The test SDP will consume a small test datasets that we'll use to perform cheks on the output: given a specific input, we test the transformation logic by ensuring the output is correct, adding wrong data as input to cover all cases.
 -- MAGIC
--- MAGIC By leveraging expectations, we can simply run a test LDP pipeline. If the pipeline fail, this means that our tests are failing and something is incorrect.
+-- MAGIC By leveraging expectations, we can simply run a test SDP pipeline. If the pipeline fail, this means that our tests are failing and something is incorrect.
 -- MAGIC
 -- MAGIC <img style="float: right" width="1000px" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/dlt-advanecd/DLT-advanced-unit-test-3.png"/>
 -- MAGIC
@@ -84,4 +84,4 @@ AS SELECT count(*) as duplicate, id FROM user_gold_ldp GROUP BY id
 -- MAGIC
 -- MAGIC If one of the condition defined in the TEST table fail, the test pipeline expectation will fail and we'll know something need to be fixed!
 -- MAGIC
--- MAGIC You can open the <a dbdemos-pipeline-id="dlt-test" href="#joblist/pipelines/cade4f82-4003-457c-9f7c-a8e5559873b6">Delta Live Table Pipeline for unit-test</a> to see the tests in action
+-- MAGIC You can open the <a dbdemos-pipeline-id="sdp-test" href="#joblist/pipelines/cade4f82-4003-457c-9f7c-a8e5559873b6">Spark Declarative Pipelines Pipeline for unit-test</a> to see the tests in action

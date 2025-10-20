@@ -61,7 +61,7 @@
       "warehouse_id": "9be8079d873b30a6"
     },
     {
-      "path": "04-create-end-to-end-DLT-workflow", 
+      "path": "04-create-end-to-end-SDP-workflow", 
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,

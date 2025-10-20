@@ -6,7 +6,7 @@
 # MAGIC
 # MAGIC The end results are stored in the `accident_images` delta table
 # MAGIC
-# MAGIC *Note: we could also have these transformations available in a Delta Live Table. Open [02.2-EXTRA-Batch-Scoring-DLT]($./EXTRA-DLT-inference/02.2-EXTRA-Batch-Scoring-DLT) to see how it's done.*
+# MAGIC *Note: we could also have these transformations available in a Spark Declarative Pipelines. Open [02.2-EXTRA-Batch-Scoring-DLT]($./EXTRA-DLT-inference/02.2-EXTRA-Batch-Scoring-DLT) to see how it's done.*
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->

@@ -23,7 +23,7 @@
 # MAGIC
 # MAGIC ## Ingesting data for C360 platfom
 # MAGIC
-# MAGIC This demo replicate the Delta Live Table ingestion pipeline available in the Lakehouse C360 platform demo `dbdemos.install('lakehouse-retail-c360')`
+# MAGIC This demo replicate the Spark Declarative Pipelines ingestion pipeline available in the Lakehouse C360 platform demo `dbdemos.install('lakehouse-retail-c360')`
 # MAGIC
 # MAGIC In this dbt pipeline, we'll work as a Data Engineer to build our c360 database. We'll consume and clean our raw data sources to prepare the tables required for our BI & ML workload.
 # MAGIC
@@ -113,13 +113,13 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### A note on Delta Live Table
+# MAGIC ### A note on Spark Declarative Pipelines
 # MAGIC
-# MAGIC Delta Live Table is a declarative framework build by Databricks. It can also be used to build data pipeline within Databricks and provides among other:
+# MAGIC Spark Declarative Pipelines is a declarative framework build by Databricks. It can also be used to build data pipeline within Databricks and provides among other:
 # MAGIC
 # MAGIC  - Ingestion capabilities to ingest data from any sources within your pipeline (no need for external step)
 # MAGIC  - Out of the box streaming capabilities for near-realtime inferences
 # MAGIC  - Incremental support: ingest and transform new data as they come 
 # MAGIC  - Advanced capabilities (simple Change Data Capture, SCDT2 etc)
 # MAGIC
-# MAGIC If you wish to know more about dlt, install the DLT demos: `dbdemos.install('dlt-loan')`
+# MAGIC If you wish to know more about dlt, install the SDP demos: `dbdemos.install('sdp-loan')`

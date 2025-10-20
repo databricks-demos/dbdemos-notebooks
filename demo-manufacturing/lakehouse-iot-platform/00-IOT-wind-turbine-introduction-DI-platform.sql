@@ -104,8 +104,13 @@
 
 -- MAGIC %md 
 -- MAGIC Open the Wind Turbine 
+<<<<<<< HEAD
 -- MAGIC   <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-Wind-Turbine-SQL) *(Alternatives: Spark Declarative Pipelines Python version Soon available - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine))*. <br>
 -- MAGIC   For more details on Spark Declarative Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
+=======
+-- MAGIC   <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL) *(Alternatives: (Lakeflow) Declarative Pipelines Python version Soon available - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine))*. <br>
+-- MAGIC   For more details on (Lakeflow) Declarative Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
+>>>>>>> main
 
 -- COMMAND ----------
 

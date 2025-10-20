@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-#Note: we do not recommend to change the catalog here as it won't impact all the demo resources such as DLT pipeline and Dashboards.
+#Note: we do not recommend to change the catalog here as it won't impact all the demo resources such as SDP pipeline and Dashboards.
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("...", catalog="..", schema="...")
 
 catalog = "main__build"

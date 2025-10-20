@@ -1,15 +1,15 @@
 {
   "datasets" : [ {
     "name" : "af93f93e",
-    "displayName" : "DLT-retail-data-quality-stats",
+    "displayName" : "SDP-retail-data-quality-stats",
     "query" : "select \n    date(timestamp) day, sum(failed_records)/sum(output_records)*100 failure_rate, sum(output_records) output_records from `main__build`.`dbdemos_retail_c360`.dlt_expectations \ngroup by day order by day"
   }, {
     "name" : "210ed6ab",
-    "displayName" : "DLT-retail-data-quality",
+    "displayName" : "SDP-retail-data-quality",
     "query" : "select sum(passed_records) as passed_records,\n       sum(failed_records) as failed_records,\n       sum(dropped_records) as dropped_records,\n       sum(output_records) as output_records,\n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       name,\n       dataset,\n        date(timestamp) as date from `main__build`.`dbdemos_retail_c360`.dlt_expectations values group by date, dataset, name;"
   }, {
     "name" : "6770434a",
-    "displayName" : "DLT-retail-data-quality-per-table",
+    "displayName" : "SDP-retail-data-quality-per-table",
     "query" : "select 'passed_records' as type,\n       sum(passed_records) as value, \n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       dataset \n   from `main__build`.`dbdemos_retail_c360`.dlt_expectations  group by dataset\nunion\nselect 'failed_records' as type,\n       sum(failed_records) as value, \n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       dataset \n   from `main__build`.`dbdemos_retail_c360`.dlt_expectations  group by dataset\nunion\nselect 'dropped_records' as type,\n       sum(dropped_records) as value, \n       sum(failed_records)/sum(output_records)*100 as failure_rate,\n       dataset \n   from `main__build`.`dbdemos_retail_c360`.dlt_expectations  group by dataset\n"
   } ],
   "pages" : [ {
@@ -18,7 +18,7 @@
     "layout" : [ {
       "widget" : {
         "name" : "b27f3885",
-        "textbox_spec" : "# Retail ingestion quality tracker\nThis dashboard leverage the Delta Live Table expectation metrics to track our data quality over the ingestion pipeline.\n\nThe pipeline is incrementally consuming new data (each hour or in real time) and the dashboard is updated accordingly. Open notebook `02.1-Delta-Live-Table-Ingestion` to visualize the Delta Live Table pipeline.\n\nData has been prepared using a SQL query over the value from the `/system/events` table. Open `01.4-DLT-churn-expectation-dashboard-data-prep` for more details."
+        "textbox_spec" : "# Retail ingestion quality tracker\nThis dashboard leverage the Spark Declarative Pipelines expectation metrics to track our data quality over the ingestion pipeline.\n\nThe pipeline is incrementally consuming new data (each hour or in real time) and the dashboard is updated accordingly. Open notebook `02.1-Delta-Live-Table-Ingestion` to visualize the Spark Declarative Pipelines pipeline.\n\nData has been prepared using a SQL query over the value from the `/system/events` table. Open `01.4-SDP-churn-expectation-dashboard-data-prep` for more details."
       },
       "position" : {
         "x" : 0,

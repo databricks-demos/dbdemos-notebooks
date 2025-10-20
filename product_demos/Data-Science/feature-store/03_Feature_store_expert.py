@@ -422,7 +422,7 @@ print("Accuracy: ", accuracy_score(pd_scoring["purchased"], pd_scoring["predicti
 # MAGIC
 # MAGIC To do that, we'll deploy online stores. These are fully serverless and managed by Databricks. You can think of them as a  (K/V store, such as Mysql, dynamoDB, CosmoDB...).
 # MAGIC
-# MAGIC Databricks will automatically synchronize the Delta Live Table content with the online store (you can chose to trigger the update yourself or do it on a schedule).
+# MAGIC Databricks will automatically synchronize the Spark Declarative Pipelines content with the online store (you can chose to trigger the update yourself or do it on a schedule).
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/feature-store-expert-flow.png?raw=true" width="1200px" />
 

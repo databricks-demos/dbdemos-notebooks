@@ -1,15 +1,15 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # Policy, Claims & Telematics DLT Ingestion pipeline
+# MAGIC # Policy, Claims & Telematics SDP Ingestion pipeline
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-dlt-0.png?raw=true" style="float: right" width="800px">
 # MAGIC
-# MAGIC Using <b>Delta Live Tables</b> (DLT) for ETL helps simplify and operationalize the pipeline with its support for autoloader, data quality via constraints, efficient auto-scaling for streaming workloads, resiliency via restart on failure, execution of administrative operations among others.
+# MAGIC Using <b>Spark Declarative Pipelines</b> (SDP) for ETL helps simplify and operationalize the pipeline with its support for autoloader, data quality via constraints, efficient auto-scaling for streaming workloads, resiliency via restart on failure, execution of administrative operations among others.
 # MAGIC
 # MAGIC We'll show how Databricks makes it easy to incrementally ingest and transform our incoming claims data.
 # MAGIC
-# MAGIC For more advanced DLT capabilities run `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')` for CDC/SCDT2 example.
+# MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCDT2 example.
 # MAGIC
 # MAGIC
 # MAGIC
@@ -26,7 +26,7 @@
 
 # MAGIC %md  
 # MAGIC
-# MAGIC This demo started for you a <a dbdemos-pipeline-id="dlt-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">DLT Pipeline</a> using this notebook! Explore it to see its execution out of the box.
+# MAGIC This demo started for you a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">SDP Pipeline</a> using this notebook! Explore it to see its execution out of the box.
 
 # COMMAND ----------
 

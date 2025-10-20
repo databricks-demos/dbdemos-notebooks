@@ -20,7 +20,7 @@
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Databricks Delta Lake", "url": "https://www.databricks.com/blog/2022/05/20/five-simple-steps-for-implementing-a-star-schema-in-databricks-with-delta-lake.html"}],
-  "recommended_items": ["identity-pk-fk", "dlt-loans", "dlt-cdc"],
+  "recommended_items": ["identity-pk-fk", "sdp-loans", "sdp-cdc"],
   "demo_assets": [],    
   "bundle": True,
   "tags": [{"delta": "Delta Lake"}],

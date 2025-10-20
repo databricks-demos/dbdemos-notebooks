@@ -397,7 +397,7 @@ display(scored_df.limit(100))
 # MAGIC
 # MAGIC Simply pick a source Detla Table to create your first online table. 
 # MAGIC
-# MAGIC Databricks will manage the synchronisation between your Delta Live Table and the Online Table for you in the background.
+# MAGIC Databricks will manage the synchronisation between your Spark Declarative Pipelines and the Online Table for you in the background.
 
 # COMMAND ----------
 

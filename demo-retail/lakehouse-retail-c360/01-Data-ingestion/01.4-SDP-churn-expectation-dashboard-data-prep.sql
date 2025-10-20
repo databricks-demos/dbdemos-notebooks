@@ -1,12 +1,12 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC # DLT pipeline log analysis
+-- MAGIC # SDP pipeline log analysis
 -- MAGIC
 -- MAGIC <img style="float:right" width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-dlt-stat.png?raw=true">
 -- MAGIC
 -- MAGIC
--- MAGIC Each DLT Pipeline saves events and expectations metrics in the Storage Location defined on the pipeline. From this table we can see what is happening and the quality of the data passing through it.
+-- MAGIC Each SDP Pipeline saves events and expectations metrics in the Storage Location defined on the pipeline. From this table we can see what is happening and the quality of the data passing through it.
 -- MAGIC
 -- MAGIC You can leverage the expecations directly as a SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
 -- MAGIC
@@ -18,14 +18,14 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Accessing the Delta Live Table pipeline events with Unity Catalog
+-- MAGIC ## Accessing the Spark Declarative Pipelines pipeline events with Unity Catalog
 -- MAGIC
 -- MAGIC Databricks provides an `event_log` function which is automatically going to lookup the event log table. You can specify any table to get access to the logs:
 -- MAGIC
 -- MAGIC `SELECT * FROM event_log(TABLE(catalog.schema.my_table))`
 -- MAGIC
 -- MAGIC #### Using Legacy hive_metastore
--- MAGIC *Note: If you are not using Unity Catalog (legacy hive_metastore), you can find your event log location opening the Settings of your DLT pipeline, under `storage` :*
+-- MAGIC *Note: If you are not using Unity Catalog (legacy hive_metastore), you can find your event log location opening the Settings of your SDP pipeline, under `storage` :*
 -- MAGIC
 -- MAGIC ```
 -- MAGIC {
@@ -44,7 +44,7 @@ SELECT * FROM main__build.dbdemos_retail_c360.dlt_event_log_
 
 -- COMMAND ----------
 
--- DBTITLE 1,Adding our DLT system table to the metastore
+-- DBTITLE 1,Adding our SDP system table to the metastore
 --CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
 --  as SELECT * FROM event_log(TABLE(main__build.dbdemos_retail_c360.churn_features));
 --SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
@@ -108,4 +108,4 @@ FROM(
 -- MAGIC
 -- MAGIC ## That's it! Our data quality metrics are ready! 
 -- MAGIC
--- MAGIC Our datable is now ready be queried using DBSQL. Open the <a dbdemos-dashboard-id="dlt-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>
+-- MAGIC Our datable is now ready be queried using DBSQL. Open the <a dbdemos-dashboard-id="sdp-quality-stat" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard</a>

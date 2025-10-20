@@ -66,7 +66,7 @@ display(bronzeDF)
 # MAGIC Let's redefine our stream with these features. Notice that we now have all of the JSON fields.
 # MAGIC
 # MAGIC *Notes:*
-# MAGIC * *With Delta Live Tables you don't even have to set this option, the engine manages the schema location for you.*
+# MAGIC * *With Spark Declarative Pipelines you don't even have to set this option, the engine manages the schema location for you.*
 # MAGIC * *Sampling size can be changed with `spark.databricks.cloudFiles.schemaInference.sampleSize.numBytes`*
 
 # COMMAND ----------
@@ -208,7 +208,7 @@ new_row.write.format("json").mode("append").save(volume_folder + "/user_json")
 # MAGIC If you need your job to be resilient with regard to an evolving schema, you have multiple options:
 # MAGIC
 # MAGIC * Let the full job fail & configure Databricks Workflow to restart it automatically
-# MAGIC * Leverage Delta Live Tables to simplify all the setup (DLT handles everything for you out of the box)
+# MAGIC * Leverage Spark Declarative Pipelines to simplify all the setup (SDP handles everything for you out of the box)
 # MAGIC * Wrap your call to restart the stream when the new column appears.
 # MAGIC
 # MAGIC Here is an example:

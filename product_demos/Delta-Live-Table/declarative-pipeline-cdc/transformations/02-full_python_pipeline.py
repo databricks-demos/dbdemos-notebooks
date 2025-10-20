@@ -7,7 +7,7 @@ from pyspark.sql.functions import *
 # -------------------------------------------------------------------
 # --- 1. Ingest data with autoloader: loop on all folders -----------
 # -------------------------------------------------------------------
-# Let's loop over all the folders and dynamically generate our DLT pipeline.
+# Let's loop over all the folders and dynamically generate our SDP pipeline.
 import dlt
 from pyspark.sql.functions import *
 
@@ -15,7 +15,7 @@ catalog = spark.conf.get("catalog")
 schema = spark.conf.get("schema")
 
 def create_pipeline(table_name):
-    print(f"Building DLT CDC pipeline for {table_name}")
+    print(f"Building SDP CDC pipeline for {table_name}")
 
     ##Raw CDC Table
     # .option("cloudFiles.maxFilesPerTrigger", "1")

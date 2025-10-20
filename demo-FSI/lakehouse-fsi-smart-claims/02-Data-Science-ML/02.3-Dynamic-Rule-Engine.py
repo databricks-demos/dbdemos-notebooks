@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC ## Implementing Dynamic rules
 # MAGIC
-# MAGIC Many system exists to build such rules. These can be natively implemented in Spark or using Delta Live Table (check `dbdemos.install('dlt-unit-test')` for an example of dynamic DLT rules)
+# MAGIC Many system exists to build such rules. These can be natively implemented in Spark or using Spark Declarative Pipelines (check `dbdemos.install('declarative-pipeline-unit-test')` for an example of dynamic SDP rules)
 # MAGIC
 # MAGIC In this simple example, we'll add our rules as SQL statement in a table table and then apply them over our dataset.
 # MAGIC

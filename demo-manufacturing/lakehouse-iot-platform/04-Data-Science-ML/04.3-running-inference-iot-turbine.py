@@ -5,7 +5,7 @@
 # MAGIC
 # MAGIC With AutoML, our best model was automatically saved in our MLFlow registry.
 # MAGIC
-# MAGIC All we need to do now is use this model to run Inferences. A simple solution is to share the model name to our Data Engineering team and they'll be able to call this model within the pipeline they maintained. That's what we did in our Delta Live Table pipeline!
+# MAGIC All we need to do now is use this model to run Inferences. A simple solution is to share the model name to our Data Engineering team and they'll be able to call this model within the pipeline they maintained. That's what we did in our Spark Declarative Pipelines pipeline!
 # MAGIC
 # MAGIC Alternatively, this can be schedule in a separate job. Here is an example to show you how MLFlow can be directly used to retriver the model and run inferences.
 # MAGIC

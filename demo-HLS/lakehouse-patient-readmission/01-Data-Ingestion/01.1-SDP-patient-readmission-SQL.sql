@@ -36,7 +36,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## Delta Live Table: A simple way to build and manage data pipelines for fresh, high quality data!
+-- MAGIC ## Spark Declarative Pipelines: A simple way to build and manage data pipelines for fresh, high quality data!
 -- MAGIC
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our OMOP CDM database. <br>
@@ -44,9 +44,9 @@
 -- MAGIC
 -- MAGIC The lakehouse makes it easy to ingest from any external or internal HLS datasources, such as HL7 FHIR, EHR, ioMT, SQL databases). For our demo, our data will be files received in a cloud blob storage in different format. We will then apply a couple of transformations while ensuring data quality.
 -- MAGIC
--- MAGIC Databricks simplifies this task with Delta Live Table (DLT) by making Data Engineering accessible to all.
+-- MAGIC Databricks simplifies this task with Spark Declarative Pipelines (SDP) by making Data Engineering accessible to all.
 -- MAGIC
--- MAGIC DLT allows Data Analysts to create advanced pipeline with plain SQL.
+-- MAGIC SDP allows Data Analysts to create advanced pipeline with plain SQL.
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
@@ -89,9 +89,9 @@
 
 -- MAGIC %md 
 -- MAGIC
--- MAGIC ## Building a Delta Live Table pipeline to ingest and prepare HLS data with the OMOP model
+-- MAGIC ## Building a Spark Declarative Pipelines pipeline to ingest and prepare HLS data with the OMOP model
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end DLT pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modelisation.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, clean and enrich this information.
 -- MAGIC
@@ -106,7 +106,7 @@
 -- MAGIC %md 
 -- MAGIC
 -- MAGIC
--- MAGIC The DLT pipeline was started for you! Click to <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">open your Pipeline</a> and review its execution.
+-- MAGIC The SDP pipeline was started for you! Click to <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">open your Pipeline</a> and review its execution.
 
 -- COMMAND ----------
 
@@ -165,7 +165,7 @@ CREATE OR REFRESH STREAMING TABLE concept_relationship
 -- MAGIC
 -- MAGIC We're also adding an TODO [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
--- MAGIC For more advanced DLT capabilities run `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')` for CDC/SCDT2 example.
+-- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCDT2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 -- MAGIC
@@ -705,7 +705,7 @@ CREATE OR REFRESH MATERIALIZED VIEW drug_exposure AS
 -- MAGIC
 -- MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">OMOP data model Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">OMOP data model Spark Declarative Pipelines pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 

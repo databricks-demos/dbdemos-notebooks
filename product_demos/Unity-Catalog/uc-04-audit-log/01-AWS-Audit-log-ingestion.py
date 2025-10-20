@@ -61,7 +61,7 @@ display(dbutils.fs.ls("s3a://databricks-field-eng-audit-logs/raw-audit-logs/"))
 # MAGIC
 # MAGIC We can then schedule this notebook to run every hour. 
 # MAGIC
-# MAGIC Note that we could also use a small DLT pipeline to do that, this would prevent us from having to deal with checkpoints and autoloader restart.
+# MAGIC Note that we could also use a small SDP pipeline to do that, this would prevent us from having to deal with checkpoints and autoloader restart.
 
 # COMMAND ----------
 

@@ -54,7 +54,7 @@
 # MAGIC <h3 style="padding: 10px 0px 0px 5px">Marc, as a Data Scientist, needs a data + ML platform accelerating all the ML & DS steps:</h3>
 # MAGIC
 # MAGIC <div style="font-size: 19px; margin-left: 73px; clear: left">
-# MAGIC <div class="badge_b"><div class="badge">1</div> Build Data Pipeline supporting real time (with DLT)</div>
+# MAGIC <div class="badge_b"><div class="badge">1</div> Build Data Pipeline supporting real time (with SDP)</div>
 # MAGIC <div class="badge_b"><div class="badge">2</div> Data Exploration</div>
 # MAGIC <div class="badge_b"><div class="badge">3</div> Feature creation</div>
 # MAGIC <div class="badge_b"><div class="badge">4</div> Build & train model</div>
@@ -74,7 +74,7 @@
 # MAGIC
 # MAGIC Our first step as Data Scientist is to analyze and build the features we'll use to train our model.
 # MAGIC
-# MAGIC The transaction table enriched with customer data has been saved within our Delta Live Table pipeline. All we have to do is read this information, analyze it and start an Auto-ML run.
+# MAGIC The transaction table enriched with customer data has been saved within our Spark Declarative Pipelines pipeline. All we have to do is read this information, analyze it and start an Auto-ML run.
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-ds.png" width="1000px">
 # MAGIC

@@ -14,19 +14,19 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_ldp_unit_test",
   "description": "Deploy robust pipelines with unit tests leveraging expectation.",
-  "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Lakeflow Declarative Pipeline let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your LDP pipeline and make it composable, easily switching input data with your test data.",
+  "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Spark Declarative Pipelines let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your SDP pipeline and make it composable, easily switching input data with your test data.",
   "bundle": True,
   "notebooks": [
     {
-      "path": "LDP-pipeline-to-test", 
+      "path": "SDP-pipeline-to-test", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "LDP to test", 
+      "title":  "SDP to test", 
       "description": "Definition of the pipeline we want to test."
     },
     {
-      "path": "ingestion_profile/LDP-ingest_prod", 
+      "path": "ingestion_profile/SDP-ingest_prod", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -34,7 +34,7 @@
       "description": "Define the production data source (ex: kafka)"
     },
     {
-      "path": "ingestion_profile/LDP-ingest_test", 
+      "path": "ingestion_profile/SDP-ingest_test", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -42,15 +42,15 @@
       "description": "Define the test data source (ex: csv file crafted to validate our tests)"
     },
     {
-      "path": "test/LDP-Test-Dataset-setup", 
+      "path": "test/SDP-Test-Dataset-setup", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Test dataset creation", 
-      "description": "Craft the data required for the tests (used by 'LDP-ingest_test')"
+      "description": "Craft the data required for the tests (used by 'SDP-ingest_test')"
     },
     {
-      "path": "test/LDP-Tests", 
+      "path": "test/SDP-Tests", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -70,7 +70,7 @@
             {
                 "task_key": "init_data",
                 "notebook_task": {
-                    "notebook_path": "{{DEMO_FOLDER}}/test/LDP-Test-Dataset-setup",
+                    "notebook_path": "{{DEMO_FOLDER}}/test/SDP-Test-Dataset-setup",
                     "source": "WORKSPACE"
                 },
                 "job_cluster_key": "Shared_job_cluster",
@@ -131,7 +131,7 @@
   },
   "pipelines": [
     {
-      "id": "dlt-test",
+      "id": "sdp-test",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -152,17 +152,17 @@
         "libraries": [
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/LDP-pipeline-to-test"
+                    "path": "{{DEMO_FOLDER}}/SDP-pipeline-to-test"
                 }
             },
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/ingestion_profile/LDP-ingest_test"
+                    "path": "{{DEMO_FOLDER}}/ingestion_profile/SDP-ingest_test"
                 }
             },
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/test/LDP-Tests"
+                    "path": "{{DEMO_FOLDER}}/test/SDP-Tests"
                 }
             }
         ],

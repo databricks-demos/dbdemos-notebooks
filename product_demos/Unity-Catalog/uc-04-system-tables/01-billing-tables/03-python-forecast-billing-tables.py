@@ -57,7 +57,7 @@ data_to_predict = spark.sql("""
 data_to_predict = data_to_predict.withColumn("sku",
                      when(col("sku").contains("ALL_PURPOSE"), "ALL_PURPOSE")
                     .when(col("sku").contains("JOBS"), "JOBS")
-                    .when(col("sku").contains("DLT"), "DLT")
+                    .when(col("sku").contains("SDP") | col("sku").contains("DLT"), "SDP")
                     .when(col("sku").contains("SQL"), "SQL")
                     .when(col("sku").contains("INFERENCE"), "MODEL_INFERENCE")
                     .otherwise("OTHER"))

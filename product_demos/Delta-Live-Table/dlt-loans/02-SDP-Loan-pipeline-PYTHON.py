@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Simple ETL with DLT
+# MAGIC # Simple ETL with SDP
 # MAGIC
-# MAGIC DLT makes Data Engineering accessible for all. Just declare your transformations in SQL or Python, and DLT will handle the Data Engineering complexity for you.
+# MAGIC SDP makes Data Engineering accessible for all. Just declare your transformations in SQL or Python, and SDP will handle the Data Engineering complexity for you.
 # MAGIC
 # MAGIC <img style="float:right" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/dlt-golden-demo-loan-1.png" width="700"/>
 # MAGIC
@@ -24,13 +24,13 @@
 # MAGIC
 # MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
 # MAGIC
-# MAGIC ## Our DLT pipeline
+# MAGIC ## Our SDP pipeline
 # MAGIC
 # MAGIC We'll be using as input a raw dataset containing information on our customers Loan and historical transactions.
 # MAGIC
 # MAGIC Our goal is to ingest this data in near real time and build table for our Analyst team while ensuring data quality.
 # MAGIC
-# MAGIC **Your DLT Pipeline is ready!** Your pipeline was started using the SQL notebook and is <a dbdemos-pipeline-id="dlt-loans" href="/#joblist/pipelines/460f840c-9ecc-4d19-a661-f60fd3a88297">available here</a>.
+# MAGIC **Your SDP Pipeline is ready!** Your pipeline was started using the SQL notebook and is <a dbdemos-pipeline-id="sdp-loans" href="/#joblist/pipelines/460f840c-9ecc-4d19-a661-f60fd3a88297">available here</a>.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=01-DLT-Loan-pipeline-PYTHON&demo_name=dlt-loans&event=VIEW">
@@ -124,7 +124,7 @@ def raw_historical_loans():
 # MAGIC
 # MAGIC To consume only incremental data from the Bronze layer like `BZ_raw_txs`, we'll be using the `spark.readStream.table` function.
 # MAGIC
-# MAGIC Note that we don't have to worry about compactions, DLT handles that for us.
+# MAGIC Note that we don't have to worry about compactions, SDP handles that for us.
 # MAGIC
 # MAGIC #### Expectations
 # MAGIC By defining expectations (`@dlt.expect`), you can enforce and track your data quality. See the [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-expectations.html) for more details
@@ -195,7 +195,7 @@ def historical_txs():
 # MAGIC
 # MAGIC Our last step is to materialize the Gold Layer.
 # MAGIC
-# MAGIC Because these tables will be requested at scale using a SQL Endpoint, we'll add Liquid Clustering at the table level to organize data for faster queries, and DLT will handle the rest.
+# MAGIC Because these tables will be requested at scale using a SQL Endpoint, we'll add Liquid Clustering at the table level to organize data for faster queries, and SDP will handle the rest.
 
 # COMMAND ----------
 
@@ -252,9 +252,9 @@ def new_loan_balances_by_country():
 
 # MAGIC %md ## Next steps
 # MAGIC
-# MAGIC Your DLT pipeline is ready to be started. <a dbdemos-pipeline-id="dlt-loans" href="/#joblist/pipelines/460f840c-9ecc-4d19-a661-f60fd3a88297">Click here to access the pipeline</a> created for you using the SQL notebook.
+# MAGIC Your SDP pipeline is ready to be started. <a dbdemos-pipeline-id="sdp-loans" href="/#joblist/pipelines/460f840c-9ecc-4d19-a661-f60fd3a88297">Click here to access the pipeline</a> created for you using the SQL notebook.
 # MAGIC
-# MAGIC To create a new one using this notebook, open the DLT menu, create a pipeline and select this notebook to run it. To generate sample data, please run the [companion notebook]($./_resources/00-Loan-Data-Generator) (make sure the path where you read and write the data are the same!)
+# MAGIC To create a new one using this notebook, open the SDP menu, create a pipeline and select this notebook to run it. To generate sample data, please run the [companion notebook]($./_resources/00-Loan-Data-Generator) (make sure the path where you read and write the data are the same!)
 # MAGIC
 # MAGIC Datas Analyst can start using DBSQL to analyze data and track our Loan metrics.  Data Scientist can also access the data to start building models to predict payment default or other more advanced use-cases.
 
@@ -269,8 +269,8 @@ def new_loan_balances_by_country():
 # MAGIC You can leverage DBSQL to request these table and build custom alerts based on the metrics your business is tracking.
 # MAGIC
 # MAGIC
-# MAGIC See [how to access your DLT metrics]($./03-Log-Analysis)
+# MAGIC See [how to access your SDP metrics]($./03-Log-Analysis)
 # MAGIC
 # MAGIC <img width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/dlt/dlt-loans-dashboard.png?raw=true">
 # MAGIC
-# MAGIC <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard example</a>
+# MAGIC <a dbdemos-dashboard-id="sdp-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Data Quality Dashboard example</a>

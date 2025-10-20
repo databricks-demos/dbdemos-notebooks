@@ -85,7 +85,7 @@
 # MAGIC         CASE
 # MAGIC             WHEN u.sku_name LIKE '%ALL_PURPOSE%' THEN 'ALL_PURPOSE'
 # MAGIC             WHEN u.sku_name LIKE '%JOBS%' THEN 'JOBS'
-# MAGIC             WHEN u.sku_name LIKE '%DLT%' THEN 'DLT'
+# MAGIC             WHEN u.sku_name LIKE '%SDP%' OR u.sku_name LIKE '%DLT%' THEN 'SDP'
 # MAGIC             WHEN u.sku_name LIKE '%SQL%' THEN 'SQL'
 # MAGIC             WHEN u.sku_name LIKE '%INFERENCE%' THEN 'MODEL_INFERENCE'
 # MAGIC             ELSE 'OTHER'

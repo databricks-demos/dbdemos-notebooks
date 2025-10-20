@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md 
-# MAGIC # Lakeflow Declarative Pipelines - Unit testing
+# MAGIC # Spark Declarative Pipelines - Unit testing
 # MAGIC
 # MAGIC ## Why testing?
 # MAGIC
-# MAGIC Deploying tests on your LDP pipelines will guarantee that your ingestion is always stable and future proof.
+# MAGIC Deploying tests on your SDP pipelines will guarantee that your ingestion is always stable and future proof.
 # MAGIC
 # MAGIC The tests can be deployed as part of traditional CI/CD pipeline and can be run before a new version deployment, ensuring that a new version won't introduce a regression.
 # MAGIC
@@ -13,16 +13,16 @@
 # MAGIC * By Data Analyst for reporting/BI
 # MAGIC * By Data Scientists to build ML model for downstream applications
 # MAGIC
-# MAGIC ## Unit testing strategy with LDP
+# MAGIC ## Unit testing strategy with SDP
 # MAGIC
-# MAGIC Lakeflow Declarative Pipeline logic can be unit tested leveraging Expectation.
+# MAGIC Spark Declarative Pipelines logic can be unit tested leveraging Expectation.
 # MAGIC
-# MAGIC At a high level, the LDP pipelines can be constructed as following:
+# MAGIC At a high level, the SDP pipelines can be constructed as following:
 # MAGIC
 # MAGIC * The ingestion step (first step of the pipeline on the left) is written in a separate notebook. This correspond to the left **green** (prod) and **blue** (test) input sources.
 # MAGIC    * The Production pipeline is defined with the PROD ingestion notebook:[./ingestion_profile/LDP-ingest_prod]($./ingestion_profile/LDP-ingest_prod) and connects to the live datasource (ex: kafka server, staging blob storage)
 # MAGIC    * The Test pipeline (only used to run the unit test) is defined with the TEST ingestion notebook: [./ingestion_profile/LDP-ingest_test]($./ingestion_profile/LDP-ingest_test) and can consume from local files used for our unit tests (ex: adhoc csv file)
-# MAGIC * A common LDP pipeline logic is used for both the prod and the test pipeline (the **yellow** in the graph)
+# MAGIC * A common SDP pipeline logic is used for both the prod and the test pipeline (the **yellow** in the graph)
 # MAGIC * An additional notebook containing all the unit tests is used in the TEST pipeline (the **blue `TEST_xxx` tables** in the image on the right side)
 # MAGIC
 # MAGIC
@@ -30,7 +30,7 @@
 # MAGIC
 # MAGIC ## Accessing the pipeline
 # MAGIC
-# MAGIC Your pipeline has been created! You can directly access the <a dbdemos-pipeline-id="dlt-test" href="#joblist/pipelines/cade4f82-4003-457c-9f7c-a8e5559873b6">Lakeflow Declarative Pipeline for unit-test demo</a>.
+# MAGIC Your pipeline has been created! You can directly access the <a dbdemos-pipeline-id="sdp-test" href="#joblist/pipelines/cade4f82-4003-457c-9f7c-a8e5559873b6">Spark Declarative Pipelines for unit-test demo</a>.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&notebook=LDP-pipeline-to-test&demo_name=dlt-unit-test&event=VIEW">
@@ -68,13 +68,13 @@ data = [
  ("user_gold_ldp",    "valid_income",   "annual_income IS NOT NULL"),
  ("user_gold_ldp",    "valid_score",    "spending_core IS NOT NULL")
 ]
-#Typically only run once, this doesn't have to be part of the LDP pipeline.
+#Typically only run once, this doesn't have to be part of the SDP pipeline.
 spark.createDataFrame(data=data, schema=["tag", "name", "constraint"]).write.mode("overwrite").saveAsTable(f"{catalog}.{schema}.expectations")
 
 # COMMAND ----------
 
 # DBTITLE 1,Make expectations portable and reusable from a Delta Table
-#Return the rules matching the tag as a format ready for LDP annotation.
+#Return the rules matching the tag as a format ready for SDP annotation.
 from pyspark.sql.functions import expr, col
 
 def get_rules(tag):
@@ -104,7 +104,7 @@ def get_rules(tag):
 # MAGIC Start by reviewing the notebooks to see how the data is ingested.
 # MAGIC
 # MAGIC
-# MAGIC *Note: LDP is available as SQL or Python, this example will use Python*
+# MAGIC *Note: SDP is available as SQL or Python, this example will use Python*
 
 # COMMAND ----------
 
@@ -228,7 +228,7 @@ def user_gold_ldp():
 # MAGIC
 # MAGIC Here is a full example of the test pipeline definition.
 # MAGIC
-# MAGIC Note that we have 3 notebooks in the LDP pipeline:
+# MAGIC Note that we have 3 notebooks in the SDP pipeline:
 # MAGIC
 # MAGIC * **LDP-ingest_test**: ingesting our test datasets
 # MAGIC * **LDP-pipeline-to-test**: the actual pipeline we want to test
@@ -242,13 +242,13 @@ def user_gold_ldp():
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Going further with LDP
+# MAGIC # Going further with SDP
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Checking your data quality metrics with Lakeflow Declarative Pipelines
-# MAGIC Lakeflow Declarative Pipelines tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required. This let you build the following dashboards:
+# MAGIC ## Checking your data quality metrics with Spark Declarative Pipelines
+# MAGIC Spark Declarative Pipelines tracks all your data quality metrics. You can leverage the expecations directly as SQL table with Databricks SQL to track your expectation metrics and send alerts as required. This let you build the following dashboards:
 # MAGIC
 # MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/retail-dlt-data-quality-dashboard.png">
 

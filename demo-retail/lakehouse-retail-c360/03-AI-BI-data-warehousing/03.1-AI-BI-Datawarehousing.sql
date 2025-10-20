@@ -107,7 +107,7 @@
 -- MAGIC
 -- MAGIC Turnkey capabilities allow analysts and analytic engineers to easily ingest data from anything like cloud storage to enterprise applications such as Salesforce, Google Analytics, or Marketo using Fivetran. It’s just one click away. 
 -- MAGIC
--- MAGIC Then, simply manage dependencies and transform data in-place with built-in ETL capabilities on the Lakehouse (Delta Live Table), or using your favorite tools like dbt on Databricks SQL for best-in-class performance.
+-- MAGIC Then, simply manage dependencies and transform data in-place with built-in ETL capabilities on the Lakehouse (Spark Declarative Pipelines), or using your favorite tools like dbt on Databricks SQL for best-in-class performance.
 -- MAGIC
 -- MAGIC ### Query federation
 -- MAGIC

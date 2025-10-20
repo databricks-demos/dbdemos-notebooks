@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC **Your Lakeflow Declarative Pipeline has been installed and started for you!** Open the <a dbdemos-pipeline-id="pipeline-bike" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Bike Rental Declarative Pipeline</a> to see it in action.<br/>
+# MAGIC **Your Spark Declarative Pipelines has been installed and started for you!** Open the <a dbdemos-pipeline-id="pipeline-bike" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Bike Rental Declarative Pipeline</a> to see it in action.<br/>
 # MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 # COMMAND ----------
@@ -103,4 +103,4 @@
 # MAGIC
 # MAGIC ### Next: tracking data quality
 # MAGIC
-# MAGIC Lakeflow Declarative Pipelines makes it easy to track your data quality and set alerts when something is wrong! Open the [02-Pipeline-event-monitoring]($../explorations/02-Pipeline-event-monitoring) notebook for more details.
+# MAGIC Spark Declarative Pipelines makes it easy to track your data quality and set alerts when something is wrong! Open the [02-Pipeline-event-monitoring]($../explorations/02-Pipeline-event-monitoring) notebook for more details.

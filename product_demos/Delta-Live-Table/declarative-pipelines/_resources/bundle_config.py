@@ -13,7 +13,7 @@
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_pipeline_bike",
-    "description": "Ingest bike rental data and implement a Lakeflow Declarative Pipeline, with expectation and monitoring.",
+    "description": "Ingest bike rental data and implement a Spark Declarative Pipelines, with expectation and monitoring.",
     "bundle": True,
     "notebooks": [
       {
@@ -29,7 +29,7 @@
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
-        "title":  "Lakeflow Declarative Pipeline: Introduction", 
+        "title":  "Spark Declarative Pipelines: Introduction", 
         "description": "Start here to learn about your Pipeline"
       },
       {
@@ -200,7 +200,7 @@
         }
       }
     ],
-    "dashboards": [{"name": "[dbdemos] LDP - Bike Rental Business Insights",  "id": "bike-rental"},
-                   {"name": "[dbdemos] LDP - Bike Operational insights",  "id": "operational"},
-                   {"name": "[dbdemos] LDP - Bike Data Monitoring",  "id": "data-quality"}]
+    "dashboards": [{"name": "[dbdemos] SDP - Bike Rental Business Insights",  "id": "bike-rental"},
+                   {"name": "[dbdemos] SDP - Bike Operational insights",  "id": "operational"},
+                   {"name": "[dbdemos] SDP - Bike Data Monitoring",  "id": "data-quality"}]
   }

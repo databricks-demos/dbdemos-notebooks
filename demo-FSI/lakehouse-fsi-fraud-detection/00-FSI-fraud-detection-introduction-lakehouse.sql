@@ -83,15 +83,15 @@
 -- MAGIC It provides many functionalities *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
 -- MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 -- MAGIC
--- MAGIC ### Simplify ingestion with Delta Live Tables (DLT)
+-- MAGIC ### Simplify ingestion with Spark Declarative Pipelines (SDP)
 -- MAGIC
--- MAGIC Databricks simplifies data ingestion and transformation with Delta Live Tables by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
+-- MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
 
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the FSI banking & Fraud  <a dbdemos-pipeline-id="dlt-fsi-fraud" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Delta Live Table pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-DLT-fraud-detection-SQL) *(Alternatives: DLT Python version Soon available)*. <br>
--- MAGIC   For more details on DLT: `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')`
+-- MAGIC Open the FSI banking & Fraud  <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-fraud-detection-SQL) *(Alternatives: SDP Python version Soon available)*. <br>
+-- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 

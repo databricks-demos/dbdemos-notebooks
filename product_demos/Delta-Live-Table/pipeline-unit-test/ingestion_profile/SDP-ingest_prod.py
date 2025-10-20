@@ -23,7 +23,7 @@
 # MAGIC
 # MAGIC In prod, we'll be using the autoloader to our prod landing folder. 
 # MAGIC
-# MAGIC To give more flexibility in our deployment, we'll go further and set the location as a LDP parameter
+# MAGIC To give more flexibility in our deployment, we'll go further and set the location as a SDP parameter
 
 # COMMAND ----------
 

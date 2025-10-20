@@ -1,9 +1,9 @@
 -- Databricks notebook source
 -- MAGIC %md
--- MAGIC # 4/ End to End DLT Production Pipeline for product review and classification with SQL AI QUERY
+-- MAGIC # 4/ End to End SDP Production Pipeline for product review and classification with SQL AI QUERY
 -- MAGIC
 -- MAGIC
--- MAGIC In this demo, we will create a production ready pipeline for the product review and classification using Delta Live Table framework
+-- MAGIC In this demo, we will create a production ready pipeline for the product review and classification using Spark Declarative Pipelines framework
 -- MAGIC
 -- MAGIC - `reviews_annotated_silver` table: Join review and customer data, annotate reviews
 -- MAGIC - `review_answer_gold` table: generate response per customer review

@@ -127,7 +127,7 @@
 -- MAGIC
 -- MAGIC Turnkey capabilities allow analysts and analytic engineers to easily ingest data from anything like cloud storage to enterprise applications such as Salesforce, Google Analytics, or Marketo using Fivetran. It’s just one click away. 
 -- MAGIC
--- MAGIC Then, simply manage dependencies and transform data in-place with built-in ETL capabilities on the Data Intelligence Platform (Delta Live Table), or using your favorite tools like dbt on Databricks SQL for best-in-class performance.
+-- MAGIC Then, simply manage dependencies and transform data in-place with built-in ETL capabilities on the Data Intelligence Platform (Spark Declarative Pipelines), or using your favorite tools like dbt on Databricks SQL for best-in-class performance.
 -- MAGIC
 -- MAGIC ### Query federation
 -- MAGIC
@@ -135,7 +135,7 @@
 -- MAGIC
 -- MAGIC ### Materialized view
 -- MAGIC
--- MAGIC Avoid expensive queries and materialize your tables. The engine will recompute only what's required when your data get updated. The best way to do so is using (Lakeflow) Declarative pipelines as shown here: <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL) 
+-- MAGIC Avoid expensive queries and materialize your tables. The engine will recompute only what's required when your data get updated. The best way to do so is using (Lakeflow) Declarative pipelines as shown here: <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL) 
 
 -- COMMAND ----------
 

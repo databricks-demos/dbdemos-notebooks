@@ -54,7 +54,7 @@
 -- MAGIC
 -- MAGIC Our team leverages the Databricks Data Intelligence Platform to transform fragmented customer data into actionable insights:
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture.png?raw=true" style="float: right; margin-right: 20px; width: 50%;" alt="Team Workflow"/>
--- MAGIC 1. **Data Unification**: `John`, our Data Engineer, builds Delta Live Tables pipelines to synchronize and transform data from disparate sources (CRM, ERP, web analytics, mobile app) into a unified Customer 360 database. This creates a single source of truth with real-time data ingestion capabilities.
+-- MAGIC 1. **Data Unification**: `John`, our Data Engineer, builds Spark Declarative Pipelines to synchronize and transform data from disparate sources (CRM, ERP, web analytics, mobile app) into a unified Customer 360 database. This creates a single source of truth with real-time data ingestion capabilities.
 -- MAGIC
 -- MAGIC 2. **Governance & Security**: `Emily` implements Unity Catalog to ensure proper data governance, providing role-based access controls while maintaining data lineage and compliance. This enables secure collaboration across business units while protecting sensitive customer information.
 -- MAGIC
@@ -88,16 +88,16 @@
 -- MAGIC
 -- MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
 -- MAGIC
--- MAGIC ### Simplify ingestion with DLT
+-- MAGIC ### Simplify ingestion with SDP
 -- MAGIC
--- MAGIC Databricks simplifies data ingestion and transformation with DLT by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
+-- MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines (SDP) by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
 
 -- COMMAND ----------
 
--- MAGIC %md 
--- MAGIC Open the customer churn 
--- MAGIC   <a dbdemos-pipeline-id="dlt-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">DLT pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-DLT-churn-SQL) *(Alternatives: [DLT Python version]($./01-Data-ingestion/01.3-DLT-churn-python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
--- MAGIC   For more details on DLT: `dbdemos.install('dlt-load')` or `dbdemos.install('dlt-cdc')`
+-- MAGIC %md
+-- MAGIC Open the customer churn
+-- MAGIC   <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">SDP pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-churn-SQL) *(Alternatives: [SDP Python version]($./01-Data-ingestion/01.3-SDP-churn-python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
+-- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 

@@ -7,9 +7,9 @@
 # COMMAND ----------
 
 # MAGIC %md #Registering python UDF to a SQL function
-# MAGIC This is a companion notebook to load the `predict_churn` model as a spark udf and save it as a SQL function. While this code was present in the SQL notebook, it won't be run by the DLT engine (since the notebook is SQL we only read sql cess)
+# MAGIC This is a companion notebook to load the `predict_churn` model as a spark udf and save it as a SQL function. While this code was present in the SQL notebook, it won't be run by the SDP engine (since the notebook is SQL we only read sql cess)
 # MAGIC  
-# MAGIC For the UDF to be available, you must this notebook in your DLT. (Currently mixing python in a SQL DLT notebook won't run the python)
+# MAGIC For the UDF to be available, you must this notebook in your DLT. (Currently mixing python in a SQL SDP notebook won't run the python)
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01.2-DLT-churn-Python-UDF&demo_name=lakehouse-retail-c360&event=VIEW">
@@ -26,9 +26,9 @@ spark.udf.register("predict_churn", predict_churn_udf)
 
 # COMMAND ----------
 
-# MAGIC %md ### Setting up the DLT 
+# MAGIC %md ### Setting up the SDP 
 # MAGIC
-# MAGIC This notebook must be included in your DLT "libraries" parameter:
+# MAGIC This notebook must be included in your SDP "libraries" parameter:
 # MAGIC
 # MAGIC ```
 # MAGIC {

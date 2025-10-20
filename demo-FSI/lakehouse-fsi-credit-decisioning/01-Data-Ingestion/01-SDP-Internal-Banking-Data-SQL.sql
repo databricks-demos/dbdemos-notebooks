@@ -1,6 +1,6 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with Delta Live Tables
+-- MAGIC # Simplify Ingestion and Transformation with Spark Declarative Pipelines
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our Credit Decisioning database. <br>
 -- MAGIC We'll consume and clean our raw data sources to prepare the tables required for our BI & ML workload.
@@ -13,12 +13,12 @@
 -- MAGIC - **Fund transfer** are the banking transactions (such as credit card transactions) and are *available real-time* through Kafka streams.
 -- MAGIC
 -- MAGIC
--- MAGIC ## Delta Live Table: A simple way to build and manage data pipelines for fresh, high quality data!
+-- MAGIC ## Spark Declarative Pipelines: A simple way to build and manage data pipelines for fresh, high quality data!
 -- MAGIC
 -- MAGIC
--- MAGIC Databricks simplifies this task with Delta Live Table (DLT) by making Data Engineering accessible to all.
+-- MAGIC Databricks simplifies this task with Spark Declarative Pipelines (SDP) by making Data Engineering accessible to all.
 -- MAGIC
--- MAGIC DLT allows Data Analysts to create advanced pipeline with plain SQL.
+-- MAGIC SDP allows Data Analysts to create advanced pipeline with plain SQL.
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
@@ -63,9 +63,9 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC ## Building a Delta Live Table pipeline to analyze consumer credit
+-- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze consumer credit
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end DLT pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modelisation.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our credit decisioning prediction.
 -- MAGIC
@@ -78,7 +78,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your DLT Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="dlt-fsi-credit-decisioning" href="#joblist/pipelines" target="_blank">Delta Live Table pipeline</a> to see it in action.<br/>
+-- MAGIC Your SDP Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-fsi-credit-decisioning" href="#joblist/pipelines" target="_blank">Spark Declarative Pipelines pipeline</a> to see it in action.<br/>
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 -- COMMAND ----------
@@ -201,7 +201,7 @@ CREATE OR REFRESH STREAMING TABLE telco_bronze AS
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
--- MAGIC For more advanced DLT capabilities run `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')` for CDC/SCDT2 example.
+-- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCDT2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 
@@ -272,7 +272,7 @@ CREATE OR REFRESH MATERIALIZED VIEW account_silver AS
 -- MAGIC
 -- MAGIC <img width="650px" style="float:right" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi_credit_decisioning_dlt_3.png"/>
 -- MAGIC
--- MAGIC We curate all the tables in Delta Lake using Delta Live Tables so we can apply all the joins, masking, and data constraints in real-time. Data scientists can now use these datasets to built high-quality models, particularly to predict credit worthiness. Because we are masking sensitive data as part of Unity Catalog capabilities, we are able to confidently expose the data to many downstream users from data scientists to data analysts and business users.
+-- MAGIC We curate all the tables in Delta Lake using Spark Declarative Pipelines so we can apply all the joins, masking, and data constraints in real-time. Data scientists can now use these datasets to built high-quality models, particularly to predict credit worthiness. Because we are masking sensitive data as part of Unity Catalog capabilities, we are able to confidently expose the data to many downstream users from data scientists to data analysts and business users.
 
 -- COMMAND ----------
 

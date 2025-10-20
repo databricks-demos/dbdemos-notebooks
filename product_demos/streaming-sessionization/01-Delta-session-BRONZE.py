@@ -7,7 +7,7 @@
 # MAGIC SDP lets you write your entire data pipeline, supporting streaming transformation using SQL or python and removing all the technical challenges.
 # MAGIC
 # MAGIC We strongly recommend implementing your pipelines using SDP as this will allow for much robust pipelines, enforcing data quality and greatly accelerating project delivery.<br/>
-# MAGIC *For a SDP example, please install `dbdemos.install('sdp-loans')` or the C360 Lakehouse demo: `dbdemos.install('lakehouse-retail-churn')`*
+# MAGIC *For a SDP example, please install `dbdemos.install('pipeline-bike')` or the C360 Lakehouse demo: `dbdemos.install('lakehouse-retail-churn')`*
 # MAGIC
 # MAGIC Spark Streaming API offers lower-level primitive offering more advanced control, such as `foreachBatch` and custom streaming operation with `applyInPandasWithState`.
 # MAGIC

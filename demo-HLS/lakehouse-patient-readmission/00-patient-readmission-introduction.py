@@ -95,7 +95,7 @@
 # MAGIC %md 
 # MAGIC
 # MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-SDP-patient-readmission-SQL) *(python SDP notebook alternative coming soon).* <br>
-# MAGIC   For more details on SDP: `dbdemos.install('sdp-loan')` or `dbdemos.install('sdp-cdc')`
+# MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('sdp-cdc')`
 
 # COMMAND ----------
 

@@ -196,7 +196,7 @@ AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_retail_c360/c360/user
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboards are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
--- MAGIC For more advanced SDP capabilities run `dbdemos.install('sdp-loans')` or `dbdemos.install('sdp-cdc')` for CDC/SCDT2 example.
+-- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('sdp-cdc')` for CDC/SCDT2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 

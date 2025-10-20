@@ -122,4 +122,4 @@
 # MAGIC  - Incremental support: ingest and transform new data as they come 
 # MAGIC  - Advanced capabilities (simple Change Data Capture, SCDT2 etc)
 # MAGIC
-# MAGIC If you wish to know more about dlt, install the SDP demos: `dbdemos.install('sdp-loan')`
+# MAGIC If you wish to know more about dlt, install the SDP demos: `dbdemos.install('pipeline-bike')`

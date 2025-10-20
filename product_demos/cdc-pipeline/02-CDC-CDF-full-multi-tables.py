@@ -184,7 +184,7 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 # MAGIC Error and exception in each stream should be properly captured. Multiple strategy exist: send a notification when a table has some error and continue processing the others, stop the entire job, define table "priorities" etc.
 # MAGIC
 # MAGIC ### Spark Declarative Pipelines
-# MAGIC To simplify these operations & error handling, we strongly advise you to run your CDC pipelines on top of Spark Declarative Pipelines: `dbdemos.install('delta-live-table')`
+# MAGIC To simplify these operations & error handling, we strongly advise you to run your CDC pipelines on top of Spark Declarative Pipelines: `dbdemos.install('pipeline-bike')`
 
 # COMMAND ----------
 

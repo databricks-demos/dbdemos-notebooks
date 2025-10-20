@@ -9,7 +9,7 @@
 # MAGIC
 # MAGIC We'll show how Databricks makes it easy to incrementally ingest and transform our incoming claims data.
 # MAGIC
-# MAGIC For more advanced SDP capabilities run `dbdemos.install('sdp-loans')` or `dbdemos.install('sdp-cdc')` for CDC/SCDT2 example.
+# MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('sdp-cdc')` for CDC/SCDT2 example.
 # MAGIC
 # MAGIC
 # MAGIC

@@ -104,7 +104,7 @@ OPTIMIZE `delta`.`/Volumes/main__build/dbdemos_delta_lake/delta_lake_raw_data/us
 -- MAGIC %md
 -- MAGIC That's it! You know everything about Delta Lake!
 -- MAGIC
--- MAGIC As next step, you learn more about Spark Declarative Pipelines to simplify your ingestion pipeline: `dbdemos.install('delta-live-table')`
+-- MAGIC As next step, you learn more about Spark Declarative Pipelines to simplify your ingestion pipeline: `dbdemos.install('pipeline-bike')`
 -- MAGIC
 -- MAGIC Go back to [00-Delta-Lake-Introduction]($./00-Delta-Lake-Introduction).
 

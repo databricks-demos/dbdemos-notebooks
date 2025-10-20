@@ -12,7 +12,7 @@
 # MAGIC
 # MAGIC This table will then be used to train a ML Classification model to learn to detect anomalies in our images in real time!
 # MAGIC
-# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Spark Declarative Pipelines. For more details on SDP, install `dbdemos.install('sdp-loans')`*
+# MAGIC *Note that this demo leverages the standard spark API. You could also implement this same pipeline in pure SQL leveraging Spark Declarative Pipelines. For more details on SDP, install `dbdemos.install('pipeline-bike')`*
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fcomputer-vision-dl%2Fetl&dt=ML">

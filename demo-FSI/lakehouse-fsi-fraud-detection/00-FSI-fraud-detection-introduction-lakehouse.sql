@@ -91,7 +91,7 @@
 
 -- MAGIC %md 
 -- MAGIC Open the FSI banking & Fraud  <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-fraud-detection-SQL) *(Alternatives: SDP Python version Soon available)*. <br>
--- MAGIC   For more details on SDP: `dbdemos.install('sdp-loans')` or `dbdemos.install('sdp-cdc')`
+-- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('sdp-cdc')`
 
 -- COMMAND ----------
 

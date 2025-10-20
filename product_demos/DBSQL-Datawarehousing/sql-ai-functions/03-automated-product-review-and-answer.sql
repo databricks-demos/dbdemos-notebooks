@@ -163,7 +163,7 @@ SELECT * FROM reviews_answer
 -- MAGIC
 -- MAGIC Our pipeline is ready. Keep in mind that this is a fairly basic pipeline for our demo.
 -- MAGIC
--- MAGIC For more advanced pipeline, we recommend using Spark Declarative Pipelines. SDP simplify data ingetsion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('dlt-loans')`
+-- MAGIC For more advanced pipeline, we recommend using Spark Declarative Pipelines. SDP simplify data ingetsion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('pipeline-bike')`
 
 -- COMMAND ----------
 

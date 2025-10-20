@@ -16,7 +16,7 @@
 # MAGIC
 # MAGIC As you'll see, implementing a CDC pipeline from scratch is slightly advanced. 
 # MAGIC
-# MAGIC To simplify these operation & implement a full CDC flow with SQL expression, we strongly advise to use Spark Declarative Pipelines with `APPLY CHANGES`: `dbdemos.install('delta-live-table')` (including native SCDT2 support)
+# MAGIC To simplify these operation & implement a full CDC flow with SQL expression, we strongly advise to use Spark Declarative Pipelines with `APPLY CHANGES`: `dbdemos.install('pipeline-bike')` (including native SCDT2 support)
 # MAGIC
 # MAGIC As you'll see, `APPLY CHANGES` handles the MERGE INTO + DEDUPLICATION complexity for you. 
 # MAGIC

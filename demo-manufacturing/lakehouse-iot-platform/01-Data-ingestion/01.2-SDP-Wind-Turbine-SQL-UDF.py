@@ -9,7 +9,7 @@
 # MAGIC %md #Registering python UDF to a SQL function
 # MAGIC This is a companion notebook to load the wind turbine prediction model as a spark udf and save it as a SQL function
 # MAGIC  
-# MAGIC Make sure you add this notebook in your (Lakeflow) Declarative Pipelines job to have access to the `get_turbine_status` function. (Currently mixing python in a SQL (Lakeflow) Declarative Pipelines notebook won't run the python)
+# MAGIC Make sure you add this notebook in your Spark Declarative Pipelines job to have access to the `get_turbine_status` function. (Currently mixing python in a SQL Spark Declarative Pipelines notebook won't run the python)
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -26,7 +26,7 @@ spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 # MAGIC %md ### Setting up the SDP 
 # MAGIC
-# MAGIC This notebook must be included in your (Lakeflow) Declarative Pipeline "libraries" parameter:
+# MAGIC This notebook must be included in your Spark Declarative Pipeline "libraries" parameter:
 # MAGIC
 # MAGIC ```
 # MAGIC {

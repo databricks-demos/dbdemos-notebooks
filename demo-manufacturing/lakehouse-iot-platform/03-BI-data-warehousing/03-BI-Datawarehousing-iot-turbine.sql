@@ -135,7 +135,7 @@
 -- MAGIC
 -- MAGIC ### Materialized view
 -- MAGIC
--- MAGIC Avoid expensive queries and materialize your tables. The engine will recompute only what's required when your data get updated. The best way to do so is using (Lakeflow) Declarative pipelines as shown here: <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL) 
+-- MAGIC Avoid expensive queries and materialize your tables. The engine will recompute only what's required when your data get updated. The best way to do so is using Spark Declarative Pipelines as shown here: <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-Wind-Turbine-SQL) 
 
 -- COMMAND ----------
 

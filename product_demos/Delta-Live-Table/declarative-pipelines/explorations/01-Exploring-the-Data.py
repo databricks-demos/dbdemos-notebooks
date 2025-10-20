@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Exploring the raw data
 # MAGIC
-# MAGIC For this demo, we've generated some data and stored it in a Unity Catalog Volume. Volumes can store any type of file and can either be managed by Unity Catalog or connected to cloud storage. Lakeflow Declaritive Pipelines can automatically pick up new files and incrementally process data in a volume making your pipelines fast and efficient.
+# MAGIC For this demo, we've generated some data and stored it in a Unity Catalog Volume. Volumes can store any type of file and can either be managed by Unity Catalog or connected to cloud storage. Spark Declarative Pipelines can automatically pick up new files and incrementally process data in a volume making your pipelines fast and efficient.
 # MAGIC
 # MAGIC Let's start by taking a look at the contents of the `raw_data` volume.
 # MAGIC

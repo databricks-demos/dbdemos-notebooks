@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Intro to Lakeflow Declaritive Pipelines
+# MAGIC ## Intro to Spark Declarative Pipelines
 # MAGIC
 # MAGIC Declarative Pipelines simplify batch and streaming ETL with automated reliability and built-in data quality. Let's give it a try!
 # MAGIC

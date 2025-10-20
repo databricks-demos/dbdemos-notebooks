@@ -25,7 +25,7 @@
         "description": "Generate data for the pipeline."
       },
       {
-        "path": "00-Lakeflow-Declarative-Pipeline-Introduction", 
+        "path": "00-SDP-Introduction", 
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,

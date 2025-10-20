@@ -61,7 +61,7 @@
       "description": "Start here to explore the Data Intelligence Platform."
     },
     {
-      "path": "01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL", 
+      "path": "01-Data-ingestion/01.1-SDP-Wind-Turbine-SQL", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -69,7 +69,7 @@
       "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.2-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL-UDF", 
+      "path": "01-Data-ingestion/01.2-SDP-Wind-Turbine-SQL-UDF", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -290,12 +290,12 @@
         "libraries": [
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL"
+                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-Wind-Turbine-SQL"
                 }
             },
             {
                 "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL-UDF"
+                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-SDP-Wind-Turbine-SQL-UDF"
                 }
             }
         ],
@@ -312,7 +312,7 @@
         "libraries": [
           {
             "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - sdp-sqls/transformations/**"
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - SDP-sqls/transformations/**"
             }
           }
         ],
@@ -323,7 +323,7 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - sdp-sqls"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1 - SDP-sqls"
       }
     },
     {
@@ -334,7 +334,7 @@
         "libraries": [
           {
             "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - sdp-python/transformations/**"
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - SDP-python/transformations/**"
             }
           }
         ],
@@ -345,7 +345,7 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - sdp-python"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2 - SDP-python"
       }
     }
   ],

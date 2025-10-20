@@ -68,7 +68,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Using Databricks Asset Bundles with Lakeflow Declaritive Pipelines
+# MAGIC # Using Databricks Asset Bundles with Spark Declarative Pipelines
 # MAGIC For each of the resource types you can deploy using DABs, you can refer to the Databricks REST API documentation to see what fields are available. Here's a (incomplete) list of configuration options for pipelines today.
 # MAGIC ```yml
 # MAGIC resources:

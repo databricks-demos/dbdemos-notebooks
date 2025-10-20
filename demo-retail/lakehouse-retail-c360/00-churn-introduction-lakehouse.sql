@@ -97,7 +97,7 @@
 -- MAGIC %md
 -- MAGIC Open the customer churn
 -- MAGIC   <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">SDP pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-churn-SQL) *(Alternatives: [SDP Python version]($./01-Data-ingestion/01.3-SDP-churn-python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
--- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('sdp-cdc')`
+-- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 

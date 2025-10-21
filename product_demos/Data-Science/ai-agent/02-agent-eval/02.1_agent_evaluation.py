@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
+# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain==0.3.27 langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

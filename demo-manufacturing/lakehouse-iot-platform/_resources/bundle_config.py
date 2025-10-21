@@ -242,9 +242,9 @@
                 "email_notifications": {}
             },
             {
-                "task_key": "start_dlt_pipeline",
+                "task_key": "start_sdp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-iot-wind-turbine}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-sql}}",
                     "full_refresh": true
                 },
                 "timeout_seconds": 0,
@@ -266,7 +266,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "start_dlt_pipeline"
+                          "task_key": "start_sdp_pipeline"
                       }
                   ]
             },

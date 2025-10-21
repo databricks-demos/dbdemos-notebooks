@@ -172,7 +172,7 @@
             {
                 "task_key": "start_dlt_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-patient-readmission}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-patient-readmission}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,

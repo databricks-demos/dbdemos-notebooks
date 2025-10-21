@@ -174,7 +174,7 @@
             {
                 "task_key": "start_dlt_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-credit-decisioning}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-credit-decisioning}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -363,7 +363,7 @@
                 {
                     "task_key": "start_dlt_pipeline",
                     "pipeline_task": {
-                        "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-credit-decisioning}}",
+                        "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-credit-decisioning}}",
                         "full_refresh": false
                     },
                     "timeout_seconds": 0,

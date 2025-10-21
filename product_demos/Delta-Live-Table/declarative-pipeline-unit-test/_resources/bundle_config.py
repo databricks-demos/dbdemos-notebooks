@@ -80,7 +80,7 @@
             {
                 "task_key": "start_ldp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-test}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-test}}",
                     "full_refresh": true
                 },
                 "timeout_seconds": 0,

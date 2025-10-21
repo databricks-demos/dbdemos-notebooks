@@ -145,7 +145,7 @@
             {
                 "task_key": "claim_policy_dlt_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-smart-claims}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-smart-claims}}",
                     "full_refresh": True
                 },
                 "timeout_seconds": 0,

@@ -73,7 +73,7 @@
             {
                 "task_key": "start_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-cdc}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-cdc}}",
                     "full_refresh": true
                 },
                 "timeout_seconds": 0,

@@ -54,7 +54,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your Spark Declarative Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine Spark Declarative Pipeline</a> to see it in action.<br/>
+-- MAGIC Your Spark Declarative Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine Spark Declarative Pipeline</a> to see it in action.<br/>
 -- MAGIC
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed with dbdemos, this might take a few minutes... Check installation logs for more details)*
 
@@ -161,7 +161,7 @@
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## Conclusion
--- MAGIC Our <a dbdemos-pipeline-id="sdp-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
+-- MAGIC Our <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
 -- MAGIC
 -- MAGIC
 -- MAGIC For more details on model training, open the [model training notebook]($../../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance)

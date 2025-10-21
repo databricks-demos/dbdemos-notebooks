@@ -67,7 +67,7 @@
     {
       "path": "02-agent-eval/agent.py",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Your Langchain Agent",
       "description": "Custom MLFlow flavor model for our langchain agent."
@@ -123,7 +123,7 @@
     {
       "path": "config",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Config",
       "description": "Configuration file"

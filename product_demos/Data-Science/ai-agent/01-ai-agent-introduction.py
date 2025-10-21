@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Open [01-create-tools/01_create_first_billing_agent]($.01-create-tools/01_create_first_billing_agent) to get started
+# MAGIC Open [01-create-tools/01_create_first_billing_agent]($./01-create-tools/01_create_first_billing_agent) to get started
 
 # COMMAND ----------
 

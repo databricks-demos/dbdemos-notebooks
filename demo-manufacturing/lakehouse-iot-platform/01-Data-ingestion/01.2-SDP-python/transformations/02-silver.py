@@ -1,5 +1,10 @@
 import dlt
 
+# ----------------------------------
+# Aggregate raw sensor data into hourly statistical features
+# Compute standard deviations and percentiles for each sensor to detect anomalies and signal degradation
+# These aggregated features are used for ML model training and real-time anomaly detection
+# ----------------------------------
 @dlt.table(
     name="sensor_hourly",
     comment="Hourly sensor stats, used to describe signal and detect anomalies"

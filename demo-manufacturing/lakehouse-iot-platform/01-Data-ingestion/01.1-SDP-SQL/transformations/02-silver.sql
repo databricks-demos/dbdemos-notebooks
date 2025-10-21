@@ -1,5 +1,7 @@
 -- ----------------------------------
--- TODO quick description of what we do here
+-- Aggregate raw sensor data into hourly statistical features
+-- Compute standard deviations and percentiles for each sensor to detect anomalies and signal degradation
+-- These aggregated features are used for ML model training and real-time anomaly detection
 -- ----------------------------------
 
 CREATE MATERIALIZED VIEW sensor_hourly (
@@ -9,7 +11,7 @@ CREATE MATERIALIZED VIEW sensor_hourly (
 COMMENT "Hourly sensor stats, used to describe signal and detect anomalies"
 AS
 SELECT turbine_id,
-      date_trunc('hour', from_unixtime(timestamp)) AS hourly_timestamp, 
+      date_trunc('hour', from_unixtime(timestamp)) AS hourly_timestamp,
       avg(energy)          as avg_energy,
       stddev_pop(sensor_A) as std_sensor_A,
       stddev_pop(sensor_B) as std_sensor_B,

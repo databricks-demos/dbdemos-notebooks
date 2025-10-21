@@ -1,3 +1,7 @@
+-- ----------------------------------
+-- TODO quick description of what we do here
+-- ----------------------------------
+
 CREATE MATERIALIZED VIEW sensor_hourly (
   CONSTRAINT turbine_id_valid EXPECT (turbine_id IS not NULL)  ON VIOLATION DROP ROW,
   CONSTRAINT timestamp_valid EXPECT (hourly_timestamp IS not NULL)  ON VIOLATION DROP ROW

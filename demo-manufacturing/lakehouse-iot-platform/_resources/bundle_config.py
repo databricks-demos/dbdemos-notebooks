@@ -341,42 +341,6 @@
   }, 
   "pipelines": [
     {
-      "id": "sdp-iot-wind-turbine",
-      "run_after_creation": False,
-      "definition": {
-        "clusters": [
-            {
-                "label": "default",
-                "autoscale": {
-                    "min_workers": 1,
-                    "max_workers": 2,
-                    "mode": "ENHANCED"
-                }
-            }
-        ],
-        "development": True,
-        "continuous": False,
-        "channel": "PREVIEW",
-        "edition": "ADVANCED",
-        "photon": False,
-        "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-Wind-Turbine-SQL"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-SDP-Wind-Turbine-SQL-UDF"
-                }
-            }
-        ],
-        "name": "dbdemos_dlt_iot_turbine_{{CATALOG}}_{{SCHEMA}}",
-        "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
-      }
-    },
-    {
       "id": "sdp-sql",
       "run_after_creation": False,
       "definition": {
@@ -395,29 +359,10 @@
         "channel": "CURRENT",
         "catalog": "{{CATALOG}}",
         "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL"
-      }
-    },
-    {
-      "id": "sdp-python",
-      "run_after_creation": False,
-      "definition": {
-        "name": "new-pipeline-editor-python",
-        "libraries": [
-          {
-            "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-SDP-python/transformations/**"
-            }
-          }
-        ],
-        "schema": "{{SCHEMA}}",
-        "continuous": False,
-        "development": True,
-        "photon": True,
-        "channel": "CURRENT",
-        "catalog": "{{CATALOG}}",
-        "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-SDP-python"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL",
+        "environment": {
+          "dependencies": ["mlflow==3.1.0"]
+        }
       }
     }
   ],

@@ -52,7 +52,7 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-fraud-detection-SQL", 
+      "path": "01-Data-ingestion/01.3-sdp-fraud-detection-SQL",
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -306,6 +306,50 @@
         "name": "dbdemos_fraud_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
         "target": "{{SCHEMA}}"
+      }
+    },
+    {
+      "id": "sdp-fsi-fraud-sql",
+      "run_after_creation": False,
+      "definition": {
+        "name": "new-pipeline-editor-sqls",
+        "libraries": [
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql/transformations/**"
+            }
+          }
+        ],
+        "schema": "{{SCHEMA}}",
+        "continuous": False,
+        "development": True,
+        "photon": True,
+        "channel": "CURRENT",
+        "catalog": "{{CATALOG}}",
+        "serverless": True,
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql"
+      }
+    },
+    {
+      "id": "sdp-fsi-fraud-python",
+      "run_after_creation": False,
+      "definition": {
+        "name": "new-pipeline-editor-python",
+        "libraries": [
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-sdp-python/transformations/**"
+            }
+          }
+        ],
+        "schema": "{{SCHEMA}}",
+        "continuous": False,
+        "development": True,
+        "photon": True,
+        "channel": "CURRENT",
+        "catalog": "{{CATALOG}}",
+        "serverless": True,
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-sdp-python"
       }
     }
   ],

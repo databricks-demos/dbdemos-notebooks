@@ -124,41 +124,61 @@
 -- MAGIC   
 -- MAGIC Autoloader allow us to efficiently ingest millions of files from a cloud storage, and support efficient schema inference and evolution at scale.
 -- MAGIC
--- MAGIC For more details on autoloader, run `dbdemos.install('auto-loadeoner')`
+-- MAGIC For more details on autoloader, run `dbdemos.install('auto-loader')`
 -- MAGIC
 -- MAGIC Let's use it to our pipeline and ingest the raw JSON & CSV data being delivered in our blob storage `/dbdemos/fsi/fraud-detection/...`. 
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Ingest transactions
-CREATE STREAMING TABLE bronze_transactions 
-  COMMENT "Historical banking transaction to be trained on fraud detection"
-AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/transactions", "json", map("cloudFiles.maxFilesPerTrigger", "1", "cloudFiles.inferColumnTypes", "true"))
+CREATE STREAMING TABLE bronze_transactions
+COMMENT "Historical banking transaction to be trained on fraud detection"
+AS
+SELECT *
+FROM STREAM read_files(
+  '/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/transactions',
+  format => 'json',
+  maxFilesPerTrigger => 1,
+  inferColumnTypes => true
+);
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Customers
-CREATE STREAMING LIVE TABLE banking_customers (
+CREATE STREAMING TABLE banking_customers (
   CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
 )
 COMMENT "Customer data coming from csv files ingested in incremental with Auto Loader to support schema inference and evolution"
-AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/customers", "csv", map("cloudFiles.inferColumnTypes", "true", "multiLine", "true"))
+AS
+SELECT * 
+FROM STREAM read_files(
+  '/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/customers',
+  format => 'csv',
+  multiLine => true,
+  inferColumnTypes => true
+);
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Reference table
-CREATE STREAMING LIVE TABLE country_coordinates
+CREATE STREAMING TABLE country_coordinates
 AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/country_code", "csv")
+SELECT * 
+FROM STREAM read_files(
+  '/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/country_code',
+  format => 'csv'
+);
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Fraud report (labels for ML training)
-CREATE STREAMING LIVE TABLE fraud_reports
+CREATE STREAMING TABLE fraud_reports
 AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/fraud_report", "csv")
+SELECT *
+FROM STREAM read_files(
+  '/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/fraud_report',
+  format => 'csv'
+);
 
 -- COMMAND ----------
 
@@ -182,7 +202,7 @@ AS
 -- COMMAND ----------
 
 -- DBTITLE 1,Silver
-CREATE STREAMING LIVE TABLE silver_transactions (
+CREATE STREAMING TABLE silver_transactions (
   CONSTRAINT correct_data EXPECT (id IS NOT NULL),
   CONSTRAINT correct_customer_id EXPECT (customer_id IS NOT NULL)
 )
@@ -192,8 +212,8 @@ AS
           regexp_replace(countryDest, "\-\-", "") as countryDest, 
           newBalanceOrig - oldBalanceOrig as diffOrig, 
           newBalanceDest - oldBalanceDest as diffDest
-FROM STREAM(live.bronze_transactions) t
-  LEFT JOIN live.fraud_reports f using(id)
+FROM STREAM bronze_transactions t
+  LEFT JOIN fraud_reports f using(id);
 
 -- COMMAND ----------
 
@@ -209,7 +229,7 @@ FROM STREAM(live.bronze_transactions) t
 -- COMMAND ----------
 
 -- DBTITLE 1,Gold, ready for Data Scientists to consume
-CREATE LIVE TABLE gold_transactions (
+CREATE MATERIALIZED VIEW gold_transactions (
   CONSTRAINT amount_decent EXPECT (amount > 10)
 )
 AS 
@@ -217,10 +237,10 @@ AS
           boolean(coalesce(is_fraud, 0)) as is_fraud,
           o.alpha3_code as countryOrig, o.country as countryOrig_name, o.long_avg as countryLongOrig_long, o.lat_avg as countryLatOrig_lat,
           d.alpha3_code as countryDest, d.country as countryDest_name, d.long_avg as countryLongDest_long, d.lat_avg as countryLatDest_lat
-FROM live.silver_transactions t
-  INNER JOIN live.country_coordinates o ON t.countryOrig=o.alpha3_code 
-  INNER JOIN live.country_coordinates d ON t.countryDest=d.alpha3_code 
-  INNER JOIN live.banking_customers c ON c.id=t.customer_id 
+FROM silver_transactions t
+  INNER JOIN country_coordinates o ON t.countryOrig=o.alpha3_code 
+  INNER JOIN country_coordinates d ON t.countryDest=d.alpha3_code 
+  INNER JOIN banking_customers c ON c.id=t.customer_id;
 
 -- COMMAND ----------
 

@@ -61,7 +61,7 @@
       "description": "Start here to explore the Data Intelligence Platform."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL.sql",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -69,7 +69,7 @@
       "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration.sql",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -109,7 +109,7 @@
       "description": "Wind turbine UDF for predictions."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python.sql",
+      "path": "01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -117,7 +117,7 @@
       "description": "Python SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration.py",
+      "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -149,7 +149,7 @@
       "description": "Gold layer transformations."
     },
     {
-      "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine.py",
+      "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -157,11 +157,11 @@
       "description": "Build a complete ingestion pipeline using spark API (alternative to SDP)"
     },
     {
-      "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine.sql", 
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": True,
-      "title":  "Governance with Unity Catalog", 
+      "title":  "Governance with Unity Catalog",
       "description": "Secure your tables, lineage, auditlog..."
     },
      {

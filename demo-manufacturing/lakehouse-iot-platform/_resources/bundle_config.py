@@ -61,7 +61,7 @@
       "description": "Start here to explore the Data Intelligence Platform."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL.sql",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -69,7 +69,7 @@
       "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -77,7 +77,7 @@
       "description": "Sample exploration notebook for SQL pipeline."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/01-bronze",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/01-bronze.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -85,7 +85,7 @@
       "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/02-silver",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/02-silver.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -93,7 +93,7 @@
       "description": "Silver layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/03-gold",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/03-gold.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -101,7 +101,7 @@
       "description": "Gold layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/04-Wind-Turbine-UDF",
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/04-Wind-Turbine-UDF.py",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -109,7 +109,7 @@
       "description": "Wind turbine UDF for predictions."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python",
+      "path": "01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python.sql",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -117,7 +117,7 @@
       "description": "Python SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration",
+      "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration.py",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -125,7 +125,7 @@
       "description": "Sample exploration notebook for Python pipeline."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/transformations/01-bronze",
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/01-bronze.py",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -133,7 +133,7 @@
       "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/transformations/02-silver",
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/02-silver.py",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -141,7 +141,7 @@
       "description": "Silver layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-python/transformations/03-gold",
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/03-gold.py",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -149,7 +149,7 @@
       "description": "Gold layer transformations."
     },
     {
-      "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine",
+      "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine.py",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -157,7 +157,7 @@
       "description": "Build a complete ingestion pipeline using spark API (alternative to SDP)"
     },
     {
-      "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine", 
+      "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine.sql", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,

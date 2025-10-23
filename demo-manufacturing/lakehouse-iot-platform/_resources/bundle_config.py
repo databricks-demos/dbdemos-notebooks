@@ -344,7 +344,17 @@
       "id": "sdp-sql",
       "run_after_creation": False,
       "definition": {
-        "name": "new-pipeline-editor-sqls",
+        "clusters": [
+            {
+                "label": "default",
+                "autoscale": {
+                    "min_workers": 1,
+                    "max_workers": 2,
+                    "mode": "LEGACY"
+                }
+            }
+        ],
+        "name": "dbdemos_sdp_iot_{{CATALOG}}_{{SCHEMA}}",
         "libraries": [
           {
             "glob": {
@@ -355,10 +365,10 @@
         "schema": "{{SCHEMA}}",
         "continuous": False,
         "development": True,
-        "photon": True,
-        "channel": "CURRENT",
+        "edition": "ADVANCED",
+        "photon": False,
+        "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
-        "serverless": True,
         "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL",
         "environment": {
           "dependencies": ["mlflow==3.1.0"]

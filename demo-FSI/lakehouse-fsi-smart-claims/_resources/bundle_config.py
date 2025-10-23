@@ -50,20 +50,44 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims",
+      "path": "01-Data-Ingestion/01.1-SDP-Smart-Claims",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest claim and policy data with Spark Declarative Pipelines",
+      "title":  "SDP - Main notebook",
       "description": "Python SDP pipeline to ingest claim and policy data."
     },
     {
-      "path": "01-Data-Ingestion/01.2-Policy-Location",
+      "path": "01-Data-Ingestion/explorations/sample_exploration",
       "pre_run": False,
-      "publish_on_website": True,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest Accidents data",
-      "description": "Ingest the accident images"
+      "title":  "SDP - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/01-bronze.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/02-silver.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/03-gold.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Gold transformations",
+      "description": "Gold layer transformations."
     },
     {
       "path": "02-Data-Science-ML/02.1-Model-Training",
@@ -270,26 +294,25 @@
                 }
             }
         ],
-        "development": True,
-        "continuous": False,
-        "channel": "PREVIEW",
-        "edition": "ADVANCED",
-        "photon": True,
+        "name": "dbdemos_sdp_smart_claims_{{CATALOG}}_{{SCHEMA}}",
         "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.2-Policy-Location"
-                }
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
             }
+          }
         ],
-        "name": "dbdemos_claims_{{CATALOG}}_{{SCHEMA}}",
+        "schema": "{{SCHEMA}}",
+        "continuous": False,
+        "development": True,
+        "edition": "ADVANCED",
+        "photon": False,
+        "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-Ingestion",
+        "environment": {
+          "dependencies": ["geopy==2.4.1"]
+        }
       }
     }
   ],

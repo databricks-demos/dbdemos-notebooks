@@ -179,7 +179,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Open the [04-Workflow-Orchestration]($./04-Workflow-Orchestration/04-Workflow-Orchestration-Smart-Claims)  notebook to schedule or <a dbdemos-workflow-id="init-job" href="#job/629612721485383/tasks" target="_blank">access your workflow</a> (data ingetion, model re-training, dashboard update etc)
+# MAGIC Open the [05-Workflow-Orchestration]($./05-Workflow-Orchestration/05-Workflow-Orchestration-Smart-Claims)  notebook to schedule or <a dbdemos-workflow-id="init-job" href="#job/629612721485383/tasks" target="_blank">access your workflow</a> (data ingetion, model re-training, dashboard update etc)
 
 # COMMAND ----------
 

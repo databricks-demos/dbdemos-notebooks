@@ -2,7 +2,7 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Data engineering with Databricks - Realtime data ingestion for Financial transactions
 -- MAGIC
--- MAGIC Building realtime system consuming messages from live system is required to build reactive data application. 
+-- MAGIC Building realtime system consuming messages from live system is required to build reactive data application.
 -- MAGIC
 -- MAGIC Near real-time is key to detect new fraud pattern and build a proactive system, offering better protection for your customers.
 -- MAGIC
@@ -67,7 +67,7 @@
 -- MAGIC **A note on Fraud detection in real application** <br/>
 -- MAGIC *This demo is a simple example to showcase the Lakehouse benefits. We'll keep the data model and ML simple for the sake of the demo. Real-world application would need more data sources and also deal with imbalanced class and more advanced models. If you are interested in a more advanced discussion, reach out to your Databricks team!*
 -- MAGIC
--- MAGIC Let's see how this data can be used within the Lakehouse to analyse and reduce fraud!  
+-- MAGIC Let's see how this data can be used within the Lakehouse to analyse and reduce fraud!
 
 -- COMMAND ----------
 
@@ -84,12 +84,12 @@
 -- MAGIC * Build our DBSQL dashboard to track transactions and fraud impact.
 -- MAGIC * Train & deploy a model to detect potential fraud in real-time.
 -- MAGIC
--- MAGIC Let's implement the following flow: 
--- MAGIC  
+-- MAGIC Let's implement the following flow:
+-- MAGIC
 -- MAGIC <img width="1200px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-dlt-full.png"/>
 -- MAGIC
 -- MAGIC
--- MAGIC *Note that we're including the ML model our [Data Scientist built]($../04-Data-Science-ML/04.1-automl-fraud-detection) using Databricks AutoML to predict fraud. We'll cover that in the next section.*
+-- MAGIC *Note that we're including the ML model our [Data Scientist built]($../04-Data-Science-ML/04.1-AutoML-FSI-fraud) using Databricks AutoML to predict fraud. We'll cover that in the next section.*
 
 -- COMMAND ----------
 
@@ -99,71 +99,34 @@
 
 -- COMMAND ----------
 
--- DBTITLE 1,Let's explore our raw incoming data: transactions (json)
--- MAGIC %python
--- MAGIC display(spark.read.json('/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/transactions'))
-
--- COMMAND ----------
-
--- DBTITLE 1,Raw incoming customers (json)
--- MAGIC %python
--- MAGIC display(spark.read.csv('/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/customers', header=True, multiLine=True))
-
--- COMMAND ----------
-
--- DBTITLE 1,Raw incoming country
--- MAGIC %python
--- MAGIC display(spark.read.csv('/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/country_code', header=True))
+-- MAGIC %md
+-- MAGIC
+-- MAGIC ## 1/ Data Exploration
+-- MAGIC
+-- MAGIC All Data projects start with some exploration. Open the [/explorations/sample_exploration]($./explorations/sample_exploration) notebook to get started and discover the data made available to you
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### 1/ Loading our data using Databricks Autoloader (cloud_files)
+-- MAGIC ### 2/ Loading our data using Databricks Autoloader (cloud_files)
 -- MAGIC
 -- MAGIC <img  style="float:right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-dlt-1.png"/>
--- MAGIC   
+-- MAGIC
 -- MAGIC Autoloader allow us to efficiently ingest millions of files from a cloud storage, and support efficient schema inference and evolution at scale.
 -- MAGIC
 -- MAGIC For more details on autoloader, run `dbdemos.install('auto-loader')`
 -- MAGIC
--- MAGIC Let's use it to our pipeline and ingest the raw JSON & CSV data being delivered in our blob storage `/dbdemos/fsi/fraud-detection/...`. 
+-- MAGIC Let's use it to our pipeline and ingest the raw JSON & CSV data being delivered in our blob storage `/dbdemos/fsi/fraud-detection/...`.
 
 -- COMMAND ----------
 
--- DBTITLE 1,Ingest transactions
-CREATE STREAMING LIVE TABLE bronze_transactions 
-  COMMENT "Historical banking transaction to be trained on fraud detection"
-AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/transactions", "json", map("cloudFiles.maxFilesPerTrigger", "1", "cloudFiles.inferColumnTypes", "true"))
-
--- COMMAND ----------
-
--- DBTITLE 1,Customers
-CREATE STREAMING LIVE TABLE banking_customers (
-  CONSTRAINT correct_schema EXPECT (_rescued_data IS NULL)
-)
-COMMENT "Customer data coming from csv files ingested in incremental with Auto Loader to support schema inference and evolution"
-AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/customers", "csv", map("cloudFiles.inferColumnTypes", "true", "multiLine", "true"))
-
--- COMMAND ----------
-
--- DBTITLE 1,Reference table
-CREATE STREAMING LIVE TABLE country_coordinates
-AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/country_code", "csv")
-
--- COMMAND ----------
-
--- DBTITLE 1,Fraud report (labels for ML training)
-CREATE STREAMING LIVE TABLE fraud_reports
-AS 
-  SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_fsi_fraud_detection/fraud_raw_data/fraud_report", "csv")
+-- MAGIC %md
+-- MAGIC Open the [transformations/01-bronze.sql]($./transformations/01-bronze.sql) file to review the SQL code ingesting the raw data and creating our bronze layer.
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### 2/ Enforce quality and materialize our tables for Data Analysts
+-- MAGIC ### 3/ Enforce quality and materialize our tables for Data Analysts
 -- MAGIC
 -- MAGIC <img style="float:right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-dlt-2.png"/>
 -- MAGIC
@@ -181,24 +144,13 @@ AS
 
 -- COMMAND ----------
 
--- DBTITLE 1,Silver
-CREATE STREAMING LIVE TABLE silver_transactions (
-  CONSTRAINT correct_data EXPECT (id IS NOT NULL),
-  CONSTRAINT correct_customer_id EXPECT (customer_id IS NOT NULL)
-)
-AS 
-  SELECT * EXCEPT(countryOrig, countryDest, t._rescued_data, f._rescued_data), 
-          regexp_replace(countryOrig, "\-\-", "") as countryOrig, 
-          regexp_replace(countryDest, "\-\-", "") as countryDest, 
-          newBalanceOrig - oldBalanceOrig as diffOrig, 
-          newBalanceDest - oldBalanceDest as diffDest
-FROM STREAM(live.bronze_transactions) t
-  LEFT JOIN live.fraud_reports f using(id)
+-- MAGIC %md
+-- MAGIC Open the [transformations/02-silver.sql]($./transformations/02-silver.sql) file to review the SQL code creating our clean silver table.
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### 3/ Aggregate and join data to create our ML features
+-- MAGIC ### 4/ Aggregate and join data to create our ML features
 -- MAGIC
 -- MAGIC <img style="float:right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-dlt-3.png"/>
 -- MAGIC
@@ -208,19 +160,8 @@ FROM STREAM(live.bronze_transactions) t
 
 -- COMMAND ----------
 
--- DBTITLE 1,Gold, ready for Data Scientists to consume
-CREATE LIVE TABLE gold_transactions (
-  CONSTRAINT amount_decent EXPECT (amount > 10)
-)
-AS 
-  SELECT t.* EXCEPT(countryOrig, countryDest, is_fraud), c.* EXCEPT(id, _rescued_data),
-          boolean(coalesce(is_fraud, 0)) as is_fraud,
-          o.alpha3_code as countryOrig, o.country as countryOrig_name, o.long_avg as countryLongOrig_long, o.lat_avg as countryLatOrig_lat,
-          d.alpha3_code as countryDest, d.country as countryDest_name, d.long_avg as countryLongDest_long, d.lat_avg as countryLatDest_lat
-FROM live.silver_transactions t
-  INNER JOIN live.country_coordinates o ON t.countryOrig=o.alpha3_code 
-  INNER JOIN live.country_coordinates d ON t.countryDest=d.alpha3_code 
-  INNER JOIN live.banking_customers c ON c.id=t.customer_id 
+-- MAGIC %md
+-- MAGIC Open the [transformations/03-gold.sql]($./transformations/03-gold.sql) file to review the SQL code creating our enriched gold table.
 
 -- COMMAND ----------
 
@@ -239,7 +180,7 @@ FROM live.silver_transactions t
 -- MAGIC
 -- MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 -- MAGIC
--- MAGIC Jump to the [Governance with Unity Catalog notebook]($../00-churn-introduction-lakehouse) or [Go back to the introduction]($../00-churn-introduction-lakehouse)
+-- MAGIC Jump to the [Governance with Unity Catalog notebook]($../02-Data-governance/02-UC-data-governance-ACL-fsi-fraud) or [Go back to the introduction]($../00-FSI-fraud-detection-introduction-lakehouse)
 
 -- COMMAND ----------
 
@@ -250,4 +191,4 @@ FROM live.silver_transactions t
 -- MAGIC
 -- MAGIC This dataset is built with PaySim, an open source banking transactions simulator.
 -- MAGIC
--- MAGIC [PaySim](https://github.com/EdgarLopezPhD/PaySim) simulates mobile money transactions based on a sample of real transactions extracted from one month of financial logs from a mobile money service implemented in an African country. 
+-- MAGIC [PaySim](https://github.com/EdgarLopezPhD/PaySim) simulates mobile money transactions based on a sample of real transactions extracted from one month of financial logs from a mobile money service implemented in an African country.

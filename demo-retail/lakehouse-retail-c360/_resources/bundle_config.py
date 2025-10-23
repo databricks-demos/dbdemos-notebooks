@@ -70,36 +70,100 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-churn-SQL", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-churn-SQL",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with Spark Declarative Pipelines", 
+      "title":  "SDP SQL - Main notebook",
       "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.2-SDP-churn-Python-UDF", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with SDP-companion UDF", 
-      "description": "Loads ML model as UDF in python."
+      "title":  "SDP SQL - Sample exploration",
+      "description": "Sample exploration notebook for SQL pipeline."
     },
     {
-      "path": "01-Data-ingestion/01.3-SDP-churn-python", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/01-bronze.sql",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Alternative: Ingest data with Spark Declarative Pipelines", 
+      "title":  "SDP SQL - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/02-silver.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/03-gold.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/04-churn-UDF.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - UDF",
+      "description": "Churn prediction UDF for ML model."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/01.1-SDP-churn-Python",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Main notebook",
       "description": "Python SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.4-SDP-churn-expectation-dashboard-data-prep", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Alternative: Ingest data with Spark Declarative Pipelines", 
-      "description": "Python SDP pipeline to ingest data & build clean tables."
+      "title":  "SDP Python - Sample exploration",
+      "description": "Sample exploration notebook for Python pipeline."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/01-bronze.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/02-silver.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/03-gold.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/01.2-SDP-churn-expectation-dashboard-data-prep",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Dashboard data prep",
+      "description": "Prepare data for SDP quality dashboard (SQL version)."
     },
     {
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn", 
@@ -364,26 +428,25 @@
                 }
             }
         ],
-        "development": True,
+        "name": "dbdemos_sdp_lakehouse_churn_{{CATALOG}}_{{SCHEMA}}",
+        "libraries": [
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL/transformations/**"
+            }
+          }
+        ],
+        "schema": "{{SCHEMA}}",
         "continuous": False,
-        "channel": "PREVIEW",
+        "development": True,
         "edition": "ADVANCED",
         "photon": False,
-        "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-churn-SQL"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-SDP-churn-Python-UDF"
-                }
-            }
-        ],
-        "name": "dbdemos_dlt_lakehouse_churn_{{CATALOG}}_{{SCHEMA}}",
+        "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL",
+        "environment": {
+          "dependencies": ["mlflow==3.1.0"]
+        }
       }
     }
   ],

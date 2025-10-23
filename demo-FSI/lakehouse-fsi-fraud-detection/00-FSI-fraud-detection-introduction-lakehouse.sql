@@ -181,7 +181,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [workflow and orchestration notebook]($./05-Workflow-orchestration/05-Workflow-orchestration-fsi-fraud) to schedule our pipeline (data ingetion, model re-training etc)
+-- MAGIC Open the [workflow and orchestration notebook]($./06-Workflow-orchestration/06-Workflow-orchestration-fsi-fraud) to schedule our pipeline (data ingetion, model re-training etc)
 
 -- COMMAND ----------
 

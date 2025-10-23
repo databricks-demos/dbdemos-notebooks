@@ -181,4 +181,4 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Interested in finishing up this demo? Check out [in the orchestration notebook]($../06-Workflow-orchestration/06-Workflow-orchestration-churn)
+# MAGIC Interested in finishing up this demo? Check out [in the orchestration notebook]($../06-Workflow-orchestration/06-Workflow-orchestration-iot-turbine)

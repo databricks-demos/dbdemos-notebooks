@@ -1,3 +1,13 @@
+# -- ----------------------------------
+# -- Create enriched transaction dataset for ML and analytics
+# -- - Join transactions with customer information
+# -- - Enrich with geographic coordinates for originating and destination countries
+# -- - Convert fraud flag to boolean type
+# -- - Validate transaction amounts
+# -- Creates comprehensive feature set for fraud detection models
+# -- ----------------------------------
+
+
 import dlt
 from pyspark.sql import functions as F
 

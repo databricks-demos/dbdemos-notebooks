@@ -1,3 +1,12 @@
+-- ----------------------------------
+-- Create enriched transaction dataset for ML and analytics
+-- - Join transactions with customer information
+-- - Enrich with geographic coordinates for originating and destination countries
+-- - Convert fraud flag to boolean type
+-- - Validate transaction amounts
+-- Creates comprehensive feature set for fraud detection models
+-- ----------------------------------
+
 --Gold, ready for Data Scientists to consume
 CREATE MATERIALIZED VIEW gold_transactions (
   CONSTRAINT amount_decent EXPECT (amount > 10)

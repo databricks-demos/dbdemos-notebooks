@@ -79,11 +79,6 @@
 -- MAGIC
 -- MAGIC <img src="https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-logo.png" style="float: right;" width="200px">
 -- MAGIC
--- MAGIC ## Delta Lake
--- MAGIC
--- MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake tables. Delta Lake is an open storage framework for reliability and performance.<br>
--- MAGIC It provides many functionalities (ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)<br>
--- MAGIC For more details on Delta Lake, run dbdemos.install('delta-lake')
 
 -- COMMAND ----------
 
@@ -155,7 +150,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/01-silver.sql]($./transformations/01-silver.sql) notebook to review the SQL queries creating our features and our training dataset
+-- MAGIC Open the [transformations/02-silver.sql]($./transformations/02-silver.sql) notebook to review the SQL queries creating our features and our training dataset
 
 -- COMMAND ----------
 
@@ -174,7 +169,7 @@
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC Open the [transformations/01-gold.sql]($./transformations/01-gold.sql) notebook to review the SQL queries creating our features and our training dataset
+-- MAGIC Open the [transformations/03-gold.sql]($./transformations/03-gold.sql) notebook to review the SQL queries creating our features and our training dataset
 
 -- COMMAND ----------
 

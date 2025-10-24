@@ -8,19 +8,19 @@
 # -- ----------------------------------
 
 
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
-@dlt.table(
+@dp.materialized_view(
     name="gold_transactions",
     comment="Gold, ready for Data Scientists to consume"
 )
-@dlt.expect("amount_decent", "amount > 10")
+@dp.expect("amount_decent", "amount > 10")
 def gold_transactions():
-    t = dlt.read("silver_transactions").alias("t")
-    o = dlt.read("country_coordinates").alias("o")
-    d = dlt.read("country_coordinates").alias("d")
-    c = dlt.read("banking_customers").alias("c")
+    t = spark.read.table("silver_transactions").alias("t")
+    o = spark.read.table("country_coordinates").alias("o")
+    d = spark.read.table("country_coordinates").alias("d")
+    c = spark.read.table("banking_customers").alias("c")
 
     joined = (
         t.join(o, F.col("t.countryOrig") == F.col("o.alpha3_code"), "inner")

@@ -3,9 +3,9 @@
 # -- Loads historical banking transactions for fraud detection analysis
 # -- Uses autoloader to incrementally process new transaction files
 # -- ----------------------------------
-import dlt
+from pyspark import pipelines as dp
 
-@dlt.table(
+@dp.table(
     name="bronze_transactions",
     comment="Historical banking transaction to be trained on fraud detection"
 )
@@ -24,11 +24,11 @@ def bronze_transactions():
 # -- Customer information with schema validation
 # -- Drops rows with rescued data to ensure data quality
 # -- ----------------------------------
-@dlt.table(
+@dp.table(
     name="banking_customers",
     comment="Customer data coming from csv files ingested in incremental with Auto Loader to support schema inference and evolution"
 )
-@dlt.expect("correct_schema", "_rescued_data IS NULL")
+@dp.expect("correct_schema", "_rescued_data IS NULL")
 def banking_customers():
     return (
         spark.readStream
@@ -46,7 +46,7 @@ def banking_customers():
 # -- Reference table for mapping country codes to coordinates
 # -- ----------------------------------
 
-@dlt.table(name="country_coordinates")
+@dp.table(name="country_coordinates")
 def country_coordinates():
     return (
         spark.readStream
@@ -61,7 +61,7 @@ def country_coordinates():
 # -- Essential for supervised learning fraud detection models
 # -- ----------------------------------
 
-@dlt.table(name="fraud_reports")
+@dp.table(name="fraud_reports")
 def fraud_reports():
     return (
         spark.readStream

@@ -7,18 +7,18 @@
 # -- Creates clean dataset ready for analytics and ML feature engineering
 # -- ----------------------------------
 
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
-@dlt.table(
+@dp.table(
     name="silver_transactions",
     comment="Enforce quality and materialize our tables for Data Analysts"
 )
-@dlt.expect("correct_data", "id IS NOT NULL")
-@dlt.expect("correct_customer_id", "customer_id IS NOT NULL")
+@dp.expect("correct_data", "id IS NOT NULL")
+@dp.expect("correct_customer_id", "customer_id IS NOT NULL")
 def silver_transactions():
-    t = dlt.read_stream("bronze_transactions").alias("t")
-    f = dlt.read("fraud_reports").alias("f")
+    t = spark.readStream.table("bronze_transactions").alias("t")
+    f = spark.read.table("fraud_reports").alias("f")
 
     joined = t.join(f, on="id", how="left")
 

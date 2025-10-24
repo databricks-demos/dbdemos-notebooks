@@ -102,17 +102,17 @@ def fund_trans_gold():
 @dlt.table()
 def telco_gold():
     # Read upstream DLT tables (batch reads => materialized output)
-    telco_df = spark.read.table("LIVE.telco_bronze")
-    customer_df = spark.read.table("LIVE.customer_bronze")
+    telco_df = spark.read.table("telco_bronze")
+    customer_df = spark.read.table("customer_bronze")
 
     telco = telco_df.alias("telco")
     customer = customer_df.alias("customer")
 
     return (
-        telco.join(customer, col("telco.user_phone") == col("customer.mobile_phone"), "left")
+        telco.join(customer, F.col("telco.user_phone") == F.col("customer.mobile_phone"), "left")
              .select(
-                 col("customer.id").alias("cust_id"),
-                 *[col(f"telco.{c}") for c in telco_df.columns]
+                 F.col("customer.id").alias("cust_id"),
+                 *[F.col(f"telco.{c}") for c in telco_df.columns]
              )
     )
 
@@ -124,17 +124,17 @@ def telco_gold():
 
 @dlt.table()
 def customer_gold():
-    customer = spark.read.table("LIVE.customer_silver").alias("customer")
-    account  = spark.read.table("LIVE.account_silver").alias("account")
+    customer = spark.read.table("customer_silver").alias("customer")
+    account  = spark.read.table("account_silver").alias("account")
 
     return (
-        customer.join(account, col("customer.cust_id") == col("account.cust_id"), "left")
+        customer.join(account, F.col("customer.cust_id") == F.col("account.cust_id"), "left")
                 .select(
-                    *[col(f"customer.{c}") for c in customer.columns],
-                    col("account.avg_balance"),
-                    col("account.num_accs"),
-                    col("account.balance_usd"),
-                    col("account.available_balance_usd")
+                    *[F.col(f"customer.{c}") for c in customer.columns],
+                    F.col("account.avg_balance"),
+                    F.col("account.num_accs"),
+                    F.col("account.balance_usd"),
+                    F.col("account.available_balance_usd")
                 )
     )
 

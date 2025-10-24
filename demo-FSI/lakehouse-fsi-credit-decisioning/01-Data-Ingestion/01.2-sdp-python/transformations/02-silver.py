@@ -8,8 +8,8 @@ from pyspark.sql.functions import col, count, avg, lit, year
 
 @dlt.table()
 def fund_trans_silver():
-    fund = spark.read.table("LIVE.fund_trans_bronze")
-    acct = spark.read.table("LIVE.account_bronze")
+    fund = spark.read.table("fund_trans_bronze")
+    acct = spark.read.table("account_bronze")
 
     payer = acct.alias("payer_account")
     payee = acct.alias("payee_account")
@@ -37,8 +37,8 @@ def fund_trans_silver():
 @dlt.table()
 def customer_silver():
     # Read upstream DLT tables (batch reads => materialized view semantics)
-    customer_df = spark.read.table("LIVE.customer_bronze")
-    relationship_df = spark.read.table("LIVE.relationship_bronze")
+    customer_df = spark.read.table("customer_bronze")
+    relationship_df = spark.read.table("relationship_bronze")
 
     # Columns to keep (replicates SELECT ... EXCEPT(...))
     cust_keep = [c for c in customer_df.columns if c not in ("dob", "_rescued_data")]

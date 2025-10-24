@@ -3,10 +3,10 @@
 # -- Join fund transfers with account information to get customer IDs
 # -- Links payer and payee accounts to cust
 
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql.functions import col, count, avg, lit, year
 
-@dlt.table()
+@dp.materialized_view()
 def fund_trans_silver():
     fund = spark.read.table("fund_trans_bronze")
     acct = spark.read.table("account_bronze")
@@ -34,7 +34,7 @@ def fund_trans_silver():
 # -- Creates comprehensive customer profile for downstream analysis
 # -- ----------------------------------
 
-@dlt.table()
+@dp.materialized_view()
 def customer_silver():
     # Read upstream DLT tables (batch reads => materialized view semantics)
     customer_df = spark.read.table("customer_bronze")
@@ -70,7 +70,7 @@ def customer_silver():
 # -- ----------------------------------
 
 
-@dlt.table()
+@dp.materialized_view()
 def account_silver():
     # Source table
     acc_bronze = spark.read.table("account_bronze")

@@ -4,12 +4,12 @@
 # -- Drop rows with missing customer IDs to ensure data quality
 # -- ----------------------------------
 
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
 
-@dlt.table()
-@dlt.expect_or_drop("CustomerID_not_null", "CUST_ID IS NOT NULL")
+@dp.materialized_view()
+@dp.expect_or_drop("CustomerID_not_null", "CUST_ID IS NOT NULL")
 def credit_bureau_gold():
     # Batch read from the LIVE streaming table => materialized output
     return spark.read.table("credit_bureau_bronze")
@@ -24,9 +24,7 @@ def credit_bureau_gold():
 # -- Provides behavioral payment patterns for credit risk assessment
 # -- ----------------------------------
 
-from pyspark import pipelines as dp
-
-@dlt.table()
+@dp.materialized_view()
 def fund_trans_gold():
     # Sources
     funds = spark.read.table("fund_trans_silver")
@@ -99,7 +97,7 @@ def fund_trans_gold():
 # -- Alternative data source to evaluate creditworthiness
 # -- ----------------------------------
 
-@dlt.table()
+@dp.materialized_view()
 def telco_gold():
     # Read upstream DLT tables (batch reads => materialized output)
     telco_df = spark.read.table("telco_bronze")
@@ -122,7 +120,7 @@ def telco_gold():
 # -- System of record for customer attributes and financial summary
 # -- ----------------------------------
 
-@dlt.table()
+@dp.materialized_view()
 def customer_gold():
     customer = spark.read.table("customer_silver").alias("customer")
     account  = spark.read.table("account_silver").alias("account")
@@ -146,10 +144,8 @@ def customer_gold():
 # -- Uses is_member function to encrypt based on user group
 # -- ----------------------------------
 
-import dlt
-from pyspark.sql import functions as F
 
-@dlt.table
+@dp.materialized_view
 def customer_gold_secured():
     # Read source
     c = spark.read.table("customer_gold").alias("c")

@@ -1,10 +1,10 @@
-import dlt
+from pyspark import pipelines as dp
 # -- ----------------------------------
 # -- Ingest credit bureau data (JSON format)
 # -- Credit bureau data contains information about customer credit history and creditworthiness
 # -- Monthly data accessed through API from government agencies or central banks
 # -- ----------------------------------
-@dlt.table
+@dp.table
 def credit_bureau_bronze():
     return (
         spark.readStream
@@ -19,7 +19,7 @@ def credit_bureau_bronze():
 # -- Customer table from internal KYC processes containing customer-related data
 # -- Daily ingestion from internal relational databases via CDC pipeline
 # -- ----------------------------------
-@dlt.table()
+@dp.table()
 def customer_bronze():
     return (
         spark.readStream
@@ -41,7 +41,7 @@ def customer_bronze():
 # -- Source: Internal banking databases
 # -- ----------------------------------
 
-@dlt.table()
+@dp.table()
 def relationship_bronze():
     return (
         spark.readStream
@@ -60,7 +60,7 @@ def relationship_bronze():
 # -- Daily ingestion via CDC pipeline
 # -- ----------------------------------
 
-@dlt.table()
+@dp.table()
 def account_bronze():
     return (
         spark.readStream
@@ -78,7 +78,7 @@ def account_bronze():
 # -- Streaming data available in real-time through Kafka
 # -- ----------------------------------
 
-@dlt.table()
+@dp.table()
 def fund_trans_bronze():
     return (
         spark.readStream
@@ -97,7 +97,7 @@ def fund_trans_bronze():
 # -- ----------------------------------
 
 
-@dlt.table()
+@dp.table()
 def telco_bronze():
     return (
         spark.readStream

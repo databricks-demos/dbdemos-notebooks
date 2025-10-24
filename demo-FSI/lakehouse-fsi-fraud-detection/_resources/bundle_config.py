@@ -52,12 +52,44 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-ingestion/01.3-sdp-fraud-detection-SQL",
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01-SDP-fraud-detection-SQL",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with Spark Declarative Pipelines", 
+      "title":  "SDP SQL - Main notebook",
       "description": "SQL SDP pipeline to ingest data & build clean tables."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-sql/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-sql/transformations/01-bronze.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-sql/transformations/02-silver.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-sql/transformations/03-gold.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Gold transformations",
+      "description": "Gold layer transformations."
     },
     {
       "path": "02-Data-governance/02-UC-data-governance-ACL-fsi-fraud", 
@@ -163,7 +195,7 @@
             {
                 "task_key": "start_dlt_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-fraud}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-fraud}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -295,61 +327,18 @@
         "continuous": False,
         "channel": "PREVIEW",
         "edition": "ADVANCED",
-        "photon": True,
+        "photon": False,
         "libraries": [
             {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-fraud-detection-SQL"
+                "glob": {
+                    "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql/transformations/**"
                 }
             }
         ],
-        "name": "dbdemos_fraud_{{CATALOG}}_{{SCHEMA}}",
+        "name": "dbdemos_sdp_lakehouse_fraud_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
-      }
-    },
-    {
-      "id": "sdp-fsi-fraud-sql",
-      "run_after_creation": False,
-      "definition": {
-        "name": "new-pipeline-editor-sqls",
-        "libraries": [
-          {
-            "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql/transformations/**"
-            }
-          }
-        ],
         "schema": "{{SCHEMA}}",
-        "continuous": False,
-        "development": True,
-        "photon": True,
-        "channel": "CURRENT",
-        "catalog": "{{CATALOG}}",
-        "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql"
-      }
-    },
-    {
-      "id": "sdp-fsi-fraud-python",
-      "run_after_creation": False,
-      "definition": {
-        "name": "new-pipeline-editor-python",
-        "libraries": [
-          {
-            "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-sdp-python/transformations/**"
-            }
-          }
-        ],
-        "schema": "{{SCHEMA}}",
-        "continuous": False,
-        "development": True,
-        "photon": True,
-        "channel": "CURRENT",
-        "catalog": "{{CATALOG}}",
-        "serverless": True,
-        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-sdp-python"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion"
       }
     }
   ],

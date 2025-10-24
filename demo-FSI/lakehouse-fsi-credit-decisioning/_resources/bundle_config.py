@@ -59,12 +59,44 @@
       "description": "Introduction notebook, start here to implement your FSI Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest internal banking data with Spark Declarative Pipelines", 
+      "title":  "SDP SQL - Main notebook",
       "description": "SQL SDP pipeline to ingest internal banking data & build clean tables."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-sql/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-sql/transformations/01-bronze.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-sql/transformations/02-silver.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-sql/transformations/03-gold.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Gold transformations",
+      "description": "Gold layer transformations."
     },
     {
       "path": "02-Data-Governance/02-Data-Governance-credit-decisioning", 
@@ -174,7 +206,7 @@
             {
                 "task_key": "start_dlt_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-credit-decisioning}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-credit-decisioning}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -326,15 +358,18 @@
             {
                 "notebook": {
                     "path": "{{DEMO_FOLDER}}/_resources/01-load-data"
-                },
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL"
+                }
+            },
+            {
+                "glob": {
+                    "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-sdp-sql/transformations/**"
                 }
             }
         ],
-        "name": "dbdemos_credit_decisioning_{{CATALOG}}_{{SCHEMA}}",
+        "name": "dbdemos_sdp_lakehouse_credit_decisioning_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "schema": "{{SCHEMA}}",
+        "root_path": "{{DEMO_FOLDER}}/01-Data-Ingestion"
       }
     }
   ],
@@ -363,7 +398,7 @@
                 {
                     "task_key": "start_dlt_pipeline",
                     "pipeline_task": {
-                        "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-credit-decisioning}}",
+                        "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-credit-decisioning}}",
                         "full_refresh": false
                     },
                     "timeout_seconds": 0,

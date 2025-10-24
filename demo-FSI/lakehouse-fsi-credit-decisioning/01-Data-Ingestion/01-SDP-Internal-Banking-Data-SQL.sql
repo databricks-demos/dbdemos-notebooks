@@ -87,7 +87,7 @@
 -- MAGIC
 -- MAGIC ## 1/ Data Exploration
 -- MAGIC
--- MAGIC All Data projects start with some exploration. Open the [/explorations/sample_exploration]($./explorations/sample_exploration) notebook to get started and discover the data made available to you
+-- MAGIC All Data projects start with some exploration. Open the [/01.1-sdp-sql/explorations/sample_exploration]($./01.1-sdp-sql/explorations/sample_exploration) notebook to get started and discover the data made available to you
 
 -- COMMAND ----------
 
@@ -112,7 +112,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/01-bronze.sql]($./transformations/01-bronze.sql) file to review the SQL code ingesting the raw data and creating our bronze layer.
+-- MAGIC Open the [/01.1-sdp-sql/transformations/01-bronze.sql]($./01.1-sdp-sql/transformations/01-bronze.sql) file to review the SQL code ingesting the raw data and creating our bronze layer.
 
 -- COMMAND ----------
 
@@ -137,7 +137,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/02-silver.sql]($./transformations/02-silver.sql) file to review the SQL code creating our clean silver tables.
+-- MAGIC Open the [/01.1-sdp-sql/transformations/02-silver.sql]($./01.1-sdp-sql/transformations/02-silver.sql) file to review the SQL code creating our clean silver tables.
 
 -- COMMAND ----------
 
@@ -159,7 +159,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/03-gold.sql]($./transformations/03-gold.sql) file to review the SQL code creating our enriched gold tables.
+-- MAGIC Open the [/01.1-sdp-sql/transformations/03-gold.sql]($./01.1-sdp-sql/transformations/03-gold.sql) file to review the SQL code creating our enriched gold tables.
 
 -- COMMAND ----------
 

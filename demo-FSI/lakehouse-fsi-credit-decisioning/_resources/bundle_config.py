@@ -67,7 +67,7 @@
       "description": "SQL SDP pipeline to ingest internal banking data & build clean tables."
     },
     {
-      "path": "01-Data-Ingestion/explorations/sample_exploration",
+      "path": "01-Data-Ingestion/01.1-sdp-sql/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -75,7 +75,7 @@
       "description": "Sample exploration notebook for pipeline."
     },
     {
-      "path": "01-Data-Ingestion/transformations/01-bronze.sql",
+      "path": "01-Data-Ingestion/01.1-sdp-sql/transformations/01-bronze.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -83,7 +83,7 @@
       "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-Ingestion/transformations/02-silver.sql",
+      "path": "01-Data-Ingestion/01.1-sdp-sql/transformations/02-silver.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -91,7 +91,7 @@
       "description": "Silver layer transformations."
     },
     {
-      "path": "01-Data-Ingestion/transformations/03-gold.sql",
+      "path": "01-Data-Ingestion/01.1-sdp-sql/transformations/03-gold.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -362,7 +362,7 @@
             },
             {
                 "glob": {
-                    "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
+                    "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-sdp-sql/transformations/**"
                 }
             }
         ],

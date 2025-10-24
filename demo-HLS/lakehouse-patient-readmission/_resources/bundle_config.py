@@ -75,7 +75,7 @@
       "description": "SQL SDP pipeline to ingest patient data & build clean tables."
     },
     {
-      "path": "01-Data-Ingestion/transformations/01-bronze", 
+      "path": "01-Data-Ingestion/transformations/01-bronze.sql", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -83,7 +83,7 @@
       "description": "Bronze layer transformations"
     },
     {
-      "path": "01-Data-Ingestion/transformations/02-silver", 
+      "path": "01-Data-Ingestion/transformations/02-silver.sql", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -91,7 +91,7 @@
       "description": "Silver layer transformations"
     },
     {
-      "path": "01-Data-Ingestion/transformations/03-gold", 
+      "path": "01-Data-Ingestion/transformations/03-gold.sql", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
@@ -100,7 +100,7 @@
     },
     {
       "path": "01-Data-Ingestion/explorations/sample_exploration", 
-      "pre_run": False, 
+      "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "SDP - Sample exploration", 
@@ -320,8 +320,6 @@
         "development": True,
         "continuous": False,
         "channel": "CURRENT",
-        "photon": False,
-        "serverless": True,
         "libraries": [
             {
                 "glob": {

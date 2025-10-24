@@ -12,19 +12,10 @@
   "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
+  "bundle": True,
   "default_schema": "dbdemos_fsi_credit_decisioning",
   "description": "Build your banking data platform and identify credit worthy customers",
   "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end credit decisioning system for underbanked customers, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both internal and partner data, and then transform them using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build a Machine Learning model with Databricks AutoML to identify credit worthy customers</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the ingested data and explain the machine learning model outputs</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
-  "usecase": "Lakehouse Platform",
-  "products": ["Spark Declarative Pipelines", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
-  "related_links": [
-      {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
-      {"title": "Databricks for Financial Services", "url": "https://www.databricks.com/solutions/industries/financial-services"}],
-  "recommended_items": ["lakehouse-iot-platform", "lakehouse-fsi-fraud", "lakehouse-retail-c360"],
-  "demo_assets": [
-      {"title": "Spark Declarative Pipelines pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dlt-0.png"},
-      {"title": "Databricks SQL Dashboard: Credit Decisioning", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dashboard-0.png"}],   "bundle": True,
-  "tags": [{"dlt": "Spark Declarative Pipelines"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
   "notebooks": [
     {
       "path": "_resources/00-setup", 
@@ -206,7 +197,7 @@
             {
                 "task_key": "start_dlt_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-credit-decisioning}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-fsi-credit-decisioning}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -356,11 +347,6 @@
         "photon": False,
         "libraries": [
             {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/_resources/01-load-data"
-                }
-            },
-            {
                 "glob": {
                     "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
                 }
@@ -398,7 +384,7 @@
                 {
                     "task_key": "start_dlt_pipeline",
                     "pipeline_task": {
-                        "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-fsi-credit-decisioning}}",
+                        "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-fsi-credit-decisioning}}",
                         "full_refresh": false
                     },
                     "timeout_seconds": 0,

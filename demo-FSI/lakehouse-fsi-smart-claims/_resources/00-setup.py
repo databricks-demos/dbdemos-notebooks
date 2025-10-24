@@ -13,19 +13,12 @@
 
 # COMMAND ----------
 
-print('resete all start')
-dbutils.widgets.text("reset_all_data", "false", "Reset Data")
-reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
-print('resete all stop')
-
-# COMMAND ----------
-
 # MAGIC %run ../../../_resources/00-global-setup-v2
 
 # COMMAND ----------
 
 print('run done')
-DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
+DBDemos.setup_schema(catalog, db, False, volume_name)
 volume_folder = f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
@@ -36,7 +29,7 @@ import timeit
 import time
 import collections
  
-if reset_all_data or DBDemos.is_any_folder_empty([volume_folder+"/Accidents", volume_folder+"/Claims", volume_folder+"/Policies", volume_folder+"/Images", volume_folder+"/Telematics"]):
+if DBDemos.is_any_folder_empty([volume_folder+"/Accidents", volume_folder+"/Claims", volume_folder+"/Policies", volume_folder+"/Images", volume_folder+"/Telematics"]):
   print(f'Downloading raw data under {volume_folder}...')
   #Accidents
   DBDemos.download_file_from_git(volume_folder+'/Accidents/metadata', "databricks-demos", "dbdemos-dataset", "/fsi/smart-claims/Accidents/metadata")
@@ -50,7 +43,7 @@ if reset_all_data or DBDemos.is_any_folder_empty([volume_folder+"/Accidents", vo
   #training images
   DBDemos.download_file_from_git(volume_folder+'/Images', "databricks-demos", "dbdemos-dataset", "/fsi/smart-claims/Images")
 else:
-  print("data already existing. Run with reset_all_data=true to force a data cleanup for your local demo.")
+  print("data already existing.")
 
 # COMMAND ----------
 

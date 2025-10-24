@@ -10,7 +10,8 @@ This folder defines all source code for the spark declarative pipeline:
 To get started, go to the `transformations` folder -- most of the relevant source code lives there:
 
 * By convention, every dataset under `transformations` is in a separate file.
-* Take a look at the sample under "sample_trips_oct_21_1134.sql" to get familiar with the syntax.
+* You can write declarative pipeline either in sql or python file.
+* Take a look at the sample under "01.1.-sdp-sql/transformations" or "01.2.-sdp-python/transformations" to get familiar with the syntax.
   Read more about the syntax at https://docs.databricks.com/dlt/sql-ref.html.
 * Use `Run file` to run and preview a single transformation.
 * Use `Run pipeline` to run _all_ transformations in the entire pipeline.

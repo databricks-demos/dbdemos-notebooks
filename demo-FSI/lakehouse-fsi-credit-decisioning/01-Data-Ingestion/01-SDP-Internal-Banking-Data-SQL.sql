@@ -23,26 +23,26 @@
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
 -- MAGIC     <p>
--- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-accelerate.png"/> 
+-- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-accelerate.png"/>
 -- MAGIC       <strong>Accelerate ETL development</strong> <br/>
--- MAGIC       Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance 
+-- MAGIC       Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance
 -- MAGIC     </p>
 -- MAGIC     <p>
--- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-complexity.png"/> 
+-- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-complexity.png"/>
 -- MAGIC       <strong>Remove operational complexity</strong> <br/>
 -- MAGIC       By automating complex administrative tasks and gaining broader visibility into pipeline operations
 -- MAGIC     </p>
 -- MAGIC   </div>
 -- MAGIC   <div style="width: 48%; float: left">
 -- MAGIC     <p>
--- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-trust.png"/> 
+-- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-trust.png"/>
 -- MAGIC       <strong>Trust your data</strong> <br/>
--- MAGIC       With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML 
+-- MAGIC       With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML
 -- MAGIC     </p>
 -- MAGIC     <p>
--- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-stream.png"/> 
+-- MAGIC       <img style="width: 50px; float: left; margin: 0px 5px 30px 0px;" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/logo-stream.png"/>
 -- MAGIC       <strong>Simplify batch and streaming</strong> <br/>
--- MAGIC       With self-optimization and auto-scaling data pipelines for batch or streaming processing 
+-- MAGIC       With self-optimization and auto-scaling data pipelines for batch or streaming processing
 -- MAGIC     </p>
 -- MAGIC </div>
 -- MAGIC </div>
@@ -62,7 +62,7 @@
 
 -- COMMAND ----------
 
--- MAGIC %md 
+-- MAGIC %md
 -- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze consumer credit
 -- MAGIC
 -- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modelisation.
@@ -71,8 +71,8 @@
 -- MAGIC
 -- MAGIC This information will then be used to build our DBSQL dashboard to create credit scores, decisioning, and risk.
 -- MAGIC
--- MAGIC Let's implement the following flow: 
--- MAGIC  
+-- MAGIC Let's implement the following flow:
+-- MAGIC
 -- MAGIC <div><img width="1000px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi_credit_decisioning_dlt_0.png" /></div>
 
 -- COMMAND ----------
@@ -83,117 +83,41 @@
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC
+-- MAGIC ## 1/ Data Exploration
+-- MAGIC
+-- MAGIC All Data projects start with some exploration. Open the [/01.1-sdp-sql/explorations/sample_exploration]($./01.1-sdp-sql/explorations/sample_exploration) notebook to get started and discover the data made available to you
+
+-- COMMAND ----------
+
 -- MAGIC %md-sandbox
--- MAGIC ### 1/ Loading our data using Databricks Autoloader (cloud_files)
+-- MAGIC ### 2/ Loading our data using Databricks Autoloader (cloud_files)
 -- MAGIC
 -- MAGIC <img width="650px" style="float:right" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi_credit_decisioning_dlt_1.png"/>
--- MAGIC   
+-- MAGIC
 -- MAGIC Autoloader allow us to efficiently ingest millions of files from a cloud storage, and support efficient schema inference and evolution at scale.
 -- MAGIC
 -- MAGIC For more details on autoloader, run `dbdemos.install('auto-loader')`
+-- MAGIC
+-- MAGIC We'll ingest the following data sources:
+-- MAGIC
+-- MAGIC 1. **Credit Bureau** - Credit history and creditworthiness information from government agencies (monthly)
+-- MAGIC 2. **Customer** - Customer-related data from internal KYC processes (daily)
+-- MAGIC 3. **Relationship** - Bank-customer relationship data (daily)
+-- MAGIC 4. **Account** - Customer account information (daily)
+-- MAGIC 5. **Fund Transfer** - Real-time payment transactions through Kafka streams
+-- MAGIC 6. **Telco** - Partner data to augment creditworthiness evaluation (weekly)
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC #### 1. Credit Bureau
--- MAGIC
--- MAGIC Credit bureau data refers to information about an individual's credit history, financial behavior, and creditworthiness that is collected and maintained by credit bureaus. Credit bureaus are companies that collect and compile information about consumers' credit activities, such as credit card usage, loan payments, and other financial transactions.
-
--- COMMAND ----------
-
-CREATE OR REFRESH STREAMING TABLE credit_bureau_bronze AS
-  SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/credit_bureau', 'json',
-                 map('header', 'true', 
-                     'inferSchema', 'true', 
-                     'cloudFiles.inferColumnTypes', 'true'))
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 1. Customer table
--- MAGIC
--- MAGIC The customer table comes from the internal KYC processes and contains customer-related data.
-
--- COMMAND ----------
-
-CREATE OR REFRESH STREAMING TABLE customer_bronze AS
-  SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/customer', 'csv',
-                 map('header', 'true', 
-                     'inferSchema', 'true', 
-                     'cloudFiles.inferColumnTypes', 'true',
-                     'cloudFiles.schemaHints', 'passport_expiry date, visa_expiry date, join_date date, dob date'))
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 2. Relationship table
--- MAGIC
--- MAGIC The relationship table represents the relationship between the bank and the customer. It also comes from the raw databases.
-
--- COMMAND ----------
-
-CREATE OR REFRESH STREAMING TABLE relationship_bronze AS
-  SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/relationship', 'csv',
-                 map('header', 'true', 
-                     'inferSchema', 'true', 
-                     'cloudFiles.inferColumnTypes', 'true'))
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 3. Account table
-
--- COMMAND ----------
-
-CREATE OR REFRESH STREAMING TABLE account_bronze AS
-  SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/internalbanking/account', 'csv',
-                 map('header', 'true', 
-                     'inferSchema', 'true', 
-                     'cloudFiles.inferColumnTypes', 'true'))
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 4. Fund Transfer Table
--- MAGIC
--- MAGIC Fund transfer is a real-time data stream that contains payment transactions performed by the client.
-
--- COMMAND ----------
-
-CREATE OR REFRESH STREAMING TABLE fund_trans_bronze AS
-  SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/fund_trans', 'json',
-                map('inferSchema', 'true', 
-                    'cloudFiles.inferColumnTypes', 'true'))
-
--- COMMAND ----------
-
--- MAGIC %md 
--- MAGIC
--- MAGIC #### 5. Telco
--- MAGIC
--- MAGIC This is where we augment the internal banking data through external and alternative data sources - in this case, telecom partner data, containing payment features for the common customers (between the bank and the telco provider).
-
--- COMMAND ----------
-
-CREATE OR REFRESH STREAMING TABLE telco_bronze AS
-  SELECT * FROM
-    cloud_files('/Volumes/main__build/dbdemos_fsi_credit_decisioning/credit_raw_data/telco', 'json',
-                 map('inferSchema', 'true',
-                     'cloudFiles.inferColumnTypes', 'true'))
+-- MAGIC Open the [/01.1-sdp-sql/transformations/01-bronze.sql]($./01.1-sdp-sql/transformations/01-bronze.sql) file to review the SQL code ingesting the raw data and creating our bronze layer.
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### 2/ Enforce quality and materialize our tables for Data Analysts
+-- MAGIC ### 3/ Enforce quality and materialize our tables for Data Analysts
 -- MAGIC
 -- MAGIC <img width="650px" style="float:right" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi_credit_decisioning_dlt_2.png"/>
 -- MAGIC
@@ -204,226 +128,38 @@ CREATE OR REFRESH STREAMING TABLE telco_bronze AS
 -- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCDT2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
+-- MAGIC
+-- MAGIC We'll create cleaned silver tables for:
+-- MAGIC - **Fund Transfer** - Link transactions to customer IDs through account joins
+-- MAGIC - **Customer** - Join customer with relationship data and extract birth year
+-- MAGIC - **Account** - Calculate account aggregations per customer (count, average balance)
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC
--- MAGIC #### 1. Fund transfer table
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW fund_trans_silver AS
-  SELECT
-    payer_account.cust_id payer_cust_id,
-    payee_account.cust_id payee_cust_id,
-    fund.*
-  FROM
-    live.fund_trans_bronze fund
-  LEFT OUTER JOIN live.account_bronze payer_account ON fund.payer_acc_id = payer_account.id
-  LEFT OUTER JOIN live.account_bronze payee_account ON fund.payee_acc_id = payee_account.id
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 2. Customer table
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW customer_silver AS
-  SELECT
-    * EXCEPT (dob, customer._rescued_data, relationship._rescued_data, relationship.id, relationship.operation),
-    year(dob) AS birth_year
-  FROM
-    live.customer_bronze customer
-  LEFT OUTER JOIN live.relationship_bronze relationship ON customer.id = relationship.cust_id
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 3. Account table
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW account_silver AS
-  WITH cust_acc AS (
-      SELECT cust_id, count(1) num_accs, avg(balance) avg_balance 
-        FROM live.account_bronze
-        GROUP BY cust_id
-    )
-  SELECT
-    acc_usd.cust_id,
-    num_accs,
-    avg_balance,
-    balance balance_usd,
-    available_balance available_balance_usd,
-    operation
-  FROM
-    cust_acc
-  LEFT OUTER JOIN live.account_bronze acc_usd ON cust_acc.cust_id = acc_usd.cust_id AND acc_usd.currency = 'USD'
+-- MAGIC Open the [/01.1-sdp-sql/transformations/02-silver.sql]($./01.1-sdp-sql/transformations/02-silver.sql) file to review the SQL code creating our clean silver tables.
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC ### 3/ Aggregation layer for analytics & ML
+-- MAGIC ### 4/ Aggregation layer for analytics & ML
 -- MAGIC
 -- MAGIC <img width="650px" style="float:right" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi_credit_decisioning_dlt_3.png"/>
 -- MAGIC
 -- MAGIC We curate all the tables in Delta Lake using Spark Declarative Pipelines so we can apply all the joins, masking, and data constraints in real-time. Data scientists can now use these datasets to built high-quality models, particularly to predict credit worthiness. Because we are masking sensitive data as part of Unity Catalog capabilities, we are able to confidently expose the data to many downstream users from data scientists to data analysts and business users.
+-- MAGIC
+-- MAGIC We'll create gold tables with:
+-- MAGIC - **Credit Bureau** - Clean credit bureau data with data quality constraints
+-- MAGIC - **Fund Transfer** - Aggregate transaction metrics over 3, 6, and 12 month windows for behavioral analysis
+-- MAGIC - **Telco** - Partner data enriched with customer information
+-- MAGIC - **Customer** - Comprehensive customer profile with account aggregations
+-- MAGIC - **Customer Secured** - Masked PII view using dynamic encryption for data science users
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC
--- MAGIC #### 1. Credit bureau cleanup
--- MAGIC
--- MAGIC We begin by ingesting credit bureau data, sourced from a Delta Lake table here. Typically, this data would be curated via API ingestion and dumped into cloud object stores. 
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW credit_bureau_gold
-  (CONSTRAINT CustomerID_not_null EXPECT (CUST_ID IS NOT NULL) ON VIOLATION DROP ROW)
-AS
-  SELECT * FROM live.credit_bureau_bronze
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 1. Fund transfer table
--- MAGIC
--- MAGIC The fund transfer table represents peer-to-peer payments made between the customer and another person. This helps us to understand the frequency and monetary attributes for payments for each customer as a credit risk source.
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW fund_trans_gold AS (
-  WITH 
-    max_date AS (SELECT max(datetime) AS max_date FROM live.fund_trans_silver),
-    12m_payer AS (SELECT
-                      payer_cust_id,
-                      COUNT(DISTINCT payer_cust_id) dist_payer_cnt_12m,
-                      COUNT(1) sent_txn_cnt_12m,
-                      SUM(txn_amt) sent_txn_amt_12m,
-                      AVG(txn_amt) sent_amt_avg_12m
-                    FROM live.fund_trans_silver WHERE cast(datetime AS date) >= date_add(MONTH, -12, (SELECT CAST(max_date AS date) FROM max_date))
-                    GROUP BY payer_cust_id),
-      12m_payee AS (SELECT
-                        payee_cust_id,
-                        COUNT(DISTINCT payee_cust_id) dist_payee_cnt_12m,
-                        COUNT(1) rcvd_txn_cnt_12m,
-                        SUM(txn_amt) rcvd_txn_amt_12m,
-                        AVG(txn_amt) rcvd_amt_avg_12m
-                      FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -12, (SELECT CAST(max_date AS date) FROM max_date))
-                      GROUP BY payee_cust_id),
-      6m_payer AS (SELECT
-                    payer_cust_id,
-                    COUNT(DISTINCT payer_cust_id) dist_payer_cnt_6m,
-                    COUNT(1) sent_txn_cnt_6m,
-                    SUM(txn_amt) sent_txn_amt_6m,
-                    AVG(txn_amt) sent_amt_avg_6m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -6, (SELECT CAST(max_date AS date) FROM max_date))
-                  GROUP BY payer_cust_id),
-      6m_payee AS (SELECT
-                    payee_cust_id,
-                    COUNT(DISTINCT payee_cust_id) dist_payee_cnt_6m,
-                    COUNT(1) rcvd_txn_cnt_6m,
-                    SUM(txn_amt) rcvd_txn_amt_6m,
-                    AVG(txn_amt) rcvd_amt_avg_6m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -6, (SELECT CAST(max_date AS date) FROM max_date))
-                  GROUP BY payee_cust_id),
-      3m_payer AS (SELECT
-                    payer_cust_id,
-                    COUNT(DISTINCT payer_cust_id) dist_payer_cnt_3m,
-                    COUNT(1) sent_txn_cnt_3m,
-                    SUM(txn_amt) sent_txn_amt_3m,
-                    AVG(txn_amt) sent_amt_avg_3m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -3, (SELECT CAST(max_date AS date) FROM max_date))
-                  GROUP BY payer_cust_id),
-      3m_payee AS (SELECT
-                    payee_cust_id,
-                    COUNT(DISTINCT payee_cust_id) dist_payee_cnt_3m,
-                    COUNT(1) rcvd_txn_cnt_3m,
-                    SUM(txn_amt) rcvd_txn_amt_3m,
-                    AVG(txn_amt) rcvd_amt_avg_3m
-                  FROM live.fund_trans_silver WHERE CAST(datetime AS date) >= date_add(MONTH, -3, (SELECT CAST(max_date AS date) FROM max_date))
-                  GROUP BY payee_cust_id)        
-  SELECT c.cust_id, 
-    12m_payer.* EXCEPT (payer_cust_id),
-    12m_payee.* EXCEPT (payee_cust_id), 
-    6m_payer.* EXCEPT (payer_cust_id), 
-    6m_payee.* EXCEPT (payee_cust_id), 
-    3m_payer.* EXCEPT (payer_cust_id), 
-    3m_payee.* EXCEPT (payee_cust_id) 
-  FROM live.customer_silver c 
-    LEFT JOIN 12m_payer ON 12m_payer.payer_cust_id = c.cust_id
-    LEFT JOIN 12m_payee ON 12m_payee.payee_cust_id = c.cust_id
-    LEFT JOIN 6m_payer ON 6m_payer.payer_cust_id = c.cust_id
-    LEFT JOIN 6m_payee ON 6m_payee.payee_cust_id = c.cust_id
-    LEFT JOIN 3m_payer ON 3m_payer.payer_cust_id = c.cust_id
-    LEFT JOIN 3m_payee ON 3m_payee.payee_cust_id = c.cust_id)
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 3. Telco table
--- MAGIC
--- MAGIC The telco table represents all the payments data for a given prospect or customer to understand credit worthiness based on a non-bank credit source.
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW telco_gold AS
-SELECT
-  customer.id cust_id,
-  telco.*
-FROM
-  live.telco_bronze telco
-  LEFT OUTER JOIN live.customer_bronze customer ON telco.user_phone = customer.mobile_phone
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 4. Customer table
--- MAGIC
--- MAGIC The customer data represents the system of record for PII and customer attributes that will be joined to other fact tables. 
-
--- COMMAND ----------
-
-CREATE OR REFRESH MATERIALIZED VIEW customer_gold AS
-SELECT
-  customer.*,
-  account.avg_balance,
-  account.num_accs,
-  account.balance_usd,
-  account.available_balance_usd
-FROM
-  live.customer_silver customer
-  LEFT OUTER JOIN live.account_silver account ON customer.cust_id = account.cust_id 
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC
--- MAGIC #### 5. Adding a view removing firstname for our datas scientist users
--- MAGIC
--- MAGIC The best practice for masking data in Databricks Delta Lake tables is to use dynamic views and functions like is_member to encrypt or mask data based on the group. In this case, we want to mask PII data based on user group, and we are using built-in encryption functions `aes_encrypt` to do this. Moreover, the key itself is saved into a Databricks secret for security reasons.
-
--- COMMAND ----------
-
-CREATE OR REPLACE LIVE VIEW customer_gold_secured AS
-SELECT
-  c.* EXCEPT (first_name),
-  CASE
-    WHEN is_member('data-science-users')
-    THEN base64(aes_encrypt(c.first_name, 'YOUR_SECRET_FROM_MANAGER')) -- save secret in Databricks manager and load it in SQL with secret('<YOUR_SCOPE> ', '<YOUR_SECRET_NAME>')
-    ELSE c.first_name
-  END AS first_name
-FROM
-  live.customer_gold AS c
+-- MAGIC Open the [/01.1-sdp-sql/transformations/03-gold.sql]($./01.1-sdp-sql/transformations/03-gold.sql) file to review the SQL code creating our enriched gold tables.
 
 -- COMMAND ----------
 

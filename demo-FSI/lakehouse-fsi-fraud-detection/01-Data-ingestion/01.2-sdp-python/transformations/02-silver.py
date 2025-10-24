@@ -1,3 +1,12 @@
+# -- ----------------------------------
+# -- Clean and transform transaction data
+# -- - Clean up country codes (remove "--" characters)
+# -- - Calculate balance differences for originating and destination accounts
+# -- - Join with fraud reports to add fraud labels
+# -- - Enforce data quality with expectations on critical fields
+# -- Creates clean dataset ready for analytics and ML feature engineering
+# -- ----------------------------------
+
 import dlt
 from pyspark.sql import functions as F
 

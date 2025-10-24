@@ -67,12 +67,44 @@
       "description": "Introduction notebook, start here to implement your HLS Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01.1-SDP-patient-readmission-SQL", 
+      "path": "01-Data-Ingestion/01.1-SDP-patient-readmission", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Ingest patient & encounter data with Spark Declarative Pipelines", 
       "description": "SQL SDP pipeline to ingest patient data & build clean tables."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/01-bronze", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Bronze transformations", 
+      "description": "Bronze layer transformations"
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/02-silver", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Silver transformations", 
+      "description": "Silver layer transformations"
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/03-gold", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Gold transformations", 
+      "description": "Gold layer transformations"
+    },
+    {
+      "path": "01-Data-Ingestion/explorations/sample_exploration", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Sample exploration", 
+      "description": "Sample exploration notebook for pipeline"
     },
     {
       "path": "02-Data-Governance/02-Data-Governance-patient-readmission", 
@@ -287,16 +319,13 @@
         ],
         "development": True,
         "continuous": False,
-        "channel": "PREVIEW",
-        "edition": "ADVANCED",
+        "channel": "CURRENT",
         "photon": False,
+        "serverless": True,
         "libraries": [
             {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/_resources/01-load-data"
-                },
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-SDP-patient-readmission-SQL"
+                "glob": {
+                    "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
                 }
             }
         ],

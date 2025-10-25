@@ -47,7 +47,7 @@
 # MAGIC
 # MAGIC ## 1/ Data Exploration
 # MAGIC
-# MAGIC All Data projects start with some exploration. Open the [/01.1-sdp-python/explorations/sample_exploration]($./01.1-sdp-python/explorations/sample_exploration) notebook to get started and discover the data made available to you
+# MAGIC All Data projects start with some exploration. Open the [/explorations/sample_exploration]($./explorations/sample_exploration) notebook to get started and discover the data made available to you
 
 # COMMAND ----------
 
@@ -68,7 +68,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Open the [01.1-sdp-python/transformations/01-bronze.py]($./01.1-sdp-python/transformations/01-bronze.py) notebook to review the Python code ingesting the raw data and creating our bronze layer.
+# MAGIC Open the [/transformations/01-bronze.py]($./transformations/01-bronze.py) notebook to review the Python code ingesting the raw data and creating our bronze layer.
 
 # COMMAND ----------
 
@@ -90,7 +90,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Open the [01.1-sdp-python/transformations/02-silver.py]($./01.1-sdp-python/transformations/02-silver.py) notebook to review the Python code creating our clean silver tables.
+# MAGIC Open the [/transformations/02-silver.py]($./transformations/02-silver.py) notebook to review the Python code creating our clean silver tables.
 
 # COMMAND ----------
 
@@ -110,7 +110,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Open the [01.1-sdp-python/transformations/03-gold.py]($./01.1-sdp-python/transformations/03-gold.py) notebook to review the Python code creating our joined gold table.
+# MAGIC Open the [/transformations/03-gold.py]($./transformations/03-gold.py) notebook to review the Python code creating our joined gold table.
 
 # COMMAND ----------
 
@@ -122,4 +122,4 @@
 # MAGIC
 # MAGIC The gold layer also includes geolocation enrichment using the open-source geopy library to add latitude/longitude coordinates to policy addresses, providing better visualization capabilities for Claims Investigators.
 # MAGIC
-# MAGIC Go back to the [00-Smart-Claims-Introduction]($../00-Smart-Claims-Introduction) to explore AI and Data Visualization.
+# MAGIC Go back to the [00-Smart-Claims-Introduction]($../../00-Smart-Claims-Introduction) to explore AI and Data Visualization.

@@ -59,7 +59,7 @@
       "description": "Introduction notebook, start here to implement your FSI Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL",
+      "path": "01-Data-Ingestion/01.1-sdp-sql/01-SDP-Internal-Banking-Data-SQL",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -96,6 +96,38 @@
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
       "title":  "SDP SQL - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-python/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-python/transformations/01-bronze.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-python/transformations/02-silver.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/01.1-sdp-python/transformations/03-gold.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Gold transformations",
       "description": "Gold layer transformations."
     },
     {

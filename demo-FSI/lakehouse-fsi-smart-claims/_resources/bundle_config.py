@@ -50,7 +50,7 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01-SDP-Smart-Claims",
+      "path": "01-Data-Ingestion/01.1-sdp-python/01-SDP-Smart-Claims",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,

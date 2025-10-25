@@ -1,4 +1,4 @@
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
 catalog = "main__build"
@@ -9,7 +9,7 @@ volume_name = "volume_claims"
 # Ingest raw claims data from JSON files
 # Contains claim information: claim numbers, dates, driver details, incident information
 # ----------------------------------
-@dlt.table(comment="The raw claims data loaded from json files.")
+@dp.table(comment="The raw claims data loaded from json files.")
 def raw_claim():
   return (
     spark.readStream.format("cloudFiles")
@@ -21,7 +21,7 @@ def raw_claim():
 # Ingest raw policy data from CSV files
 # Contains policy information: policy numbers, dates, premiums, location details
 # ----------------------------------
-@dlt.table(comment="Policy data loaded from csv files.")
+@dp.table(comment="Policy data loaded from csv files.")
 def raw_policy():
     return (
       spark.readStream.format("cloudFiles")
@@ -34,7 +34,7 @@ def raw_policy():
 # Ingest raw telematics (IoT) streaming data from parquet files
 # Contains vehicle telemetry: speed, GPS coordinates, chassis numbers
 # ----------------------------------
-@dlt.table(comment="Load Telematics (IoT) streaming data")
+@dp.table(comment="Load Telematics (IoT) streaming data")
 def raw_telematics():
   return (
     spark.readStream.format("cloudFiles")

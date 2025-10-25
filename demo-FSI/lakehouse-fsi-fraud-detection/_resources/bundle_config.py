@@ -42,7 +42,7 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-ingestion/01.1-SDP-fraud-detection-SQL",
+      "path": "01-Data-ingestion/01.1-sdp-sql/01-SDP-fraud-detection-SQL",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -50,7 +50,7 @@
       "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/explorations/sample_exploration",
+      "path": "01-Data-ingestion/01.1-sdp-sql/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -58,7 +58,7 @@
       "description": "Sample exploration notebook for pipeline."
     },
     {
-      "path": "01-Data-ingestion/transformations/01-bronze.sql",
+      "path": "01-Data-ingestion/01.1-sdp-sql/transformations/01-bronze.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -66,7 +66,7 @@
       "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-ingestion/transformations/02-silver.sql",
+      "path": "01-Data-ingestion/01.1-sdp-sql/transformations/02-silver.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -74,11 +74,43 @@
       "description": "Silver layer transformations."
     },
     {
-      "path": "01-Data-ingestion/transformations/03-gold.sql",
+      "path": "01-Data-ingestion/01.1-sdp-sql/transformations/03-gold.sql",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
       "title":  "SDP SQL - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-python/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-python/transformations/01-bronze.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-python/transformations/02-silver.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-sdp-python/transformations/03-gold.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP python - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -321,7 +353,7 @@
         "libraries": [
             {
                 "glob": {
-                    "include": "{{DEMO_FOLDER}}/01-Data-ingestion/transformations/**"
+                    "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql/transformations/**"
                 }
             }
         ],

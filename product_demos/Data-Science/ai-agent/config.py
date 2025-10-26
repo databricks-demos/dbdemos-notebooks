@@ -12,8 +12,8 @@
 #Note: we do not recommend to change the catalog here as it won't impact all the demo resources such as DLT pipeline and Dashboards.
 #Instead, please re-install the demo with a specific catalog and schema using dbdemos.install("lakehouse-retail-c360", catalog="..", schema="...")
 
-catalog = "natyra_demo"
-schema = dbName = db = "ai-agent-mcp"
+catalog = "main_build"
+schema = dbName = db = "dbdemos_ai_agent"
 
 volume_name = "raw_data"
 VECTOR_SEARCH_ENDPOINT_NAME="dbdemos_vs_endpoint"

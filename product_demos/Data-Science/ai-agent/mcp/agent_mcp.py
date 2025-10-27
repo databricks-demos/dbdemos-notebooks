@@ -96,7 +96,7 @@ print("✅ Available tools:", AGENT.list_tools())
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/pg-mcp-img1?raw=true?raw=true" width="800px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/ai-agent/pg-mcp-img1.png" width="800px">
 
 # COMMAND ----------
 
@@ -105,7 +105,7 @@ print("✅ Available tools:", AGENT.list_tools())
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/pg-mcp-img2?raw=true?raw=true" width="800px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/ai-agent/pg-mcp-img2.png" width="800">
 
 # COMMAND ----------
 
@@ -115,7 +115,8 @@ print("✅ Available tools:", AGENT.list_tools())
 
 # MAGIC %md
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/ai-agent/pg-mcp-img3?raw=true?raw=true" width="800px">
+# MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/ai-agent/pg-mcp-img3.png" width="800">
+# MAGIC
 
 # COMMAND ----------
 

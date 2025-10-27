@@ -42,7 +42,7 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01.1-sdp-python/01-SDP-Smart-Claims",
+      "path": "01-Data-Ingestion/01-SDP-Smart-Claims",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -50,33 +50,33 @@
       "description": "Python SDP pipeline to ingest claim and policy data."
     },
     {
-      "path": "01-Data-Ingestion/01.1-sdp-python/explorations/sample_exploration",
-      "pre_run": False,
-      "publish_on_website": False,
+      "path": "01-Data-Ingestion/explorations/sample_exploration",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "SDP - Sample exploration",
       "description": "Sample exploration notebook for pipeline."
     },
     {
-      "path": "01-Data-Ingestion/01.1-sdp-python/transformations/01-bronze.py",
+      "path": "01-Data-Ingestion/transformations/01-bronze.py",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "SDP - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-Ingestion/01.1-sdp-python/transformations/02-silver.py",
+      "path": "01-Data-Ingestion/transformations/02-silver.py",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "SDP - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
-      "path": "01-Data-Ingestion/01.1-sdp-python/transformations/03-gold.py",
+      "path": "01-Data-Ingestion/transformations/03-gold.py",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "SDP - Gold transformations",
       "description": "Gold layer transformations."
@@ -290,7 +290,7 @@
         "libraries": [
           {
             "glob": {
-              "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-sdp-python/transformations/**"
+              "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
             }
           }
         ],

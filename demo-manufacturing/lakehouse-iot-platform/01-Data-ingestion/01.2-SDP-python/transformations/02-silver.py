@@ -1,16 +1,16 @@
-import dlt
+from pyspark import pipelines as dp
 
 # ----------------------------------
 # Aggregate raw sensor data into hourly statistical features
 # Compute standard deviations and percentiles for each sensor to detect anomalies and signal degradation
 # These aggregated features are used for ML model training and real-time anomaly detection
 # ----------------------------------
-@dlt.table(
+@dp.materialized_view(
     name="sensor_hourly",
     comment="Hourly sensor stats, used to describe signal and detect anomalies"
 )
-@dlt.expect_or_drop("turbine_id_valid", "turbine_id IS NOT NULL")
-@dlt.expect_or_drop("timestamp_valid", "hourly_timestamp IS NOT NULL")
+@dp.expect_or_drop("turbine_id_valid", "turbine_id IS NOT NULL")
+@dp.expect_or_drop("timestamp_valid", "hourly_timestamp IS NOT NULL")
 def sensor_hourly():
     from pyspark.sql.functions import col, date_trunc, from_unixtime, avg, stddev_pop, expr
     return (

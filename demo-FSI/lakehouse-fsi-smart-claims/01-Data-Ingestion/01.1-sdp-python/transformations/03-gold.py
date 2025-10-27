@@ -1,4 +1,4 @@
-import dlt
+from pyspark import pipelines as dp
 import geopy
 import pandas as pd
 from pyspark.sql.functions import col, pandas_udf
@@ -10,12 +10,12 @@ import random
 # Combines cleaned claim records with corresponding policy information
 # Creates comprehensive claim-policy dataset for downstream analysis and ML models
 # ----------------------------------
-@dlt.table(comment = "Curated claim joined with policy records")
+@dp.table(comment = "Curated claim joined with policy records")
 def claim_policy():
     # Read the staged policy records
-    policy = dlt.read("policy")
+    policy = spark.read.table("policy")
     # Read the staged claim records
-    claim = dlt.readStream("claim")
+    claim = spark.readStream.table("claim")
 
     return claim.join(policy, on="policy_no")
 
@@ -48,9 +48,9 @@ def get_lat_long(batch_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
 # Joins claim_policy with telematics and adds lat/long coordinates
 # Final enriched table for Claims Investigators dashboards
 # ----------------------------------
-@dlt.table(comment="Claims with geolocation latitude/longitude and telematics data")
+@dp.materialized_view(comment="Claims with geolocation latitude/longitude and telematics data")
 def claim_policy_telematics():
-  t = dlt.read("telematics")
-  claim = dlt.read("claim_policy").where("address is not null")
+  t = spark.read.table("telematics")
+  claim = spark.read.table("claim_policy").where("address is not null")
   return (claim.withColumn("lat_long", get_lat_long(col("address")))
                .join(t, on="chassis_no"))

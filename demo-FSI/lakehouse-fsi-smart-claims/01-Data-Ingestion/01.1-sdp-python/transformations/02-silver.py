@@ -1,4 +1,4 @@
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 from pyspark.sql.functions import lit, concat, col
 from pyspark.sql import types as T
@@ -17,9 +17,9 @@ def flatten_struct(df):
 # Compute average speed and GPS coordinates per vehicle
 # Provides vehicle behavior metrics for risk assessment
 # ----------------------------------
-@dlt.table(comment="Average telematics")
+@dp.materialized_view(comment="Average telematics")
 def telematics():
-  return (dlt.read('raw_telematics').groupBy("chassis_no").agg(
+  return (spark.read.table('raw_telematics').groupBy("chassis_no").agg(
                 F.avg("speed").alias("telematics_speed"),
                 F.avg("latitude").alias("telematics_latitude"),
                 F.avg("longitude").alias("telematics_longitude")))
@@ -32,11 +32,11 @@ def telematics():
 # - Remove rescued data
 # - Validate policy numbers
 # ----------------------------------
-@dlt.table
-@dlt.expect_all({"valid_policy_number": "policy_no IS NOT NULL"})
+@dp.table()
+@dp.expect_all({"valid_policy_number": "policy_no IS NOT NULL"})
 def policy():
     # Read the staged policy records into memory
-    return (dlt.readStream("raw_policy")
+    return (spark.readStream.table("raw_policy")
                 .withColumn("premium", F.abs(col("premium")))
                 # Reformat the incident date values
                 .withColumn("pol_eff_date", F.to_date(col("pol_eff_date"), "dd-MM-yyyy"))
@@ -52,11 +52,11 @@ def policy():
 # - Remove rescued data
 # - Validate claim numbers
 # ----------------------------------
-@dlt.table
-@dlt.expect_all({"valid_claim_number": "claim_no IS NOT NULL"})
+@dp.table()
+@dp.expect_all({"valid_claim_number": "claim_no IS NOT NULL"})
 def claim():
     # Read the staged claim records into memory
-    claim = dlt.readStream("raw_claim")
+    claim = spark.readStream.table("raw_claim")
     claim = flatten_struct(claim)
 
     # Update the format of all date/time features

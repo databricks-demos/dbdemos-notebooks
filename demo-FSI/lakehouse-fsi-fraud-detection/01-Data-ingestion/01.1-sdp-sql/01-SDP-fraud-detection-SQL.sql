@@ -121,7 +121,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/01-bronze.sql]($./transformations/01-bronze.sql) file to review the SQL code ingesting the raw data and creating our bronze layer.
+-- MAGIC Open the [/transformations/01-bronze.sql]($./transformations/01-bronze.sql) file to review the SQL code ingesting the raw data and creating our bronze layer.
 
 -- COMMAND ----------
 
@@ -145,7 +145,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/02-silver.sql]($./transformations/02-silver.sql) file to review the SQL code creating our clean silver table.
+-- MAGIC Open the [/transformations/02-silver.sql]($./transformations/02-silver.sql) file to review the SQL code creating our clean silver table.
 
 -- COMMAND ----------
 
@@ -161,7 +161,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/03-gold.sql]($./transformations/03-gold.sql) file to review the SQL code creating our enriched gold table.
+-- MAGIC Open the [/transformations/03-gold.sql]($./transformations/03-gold.sql) file to review the SQL code creating our enriched gold table.
 
 -- COMMAND ----------
 
@@ -180,7 +180,7 @@
 -- MAGIC
 -- MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 -- MAGIC
--- MAGIC Jump to the [Governance with Unity Catalog notebook]($../02-Data-governance/02-UC-data-governance-ACL-fsi-fraud) or [Go back to the introduction]($../00-FSI-fraud-detection-introduction-lakehouse)
+-- MAGIC Jump to the [Governance with Unity Catalog notebook]($../../02-Data-governance/02-UC-data-governance-ACL-fsi-fraud) or [Go back to the introduction]($../../00-FSI-fraud-detection-introduction-lakehouse)
 
 -- COMMAND ----------
 

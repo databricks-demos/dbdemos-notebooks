@@ -68,7 +68,7 @@
     {
       "path": "01-Data-ingestion/01.1-sdp-sql/transformations/02-silver.sql",
       "pre_run": False,
-      "publish_on_website": v,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "SDP SQL - Silver transformations",
       "description": "Silver layer transformations."

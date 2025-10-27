@@ -27,17 +27,20 @@
 
 # COMMAND ----------
 
-
+from databricks.sdk import WorkspaceClient
 import os, sys, yaml, mlflow
 import nest_asyncio
 nest_asyncio.apply()
 
-# ==========================
-# Locate and load base config
-# ==========================
+# --- Paths ---
 agent_eval_path = os.path.abspath(os.path.join(os.getcwd(), "../02-agent-eval"))
 sys.path.append(agent_eval_path)
 conf_path = os.path.join(agent_eval_path, "agent_config.yaml")
+
+# --- Use Databricks SDK to detect workspace URL ---
+ws = WorkspaceClient()
+workspace_url = ws.config.host.rstrip("/") 
+mcp_url = f"{workspace_url}/api/2.0/mcp/functions/system/ai"
 
 # ==========================
 # Update config for MCP
@@ -45,29 +48,20 @@ conf_path = os.path.join(agent_eval_path, "agent_config.yaml")
 try:
     config = yaml.safe_load(open(conf_path))
     config["config_version_name"] = "model_with_mcp"
-    config["mcp_server_urls"] = [
-        "https://adb-984752964297111.11.azuredatabricks.net/api/2.0/mcp/functions/system/ai"
-    ]
+    config["mcp_server_urls"] = [mcp_url]
 
     with open(conf_path, "w") as f:
         yaml.safe_dump(config, f, sort_keys=False)
 
-
 except Exception as e:
-    print(f"⚠️ Skipped MCP update: {e}")
-
-# COMMAND ----------
-
-# Use same experiment to keep all traces together
-#--------Here it exceeds the recursion depth
-#mlflow.set_experiment(agent_eval_path + "/02.1_agent_evaluation")
+    print(f"Skipped MCP update: {e}")
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Instantiate the agent
 # MAGIC
-# MAGIC Next we will instantiate the agent and to make sure we have provided the tools from the managed MCP server, we will check all the available tools that the agent has. In the list, besides the UC functions we have created, we will see also the tools from MCP server which has the UC system ai functions i.e **system__ai__python_exec**.
+# MAGIC Next, we will instantiate the agent and to make sure we have provided the tools from the managed MCP server, we will check all the available tools that the agent has. In the list below, besides the UC functions we have created, we will see also the tools from MCP server which has the UC system ai functions i.e **system__ai__python_exec**.
 
 # COMMAND ----------
 
@@ -128,7 +122,3 @@ print("✅ Available tools:", AGENT.list_tools())
 # MAGIC %md
 # MAGIC ## Next steps
 # MAGIC If you would like to further explore other MCP server options in Databricks, how to test and use them in your agentic system, you could also leverage this Databricks MCP kit in [here](https://github.com/natyra-bajraktari/mcp-accl).
-
-# COMMAND ----------
-
-

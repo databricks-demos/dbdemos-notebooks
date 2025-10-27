@@ -1,4 +1,4 @@
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
 # ----------------------------------
@@ -9,10 +9,10 @@ from pyspark.sql import functions as F
 # - App event statistics: platform, event count, session count, last event
 # - Temporal features: days since creation, last activity, last event
 # ----------------------------------
-@dlt.create_table(comment="Final user table with all information for Analysis / ML")
+@dp.materialized_view(comment="Final user table with all information for Analysis / ML")
 def churn_features():
-  churn_app_events_stats_df = (dlt
-          .read("churn_app_events")
+  churn_app_events_stats_df = (
+          spark.read.table("churn_app_events")
           .groupby("user_id")
           .agg(F.first("platform").alias("platform"),
                F.count('*').alias("event_count"),
@@ -20,8 +20,8 @@ def churn_features():
                F.max(F.to_timestamp("date", "MM-dd-yyyy HH:mm:ss")).alias("last_event"))
                               )
 
-  churn_orders_stats_df = (dlt
-          .read("churn_orders")
+  churn_orders_stats_df = (
+          spark.read.table("churn_orders")
           .groupby("user_id")
           .agg(F.count('*').alias("order_count"),
                F.sum("amount").alias("total_amount"),
@@ -29,8 +29,8 @@ def churn_features():
                F.max("creation_date").alias("last_transaction"))
          )
 
-  return (dlt
-          .read("churn_users")
+  return (
+          spark.read.table("churn_users")
           .join(churn_app_events_stats_df, on="user_id")
           .join(churn_orders_stats_df, on="user_id")
           .withColumn("days_since_creation", F.datediff(F.current_timestamp(), F.col("creation_date")))
@@ -58,8 +58,8 @@ spark.udf.register("predict_churn", predict_churn_udf)
 # ----------------------------------
 model_features = predict_churn_udf.metadata.get_input_schema().input_names()
 
-@dlt.create_table(comment="Customer at risk of churn")
+@dp.materialized_view(comment="Customer at risk of churn")
 def churn_prediction():
-  return (dlt
-          .read('churn_features')
+  return (
+          spark.read.table('churn_features')
           .withColumn('churn_prediction', predict_churn_udf(*model_features)))

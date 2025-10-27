@@ -1,14 +1,14 @@
-import dlt
+from pyspark import pipelines as dp
 
 # ----------------------------------
 # Ingest historical turbine status from JSON files
 # This contains the historical failure data used as labels for our ML model to identify faulty turbines
 # ----------------------------------
-@dlt.table(
+@dp.table(
     name="historical_turbine_status",
     comment="Turbine status to be used as label in our predictive maintenance model (to know which turbine is potentially faulty)"
 )
-@dlt.expect("correct_schema", "_rescued_data IS NULL")
+@dp.expect("correct_schema", "_rescued_data IS NULL")
 def historical_turbine_status():
     return (
         spark.readStream.format("cloudFiles")
@@ -24,11 +24,11 @@ def historical_turbine_status():
 # Contains real-time sensor readings: vibration levels (sensor A-F), energy produced, timestamps, etc.
 # Data quality: drop rows with invalid energy values
 # ----------------------------------
-@dlt.table(
+@dp.table(
     comment="Raw sensor data coming from json files ingested in incremental with Auto Loader: vibration, energy produced etc. 1 point every X sec per sensor."
 )
-@dlt.expect("correct_schema", "_rescued_data IS NULL")
-@dlt.expect_or_drop("correct_energy", "energy IS NOT NULL and energy > 0")
+@dp.expect("correct_schema", "_rescued_data IS NULL")
+@dp.expect_or_drop("correct_energy", "energy IS NOT NULL and energy > 0")
 def sensor_bronze():
     return (
         spark.readStream.format("cloudFiles")
@@ -44,11 +44,11 @@ def sensor_bronze():
 # Contains static turbine information: location (lat/long, state, country), model type, turbine ID
 # This reference data enriches sensor readings with contextual information
 # ----------------------------------
-@dlt.table(
+@dp.table(
     name="turbine",
     comment="Turbine details, with location, wind turbine model type etc"
 )
-@dlt.expect("correct_schema", "_rescued_data IS NULL")
+@dp.expect("correct_schema", "_rescued_data IS NULL")
 def turbine():
     return (
         spark.readStream.format("cloudFiles")

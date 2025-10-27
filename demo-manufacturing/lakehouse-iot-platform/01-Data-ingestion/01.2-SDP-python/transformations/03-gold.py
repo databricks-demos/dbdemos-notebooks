@@ -1,4 +1,4 @@
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
@@ -7,7 +7,7 @@ from pyspark.sql.window import Window
 # Selects the most recent metrics per turbine and joins with location/model information
 # This creates a unified feature set ready for ML model inference
 # ----------------------------------
-@dlt.table(
+@dp.materialized_view(
     name="turbine_current_features",
     comment="Wind turbine features based on model prediction"
 )
@@ -45,7 +45,7 @@ spark.udf.register("predict_maintenance", predict_maintenance_udf)
 # Uses the predict_maintenance UDF (loaded from MLflow registry) to score each turbine
 # Identifies which turbines are likely to fail and need preventive maintenance
 # ----------------------------------
-@dlt.table(
+@dp.materialized_view(
     name="turbine_current_status",
     comment="Wind turbine last status based on model prediction"
 )
@@ -64,7 +64,7 @@ def turbine_current_status():
 # Combines hourly sensor features with known failure periods to create labeled training data
 # The sensor_vector array format is optimized for ML model training
 # ----------------------------------
-@dlt.table(
+@dp.materialized_view(
     name="turbine_training_dataset",
     comment="Hourly sensor stats, used to describe signal and detect anomalies"
 )

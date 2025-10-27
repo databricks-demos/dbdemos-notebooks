@@ -1,4 +1,4 @@
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
 # ----------------------------------
@@ -9,11 +9,11 @@ from pyspark.sql import functions as F
 # - Standardize name capitalization
 # - Cast data types appropriately
 # ----------------------------------
-@dlt.create_table(comment="User data cleaned and anonymized for analysis.")
-@dlt.expect_or_drop("user_valid_id", "user_id IS NOT NULL")
+@dp.table(comment="User data cleaned and anonymized for analysis.")
+@dp.expect_or_drop("user_valid_id", "user_id IS NOT NULL")
 def churn_users():
-  return (dlt
-          .read_stream("churn_users_bronze")
+  return (spark
+          .readStream.table("churn_users_bronze")
           .select(F.col("id").alias("user_id"),
                   F.sha1(F.col("email")).alias("email"),
                   F.to_timestamp(F.col("creation_date"), "MM-dd-yyyy HH:mm:ss").alias("creation_date"),
@@ -34,12 +34,12 @@ def churn_users():
 # - Parse transaction dates
 # - Validate order and user IDs
 # ----------------------------------
-@dlt.create_table(comment="Order data cleaned and anonymized for analysis.")
-@dlt.expect_or_drop("order_valid_id", "order_id IS NOT NULL")
-@dlt.expect_or_drop("order_valid_user_id", "user_id IS NOT NULL")
+@dp.table(comment="Order data cleaned and anonymized for analysis.")
+@dp.expect_or_drop("order_valid_id", "order_id IS NOT NULL")
+@dp.expect_or_drop("order_valid_user_id", "user_id IS NOT NULL")
 def churn_orders():
-  return (dlt
-          .read_stream("churn_orders_bronze")
+  return (spark
+          .readStream.table("churn_orders_bronze")
           .select(F.col("amount").cast("int").alias("amount"),
                   F.col("id").alias("order_id"),
                   F.col("user_id"),

@@ -6,32 +6,32 @@
 
 -- COMMAND ----------
 
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_zone/encounters", format => "parquet" )
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_zone/encounters", format => "parquet" )
 
 -- COMMAND ----------
 
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_zone/patients", format => "parquet");
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_zone/patients", format => "parquet");
 
 -- COMMAND ----------
 
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_zone/conditions", format => "parquet");
-
-
--- COMMAND ----------
-
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_zone/medications", format => "parquet");
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_zone/conditions", format => "parquet");
 
 
 -- COMMAND ----------
 
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_zone/immunizations", format => "parquet");
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_zone/medications", format => "parquet");
 
 
 -- COMMAND ----------
 
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_vocab/CONCEPT", format => "parquet");
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_zone/immunizations", format => "parquet");
 
 
 -- COMMAND ----------
 
-SELECT * FROM read_files("/Volumes/main_build/lakehouse_hls_readmission/synthea/landing_vocab/CONCEPT_RELATIONSHIP", format => "parquet");
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_vocab/CONCEPT", format => "parquet");
+
+
+-- COMMAND ----------
+
+SELECT * FROM read_files("/Volumes/main__build/lakehouse_hls_readmission/synthea/landing_vocab/CONCEPT_RELATIONSHIP", format => "parquet");

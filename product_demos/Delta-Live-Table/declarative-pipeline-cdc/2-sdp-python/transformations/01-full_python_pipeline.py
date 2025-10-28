@@ -1,6 +1,6 @@
 ## This file implements the same logic in python as the SQL version
 
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql.functions import *
 
 
@@ -8,8 +8,6 @@ from pyspark.sql.functions import *
 # --- 1. Ingest data with autoloader: loop on all folders -----------
 # -------------------------------------------------------------------
 # Let's loop over all the folders and dynamically generate our SDP pipeline.
-import dlt
-from pyspark.sql.functions import *
 
 catalog = spark.conf.get("catalog")
 schema = spark.conf.get("schema")
@@ -19,7 +17,7 @@ def create_pipeline(table_name):
 
     ##Raw CDC Table
     # .option("cloudFiles.maxFilesPerTrigger", "1")
-    @dlt.table(
+    @dp.table(
         name=table_name + "_cdc",
         comment=f"New {table_name} data incrementally ingested from cloud object storage landing zone",
     )
@@ -32,19 +30,19 @@ def create_pipeline(table_name):
         )
 
     ##Clean CDC input and track quality with expectations
-    @dlt.view(
+    @dp.temporary_view(
         name=table_name + "_cdc_clean",
         comment="Cleansed cdc data, tracking data quality with a view. We ensude valid JSON, id and operation type",
     )
-    @dlt.expect_or_drop("no_rescued_data", "_rescued_data IS NULL")
-    @dlt.expect_or_drop("valid_id", "id IS NOT NULL")
-    @dlt.expect_or_drop("valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')")
+    @dp.expect_or_drop("no_rescued_data", "_rescued_data IS NULL")
+    @dp.expect_or_drop("valid_id", "id IS NOT NULL")
+    @dp.expect_or_drop("valid_operation", "operation IN ('APPEND', 'DELETE', 'UPDATE')")
     def raw_cdc_clean():
-        return dlt.read_stream(table_name + "_cdc")
+        return spark.readStream.table(table_name + "_cdc")
 
     ##Materialize the final table
-    dlt.create_streaming_table(name=table_name, comment="Clean, materialized " + table_name)
-    dlt.apply_changes(
+    dp.create_streaming_table(name=table_name, comment="Clean, materialized " + table_name)
+    dp.create_auto_cdc_flow(
         target=table_name,  # The customer table being materilized
         source=table_name + "_cdc_clean",  # the incoming CDC
         keys=["id"],  # what we'll be using to match the rows to upsert
@@ -53,7 +51,6 @@ def create_pipeline(table_name):
         apply_as_deletes=expr("operation = 'DELETE'"),  # DELETE condition
         except_column_list=["operation", "operation_date", "_rescued_data"], # in addition we drop metadata columns
     )
-
 
 for folder in dbutils.fs.ls(f"/Volumes/{catalog}/{schema}/raw_data"):
     table_name = folder.name[:-1]
@@ -65,12 +62,12 @@ for folder in dbutils.fs.ls(f"/Volumes/{catalog}/{schema}/raw_data"):
 # ---------------------------------------------------------------
 
 # create the table
-dlt.create_streaming_table(
+dp.create_streaming_table(
     name="SCD2_customers", comment="Slowly Changing Dimension Type 2 for customers"
 )
 
 # store all changes as SCD2
-dlt.apply_changes(
+dp.create_auto_cdc_flow(
     target="SCD2_customers",
     source="customers_cdc_clean",
     keys=["id"],

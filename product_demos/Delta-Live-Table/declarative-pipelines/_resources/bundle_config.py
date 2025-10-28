@@ -59,7 +59,7 @@
       {
         "path": "1-sdp-sql/transformations/01-bronze.sql", 
         "pre_run": False, 
-        "publish_on_website": False, 
+        "publish_on_website": True, 
         "add_cluster_setup_cell": False,
         "title":  "Bronze SQL tables", 
         "description": "Ingest the raw data."
@@ -67,7 +67,7 @@
       {
         "path": "1-sdp-sql/transformations/02-silver.sql", 
         "pre_run": False, 
-        "publish_on_website": False, 
+        "publish_on_website": True, 
         "add_cluster_setup_cell": False,
         "title":  "Silver SQL tables", 
         "description": "Clean and prepare your data."
@@ -75,7 +75,7 @@
       {
         "path": "1-sdp-sql/transformations/03-gold.sql", 
         "pre_run": False, 
-        "publish_on_website": False, 
+        "publish_on_website": True, 
         "add_cluster_setup_cell": False,
         "title":  "Gold SQL tables", 
         "description": "Final aggregation layer, for ML and BI usage."
@@ -91,7 +91,7 @@
       {
         "path": "2-sdp-python/transformations/01-bronze.py", 
         "pre_run": False, 
-        "publish_on_website": False, 
+        "publish_on_website": True, 
         "add_cluster_setup_cell": False,
         "title":  "Bronze SQL tables", 
         "description": "Ingest the raw data using python."
@@ -99,7 +99,7 @@
       {
         "path": "2-sdp-python/transformations/02-silver.py", 
         "pre_run": False, 
-        "publish_on_website": False, 
+        "publish_on_website": True, 
         "add_cluster_setup_cell": False,
         "title":  "Silver SQL tables", 
         "description": "Clean and prepare your data using python."
@@ -107,7 +107,7 @@
       {
         "path": "2-sdp-python/transformations/03-gold.py", 
         "pre_run": False, 
-        "publish_on_website": False, 
+        "publish_on_website": True, 
         "add_cluster_setup_cell": False,
         "title":  "Gold SQL tables", 
         "description": "Final aggregation layer, for ML and BI usage using python."

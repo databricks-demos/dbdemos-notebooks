@@ -159,7 +159,7 @@
                 "email_notifications": {}
             },
             {
-                "task_key": "claim_policy_dlt_pipeline",
+                "task_key": "claim_policy_sdp_pipeline",
                 "pipeline_task": {
                     "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-fsi-smart-claims}}",
                     "full_refresh": True
@@ -198,7 +198,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "claim_policy_dlt_pipeline"
+                          "task_key": "claim_policy_sdp_pipeline"
                       },
                       {
                           "task_key": "train_model"
@@ -301,6 +301,11 @@
         "photon": False,
         "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
+        "event_log": {
+              "catalog": "{{CATALOG}}",
+              "schema": "{{SCHEMA}}",
+              "name": "dbdemos_smart_claims_event_logs"
+        },
         "root_path": "{{DEMO_FOLDER}}/01-Data-Ingestion",
         "environment": {
           "dependencies": ["geopy==2.4.1"]

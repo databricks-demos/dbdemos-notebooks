@@ -35,7 +35,15 @@
       "description": "CDC flow in SQL with Declarative Pipelines"
     },
     {
-      "path": "transformations/01-sql_cdc_pipeline.sql", 
+      "path": "1-sdp-sql/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "1-sdp-sql/transformations/01-sql_cdc_pipeline.sql", 
       "pre_run": False, 
       "publish_on_website": False, 
       "add_cluster_setup_cell": False,
@@ -43,7 +51,15 @@
       "description": "Use SQL to create a CDC pipelines with SCDT2."
     },
     {
-      "path": "transformations/02-full_python_pipeline.py", 
+      "path": "2-sdp-python/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "2-sdp-python/transformations/01-full_python_pipeline.py", 
       "pre_run": False, 
       "publish_on_website": False, 
       "add_cluster_setup_cell": False,
@@ -135,7 +151,7 @@
         "photon": False,
         "root_path": "{{DEMO_FOLDER}}",
         "libraries": [
-            {"glob": {"include": "{{DEMO_FOLDER}}/transformations/01-sql_cdc_pipeline.sql"}}
+            {"glob": {"include": "{{DEMO_FOLDER}}/1-sdp-sql/transformations/**"}}
         ],
         "name": "dbdemos_pipeline_cdc_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",

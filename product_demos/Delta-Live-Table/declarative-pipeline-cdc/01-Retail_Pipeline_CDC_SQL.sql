@@ -70,10 +70,18 @@
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC
+-- MAGIC ## Data Exploration
+-- MAGIC
+-- MAGIC All Data projects start with some exploration. Open the [/1-sdp-sql/explorations/sample_exploration]($./1-sdp-sql/explorations/sample_exploration) notebook to get started and discover the data made available to you
+
+-- COMMAND ----------
+
 -- MAGIC %md 
 -- MAGIC ## Ready to implement your pipeline ? 
 -- MAGIC
--- MAGIC Open [transformations/01-sql_cdc_pipeline.sql]($./transformations/01-sql_cdc_pipeline.sql) to get started and explore how to do CDC with SDP!
+-- MAGIC Open [/1-sdp-sql/transformations/01-sql_cdc_pipeline.sql]($./1-sdp-sql/transformations/01-sql_cdc_pipeline.sql) to get started and explore how to do CDC with SDP!
 -- MAGIC
 -- MAGIC The sql script implements the following steps:
 
@@ -176,4 +184,4 @@
 -- MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/cdc_dlt_pipeline_full.png" width="1000"/>
 -- MAGIC
 -- MAGIC
--- MAGIC Open the [transformations/02-full_python_pipeline.py]($./transformations/02-full_python_pipeline.py) to see how it's done!
+-- MAGIC Open the [/2-sdp-python/transformations/01-full_python_pipeline.py]($./2-sdp-python/transformations/01-full_python_pipeline.py) to see how it's done!

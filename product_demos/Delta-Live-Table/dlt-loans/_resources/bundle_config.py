@@ -82,7 +82,7 @@
                   "email_notifications": {}
               },
               {
-                  "task_key": "start_dlt_pipeline",
+                  "task_key": "start_sdp_pipeline",
                   "pipeline_task": {
                       "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-loans}}",
                       "full_refresh": true

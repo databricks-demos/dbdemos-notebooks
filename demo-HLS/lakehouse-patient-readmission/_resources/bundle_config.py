@@ -193,7 +193,7 @@
                 "email_notifications": {}
             }, 
             {
-                "task_key": "start_dlt_pipeline",
+                "task_key": "start_sdp_pipeline",
                 "pipeline_task": {
                     "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-patient-readmission}}",
                     "full_refresh": false
@@ -211,7 +211,7 @@
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
-                "depends_on": [{"task_key": "start_dlt_pipeline"}]
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
             },
             {
                 "task_key": "feature_engineering",

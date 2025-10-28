@@ -33,7 +33,7 @@
         "description": "Start here to learn about your Pipeline"
       },
       {
-        "path": "explorations/01-Exploring-the-Data", 
+        "path": "1-sdp-sql/explorations/01-Exploring-the-Data", 
         "pre_run": True, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
@@ -41,7 +41,7 @@
         "description": "Run interactive queries to better understand your data"
       },
       {
-        "path": "explorations/02-Pipeline-event-monitoring", 
+        "path": "1-sdp-sql/explorations/02-Pipeline-event-monitoring", 
         "pre_run": True, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
@@ -49,7 +49,7 @@
         "description": "Interactive queries to learn about your Declarative Pipeline metadata."
       },
       {
-        "path": "transformations/00-pipeline-tutorial", 
+        "path": "01-pipeline-tutorial", 
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
@@ -57,7 +57,7 @@
         "description": "Learn about Streaming table, Materialized view and more."
       },
       {
-        "path": "transformations/01-bronze.sql", 
+        "path": "1-sdp-sql/transformations/01-bronze.sql", 
         "pre_run": False, 
         "publish_on_website": False, 
         "add_cluster_setup_cell": False,
@@ -65,7 +65,7 @@
         "description": "Ingest the raw data."
       },
       {
-        "path": "transformations/02-silver.sql", 
+        "path": "1-sdp-sql/transformations/02-silver.sql", 
         "pre_run": False, 
         "publish_on_website": False, 
         "add_cluster_setup_cell": False,
@@ -73,12 +73,44 @@
         "description": "Clean and prepare your data."
       },
       {
-        "path": "transformations/03-gold.sql", 
+        "path": "1-sdp-sql/transformations/03-gold.sql", 
         "pre_run": False, 
         "publish_on_website": False, 
         "add_cluster_setup_cell": False,
         "title":  "Gold SQL tables", 
         "description": "Final aggregation layer, for ML and BI usage."
+      },
+      {
+        "path": "2-sdp-python/explorations/01-Exploring-the-Data", 
+        "pre_run": True, 
+        "publish_on_website": True, 
+        "add_cluster_setup_cell": False,
+        "title":  "Data Exploration", 
+        "description": "Run interactive queries to better understand your data"
+      },
+      {
+        "path": "2-sdp-python/transformations/01-bronze.py", 
+        "pre_run": False, 
+        "publish_on_website": False, 
+        "add_cluster_setup_cell": False,
+        "title":  "Bronze SQL tables", 
+        "description": "Ingest the raw data using python."
+      },
+      {
+        "path": "2-sdp-python/transformations/02-silver.py", 
+        "pre_run": False, 
+        "publish_on_website": False, 
+        "add_cluster_setup_cell": False,
+        "title":  "Silver SQL tables", 
+        "description": "Clean and prepare your data using python."
+      },
+      {
+        "path": "2-sdp-python/transformations/03-gold.py", 
+        "pre_run": False, 
+        "publish_on_website": False, 
+        "add_cluster_setup_cell": False,
+        "title":  "Gold SQL tables", 
+        "description": "Final aggregation layer, for ML and BI usage using python."
       },
       {
         "path": "deployment/01-Using-DABs", 
@@ -181,9 +213,7 @@
           "photon": False,
           "root_path": "{{DEMO_FOLDER}}",
           "libraries": [
-              {"glob": {"include": "{{DEMO_FOLDER}}/transformations/01-bronze.sql"}},
-              {"glob": {"include": "{{DEMO_FOLDER}}/transformations/02-silver.sql"}},
-              {"glob": {"include": "{{DEMO_FOLDER}}/transformations/03-gold.sql"}}
+              {"glob": {"include": "{{DEMO_FOLDER}}/1-sdp-sql/transformations/**"}}
           ],
           "name": "dbdemos_pipeline_bike_{{CATALOG}}_{{SCHEMA}}",
           "catalog": "{{CATALOG}}",

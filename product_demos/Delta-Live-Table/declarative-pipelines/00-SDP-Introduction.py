@@ -22,7 +22,7 @@
 
 # MAGIC %md
 # MAGIC #### 1/ Exploring the data
-# MAGIC First, open the [notebook in the Exploration folder]($./explorations/01-Exploring-the-Data) to discover our dataset.
+# MAGIC First, open the [notebook in the Exploration folder]($./1-sdp-sql/explorations/01-Exploring-the-Data) to discover our dataset.
 # MAGIC
 # MAGIC We'll consume data from 4 sources, all available to us as raw CSV or JSON file in our schema volume:
 # MAGIC
@@ -51,7 +51,7 @@
 # MAGIC
 # MAGIC Now that we reviewed the data available to us, it's time to start creating our pipeline! We'll do it one step at a time.
 # MAGIC
-# MAGIC Open the [00-pipeline-tutorial notebook]($./transformations/00-pipeline-tutorial) if you want to start with the basics behind Streaming Table and Materialized View.
+# MAGIC Open the [01-pipeline-tutorial notebook]($./01-pipeline-tutorial) if you want to start with the basics behind Streaming Table and Materialized View.
 # MAGIC
 # MAGIC <table>
 # MAGIC   <tr>

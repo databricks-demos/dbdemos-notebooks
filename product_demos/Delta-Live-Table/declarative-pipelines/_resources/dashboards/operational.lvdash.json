@@ -1,0 +1,1993 @@
+{
+  "datasets": [
+    {
+      "name": "ee59747e",
+      "displayName": "Pipeline_Run_Status",
+      "queryLines": [
+        "-- ============================================================================\n",
+        "-- Pipeline Update Lifecycle Summary\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- This query processes raw event logs to extract pipeline update state,\n",
+        "-- compute lifecycle duration, and determine the final status of each update.\n",
+        "-- ============================================================================\n",
+        "\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- Step 1: Extract and normalize relevant fields from the raw event log\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "WITH curated_event_log AS (\n",
+        "    SELECT\n",
+        "        origin.pipeline_id AS pipeline_id,\n",
+        "        origin.pipeline_name AS pipeline_name,\n",
+        "        origin.update_id AS pipeline_update_id,\n",
+        "        id,\n",
+        "        timestamp,\n",
+        "        level,\n",
+        "        event_type,\n",
+        "        details\n",
+        "    FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs\n",
+        "),\n",
+        "\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- Step 2: Parse `update_progress` events to extract state field\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "parsed_update_progress AS (\n",
+        "    SELECT\n",
+        "        *,\n",
+        "        FROM_JSON(details, 'struct<update_progress: struct<state: string>>') AS upd\n",
+        "    FROM curated_event_log\n",
+        "    WHERE event_type = 'update_progress'\n",
+        "),\n",
+        "\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- Step 3: Identify the last known state for each update_id\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "last_status_per_update AS (\n",
+        "    SELECT\n",
+        "        pipeline_id,\n",
+        "        pipeline_update_id,\n",
+        "        pipeline_name,\n",
+        "        upd.update_progress.state AS last_update_state,\n",
+        "        timestamp,\n",
+        "        ROW_NUMBER() OVER (\n",
+        "            PARTITION BY pipeline_update_id\n",
+        "            ORDER BY timestamp DESC\n",
+        "        ) AS rn\n",
+        "    FROM parsed_update_progress\n",
+        "    QUALIFY rn = 1\n",
+        "),\n",
+        "\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- Step 4: Compute start and end timestamps and total duration\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "update_durations AS (\n",
+        "    SELECT\n",
+        "        pipeline_id,\n",
+        "        pipeline_name,\n",
+        "        pipeline_update_id,\n",
+        "\n",
+        "        -- Capture the start of the update\n",
+        "        MIN(CASE WHEN event_type = 'create_update' THEN timestamp END) AS start_time,\n",
+        "\n",
+        "        -- Capture the end of the update based on terminal states\n",
+        "        MAX(CASE\n",
+        "            WHEN event_type = 'update_progress'\n",
+        "             AND FROM_JSON(details, 'struct<update_progress: struct<state: string>>').update_progress.state IN ('COMPLETED', 'FAILED', 'CANCELLED')\n",
+        "            THEN timestamp\n",
+        "        END) AS end_time,\n",
+        "\n",
+        "        -- Calculate duration in seconds\n",
+        "        TIMESTAMPDIFF(\n",
+        "            SECOND,\n",
+        "            MIN(CASE WHEN event_type = 'create_update' THEN timestamp END),\n",
+        "            MAX(CASE\n",
+        "                WHEN event_type = 'update_progress'\n",
+        "                 AND FROM_JSON(details, 'struct<update_progress: struct<state: string>>').update_progress.state IN ('COMPLETED', 'FAILED', 'CANCELLED')\n",
+        "                THEN timestamp\n",
+        "            END)\n",
+        "        ) AS duration_seconds\n",
+        "\n",
+        "    FROM curated_event_log\n",
+        "    WHERE event_type IN ('create_update', 'update_progress')\n",
+        "      AND pipeline_update_id IS NOT NULL\n",
+        "    GROUP BY pipeline_id, pipeline_name, pipeline_update_id\n",
+        "    HAVING start_time IS NOT NULL AND end_time IS NOT NULL\n",
+        ")\n",
+        "\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- Step 5: Join final status and duration metrics, filter to latest state\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "SELECT\n",
+        "    s.pipeline_id,\n",
+        "    s.pipeline_name,\n",
+        "    s.pipeline_update_id,\n",
+        "    d.start_time,\n",
+        "    d.end_time,\n",
+        "    d.duration_seconds,\n",
+        "    s.last_update_state AS pipeline_update_status\n",
+        "FROM last_status_per_update s\n",
+        "JOIN update_durations d\n",
+        "  ON s.pipeline_id = d.pipeline_id\n",
+        " AND s.pipeline_update_id = d.pipeline_update_id\n",
+        "ORDER BY d.end_time DESC;\n",
+        "\n"
+      ]
+    },
+    {
+      "name": "9f3b86f2",
+      "displayName": "MV_Refresh_Info",
+      "queryLines": [
+        "-- ============================================================================\n",
+        "-- Step 1: Identify the latest update_id per pipeline from event_log_raw\n",
+        "-- ============================================================================\n",
+        "WITH latest_update AS (\n",
+        "  SELECT \n",
+        "    origin.pipeline_id,\n",
+        "    origin.update_id AS latest_update_id\n",
+        "  FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs AS origin\n",
+        "  WHERE origin.event_type = 'create_update'\n",
+        "  ORDER BY timestamp DESC \n",
+        "  -- LIMIT 1 -- remove if you want to get all of the update_ids\n",
+        "),\n",
+        "\n",
+        "-- ============================================================================\n",
+        "-- Step 2: Parse the planning_information JSON into a structured format\n",
+        "-- ============================================================================\n",
+        "parsed_planning AS (\n",
+        "  SELECT\n",
+        "    origin.pipeline_name,\n",
+        "    origin.pipeline_id,\n",
+        "    origin.flow_name,\n",
+        "    lu.latest_update_id,\n",
+        "    from_json(\n",
+        "      details:planning_information,\n",
+        "      'struct<\n",
+        "        technique_information: array<struct<\n",
+        "          maintenance_type: string,\n",
+        "          is_chosen: boolean,\n",
+        "          is_applicable: boolean,\n",
+        "          cost: double,\n",
+        "          incrementalization_issues: array<struct<\n",
+        "            issue_type: string,\n",
+        "            prevent_incrementalization: boolean,\n",
+        "            operator_name: string,\n",
+        "            plan_not_incrementalizable_sub_type: string,\n",
+        "            expression_name: string,\n",
+        "            plan_not_deterministic_sub_type: string\n",
+        "          >>\n",
+        "        >>\n",
+        "      >'\n",
+        "    ) AS parsed\n",
+        "  FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs AS origin\n",
+        "  JOIN latest_update lu \n",
+        "    ON origin.update_id = lu.latest_update_id\n",
+        "  WHERE details:planning_information IS NOT NULL\n",
+        "),\n",
+        "\n",
+        "-- ============================================================================\n",
+        "-- Step 3: Extract the chosen technique from the array 'technique_information'\n",
+        "-- ============================================================================\n",
+        "chosen_technique AS (\n",
+        "  SELECT\n",
+        "    pipeline_name,\n",
+        "    pipeline_id,\n",
+        "    flow_name,\n",
+        "    latest_update_id,\n",
+        "    FILTER(parsed.technique_information, t -> t.is_chosen = true)[0] AS chosen_technique,\n",
+        "    parsed.technique_information AS planning_information\n",
+        "  FROM parsed_planning\n",
+        ")\n",
+        "\n",
+        "-- ============================================================================\n",
+        "-- Final Step: Select and display the results\n",
+        "-- ============================================================================\n",
+        "SELECT\n",
+        "  pipeline_name,\n",
+        "  pipeline_id,\n",
+        "  flow_name,\n",
+        "  latest_update_id,\n",
+        "  chosen_technique.maintenance_type,\n",
+        "  chosen_technique,\n",
+        "  planning_information\n",
+        "FROM chosen_technique\n",
+        "ORDER BY latest_update_id DESC;\n"
+      ]
+    },
+    {
+      "name": "0cfc2c44",
+      "displayName": "Billing_Info",
+      "queryLines": [
+        "WITH first_pipeline_id AS (\n",
+        "  SELECT first(origin['pipeline_id'], TRUE) AS id\n",
+        "  FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs\n",
+        ")\n",
+        "\n",
+        "SELECT\n",
+        "  sku_name,\n",
+        "  billing_origin_product,\n",
+        "  usage_date,\n",
+        "  collect_set(identity_metadata.run_as) AS users,\n",
+        "  SUM(usage_quantity) AS `DBUs`\n",
+        "FROM\n",
+        "  system.billing.usage\n",
+        "WHERE\n",
+        "  usage_metadata.dlt_pipeline_id = (SELECT id FROM first_pipeline_id)\n",
+        "GROUP BY\n",
+        "  sku_name,\n",
+        "  billing_origin_product,\n",
+        "  usage_date;"
+      ]
+    },
+    {
+      "name": "9ab40944",
+      "displayName": "Flow_Details",
+      "queryLines": [
+        "-- ============================================================================\n",
+        "-- Flow Metrics and Duration Calculation\n",
+        "-- ----------------------------------------------------------------------------\n",
+        "-- This query extracts flow progress events, computes start/end times and final\n",
+        "-- statuses, aggregates metrics, and calculates duration as (end - start) in seconds.\n",
+        "-- ============================================================================\n",
+        "\n",
+        "WITH flow_progress_raw AS (\n",
+        "  SELECT \n",
+        "    origin.pipeline_name         AS pipeline_name,\n",
+        "    origin.pipeline_id           AS pipeline_id,\n",
+        "    origin.flow_name             AS table_name,\n",
+        "    origin.update_id             AS update_id,\n",
+        "    timestamp,\n",
+        "    details:flow_progress.status AS status,\n",
+        "\n",
+        "    -- Extract numeric metrics from the flow progress details\n",
+        "    TRY_CAST(details:flow_progress.metrics.num_output_rows AS BIGINT)      AS num_output_rows,\n",
+        "    TRY_CAST(details:flow_progress.metrics.num_upserted_rows AS BIGINT)    AS num_upserted_rows,\n",
+        "    TRY_CAST(details:flow_progress.metrics.num_deleted_rows AS BIGINT)     AS num_deleted_rows,\n",
+        "    TRY_CAST(details:flow_progress.data_quality.dropped_records AS BIGINT) AS num_expectation_dropped_rows,\n",
+        "\n",
+        "    -- Extract JSON array of data quality expectations\n",
+        "    FROM_JSON(\n",
+        "      details:flow_progress.data_quality.expectations,\n",
+        "      SCHEMA_OF_JSON(\"[{'name':'str', 'dataset':'str', 'passed_records':42, 'failed_records':42}]\")\n",
+        "    ) AS expectations_array\n",
+        "\n",
+        "  FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs\n",
+        "  WHERE event_type = 'flow_progress'\n",
+        "    AND origin.flow_name IS NOT NULL\n",
+        "    AND origin.flow_name != 'pipelines.flowTimeMetrics.missingFlowName'\n",
+        "),\n",
+        "\n",
+        "aggregated_flows AS (\n",
+        "  SELECT\n",
+        "    pipeline_name,\n",
+        "    pipeline_id,\n",
+        "    update_id,\n",
+        "    table_name,\n",
+        "\n",
+        "    -- Earliest start time for relevant statuses\n",
+        "    MIN(CASE WHEN status IN ('STARTING', 'RUNNING', 'COMPLETED') THEN timestamp END) AS start_timestamp,\n",
+        "\n",
+        "    -- Latest end time for relevant statuses\n",
+        "    MAX(CASE WHEN status IN ('STARTING', 'RUNNING', 'COMPLETED') THEN timestamp END) AS end_timestamp,\n",
+        "\n",
+        "    -- Most recent terminal status per flow\n",
+        "    MAX_BY(status, timestamp) FILTER (\n",
+        "      WHERE status IN ('COMPLETED', 'FAILED', 'CANCELLED', 'EXCLUDED', 'SKIPPED', 'STOPPED', 'IDLE')\n",
+        "    ) AS final_status,\n",
+        "\n",
+        "    -- Aggregate numeric metrics\n",
+        "    SUM(COALESCE(num_output_rows, 0))              AS total_output_records,\n",
+        "    SUM(COALESCE(num_upserted_rows, 0))            AS total_upserted_records,\n",
+        "    SUM(COALESCE(num_deleted_rows, 0))             AS total_deleted_records,\n",
+        "    MAX(COALESCE(num_expectation_dropped_rows, 0)) AS total_expectation_dropped_records,\n",
+        "\n",
+        "    -- Consolidate expectations arrays\n",
+        "    MAX(expectations_array)                        AS total_expectations\n",
+        "\n",
+        "  FROM flow_progress_raw\n",
+        "  GROUP BY pipeline_name, pipeline_id, update_id, table_name\n",
+        ")\n",
+        "\n",
+        "SELECT \n",
+        "  af.pipeline_name,\n",
+        "  af.pipeline_id,\n",
+        "  af.update_id,\n",
+        "  af.table_name,\n",
+        "  af.start_timestamp,\n",
+        "  af.end_timestamp,\n",
+        "  af.final_status,\n",
+        "\n",
+        "  -- Calculate duration in seconds, rounded to nearest integer\n",
+        "  CASE \n",
+        "    WHEN af.start_timestamp IS NOT NULL AND af.end_timestamp IS NOT NULL THEN\n",
+        "      ROUND(TIMESTAMPDIFF(MILLISECOND, af.start_timestamp, af.end_timestamp) / 1000)\n",
+        "    ELSE NULL\n",
+        "  END AS duration_seconds,\n",
+        "\n",
+        "  af.total_output_records,\n",
+        "  af.total_upserted_records,\n",
+        "  af.total_deleted_records,\n",
+        "  af.total_expectation_dropped_records,\n",
+        "  af.total_expectations\n",
+        "\n",
+        "FROM aggregated_flows af\n",
+        "\n",
+        "-- Optional: filter to latest update only\n",
+        "WHERE af.update_id = (\n",
+        "  SELECT update_id\n",
+        "  FROM aggregated_flows\n",
+        "  ORDER BY end_timestamp DESC\n",
+        "  LIMIT 1\n",
+        ")\n",
+        "\n",
+        "ORDER BY af.end_timestamp DESC, af.pipeline_name, af.pipeline_id, af.update_id, af.table_name;\n"
+      ]
+    },
+    {
+      "name": "8378c4ab",
+      "displayName": "Data_Lineage",
+      "queryLines": [
+        "with latest_update as (\n",
+        "  SELECT origin.update_id as id\n",
+        "    FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs \n",
+        "    WHERE event_type = 'create_update' \n",
+        "    ORDER BY timestamp DESC \n",
+        "    limit 1 -- remove if you want all of the update_ids\n",
+        ")\n",
+        "SELECT\n",
+        "  details:flow_definition.output_dataset as flow_name,\n",
+        "  details:flow_definition.input_datasets as input_flow_names,\n",
+        "  details:flow_definition.flow_type as flow_type, \n",
+        "  details:flow_definition.schema, -- the schema of the flow \n",
+        "  details:flow_definition -- overall flow_definition object\n",
+        "FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs inner join latest_update on origin.update_id = latest_update.id\n",
+        "WHERE details:flow_definition IS NOT NULL \n",
+        "ORDER BY timestamp\n",
+        "LIMIT 10;"
+      ]
+    },
+    {
+      "name": "7b2db394",
+      "displayName": "Flow_Configuration_Overview",
+      "queryLines": [
+        "with latest_update as (\n",
+        "  SELECT origin.update_id as id\n",
+        "    FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs \n",
+        "    WHERE event_type = 'create_update' \n",
+        "    ORDER BY timestamp DESC \n",
+        "    -- limit 1 -- remove if you want all of the update_ids\n",
+        ")\n",
+        "SELECT\n",
+        "  e.details:flow_definition.output_dataset as flow_name,\n",
+        "  e.details:flow_definition.input_datasets as input_flow_names,\n",
+        "  e.details:flow_definition.flow_type as flow_type, \n",
+        "  e.details:flow_definition.schema, -- the schema of the flow \n",
+        "  e.details:flow_definition -- overall flow_definition object\n",
+        "FROM main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e  inner join latest_update on origin.update_id = latest_update.id\n",
+        "WHERE details:flow_definition IS NOT NULL \n",
+        "ORDER BY timestamp\n",
+        "LIMIT 10;"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "56ef3231",
+      "displayName": "Event Log Dashboard",
+      "layout": [
+        {
+          "widget": {
+            "name": "c2592514",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Event Log Dashboard\n",
+                "This is a sample dashboard that pulls from the Event Log. "
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "e750ffed",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Overview\n",
+                "### Run Status"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "6f17e315",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ee59747e",
+                  "fields": [
+                    {
+                      "name": "pipeline_update_id",
+                      "expression": "`pipeline_update_id`"
+                    },
+                    {
+                      "name": "pipeline_update_status",
+                      "expression": "`pipeline_update_status`"
+                    },
+                    {
+                      "name": "duration_seconds",
+                      "expression": "`duration_seconds`"
+                    },
+                    {
+                      "name": "start_time",
+                      "expression": "`start_time`"
+                    },
+                    {
+                      "name": "end_time",
+                      "expression": "`end_time`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "pipeline_update_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 2,
+                    "title": "pipeline_update_id",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": true,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "pipeline_update_id"
+                  },
+                  {
+                    "fieldName": "pipeline_update_status",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 3,
+                    "title": "pipeline_update_status",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "pipeline_update_status"
+                  },
+                  {
+                    "fieldName": "duration_seconds",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 4,
+                    "title": "duration_seconds",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "duration_seconds"
+                  },
+                  {
+                    "fieldName": "start_time",
+                    "dateTimeFormat": "DD/MM/YY HH:mm:ss.SSS",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "datetime",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 5,
+                    "title": "start_time",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "start_time"
+                  },
+                  {
+                    "fieldName": "end_time",
+                    "dateTimeFormat": "DD/MM/YY HH:mm:ss.SSS",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "datetime",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 6,
+                    "title": "end_time",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "end_time"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "pipeline_id",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 0,
+                  "title": "pipeline_id",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "pipeline_name",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 1,
+                  "title": "pipeline_name",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bdd2f2c7",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Material View Incrementalization"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "86d69e88",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9f3b86f2",
+                  "fields": [
+                    {
+                      "name": "latest_update_id",
+                      "expression": "`latest_update_id`"
+                    },
+                    {
+                      "name": "flow_name",
+                      "expression": "`flow_name`"
+                    },
+                    {
+                      "name": "maintenance_type",
+                      "expression": "`maintenance_type`"
+                    },
+                    {
+                      "name": "chosen_technique",
+                      "expression": "`chosen_technique`"
+                    },
+                    {
+                      "name": "planning_information",
+                      "expression": "`planning_information`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`latest_update_id` IN (`latest_update_id`) OR TRUE"
+                    },
+                    {
+                      "expression": "`flow_name` IN (`flow_name`) OR TRUE"
+                    },
+                    {
+                      "expression": "`chosen_technique` IN (`chosen_technique`) OR TRUE"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "latest_update_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 2,
+                    "title": "latest_update_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "latest_update_id"
+                  },
+                  {
+                    "fieldName": "flow_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 3,
+                    "title": "flow_name",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "flow_name"
+                  },
+                  {
+                    "fieldName": "maintenance_type",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 4,
+                    "title": "maintenance_type",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "maintenance_type"
+                  },
+                  {
+                    "fieldName": "chosen_technique",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "json",
+                    "visible": true,
+                    "order": 5,
+                    "title": "chosen_technique",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "chosen_technique"
+                  },
+                  {
+                    "fieldName": "planning_information",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "json",
+                    "visible": true,
+                    "order": 6,
+                    "title": "planning_information",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "planning_information"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "pipeline_name",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 0,
+                  "title": "pipeline_name",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "pipeline_id",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 1,
+                  "title": "pipeline_id",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "539bfe64",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Billing"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "dea50847",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "0cfc2c44",
+                  "fields": [
+                    {
+                      "name": "billing_origin_product",
+                      "expression": "`billing_origin_product`"
+                    },
+                    {
+                      "name": "daily(usage_date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `usage_date`)"
+                    },
+                    {
+                      "name": "sum(DBUs)",
+                      "expression": "SUM(`DBUs`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(usage_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "usage_date"
+                },
+                "y": {
+                  "fieldName": "sum(DBUs)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of DBUs"
+                },
+                "color": {
+                  "fieldName": "billing_origin_product",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "billing_origin_product"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "3cfdb504",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "0cfc2c44",
+                  "fields": [
+                    {
+                      "name": "usage_date",
+                      "expression": "`usage_date`"
+                    },
+                    {
+                      "name": "billing_origin_product",
+                      "expression": "`billing_origin_product`"
+                    },
+                    {
+                      "name": "DBUs",
+                      "expression": "`DBUs`"
+                    },
+                    {
+                      "name": "sku_name",
+                      "expression": "`sku_name`"
+                    },
+                    {
+                      "name": "users",
+                      "expression": "`users`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "usage_date",
+                    "dateTimeFormat": "DD/MM/YY",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "date",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 0,
+                    "title": "usage_date",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "usage_date"
+                  },
+                  {
+                    "fieldName": "billing_origin_product",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 1,
+                    "title": "billing_origin_product",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "billing_origin_product"
+                  },
+                  {
+                    "fieldName": "DBUs",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "decimal",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 2,
+                    "title": "DBUs",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "DBUs"
+                  },
+                  {
+                    "fieldName": "sku_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 3,
+                    "title": "sku_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "sku_name"
+                  },
+                  {
+                    "fieldName": "users",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "json",
+                    "visible": true,
+                    "order": 4,
+                    "title": "users",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "users"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 21,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "0483ce1b",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Advanced Queries\n",
+                "### Flow Details"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 27,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "8513bdb1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9ab40944",
+                  "fields": [
+                    {
+                      "name": "update_id",
+                      "expression": "`update_id`"
+                    },
+                    {
+                      "name": "table_name",
+                      "expression": "`table_name`"
+                    },
+                    {
+                      "name": "start_timestamp",
+                      "expression": "`start_timestamp`"
+                    },
+                    {
+                      "name": "end_timestamp",
+                      "expression": "`end_timestamp`"
+                    },
+                    {
+                      "name": "final_status",
+                      "expression": "`final_status`"
+                    },
+                    {
+                      "name": "duration_seconds",
+                      "expression": "`duration_seconds`"
+                    },
+                    {
+                      "name": "total_output_records",
+                      "expression": "`total_output_records`"
+                    },
+                    {
+                      "name": "total_upserted_records",
+                      "expression": "`total_upserted_records`"
+                    },
+                    {
+                      "name": "total_deleted_records",
+                      "expression": "`total_deleted_records`"
+                    },
+                    {
+                      "name": "total_expectation_dropped_records",
+                      "expression": "`total_expectation_dropped_records`"
+                    },
+                    {
+                      "name": "total_expectations",
+                      "expression": "`total_expectations`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "update_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "update_id",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "update_id"
+                  },
+                  {
+                    "fieldName": "table_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "table_name",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "table_name"
+                  },
+                  {
+                    "fieldName": "start_timestamp",
+                    "dateTimeFormat": "DD/MM/YY HH:mm:ss.SSS",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "datetime",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "start_timestamp",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "start_timestamp"
+                  },
+                  {
+                    "fieldName": "end_timestamp",
+                    "dateTimeFormat": "DD/MM/YY HH:mm:ss.SSS",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "datetime",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 100005,
+                    "title": "end_timestamp",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "end_timestamp"
+                  },
+                  {
+                    "fieldName": "final_status",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100006,
+                    "title": "final_status",
+                    "allowSearch": true,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "final_status"
+                  },
+                  {
+                    "fieldName": "duration_seconds",
+                    "numberFormat": "0.00",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100007,
+                    "title": "duration_seconds",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "duration_seconds"
+                  },
+                  {
+                    "fieldName": "total_output_records",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100008,
+                    "title": "total_output_records",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_output_records"
+                  },
+                  {
+                    "fieldName": "total_upserted_records",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100009,
+                    "title": "total_upserted_records",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_upserted_records"
+                  },
+                  {
+                    "fieldName": "total_deleted_records",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100010,
+                    "title": "total_deleted_records",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_deleted_records"
+                  },
+                  {
+                    "fieldName": "total_expectation_dropped_records",
+                    "numberFormat": "0",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "integer",
+                    "displayAs": "number",
+                    "visible": true,
+                    "order": 100011,
+                    "title": "total_expectation_dropped_records",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_expectation_dropped_records"
+                  },
+                  {
+                    "fieldName": "total_expectations",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "complex",
+                    "displayAs": "json",
+                    "visible": true,
+                    "order": 100012,
+                    "title": "total_expectations",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "total_expectations"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "pipeline_name",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 100000,
+                  "title": "pipeline_name",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "pipeline_id",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 100001,
+                  "title": "pipeline_id",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 29,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "98a17810",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Data Lineage"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 36,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "6f887bdd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7b2db394",
+                  "fields": [
+                    {
+                      "name": "flow_name",
+                      "expression": "`flow_name`"
+                    },
+                    {
+                      "name": "input_flow_names",
+                      "expression": "`input_flow_names`"
+                    },
+                    {
+                      "name": "flow_type",
+                      "expression": "`flow_type`"
+                    },
+                    {
+                      "name": "schema",
+                      "expression": "`schema`"
+                    },
+                    {
+                      "name": "flow_definition",
+                      "expression": "`flow_definition`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "flow_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "flow_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "flow_name"
+                  },
+                  {
+                    "fieldName": "input_flow_names",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "input_flow_names",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "input_flow_names"
+                  },
+                  {
+                    "fieldName": "flow_type",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "flow_type",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "flow_type"
+                  },
+                  {
+                    "fieldName": "schema",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "schema",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "schema"
+                  },
+                  {
+                    "fieldName": "flow_definition",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "flow_definition",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "flow_definition"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 38,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "9d1cdd10",
+            "multilineTextboxSpec": {
+              "lines": [
+                "Field Demo dashboard. Please do not edit ![tracking_img](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&dashboard=BIKE_RENTAL_OPERATIONAL&demo_name=declarative-pipelines&event=VIEW)"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 44,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "1dede81c",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "d7d31e78",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c49dba51ed0be62940b68cb9ad6_pipeline_id",
+                "query": {
+                  "datasetName": "0cfc2c44",
+                  "parameters": [
+                    {
+                      "name": "pipeline_id",
+                      "keyword": "pipeline_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c49b4931e16987f0528c3455309_pipeline_id",
+                "query": {
+                  "datasetName": "ee59747e",
+                  "parameters": [
+                    {
+                      "name": "pipeline_id",
+                      "keyword": "pipeline_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c49c7ad17d4be915939e7f7f456_pipeline_id",
+                "query": {
+                  "datasetName": "9f3b86f2",
+                  "parameters": [
+                    {
+                      "name": "pipeline_id",
+                      "keyword": "pipeline_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c4a4c6714e3b0463c2767651dca_pipeline_id",
+                "query": {
+                  "datasetName": "9ab40944",
+                  "parameters": [
+                    {
+                      "name": "pipeline_id",
+                      "keyword": "pipeline_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c4a9f951d8da578c732b865225e_pipeline_id",
+                "query": {
+                  "datasetName": "8378c4ab",
+                  "parameters": [
+                    {
+                      "name": "pipeline_id",
+                      "keyword": "pipeline_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "pipeline_id",
+                    "queryName": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c49dba51ed0be62940b68cb9ad6_pipeline_id"
+                  },
+                  {
+                    "parameterName": "pipeline_id",
+                    "queryName": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c49b4931e16987f0528c3455309_pipeline_id"
+                  },
+                  {
+                    "parameterName": "pipeline_id",
+                    "queryName": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c49c7ad17d4be915939e7f7f456_pipeline_id"
+                  },
+                  {
+                    "parameterName": "pipeline_id",
+                    "queryName": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c4a4c6714e3b0463c2767651dca_pipeline_id"
+                  },
+                  {
+                    "parameterName": "pipeline_id",
+                    "queryName": "parameter_dashboards/01f03c49b49319248d284722ce5a5eab/datasets/01f03c4a9f951d8da578c732b865225e_pipeline_id"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}

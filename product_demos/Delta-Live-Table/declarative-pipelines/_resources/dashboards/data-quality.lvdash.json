@@ -1,0 +1,751 @@
+{
+  "datasets": [
+    {
+      "name": "af93f93e",
+      "displayName": "Quality - Historical Summary",
+      "queryLines": [
+        "select\n",
+        "  date(e.timestamp) as date,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long)\n",
+        "  / sum(e.details:flow_progress:metrics:num_output_rows) as failure_rate,\n",
+        "  sum(e.details:flow_progress:metrics:num_output_rows) as output_records,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long) as dropped_records\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e\n",
+        "where\n",
+        "  e.event_type = \"flow_progress\"\n",
+        "  and details:flow_progress:status = \"RUNNING\"\n",
+        "  and details:flow_progress:metrics:num_output_rows is not null\n",
+        "group by\n",
+        "  all\n",
+        "order by\n",
+        "  date"
+      ]
+    },
+    {
+      "name": "210ed6ab",
+      "displayName": "Quality - Historical Quality",
+      "queryLines": [
+        "select\n",
+        "  date(e.timestamp) as date,\n",
+        "  ex.value:name::string,\n",
+        "  ex.value:dataset::string,\n",
+        "  sum(ex.value:passed_records::long) as passed_records,\n",
+        "  sum(ex.value:failed_records::long) as failed_records\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e,\n",
+        "  lateral variant_explode(parse_json(e.details:flow_progress:data_quality:expectations:[ * ])) as ex\n",
+        "where\n",
+        "  e.event_type = \"flow_progress\"\n",
+        "  and details:flow_progress:status = \"RUNNING\"\n",
+        "  and details:flow_progress:data_quality:expectations IS NOT NULL\n",
+        "group by\n",
+        "  all\n"
+      ]
+    },
+    {
+      "name": "6770434a",
+      "displayName": "Quality - Daily Summary",
+      "queryLines": [
+        "select\n",
+        "  date(timestamp) as date,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long)\n",
+        "  / sum(e.details:flow_progress:metrics:num_output_rows) as failure_rate,\n",
+        "  sum(e.details:flow_progress:metrics:num_output_rows) as output_records,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long) as dropped_records\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e\n",
+        "where\n",
+        "  e.event_type = \"flow_progress\"\n",
+        "  and details:flow_progress:status = \"RUNNING\"\n",
+        "  and details:flow_progress:metrics:num_output_rows is not null\n",
+        "  and date(timestamp) = (\n",
+        "    select\n",
+        "      max(date(timestamp))\n",
+        "    from\n",
+        "      main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs\n",
+        "    where\n",
+        "      event_type = \"create_update\"\n",
+        "  )\n",
+        "group by\n",
+        "  all"
+      ]
+    },
+    {
+      "name": "e035b194",
+      "displayName": "Quality - Daily Quality",
+      "queryLines": [
+        "select\n",
+        "  date(e.timestamp) as date,\n",
+        "  ex.value:name::string as name,\n",
+        "  ex.value:dataset::string as dataset,\n",
+        "  sum(ex.value:passed_records::long) as passed_records,\n",
+        "  sum(ex.value:failed_records::long) as failed_records\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e,\n",
+        "  lateral variant_explode(parse_json(e.details:flow_progress:data_quality:expectations:[ * ])) as ex\n",
+        "where\n",
+        "  e.event_type = \"flow_progress\"\n",
+        "  and details:flow_progress:status = \"RUNNING\"\n",
+        "  AND e.details:flow_progress:data_quality:expectations IS NOT NULL\n",
+        "  and date(timestamp) = (\n",
+        "    select\n",
+        "      max(date(timestamp))\n",
+        "    from\n",
+        "      main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs\n",
+        "    where\n",
+        "      event_type = \"create_update\"\n",
+        "  )\n",
+        "group by\n",
+        "  all"
+      ]
+    },
+    {
+      "name": "409ad825",
+      "displayName": "Quality - Historical Tables",
+      "queryLines": [
+        "select\n",
+        "  date(e.timestamp) as date,\n",
+        "  split_part(e.origin.flow_name, \".\", -1) as table_name,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long)\n",
+        "  / sum(e.details:flow_progress:metrics:num_output_rows) as failure_rate,\n",
+        "  sum(e.details:flow_progress:metrics:num_output_rows) as output_records,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long) as dropped_records\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e\n",
+        "where\n",
+        "  e.event_type = \"flow_progress\"\n",
+        "  and details:flow_progress:status = \"RUNNING\"\n",
+        "  and details:flow_progress:metrics:num_output_rows is not null\n",
+        "group by\n",
+        "  all\n",
+        "order by\n",
+        "  date\n"
+      ]
+    },
+    {
+      "name": "4480dba1",
+      "displayName": "Quality - Daily Tables",
+      "queryLines": [
+        "select\n",
+        "  date(e.timestamp) as date,\n",
+        "  split_part(e.origin.flow_name, \".\", -1) as table_name,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long)\n",
+        "  / sum(e.details:flow_progress:metrics:num_output_rows) as failure_rate,\n",
+        "  sum(e.details:flow_progress:metrics:num_output_rows) as output_records,\n",
+        "  sum(e.details:flow_progress:data_quality:dropped_records::long) as dropped_records\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs e\n",
+        "where\n",
+        "  e.event_type = \"flow_progress\"\n",
+        "  and details:flow_progress:status = \"RUNNING\"\n",
+        "  and details:flow_progress:metrics:num_output_rows is not null\n",
+        "  and date(timestamp) = (\n",
+        "    select\n",
+        "      max(date(timestamp))\n",
+        "    from\n",
+        "      main__build.dbdemos_pipeline_bike.pipeline_bike_event_logs\n",
+        "    where\n",
+        "      event_type = \"create_update\"\n",
+        "  )\n",
+        "group by\n",
+        "  all\n",
+        "order by\n",
+        "  date"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "7416f21b",
+      "displayName": "Data Quality",
+      "layout": [
+        {
+          "widget": {
+            "name": "3734b963",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "af93f93e",
+                  "fields": [
+                    {
+                      "name": "sum(output_records)",
+                      "expression": "SUM(`output_records`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(output_records)",
+                  "displayName": "Sum of output_records"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Output Rows",
+                "showDescription": true,
+                "description": "Total output rows across all tables to date"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "413cb1de",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "af93f93e",
+                  "fields": [
+                    {
+                      "name": "sum(dropped_records)",
+                      "expression": "SUM(`dropped_records`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(dropped_records)",
+                  "displayName": "Sum of dropped_records"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "All Dropped Records",
+                "showDescription": true,
+                "description": "Total records dropped due to failing quality checks"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 9,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "8d4bd181",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "af93f93e",
+                  "fields": [
+                    {
+                      "name": "avg(failure_rate)",
+                      "expression": "AVG(`failure_rate`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(failure_rate)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Average failure_rate"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average Failure Rate",
+                "showDescription": true,
+                "description": ""
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 9,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "7735a224",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "409ad825",
+                  "fields": [
+                    {
+                      "name": "table_name",
+                      "expression": "`table_name`"
+                    },
+                    {
+                      "name": "daily(date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `date`)"
+                    },
+                    {
+                      "name": "sum(output_records)",
+                      "expression": "SUM(`output_records`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "sum(output_records)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Sum of output_records"
+                },
+                "color": {
+                  "fieldName": "table_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "hide": false,
+                    "hideTitle": true
+                  },
+                  "displayName": "Table"
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Output rows per table (historical)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "6ca53c09",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6770434a",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "date",
+                  "displayName": "date"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Last Process Date",
+                "showDescription": true,
+                "description": "Most recent date pipeline was executed"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "54fcc34b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6770434a",
+                  "fields": [
+                    {
+                      "name": "sum(output_records)",
+                      "expression": "SUM(`output_records`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(output_records)",
+                  "displayName": "Sum of output_records"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Output Rows",
+                "showDescription": true,
+                "description": "Total rows after quality rules applied"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "5be416f7",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "6770434a",
+                  "fields": [
+                    {
+                      "name": "avg(failure_rate)",
+                      "expression": "AVG(`failure_rate`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(failure_rate)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Average failure_rate"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Failure Rate",
+                "showDescription": true,
+                "description": "Dropped records due to failing quality checks"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "53dd28bd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4480dba1",
+                  "fields": [
+                    {
+                      "name": "sum(output_records)",
+                      "expression": "SUM(`output_records`)"
+                    },
+                    {
+                      "name": "sum(dropped_records)",
+                      "expression": "SUM(`dropped_records`)"
+                    },
+                    {
+                      "name": "table_name",
+                      "expression": "`table_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(output_records)",
+                      "displayName": "Output Rows"
+                    },
+                    {
+                      "fieldName": "sum(dropped_records)",
+                      "displayName": "Dropped Rows"
+                    }
+                  ]
+                },
+                "y": {
+                  "fieldName": "table_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "axis": {
+                    "hideLabels": false,
+                    "hideTitle": true
+                  },
+                  "displayName": "Table"
+                },
+                "color": {
+                  "legend": {
+                    "title": ""
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Rows Processed Per Table"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "fcc9cfff",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e035b194",
+                  "fields": [
+                    {
+                      "name": "sum(failed_records)",
+                      "expression": "SUM(`failed_records`)"
+                    },
+                    {
+                      "name": "name",
+                      "expression": "`name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(failed_records)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Sum of failed_records"
+                },
+                "color": {
+                  "fieldName": "name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "hideTitle": true
+                  },
+                  "displayName": "name"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dropped Records Per Rule"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "f50bf293",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "210ed6ab",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "expression": "`name`"
+                    },
+                    {
+                      "name": "daily(date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `date`)"
+                    },
+                    {
+                      "name": "sum(failed_records)",
+                      "expression": "SUM(`failed_records`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "date"
+                },
+                "y": {
+                  "fieldName": "sum(failed_records)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Sum of failed_records"
+                },
+                "color": {
+                  "fieldName": "name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "hide": false,
+                    "hideTitle": true
+                  },
+                  "displayName": "name"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dropped Records Per Rule (historical)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "68824e68",
+            "multilineTextboxSpec": {
+              "lines": [
+                "Field Demo dashboard. Please do not edit ![tracking_img](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&dashboard=BIKE_RENTAL_QUALITY&demo_name=declarative-pipelines&event=VIEW)"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}

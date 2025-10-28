@@ -1,0 +1,676 @@
+{
+  "datasets": [
+    {
+      "name": "db511bb6",
+      "displayName": "Revenue - Forecast",
+      "queryLines": [
+        "WITH original_table AS (\n",
+        "  SELECT\n",
+        "    DATE_TRUNC(\"DAY\", `ride_date`) AS ride_date,\n",
+        "    SUM(total_revenue) AS total_revenue\n",
+        "  FROM\n",
+        "    (\n",
+        "      select\n",
+        "        r.ride_date,\n",
+        "        sum(r.ride_revenue) as total_revenue\n",
+        "      from\n",
+        "        main__build.dbdemos_pipeline_bike.rides r\n",
+        "      group by\n",
+        "        all\n",
+        "    )\n",
+        "  GROUP BY\n",
+        "    1\n",
+        "),\n",
+        "dates AS (\n",
+        "  SELECT\n",
+        "    MAX(ride_date) AS max_date_column,\n",
+        "    MIN(ride_date) AS min_date_column,\n",
+        "    MAX_BY(total_revenue, ride_date) AS total_revenue\n",
+        "  FROM\n",
+        "    original_table\n",
+        "),\n",
+        "forecast_table AS (\n",
+        "  SELECT\n",
+        "    ride_date,\n",
+        "    total_revenue_forecast,\n",
+        "    total_revenue_upper,\n",
+        "    total_revenue_lower,\n",
+        "    NULL AS total_revenue\n",
+        "  FROM\n",
+        "    AI_FORECAST(\n",
+        "      TABLE(original_table),\n",
+        "      horizon =>\n",
+        "        (\n",
+        "          SELECT\n",
+        "            max_date_column\n",
+        "            + MAKE_DT_INTERVAL(\n",
+        "              CAST(FLOOR(DATEDIFF(max_date_column, min_date_column) * 0.5) AS INT), 0, 0, 0\n",
+        "            )\n",
+        "          FROM\n",
+        "            dates\n",
+        "        ),\n",
+        "      time_col => 'ride_date',\n",
+        "      value_col => 'total_revenue'\n",
+        "    )\n",
+        ")\n",
+        "SELECT\n",
+        "  *\n",
+        "FROM\n",
+        "  forecast_table\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  ride_date,\n",
+        "  NULL AS total_revenue_forecast,\n",
+        "  NULL AS total_revenue_upper,\n",
+        "  NULL AS total_revenue_lower,\n",
+        "  total_revenue\n",
+        "FROM\n",
+        "  original_table\n",
+        "WHERE\n",
+        "  ride_date < (\n",
+        "    SELECT\n",
+        "      max_date_column\n",
+        "    FROM\n",
+        "      dates\n",
+        "  )\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  max_date_column AS ride_date,\n",
+        "  total_revenue AS total_revenue_forecast,\n",
+        "  total_revenue AS total_revenue_upper,\n",
+        "  total_revenue AS total_revenue_lower,\n",
+        "  total_revenue\n",
+        "FROM\n",
+        "  dates"
+      ]
+    },
+    {
+      "name": "a30a6219",
+      "displayName": "Revenue - Rides",
+      "queryLines": [
+        "select\n",
+        "  r.ride_date,\n",
+        "  r.user_type,\n",
+        "  sum(r.ride_revenue) as total_revenue\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.rides r\n",
+        "group by\n",
+        "  all"
+      ]
+    },
+    {
+      "name": "32484f08",
+      "displayName": "Revenue - Maintenance",
+      "queryLines": [
+        "select\n",
+        "    ml.maintenance_date,\n",
+        "    ml.issue_type,\n",
+        "    me.*\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.maintenance_logs ml\n",
+        "    inner join main__build.dbdemos_pipeline_bike.maintenance_events me\n",
+        "      on me.maintenance_id = ml.maintenance_id"
+      ]
+    },
+    {
+      "name": "8ffc9b0e",
+      "displayName": "Revenue - Ride count",
+      "queryLines": [
+        "select\n",
+        "  count(*) as ride_per_day,\n",
+        "  ride_date\n",
+        "from\n",
+        "  main__build.dbdemos_pipeline_bike.rides r\n",
+        "group by r.ride_date\n",
+        "order by r.ride_date desc\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "36a334eb",
+      "displayName": "Revenue",
+      "layout": [
+        {
+          "widget": {
+            "name": "d5d70944",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "db511bb6",
+                  "fields": [
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Sum of total_revenue"
+                }
+              },
+              "frame": {
+                "title": "Total Revenue (Current FY)",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "5cecaf0b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "db511bb6",
+                  "fields": [
+                    {
+                      "name": "ride_date",
+                      "expression": "`ride_date`"
+                    },
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    },
+                    {
+                      "name": "total_revenue_forecast",
+                      "expression": "`total_revenue_forecast`"
+                    },
+                    {
+                      "name": "total_revenue_upper",
+                      "expression": "`total_revenue_upper`"
+                    },
+                    {
+                      "name": "total_revenue_lower",
+                      "expression": "`total_revenue_lower`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "forecast-line",
+              "encodings": {
+                "x": {
+                  "fieldName": "ride_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "original": {
+                    "fieldName": "total_revenue",
+                    "displayName": "Actual"
+                  },
+                  "prediction": {
+                    "fieldName": "total_revenue_forecast",
+                    "displayName": "Forecasted"
+                  },
+                  "predictionUpper": {
+                    "fieldName": "total_revenue_upper",
+                    "displayName": "Upper"
+                  },
+                  "predictionLower": {
+                    "fieldName": "total_revenue_lower",
+                    "displayName": "Lower"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Forecast",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "938377e8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "db511bb6",
+                  "fields": [
+                    {
+                      "name": "avg(total_revenue)",
+                      "expression": "AVG(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(total_revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Average total_revenue"
+                }
+              },
+              "frame": {
+                "title": "Average Daily",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "03d4bf04",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a30a6219",
+                  "fields": [
+                    {
+                      "name": "user_type",
+                      "expression": "`user_type`"
+                    },
+                    {
+                      "name": "monthly(ride_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `ride_date`)"
+                    },
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(ride_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "sum(total_revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "axis": {
+                    "title": "Revenue"
+                  },
+                  "displayName": "Revenue"
+                },
+                "color": {
+                  "fieldName": "user_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "legend": {
+                    "hide": false,
+                    "hideTitle": true
+                  },
+                  "displayName": "Member/Non Member"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Member/Non-member"
+              },
+              "mark": {
+                "layout": "percent-stack"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "7bdbe280",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "32484f08",
+                  "fields": [
+                    {
+                      "name": "issue_type",
+                      "expression": "`issue_type`"
+                    },
+                    {
+                      "name": "maintenance_date",
+                      "expression": "`maintenance_date`"
+                    },
+                    {
+                      "name": "sum(revenue_lost)",
+                      "expression": "SUM(`revenue_lost`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "maintenance_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "maintenance_date"
+                },
+                "y": {
+                  "fieldName": "sum(revenue_lost)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Revenue Lost"
+                  },
+                  "displayName": "Revenue Lost"
+                },
+                "color": {
+                  "fieldName": "issue_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Issue"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "88c6beac",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "32484f08",
+                  "fields": [
+                    {
+                      "name": "sum(revenue_lost)",
+                      "expression": "SUM(`revenue_lost`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(revenue_lost)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "style": {
+                    "color": "#FF3621"
+                  },
+                  "displayName": "Sum of revenue_lost"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Maintenance Revenue Loss"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "08085352",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "32484f08",
+                  "fields": [
+                    {
+                      "name": "avg(days_to_resolve)",
+                      "expression": "AVG(`days_to_resolve`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(days_to_resolve)",
+                  "displayName": "Average days_to_resolve"
+                }
+              },
+              "frame": {
+                "title": "Days To Resolve",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 9,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "d596bc88",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "32484f08",
+                  "fields": [
+                    {
+                      "name": "count(maintenance_id)",
+                      "expression": "COUNT(`maintenance_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(maintenance_id)",
+                  "displayName": "Count of maintenance_id"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total Maintenance Events (Current FY)"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 9,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "fc599355",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8ffc9b0e",
+                  "fields": [
+                    {
+                      "name": "ride_per_day",
+                      "expression": "`ride_per_day`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "ride_per_day",
+                  "rowNumber": 1,
+                  "displayName": "ride_per_day"
+                }
+              },
+              "frame": {
+                "title": "Daily number of ride",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "18fa5dc1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "Field Demo dashboard. Please do not edit ![tracking_img](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-engineering&dashboard=BIKE_RENTAL&demo_name=declarative-pipelines&event=VIEW)"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}

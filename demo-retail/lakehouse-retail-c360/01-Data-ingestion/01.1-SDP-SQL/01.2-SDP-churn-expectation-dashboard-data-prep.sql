@@ -20,40 +20,17 @@
 -- MAGIC %md
 -- MAGIC ## Accessing the Spark Declarative Pipelines pipeline events with Unity Catalog
 -- MAGIC
--- MAGIC Databricks provides an `event_log` function which is automatically going to lookup the event log table. You can specify any table to get access to the logs:
--- MAGIC
--- MAGIC `SELECT * FROM event_log(TABLE(catalog.schema.my_table))`
--- MAGIC
--- MAGIC #### Using Legacy hive_metastore
--- MAGIC *Note: If you are not using Unity Catalog (legacy hive_metastore), you can find your event log location opening the Settings of your SDP pipeline, under `storage` :*
--- MAGIC
--- MAGIC ```
--- MAGIC {
--- MAGIC     ...
--- MAGIC     "name": "lakehouse_churn_dlt",
--- MAGIC     "storage": "/demos/dlt/loans",
--- MAGIC     "target": "quentin_lakehouse_churn_dlt"
--- MAGIC }
--- MAGIC ```
--- MAGIC
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Accessing the Event log table from Unity Catalog.
-SELECT * FROM main__build.dbdemos_retail_c360.dlt_event_log_
-
--- COMMAND ----------
-
--- DBTITLE 1,Adding our SDP system table to the metastore
---CREATE OR REPLACE TEMPORARY VIEW demo_dlt_loans_system_event_log_raw 
---  as SELECT * FROM event_log(TABLE(main__build.dbdemos_retail_c360.churn_features));
---SELECT * FROM demo_dlt_loans_system_event_log_raw order by timestamp desc;
+SELECT * FROM main__build.dbdemos_retail_c360.dbdemos_retail_c360_event_logs
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC ## Analyzing dlt_system_event_log_raw table structure
+-- MAGIC ## Analyzing event log table structure
 -- MAGIC
 -- MAGIC The `details` column contains metadata about each Event sent to the Event Log. There are different fields depending on what type of Event it is. Some examples include:
 -- MAGIC * `user_action` Events occur when taking actions like creating the pipeline
@@ -78,7 +55,7 @@ SELECT
   details:flow_definition.flow_type,
   details:flow_definition.schema,
   details:flow_definition
-FROM main__build.dbdemos_retail_c360.dlt_event_log_
+FROM main__build.dbdemos_retail_c360.dbdemos_retail_c360_event_logs
 WHERE details:flow_definition IS NOT NULL
 ORDER BY timestamp
 
@@ -99,7 +76,7 @@ FROM(
     details:flow_progress.data_quality.dropped_records,
     explode(from_json(details:flow_progress:data_quality:expectations
              ,schema_of_json("[{'name':'str', 'dataset':'str', 'passed_records':42, 'failed_records':42}]"))) expectations
-  FROM main__build.dbdemos_retail_c360.dlt_event_log_
+  FROM main__build.dbdemos_retail_c360.dbdemos_retail_c360_event_logs
   WHERE details:flow_progress.metrics IS NOT NULL) data_quality
 
 -- COMMAND ----------

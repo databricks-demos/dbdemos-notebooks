@@ -82,15 +82,7 @@
       "description": "Gold layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.1-sdp-python/explorations/sample_exploration",
-      "pre_run": False,
-      "publish_on_website": True,
-      "add_cluster_setup_cell": False,
-      "title":  "SDP python - Sample exploration",
-      "description": "Sample exploration notebook for pipeline."
-    },
-    {
-      "path": "01-Data-ingestion/01.1-sdp-python/transformations/01-bronze.py",
+      "path": "01-Data-ingestion/01.2-sdp-python/transformations/01-bronze.py",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -98,7 +90,7 @@
       "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.1-sdp-python/transformations/02-silver.py",
+      "path": "01-Data-ingestion/01.2-sdp-python/transformations/02-silver.py",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -106,7 +98,7 @@
       "description": "Silver layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.1-sdp-python/transformations/03-gold.py",
+      "path": "01-Data-ingestion/01.2-sdp-python/transformations/03-gold.py",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
@@ -360,6 +352,11 @@
         "name": "dbdemos_sdp_lakehouse_fraud_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
         "schema": "{{SCHEMA}}",
+        "event_log": {
+              "catalog": "{{CATALOG}}",
+              "schema": "{{SCHEMA}}",
+              "name": "dbdemos_fraud_event_logs"
+        },
         "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql"
       }
     }

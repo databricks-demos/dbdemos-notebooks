@@ -285,7 +285,7 @@
             {
                 "task_key": "start_sdp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-churn}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-churn}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -444,6 +444,11 @@
         "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
         "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL",
+        "event_log": {
+              "catalog": "{{CATALOG}}",
+              "schema": "{{SCHEMA}}",
+              "name": "dbdemos_retail_c360_event_logs"
+        },
         "environment": {
           "dependencies": ["mlflow==3.1.0"]
         }

@@ -22,7 +22,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install -U -qqqq mlflow>=3.1.1 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
+# MAGIC %pip install -U -qqqq mlflow>=3.1.1 langchain langgraph databricks-langchain pydantic databricks-agents databricks-mcp unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1 
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -39,14 +39,14 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT path FROM READ_FILES('/Volumes/natyra_demo/db/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
+# MAGIC SELECT path FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
 # COMMAND ----------
 
 # DBTITLE 1,let's try our ai_parse_document function
 # MAGIC %sql
 # MAGIC SELECT ai_parse_document(content) AS parsed_document
-# MAGIC   FROM READ_FILES('/Volumes/natyra_demo/db/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
+# MAGIC   FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
 # COMMAND ----------
 
@@ -243,10 +243,6 @@ except Exception as e:
     print(f"Skipped update - ignore for job run - {e}")
 
 model_config = mlflow.models.ModelConfig(development_config=conf_path)
-
-# COMMAND ----------
-
-# MAGIC %pip install databricks-mcp
 
 # COMMAND ----------
 

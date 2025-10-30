@@ -1,12 +1,12 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Data engineering with Databricks - Realtime data ingestion for Financial transactions
+-- MAGIC # Data engineering with Databricks - Real-time data ingestion for Financial transactions
 -- MAGIC
--- MAGIC Building realtime system consuming messages from live system is required to build reactive data application.
+-- MAGIC Building a real-time system consuming messages from live systems is required to build reactive data application.
 -- MAGIC
--- MAGIC Near real-time is key to detect new fraud pattern and build a proactive system, offering better protection for your customers.
+-- MAGIC Near real-time is key to detecting new fraud patterns and to building a proactive system, offering better protection for your customers.
 -- MAGIC
--- MAGIC Ingesting, transforming and cleaning data to create clean SQL tables for our downstream user (Data Analysts and Data Scientists) is complex.
+-- MAGIC Ingesting, transforming and cleaning data to create clean SQL tables for our downstream users (Data Analysts and Data Scientists) is complex.
 -- MAGIC
 -- MAGIC <link href="https://fonts.googleapis.com/css?family=DM Sans" rel="stylesheet"/>
 -- MAGIC <div style="width:300px; text-align: center; float: right; margin: 30px 60px 10px 10px;  font-family: 'DM Sans'">
@@ -21,11 +21,11 @@
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC
--- MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as Data engineer, spends immense time….
+-- MAGIC ## <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/de.png" style="float:left; margin: -35px 0px 0px 0px" width="80px"> John, as a Data engineer, spends an immense amount of time….
 -- MAGIC
 -- MAGIC
 -- MAGIC * Hand-coding data ingestion & transformations and dealing with technical challenges:<br>
--- MAGIC   *Supporting streaming and batch, handling concurrent operations, small files issues, GDPR requirements, complex DAG dependencies...*<br><br>
+-- MAGIC   *Supporting streaming and batch, handling concurrent operations, small-file issues, GDPR requirements, complex DAG dependencies...*<br><br>
 -- MAGIC * Building custom frameworks to enforce quality and tests<br><br>
 -- MAGIC * Building and maintaining scalable infrastructure, with observability and monitoring<br><br>
 -- MAGIC * Managing incompatible governance models from different systems
@@ -39,14 +39,14 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Demo: build a banking database and detect fraud on transaction in real-time (ms)
+-- MAGIC ## Demo: build a banking database and detect fraud on transactions in real-time (ms)
 -- MAGIC
--- MAGIC In this demo, we'll step in the shoes of a retail banking company processing transaction.
+-- MAGIC In this demo, we'll step into the shoes of a retail banking company processing transactions.
 -- MAGIC
--- MAGIC The business has determined that we should improve our transaction fraud system and offer a better protection to our customers (retail and institutions using our payment systems). We're asked to:
+-- MAGIC The business has determined that we should improve our transaction fraud system and offer better protection to our customers (retail and institutions using our payment systems). We're asked to:
 -- MAGIC
--- MAGIC * Analyse and explain current transactions: quantify fraud, understand pattern and usage
--- MAGIC * Build a proactive system to detect fraud and serve prediction in real-time (ms latencies)
+-- MAGIC * Analyse and explain current transactions: quantify fraud, understand patterns and usage
+-- MAGIC * Build a proactive system to detect fraud and serve predictions in real-time (with ms latencies)
 -- MAGIC
 -- MAGIC
 -- MAGIC ### What we'll build
@@ -62,10 +62,10 @@
 -- MAGIC 3. Run BI queries to analyse existing fraud
 -- MAGIC 4. Build an ML model to detect fraud and deploy this model for real-time inference
 -- MAGIC
--- MAGIC As a result, we'll have all the information required to trigger alerts and ask our customer for stronger authentication if we believe there is a high fraud risk.
+-- MAGIC As a result, we'll have all the information required to trigger alerts and ask our customers for stronger authentication if we believe there is a high fraud risk.
 -- MAGIC
--- MAGIC **A note on Fraud detection in real application** <br/>
--- MAGIC *This demo is a simple example to showcase the Lakehouse benefits. We'll keep the data model and ML simple for the sake of the demo. Real-world application would need more data sources and also deal with imbalanced class and more advanced models. If you are interested in a more advanced discussion, reach out to your Databricks team!*
+-- MAGIC **A note on Fraud detection in real applications** <br/>
+-- MAGIC *This demo is a simple example to showcase the Lakehouse benefits. We'll keep the data model and ML simple for the sake of the demo. Real-world applications would need more data sources and also deal with imbalanced classes and more advanced models. If you are interested in a more advanced discussion, reach out to your Databricks team!*
 -- MAGIC
 -- MAGIC Let's see how this data can be used within the Lakehouse to analyse and reduce fraud!
 
@@ -75,11 +75,11 @@
 -- MAGIC
 -- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze and reduce fraud detection in real-time
 -- MAGIC
--- MAGIC In this example, we'll implement a end 2 end SDP pipeline consuming our banking transactions information. We'll use the medaillon architecture but we could build star schema, data vault or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming our banking transactions information. We'll use the medallion architecture but we could build a star schema, a data vault or any other modelisation.
 -- MAGIC
--- MAGIC We'll incrementally load new data with the autoloader and enrich this information.
+-- MAGIC We'll incrementally load new data with the Autoloader and enrich this information.
 -- MAGIC
--- MAGIC This information will then be used  to:
+-- MAGIC This information will then be used to:
 -- MAGIC
 -- MAGIC * Build our DBSQL dashboard to track transactions and fraud impact.
 -- MAGIC * Train & deploy a model to detect potential fraud in real-time.
@@ -103,7 +103,7 @@
 -- MAGIC
 -- MAGIC ## 1/ Data Exploration
 -- MAGIC
--- MAGIC All Data projects start with some exploration. Open the [/explorations/sample_exploration]($./explorations/sample_exploration) notebook to get started and discover the data made available to you
+-- MAGIC All Data projects start with some exploration. Open the [/explorations/sample_exploration]($./explorations/sample_exploration) notebook to get started and discover the data made available to you.
 
 -- COMMAND ----------
 
@@ -112,9 +112,9 @@
 -- MAGIC
 -- MAGIC <img  style="float:right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-dlt-1.png"/>
 -- MAGIC
--- MAGIC Autoloader allow us to efficiently ingest millions of files from a cloud storage, and support efficient schema inference and evolution at scale.
+-- MAGIC Autoloader allows us to efficiently ingest millions of files from a cloud storage, and supports efficient schema inference and evolution at scale.
 -- MAGIC
--- MAGIC For more details on autoloader, run `dbdemos.install('auto-loader')`
+-- MAGIC For more details on autoloader, run `dbdemos.install('auto-loader')`.
 -- MAGIC
 -- MAGIC Let's use it to our pipeline and ingest the raw JSON & CSV data being delivered in our blob storage `/dbdemos/fsi/fraud-detection/...`.
 
@@ -131,14 +131,14 @@
 -- MAGIC <img style="float:right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-dlt-2.png"/>
 -- MAGIC
 -- MAGIC
--- MAGIC The next layer often call silver is consuming **incremental** data from the bronze one, and cleaning up some information:
+-- MAGIC The next layer, often called Silver, consumes **incremental** data from the bronze one, and cleans up some information:
 -- MAGIC
 -- MAGIC * Clean up the codes of the countries of origin and destination (removing the "--")
 -- MAGIC * Calculate the difference between the Originating and Destination Balances.
 -- MAGIC
--- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
+-- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different fields to enforce and track our Data Quality. This will ensure that our dashboards are relevant and can easily spot potential errors due to data anomalies.
 -- MAGIC
--- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCDT2 example.
+-- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 
@@ -156,7 +156,7 @@
 -- MAGIC
 -- MAGIC We're now ready to create the features required for Fraud detection.
 -- MAGIC
--- MAGIC We need to enrich our transaction dataset with extra information our model will use to help detecting churn.
+-- MAGIC We need to enrich our transaction dataset with extra information that our model will use to help detect fraud.
 
 -- COMMAND ----------
 
@@ -167,11 +167,11 @@
 
 -- MAGIC %md ## Our pipeline is now ready!
 -- MAGIC
--- MAGIC As you can see, building Data Pipeline with databricks let you focus on your business implementation while the engine solves all hard data engineering work for you.
+-- MAGIC As you can see, building data pipelines with databricks lets you focus on your business implementation while the engine solves all hard data engineering work for you.
 -- MAGIC
 -- MAGIC The table is now ready for our Data Scientist to train a model detecting fraud risk.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Spark Declarative Pipelines pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Spark Declarative Pipelines pipeline</a> and click on Start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 

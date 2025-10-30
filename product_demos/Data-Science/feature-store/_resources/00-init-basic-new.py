@@ -28,7 +28,7 @@ DBDemos.setup_schema(catalog, db, reset_all_data)
 from databricks.sdk.service.serving import (
     EndpointCoreConfigInput,
     ServedModelInput,
-    ServedModelInputWorkloadSize,
+    #ServedModelInputWorkloadSize,
     ServingEndpointDetailed,
 )
 
@@ -164,6 +164,112 @@ travel_purchase_df.withColumn("booking_date", F.col("booking_date").cast('date')
 
 # COMMAND ----------
 
+# DBTITLE 1,Generate the User Demo Dataset
+import pandas as pd
+import numpy as np
+import random
+from datetime import datetime, timedelta
+
+# 1. Extract unique users
+user_ids = (
+    travel_purchase_df
+    .select("user_id")
+    .distinct()
+    .toPandas()
+)
+
+
+# 2. State → Cities mapping (all 50 states + DC)
+states_cities = {
+    "AL": ["Birmingham", "Montgomery", "Mobile"],
+    "AK": ["Anchorage", "Fairbanks", "Juneau"],
+    "AZ": ["Phoenix", "Tucson", "Mesa"],
+    "AR": ["Little Rock", "Fayetteville", "Fort Smith"],
+    "CA": ["Los Angeles", "San Francisco", "San Diego", "Sacramento"],
+    "CO": ["Denver", "Colorado Springs", "Boulder"],
+    "CT": ["Hartford", "New Haven", "Stamford"],
+    "DE": ["Wilmington", "Dover"],
+    "FL": ["Miami", "Orlando", "Tampa", "Jacksonville"],
+    "GA": ["Atlanta", "Savannah", "Augusta"],
+    "HI": ["Honolulu", "Hilo"],
+    "ID": ["Boise", "Idaho Falls", "Twin Falls"],
+    "IL": ["Chicago", "Springfield", "Naperville"],
+    "IN": ["Indianapolis", "Fort Wayne", "Evansville"],
+    "IA": ["Des Moines", "Cedar Rapids", "Iowa City"],
+    "KS": ["Wichita", "Topeka", "Kansas City"],
+    "KY": ["Louisville", "Lexington", "Bowling Green"],
+    "LA": ["New Orleans", "Baton Rouge", "Shreveport"],
+    "ME": ["Portland", "Augusta", "Bangor"],
+    "MD": ["Baltimore", "Annapolis", "Rockville"],
+    "MA": ["Boston", "Cambridge", "Worcester"],
+    "MI": ["Detroit", "Grand Rapids", "Ann Arbor"],
+    "MN": ["Minneapolis", "Saint Paul", "Duluth"],
+    "MS": ["Jackson", "Biloxi", "Hattiesburg"],
+    "MO": ["St. Louis", "Kansas City", "Springfield"],
+    "MT": ["Billings", "Bozeman", "Missoula"],
+    "NE": ["Omaha", "Lincoln", "Grand Island"],
+    "NV": ["Las Vegas", "Reno", "Carson City"],
+    "NH": ["Manchester", "Concord", "Nashua"],
+    "NJ": ["Newark", "Jersey City", "Trenton"],
+    "NM": ["Albuquerque", "Santa Fe", "Las Cruces"],
+    "NY": ["New York", "Buffalo", "Rochester", "Albany"],
+    "NC": ["Charlotte", "Raleigh", "Durham", "Greensboro"],
+    "ND": ["Fargo", "Bismarck", "Grand Forks"],
+    "OH": ["Columbus", "Cleveland", "Cincinnati"],
+    "OK": ["Oklahoma City", "Tulsa", "Norman"],
+    "OR": ["Portland", "Eugene", "Salem"],
+    "PA": ["Philadelphia", "Pittsburgh", "Harrisburg"],
+    "RI": ["Providence", "Warwick", "Cranston"],
+    "SC": ["Charleston", "Columbia", "Greenville"],
+    "SD": ["Sioux Falls", "Rapid City", "Pierre"],
+    "TN": ["Nashville", "Memphis", "Knoxville"],
+    "TX": ["Houston", "Dallas", "Austin", "San Antonio"],
+    "UT": ["Salt Lake City", "Provo", "Ogden"],
+    "VT": ["Burlington", "Montpelier", "Rutland"],
+    "VA": ["Richmond", "Virginia Beach", "Norfolk"],
+    "WA": ["Seattle", "Spokane", "Tacoma"],
+    "WV": ["Charleston", "Morgantown", "Huntington"],
+    "WI": ["Milwaukee", "Madison", "Green Bay"],
+    "WY": ["Cheyenne", "Casper", "Laramie"],
+    "DC": ["Washington"]
+}
+
+
+# 3. Generate synthetic demographics
+np.random.seed(42)
+today = datetime.today()
+
+def random_zip():
+    # Generate 5-digit random zip (10000–99999)
+    return str(random.randint(10000, 99999))
+
+demography = pd.DataFrame({
+    "user_id": user_ids["user_id"],
+    "age": np.random.randint(18, 65, size=len(user_ids)),
+    "gender": np.random.choice(["M", "F", "Other"], size=len(user_ids)),
+    "income_bracket": np.random.choice(["low", "medium", "high"], size=len(user_ids)),
+    "loyalty_tier": np.random.choice(["silver", "gold", "platinum"], size=len(user_ids))
+})
+
+# First login dates within last 5 years
+demography["first_login_date"] = [
+    today - timedelta(days=random.randint(365, 5*365)) for _ in range(len(user_ids))
+]
+#demography["tenure_days"] = (today - demography["first_login_date"]).dt.days
+
+# Billing state, city, and ZIP
+demography["billing_state"] = np.random.choice(list(states_cities.keys()), size=len(user_ids))
+demography["billing_city"] = [
+    np.random.choice(states_cities[state]) for state in demography["billing_state"]
+]
+demography["billing_zip"] = [random_zip() for _ in range(len(user_ids))]
+
+# 4. Save as UC table
+demography_spark = spark.createDataFrame(demography)
+demography_spark.write.mode("overwrite").saveAsTable("user_demography")
+
+# COMMAND ----------
+
 import warnings
 
 with warnings.catch_warnings():
@@ -191,3 +297,29 @@ def init_experiment_for_batch(demo_name, experiment_name):
   mlflow.set_experiment(xp)
   
 init_experiment_for_batch("feature_store", "introduction")
+
+# COMMAND ----------
+
+from datetime import datetime
+import mlflow
+import mlflow.sklearn
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from lightgbm import LGBMClassifier
+from sklearn.metrics import roc_auc_score, accuracy_score
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient
+import time
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureLookup
+
+# COMMAND ----------
+
+import mlflow.deployments

@@ -11,7 +11,8 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
-catalog = "main__build"
+#catalog = "main__build"
+catalog = "summer_catalog"
 main_naming = "dbdemos_fs_travel"
 schema = dbName = db = "dbdemos_fs_travel"
 
@@ -323,3 +324,87 @@ from databricks.feature_engineering import FeatureLookup
 # COMMAND ----------
 
 import mlflow.deployments
+
+# COMMAND ----------
+
+def wait_for_lakebase_tables(catalog, schema, tables, waiting_time=900, sleep_time=30):
+    from databricks.sdk import WorkspaceClient
+    import time
+    w = WorkspaceClient()
+    ready = []
+
+    for table in tables:
+        print(f"Waiting for online sync: {catalog}.{schema}.{table}")
+        for i in range(int(waiting_time / sleep_time)):
+            try:
+                state = (
+                    w.database.get_synced_database_table(
+                        name=f"{catalog}.{schema}.{table}"
+                    )
+                    .data_synchronization_status.detailed_state.name
+                )
+            except Exception as e:
+                print(f"Could not check state yet ({e}), retrying...")
+                state = "UNKNOWN"
+
+            if "FAIL" in state:
+                print(f"Online table {table} failed to synchronize.")
+                break
+            elif "ONLINE" in state:
+                print(f"Online table {table} is ready.")
+                ready.append(table)
+                break
+
+            time.sleep(sleep_time)
+        else:
+            print(f"Timed out waiting for {table}.")
+    return len(ready) == len(tables)
+
+
+
+
+# COMMAND ----------
+
+import time
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import EndpointStateReady
+
+def is_endpoint_ready(endpoint_name: str) -> bool:
+    w = WorkspaceClient()
+    endpoint = w.serving_endpoints.get(name=endpoint_name)
+
+    # Primary check (Model Serving)
+    if endpoint.state.ready == EndpointStateReady.READY:
+        return True
+
+    # Secondary check (Feature Serving)
+    if getattr(endpoint.state, "served_entities", None):
+        served_states = [se.state for se in endpoint.state.served_entities if hasattr(se, "state")]
+        if any(s in ("READY", "DEPLOYMENT_READY") for s in served_states):
+            return True
+
+    return False
+
+
+def wait_until_endpoint_ready(endpoint_name: str, timeout: int = 1800, sleep_time: int = 30) -> bool:
+    w = WorkspaceClient()
+    start_time = time.time()
+    print(f"Waiting for endpoint '{endpoint_name}' to become READY...")
+
+    while time.time() - start_time < timeout:
+        try:
+            endpoint = w.serving_endpoints.get(name=endpoint_name)
+            state_summary = f"ready={endpoint.state.ready.value}, config_update={endpoint.state.config_update.value}"
+            print(f"   Current state → {state_summary}")
+
+            if is_endpoint_ready(endpoint_name):
+                print(f"Endpoint '{endpoint_name}' is READY for requests.")
+                return True
+        except Exception as e:
+            print(f"Error checking endpoint state: {e}")
+
+        time.sleep(sleep_time)
+
+    print(f"Timeout reached after {timeout/60:.1f} min — endpoint not ready.")
+    return False
+

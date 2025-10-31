@@ -198,7 +198,7 @@ fe.create_table(
 
 # COMMAND ----------
 
-# MAGIC %md
+# MAGIC %md-sandbox
 # MAGIC ## Creating a Feature Table from an Existing Unity Catalog Table
 # MAGIC
 # MAGIC

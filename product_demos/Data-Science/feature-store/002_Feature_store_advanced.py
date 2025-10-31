@@ -3,11 +3,11 @@
 # MAGIC
 # MAGIC # Feature store Travel Agency recommendation - Advanced
 # MAGIC
-# MAGIC In this advanced demo, we’ll explore more powerful capabilities of **Feature Engineering in Databricks Unity Catalog**, building on top of the previous introductory notebook.
+# MAGIC In this advanced demo, we’ll explore more powerful capabilities of Feature Engineering in Databricks Unity Catalog, building on top of the previous introductory notebook.
 # MAGIC
-# MAGIC We’ll continue with the same use case — a **Travel Agency Recommender Model** — which aims to increase revenue by personalizing travel and hotel offers based on the likelihood that each user will make a purchase.
+# MAGIC We’ll continue with the same use case — a Travel Agency Recommender Model — which aims to increase revenue by personalizing travel and hotel offers based on the likelihood that each user will make a purchase.
 # MAGIC
-# MAGIC This version goes deeper into **temporal and online feature management**, demonstrating how Databricks enables both accurate offline training and real-time serving.
+# MAGIC This version goes deeper into temporal and online feature management, demonstrating how Databricks enables both accurate offline training and real-time serving.
 # MAGIC
 # MAGIC
 # MAGIC ## What You’ll Learn
@@ -43,7 +43,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init-basic-new $reset_all_data=false
+# MAGIC %run ./_resources/00-init-basic-new $reset_all_data=true
 
 # COMMAND ----------
 
@@ -60,7 +60,7 @@
 # MAGIC
 # MAGIC ## 1: Create our Feature Tables
 # MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/2025Q4_02_image1.png?raw=true" width="800px" style="float: right">
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/2025Q4_02_image1.png?raw=true" width="700px" style="float: right">
 # MAGIC
 # MAGIC In this second example, we'll introduce more tables and new features calculated with window functions.
 # MAGIC
@@ -599,7 +599,7 @@ fe.publish_table(
     online_store=online_store,
     source_table_name=f"{catalog}.{db}.user_features_advanced",
     online_table_name=f"{catalog}.{db}.user_features_advanced_online",
-    streaming=True  # continuously update as new data arrives
+    publish_mode="CONTINUOUS"
 )
 
 # Publish destination-level features
@@ -607,7 +607,7 @@ fe.publish_table(
     online_store=online_store,
     source_table_name=f"{catalog}.{db}.destination_features_advanced",
     online_table_name=f"{catalog}.{db}.destination_features_advanced_online",
-    streaming=True
+    publish_mode="CONTINUOUS"
 )
 
 
@@ -622,6 +622,24 @@ fe.publish_table(
 # MAGIC
 # MAGIC Like any other table, it's available within the Unity Catalog explorer, in your catalog -> schema. 
 # MAGIC
+
+# COMMAND ----------
+
+# DBTITLE 1,Waiting for Lakebase table
+# Wait for both tables to be ready before continuing
+tables_ready = wait_for_lakebase_tables(
+    catalog=catalog,
+    schema=db,
+    tables=[
+        "user_features_advanced_online",
+        "destination_features_advanced_online"
+    ],
+    waiting_time=1200,  # 30 minutes max wait
+    sleep_time=30
+)
+
+if not tables_ready:
+    raise RuntimeError("Not all online tables reached ONLINE state. Please check the synchronization status.")
 
 # COMMAND ----------
 
@@ -718,6 +736,15 @@ print(f"Feature Serving Endpoint created: {endpoint_name}")
 
 # COMMAND ----------
 
+# DBTITLE 1,Ensure the endpoints is READY
+if wait_until_endpoint_ready(endpoint_name, timeout=900, sleep_time=30):
+    print("Endpoint confirmed ready — safe to send inference or feature requests.")
+else:
+    raise TimeoutError(f"Endpoint '{endpoint_name}' is not ready yet.")
+
+
+# COMMAND ----------
+
 # DBTITLE 1,Option 1 - Real time feature access
 import mlflow.deployments
 
@@ -792,6 +819,15 @@ print(f"Model served: {model_full_name} (version {latest_version})")
 # MAGIC %md 
 # MAGIC #### View your endpoint
 # MAGIC For more information about your endpoint, go to the Serving UI and search for your endpoint name.
+
+# COMMAND ----------
+
+# DBTITLE 1,Ensure your endpoint is READY
+#endpoint_name = "travel-recommendation-fs-endpoint"
+if wait_until_endpoint_ready(endpoint_name, timeout=900, sleep_time=30):
+    print("Endpoint confirmed ready — safe to send inference or feature requests.")
+else:
+    raise TimeoutError(f"Endpoint '{endpoint_name}' is not ready yet.")
 
 # COMMAND ----------
 

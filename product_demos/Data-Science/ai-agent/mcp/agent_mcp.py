@@ -122,4 +122,4 @@ print("✅ Available tools:", AGENT.list_tools())
 
 # MAGIC %md
 # MAGIC ## Next steps
-# MAGIC If you would like to further explore other MCP server options in Databricks, how to test and use them in your agentic system, you could also leverage this Databricks MCP kit in [here](https://github.com/natyra-bajraktari/mcp-accl).
+# MAGIC If you would like to further explore other MCP server options in Databricks, please refer to [Databricks MCP documentation](https://docs.databricks.com/aws/en/generative-ai/mcp/).

@@ -73,7 +73,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./_resources/00-init-basic-new $reset_all_data=true
+# MAGIC %run ./_resources/00-init-basic-new
 
 # COMMAND ----------
 

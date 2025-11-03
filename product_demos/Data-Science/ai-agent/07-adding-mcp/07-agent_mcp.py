@@ -2,10 +2,27 @@
 # MAGIC %md
 # MAGIC ## Exposing your tools from the MCP server
 # MAGIC
-# MAGIC If you want to expose your tools or data so that other agents would be able to access it, then you could leverage MCP servers. Databricks already provides [managed MCP servers](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp#available-managed-servers), so that you do not need to start from scratch. 
+# MAGIC If you want to expose your tools or data so that other agents would be able to access it, then you could leverage MCP servers. 
+# MAGIC
+# MAGIC Databricks supports 3 types of MCPs:
+# MAGIC 	
+# MAGIC - **Databricks-managed MCP servers**:
+# MAGIC Databricks has ready-to-use servers that let agents query data and access tools in Unity Catalog. This exposes Databricks services as MCP resources (Databricks Vector Search, UC functions, Genie Spaces, DBSQL...)
+# MAGIC
+# MAGIC - **External MCP servers**:
+# MAGIC Connect to third-party MCP servers hosted outside Databricks using managed proxies and Unity Catalog connections.
+# MAGIC
+# MAGIC - **Custom MCP servers**:
+# MAGIC Securely host your own MCP server as a Databricks app to bring your own server or run a third-party MCP server.
 # MAGIC
 # MAGIC
-# MAGIC These managed servers include the UC functions, vector search indexes, and Genie spaces. In our example, we will show how you can provide the agent, the tools from the Databricks Managed MCP servers such as the UC system ai functions, but in similar fashion you can configure it for any other either Databricks managed MCP server or custom. 
+# MAGIC
+# MAGIC
+# MAGIC
+# MAGIC See Databricks [managed MCP servers Documentation](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp#available-managed-servers) for more details
+# MAGIC
+# MAGIC
+# MAGIC In this example, we will show how you can provide the agent, the tools from the Databricks Managed MCP servers such as the UC system ai functions. You will then be able to  configure your agent with any other MCP tools, either Databricks managed MCP server or a custom one! 
 
 # COMMAND ----------
 

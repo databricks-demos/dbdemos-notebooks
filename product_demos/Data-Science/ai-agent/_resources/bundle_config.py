@@ -113,6 +113,14 @@
       "description": "Use Databricks AI/BI with Genie to measure your AI App impact on your business."
     },
     {
+      "path": "07-adding-mcp/07-agent_mcp",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "Add MCP to your agents",
+      "description": "Use Databricks managed MCP to add more capabilities to your agent."
+    },
+    {
       "path": "01-ai-agent-introduction",
       "pre_run": False,
       "publish_on_website": True,

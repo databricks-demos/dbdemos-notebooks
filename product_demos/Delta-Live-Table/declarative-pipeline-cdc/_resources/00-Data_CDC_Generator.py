@@ -17,7 +17,7 @@
 # COMMAND ----------
 
 catalog = "main__build"
-schema = dbName = db = "dbdemos_dlt_cdc"
+schema = dbName = db = "dbdemos_sdp_cdc"
 
 volume_name = "raw_data"
 

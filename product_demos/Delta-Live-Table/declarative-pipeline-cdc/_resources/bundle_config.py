@@ -12,7 +12,7 @@
   "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
-  "default_schema": "dbdemos_dlt_cdc",
+  "default_schema": "dbdemos_sdp_cdc",
   "description": "Ingest Change Data Capture flow with APPLY INTO and simplify SCDT2 implementation.",
   "fullDescription": "This demo highlight how Spark Declarative Pipelines simplifies CDC (Change Data Capture).<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/>We'll also implement a SCD2 (Slowly Changing Dimention table of type 2). While this can be really tricky to implement when data arrives out of order, Declarative Pipelines makes this super simple with one simple keyword.<br/><br/>Ultimately, we'll show you how to programatically scan multiple incoming folder and trigger N stream (1 for each CDC table), leveraging Declarative Pipelines with python.",
     "usecase": "Data Engineering",
@@ -21,7 +21,7 @@
     {
       "path": "_resources/00-Data_CDC_Generator", 
       "pre_run": False, 
-      "publish_on_website": False, 
+      "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "CDC data generator", 
       "description": "Generate data for the pipeline."

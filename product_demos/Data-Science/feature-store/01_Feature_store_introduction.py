@@ -331,7 +331,7 @@ display(training_pd)
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC ## Introducing Databricks Assistant Data Science Agent
-# MAGIC We are proud to introduce the Data Science Agent, a major advancement that elevates the Databricks Assistant from a helpful copilot into a true autonomous partner for data science and analytics. Fully integrated with Databricks Notebooks and the SQL Editor, the [Data Science Agent](https://www.databricks.com/blog/introducing-databricks-assistant-data-science-agent) brings intelligence, adaptability, and execution together in a single experience.
+# MAGIC The Data Science Agent elevates the Databricks Assistant from a helpful copilot into a true autonomous partner for data science and analytics. Fully integrated with Databricks Notebooks and the SQL Editor, the [Data Science Agent](https://www.databricks.com/blog/introducing-databricks-assistant-data-science-agent) let's you analyze your data and build ML models in a few clicks/prompt.
 # MAGIC <img src="https://www.databricks.com/sites/default/files/2025-09/AgentModeOG1Border.png?v=1756901406" width="500px" style="float: right"/>
 # MAGIC - Data Science Agent transforms Databricks Assistant into an autonomous partner for data science and analytics tasks in Notebooks and the SQL Editor.
 # MAGIC
@@ -341,7 +341,7 @@ display(training_pd)
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC
+# MAGIC Open the assistant and give it a try!
 # MAGIC
 # MAGIC
 # MAGIC

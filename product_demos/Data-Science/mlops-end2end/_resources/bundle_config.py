@@ -338,8 +338,34 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "adv_batch_inference",
+                    "task_key": "challenger_validation",
                     "depends_on": [{"task_key": "adv_register_model2"}],
+                    "run_if": "ALL_SUCCESS",
+                    "notebook_task": {
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04a_challenger_validation",
+                        "source": "WORKSPACE"
+                    },
+                    "job_cluster_key": "Shared_job_cluster",
+                    "timeout_seconds": 0,
+                    "email_notifications": {},
+                    "webhook_notifications": {}
+                },
+                {
+                    "task_key": "challenger_approval",
+                    "depends_on": [{"task_key": "challenger_validation"}],
+                    "run_if": "ALL_SUCCESS",
+                    "notebook_task": {
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04b_challenger_approval",
+                        "source": "WORKSPACE"
+                    },
+                    "job_cluster_key": "Shared_job_cluster",
+                    "timeout_seconds": 0,
+                    "email_notifications": {},
+                    "webhook_notifications": {}
+                },
+                {
+                    "task_key": "adv_batch_inference",
+                    "depends_on": [{"task_key": "challenger_approval"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
                         "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",

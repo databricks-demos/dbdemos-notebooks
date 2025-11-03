@@ -246,6 +246,10 @@ model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-mcp
+
+# COMMAND ----------
+
 from agent import AGENT 
 
 #Let's try our retriever to make sure we know have access to the wifi router pdf guide

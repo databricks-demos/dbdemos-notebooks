@@ -37,6 +37,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-mcp
+# MAGIC
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/01-setup
 
 # COMMAND ----------
@@ -60,7 +65,8 @@ rag_chain_config = {
     "system_prompt": "Your job is to provide customer help. call the tool to answer.",
     "llm_endpoint_name": LLM_ENDPOINT_NAME,
     "max_history_messages": 20,
-    "retriever_config": None
+    "retriever_config": None,
+    "mcp_server_urls": [] 
 }
 try:
     with open('agent_config.yaml', 'w') as f:

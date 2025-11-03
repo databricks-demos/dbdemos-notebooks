@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Annotated, Any, Generator, Optional, Sequence, TypedDict, Union
 from uuid import uuid4
@@ -10,17 +11,16 @@ from databricks_langchain import (
     DatabricksFunctionClient,
     set_uc_function_client,
 )
-
+from databricks_mcp import DatabricksMCPClient
+from databricks.sdk import WorkspaceClient
 from langchain_core.language_models import LanguageModelLike
 from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
     BaseMessage,
-    convert_to_openai_messages,
 )
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 from langchain_core.tools import BaseTool
-
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt.tool_node import ToolNode
@@ -35,16 +35,46 @@ from mlflow.types.responses import (
     ResponsesAgentStreamEvent,
 )
 
-# Enable MLflow LangChain auto-trace
+# Enable LangChain autolog
 mlflow.langchain.autolog()
 
 # Required to use Unity Catalog UDFs as tools
 set_uc_function_client(DatabricksFunctionClient())
 
+
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
     custom_inputs: Optional[dict[str, Any]]
     custom_outputs: Optional[dict[str, Any]]
+
+
+# Generic schema for MCP tools (allows any input)
+GENERIC_SCHEMA = {
+    "title": "MCPToolArgs",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": True
+}
+
+
+class MCPToolWrapper(BaseTool):
+    """Wrap a Databricks MCP tool as a LangChain BaseTool"""
+
+    def __init__(self, name: str, description: str, server_url: str, ws_client: WorkspaceClient):
+        super().__init__(name=name, description=description, args_schema=GENERIC_SCHEMA)
+        # store server info internally (not a Pydantic field)
+        self._tool_data = {
+            "server_url": server_url,
+            "ws_client": ws_client,
+        }
+
+    def _run(self, **kwargs) -> str:
+        client = DatabricksMCPClient(
+            server_url=self._tool_data["server_url"],
+            workspace_client=self._tool_data["ws_client"]
+        )
+        response = client.call_tool(self.name, kwargs)
+        return "".join([c.text for c in response.content])
 
 
 def create_tool_calling_agent(
@@ -85,15 +115,20 @@ class LangGraphResponsesAgent(ResponsesAgent):
         llm_endpoint_name: str = "databricks-meta-llama-3-70b-instruct",
         system_prompt: Optional[str] = None,
         retriever_config: Optional[dict] = None,
+        mcp_server_urls: Optional[Sequence[str]] = None,
         max_history_messages: int = 20,
     ):
         self.llm_endpoint_name = llm_endpoint_name
         self.system_prompt = system_prompt
         self.max_history_messages = max_history_messages
 
+        # Initialize LLM
         self.llm = ChatDatabricks(endpoint=llm_endpoint_name)
+
+        # Load Unity Catalog tools
         self.tools: list[BaseTool] = UCFunctionToolkit(function_names=list(uc_tool_names)).tools
 
+        # Add retriever if configured
         if retriever_config:
             self.tools.append(
                 VectorSearchRetrieverTool(
@@ -104,8 +139,25 @@ class LangGraphResponsesAgent(ResponsesAgent):
                 )
             )
 
+        # Add MCP tools from URLs
+        if mcp_server_urls:
+            ws_client = WorkspaceClient()
+            for url in mcp_server_urls:
+                try:
+                    client = DatabricksMCPClient(server_url=url, workspace_client=ws_client)
+                    tool_defs = client.list_tools()
+                    for t in tool_defs:
+                        self.tools.append(MCPToolWrapper(t.name, t.description or t.name, url, ws_client))
+                    print(f"Loaded MCP tools from {url}: {[t.name for t in self.tools if isinstance(t, MCPToolWrapper)]}")
+                except Exception as e:
+                    print(f"Failed to load MCP server {url}: {e}")
+
+        # Create agent graph
         self.agent = create_tool_calling_agent(self.llm, self.tools, system_prompt)
 
+    # -----------------------
+    # LangGraph Responses mapping
+    # -----------------------
     def _responses_to_cc(self, message: dict[str, Any]) -> list[dict[str, Any]]:
         msg_type = message.get("type")
         if msg_type == "function_call":
@@ -160,6 +212,9 @@ class LangGraphResponsesAgent(ResponsesAgent):
                 )]
         return []
 
+    # -----------------------
+    # Predict methods
+    # -----------------------
     @mlflow.trace(span_type=SpanType.AGENT)
     def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
         outputs = [
@@ -169,17 +224,16 @@ class LangGraphResponsesAgent(ResponsesAgent):
         return ResponsesAgentResponse(output=outputs, custom_outputs=request.custom_inputs)
 
     @mlflow.trace(span_type=SpanType.AGENT)
-    def predict_stream(
-        self, request: ResponsesAgentRequest,
-    ) -> Generator[ResponsesAgentStreamEvent, None, None]:
+    def predict_stream(self, request: ResponsesAgentRequest) -> Generator[ResponsesAgentStreamEvent, None, None]:
         cc_msgs = []
         mlflow.update_current_trace(request_preview=request.input[0].content)
         for msg in request.input:
             cc_msgs.extend(self._responses_to_cc(msg.model_dump()))
 
-        # Limit history to the most recent max_history_messages
+        # Limit history
         if len(cc_msgs) > self.max_history_messages:
             cc_msgs = cc_msgs[-self.max_history_messages:]
+
         for event in self.agent.stream({"messages": cc_msgs}, stream_mode=["updates", "messages"]):
             if event[0] == "updates":
                 for node_data in event[1].values():
@@ -194,7 +248,10 @@ class LangGraphResponsesAgent(ResponsesAgent):
                         )
                 except Exception:
                     pass
-                
+
+    # -----------------------
+    # Resource tracking
+    # -----------------------
     def get_resources(self):
         res = [DatabricksServingEndpoint(endpoint_name=self.llm.endpoint)]
         for t in self.tools:
@@ -204,18 +261,24 @@ class LangGraphResponsesAgent(ResponsesAgent):
                 res.append(DatabricksFunction(function_name=t.uc_function_name))
         return res
 
+    # -----------------------
+    # Helper to list loaded tools
+    # -----------------------
+    def list_tools(self) -> list[str]:
+        return [t.name for t in self.tools]
 
-# Load configuration values from YAML
+# ==========================
+# Instantiate from config
+# ==========================
 model_config = ModelConfig(development_config="../02-agent-eval/agent_config.yaml")
 
-# Instantiate agent
 AGENT = LangGraphResponsesAgent(
     uc_tool_names=model_config.get("uc_tool_names"),
     llm_endpoint_name=model_config.get("llm_endpoint_name"),
     system_prompt=model_config.get("system_prompt"),
     retriever_config=model_config.get("retriever_config"),
+    mcp_server_urls=model_config.get("mcp_server_urls"),
     max_history_messages=model_config.get("max_history_messages"),
 )
 
-# Register agent with MLflow for inference
 mlflow.models.set_model(AGENT)

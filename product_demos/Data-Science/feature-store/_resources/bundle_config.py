@@ -22,7 +22,7 @@
   "tags": [{"ds": "Data Science"}],
   "notebooks": [
     {
-      "path": "_resources/00-init-basic",
+      "path": "_resources/00-init-basic-new",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
@@ -30,15 +30,7 @@
       "description": "Init data for demo."
     },
     {
-      "path": "_resources/00-init-expert",
-      "pre_run": False,
-      "publish_on_website": False,
-      "add_cluster_setup_cell": False,
-      "title":  "Setup",
-      "description": "Init data for expert demo."
-    },
-    {
-      "path": "01_Feature_store_introduction", 
+      "path": "001_Feature_store_introduction", 
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -46,20 +38,20 @@
       "description": "Introduction to Databricks FS"
     },
     {
-      "path": "02_Feature_store_advanced", 
+      "path": "002_Feature_store_advanced", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - advanced", 
-      "description": "Point in time & automl"
+      "description": "Point in time & online feature store"
     },
     {
-      "path": "03_Feature_store_expert", 
+      "path": "03_Feature_store_pipeline", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - full", 
-      "description": "Streaming, online backed, model serving"
+      "description": "Feature Store creation in pipeline"
     }
   ],
   "cluster": {

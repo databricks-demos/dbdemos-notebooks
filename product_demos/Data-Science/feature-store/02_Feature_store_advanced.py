@@ -37,8 +37,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Update feature engineering version
-# MAGIC %pip install mlflow==2.22.0 databricks-sdk==0.50.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
-# MAGIC %pip install databricks-feature-engineering>=0.13.0a3
+# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

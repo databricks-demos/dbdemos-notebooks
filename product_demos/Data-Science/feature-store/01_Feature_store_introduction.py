@@ -68,7 +68,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.10.2 databricks-sdk==0.50.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
+# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -225,12 +225,14 @@ fe.create_table(
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- Make sure user_id is not nullable
-# MAGIC ALTER TABLE user_demography ALTER COLUMN user_id SET NOT NULL;
-# MAGIC
-# MAGIC -- Add primary key constraint
-# MAGIC ALTER TABLE user_demography ADD CONSTRAINT user_demography_pk PRIMARY KEY(user_id);
+# Make sure user_id is not nullable
+spark.sql('ALTER TABLE user_demography ALTER COLUMN user_id SET NOT NULL')
+
+# Add primary key constraint (try catch in case it exists)
+try:
+    spark.sql('ALTER TABLE user_demography ADD CONSTRAINT user_demography_pk PRIMARY KEY(user_id)')
+except:
+    print('already existing')
 
 # COMMAND ----------
 

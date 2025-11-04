@@ -2,8 +2,8 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import col, lit, concat
 from pyspark.sql import types as T
 
-catalog = "alex_feng"
-schema = dbName = db = "smart_claims"
+catalog = "main__build"
+schema = dbName = db = "dbdemos_fsi_smart_claims"
 volume_name = "volume_claims"
 
 def flatten_struct(df):
@@ -13,4 +13,3 @@ def flatten_struct(df):
                 df = df.withColumn(field.name + '_' + child.name, F.col(field.name + '.' + child.name))
             df = df.drop(field.name)
     return df
-      

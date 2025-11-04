@@ -18,12 +18,6 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
-for f in dbutils.fs.ls(volume_folder):
-  dbutils.fs.rm(f.path, True)  
-#dbutils.fs.rm(volume_folder, True)
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC To speedup the demo, we won't generate the data but download it directly. IF it fails you can run the generation notebooks in the _resource folders instead.
 

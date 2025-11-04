@@ -15,6 +15,7 @@
   "title": "AI Agent System and Evaluation with Databricks AI",
   "description": "Deploy your AI Agent system on Databricks AI with foundation LLM, Langchain, PDF extraction and Vector Search & Mosaic AI Agent Evaluation",
   "bundle": True,
+  "env_version": 3,
   "notebooks": [
     {
       "path": "_resources/01-setup",
@@ -139,7 +140,7 @@
   ],
   "cluster": {
     "num_workers": 0,
-    "spark_version": "17.3.x-scala2.13",
+    "spark_version": "17.1.x-scala2.13",
     "spark_conf": {
         "spark.master": "local[*, 4]"
     },

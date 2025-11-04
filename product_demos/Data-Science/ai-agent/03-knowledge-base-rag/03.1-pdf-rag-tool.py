@@ -45,6 +45,7 @@
 
 # DBTITLE 1,let's try our ai_parse_document function
 # MAGIC %sql
+# MAGIC -- ai_parse_document is available in DBR 17.1 or serverless runtime
 # MAGIC SELECT ai_parse_document(content) AS parsed_document
 # MAGIC   FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 

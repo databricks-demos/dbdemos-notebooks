@@ -27,8 +27,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install prophet==1.1.2 holidays==0.23
+# MAGIC %pip install --upgrade prophet==1.1.5 cmdstanpy==1.2.4 'holidays>=0.25' 'convertdate>=2.4.0' 'numpy<2' 'matplotlib<3.8'
 # MAGIC %restart_python
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 

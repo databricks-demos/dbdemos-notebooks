@@ -64,7 +64,7 @@ dbutils.widgets.dropdown("smoke_test", "False", ["True", "False"], "Smoke Test F
 
 # COMMAND ----------
 
-is_smoke_test = dbutils.widgets.get("smoke_test") == "True"
+is_smoke_test = dbutils.widgets.get("smoke_test").lower() == "true"
 
 # COMMAND ----------
 

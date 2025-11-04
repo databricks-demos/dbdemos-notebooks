@@ -228,6 +228,8 @@ fe = FeatureEngineeringClient()
 # COMMAND ----------
 
 # DBTITLE 1,Create "feature"/UC table
+#Drop the table for clean repeatable demo
+spark.sql(f'drop table if exists {catalog}.{db}.advanced_churn_feature_table')
 # One-Time operation
 churn_feature_table = fe.create_table(
   name="advanced_churn_feature_table", # f"{catalog}.{dbName}.{feature_table_name}"
@@ -240,8 +242,6 @@ churn_feature_table = fe.create_table(
 # COMMAND ----------
 
 # DBTITLE 1,Write the feature values to a feature table
-#Drop the table for clean repeatable demo
-spark.sql(f'drop table if exists {catalog}.{db}.advanced_churn_feature_table')
 fe.write_table(
   name=f"{catalog}.{db}.advanced_churn_feature_table",
   df=churn_featuresDF, # can be a streaming dataframe as well

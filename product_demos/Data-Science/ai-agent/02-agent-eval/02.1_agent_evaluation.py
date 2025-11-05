@@ -264,24 +264,16 @@ with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
 
 # COMMAND ----------
 
-rag_chain_config = {
-    "config_version_name": "better_prompt",
-    "input_example": [{"role": "user", "content": "Give me the orders for john21@example.net"}],
-    "uc_tool_names": [f"{catalog}.{dbName}.*"],
-    "system_prompt": (
+try:
+    config = yaml.safe_load(open("agent_config.yaml"))
+    config["config_version_name"] = "better_prompt"
+    config["system_prompt"] = (
         "You are a telco assistant. Call the appropriate tool to help the user with billing, support, or account info. "
         "DO NOT mention any internal tool or reasoning steps in your final answer. Do not say according to records or imply that you are looking up information."
-    ),
-    "llm_endpoint_name": LLM_ENDPOINT_NAME,
-    "max_history_messages": 20,
-    "retriever_config": None,
-    "mcp_server_urls": [] 
-}
-try:
-    with open('agent_config.yaml', 'w') as f:
-        yaml.dump(rag_chain_config, f)
-except:
-    print('pass to work on build job')
+    )
+    yaml.dump(config, open("agent_config.yaml", "w"))
+except Exception as e:
+    print(f"Skipped update - ignore for job run - {e}")
 
 # COMMAND ----------
 

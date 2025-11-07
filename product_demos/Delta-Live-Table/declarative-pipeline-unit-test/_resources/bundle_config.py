@@ -56,6 +56,54 @@
       "add_cluster_setup_cell": False,
       "title":  "Unit test definition", 
       "description": "Main notebook containing the unit tests."
+    },
+    {
+    "path": "sdp-python/transformations/01-bronze.py", 
+    "pre_run": False, 
+    "publish_on_website": True, 
+    "add_cluster_setup_cell": False,
+    "title":  "Bronze SQL tables", 
+    "description": "Ingest the raw data using python."
+    },
+    {
+    "path": "sdp-python/transformations/02-silver.py", 
+    "pre_run": False, 
+    "publish_on_website": True, 
+    "add_cluster_setup_cell": False,
+    "title":  "Silver SQL tables", 
+    "description": "Clean and prepare your data using python."
+    },
+    {
+    "path": "sdp-python/transformations/03-gold.py", 
+    "pre_run": False, 
+    "publish_on_website": True, 
+    "add_cluster_setup_cell": False,
+    "title":  "Gold SQL tables", 
+    "description": "Final aggregation layer, for ML and BI usage using python."
+    },
+    {
+    "path": "sdp-python/transformations/test/01-bronze-test.py", 
+    "pre_run": False, 
+    "publish_on_website": True, 
+    "add_cluster_setup_cell": False,
+    "title":  "Test - Bronze SQL tables", 
+    "description": "Test - Ingest the raw data using python."
+    },
+    {
+    "path": "sdp-python/transformations/test/02-silver-test.py", 
+    "pre_run": False, 
+    "publish_on_website": True, 
+    "add_cluster_setup_cell": False,
+    "title":  "Test - Silver SQL tables", 
+    "description": "Test - Clean and prepare your data using python."
+    },
+    {
+    "path": "sdp-python/transformations/test/03-gold-test.py", 
+    "pre_run": False, 
+    "publish_on_website": True, 
+    "add_cluster_setup_cell": False,
+    "title":  "Test - Gold SQL tables", 
+    "description": "Test - Final aggregation layer, for ML and BI usage using python."
     }
   ],
   "init_job": {
@@ -150,21 +198,7 @@
         "edition": "ADVANCED",
         "photon": False,
         "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/SDP-pipeline-to-test"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/ingestion_profile/SDP-ingest_test"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/test/SDP-Tests"
-                }
-            }
+            {"glob": {"include": "{{DEMO_FOLDER}}/sdp-python/transformations/**"}}
         ],
         "name": "dbdemos_ldp_unit_test_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",

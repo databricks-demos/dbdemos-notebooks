@@ -28,10 +28,10 @@
 # COMMAND ----------
 
 # DBTITLE 1,Ingest raw User stream data in incremental mode
-import dlt
+from pyspark import pipelines as dp
 DEFAULT_LANDING_PATH = "/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/prod"
 
-@dlt.view(comment="Raw user data - Production")
+@dp.materialized_view(comment="Raw user data - Production")
 def raw_user_data():
   landing_path = spark.conf.get("mypipeline.landing_path", DEFAULT_LANDING_PATH)
   return (
@@ -44,7 +44,9 @@ def raw_user_data():
 # COMMAND ----------
 
 # DBTITLE 1,Ingest user spending score
-@dlt.view(comment="Raw spend data - Production")
+from pyspark import pipelines as dp
+
+@dp.materialized_view(comment="Raw spend data - Production")
 def raw_spend_data():
   landing_path = spark.conf.get("mypipeline.landing_path", DEFAULT_LANDING_PATH)
   return(

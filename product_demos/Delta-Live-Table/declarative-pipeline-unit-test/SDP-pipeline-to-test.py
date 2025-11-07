@@ -108,13 +108,8 @@ def get_rules(tag):
 
 # COMMAND ----------
 
-# DBTITLE 1,Ingest raw User stream data in incremental mode
-import dlt
-
-@dlt.table(comment="Raw user data")
-@dlt.expect_all_or_drop(get_rules('user_bronze_ldp')) #get the rules from our centralized table.
-def user_bronze_ldp():
-  return dlt.read_stream("raw_user_data")
+# MAGIC %md Open the [/sdp-python/transformations/01-bronze.py]($./sdp-python/transformations/01-bronze.py) to check out the full bronze layer code.
+# MAGIC
 
 # COMMAND ----------
 
@@ -125,29 +120,8 @@ def user_bronze_ldp():
 # MAGIC We're also adding an expectation on the ID. As the ID will be used in the next join operation, ID should never be null and be positive.
 # MAGIC
 # MAGIC Note that the expectations have been defined in the metadata expectation table under `user_silver_ldp`
-
-# COMMAND ----------
-
-# DBTITLE 1,Clean and anonymize User data
-from pyspark.sql.functions import *
-
-@dlt.table(comment="User data cleaned and anonymized for analysis.")
-@dlt.expect_all_or_drop(get_rules('user_silver_ldp'))
-def user_silver_ldp():
-  return (
-    dlt.read_stream("user_bronze_ldp").select(
-      col("id").cast("int"),
-      sha1("email").alias("email"),
-      to_timestamp(col("creation_date"),"MM-dd-yyyy HH:mm:ss").alias("creation_date"),
-      to_timestamp(col("last_activity_date"),"MM-dd-yyyy HH:mm:ss").alias("last_activity_date"),
-      "firstname", 
-      "lastname", 
-      "address", 
-      "city", 
-      "last_ip", 
-      "postcode"
-    )
-  )
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
@@ -160,11 +134,7 @@ def user_silver_ldp():
 
 # COMMAND ----------
 
-# DBTITLE 1,Ingest user spending score
-@dlt.table(comment="Spending score from raw data")
-@dlt.expect_all_or_drop(get_rules('spend_silver_ldp'))
-def spend_silver_ldp():
-    return dlt.read_stream("raw_spend_data")
+# MAGIC %md Open the [/sdp-python/transformations/02-silver.py]($./sdp-python/transformations/01-silver.py) to check out the full silver layer code.
 
 # COMMAND ----------
 
@@ -176,11 +146,7 @@ def spend_silver_ldp():
 
 # COMMAND ----------
 
-# DBTITLE 1,Join both data to create our final table
-@dlt.table(comment="Final user table with all information for Analysis / ML")
-@dlt.expect_all_or_drop(get_rules('user_gold_ldp'))
-def user_gold_ldp():
-  return dlt.read_stream("user_silver_ldp").join(dlt.read("spend_silver_ldp"), ["id"], "left")
+# MAGIC %md Open the [/sdp-python/transformations/03-gold.py]($./sdp-python/transformations/01-gold.py) to check out the full gold layer code.
 
 # COMMAND ----------
 
@@ -206,7 +172,7 @@ def user_gold_ldp():
 # MAGIC
 # MAGIC As example, let's make sure we'll ingest data having NULL id or ids as string.
 # MAGIC
-# MAGIC Open the [./test/LDP-Test-Dataset-setup]($./test/LDP-Test-Dataset-setup) notebook to see how this is done
+# MAGIC Open the [./test/SDP-Test-Dataset-setup]($./test/SDP-Test-Dataset-setup) notebook to see how this is done
 
 # COMMAND ----------
 
@@ -217,7 +183,7 @@ def user_gold_ldp():
 # MAGIC
 # MAGIC The final step is creating the actual test.
 # MAGIC
-# MAGIC Open the [./test/LDP-Tests]($./test/LDP-Tests) notebook to see how this is done!
+# MAGIC Open the [./test/SDP-Tests]($./test/SDP-Tests) notebook to see how this is done!
 
 # COMMAND ----------
 
@@ -228,11 +194,11 @@ def user_gold_ldp():
 # MAGIC
 # MAGIC Here is a full example of the test pipeline definition.
 # MAGIC
-# MAGIC Note that we have 3 notebooks in the SDP pipeline:
+# MAGIC Note all the transformation logic is defined under 
+# MAGIC spd-python/transformations
+# MAGIC and all the testes are defined udnder
+# MAGIC spd-python/transformations/test
 # MAGIC
-# MAGIC * **LDP-ingest_test**: ingesting our test datasets
-# MAGIC * **LDP-pipeline-to-test**: the actual pipeline we want to test
-# MAGIC * **test/LDP-Tests**: the test definition
 # MAGIC
 # MAGIC Remember that you'll have to schedule FULL REFRESH everytime your run the pipeline to get accurate test results (we want to consume all the entry dataset from scratch).
 # MAGIC

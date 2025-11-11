@@ -106,7 +106,7 @@ job_settings = jobs.JobSettings(
             task_key="Deployment",
             notebook_task=jobs.NotebookTask(
                 notebook_path=deployment_notebook_path,
-                base_parameters={"smoke_test": True},
+                base_parameters={"smoke_test": False},
             ),
             depends_on=[jobs.TaskDependency(task_key="Approval_Check")],
             max_retries=0,

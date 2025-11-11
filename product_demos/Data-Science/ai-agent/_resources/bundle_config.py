@@ -15,7 +15,7 @@
   "title": "AI Agent System and Evaluation with Databricks AI",
   "description": "Deploy your AI Agent system on Databricks AI with foundation LLM, Langchain, PDF extraction and Vector Search & Mosaic AI Agent Evaluation",
   "bundle": True,
-  "env_version": 3,
+  "env_version": 2,
   "notebooks": [
     {
       "path": "_resources/01-setup",

@@ -28,9 +28,11 @@
 # COMMAND ----------
 
 # DBTITLE 1,Ingest raw User stream data in incremental mode
-import dlt
+from pyspark import pipelines as dp
+
 spark.conf.set("pipelines.incompatibleViewCheck.enabled", "false")
-@dlt.view(comment="Raw user data - Test")
+
+@dp.materialized_view(comment="Raw user data - Test")
 def raw_user_data():
   return (
     spark.readStream.format("cloudFiles")
@@ -41,7 +43,9 @@ def raw_user_data():
 # COMMAND ----------
 
 # DBTITLE 1,Ingest user spending score
-@dlt.view(comment="Raw spend data - Test")
+from pyspark import pipelines as dp
+
+@dp.materialized_view(comment="Raw spend data - Test")
 def raw_spend_data():
   return (spark.readStream.format("cloudFiles")
     .option("cloudFiles.format","csv")

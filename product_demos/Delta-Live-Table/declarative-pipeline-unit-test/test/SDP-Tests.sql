@@ -29,12 +29,7 @@
 
 -- COMMAND ----------
 
--- DBTITLE 1,Let's make sure incorrect input rows (bad schema) are dropped
-CREATE TEMPORARY LIVE TABLE TEST_user_bronze_ldp (
-  CONSTRAINT incorrect_data_removed EXPECT (not_empty_rescued_data = 0) ON VIOLATION FAIL UPDATE
-)
-COMMENT "TEST: bronze table properly drops row with incorrect schema"
-AS SELECT count(*) as not_empty_rescued_data from user_bronze_ldp  where _rescued_data is not null or email='margaret84@example.com'
+-- MAGIC %md Open the [/sdp-python/transformations/test/01-bronze-test.py]($../sdp-python/transformations/test/01-bronze-test.py) to check out on how to make sure incorrect input rows (bad schema) are dropped
 
 -- COMMAND ----------
 
@@ -49,18 +44,7 @@ AS SELECT count(*) as not_empty_rescued_data from user_bronze_ldp  where _rescue
 
 -- COMMAND ----------
 
-CREATE TEMPORARY LIVE TABLE TEST_user_silver_ldp_anonymize (
-  CONSTRAINT keep_all_rows              EXPECT (num_rows = 4)      ON VIOLATION FAIL UPDATE, 
-  CONSTRAINT email_should_be_anonymized EXPECT (clear_email = 0)  ON VIOLATION FAIL UPDATE,
-  CONSTRAINT null_ids_removed           EXPECT (null_id_count = 0) ON VIOLATION FAIL UPDATE  
-)
-COMMENT "TEST: check silver table removes null ids and anonymize emails"
-AS (
-  WITH
-   rows_test  AS (SELECT count(*) AS num_rows       FROM user_silver_ldp),
-   email_test AS (SELECT count(*) AS clear_email    FROM user_silver_ldp  WHERE email LIKE '%@%'),
-   id_test    AS (SELECT count(*) AS null_id_count  FROM user_silver_ldp  WHERE id IS NULL)
-  SELECT * from email_test, id_test, rows_test)
+-- MAGIC %md Open the [/sdp-python/transformations/test/02-silver-test.py]($../sdp-python/transformations/test/02-silver-test.py) to check out on how to test the silver layer
 
 -- COMMAND ----------
 
@@ -71,11 +55,7 @@ AS (
 
 -- COMMAND ----------
 
-CREATE TEMPORARY LIVE TABLE TEST_user_gold_ldp (
-  CONSTRAINT pk_must_be_unique EXPECT (duplicate = 1) ON VIOLATION FAIL UPDATE
-)
-COMMENT "TEST: check that gold table only contains unique customer id"
-AS SELECT count(*) as duplicate, id FROM user_gold_ldp GROUP BY id
+-- MAGIC %md Open the [/sdp-python/transformations/test/03-gold-test.py]($../sdp-python/transformations/test/03-gold-test.py) to check out on how to test the gold layer
 
 -- COMMAND ----------
 

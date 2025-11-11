@@ -12,6 +12,7 @@ is_advanced_mlops_demo = dbutils.widgets.get("adv_mlops") == "true"
 
 # COMMAND ----------
 
+import re
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 reformat_current_user = current_user.split("@")[0].lower().replace(".", "_")
 current_user_az = re.sub(r'[^A-Za-z]', '', reformat_current_user)

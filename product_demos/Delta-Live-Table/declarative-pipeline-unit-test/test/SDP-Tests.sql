@@ -2,7 +2,7 @@
 -- MAGIC %md 
 -- MAGIC # Testing our SDP
 -- MAGIC
--- MAGIC Tests can be added directly as expectation within LDP.
+-- MAGIC Tests can be added directly as expectation within SDP.
 -- MAGIC
 -- MAGIC This is typically done using a companion notebook and creating a test version of the SDP .
 -- MAGIC

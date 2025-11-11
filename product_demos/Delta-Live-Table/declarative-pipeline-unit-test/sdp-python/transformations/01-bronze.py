@@ -13,7 +13,7 @@ def raw_user_data():
     spark.readStream.format("cloudFiles")
       .option("cloudFiles.format", "json")
       .option("cloudFiles.schemaHints", "id int")
-      .load(f"/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/users_json/*.json"))
+      .load(f"/Volumes/main__build/dbdemos_sdp_unit_test/raw_data/test/users_json/*.json"))
 
 
 from pyspark import pipelines as dp
@@ -23,11 +23,11 @@ def raw_spend_data():
   return (spark.readStream.format("cloudFiles")
     .option("cloudFiles.format","csv")
     .option("cloudFiles.schemaHints", "id int, age int, annual_income float, spending_core float")
-    .load(f"/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/test/spend_csv/*.csv"))
+    .load(f"/Volumes/main__build/dbdemos_sdp_unit_test/raw_data/test/spend_csv/*.csv"))
 
   # Ingest raw User stream data in incremental mode
 
 @dp.table(comment="Raw user data")
-@dp.expect_all_or_drop(get_rules('user_bronze_ldp')) #get the rules from our centralized table.
-def user_bronze_ldp():
+@dp.expect_all_or_drop(get_rules('user_bronze_sdp')) #get the rules from our centralized table.
+def user_bronze_sdp():
   return spark.readStream.table("raw_user_data")

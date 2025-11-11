@@ -20,8 +20,8 @@
 # MAGIC At a high level, the SDP pipelines can be constructed as following:
 # MAGIC
 # MAGIC * The ingestion step (first step of the pipeline on the left) is written in a separate notebook. This correspond to the left **green** (prod) and **blue** (test) input sources.
-# MAGIC    * The Production pipeline is defined with the PROD ingestion notebook:[./ingestion_profile/LDP-ingest_prod]($./ingestion_profile/LDP-ingest_prod) and connects to the live datasource (ex: kafka server, staging blob storage)
-# MAGIC    * The Test pipeline (only used to run the unit test) is defined with the TEST ingestion notebook: [./ingestion_profile/LDP-ingest_test]($./ingestion_profile/LDP-ingest_test) and can consume from local files used for our unit tests (ex: adhoc csv file)
+# MAGIC    * The Production pipeline is defined with the PROD ingestion notebook:[./ingestion_profile/SDP-ingest_prod]($./ingestion_profile/SDP-ingest_prod) and connects to the live datasource (ex: kafka server, staging blob storage)
+# MAGIC    * The Test pipeline (only used to run the unit test) is defined with the TEST ingestion notebook: [./ingestion_profile/SDP-ingest_test]($./ingestion_profile/SDP-ingest_test) and can consume from local files used for our unit tests (ex: adhoc csv file)
 # MAGIC * A common SDP pipeline logic is used for both the prod and the test pipeline (the **yellow** in the graph)
 # MAGIC * An additional notebook containing all the unit tests is used in the TEST pipeline (the **blue `TEST_xxx` tables** in the image on the right side)
 # MAGIC
@@ -57,16 +57,16 @@
 # In this example, we'll store our rules as a delta table for more flexibility & reusability. 
 # While this isn't directly related to Unit test, it can also help for programatical analysis/reporting.
 catalog = "main__build"
-schema = dbName = db = "dbdemos_ldp_unit_test"
+schema = dbName = db = "dbdemos_sdp_unit_test"
 
 data = [
  # tag/table name      name              constraint
- ("user_bronze_ldp",  "correct_schema", "_rescued_data IS NULL"),
- ("user_silver_ldp",  "valid_id",       "id IS NOT NULL AND id > 0"),
- ("spend_silver_ldp", "valid_id",       "id IS NOT NULL AND id > 0"),
- ("user_gold_ldp",    "valid_age",      "age IS NOT NULL"),
- ("user_gold_ldp",    "valid_income",   "annual_income IS NOT NULL"),
- ("user_gold_ldp",    "valid_score",    "spending_core IS NOT NULL")
+ ("user_bronze_sdp",  "correct_schema", "_rescued_data IS NULL"),
+ ("user_silver_sdp",  "valid_id",       "id IS NOT NULL AND id > 0"),
+ ("spend_silver_sdp", "valid_id",       "id IS NOT NULL AND id > 0"),
+ ("user_gold_sdp",    "valid_age",      "age IS NOT NULL"),
+ ("user_gold_sdp",    "valid_income",   "annual_income IS NOT NULL"),
+ ("user_gold_sdp",    "valid_score",    "spending_core IS NOT NULL")
 ]
 #Typically only run once, this doesn't have to be part of the SDP pipeline.
 spark.createDataFrame(data=data, schema=["tag", "name", "constraint"]).write.mode("overwrite").saveAsTable(f"{catalog}.{schema}.expectations")
@@ -98,8 +98,8 @@ def get_rules(tag):
 # MAGIC This is the first step of the pipeline. Note that we consume the data from the `raw_user_data` view.
 # MAGIC
 # MAGIC This view is defined in the ingestion notebooks:
-# MAGIC * For PROD: [./ingestion_profile/LDP-ingest_prod]($./ingestion_profile/LDP-ingest_prod), reading from prod system (ex: kafka)
-# MAGIC * For TEST: [./ingestion_profile/LDP-ingest_test]($./ingestion_profile/LDP-ingest_test), consuming the test dataset (csv files)
+# MAGIC * For PROD: [./ingestion_profile/SDP-ingest_prod]($./ingestion_profile/SDP-ingest_prod), reading from prod system (ex: kafka)
+# MAGIC * For TEST: [./ingestion_profile/SDP-ingest_test]($./ingestion_profile/SDP-ingest_test), consuming the test dataset (csv files)
 # MAGIC
 # MAGIC Start by reviewing the notebooks to see how the data is ingested.
 # MAGIC
@@ -119,7 +119,7 @@ def get_rules(tag):
 # MAGIC
 # MAGIC We're also adding an expectation on the ID. As the ID will be used in the next join operation, ID should never be null and be positive.
 # MAGIC
-# MAGIC Note that the expectations have been defined in the metadata expectation table under `user_silver_ldp`
+# MAGIC Note that the expectations have been defined in the metadata expectation table under `user_silver_sdp`
 # MAGIC
 # MAGIC
 

@@ -29,7 +29,7 @@
 
 # DBTITLE 1,Ingest raw User stream data in incremental mode
 from pyspark import pipelines as dp
-DEFAULT_LANDING_PATH = "/Volumes/main__build/dbdemos_ldp_unit_test/raw_data/prod"
+DEFAULT_LANDING_PATH = "/Volumes/main__build/dbdemos_sdp_unit_test/raw_data/prod"
 
 @dp.materialized_view(comment="Raw user data - Production")
 def raw_user_data():

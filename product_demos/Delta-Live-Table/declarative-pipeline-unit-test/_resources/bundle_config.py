@@ -12,7 +12,7 @@
   "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
-  "default_schema": "dbdemos_ldp_unit_test",
+  "default_schema": "dbdemos_sdp_unit_test",
   "description": "Deploy robust pipelines with unit tests leveraging expectation.",
   "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Spark Declarative Pipelines let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your SDP pipeline and make it composable, easily switching input data with your test data.",
   "bundle": True,
@@ -108,7 +108,7 @@
   ],
   "init_job": {
     "settings": {
-        "name": "field_demos_ldp_unit_test_init_{{CURRENT_USER_NAME}}",
+        "name": "field_demos_sdp_unit_test_init_{{CURRENT_USER_NAME}}",
         "email_notifications": {
             "no_alert_for_skipped_runs": False
         },
@@ -126,9 +126,9 @@
                 "email_notifications": {}
             },
             {
-                "task_key": "start_ldp_pipeline",
+                "task_key": "start_sdp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_SDP_ID_dlt-test}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-test}}",
                     "full_refresh": true
                 },
                 "timeout_seconds": 0,
@@ -200,9 +200,19 @@
         "libraries": [
             {"glob": {"include": "{{DEMO_FOLDER}}/sdp-python/transformations/**"}}
         ],
-        "name": "dbdemos_ldp_unit_test_{{CATALOG}}_{{SCHEMA}}",
+        "name": "dbdemos_sdp_unit_test_{{CATALOG}}_{{SCHEMA}}",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "target": "{{SCHEMA}}",
+        "root_path": "{{DEMO_FOLDER}}",
+        "event_log": {
+            "catalog": "{{CATALOG}}",
+            "schema": "{{SCHEMA}}",
+            "name": "dbdemos_sdp_unit_test_event_logs"
+        },
+        "configuration": {
+          "catalog": "{{CATALOG}}",
+          "schema": "{{SCHEMA}}"
+        }
       }
     }
   ]

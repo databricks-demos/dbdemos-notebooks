@@ -3,7 +3,7 @@ from pyspark.sql.functions import expr, col
 
 # Catalog and schema configuration
 catalog = "main__build"
-schema = "dbdemos_ldp_unit_test"
+schema = "dbdemos_sdp_unit_test"
 
 def get_rules(tag):
   from pyspark.sql import SparkSession

@@ -58,6 +58,14 @@
       "description": "Main notebook containing the unit tests."
     },
     {
+      "path": "sdp-python/transformations/config.py", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Config", 
+      "description": "Load the rules from the expectation"
+    },
+    {
     "path": "sdp-python/transformations/01-bronze.py", 
     "pre_run": False, 
     "publish_on_website": True, 

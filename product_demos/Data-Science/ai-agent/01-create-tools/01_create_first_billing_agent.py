@@ -249,5 +249,4 @@ displayHTML(f'<a href="/explore/data/functions/{catalog}/{dbName}/calculate_math
 # MAGIC But how can we make sure it's working properly, and more importantly will still work well for future questions and modifications?
 # MAGIC
 # MAGIC To do so, we need to build an Evaluation dataset and leverage MLFlow to automatically analyze our agent!
-# MAGIC
-# MAGIC Open the [02_agent_eval/02.1_agent_evaluation]($../02_agent_eval/02.1_agent_evaluation) notebook to see how to deploy your agent using Langchain and run your first evaluations!
+# MAGIC Open the [02-agent-eval/02.1_agent_evaluation]($../02-agent-eval/02.1_agent_evaluation) notebook to see how to deploy your agent using Langchain and run your first evaluations!

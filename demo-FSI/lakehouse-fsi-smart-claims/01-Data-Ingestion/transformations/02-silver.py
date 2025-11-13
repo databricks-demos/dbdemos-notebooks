@@ -2,15 +2,7 @@ from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 from pyspark.sql.functions import lit, concat, col
 from pyspark.sql import types as T
-
-# Helper function to flatten nested struct fields
-def flatten_struct(df):
-    for field in df.schema.fields:
-        if isinstance(field.dataType, T.StructType):
-            for child in field.dataType:
-                df = df.withColumn(field.name + '_' + child.name, F.col(field.name + '.' + child.name))
-            df = df.drop(field.name)
-    return df
+from utilities import utils
 
 # ----------------------------------
 # Aggregate telematics data by chassis number
@@ -57,7 +49,7 @@ def policy():
 def claim():
     # Read the staged claim records into memory
     claim = spark.readStream.table("raw_claim")
-    claim = flatten_struct(claim)
+    claim = utils.flatten_struct(claim)
 
     # Update the format of all date/time features
     return (claim.withColumn("claim_date", F.to_date(F.col("claim_date")))

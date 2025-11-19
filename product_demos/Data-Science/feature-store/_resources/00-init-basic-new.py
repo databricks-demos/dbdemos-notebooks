@@ -408,3 +408,21 @@ def wait_until_endpoint_ready(endpoint_name: str, timeout: int = 1800, sleep_tim
     print(f"Timeout reached after {timeout/60:.1f} min — endpoint not ready.")
     return False
 
+
+# COMMAND ----------
+
+def init_experiment_for_batch(demo_name, experiment_name):
+  from databricks.sdk import WorkspaceClient
+  import mlflow
+  w = WorkspaceClient()
+  xp_root_path = f"/Shared/dbdemos/experiments/{demo_name}"
+  try:
+    r = w.workspace.mkdirs(path=xp_root_path)
+  except Exception as e:
+    print(f"ERROR: couldn't create a folder for the experiment under {xp_root_path} - please create the folder manually or  skip this init (used for job only: {e})")
+    raise e
+  xp = f"{xp_root_path}/{experiment_name}"
+  print(f"Using common experiment under {xp}")
+  mlflow.set_experiment(xp)
+  
+init_experiment_for_batch("feature_store", "introduction")

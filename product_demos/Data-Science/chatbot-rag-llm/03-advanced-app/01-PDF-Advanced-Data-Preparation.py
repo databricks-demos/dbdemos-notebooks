@@ -260,7 +260,7 @@ pprint(embeddings)
 # MAGIC
 # MAGIC The last step is to now compute an embedding for all our documentation chunks. Let's create an udf to compute the embeddings using the foundation model endpoint.
 # MAGIC
-# MAGIC *Note that this part would typically be setup as a production-grade job, running as soon as a new documentation page is updated. <br/> This could be setup as a Delta Live Table pipeline to incrementally consume updates.*
+# MAGIC *Note that this part would typically be setup as a production-grade job, running as soon as a new documentation page is updated. <br/> This could be setup as a Spark Declarative Pipelines pipeline to incrementally consume updates.*
 
 # COMMAND ----------
 

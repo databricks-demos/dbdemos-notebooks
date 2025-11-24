@@ -4,6 +4,7 @@ input_example:
   role: user
 llm_endpoint_name: databricks-claude-3-7-sonnet
 max_history_messages: 20
+mcp_server_urls: []
 retriever_config: null
 system_prompt: You are a telco assistant. Call the appropriate tool to help the user
   with billing, support, or account info. DO NOT mention any internal tool or reasoning

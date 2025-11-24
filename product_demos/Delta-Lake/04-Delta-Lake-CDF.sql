@@ -177,9 +177,9 @@ select * from user_delta_silver WHERE ID < 10;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Easier CDF with Delta Live Table APPLY CHANGES
+-- MAGIC ## Easier CDF with Spark Declarative Pipelines APPLY CHANGES
 -- MAGIC
--- MAGIC Delta Lake CDF is a low level API. To implement simple CDC pipeline using pure SQL (including SCDT2 tables), you can leverage the Delta Live Table engine! See the [documentation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-cdc.html) for more details.
+-- MAGIC Delta Lake CDF is a low level API. To implement simple CDC pipeline using pure SQL (including SCDT2 tables), you can leverage the Spark Declarative Pipelines engine! See the [documentation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-cdc.html) for more details.
 
 -- COMMAND ----------
 

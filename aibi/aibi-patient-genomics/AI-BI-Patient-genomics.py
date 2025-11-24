@@ -70,7 +70,7 @@
 # MAGIC If you want to know more about LakeFlow Connect and how to incrementally synchronize your external table to Databricks, you can open the [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo).
 # MAGIC
 # MAGIC
-# MAGIC In this demo, we pre-loaded the data for you! For more details on how to simplify data transformation, [open the Delta Live Table Product Tour](https://www.databricks.com/resources/demos/tours/data-engineering/delta-live-tables).
+# MAGIC In this demo, we pre-loaded the data for you! For more details on how to simplify data transformation, [open the Spark Declarative Pipelines Product Tour](https://www.databricks.com/resources/demos/tours/data-engineering/delta-live-tables).
 # MAGIC
 
 # COMMAND ----------

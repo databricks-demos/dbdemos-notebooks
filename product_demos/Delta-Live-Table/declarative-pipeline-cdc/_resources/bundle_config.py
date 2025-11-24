@@ -1,0 +1,171 @@
+# Databricks notebook source
+# MAGIC %md 
+# MAGIC ## Demo bundle configuration
+# MAGIC Please ignore / do not delete, only used to prep and bundle the demo
+
+# COMMAND ----------
+
+{
+  "name": "declarative-pipeline-cdc",
+  "category": "data-engineering",
+  "title": "CDC pipeline with Declarative Pipelines.",
+  "serverless_supported": True,
+  "custom_schema_supported": True,
+  "default_catalog": "main",
+  "default_schema": "dbdemos_sdp_cdc",
+  "description": "Ingest Change Data Capture flow with APPLY INTO and simplify SCDT2 implementation.",
+  "fullDescription": "This demo highlight how Spark Declarative Pipelines simplifies CDC (Change Data Capture).<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/>We'll also implement a SCD2 (Slowly Changing Dimention table of type 2). While this can be really tricky to implement when data arrives out of order, Declarative Pipelines makes this super simple with one simple keyword.<br/><br/>Ultimately, we'll show you how to programatically scan multiple incoming folder and trigger N stream (1 for each CDC table), leveraging Declarative Pipelines with python.",
+    "usecase": "Data Engineering",
+  "bundle": True,
+  "notebooks": [
+    {
+      "path": "_resources/00-Data_CDC_Generator", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "CDC data generator", 
+      "description": "Generate data for the pipeline."
+    },
+    {
+      "path": "01-Retail_Pipeline_CDC_SQL", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Pipeline definition (SQL)", 
+      "description": "CDC flow in SQL with Declarative Pipelines"
+    },
+    {
+      "path": "1-sdp-sql/explorations/sample_exploration",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "1-sdp-sql/transformations/01-sql_cdc_pipeline.sql", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "First CDC Pipeline", 
+      "description": "Use SQL to create a CDC pipelines with SCDT2."
+    },
+    {
+      "path": "2-sdp-python/explorations/sample_exploration",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
+    },
+    {
+      "path": "2-sdp-python/transformations/01-full_python_pipeline.py", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "Programatically handle multiple CDC flow", 
+      "description": "Use python to create a dynamic CDC pipelines with N tables."
+    }
+  ],
+  "init_job": {
+    "settings": {
+        "name": "demos_pipeline_cdc_init_{{CURRENT_USER_NAME}}",
+        "email_notifications": {
+            "no_alert_for_skipped_runs": False
+        },
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "init_data",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/_resources/00-Data_CDC_Generator",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "start_pipeline",
+                "pipeline_task": {
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-cdc}}",
+                    "full_refresh": true
+                },
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [
+                    {
+                        "task_key": "init_data"
+                    }
+                ]
+            }
+        ],
+        "job_clusters": [
+            {
+                "job_cluster_key": "Shared_job_cluster",
+                "new_cluster": {
+                    "spark_version": "16.4.x-scala2.12",
+                    "spark_conf": {
+                        "spark.master": "local[*, 4]",
+                        "spark.databricks.cluster.profile": "singleNode"
+                    },
+                    "custom_tags": {
+                        "ResourceClass": "SingleNode"
+                    },
+                    "spark_env_vars": {
+                        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                    },
+                    "enable_elastic_disk": True,
+                    "data_security_mode": "SINGLE_USER",
+                    "runtime_engine": "STANDARD",
+                    "num_workers": 0
+                }
+            }
+        ],
+        "format": "MULTI_TASK"
+    }
+  },
+  "cluster": {
+    "num_workers": 1,
+    "spark_version": "16.4.x-scala2.12",
+    "spark_conf": {},
+    "data_security_mode": "USER_ISOLATION",
+    "runtime_engine": "STANDARD"
+  },
+  "pipelines": [
+    {
+      "id": "sdp-cdc",
+      "run_after_creation": False,
+      "definition": {
+        "clusters": [
+            {
+                "label": "default",
+                "num_workers": 1
+            }
+        ],
+        "development": True,
+        "continuous": False,
+        "channel": "CURRENT",
+        "edition": "ADVANCED",
+        "photon": False,
+        "root_path": "{{DEMO_FOLDER}}",
+        "libraries": [
+            {"glob": {"include": "{{DEMO_FOLDER}}/1-sdp-sql/transformations/**"}}
+        ],
+        "name": "dbdemos_pipeline_cdc_{{CATALOG}}_{{SCHEMA}}",
+        "catalog": "{{CATALOG}}",
+        "schema": "{{SCHEMA}}",
+        "event_log": {
+              "catalog": "{{CATALOG}}",
+              "schema": "{{SCHEMA}}",
+              "name": "dbdemos_cdc_event_logs"
+        },
+        "configuration": {
+          "catalog": "{{CATALOG}}",
+          "schema": "{{SCHEMA}}"
+        }
+      }
+    }
+  ]
+}

@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC ## Implementing Dynamic rules
 # MAGIC
-# MAGIC Many system exists to build such rules. These can be natively implemented in Spark or using Delta Live Table (check `dbdemos.install('dlt-unit-test')` for an example of dynamic DLT rules)
+# MAGIC Many system exists to build such rules. These can be natively implemented in Spark or using Spark Declarative Pipelines (check `dbdemos.install('declarative-pipeline-unit-test')` for an example of dynamic SDP rules)
 # MAGIC
 # MAGIC In this simple example, we'll add our rules as SQL statement in a table table and then apply them over our dataset.
 # MAGIC
@@ -98,9 +98,9 @@ insert_rule('exceeds policy amount', 'valid_amount', exceeds_policy_amount, 'HIG
 # COMMAND ----------
 
 severity_mismatch = '''
-CASE WHEN    damage_prediction.label="major" AND incident_severity > 0.8 THEN  "Severity matches the report"
-       WHEN  damage_prediction.label="minor" AND incident_severity > 0.6 THEN  "Severity matches the report"
-       WHEN  damage_prediction.label="ok" AND incident_severity > 0.4 THEN  "Severity matches the report"
+CASE WHEN    damage_prediction.label="major" AND damage_prediction.score > 0.8 THEN  "Severity matches the report"
+       WHEN  damage_prediction.label="minor" AND damage_prediction.score > 0.6 THEN  "Severity matches the report"
+       WHEN  damage_prediction.label="ok" AND damage_prediction.score > 0.4 THEN  "Severity matches the report"
        ELSE "Severity does not match"
 END 
 '''

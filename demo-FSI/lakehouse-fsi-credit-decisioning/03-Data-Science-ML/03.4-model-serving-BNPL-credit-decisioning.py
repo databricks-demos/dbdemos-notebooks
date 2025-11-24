@@ -184,10 +184,10 @@ print(
 # MAGIC
 # MAGIC In this demo, we've seen an end 2 end flow with the Lakehouse:
 # MAGIC
-# MAGIC - Data ingestion made simple with Delta Live Table
+# MAGIC - Data ingestion made simple with Spark Declarative Pipelines
 # MAGIC - Leveraging Databricks warehouse to making credit decisions
 # MAGIC - Model Training with AutoML for citizen Data Scientist
 # MAGIC - Ability to tune our model for better results, improving our revenue
 # MAGIC - Ultimately, the ability to deploy and make explainable ML predictions, made possible with the full Lakehouse capabilities.
 # MAGIC
-# MAGIC [Go back to the introduction]($../00-Credit-Decisioning) or discover how to use Databricks Workflow to orchestrate everything together through the [05-Workflow-Orchestration-credit-decisioning]($../05-Workflow-Orchestration/05-Workflow-Orchestration-credit-decisioning).
+# MAGIC [Go back to the introduction]($../00-Credit-Decisioning) or discover how to use Databricks Workflow to orchestrate everything together through the [06-Workflow-Orchestration-credit-decisioning]($../06-Workflow-Orchestration/06-Workflow-Orchestration-credit-decisioning).

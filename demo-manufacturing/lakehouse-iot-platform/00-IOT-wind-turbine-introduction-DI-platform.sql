@@ -96,16 +96,16 @@
 -- MAGIC It provides many functionalities such as *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
 -- MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 -- MAGIC
--- MAGIC ### Simplify ingestion with (Lakeflow) Declarative Pipelines
+-- MAGIC ### Simplify ingestion with Spark Declarative Pipelines
 -- MAGIC
--- MAGIC Databricks simplifies data ingestion and transformation with (Lakeflow) Declarative Pipelines by allowing SQL users to create advanced pipelines via batch or streaming. Databricks also simplifies pipeline deployment, testing, and tracking data quality which reduces operational complexity, so that you can focus on the needs of the business.<br/>
+-- MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines by allowing SQL users to create advanced pipelines via batch or streaming. Databricks also simplifies pipeline deployment, testing, and tracking data quality which reduces operational complexity, so that you can focus on the needs of the business.<br/>
 
 -- COMMAND ----------
 
--- MAGIC %md 
--- MAGIC Open the Wind Turbine 
--- MAGIC   <a dbdemos-pipeline-id="dlt-iot-wind-turbine" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">(Lakeflow) Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-Lakeflow-Declarative-Pipelines-Wind-Turbine-SQL) *(Alternatives: (Lakeflow) Declarative Pipelines Python version Soon available - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine))*. <br>
--- MAGIC   For more details on (Lakeflow) Declarative Pipelines: `dbdemos.install('dlt-load')` or `dbdemos.install('dlt-cdc')`
+-- MAGIC %md
+-- MAGIC Open the Wind Turbine
+-- MAGIC   <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL) *(Alternatives:  [Spark Declarative Pipelines Python]($./01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine))*. <br>
+-- MAGIC   For more details on Spark Declarative Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 

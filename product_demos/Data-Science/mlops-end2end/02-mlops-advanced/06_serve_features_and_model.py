@@ -30,15 +30,13 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a5
-# MAGIC mlflow==3.3.0
+# MAGIC databricks-feature-engineering==0.13.0a8
+# MAGIC mlflow==3.3.2
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 mlflow --upgrade
-# MAGIC
-# MAGIC
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 mlflow --upgrade
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -47,8 +45,9 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("model_name", "", "Model Name") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.text("model_name", f"{catalog}.{db}.advanced_mlops_churn", "Model Name") # Will be populated from Deployment Jobs Parameters
 dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.text("online_store_name", online_store_name, "Online Store Name")
 dbutils.widgets.dropdown("drop_online_store", "False", ["True", "False"], "Reset Online Table(s)")
 dbutils.widgets.dropdown("smoke_test", "False", ["True", "False"], "Smoke Test Flag")
 
@@ -63,7 +62,7 @@ dbutils.widgets.dropdown("smoke_test", "False", ["True", "False"], "Smoke Test F
 
 # COMMAND ----------
 
-is_smoke_test = dbutils.widgets.get("smoke_test") == "True"
+is_smoke_test = dbutils.widgets.get("smoke_test").lower() == "true"
 
 # COMMAND ----------
 
@@ -134,6 +133,10 @@ is_smoke_test = dbutils.widgets.get("smoke_test") == "True"
 
 # COMMAND ----------
 
+
+
+# COMMAND ----------
+
 from databricks.feature_engineering import FeatureEngineeringClient
 
 
@@ -141,7 +144,12 @@ from databricks.feature_engineering import FeatureEngineeringClient
 fe = FeatureEngineeringClient()
 
 # Set Online Store Name
-online_store_name = "fe_shared_demo" # mlops-churn-advanced"
+# Change it to avoid conflict if you want to redeploy a new version
+online_store_name = dbutils.widgets.get("online_store_name") # dbdemosonlinestore
+print(f'Using online store: {online_store_name}')
+
+endpoint_name = ("advanced_mlops_churn_" + current_user_az)[:50]
+print(f'Using endoint name: {endpoint_name}')
 
 # Check if exists
 online_store = fe.get_online_store(name=online_store_name)
@@ -182,14 +190,31 @@ elif not online_store and not is_smoke_test:
 
 # COMMAND ----------
 
+import time
+
+
 if not is_smoke_test:
     print(f"Publishing feature table to online store...")
-    publish_state = fe.publish_table(
-        online_store=online_store,
-        source_table_name=f"{catalog}.{db}.advanced_churn_feature_table",
-        online_table_name=f"{catalog}.{db}.advanced_churn_feature_online_table",
-        # streaming=True
-    )
+    max_retries = 5
+    retry_count = 0
+    while retry_count < max_retries:
+        try:
+            publish_state = fe.publish_table(
+                online_store=online_store,
+                source_table_name=f"{catalog}.{db}.advanced_churn_feature_table",
+                online_table_name=f"{catalog}.{db}.advanced_churn_feature_online_table",
+                # streaming=True
+            )
+            break
+        except Exception as e:
+            if "feature sync is currently in progress" in str(e):
+                print("Feature sync in progress, retrying...")
+                retry_count += 1
+                time.sleep(10)  # Wait for 10 seconds before retrying
+            else:
+                raise e
+    else:
+        print("Failed to publish after multiple retries.")
 
 # COMMAND ----------
 
@@ -245,8 +270,6 @@ if not is_smoke_test:
 # MAGIC
 
 # COMMAND ----------
-
-endpoint_name = "advanced_mlops_churn_aeh"
 
 # Fully qualified model name
 # model_name = f"{catalog}.{db}.advanced_mlops_churn"
@@ -354,7 +377,7 @@ endpoint_config_dict = {
     "auto_capture_config":{
         "catalog_name": catalog,
         "schema_name": db,
-        "table_name_prefix": "advanced_churn_served_v2"
+        "table_name_prefix": "advanced_churn_served"
     }
 }
 
@@ -416,8 +439,8 @@ if not is_smoke_test:
 # MAGIC ```
 # MAGIC {
 # MAGIC   "dataframe_records": [
-# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23", "split":"test"},
-# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23","split":"test"}
+# MAGIC     {"customer_id": "0002-ORFBO", "transaction_ts": "2025-08-19", "split":"test"},
+# MAGIC     {"customer_id": "0003-MKNFE", "transaction_ts": "2025-08-19", "split":"test"}
 # MAGIC   ]
 # MAGIC }
 # MAGIC ```
@@ -440,7 +463,6 @@ from mlflow.models import Model
 
 
 # Setting these variables again in case the user skipped running the cells to deploy the model
-endpoint_name = "advanced_mlops_churn_aeh"
 # model_version = client.get_model_version_by_alias(name=model_name, alias="Champion").version # Get champion version
 
 p = ModelsArtifactRepository(f"models:/{model_name}/{model_version}").download_artifacts("") 
@@ -453,8 +475,8 @@ if input_example:
 else:
   # Hard-code test-sample
   dataframe_records = [
-    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-07-23", "split":"test"},
-    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-07-23", "split":"test"}
+    {"customer_id": "0002-ORFBO", "transaction_ts": "2025-08-19", "split":"test"},
+    {"customer_id": "0003-MKNFE", "transaction_ts": "2025-08-19", "split":"test"}
   ]
 
 # COMMAND ----------

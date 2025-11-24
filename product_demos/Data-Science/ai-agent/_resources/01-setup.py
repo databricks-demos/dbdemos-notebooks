@@ -18,12 +18,6 @@ volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
 
 # COMMAND ----------
 
-for f in dbutils.fs.ls(volume_folder):
-  dbutils.fs.rm(f.path, True)  
-#dbutils.fs.rm(volume_folder, True)
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC To speedup the demo, we won't generate the data but download it directly. IF it fails you can run the generation notebooks in the _resource folders instead.
 
@@ -175,7 +169,7 @@ def wait_for_index_to_be_ready(vsc, vs_endpoint_name, index_name):
       if i % 40 == 0: print(f"Waiting for index to be ready, this can take a few min... {index_status} - pipeline url:{url}")
       time.sleep(10)
     else:
-        raise Exception(f'''Error with the index - this shouldn't happen. DLT pipeline might have been killed.\n Please delete it and re-run the previous cell: vsc.delete_index("{index_name}, {vs_endpoint_name}") \nIndex details: {idx}''')
+        raise Exception(f'''Error with the index - this shouldn't happen. SDP pipeline might have been killed.\n Please delete it and re-run the previous cell: vsc.delete_index("{index_name}, {vs_endpoint_name}") \nIndex details: {idx}''')
   raise Exception(f"Timeout, your index isn't ready yet: {vsc.get_index(index_name, vs_endpoint_name)}")
 
 def wait_for_model_serving_endpoint_to_be_ready(ep_name):

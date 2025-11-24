@@ -4,15 +4,15 @@
 # MAGIC
 # MAGIC <img style="float: right" width="300px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-2.png" />
 # MAGIC
-# MAGIC In this notebook, we'll show you an alternative to Delta Live Table: building an ingestion pipeline with the Spark API.
+# MAGIC In this notebook, we'll show you an alternative to Spark Declarative Pipelines: building an ingestion pipeline with the Spark API.
 # MAGIC
-# MAGIC As you'll see, this implementation is lower level than the Delta Live Table pipeline, and you'll have control over all the implementation details (handling checkpoints, data quality etc).
+# MAGIC As you'll see, this implementation is lower level than the Spark Declarative Pipelines pipeline, and you'll have control over all the implementation details (handling checkpoints, data quality etc).
 # MAGIC
 # MAGIC Lower level also means more power. Using Spark API, you'll have unlimited capabilities to ingest data in Batch or Streaming.
 # MAGIC
-# MAGIC If you're unsure what to use, start with Delta Live Table!
+# MAGIC If you're unsure what to use, start with Spark Declarative Pipelines!
 # MAGIC
-# MAGIC *Remember that Databricks workflow can be used to orchestrate a mix of Delta Live Table pipeline with standard Spark pipeline.*
+# MAGIC *Remember that Databricks workflow can be used to orchestrate a mix of Spark Declarative Pipelines pipeline with standard Spark pipeline.*
 # MAGIC
 # MAGIC ### Dataset:
 # MAGIC
@@ -330,7 +330,7 @@ spark.sql(f"DELETE FROM spark_sensor_bronze where turbine_id='{first_turbine}'")
 # MAGIC * Difficult pipeline operations (observability, error recovery)
 # MAGIC
 # MAGIC
-# MAGIC #### To solve these challenges, Databricks introduced **Delta Live Table**
+# MAGIC #### To solve these challenges, Databricks introduced **Spark Declarative Pipelines**
 # MAGIC A simple way to build and manage data pipelines for fresh, high quality data!
 
 # COMMAND ----------

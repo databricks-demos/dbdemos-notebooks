@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # End-to-End MLOps demo with MLFlow, Auto ML, and Models in Unity Catalog
+# MAGIC # End-to-End MLOps demo with MLFlow, and Models in Unity Catalog
 # MAGIC
 # MAGIC ## Challenges moving ML project into production
 # MAGIC
@@ -62,7 +62,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=true
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 

@@ -38,13 +38,13 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a5
-# MAGIC mlflow==3.3.0
+# MAGIC databricks-feature-engineering==0.13.0a8
+# MAGIC mlflow==3.3.2
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 mlflow --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -56,7 +56,7 @@
 # COMMAND ----------
 
 dbutils.widgets.text("model_name", f"{catalog}.{db}.advanced_mlops_churn", "Model Name") # Will be populated from Deployment Jobs Parameters
-dbutils.widgets.text("model_version", "", "Model Version") # Will be populated from Deployment Jobs Parameters
+dbutils.widgets.text("model_version", "1", "Model Version") # Will be populated from Deployment Jobs Parameters
 
 # COMMAND ----------
 

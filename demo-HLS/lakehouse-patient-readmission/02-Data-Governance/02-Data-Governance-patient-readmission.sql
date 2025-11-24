@@ -120,7 +120,7 @@ SELECT * FROM protected_patients
 -- MAGIC 2. Tracing **missing values** in a dashboard or ML model to the origin,
 -- MAGIC 3. **Finding specific data** - organizations have hundreds and even thousands of data tables and sources. Finiding the table or column that contains specific information can be daunting without a proper discoverability tools.
 -- MAGIC
--- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (DLT, SQL query, Databricks Feature Store, or a python Notebook).
+-- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (SDP, SQL query, Databricks Feature Store, or a python Notebook).
 -- MAGIC
 -- MAGIC **Note**: To explore the whole lineage, open navigate to the Data Explorer, and find the ```customer_gold``` table inside your catalog and database.
 

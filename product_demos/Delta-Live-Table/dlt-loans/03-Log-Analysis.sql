@@ -1,11 +1,11 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC # DLT pipeline log analysis
+-- MAGIC # SDP pipeline log analysis
 -- MAGIC
 -- MAGIC <img style="float:right" width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/dlt/dlt-loans-dashboard.png?raw=true">
 -- MAGIC
--- MAGIC Each DLT Pipeline can be configured to save out the metrics to a table in Unity Catalog. From this table we can see what is happening and the quality of the data passing through it.
+-- MAGIC Each SDP Pipeline can be configured to save out the metrics to a table in Unity Catalog. From this table we can see what is happening and the quality of the data passing through it.
 -- MAGIC
 -- MAGIC You can leverage the expecations directly as a SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
 -- MAGIC
@@ -13,7 +13,7 @@
 -- MAGIC
 -- MAGIC ## Your event log table is now available as a Table within your schema!
 -- MAGIC
--- MAGIC This is simply set as an option in your DLT configuration menu.
+-- MAGIC This is simply set as an option in your SDP configuration menu.
 -- MAGIC
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -80,4 +80,4 @@ where
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your expectations are ready to be queried in SQL! Open the <a dbdemos-dashboard-id="dlt-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">data Quality Dashboard example</a> for more details.
+-- MAGIC Your expectations are ready to be queried in SQL! Open the <a dbdemos-dashboard-id="sdp-expectations" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">data Quality Dashboard example</a> for more details.

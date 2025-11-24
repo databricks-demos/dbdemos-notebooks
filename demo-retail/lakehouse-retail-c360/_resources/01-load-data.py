@@ -74,7 +74,7 @@ else:
 
 # COMMAND ----------
 
-#As we need a model in the DLT pipeline and the model depends of the DLT pipeline too, let's build an empty one.
+#As we need a model in the SDP pipeline and the model depends of the SDP pipeline too, let's build an empty one.
 #This wouldn't make sense in a real-world system where we'd have 2 jobs / pipeline (1 for ingestion, and 1 to build the model / run inferences)
 import random
 import mlflow
@@ -115,7 +115,7 @@ except Exception as e:
         model_registered = mlflow.register_model(f'runs:/{run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
         client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=model_registered.version)
     else:
-        print(f"ERROR: couldn't access model for unknown reason - DLT pipeline will likely fail as model isn't available: {e}")
+        print(f"ERROR: couldn't access model for unknown reason - SDP pipeline will likely fail as model isn't available: {e}")
 
 # COMMAND ----------
 

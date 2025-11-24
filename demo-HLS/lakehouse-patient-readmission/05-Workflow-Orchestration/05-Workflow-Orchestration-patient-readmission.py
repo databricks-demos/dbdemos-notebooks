@@ -4,17 +4,17 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 20px" width="400px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/hls/patient-readmission/hls-patient-readmision-lakehouse-5.png" />
 # MAGIC
-# MAGIC All our assets are ready. We now need to define when we want our DLT pipeline to kick in and refresh the tables.
+# MAGIC All our assets are ready. We now need to define when we want our SDP pipeline to kick in and refresh the tables.
 # MAGIC
-# MAGIC One option is to switch DLT pipeline in continuous mode to have a streaming pipeline, providing near-realtime insight.
+# MAGIC One option is to switch SDP pipeline in continuous mode to have a streaming pipeline, providing near-realtime insight.
 # MAGIC
-# MAGIC An alternative is to wakeup the DLT pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
+# MAGIC An alternative is to wakeup the SDP pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
 # MAGIC
 # MAGIC This is a simple configuration offering a tradeoff between uptime and ingestion latencies.
 # MAGIC
 # MAGIC In our case, we decided that the best trade-off is to ingest new data every hours:
 # MAGIC
-# MAGIC - Start the DLT pipeline to ingest new data and refresh our tables
+# MAGIC - Start the SDP pipeline to ingest new data and refresh our tables
 # MAGIC - Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC - Retrain our model to include the lastest date and capture potential behavior change
 # MAGIC
@@ -29,7 +29,7 @@
 # MAGIC With Databricks Lakehouse we do not need any external orchestrators. We can use [Workflows](/#job/list) (available on the left menu) to orchestrate our Credit Decisioning and Scoring pipelines with just a few clicks.
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Delta Live Tables and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -46,7 +46,7 @@
 # MAGIC <p></p>
 # MAGIC
 # MAGIC * Initialize the demo raw dataset
-# MAGIC * Ingest synthea data by starting a Delta Live Tables run
+# MAGIC * Ingest synthea data by starting a Spark Declarative Pipelines run
 # MAGIC * Secure the tables, lineage, audit logs
 # MAGIC * Create our Patient cohorts
 # MAGIC * Refresh the cohort dashboard
@@ -71,7 +71,7 @@
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Delta Live Tables
+# MAGIC * Spark Declarative Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
@@ -80,7 +80,7 @@
 # MAGIC
 # MAGIC In this example, can see our 3 tasks:
 # MAGIC
-# MAGIC * Start the DLT pipeline to ingest new data and refresh our tables
+# MAGIC * Start the SDP pipeline to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC * Retrain our Churn model
 

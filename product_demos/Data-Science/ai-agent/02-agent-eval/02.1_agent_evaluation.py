@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
+# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.12.1 protobuf<5  cryptography<43 databricks-mcp
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -60,7 +60,8 @@ rag_chain_config = {
     "system_prompt": "Your job is to provide customer help. call the tool to answer.",
     "llm_endpoint_name": LLM_ENDPOINT_NAME,
     "max_history_messages": 20,
-    "retriever_config": None
+    "retriever_config": None,
+    "mcp_server_urls": [] 
 }
 try:
     with open('agent_config.yaml', 'w') as f:
@@ -280,6 +281,9 @@ except Exception as e:
 logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
 
 # COMMAND ----------
+
+# Load the model to be used in evaluation via `predict_wrapper`
+loaded_model = mlflow.pyfunc.load_model(f"runs:/{logged_agent_info.run_id}/agent")
 
 with mlflow.start_run(run_name='eval_with_reasoning_instructions'):
     results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_wrapper, scorers=scorers)

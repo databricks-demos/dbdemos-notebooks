@@ -14,28 +14,15 @@
   "serverless_supported": True,
   "title": "Feature Store and Online Inference",
   "description": "Leverage Databricks Feature Store with streaming and online store.",
-  "fullDescription": "Databricks Feature Store provide centralized repository that enables data scientists to find and share features and also ensures that the same code used to compute the feature values is used for model training and inference.<br/><br/><br/>Databricks Feature store solves the complexity of handling both big dataset at scale for training and small data for realtime inference, accelerating your Data Science team with best practices.<br/><br/>In this demo, we will cover the full Feature Store capabilities in a set of 3 notebooks. Each notebook will introduce new capabilities.<br/><br/><ul><li>Feature store lookup tables</li><li>Leverage Databricks Automl to programatically build a model</li><li>Use point in time lookups to prevent from data leackage</li><li>Add Streaming table to refresh your features in realtime</li><li>Deploy Online store for real time inference</li><li>Deploy our model as s serverless Serving Endpoint</li></ul>",
-  "usecase": "Data Science & AI",
-  "products": ["Feature Store","MLFLow", "Auto ML"],
-  "demo_assets": [],
   "bundle": True,
-  "tags": [{"ds": "Data Science"}],
   "notebooks": [
     {
-      "path": "_resources/00-init-basic",
+      "path": "_resources/00-init-basic-new",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
       "title":  "Setup",
       "description": "Init data for demo."
-    },
-    {
-      "path": "_resources/00-init-expert",
-      "pre_run": False,
-      "publish_on_website": False,
-      "add_cluster_setup_cell": False,
-      "title":  "Setup",
-      "description": "Init data for expert demo."
     },
     {
       "path": "01_Feature_store_introduction", 
@@ -51,15 +38,15 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - advanced", 
-      "description": "Point in time & automl"
+      "description": "Point in time & online feature store"
     },
     {
-      "path": "03_Feature_store_expert", 
+      "path": "03_Feature_store_pipeline", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Feature Store - full", 
-      "description": "Streaming, online backed, model serving"
+      "description": "Feature Store creation in pipeline"
     }
   ],
   "cluster": {

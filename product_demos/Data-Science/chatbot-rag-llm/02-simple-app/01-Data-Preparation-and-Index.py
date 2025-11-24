@@ -149,7 +149,7 @@ split_html_on_h2(html)
 # MAGIC
 # MAGIC The last step is to apply our UDF all our documentation text and save them to our `databricks_documentation` table
 # MAGIC
-# MAGIC *Note that this part would typically be setup as a production-grade job, running as soon as a new documentation page is updated. <br/> This could be setup as a Delta Live Table pipeline to incrementally consume updates.*
+# MAGIC *Note that this part would typically be setup as a production-grade job, running as soon as a new documentation page is updated. <br/> This could be setup as a Spark Declarative Pipelines pipeline to incrementally consume updates.*
 
 # COMMAND ----------
 
@@ -311,7 +311,7 @@ print(f"index {vs_index_fullname} on table {source_table_fullname} is ready")
 # MAGIC %md 
 # MAGIC ## Searching for similar content
 # MAGIC
-# MAGIC That's all we have to do. Databricks will automatically capture and synchronize new entries in your Delta Live Table.
+# MAGIC That's all we have to do. Databricks will automatically capture and synchronize new entries in your Spark Declarative Pipelines.
 # MAGIC
 # MAGIC Note that depending on your dataset size and model size, index creation can take a few seconds to start and index your embeddings.
 # MAGIC

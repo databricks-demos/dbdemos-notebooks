@@ -11,7 +11,7 @@
 # MAGIC
 # MAGIC Models are typically used in 2 ways:
 # MAGIC
-# MAGIC - At scale, a cluster (in batch or streaming, including within Delta Live Tables)
+# MAGIC - At scale, a cluster (in batch or streaming, including within Spark Declarative Pipelines)
 # MAGIC - For realtime, low-latencies use-cases, served behind a REST API.
 # MAGIC
 # MAGIC Databricks provides and simplify both options.

@@ -15,6 +15,7 @@
   "title": "AI Agent System and Evaluation with Databricks AI",
   "description": "Deploy your AI Agent system on Databricks AI with foundation LLM, Langchain, PDF extraction and Vector Search & Mosaic AI Agent Evaluation",
   "bundle": True,
+  "env_version": 2,
   "notebooks": [
     {
       "path": "_resources/01-setup",
@@ -67,7 +68,7 @@
     {
       "path": "02-agent-eval/agent.py",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Your Langchain Agent",
       "description": "Custom MLFlow flavor model for our langchain agent."
@@ -113,6 +114,14 @@
       "description": "Use Databricks AI/BI with Genie to measure your AI App impact on your business."
     },
     {
+      "path": "07-adding-mcp/07-agent_mcp",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "Add MCP to your agents",
+      "description": "Use Databricks managed MCP to add more capabilities to your agent."
+    },
+    {
       "path": "01-ai-agent-introduction",
       "pre_run": False,
       "publish_on_website": True,
@@ -123,7 +132,7 @@
     {
       "path": "config",
       "pre_run": False,
-      "publish_on_website": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Config",
       "description": "Configuration file"
@@ -131,6 +140,7 @@
   ],
   "cluster": {
     "num_workers": 0,
+    "spark_version": "17.1.x-scala2.13",
     "spark_conf": {
         "spark.master": "local[*, 4]"
     },

@@ -401,7 +401,7 @@ client.set_registered_model_alias(
 # MAGIC ## Model scoring
 # MAGIC
 # MAGIC After training, registering and finally flagging our model as production-ready, we can use it to infer labels on new data. We will show how to do it for:
-# MAGIC * Batch inference, leveraging Pandas UDF (same approach would work for streaming, also using DLT)
+# MAGIC * Batch inference, leveraging Pandas UDF (same approach would work for streaming, also using SDP)
 # MAGIC * Real-time, leveraging Model Serving (ms latency)
 
 # COMMAND ----------

@@ -18,12 +18,12 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a5
+# MAGIC databricks-feature-engineering==0.13.0a8
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a5 --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -114,10 +114,7 @@ def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   data_psdf = data_psdf.fillna({"monthly_charges": 0.0})
   data_psdf = data_psdf.fillna({"total_charges": 0.0})
 
-  # Add/Force semantic data types for specific columns (to facilitate autoML)
   data_cleanDF = data_psdf.to_spark()
-  data_cleanDF = data_cleanDF.withMetadata("customer_id", {"spark.contentAnnotation.semanticType":"native"})
-  data_cleanDF = data_cleanDF.withMetadata("num_optional_services", {"spark.contentAnnotation.semanticType":"numeric"})
 
   return data_cleanDF
 
@@ -162,6 +159,7 @@ import pyspark.sql.functions as F
 # Best practice: specify train-test split as categorical label (to be used by model validation jobs and baseline drift detection)
 train_ratio, test_ratio = 0.8, 0.2
 
+#Note: can be using append mode in prod, doing overwrite here for demo purposes
 churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
                         .withColumn("random", F.rand(seed=42)) \
                         .withColumn("split",
@@ -169,7 +167,7 @@ churn_features_n_predsDF.select("customer_id", "transaction_ts", "churn") \
                                     .otherwise("test")) \
                         .drop("random") \
                         .write.format("delta") \
-                        .mode("append").option("overwriteSchema", "true") \
+                        .mode("overwrite").option("overwriteSchema", "true") \
                         .saveAsTable(f"advanced_churn_label_table")
 
 churn_featuresDF = churn_features_n_predsDF.drop("churn")
@@ -230,13 +228,15 @@ fe = FeatureEngineeringClient()
 # COMMAND ----------
 
 # DBTITLE 1,Create "feature"/UC table
+#Drop the table for clean repeatable demo
+spark.sql(f'drop table if exists {catalog}.{db}.advanced_churn_feature_table')
 # One-Time operation
 churn_feature_table = fe.create_table(
   name="advanced_churn_feature_table", # f"{catalog}.{dbName}.{feature_table_name}"
   primary_keys=["customer_id", "transaction_ts"],
   schema=churn_featuresDF.schema,
   timeseries_columns="transaction_ts",
-  description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features and cleaned up their names.  No aggregations were performed. [Warning: This table doesn't store the ground truth and can now be used with AutoML's feature table integration."
+  description=f"These features are derived from the {catalog}.{db}.{bronze_table_name} table in the lakehouse. We created service features and cleaned up their names.  No aggregations were performed."
 )
 
 # COMMAND ----------
@@ -284,49 +284,22 @@ fe.write_table(
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Accelerating Churn model creation using Databricks Auto-ML
-# MAGIC ### A glass-box solution that empowers data teams without taking away control
+# MAGIC ## Accelerate ML Model creation with Databricks Assistant Data Science Agent
+# MAGIC The Data Science Agent elevates the Databricks Assistant from a helpful copilot into a true autonomous partner for data science and analytics. Fully integrated with Databricks Notebooks and the SQL Editor, the [Data Science Agent](https://www.databricks.com/blog/introducing-databricks-assistant-data-science-agent) brings intelligence, adaptability, and execution together in a single experience.
+# MAGIC <img src="https://www.databricks.com/sites/default/files/2025-09/AgentModeOG1Border.png?v=1756901406" width="500px" style="float: right"/>
+# MAGIC - Data Science Agent transforms Databricks Assistant into an autonomous partner for data science and analytics tasks in Notebooks and the SQL Editor.
 # MAGIC
-# MAGIC Databricks simplifies model creation and MLOps. However, bootstrapping new ML projects can still be long and inefficient.
+# MAGIC - It can explore data, generate and run code, and fix errors, all from a single prompt. This can cut hours of work to minutes.
 # MAGIC
-# MAGIC Instead of creating the same boilerplate for each new project, Databricks Auto-ML can automatically generate state-of-the-art models for Classifications, regression, and forecasts.
-# MAGIC
-# MAGIC Models can be directly deployed or leverage generated notebooks to bootstrap projects with best practices, saving you weeks of effort.
-# MAGIC
-# MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
+# MAGIC - Purpose-built for common data science tasks and grounded in Unity Catalog for seamless, governed access to your data.
 # MAGIC
 # MAGIC
-# MAGIC <br>
-# MAGIC
-# MAGIC ### Using Databricks Auto ML with our Churn dataset
-# MAGIC
-# MAGIC <br>
-# MAGIC
-# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
-# MAGIC
-# MAGIC <br>
-# MAGIC
-# MAGIC Auto ML is available under **Machine Learning - Experiments**. All we have to do is create a new AutoML experiment, select the table containing the ground-truth labels, and join it with the features in the feature table.
-# MAGIC
-# MAGIC Our prediction target is the `churn` column.
-# MAGIC
-# MAGIC Click on **Start**, and Databricks will do the rest.
-# MAGIC
-# MAGIC While this is done using the UI, you can also leverage the [Python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
-# MAGIC
-# MAGIC <br>
-# MAGIC
-# MAGIC #### Join/Use features directly from the Feature Store from the [UI](https://docs.databricks.com/machine-learning/automl/train-ml-model-automl-ui.html#use-existing-feature-tables-from-databricks-feature-store) or [python API]()
-# MAGIC * Select the table containing the ground-truth labels (i.e., `dbdemos.schema.churn_label_table`)
-# MAGIC * Join remaining features from the feature table (i.e., `dbdemos.schema.churn_feature_table`)
-# MAGIC
-# MAGIC Please take a look at the __Quickstart__ version of this demo for an example of AutoML in action.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### OR train a model with Hyper-Parameter-Optimization
+# MAGIC ### Let's manually train a model with Hyper-Parameter-Optimization
 # MAGIC
-# MAGIC We'll use mlflow's `optuna` native integration
+# MAGIC For this demo, we'll use mlflow's `optuna` native integration
 # MAGIC
 # MAGIC Next step: [Train a model using HPO]($./02_model_training_hpo_optuna)

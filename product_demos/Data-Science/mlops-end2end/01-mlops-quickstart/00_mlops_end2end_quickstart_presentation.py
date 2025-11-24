@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # End-to-End MLOps demo with MLFlow, Auto ML, and Models in Unity Catalog
+# MAGIC # End-to-End MLOps demo with MLFlow, and Models in Unity Catalog
 # MAGIC
 # MAGIC ## Challenges moving ML project into production
 # MAGIC
@@ -54,7 +54,6 @@
 # MAGIC - Model Serving
 # MAGIC - Realtime Feature serving with Online Tables
 # MAGIC - A/B testing 
-# MAGIC - Automated re-training
 # MAGIC - Infra setup and hooks with Databricks MLOps Stack
 # MAGIC - ...
 

@@ -27,8 +27,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install prophet==1.1.2 holidays==0.23
+# MAGIC %pip install --upgrade prophet==1.1.5 cmdstanpy==1.2.4 'holidays>=0.25' 'convertdate>=2.4.0' 'numpy<2' 'matplotlib<3.8'
 # MAGIC %restart_python
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 
@@ -57,7 +61,7 @@ data_to_predict = spark.sql("""
 data_to_predict = data_to_predict.withColumn("sku",
                      when(col("sku").contains("ALL_PURPOSE"), "ALL_PURPOSE")
                     .when(col("sku").contains("JOBS"), "JOBS")
-                    .when(col("sku").contains("DLT"), "DLT")
+                    .when(col("sku").contains("SDP") | col("sku").contains("DLT"), "SDP")
                     .when(col("sku").contains("SQL"), "SQL")
                     .when(col("sku").contains("INFERENCE"), "MODEL_INFERENCE")
                     .otherwise("OTHER"))

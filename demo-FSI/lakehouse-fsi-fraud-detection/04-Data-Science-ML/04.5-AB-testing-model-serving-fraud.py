@@ -140,7 +140,7 @@ for i in range(10):
 # MAGIC
 # MAGIC In this demo, we've seen an end 2 end flow with the Lakehouse:
 # MAGIC
-# MAGIC - Data ingestion made simple with Delta Live Table
+# MAGIC - Data ingestion made simple with Spark Declarative Pipelines
 # MAGIC - Leveraging Databricks warehouse to Analyze existing Fraud
 # MAGIC - Model Training with AutoML for citizen Data Scientist
 # MAGIC - Ability to tune our model for better results, improving our revenue

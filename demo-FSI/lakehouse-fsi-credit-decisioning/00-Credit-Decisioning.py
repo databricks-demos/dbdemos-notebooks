@@ -91,7 +91,7 @@
 # MAGIC %md 
 # MAGIC ## 1: Ingesting data & building our FS Lakehouse Database
 # MAGIC
-# MAGIC First, we need to ingest and transform customer, credit, and payments data sources with the [Delta Live Table SQL Pipeline notebook]($./01-Data-Ingestion/01-DLT-Internal-Banking-Data-SQL). This will create a <a href="/" dbdemos-pipeline-id="dlt-fsi-credit-decisioning" target="_blank">DLT Pipeline</a> running in batch or streaming, and saving our data within Unity Catalog as Delta tables.
+# MAGIC First, we need to ingest and transform customer, credit, and payments data sources with the [Spark Declarative Pipelines SQL Pipeline notebook]($./01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL). This will create a <a href="/" dbdemos-pipeline-id="sdp-fsi-credit-decisioning" target="_blank">SDP Pipeline</a> running in batch or streaming, and saving our data within Unity Catalog as Delta tables.
 
 # COMMAND ----------
 
@@ -208,4 +208,4 @@
 # MAGIC
 # MAGIC ## 5: Workflow orchestration
 # MAGIC
-# MAGIC Now that all our lakehouse pipeline is working, let's review how we can leverage Databricks Workflows to orchestrate our tasks and link them together: [05-Workflow-Orchestration-credit-decisioning]($./05-Workflow-Orchestration/05-Workflow-Orchestration-credit-decisioning).
+# MAGIC Now that all our lakehouse pipeline is working, let's review how we can leverage Databricks Workflows to orchestrate our tasks and link them together: [06-Workflow-Orchestration-credit-decisioning]($./06-Workflow-Orchestration/06-Workflow-Orchestration-credit-decisioning).

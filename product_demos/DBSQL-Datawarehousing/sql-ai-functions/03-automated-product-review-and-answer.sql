@@ -163,7 +163,7 @@ SELECT * FROM reviews_answer
 -- MAGIC
 -- MAGIC Our pipeline is ready. Keep in mind that this is a fairly basic pipeline for our demo.
 -- MAGIC
--- MAGIC For more advanced pipeline, we recommend using Delta Live Table. DLT simplify data ingetsion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('dlt-loans')`
+-- MAGIC For more advanced pipeline, we recommend using Spark Declarative Pipelines. SDP simplify data ingetsion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('pipeline-bike')`
 
 -- COMMAND ----------
 
@@ -186,9 +186,9 @@ SELECT review_id,
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### Extra: Create an Production Ready Pipeline using Delta Live Table
+-- MAGIC ### Extra: Create an Production Ready Pipeline using Spark Declarative Pipelines
 -- MAGIC
--- MAGIC We can turn the steps in this notebook into a production ready Delta Live Table pipeline with AI SQL Functions
+-- MAGIC We can turn the steps in this notebook into a production ready Spark Declarative Pipelines pipeline with AI SQL Functions
 -- MAGIC
 -- MAGIC Open [04-create-end-to-end-DLT-workflow]($./04-create-end-to-end-DLT-workflow) for more details.
 

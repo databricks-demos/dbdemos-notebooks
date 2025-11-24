@@ -14,111 +14,127 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_fsi_smart_claims",
   "description": "Build your smart claims platform on the Lakehouse",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end claims automation for car accident claims, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both policy and claims data, and then transform them using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Ingest telematics data as an external streaming source to understand customer behavior</li><li>Build a Machine Learning model with Databricks and HuggingFace to identify the seviarity of the accident and car damage</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the policy holder and claims overview and also serve the the analytics outcome to claims investigators</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
-  "usecase": "Lakehouse Platform",
-  "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
-  "related_links": [
-      {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
-      {"title": "Databricks for Financial Services", "url": "https://www.databricks.com/solutions/industries/financial-services"}],
-  "recommended_items": ["lakehouse-fsi-credit", "lakehouse-fsi-fraud", "lakehouse-iot-platform"],
-  "demo_assets": [],   
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end claims automation for car accident claims, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both policy and claims data, and then transform them using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Ingest telematics data as an external streaming source to understand customer behavior</li><li>Build a Machine Learning model with Databricks and HuggingFace to identify the seviarity of the accident and car damage</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the policy holder and claims overview and also serve the the analytics outcome to claims investigators</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "bundle": True,
-  "tags": [{"dlt": "Delta Live Table"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
   "notebooks": [
     {
-      "path": "_resources/00-setup", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "_resources/00-setup",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Prep data", 
+      "title":  "Prep data",
       "description": "Helpers & setup."
     },
     {
-      "path": "config", 
-      "pre_run": False, 
-      "publish_on_website": False, 
+      "path": "config",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Config", 
+      "title":  "Config",
       "description": "Config file."
     },
     {
-      "path": "00-Smart-Claims-Introduction", 
+      "path": "00-Smart-Claims-Introduction",
       "pre_run": False,
-      "publish_on_website": True, 
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Lakehouse - Smart Claims", 
+      "title":  "Lakehouse - Smart Claims",
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01.1-DLT-Ingest-Policy-Claims", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-Ingestion/01-SDP-Smart-Claims",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest claim and policy data with Delta Live Table", 
-      "description": "Python DLT pipeline to ingest claim and policy data."
+      "title":  "SDP - Main notebook",
+      "description": "Python SDP pipeline to ingest claim and policy data."
     },
     {
-      "path": "01-Data-Ingestion/01.2-Policy-Location", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-Ingestion/explorations/sample_exploration",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest Accidents data", 
-      "description": "Ingest the accident images"
+      "title":  "SDP - Sample exploration",
+      "description": "Sample exploration notebook for pipeline."
     },
     {
-      "path": "02-Data-Science-ML/02.1-Model-Training", 
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "01-Data-Ingestion/transformations/01-bronze.py",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/02-silver.py",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/03-gold.py",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "02-Data-Science-ML/02.1-Model-Training",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": True,
-      "title":  "Batch Scoring", 
+      "title":  "Batch Scoring",
       "description": "Train image processing model to assess accident severity"
     },
     {
-      "path": "02-Data-Science-ML/02.2-Batch-Scoring", 
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "02-Data-Science-ML/02.2-Batch-Scoring",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": True,
-      "title":  "Batch Scoring", 
+      "title":  "Batch Scoring",
       "description": "Batch scoring to generate damage severity assessment"
     },
     {
-      "path": "02-Data-Science-ML/02.3-Dynamic-Rule-Engine", 
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "02-Data-Science-ML/02.3-Dynamic-Rule-Engine",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": True,
-      "title":  "Ingests Accident data", 
+      "title":  "Ingests Accident data",
       "description": "Apply dynamic rule engine to generate insights"
     },
     {
-      "path": "03-BI-Data-Warehousing/03-BI-Data-Warehousing-Smart-Claims", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "03-BI-Data-Warehousing/03-BI-Data-Warehousing-Smart-Claims",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Datawarehousing & BI / Dashboarding", 
+      "title":  "Datawarehousing & BI / Dashboarding",
       "description": "Generate dashboards to summarize claims and generate analytics for claims investigation"
     },
     {
-      "path": "04-Generative-AI/04.1-AI-Functions-Creation", 
-      "pre_run": True, 
-      "publish_on_website": True, 
+      "path": "04-Generative-AI/04.1-AI-Functions-Creation",
+      "pre_run": True,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "GenAI Functions", 
+      "title":  "GenAI Functions",
       "description": "Utilize Databricks AI functions to generate automated claims summarizations."
     },
     {
-      "path": "04-Generative-AI/04.2-Agent-Creation-Guide", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "04-Generative-AI/04.2-Agent-Creation-Guide",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Create an agent", 
+      "title":  "Create an agent",
       "description": "Define an AI agent with the functions you defined in notebook 04.1"
-    },     
+    },
     {
-      "path": "05-Workflow-Orchestration/05-Workflow-Orchestration-Smart-Claims", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "05-Workflow-Orchestration/05-Workflow-Orchestration-Smart-Claims",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Orchestrate dashboard generation with Workflow", 
+      "title":  "Orchestrate dashboard generation with Workflow",
       "description": "Orchestrate all tasks in a job and schedule your data/model refresh"
     }
   ],
@@ -143,9 +159,9 @@
                 "email_notifications": {}
             },
             {
-                "task_key": "claim_policy_dlt_pipeline",
+                "task_key": "claim_policy_sdp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-fsi-smart-claims}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-fsi-smart-claims}}",
                     "full_refresh": True
                 },
                 "timeout_seconds": 0,
@@ -182,7 +198,7 @@
                 "email_notifications": {},
                 "depends_on": [
                       {
-                          "task_key": "claim_policy_dlt_pipeline"
+                          "task_key": "claim_policy_sdp_pipeline"
                       },
                       {
                           "task_key": "train_model"
@@ -257,7 +273,7 @@
   }, 
   "pipelines": [
     {
-      "id": "dlt-fsi-smart-claims",
+      "id": "sdp-fsi-smart-claims",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -270,26 +286,30 @@
                 }
             }
         ],
-        "development": True,
-        "continuous": False,
-        "channel": "PREVIEW",
-        "edition": "ADVANCED",
-        "photon": True,
+        "name": "dbdemos_sdp_smart_claims_{{CATALOG}}_{{SCHEMA}}",
         "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-DLT-Ingest-Policy-Claims"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.2-Policy-Location"
-                }
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
             }
+          }
         ],
-        "name": "dbdemos_claims_{{CATALOG}}_{{SCHEMA}}",
+        "schema": "{{SCHEMA}}",
+        "continuous": False,
+        "development": True,
+        "edition": "ADVANCED",
+        "photon": False,
+        "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "event_log": {
+              "catalog": "{{CATALOG}}",
+              "schema": "{{SCHEMA}}",
+              "name": "dbdemos_smart_claims_event_logs"
+        },
+        "root_path": "{{DEMO_FOLDER}}/01-Data-Ingestion",
+        "environment": {
+          "dependencies": ["geopy==2.4.1"]
+        }
       }
     }
   ],

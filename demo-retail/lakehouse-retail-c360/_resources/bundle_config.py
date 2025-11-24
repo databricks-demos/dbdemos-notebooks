@@ -13,21 +13,21 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_retail_c360",
-  "description": "Centralize customer data and reduce churn: Ingestion (DLT), BI, Predictive Maintenance (ML), Governance (UC), Orchestration.",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a customer 360 solution on the lakehouse, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end-to-end lakehouse platform: <ul><li>Ingest data from external system (such as EPR/Salesforce) and then transform it using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable and testable data processing pipelines </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks SQL and the warehouse endpoints to build a dashboard to analyze the ingested data and understand the existing churn</li><li>Build a machine learning model with Databricks AutoML to understand and predict future churn</li><li>Orchestrate all these steps with Databricks Workflows</li></ul>",
+  "description": "Centralize customer data and reduce churn: Ingestion (SDP), BI, Predictive Maintenance (ML), Governance (UC), Orchestration.",
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a customer 360 solution on the lakehouse, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end-to-end lakehouse platform: <ul><li>Ingest data from external system (such as EPR/Salesforce) and then transform it using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable and testable data processing pipelines </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks SQL and the warehouse endpoints to build a dashboard to analyze the ingested data and understand the existing churn</li><li>Build a machine learning model with Databricks AutoML to understand and predict future churn</li><li>Orchestrate all these steps with Databricks Workflows</li></ul>",
   "usecase": "Lakehouse Platform",
-  "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
+  "products": ["Spark Declarative Pipelines", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Solution Accelerator: Subscriber Churn Prediction", "url": "https://www.databricks.com/solutions/accelerators/survivorship-and-churn"}],
   "recommended_items": ["lakehouse-fsi-credit", "lakehouse-fsi-fraud", "lakehouse-iot-platform"],
   "demo_assets": [
-      {"title": "Delta Live Table pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-retail-c360-dlt-0.png"},
+      {"title": "Spark Declarative Pipelines pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-retail-c360-dlt-0.png"},
       {"title": "Databricks SQL Dashboard: Churn Analysis", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-retail-c360-dashboard-1.png"},
-      {"title": "Databricks SQL Dashboard: DLT Data Quality Stats", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-retail-c360-dashboard-0.png"},
+      {"title": "Databricks SQL Dashboard: SDP Data Quality Stats", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-retail-c360-dashboard-0.png"},
       {"title": "Databricks SQL Dashboard: Customer Churn Prediction", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-retail-c360-dashboard-2.png"}], 
   "bundle": True,
-  "tags": [{"dlt": "Delta Live Table"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
+  "tags": [{"dlt": "Spark Declarative Pipelines"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
   "notebooks": [
     {
       "path": "_resources/00-prep-data-db-sql", 
@@ -70,36 +70,100 @@
       "description": "Start here to explore the Lakehouse."
     },
     {
-      "path": "01-Data-ingestion/01.1-DLT-churn-SQL", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-churn-SQL",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with Delta Live Table", 
-      "description": "SQL DLT pipeline to ingest data & build clean tables."
+      "title":  "SDP SQL - Main notebook",
+      "description": "SQL SDP pipeline to ingest data & build clean tables."
     },
     {
-      "path": "01-Data-ingestion/01.2-DLT-churn-Python-UDF", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Ingest data with DLT-companion UDF", 
-      "description": "Loads ML model as UDF in python."
+      "title":  "SDP SQL - Sample exploration",
+      "description": "Sample exploration notebook for SQL pipeline."
     },
     {
-      "path": "01-Data-ingestion/01.3-DLT-churn-python", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/01-bronze.sql",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Alternative: Ingest data with Delta Live Table", 
-      "description": "Python DLT pipeline to ingest data & build clean tables."
+      "title":  "SDP SQL - Bronze transformations",
+      "description": "Bronze layer transformations."
     },
     {
-      "path": "01-Data-ingestion/01.4-DLT-churn-expectation-dashboard-data-prep", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/02-silver.sql",
+      "pre_run": False,
+      "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "Alternative: Ingest data with Delta Live Table", 
-      "description": "Python DLT pipeline to ingest data & build clean tables."
+      "title":  "SDP SQL - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/03-gold.sql",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/transformations/04-churn-UDF.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - UDF",
+      "description": "Churn prediction UDF for ML model."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/01.1-SDP-churn-Python",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Main notebook",
+      "description": "Python SDP pipeline to ingest data & build clean tables."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Sample exploration",
+      "description": "Sample exploration notebook for Python pipeline."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/01-bronze.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Bronze transformations",
+      "description": "Bronze layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/02-silver.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Silver transformations",
+      "description": "Silver layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.2-SDP-python/transformations/03-gold.py",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP Python - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
+      "path": "01-Data-ingestion/01.1-SDP-SQL/01.2-SDP-churn-expectation-dashboard-data-prep",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP SQL - Dashboard data prep",
+      "description": "Prepare data for SDP quality dashboard (SQL version)."
     },
     {
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn", 
@@ -107,15 +171,31 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Alternative: Ingest data with Spark+Delta", 
-      "description": "Build a complete ingestion pipeline using spark API (alternative to DLT)"
+      "description": "Build a complete ingestion pipeline using spark API (alternative to SDP)"
     },
     {
-      "path": "02-Data-governance/02-UC-data-governance-security-churn", 
+      "path": "02-Data-governance/02.1-UC-data-governance-security-churn",
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Governance with Unity Catalog", 
       "description": "Secure your tables, lineage, auditlog..."
+    },
+    {
+      "path": "02-Data-governance/02.2-UC-metric-views",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": True,
+      "title":  "Semantic Layer with Metric Views",
+      "description": "Metric views in Unity Catalog simplify access to key business KPIs."
+    },
+    {
+      "path": "02-Data-governance/churn_users_mteric_view.yaml",
+      "pre_run": False,
+      "publish_on_website": False,
+      "add_cluster_setup_cell": False,
+      "title":  "Metric view YAML for churn_users table",
+      "description": "Metric view definition as a YAML for main.dbdemos_retail_c360.churn_users."
     },
     {
       "path": "04-Data-Science-ML/04.1-automl-churn-prediction", 
@@ -203,9 +283,9 @@
                 "email_notifications": {}
             },
             {
-                "task_key": "start_dlt_pipeline",
+                "task_key": "start_sdp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-churn}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-churn}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -227,7 +307,7 @@
                 "email_notifications": {},
                 "depends_on": [
                     {
-                        "task_key": "start_dlt_pipeline"
+                        "task_key": "start_sdp_pipeline"
                     }
                 ]
             },
@@ -335,7 +415,7 @@
   }, 
   "pipelines": [
     {
-      "id": "dlt-churn",
+      "id": "sdp-churn",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -348,30 +428,34 @@
                 }
             }
         ],
-        "development": True,
+        "name": "dbdemos_sdp_lakehouse_churn_{{CATALOG}}_{{SCHEMA}}",
+        "libraries": [
+          {
+            "glob": {
+              "include": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL/transformations/**"
+            }
+          }
+        ],
+        "schema": "{{SCHEMA}}",
         "continuous": False,
-        "channel": "PREVIEW",
+        "development": True,
         "edition": "ADVANCED",
         "photon": False,
-        "libraries": [
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-DLT-churn-SQL"
-                }
-            },
-            {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.2-DLT-churn-Python-UDF"
-                }
-            }
-        ],
-        "name": "dbdemos_dlt_lakehouse_churn_{{CATALOG}}_{{SCHEMA}}",
+        "channel": "PREVIEW",
         "catalog": "{{CATALOG}}",
-        "target": "{{SCHEMA}}"
+        "root_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-SDP-SQL",
+        "event_log": {
+              "catalog": "{{CATALOG}}",
+              "schema": "{{SCHEMA}}",
+              "name": "dbdemos_retail_c360_event_logs"
+        },
+        "environment": {
+          "dependencies": ["mlflow==3.1.0"]
+        }
       }
     }
   ],
   "dashboards": [{"name": "[dbdemos] Retail Churn Prediction Dashboard",       "id": "churn-prediction"},
                  {"name": "[dbdemos] Retail - Customer Churn - Universal",     "id": "churn-universal"},
-                 {"name": "[dbdemos] Retail DLT - Retail Data Quality Stats",  "id": "dlt-quality-stat"}]
+                 {"name": "[dbdemos] Retail SDP - Retail Data Quality Stats",  "id": "sdp-quality-stat"}]
 }

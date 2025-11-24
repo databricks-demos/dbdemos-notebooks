@@ -18,8 +18,13 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Note: run this demo with Serverless compute - it was also tested with DBR 17.1
+
+# COMMAND ----------
+
 # DBTITLE 1,Library Installs
-# MAGIC %pip install databricks-agents mlflow>=3.1.0 databricks-sdk==0.55.0 unitycatalog-ai[databricks]
+# MAGIC %pip install -U -qqqq mlflow>=3.1.4 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.12.1 protobuf<5  cryptography<43 
 # MAGIC # Restart to load the packages into the Python environment
 # MAGIC dbutils.library.restartPython()
 
@@ -244,5 +249,4 @@ displayHTML(f'<a href="/explore/data/functions/{catalog}/{dbName}/calculate_math
 # MAGIC But how can we make sure it's working properly, and more importantly will still work well for future questions and modifications?
 # MAGIC
 # MAGIC To do so, we need to build an Evaluation dataset and leverage MLFlow to automatically analyze our agent!
-# MAGIC
-# MAGIC Open the [02_agent_eval/02.1_agent_evaluation]($../02_agent_eval/02.1_agent_evaluation) notebook to see how to deploy your agent using Langchain and run your first evaluations!
+# MAGIC Open the [02-agent-eval/02.1_agent_evaluation]($../02-agent-eval/02.1_agent_evaluation) notebook to see how to deploy your agent using Langchain and run your first evaluations!

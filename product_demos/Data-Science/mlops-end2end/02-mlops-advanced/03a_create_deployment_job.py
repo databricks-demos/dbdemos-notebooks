@@ -31,6 +31,14 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Last environment tested:
+# MAGIC ```
+# MAGIC mlflow>=3.3.0
+# MAGIC ```
+
+# COMMAND ----------
+
 # MAGIC %pip install --quiet mlflow --upgrade
 # MAGIC
 # MAGIC
@@ -38,7 +46,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $adv_mlops=true $reset_all_data=false
+# MAGIC %run ../_resources/00-setup $adv_mlops=true
 
 # COMMAND ----------
 
@@ -74,11 +82,9 @@ deployment_notebook_path = f"{current_directory}/06_serve_features_and_model"
 # COMMAND ----------
 
 # Create job with necessary configuration to connect to model as deployment job
-from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import jobs
 
 
-w = WorkspaceClient()
 job_settings = jobs.JobSettings(
     name=job_name,
     tasks=[
@@ -100,7 +106,7 @@ job_settings = jobs.JobSettings(
             task_key="Deployment",
             notebook_task=jobs.NotebookTask(
                 notebook_path=deployment_notebook_path,
-                base_parameters={"smoke_test": True},
+                base_parameters={"smoke_test": False},
             ),
             depends_on=[jobs.TaskDependency(task_key="Approval_Check")],
             max_retries=0,
@@ -114,9 +120,39 @@ job_settings = jobs.JobSettings(
     max_concurrent_runs=1,
 )
 
-created_job = w.jobs.create(**job_settings.__dict__)
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+
+
+w = WorkspaceClient()
+
+# Search for the job by name (in case it exists)
+existing_jobs = w.jobs.list(name=job_name)
+job_id = None
+for created_job in existing_jobs:
+  if created_job.settings.name == job_name and created_job.creator_user_name == current_user:
+      job_id = created_job.job_id
+      break
+
+if job_id:
+  # Update existing job
+  print("Updating existing...")
+  w.jobs.update(job_id=job_id, new_settings=job_settings)
+
+else:
+  # Create new job
+  print("Creating new...")
+  created_job = w.jobs.create(**job_settings.__dict__)
+  job_id = created_job.job_id
+
+print(f"Job ID: {job_id}")
+
+# COMMAND ----------
+
+# DBTITLE 1,ONE-TIME Operation
 print("Use the job name " + job_name + " to connect the deployment job to the UC model " + model_name + " as indicated in the UC Model UI.")
-print("\nFor your reference, the job ID is: " + str(created_job.job_id))
+print("\nFor your reference, the job ID is: " + str(job_id))
 print("\nDocumentation: \nAWS: https://docs.databricks.com/aws/mlflow/deployment-job#connect \nAzure: https://learn.microsoft.com/azure/databricks/mlflow/deployment-job#connect \nGCP: https://docs.databricks.com/gcp/mlflow/deployment-job#connect")
 
 # COMMAND ----------
@@ -135,10 +171,25 @@ from mlflow.tracking.client import MlflowClient
 client = MlflowClient(registry_uri="databricks-uc")
 
 try:
-  if client.get_registered_model(model_name):
+  model_info = client.get_registered_model(model_name)
+  if model_info:
     # Model exists - Link job
-    client.update_registered_model(model_name, deployment_job_id=created_job.job_id)
+    if model_info.deployment_job_id == job_id:
+      print("Model exists with existing job - Pass")
+      pass
 
-except mlflow.exceptions.RestException:
-  # Create Empty Model placeholder and Link job
-  client.create_registered_model(model_name, deployment_job_id=created_job.job_id)
+    else:
+      print("Model exists - Updating job")
+      client.update_registered_model(model_name, deployment_job_id="") # Unlink current job
+      client.update_registered_model(model_name, deployment_job_id=job_id) # Link new one
+
+except mlflow.exceptions.RestException as e:
+  if "PERMISSION_DENIED" in str(e):
+        print(f"Permission denied on model `{model_name}` - Deployment Job NOT UPDATED.")
+        # Optionally, handle or re-raise
+        pass
+
+  else:
+    # Create Empty Model placeholder and Link job
+    print("Model does not exist - Creating model and linking job")
+    client.create_registered_model(model_name, deployment_job_id=job_id)

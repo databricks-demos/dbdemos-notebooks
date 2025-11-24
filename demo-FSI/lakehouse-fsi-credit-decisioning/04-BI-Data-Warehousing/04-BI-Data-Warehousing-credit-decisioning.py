@@ -87,4 +87,4 @@
 # MAGIC
 # MAGIC We're now ready to create an end to end job to deploy our entire pipeline in production, from data ingestion to model serving and DBSQL Dashboard.
 # MAGIC
-# MAGIC Open the [05-Workflow-Orchestration-credit-decisioning]($../05-Workflow-Orchestration/05-Workflow-Orchestration-credit-decisioning) notebook to see how Databricks can orchestrate your pipelines.
+# MAGIC Open the [06-Workflow-Orchestration-credit-decisioning]($../06-Workflow-Orchestration/06-Workflow-Orchestration-credit-decisioning) notebook to see how Databricks can orchestrate your pipelines.

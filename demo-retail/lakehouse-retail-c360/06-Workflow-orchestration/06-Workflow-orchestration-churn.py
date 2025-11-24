@@ -8,7 +8,7 @@
 # MAGIC Every business has its own pulse. We need to match our technical architecture to this natural cadence:
 # MAGIC
 # MAGIC **Option 1: Always-On** ⚡  
-# MAGIC Configure DLT pipelines in continuous mode for streaming insights that capture customer signals as they happen.
+# MAGIC Configure SDP pipelines in continuous mode for streaming insights that capture customer signals as they happen.
 # MAGIC
 # MAGIC **Option 2: Efficient Cycles** ⏱️  
 # MAGIC Wake your compute on a scheduled basis, process new data incrementally, and then release resources.
@@ -17,7 +17,7 @@
 # MAGIC
 # MAGIC For our retail business, an hourly cadence hits the sweet spot:
 # MAGIC
-# MAGIC 1. **Data Refresh** 📊 - DLT pipeline activates to ingest the latest customer data
+# MAGIC 1. **Data Refresh** 📊 - SDP pipeline activates to ingest the latest customer data
 # MAGIC 2. **Dashboard Update** 📈 - DBSQL dashboards automatically refresh
 # MAGIC 3. **Model Retraining** 🧠 - ML models adapt to evolving customer behaviors
 # MAGIC 4. **Triggered Interventions** 🎯 - GenAI deploys personalized retention campaigns
@@ -43,7 +43,7 @@
 # MAGIC
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Delta Live Tables and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -63,7 +63,7 @@
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Delta Live Tables
+# MAGIC * Spark Declarative Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
@@ -72,7 +72,7 @@
 # MAGIC
 # MAGIC In this example, can see our 3 tasks:
 # MAGIC
-# MAGIC * Start the DLT pipeline to ingest new data and refresh our tables
+# MAGIC * Start the SDP pipeline to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC * Retrain our Churn model
 

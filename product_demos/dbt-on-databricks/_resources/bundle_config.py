@@ -19,7 +19,7 @@
   "related_links": [
       {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
       {"title": "Databricks and dbt Cloud", "url": "https://www.databricks.com/blog/2022/11/17/introducing-native-high-performance-integration-dbt-cloud.html"}],
-  "recommended_items": ["delta-lake", "dlt-loans", "dlt-cdc"],
+  "recommended_items": ["delta-lake", "sdp-loans", "sdp-cdc"],
   "demo_assets": [],     
   "bundle": True,
   "tags": [{"delta": "Delta Lake"}],

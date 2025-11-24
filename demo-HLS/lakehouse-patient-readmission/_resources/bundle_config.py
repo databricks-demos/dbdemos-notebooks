@@ -12,19 +12,10 @@
   "serverless_supported": True,
   "custom_schema_supported": True,
   "default_catalog": "main",
+  "bundle": True,
   "default_schema": "dbdemos_hls_readmission",
   "description": "Build your data platform and personalized health care to reduce readmission risk",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we’ll show you how to build an end-to-end Health Car data platform to ingest patient and encounter informations. <br/>We will focus on predicting and explaining patient readmission risk to improve care quality. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest health care data (from Synthea), and then transform them to the OMOP data model using Delta Live Tables (DLT), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build patient Cohorts and Leverage Databricks SQL and the warehouse endpoints to visualize our population.</li><li>Build a Machine Learning model with Databricks AutoML to predict 30 days patient readmission risk</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
-  "usecase": "Lakehouse Platform",
-  "products": ["Delta Live Tables", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
-  "related_links": [
-      {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"}, 
-      {"title": "Databricks for Financial Services", "url": "https://www.databricks.com/solutions/industries/financial-services"}],
-  "recommended_items": ["lakehouse-iot-platform", "lakehouse-fsi-fraud", "lakehouse-retail-c360"],
-  "demo_assets": [
-      {"title": "Delta Live Table pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dlt-0.png"},
-      {"title": "Databricks SQL Dashboard: Credit Decisioning", "url": "https://www.dbdemos.ai/assets/img/dbdemos/lakehouse-fsi-credit-dashboard-0.png"}],   "bundle": True,
-  "tags": [{"dlt": "Delta Live Table"},  {"ds": "Data Science"}, {"uc": "Unity Catalog"}, {"dbsql": "BI/DW/DBSQL"}],
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we’ll show you how to build an end-to-end Health Car data platform to ingest patient and encounter informations. <br/>We will focus on predicting and explaining patient readmission risk to improve care quality. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest health care data (from Synthea), and then transform them to the OMOP data model using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build patient Cohorts and Leverage Databricks SQL and the warehouse endpoints to visualize our population.</li><li>Build a Machine Learning model with Databricks AutoML to predict 30 days patient readmission risk</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
   "notebooks": [
     {
       "path": "_resources/00-generate-synthea-data", 
@@ -67,12 +58,44 @@
       "description": "Introduction notebook, start here to implement your HLS Lakehouse."
     },
     {
-      "path": "01-Data-Ingestion/01.1-DLT-patient-readmission-SQL", 
+      "path": "01-Data-Ingestion/01.1-SDP-patient-readmission", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Ingest patient & encounter data with Delta Live Table", 
-      "description": "SQL DLT pipeline to ingest patient data & build clean tables."
+      "title":  "Ingest patient & encounter data with Spark Declarative Pipelines", 
+      "description": "SQL SDP pipeline to ingest patient data & build clean tables."
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/01-bronze.sql", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Bronze transformations", 
+      "description": "Bronze layer transformations"
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/02-silver.sql", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Silver transformations", 
+      "description": "Silver layer transformations"
+    },
+    {
+      "path": "01-Data-Ingestion/transformations/03-gold.sql", 
+      "pre_run": False, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Gold transformations", 
+      "description": "Gold layer transformations"
+    },
+    {
+      "path": "01-Data-Ingestion/explorations/sample_exploration", 
+      "pre_run": True, 
+      "publish_on_website": True, 
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Sample exploration", 
+      "description": "Sample exploration notebook for pipeline"
     },
     {
       "path": "02-Data-Governance/02-Data-Governance-patient-readmission", 
@@ -170,9 +193,9 @@
                 "email_notifications": {}
             }, 
             {
-                "task_key": "start_dlt_pipeline",
+                "task_key": "start_sdp_pipeline",
                 "pipeline_task": {
-                    "pipeline_id": "{{DYNAMIC_DLT_ID_dlt-patient-readmission}}",
+                    "pipeline_id": "{{DYNAMIC_SDP_ID_sdp-patient-readmission}}",
                     "full_refresh": false
                 },
                 "timeout_seconds": 0,
@@ -188,7 +211,7 @@
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
-                "depends_on": [{"task_key": "start_dlt_pipeline"}]
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
             },
             {
                 "task_key": "feature_engineering",
@@ -272,7 +295,7 @@
   }, 
   "pipelines": [
     {
-      "id": "dlt-patient-readmission",
+      "id": "sdp-patient-readmission",
       "run_after_creation": False,
       "definition": {
         "clusters": [
@@ -287,16 +310,11 @@
         ],
         "development": True,
         "continuous": False,
-        "channel": "PREVIEW",
-        "edition": "ADVANCED",
-        "photon": False,
+        "channel": "CURRENT",
         "libraries": [
             {
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/_resources/01-load-data"
-                },
-                "notebook": {
-                    "path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-DLT-patient-readmission-SQL"
+                "glob": {
+                    "include": "{{DEMO_FOLDER}}/01-Data-Ingestion/transformations/**"
                 }
             }
         ],

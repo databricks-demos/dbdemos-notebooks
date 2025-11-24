@@ -16,6 +16,7 @@
     "description": "Automate your model deployment with MLFlow and UC, end 2 end!",
     "fullDescription": "This demo covers a full MLOPs pipeline. We'll show you how Databricks Lakehouse can be leverage to orchestrate and deploy model in production while ensuring governance, security and robustness.<ul></li>Ingest data and save them as feature store</li><li>Build ML model with Databricks AutoML</li><li>Setup MLFlow hook to automatically test our models</li><li>Create the model test job</li><li>Automatically move model in production once the test are validated</li><li>Periodically retrain our model to prevent from drift</li></ul><br/><br/>Note that this is a fairly advanced demo. If you're new to Databricks and just want to learn about ML, we recommend starting with a ML demo or one of the Lakehouse demos.",
     "usecase": "Data Science & AI",
+    "env_version": 3,
     "products": [
         "Lakehouse Monitoring",
         "MLFlow",
@@ -338,8 +339,34 @@
                     "webhook_notifications": {}
                 },
                 {
-                    "task_key": "adv_batch_inference",
+                    "task_key": "challenger_validation",
                     "depends_on": [{"task_key": "adv_register_model2"}],
+                    "run_if": "ALL_SUCCESS",
+                    "notebook_task": {
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04a_challenger_validation",
+                        "source": "WORKSPACE"
+                    },
+                    "job_cluster_key": "Shared_job_cluster",
+                    "timeout_seconds": 0,
+                    "email_notifications": {},
+                    "webhook_notifications": {}
+                },
+                {
+                    "task_key": "challenger_approval",
+                    "depends_on": [{"task_key": "challenger_validation"}],
+                    "run_if": "ALL_SUCCESS",
+                    "notebook_task": {
+                        "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/04b_challenger_approval",
+                        "source": "WORKSPACE"
+                    },
+                    "job_cluster_key": "Shared_job_cluster",
+                    "timeout_seconds": 0,
+                    "email_notifications": {},
+                    "webhook_notifications": {}
+                },
+                {
+                    "task_key": "adv_batch_inference",
+                    "depends_on": [{"task_key": "challenger_approval"}],
                     "run_if": "ALL_SUCCESS",
                     "notebook_task": {
                         "notebook_path": "{{DEMO_FOLDER}}/02-mlops-advanced/05_batch_inference",
@@ -381,7 +408,21 @@
                 {
                     "job_cluster_key": "Shared_job_cluster",
                     "new_cluster": {
-                        "performance_target": "STANDARD"
+                        "spark_version": "16.4.x-cpu-ml-scala2.12",
+                        "spark_conf": {
+                            "spark.master": "local[*, 4]",
+                            "spark.databricks.cluster.profile": "singleNode"
+                        },
+                        "custom_tags": {
+                            "ResourceClass": "SingleNode"
+                        },
+                        "spark_env_vars": {
+                            "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                        },
+                        "enable_elastic_disk": true,
+                        "data_security_mode": "SINGLE_USER",
+                        "runtime_engine": "STANDARD",
+                        "num_workers": 0
                     }
                 }
             ],
@@ -458,7 +499,19 @@
                         {
                             "job_cluster_key": "mlops_batch_inference_cluster",
                             "new_cluster": {
-                                "performance_target": "STANDARD"
+                                "spark_version": "16.4.x-cpu-ml-scala2.12",
+                                "spark_conf": {
+                                    "spark.master": "local[*, 4]",
+                                    "spark.databricks.cluster.profile": "singleNode"
+                                },
+                                "custom_tags": {"ResourceClass": "SingleNode"},
+                                "spark_env_vars": {
+                                    "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                                },
+                                "enable_elastic_disk": True,
+                                "data_security_mode": "SINGLE_USER",
+                                "runtime_engine": "STANDARD",
+                                "num_workers": 0
                             }
                         }
                     ],

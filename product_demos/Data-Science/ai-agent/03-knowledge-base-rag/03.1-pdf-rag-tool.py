@@ -22,7 +22,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install -U -qqqq mlflow>=3.1.1 langchain langgraph databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] uv databricks-feature-engineering==0.12.1
+# MAGIC %pip install -U -qqqq mlflow>=3.1.4 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.12.1 protobuf<5  cryptography<43 databricks-mcp
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -45,6 +45,7 @@
 
 # DBTITLE 1,let's try our ai_parse_document function
 # MAGIC %sql
+# MAGIC -- ai_parse_document is available in DBR 17.1 or serverless runtime
 # MAGIC SELECT ai_parse_document(content) AS parsed_document
 # MAGIC   FROM READ_FILES('/Volumes/main_build/dbdemos_ai_agent/raw_data/pdf_documentation/', format => 'binaryFile') limit 2
 
@@ -88,7 +89,7 @@
 # MAGIC     doc_uri
 # MAGIC   FROM (
 # MAGIC     SELECT array_join(
-# MAGIC             transform(parsed_document:document.pages::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
+# MAGIC             transform(parsed_document:document.elements::ARRAY<STRUCT<content:STRING>>, x -> x.content), '\n') AS content,
 # MAGIC            path as doc_uri
 # MAGIC     FROM (
 # MAGIC       SELECT ai_parse_document(content) AS parsed_document, path
@@ -243,6 +244,10 @@ except Exception as e:
     print(f"Skipped update - ignore for job run - {e}")
 
 model_config = mlflow.models.ModelConfig(development_config=conf_path)
+
+# COMMAND ----------
+
+# MAGIC %pip install databricks-mcp
 
 # COMMAND ----------
 

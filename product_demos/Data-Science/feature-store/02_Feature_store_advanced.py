@@ -710,7 +710,7 @@ from databricks.feature_engineering.entities.feature_serving_endpoint import (
     EndpointCoreConfig,
 )
 
-fs_endpoint_name = f"{catalog}_{schema}_travel-recommendation-fs"
+fs_endpoint_name = f"{catalog}_{schema}_travel-recommendation-fs"[:50]
 
 endpoint_config = EndpointCoreConfig(
     served_entities=ServedEntity(
@@ -787,7 +787,7 @@ print(response)
 # Get latest version dynamically from the registry
 client = mlflow.deployments.get_deploy_client("databricks")
 latest_version = latest_model.version
-ms_endpoint_name = f"{catalog}_{schema}_travel-recommendation-ms"
+ms_endpoint_name = f"{catalog}_{schema}_travel-recommendation-ms"[:50]
 
 endpoint_config = {
     "served_entities": [

@@ -23,7 +23,7 @@
 # MAGIC - Register and promote the model to production in **Unity Catalog**.
 # MAGIC - Perform **batch inference** using feature lineage.
 # MAGIC
-# MAGIC ### Advanced version ([open the notebook]($./002_Feature_store_advanced))
+# MAGIC ### Advanced version ([open the notebook]($./02_Feature_store_advanced))
 # MAGIC
 # MAGIC - Combine multiple Feature Tables using **point-in-time lookup**.
 # MAGIC - Create **Online Feature Tables** for real-time serving.
@@ -31,7 +31,7 @@
 # MAGIC - Deploy and query **Feature Serving Endpoints**.
 # MAGIC - Serve a **UC-registered model** in real time with automatic feature lookup.
 # MAGIC
-# MAGIC ### Spark Declarative Pipeline Feature Creation ([open the notebook]($./003_Feature_store_pipeline))
+# MAGIC ### Spark Declarative Pipeline Feature Creation ([open the notebook]($./03_Feature_store_pipeline))
 # MAGIC
 # MAGIC - Demonstrate how to build and manage feature tables declaratively using Lakeflow pipelines.
 # MAGIC
@@ -182,11 +182,11 @@ fe = FeatureEngineeringClient(model_registry_uri="databricks-uc")
 
 fe.create_table(
     name="destination_location_fs",
-    #name="summer_catalog.summer_schema.travel_purchase_features",
     primary_keys=["destination_id"],
     df=df,
-    description="Travel purchases dataset with feature engineering",
-    tags={"team":"data_science"}
+    description="Travel purchases dataset with feature engineering"
+    # you can also attach tags to specifiy the team
+    #,tags={"team":"data_science"}
 )
 
 # COMMAND ----------
@@ -536,7 +536,7 @@ display(scored_df)
 # MAGIC We'll go more in details and introduce more feature engineering capabilities in the next demos:
 # MAGIC
 # MAGIC
-# MAGIC Open the [02_Feature_store_advanced notebook]($./002_Feature_store_advanced) to explore more Feature Engineering in Unity Catalog benefits & capabilities:
+# MAGIC Open the [02_Feature_store_advanced notebook]($./02_Feature_store_advanced) to explore more Feature Engineering in Unity Catalog benefits & capabilities:
 # MAGIC - Combine multiple Feature Tables using **point-in-time lookup**.
 # MAGIC - Create **Online Feature Tables** for real-time serving.
 # MAGIC - Build and publish a **Feature Spec** for online inference.

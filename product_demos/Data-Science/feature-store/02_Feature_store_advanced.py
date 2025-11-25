@@ -211,8 +211,9 @@ fe.create_table(
     primary_keys=["user_id", "ts"],
     timestamp_keys="ts",
     df=user_features_df,
-    description="User-level rolling behavior + demographic features with tenure tracking",
-    tags={"demo":"yes"}
+    description="User-level rolling behavior + demographic features with tenure tracking"
+    # attach tags if necessary
+    #,tags={"demo":"yes"}
 )
 
 # COMMAND ----------
@@ -227,8 +228,9 @@ fe.create_table(
     primary_keys=["destination_id", "ts"],
     timestamp_keys="ts", 
     schema=destination_features_df.schema,
-    description="Destination Popularity Features",
-    tags={"demo":"yes"}
+    description="Destination Popularity Features"
+    # attach tags if necessary
+    #,tags={"demo":"yes"}
 )
 fe.write_table(name=fe_table_name_destinations, df=destination_features_df)
 
@@ -544,7 +546,7 @@ except:
         print(f"Online store '{store_name}' creation initiated. This may take several minutes.")
         
         # Wait a bit and check status
-        time.sleep(100)
+        time.sleep(500)
         store = fe.get_online_store(name=store_name)
         print(f"Store: {store.name}, State: {store.state}, Capacity: {store.capacity}")
         
@@ -708,7 +710,7 @@ from databricks.feature_engineering.entities.feature_serving_endpoint import (
     EndpointCoreConfig,
 )
 
-endpoint_name = "travel_purchase_feature_endpoint"
+fs_endpoint_name = f"{catalog}_{schema}_fs-travel-recommendation"[:50]
 
 endpoint_config = EndpointCoreConfig(
     served_entities=ServedEntity(
@@ -720,11 +722,11 @@ endpoint_config = EndpointCoreConfig(
 
 # Create the Feature Serving Endpoint
 fe.create_feature_serving_endpoint(
-    name=endpoint_name,
+    name=fs_endpoint_name,
     config=endpoint_config
 )
 
-print(f"Feature Serving Endpoint created: {endpoint_name}")
+print(f"Feature Serving Endpoint created: {fs_endpoint_name}")
 
 
 # COMMAND ----------
@@ -736,10 +738,10 @@ print(f"Feature Serving Endpoint created: {endpoint_name}")
 # COMMAND ----------
 
 # DBTITLE 1,Ensure the endpoints is READY
-if wait_until_endpoint_ready(endpoint_name, timeout=900, sleep_time=30):
+if wait_until_endpoint_ready(fs_endpoint_name, timeout=900, sleep_time=30):
     print("Endpoint confirmed ready — safe to send inference or feature requests.")
 else:
-    raise TimeoutError(f"Endpoint '{endpoint_name}' is not ready yet.")
+    raise TimeoutError(f"Endpoint '{fs_endpoint_name}' is not ready yet.")
 
 
 # COMMAND ----------
@@ -750,13 +752,13 @@ import mlflow.deployments
 # Initialize MLflow deployment client for Databricks
 client = mlflow.deployments.get_deploy_client("databricks")
 
-# Replace with your actual endpoint name from the previous step
-endpoint_name = "travel_purchase_feature_endpoint"
+# Get your actual endpoint name from the previous step
+#fs_endpoint_name = f"travel-recommendation-fs-{int(time.time())}"
 
 # Prepare sample inputs (these correspond to your lookup keys)
 # You can query multiple user_id + destination_id pairs
 response = client.predict(
-    endpoint=endpoint_name,
+    endpoint=fs_endpoint_name,
     inputs={
         "dataframe_records": [
             {"user_id": 1001, "destination_id": 42},
@@ -785,7 +787,7 @@ print(response)
 # Get latest version dynamically from the registry
 client = mlflow.deployments.get_deploy_client("databricks")
 latest_version = latest_model.version
-endpoint_name = "travel-recommendation-fs-endpoint"
+ms_endpoint_name = f"{catalog}_{schema}_ms-travel-recommendation"[:50]
 
 endpoint_config = {
     "served_entities": [
@@ -806,11 +808,11 @@ endpoint_config = {
     }
 }
 # For first time creation
-#endpoint = client.create_endpoint(name=endpoint_name,config=endpoint_config)
+endpoint = client.create_endpoint(name=ms_endpoint_name,config=endpoint_config)
 # For updating the endpoint
-endpoint = client.update_endpoint(endpoint_name, endpoint_config)
+#endpoint = client.update_endpoint(ms_endpoint_name, endpoint_config)
 
-print(f"Endpoint '{endpoint_name}' created or updated successfully.")
+print(f"Endpoint '{ms_endpoint_name}' created or updated successfully.")
 print(f"Model served: {model_full_name} (version {latest_version})")
 
 # COMMAND ----------
@@ -822,11 +824,10 @@ print(f"Model served: {model_full_name} (version {latest_version})")
 # COMMAND ----------
 
 # DBTITLE 1,Ensure your endpoint is READY
-#endpoint_name = "travel-recommendation-fs-endpoint"
-if wait_until_endpoint_ready(endpoint_name, timeout=900, sleep_time=30):
+if wait_until_endpoint_ready(ms_endpoint_name, timeout=900, sleep_time=30):
     print("Endpoint confirmed ready — safe to send inference or feature requests.")
 else:
-    raise TimeoutError(f"Endpoint '{endpoint_name}' is not ready yet.")
+    raise TimeoutError(f"Endpoint '{ms_ndpoint_name}' is not ready yet.")
 
 # COMMAND ----------
 
@@ -843,13 +844,13 @@ import mlflow.deployments
 # Initialize MLflow deployment client for Databricks
 client = mlflow.deployments.get_deploy_client("databricks")
 
-# Replace with your actual endpoint name from the previous step
-endpoint_name = "travel-recommendation-fs-endpoint"
+# Get your actual model serving endpoint name from the previous step
+#ms_endpoint_name = f"travel-recommendation-ms-{int(time.time())}"
 
 # Prepare sample inputs (these correspond to your lookup keys)
 # You can query multiple user_id + destination_id pairs
 response = client.predict(
-    endpoint=endpoint_name,
+    endpoint=ms_endpoint_name,
     inputs={
         "dataframe_records": [
             {"user_id": 1234, "destination_id": 12},
@@ -864,8 +865,7 @@ print(response)
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC
+# MAGIC %md
 # MAGIC ## Summary 
 # MAGIC
 # MAGIC In this advanced demo, we’ve built a complete feature lifecycle using Databricks Feature Store — from creating timestamp-aware user and destination features to training and deploying a real-time recommendation model.
@@ -875,7 +875,14 @@ print(response)
 # MAGIC By registering the model through `fe.log_model()`, we’ve ensured automatic feature lookups during inference — whether the model runs in batch jobs or is served in real time through Databricks Model Serving.
 # MAGIC This guarantees that the same features used in training are consistently retrieved for inference, eliminating data leakage and mismatches.
 # MAGIC
-# MAGIC ## Next Step: Spark Declarative Feature Pipelines with Lakeflow
+# MAGIC Next Step: Spark Declarative Pipeline Feature Creation ([open the notebook]($./03_Feature_store_pipeline))
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC ## Declarative Pipeline Feature Creation 
+# MAGIC
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/feature_store/2025Q4_03_image1.png?raw=true" style="float: right" width="500px" />
 # MAGIC

@@ -12,7 +12,6 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 # COMMAND ----------
 
 catalog = "main__build"
-#catalog = "summer_catalog"
 main_naming = "dbdemos_fs_travel"
 schema = dbName = db = "dbdemos_fs_travel"
 

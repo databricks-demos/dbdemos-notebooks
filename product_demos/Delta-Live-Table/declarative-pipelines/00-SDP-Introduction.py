@@ -92,9 +92,9 @@
 # MAGIC     <td><a href="$./transformations/01-gold.sql"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-3.png?raw=true" width="300px" style="width:300px;" /></a></td>
 # MAGIC   </tr>
 # MAGIC   <tr>
-# MAGIC     <td align="center">Open <a href="$./transformations/01-bronze.sql">transformations/01-bronze.sql</a></td>
-# MAGIC     <td align="center">Open <a href="$./transformations/01-silver.sql">transformations/01-silver.sql</a></td>
-# MAGIC     <td align="center">Open <a href="$./transformations/01-gold.sql">transformations/01-gold.sql</a></td>
+# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-bronze.sql">transformations/01-bronze.sql</a></td>
+# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-silver.sql">transformations/01-silver.sql</a></td>
+# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-gold.sql">transformations/01-gold.sql</a></td>
 # MAGIC   </tr>
 # MAGIC </table>
 # MAGIC

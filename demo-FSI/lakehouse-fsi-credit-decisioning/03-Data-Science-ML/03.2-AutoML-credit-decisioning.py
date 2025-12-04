@@ -129,9 +129,6 @@ training_dataset = credit_bureau_label.join(features_set, "cust_id", "inner")
 
 # COMMAND ----------
 
-# Enable remote filtering to avoid self-join issues
-spark.conf.set("spark.databricks.remoteFiltering.blockSelfJoins", "false")
-
 major_df = training_dataset.filter(col("defaulted") == 0)
 minor_df = training_dataset.filter(col("defaulted") == 1)
 

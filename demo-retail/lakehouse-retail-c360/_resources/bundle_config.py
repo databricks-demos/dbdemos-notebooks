@@ -11,7 +11,7 @@
   "title": "Lakehouse for C360: Reducing Customer Churn",
   "serverless_supported": True,
   "custom_schema_supported": True,
-  "default_catalog": "main",
+  "default_catalog": "main_build",
   "default_schema": "dbdemos_retail_c360",
   "env_version": 3,
   "description": "Centralize customer data and reduce churn: Ingestion (SDP), BI, Predictive Maintenance (ML), Governance (UC), Orchestration.",

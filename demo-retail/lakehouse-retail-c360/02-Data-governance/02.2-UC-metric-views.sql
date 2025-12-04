@@ -124,7 +124,7 @@ select CURRENT_CATALOG() as catalog, CURRENT_SCHEMA() as schema
 
 
 -- Create a Metric View with business-friendly dimensions and measures
-CREATE VIEW IF NOT EXISTS churn_users_metric_view
+CREATE OR REPLACE VIEW churn_users_metric_view
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Metric view demonstration'

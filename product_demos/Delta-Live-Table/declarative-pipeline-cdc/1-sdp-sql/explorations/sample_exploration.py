@@ -9,4 +9,4 @@
 # COMMAND ----------
 
 # DBTITLE 1,Explore Input data from CDC
-display(spark.read.json("/Volumes/main__build/dbdemos_dlt_cdc/raw_data/customers"))
+display(spark.read.json("/Volumes/main__build/dbdemos_sdp_cdc/raw_data/customers"))

@@ -32,6 +32,18 @@ conf = {
     'security.protocol': 'SSL'
 }
 
+# Alternatively, if you have set up an EventHub with Kafka interface, you can use the following configuration.
+you_have_setup_eventhub = False
+
+if you_have_setup_eventhub:
+    conf.update({
+        'bootstrap.servers': '<your-eventhub-namespace>.servicebus.windows.net:9093', # Replace with your EventHub Kafka endpoint
+        'security.protocol': 'SASL_SSL',
+        'sasl.mechanism': 'PLAIN',
+        'sasl.username': '$ConnectionString',
+        'sasl.password': '', # Use your EventHub connection string (e.g., Endpoint=sb://...SharedAccessKey=...)
+    })
+
 producer = Producer(conf)
 
 def delivery_report(err, msg):

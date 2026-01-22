@@ -75,7 +75,7 @@
 # MAGIC
 # MAGIC <br/>
 # MAGIC <div style="padding-left: 420px">
-# MAGIC Our first step is to ingest and clean the raw data we received so that our Data Analyst team can start running analysis on top of it.
+# MAGIC Our first step is to ingest and clean the raw data we received so that our data analyst team can start running analysis on top of it.
 # MAGIC
 # MAGIC
 # MAGIC <img src="https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-logo.png" style="float: right; margin-top: 20px" width="200px">
@@ -111,7 +111,7 @@
 # MAGIC
 # MAGIC To leverage our data assets across the entire organization, we need:
 # MAGIC
-# MAGIC * Fine grained ACLs for our Analysts & Data Scientists teams
+# MAGIC * Fine-grained ACLs for our analysts and data scientists teams
 # MAGIC * Lineage between all our data assets
 # MAGIC * Real-time PII data encryption 
 # MAGIC * Audit logs

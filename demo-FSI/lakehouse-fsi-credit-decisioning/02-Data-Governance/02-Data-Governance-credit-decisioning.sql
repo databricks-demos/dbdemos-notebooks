@@ -21,9 +21,9 @@
 -- MAGIC Our data has been saved as Delta Table by our Data Engineering team. The next step is to secure this data while allowing cross-team to access it. <br>
 -- MAGIC A typical setup would be the following:
 -- MAGIC
--- MAGIC * Data Engineers / Jobs can read and update the main data/schemas (ETL part)
--- MAGIC * Data Scientists can read the final tables and update their features tables
--- MAGIC * Data Analyst have READ access to the Data Engineering and Feature Tables and can ingest/transform additional data in a separate schema.
+-- MAGIC * Data engineers / Jobs can read and update the main data/schemas (ETL part)
+-- MAGIC * Data scientists can read the final tables and update their features tables
+-- MAGIC * Data analysts have READ access to the Data Engineering and Feature Tables and can ingest/transform additional data in a separate schema.
 -- MAGIC * Data is masked/anonymized dynamically based on each user access level
 -- MAGIC
 -- MAGIC This is made possible by Unity Catalog. When tables are saved in the Unity Catalog, they can be made accessible to the entire organization, cross-workspaces and cross users.

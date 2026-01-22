@@ -102,7 +102,7 @@
 # MAGIC
 # MAGIC To leverage our data assets across the entire organization, we need:
 # MAGIC
-# MAGIC * Fine grained ACLs for our Analysts & Data Scientists teams
+# MAGIC * Fine-grained ACLs for our analysts and data scientists teams
 # MAGIC * Lineage between all our data assets
 # MAGIC * Real-time PII data encryption 
 # MAGIC * Audit logs

@@ -13,11 +13,11 @@
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC ## Ingestion made it easy with Databricks Assistant
+# MAGIC ## Ingestion made easy with Databricks Assistant
 # MAGIC
-# MAGIC Databricks Data Intelligent Platform simplify our journey, empowering Data Analyst to do more and build robust Data Pipelines.
+# MAGIC Databricks Data Intelligence Platform simplifies our journey, empowering data analysts to do more and build robust data pipelines.
 # MAGIC
-# MAGIC Questions can be asked in plain text to our assistant, which will suggest how to build the pipeline, fix bug and offer potential improvements.
+# MAGIC Questions can be asked in plain text to our assistant, which will suggest how to build the pipeline, fix bugs and offer potential improvements.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=data-science&org_id=1444828305810485&notebook=01.1-DLT-Ingest-Policy-Claims&demo_name=lakehouse-fsi-smart-claims&event=VIEW">
@@ -33,7 +33,7 @@
 # MAGIC %md
 # MAGIC ## Building a Spark Declarative Pipeline for Smart Claims Processing
 # MAGIC
-# MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our claims, policy, and telematics data. We'll use the medallion architecture but we could build star schema, data vault or any other modelisation.
+# MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our claims, policy, and telematics data. We'll use the medallion architecture but we could build star schema, data vault or any other modeling approach.
 # MAGIC
 # MAGIC We'll incrementally load new data with the autoloader, enrich this information, and prepare it for downstream analysis and ML models.
 # MAGIC
@@ -80,7 +80,7 @@
 # MAGIC
 # MAGIC Once our raw data are ingested, we can start adding some transformation and business logic to cleanup our data.
 # MAGIC
-# MAGIC These tables are typically made available to downstream teams, such as Data Scientists or Data Analysts.
+# MAGIC These tables are typically made available to downstream teams, such as data scientists or data analysts.
 # MAGIC
 # MAGIC We'll:
 # MAGIC - Aggregate telematics data by vehicle

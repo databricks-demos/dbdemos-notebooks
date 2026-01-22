@@ -79,7 +79,7 @@
 -- MAGIC
 -- MAGIC
 -- MAGIC <br/>
--- MAGIC Our first step is to ingest and clean the raw data we received so that our Data Analyst team can start running analysis on top of it.
+-- MAGIC Our first step is to ingest and clean the raw data we received so that our data analyst team can start running analysis on top of it.
 -- MAGIC
 -- MAGIC
 -- MAGIC ### Simple ingestion with Lakeflow Connect

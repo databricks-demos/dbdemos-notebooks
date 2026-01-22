@@ -75,7 +75,7 @@
 -- MAGIC
 -- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze and reduce fraud detection in real-time
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming our banking transactions information. We'll use the medallion architecture but we could build a star schema, a data vault or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming our banking transactions information. We'll use the medallion architecture but we could build a star schema, a data vault or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the Autoloader and enrich this information.
 -- MAGIC

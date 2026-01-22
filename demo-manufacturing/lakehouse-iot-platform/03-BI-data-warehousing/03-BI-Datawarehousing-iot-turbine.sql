@@ -34,7 +34,7 @@
 -- MAGIC
 -- MAGIC Our datasets are now properly ingested, secured, with high quality and easily discoverable within our organization.
 -- MAGIC
--- MAGIC Let's explore how Databricks SQL supports your Data Analyst team with interactive BI and start analyzing our sensor information.
+-- MAGIC Let's explore how Databricks SQL supports your data analyst team with interactive BI and start analyzing our sensor information.
 -- MAGIC
 -- MAGIC To start with Databricks SQL, open the SQL view on the top left menu.
 -- MAGIC

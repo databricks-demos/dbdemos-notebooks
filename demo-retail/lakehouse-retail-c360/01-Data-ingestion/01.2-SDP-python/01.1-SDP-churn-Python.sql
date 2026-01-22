@@ -108,7 +108,7 @@
 -- MAGIC %md
 -- MAGIC ## Building a SDP pipeline to analyze and reduce churn
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our customer churn prediction.
 -- MAGIC

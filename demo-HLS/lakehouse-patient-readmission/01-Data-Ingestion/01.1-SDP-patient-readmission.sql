@@ -93,7 +93,7 @@
 -- MAGIC
 -- MAGIC ## Building a Spark Declarative Pipelines pipeline to ingest and prepare HLS data with the OMOP model
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medallion architecture but we could build star schema, data vault, or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medallion architecture but we could build star schema, data vault, or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, clean and enrich this information.
 -- MAGIC

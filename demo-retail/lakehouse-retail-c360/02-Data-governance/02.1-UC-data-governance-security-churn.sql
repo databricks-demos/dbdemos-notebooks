@@ -4,7 +4,7 @@
 -- MAGIC
 -- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for multiple data assets (dashboards, Models, files etc).
 -- MAGIC
--- MAGIC To reduce risks and driving innovation, Emily's team needs to:
+-- MAGIC To reduce risks and drive innovation, Emily's team needs to:
 -- MAGIC
 -- MAGIC - Unify all data assets (Tables, Files, ML models, Features, Dashboards, Queries)
 -- MAGIC - Onboard data with multiple teams
@@ -211,7 +211,7 @@ SELECT * FROM churn_users_protected
 -- MAGIC
 -- MAGIC ## Going further with Data governance & security
 -- MAGIC
--- MAGIC By bringing all your data assets together, Unity Catalog let you build a complete and simple governance to help you scale your teams.
+-- MAGIC By bringing all your data assets together, Unity Catalog lets you build a complete and simple governance to help you scale your teams.
 -- MAGIC
 -- MAGIC Unity Catalog can be leveraged from simple GRANT to building a complete datamesh organization.
 -- MAGIC
@@ -219,32 +219,32 @@ SELECT * FROM churn_users_protected
 -- MAGIC
 -- MAGIC ### Fine-grained ACL: row/column level access
 -- MAGIC
--- MAGIC Need more advanced control? You can chose to dynamically change your table output based on the user permissions: `dbdemos.intall('uc-01-acl')`
+-- MAGIC Need more advanced control? You can choose to dynamically change your table output based on the user permissions: `dbdemos.install('uc-01-acl')`
 -- MAGIC
 -- MAGIC ### Secure external location (S3/ADLS/GCS)
 -- MAGIC
--- MAGIC Unity Catalog lets you secure your managed table but also your external locations:  `dbdemos.intall('uc-02-external-location')`
+-- MAGIC Unity Catalog lets you secure your managed table but also your external locations:  `dbdemos.install('uc-02-external-location')`
 -- MAGIC
 -- MAGIC ### Lineage 
 -- MAGIC
--- MAGIC UC automatically captures table dependencies and let you track how your data is used, including at a row level: `dbdemos.intall('uc-03-data-lineage')`
+-- MAGIC UC automatically captures table dependencies and let you track how your data is used, including at a row level: `dbdemos.install('uc-03-data-lineage')`
 -- MAGIC
 -- MAGIC This lets you analyze downstream impact, or monitor sensitive information across the entire organization (GDPR).
 -- MAGIC
 -- MAGIC
 -- MAGIC ### Audit log
 -- MAGIC
--- MAGIC UC captures all events. Need to know who is accessing which data? Query your audit log:  `dbdemos.intall('uc-04-audit-log')`
+-- MAGIC UC captures all events. Need to know who is accessing which data? Query your audit log:  `dbdemos.install('uc-04-audit-log')`
 -- MAGIC
 -- MAGIC This lets you analyze downstream impact, or monitor sensitive information across the entire organization (GDPR).
 -- MAGIC
 -- MAGIC ### Upgrading to UC
 -- MAGIC
--- MAGIC Already using Databricks without UC? Upgrading your tables to benefit from Unity Catalog is simple:  `dbdemos.intall('uc-05-upgrade')`
+-- MAGIC Already using Databricks without UC? Upgrading your tables to benefit from Unity Catalog is simple:  `dbdemos.install('uc-05-upgrade')`
 -- MAGIC
 -- MAGIC ### Sharing data with external organization
 -- MAGIC
--- MAGIC Sharing your data outside of your Databricks users is simple with Delta Sharing, and doesn't require your data consumers to use Databricks:  `dbdemos.intall('delta-sharing-airlines')`
+-- MAGIC Sharing your data outside of your Databricks users is simple with Delta Sharing, and doesn't require your data consumers to use Databricks:  `dbdemos.install('delta-sharing-airlines')`
 
 -- COMMAND ----------
 

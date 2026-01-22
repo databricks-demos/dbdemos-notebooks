@@ -28,7 +28,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## Reducing Fraud  with the lakehouse
+-- MAGIC ## Reducing Fraud with the Lakehouse
 -- MAGIC
 -- MAGIC Being able to collect and centralize information in real time is critical for the industry. Data is the key to unlock critical capabilities such as real-time personalization or fraud prevention. <br/> 
 -- MAGIC

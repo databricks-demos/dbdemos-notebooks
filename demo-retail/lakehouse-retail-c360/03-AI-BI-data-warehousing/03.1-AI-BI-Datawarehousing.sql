@@ -7,9 +7,9 @@
 -- MAGIC
 -- MAGIC Traditional Data Warehouses can’t keep up with the variety of data and use cases. Business agility requires reliable, real-time data, with insight from ML models.
 -- MAGIC
--- MAGIC Working with the lakehouse unlock traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
+-- MAGIC Working with the lakehouse unlocks traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
 -- MAGIC
--- MAGIC With AI assistant infused in all the BI stack, Databricks makes it easy to analysts and business users to extract insight from their data.  
+-- MAGIC With AI assistant infused in all the BI stack, Databricks makes it easy for analysts and business users to extract insight from their data.  
 -- MAGIC <br style="clear: both">
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/raw/main/images/dbsql.png" width="700px" style="float: left" />
@@ -40,7 +40,7 @@
 -- MAGIC
 -- MAGIC **Serverless warehouse** provide instant, elastic SQL compute — decoupled from storage — and will automatically scale to provide unlimited concurrency without disruption, for high concurrency use cases.
 -- MAGIC
--- MAGIC Make no compromise. Your best Datawarehouse is a Lakehouse.
+-- MAGIC Make no compromise. Your best Data Warehouse is a Lakehouse.
 -- MAGIC
 -- MAGIC ### Creating a SQL Warehouse
 -- MAGIC
@@ -86,7 +86,7 @@
 -- MAGIC
 -- MAGIC This will allow you to run direct queries on top of your table, with a unified security model and Unity Catalog (ex: through SSO). Now analysts can use their favorite tools to discover new business insights on the most complete and freshest data.
 -- MAGIC
--- MAGIC To start using your Warehouse with third party BI tool, click on "Partner Connect" on the bottom left and chose your provider.
+-- MAGIC To start using your Warehouse with third party BI tool, click on "Partner Connect" on the bottom left and choose your provider.
 
 -- COMMAND ----------
 
@@ -101,7 +101,7 @@
 -- MAGIC
 -- MAGIC Comprehensive data modeling. Save your data based on your requirements: Data vault, Star schema, Inmon...
 -- MAGIC
--- MAGIC Databricks let you create your PK/FK, identity columns (auto-increment): `dbdemos.install('identity-pk-fk')`
+-- MAGIC Databricks lets you create your PK/FK, identity columns (auto-increment): `dbdemos.install('identity-pk-fk')`
 -- MAGIC
 -- MAGIC ### Data ingestion made easy with DBSQL & DBT
 -- MAGIC

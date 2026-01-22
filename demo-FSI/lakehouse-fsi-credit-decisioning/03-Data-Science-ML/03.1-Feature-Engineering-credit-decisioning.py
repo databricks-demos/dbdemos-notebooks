@@ -57,7 +57,7 @@
 # MAGIC
 # MAGIC <br/>
 # MAGIC
-# MAGIC This where we use our existing tables and transform the data to be ready for our ML models. These features will later be stored in Databricks Feature Store (see below) and used to train the aforementioned ML models.
+# MAGIC This is where we use our existing tables and transform the data to be ready for our ML models. These features will later be stored in Databricks Feature Store (see below) and used to train the aforementioned ML models.
 # MAGIC
 # MAGIC <br/>
 # MAGIC

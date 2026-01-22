@@ -12,7 +12,7 @@
 # MAGIC   One single platform and governance/security layer for your data warehousing and AI to **accelerate innovation** and **reduce risks**. No need to stitch together multiple solutions with disparate governance and high complexity.
 # MAGIC
 # MAGIC ### 2. Open
-# MAGIC   Built on open source and open standards. You own your data and prevent vendor lock-in, with easy integration with external solution. Being open also lets you share your data with any external organization, regardless of their data stack/vendor.
+# MAGIC   Built on open source and open standards. You own your data and prevent vendor lock-in, with easy integration with external solutions. Being open also lets you share your data with any external organization, regardless of their data stack/vendor.
 # MAGIC
 # MAGIC ### 3. Multicloud
 # MAGIC   Multicloud is one of the key strategic considerations for FS companies, 88% of single-cloud FS customers are adopting a multi-cloud architecture (<a href="https://www.fstech.co.uk/fst/88_Of_FIs_Considering_Multicloud.php">reference</a>). Multicloud architecture, however can be expensive and difficult to build. The Lakehouse provides one consistent data platform across clouds and gives companies the ability to process your data where your need.
@@ -104,7 +104,7 @@
 # MAGIC
 # MAGIC * Fine grained ACLs for our Analysts & Data Scientists teams
 # MAGIC * Lineage between all our data assets
-# MAGIC * real-time PII data encryption 
+# MAGIC * Real-time PII data encryption 
 # MAGIC * Audit logs
 # MAGIC * Data Sharing with external organization 
 # MAGIC

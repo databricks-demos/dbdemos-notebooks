@@ -55,7 +55,7 @@
 -- MAGIC     <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_overview.png" width="1000px">
 -- MAGIC </div>
 -- MAGIC
--- MAGIC 1. Ingest and create our IoT database and tables which are easily queriable via SQL.
+-- MAGIC 1. Ingest and create our IoT database and tables which are easily queryable via SQL.
 -- MAGIC 2. Secure data and grant read access to the Data Analyst and Data Science teams.
 -- MAGIC 3. Run BI queries to analyze existing failures.
 -- MAGIC 4. Build ML model to monitor our wind turbine farm & trigger predictive maintenance operations.
@@ -141,9 +141,9 @@
 -- MAGIC <br><br><br>
 -- MAGIC Our datasets are now properly ingested, secured, are of high quality and easily discoverable within our organization.
 -- MAGIC
--- MAGIC Data Analysts are now ready to run BI interactive queries which are low latency & high throughput. They can choose to either create a new compute cluster, use a shared cluster, or for even faster response times, use Databricks Serverless Datawarehouses which provide instant stop & start.
+-- MAGIC Data Analysts are now ready to run BI interactive queries which are low latency & high throughput. They can choose to either create a new compute cluster, use a shared cluster, or for even faster response times, use Databricks Serverless Data Warehouses which provide instant stop & start.
 -- MAGIC
--- MAGIC Let's see how Data Warehousing is done using Databricks! We will look at our built-in dashboards as Databricks provides a complete data platform from ingest to analysis but also provides to integrations with many popular BI tools such as PowerBI, Tableau and others!
+-- MAGIC Let's see how Data Warehousing is done using Databricks! We will look at our built-in dashboards as Databricks provides a complete data platform from ingest to analysis but also provides integrations with many popular BI tools such as PowerBI, Tableau and others!
 
 -- COMMAND ----------
 

@@ -200,7 +200,7 @@ churn_feature_table = fe.create_table(
   name=f'{catalog}.{db}.turbine_hourly_features',
   primary_keys=['turbine_id','hourly_timestamp'],
   schema=dataset.spark.schema(),
-  description='These features are derived from the turbine_training_dataset table in the data intelligence platform.  We made some basic transformations and removed NA value.'
+  description='These features are derived from the turbine_training_dataset table in the data intelligence platform. We made some basic transformations and removed NA value.'
 )
 
 fe.write_table(df=dataset.drop_duplicates(subset=['turbine_id', 'hourly_timestamp']).to_spark(), name=f'{catalog}.{db}.turbine_hourly_features')

@@ -68,7 +68,7 @@ display(cdc_raw_data.dropDuplicates(['operation']))
 
 # COMMAND ----------
 
-# DBTITLE 1,We need to keep the cdc information, however csv isn't a efficient storage. Let's put that in a Delta table instead:
+# DBTITLE 1,We need to keep the cdc information, however CSV isn't an efficient storage. Let's put that in a Delta table instead:
 bronzeDF = (spark.readStream
                 .format("cloudFiles")
                 .option("cloudFiles.format", "csv")

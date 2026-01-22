@@ -15,12 +15,12 @@
 # MAGIC </div>
 # MAGIC <div style="width: 30%; float: left; margin: 0px 0px 0px 0px; background-color: #fafbff; padding: 15px; min-height: 230px;">
 # MAGIC   <div style="text-align: center"><h3>Open</h3></div>
-# MAGIC   Built on open source and open standards. You own your data and <strong>prevent vendor lock-in</strong>, with easy integration with external solution. <br>
+# MAGIC   Built on open source and open standards. You own your data and <strong>prevent vendor lock-in</strong>, with easy integration with external solutions. <br>
 # MAGIC   Being open also lets you share your data with any external organization, regardless of their data stack/vendor.
 # MAGIC </div>
 # MAGIC <div style="width: 30%; float: left; margin: 0px 10px 0px 10px; background-color: #fafbff; padding: 15px; min-height: 230px;">
 # MAGIC   <div style="text-align: center"><h3>Multicloud</h3></div>
-# MAGIC   Multicloud is one of the key strategic considerations for FS companies, with 88% of single-cloud FS customers are adopting a <strong>multi-cloud architecture</strong> (<a href="https://www.fstech.co.uk/fst/88_Of_FIs_Considering_Multicloud.php">reference</a>). The Lakehouse provides one consistent data platform across clouds and gives companies the ability to process your data where your need.
+# MAGIC   Multicloud is one of the key strategic considerations for FS companies, with 88% of single-cloud FS customers adopting a <strong>multi-cloud architecture</strong> (<a href="https://www.fstech.co.uk/fst/88_Of_FIs_Considering_Multicloud.php">reference</a>). The Lakehouse provides one consistent data platform across clouds and gives companies the ability to process your data where you need.
 # MAGIC </div>
 # MAGIC  
 # MAGIC
@@ -127,7 +127,7 @@
 # MAGIC It not only provides for easy data discovery but also protects data from unauthorized access through ACLS at the table, row, and column level ensuring PII data remains masked even for the claims investigation officer. <br/>
 # MAGIC In addition, it provides audit trails of who accessed what data which is critical in regulated industries. 
 # MAGIC
-# MAGIC Once our data ingested, we can simply grant access to our Data Scientist team for them to explore the data and start building models.
+# MAGIC Once our data is ingested, we can simply grant access to our Data Scientist team for them to explore the data and start building models.
 
 # COMMAND ----------
 

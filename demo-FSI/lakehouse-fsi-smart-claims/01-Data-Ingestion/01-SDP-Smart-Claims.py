@@ -61,7 +61,7 @@
 # MAGIC
 # MAGIC Databricks makes it easy to incrementally ingest raw files and save them as a Delta Table using  `cloud_files`.
 # MAGIC
-# MAGIC In this notebook, we'll be using Python, but we could have declare the same transformation in pure SQL.  You could ask the assistant to convert it from python to SQL !
+# MAGIC In this notebook, we'll be using Python, but we could have declared the same transformation in pure SQL. You could ask the assistant to convert it from python to SQL!
 # MAGIC
 # MAGIC Let's use it to our pipeline and ingest the raw JSON, CSV & Parquet data being delivered in our Unity Catalog Volume.
 

@@ -4,7 +4,7 @@
 -- MAGIC
 -- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for multiple data assets (dashboards, Models, files etc).
 -- MAGIC
--- MAGIC To reduce risks and driving innovation, Emily's team needs to:
+-- MAGIC To reduce risks and drive innovation, Emily's team needs to:
 -- MAGIC
 -- MAGIC - Unify all data assets (Tables, Files, ML models, Features, Dashboards, Queries)
 -- MAGIC - Onboard data with multiple teams
@@ -18,7 +18,7 @@
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
 -- MAGIC
--- MAGIC Our Data has been saved as Delta Table by our Data Engineering team.  The next step is to secure this data while allowing cross team to access it. <br>
+-- MAGIC Our data has been saved as Delta Table by our Data Engineering team. The next step is to secure this data while allowing cross-team to access it. <br>
 -- MAGIC A typical setup would be the following:
 -- MAGIC
 -- MAGIC * Data Engineers / Jobs can read and update the main data/schemas (ETL part)

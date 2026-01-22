@@ -4,7 +4,7 @@
 -- MAGIC
 -- MAGIC Building a C360 database requires ingesting multiple data sources.
 -- MAGIC
--- MAGIC It's a complex process requiring batch loads and streaming ingestion to support real-time insights, used for personalization and marketing targeting among other.
+-- MAGIC It's a complex process requiring batch loads and streaming ingestion to support real-time insights, used for personalization and marketing targeting among others.
 -- MAGIC
 -- MAGIC Ingesting, transforming and cleaning data to create clean SQL tables for our downstream user (Data Analysts and Data Scientists) is complex.
 -- MAGIC
@@ -102,7 +102,7 @@
 -- MAGIC %md
 -- MAGIC ## Building an SDP pipeline to analyze and reduce churn
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our customer churn prediction.
 -- MAGIC

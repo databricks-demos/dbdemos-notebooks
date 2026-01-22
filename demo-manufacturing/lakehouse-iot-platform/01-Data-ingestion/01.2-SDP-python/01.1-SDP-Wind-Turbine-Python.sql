@@ -64,7 +64,7 @@
 -- MAGIC ## Building a Spark Declarative Pipeline to ingest IOT sensor and detect faulty equipments
 -- MAGIC
 -- MAGIC In this example, we'll implement a end 2 end Spark Declarative Pipeline consuming our Wind Turbine sensor data. <br/>
--- MAGIC We'll use the medaillon architecture but we could build star schema, data vault or any other modelisation.
+-- MAGIC We'll use the medallion architecture but we could build star schema, data vault or any other model.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our predictive maintenance analysis.
 -- MAGIC

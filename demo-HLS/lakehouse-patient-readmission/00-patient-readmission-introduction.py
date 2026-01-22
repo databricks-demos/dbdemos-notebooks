@@ -58,7 +58,7 @@
 # MAGIC
 # MAGIC <div style="margin-left: 20px">
 # MAGIC   <div class="badge_b"><div class="badge">1</div> Ingest all the various sources of data and create our longitudinal health records database (based on OMOP CDM) (<strong>unification of data</strong>) </div>
-# MAGIC   <div class="badge_b"><div class="badge">2</div>  Secure data and grant read access to the Data Analyst and Data Science teams, including row- and column-level filtering, PHI data masking, and others (<strong>data security and control</strong>). Use the Databricks unified <strong>data lineage</strong> to understand how your data flows and is used in your organisation</div>
+# MAGIC   <div class="badge_b"><div class="badge">2</div>  Secure data and grant read access to the Data Analyst and Data Science teams, including row- and column-level filtering, PHI data masking, and others (<strong>data security and control</strong>). Use the Databricks unified <strong>data lineage</strong> to understand how your data flows and is used in your organization</div>
 # MAGIC   <div class="badge_b"><div class="badge">4</div> Run BI queries and EDA to analyze population-level trends</div>
 # MAGIC   <div class="badge_b"><div class="badge">5</div>  Build ML model to <strong>predict readmission risk</strong> and deploy ML models for real-time serving</div>
 # MAGIC </div>
@@ -82,7 +82,7 @@
 # MAGIC
 # MAGIC ### Delta Lake
 # MAGIC
-# MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake table. [Delta Lake](https://delta.io) is an open storage framework for reliability and performance. <br/>
+# MAGIC All the tables we'll create in the Lakehouse will be stored as Delta Lake tables. [Delta Lake](https://delta.io) is an open storage framework for reliability and performance. <br/>
 # MAGIC It provides many functionalities *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
 # MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 # MAGIC
@@ -113,7 +113,7 @@
 # MAGIC
 # MAGIC * Fine grained ACLs for our Analysts & Data Scientists teams
 # MAGIC * Lineage between all our data assets
-# MAGIC * real-time PII data encryption 
+# MAGIC * Real-time PII data encryption 
 # MAGIC * Audit logs
 # MAGIC * Data Sharing with external organization 
 # MAGIC
@@ -138,9 +138,9 @@
 # MAGIC <img style="float: left; margin-right: 20px" width="400px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/hls/patient-readmission/hls-patient-readmision-lakehouse-3.png" />
 # MAGIC  
 # MAGIC <br><br>
-# MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
+# MAGIC Our datasets are now properly ingested, secured, with high quality and easily discoverable within our organization.
 # MAGIC
-# MAGIC Data Analysts are now ready to run adhoc analysis, building custom cohort on top of the existing data. In addition, Databricks provides BI interactive queries, with low latencies & high throughput, including Serverless Datawarehouses providing instant stop & start.
+# MAGIC Data Analysts are now ready to run adhoc analysis, building custom cohort on top of the existing data. In addition, Databricks provides BI interactive queries, with low latencies & high throughput, including Serverless Data Warehouses providing instant stop & start.
 
 # COMMAND ----------
 

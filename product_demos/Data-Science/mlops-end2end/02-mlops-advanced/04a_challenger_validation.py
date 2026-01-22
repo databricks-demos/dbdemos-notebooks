@@ -119,7 +119,7 @@ client.set_model_version_tag(name=model_name, version=str(model_details.version)
 # MAGIC
 # MAGIC #### Validate prediction
 # MAGIC
-# MAGIC We want to test to see that the model can predict on production data.  So, we will load the model and the latest from the feature store and test by making some predictions.
+# MAGIC We want to test to see that the model can predict on production data. So, we will load the model and the latest from the feature store and test by making some predictions.
 # MAGIC
 # MAGIC **NOTE: This may take ~7mins since we're creating a new virtual environment (env_manager=`virtualenv`) to run the inference and not the serverless cluster's default environment itself.**
 
@@ -183,7 +183,7 @@ local_path = mlflow.artifacts.download_artifacts(run_id=run_info.info.run_id, ds
 # Tag model version as possessing artifacts or not
 if not os.listdir(local_path):
   has_artifacts = False
-  print("There are no artifacts associated with this model.  Please include some data/metrics visualization or data profiling.  MLflow supports HTML, .png, and more.")
+  print("There are no artifacts associated with this model. Please include some data/metrics visualization or data profiling. MLflow supports HTML, .png, and more.")
 
 else:
   has_artifacts = True

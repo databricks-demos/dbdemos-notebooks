@@ -83,7 +83,7 @@
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
 -- MAGIC
--- MAGIC Our Data has been saved as Delta Table by our Data Engineering team.  The next step is to secure this data while allowing cross team to access it. <br>
+-- MAGIC Our data has been saved as Delta Table by our Data Engineering team. The next step is to secure this data while allowing cross-team to access it. <br>
 -- MAGIC A typical setup would be the following:
 -- MAGIC
 -- MAGIC * Data Engineers / Jobs can read and update the main data/schemas (ETL part)
@@ -259,7 +259,7 @@ SELECT * FROM parts_secured;
 -- MAGIC
 -- MAGIC ## Going further with Data governance & security
 -- MAGIC
--- MAGIC By bringing all your data assets together, Unity Catalog let you build a complete and simple governance to help you scale your teams.
+-- MAGIC By bringing all your data assets together, Unity Catalog lets you build a complete and simple governance to help you scale your teams.
 -- MAGIC
 -- MAGIC Unity Catalog can be leveraged from simple GRANT to building a complete datamesh organization.
 -- MAGIC

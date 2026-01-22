@@ -86,7 +86,7 @@
 # MAGIC - **Fine Grained Access control on your data**: Control who can access which row or column based on your own organization
 # MAGIC - **Full lineage, from data ingestion to ML models**: Analyze all downstream impact for any legal / privacy requirements
 # MAGIC - **Audit and traceability**: Analyze who did what, when
-# MAGIC - **Support for all data assets**: Including files, table, dashboards, ML/AI models, jobs, and more! _Simplify governance, support all your teams in one place._
+# MAGIC - **Support for all data assets**: Including files, tables, dashboards, ML/AI models, jobs, and more! _Simplify governance, support all your teams in one place._
 # MAGIC
 # MAGIC Explore the data and table ingested in [Unity Catalog](/explore/data) and make sure that it looks appropriate for your organization's needs.
 # MAGIC
@@ -105,7 +105,7 @@
 # MAGIC
 # MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
 # MAGIC
-# MAGIC Dashboards offers advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
+# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
 # MAGIC
 # MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
 # MAGIC

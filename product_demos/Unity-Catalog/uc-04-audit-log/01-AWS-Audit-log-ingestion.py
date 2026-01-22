@@ -55,7 +55,7 @@ display(dbutils.fs.ls("s3a://databricks-field-eng-audit-logs/raw-audit-logs/"))
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Let's setup a small medaillon pipeline to ingest our Audit log data
+# MAGIC ## Let's setup a small medallion pipeline to ingest our Audit log data
 # MAGIC
 # MAGIC Let's build a small ingestion pipeline to extract these logs and save them as Delta Table to be able to do simpler SQL queries.
 # MAGIC

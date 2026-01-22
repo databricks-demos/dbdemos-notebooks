@@ -21,7 +21,7 @@
 -- MAGIC * Hard to get great performance (*Partitioning the data for performance is error-prone and difficult to change)*
 -- MAGIC * Data quality issues (*It’s a constant headache to ensure that all the data is correct and high quality)*
 -- MAGIC
--- MAGIC Theses challenges have a real impact on team efficiency and productivity, spending unecessary time fixing low-level, technical issues instead on focusing on the high-level, business implementation.
+-- MAGIC These challenges have a real impact on team efficiency and productivity, spending unnecessary time fixing low-level, technical issues instead of focusing on the high-level, business implementation.
 -- MAGIC
 -- MAGIC Because Delta Lake solves all the low level technical challenges saving PB of data in your lakehouse, it let you focus on implementing simple data pipeline while providing blazing-fast query answers for your BI & Analytics reports.
 -- MAGIC
@@ -78,9 +78,9 @@
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/delta/delta-liquid-1.png?raw=true" style="float: right" width="300px">
 -- MAGIC
--- MAGIC Delta Lake let you add Liquid clustering column (similar to indexes).
+-- MAGIC Delta Lake lets you add Liquid clustering column (similar to indexes).
 -- MAGIC
--- MAGIC This automatically adapt your data layout accordingly and drastically accelerate your reads, providing state of the art performances.
+-- MAGIC This automatically adapts your data layout accordingly and drastically accelerates your reads, providing state of the art performance.
 -- MAGIC
 -- MAGIC Liquid Clustering makes Hive Partitioning skew and small size a thing of the past.
 

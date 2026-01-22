@@ -11,7 +11,7 @@
 # MAGIC
 # MAGIC However, many systems still live on legacy Hive Metastore, without any advanced governance capabilities. 
 # MAGIC
-# MAGIC <strong>Databricks let you add your external Hive Metastore through Federation, making them available while benefiting from Unity Catalog capabilities!</strong>
+# MAGIC <strong>Databricks lets you add your external Hive Metastore through Federation, making them available while benefiting from Unity Catalog capabilities!</strong>
 # MAGIC
 # MAGIC ## Hive metastore federation, 
 # MAGIC Hive metastore federation is a feature that enables Unity Catalog to govern tables that are stored in a Hive metastore. You can federate an external Hive metastore, AWS Glue, or a legacy internal Databricks Hive metastore.

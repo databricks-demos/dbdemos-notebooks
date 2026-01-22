@@ -6,11 +6,11 @@
 -- MAGIC
 -- MAGIC **We recommend using the previous [01-Row-Column-access-control]($./01-Row-Column-access-control) notebook over adding dynamic views when possible.**
 -- MAGIC
--- MAGIC As seen in the previous notebook, Unity Catalog let you grant table ACL using standard SQL GRANT on all the objects (CATALOG, SCHEMA, TABLE)
+-- MAGIC As seen in the previous notebook, Unity Catalog lets you grant table ACL using standard SQL GRANT on all the objects (CATALOG, SCHEMA, TABLE)
 -- MAGIC
--- MAGIC But this alone isn't enough. UC let you create more advanced access pattern to dynamically filter your data based on who query it.
+-- MAGIC But this alone isn't enough. UC lets you create more advanced access pattern to dynamically filter your data based on who query it.
 -- MAGIC
--- MAGIC This is usefull to mask sensitive PII information, or restrict access to a subset of data without having to create and maintain multiple tables.
+-- MAGIC This is useful to mask sensitive PII information, or restrict access to a subset of data without having to create and maintain multiple tables.
 -- MAGIC
 -- MAGIC *Note that Unity Catalog will provide more advanced data masking capabilities in the future, this demo covers what can be done now.*
 -- MAGIC
@@ -44,7 +44,7 @@
 -- MAGIC
 -- MAGIC Databricks has 2 functions: `current_user()` and `is_account_group_member()`.
 -- MAGIC
--- MAGIC Theses functions can be used to dynamically get the user running the query and knowing if the user is member of a give group.
+-- MAGIC These functions can be used to dynamically get the user running the query and knowing if the user is member of a given group.
 
 -- COMMAND ----------
 
@@ -73,7 +73,7 @@ SELECT * FROM customers
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC As you can see, this table has a `country`field. We want to be able to restrict the table access based in this country.
+-- MAGIC As you can see, this table has a `country` field. We want to be able to restrict the table access based on this country.
 -- MAGIC
 -- MAGIC Data Analyst and Data Scientists in USA can only access the local Dataset, same for the FR team.
 -- MAGIC

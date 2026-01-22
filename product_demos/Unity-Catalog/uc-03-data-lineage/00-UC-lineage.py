@@ -158,7 +158,7 @@ dinner_price.write.mode("overwrite").saveAsTable("dinner_price")
 # MAGIC %md 
 # MAGIC # Conclusion
 # MAGIC
-# MAGIC Databricks Unity Catalog let you track data lineage out of the box.
+# MAGIC Databricks Unity Catalog lets you track data lineage out of the box.
 # MAGIC
 # MAGIC No extra setup required, just read and write from your table and the engine will build the dependencies for you. Lineage can work at a table level but also at the column level, which provide a powerful tool to track dependencies on sensitive data.
 # MAGIC

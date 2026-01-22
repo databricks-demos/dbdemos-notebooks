@@ -5,7 +5,7 @@
 -- MAGIC
 -- MAGIC Traditional Data Warehouses can’t keep up with the variety of data and use cases. Business agility requires reliable, real-time data, with insight from ML models.
 -- MAGIC
--- MAGIC Working with the lakehouse unlock traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
+-- MAGIC Working with the lakehouse unlocks traditional BI analysis but also real time applications having a direct connection to your entire data, while remaining fully secured.
 -- MAGIC
 -- MAGIC <br>
 -- MAGIC
@@ -32,9 +32,9 @@
 -- MAGIC
 -- MAGIC <img style="float: right; margin-top: 10px" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_alice.png" />
 -- MAGIC
--- MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
+-- MAGIC Our datasets are now properly ingested, secured, with high quality and easily discoverable within our organization.
 -- MAGIC
--- MAGIC Let's explore how Databricks SQL support your Data Analyst team with interactive BI and start analyzing our sensor informations.
+-- MAGIC Let's explore how Databricks SQL supports your Data Analyst team with interactive BI and start analyzing our sensor information.
 -- MAGIC
 -- MAGIC To start with Databricks SQL, open the SQL view on the top left menu.
 -- MAGIC
@@ -121,7 +121,7 @@
 -- MAGIC
 -- MAGIC Comprehensive data modeling. Save your data based on your requirements: Data vault, Star schema, Inmon...
 -- MAGIC
--- MAGIC Databricks let you create your PK/FK, identity columns (auto-increment): `dbdemos.install('identity-pk-fk')`
+-- MAGIC Databricks lets you create your PK/FK, identity columns (auto-increment): `dbdemos.install('identity-pk-fk')`
 -- MAGIC
 -- MAGIC ### Data ingestion made easy with DBSQL & DBT
 -- MAGIC

@@ -42,7 +42,7 @@
 # MAGIC %md-sandbox
 # MAGIC ## Building a Spark Data pipeline with Delta Lake
 # MAGIC
-# MAGIC In this example, we'll implement a end 2 end pipeline consuming our IOT sources. We'll use the medaillon architecture but could build a star schema, data vault or any other modelisation.
+# MAGIC In this example, we'll implement an end-to-end pipeline consuming our IOT sources. We'll use the medallion architecture but could build a star schema, data vault or any other model.
 # MAGIC
 # MAGIC
 # MAGIC

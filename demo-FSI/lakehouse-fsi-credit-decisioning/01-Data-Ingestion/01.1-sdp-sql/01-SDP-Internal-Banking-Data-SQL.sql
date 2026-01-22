@@ -65,7 +65,7 @@
 -- MAGIC %md
 -- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze consumer credit
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modelisation.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our credit decisioning prediction.
 -- MAGIC
@@ -121,7 +121,7 @@
 -- MAGIC
 -- MAGIC <img width="650px" style="float:right" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/credit_decisioning/fsi_credit_decisioning_dlt_2.png"/>
 -- MAGIC
--- MAGIC The next layer often call silver is consuming **incremental** data from the bronze one, and cleaning up some information.
+-- MAGIC The next layer often called silver is consuming **incremental** data from the bronze one, and cleaning up some information.
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC

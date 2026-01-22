@@ -124,7 +124,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## 3/ Analysing churn analysis  (BI / Data warehousing / SQL) 
+-- MAGIC ## 3/ Analyzing churn  (BI / Data warehousing / SQL) 
 -- MAGIC
 -- MAGIC <img width="300px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-churn.png?raw=true"  style="float: right; margin: 100px 0px 10px 10px;"/>
 -- MAGIC
@@ -133,16 +133,16 @@
 -- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_bi_dw.png?raw=true" />
 -- MAGIC  
 -- MAGIC <br><br><br>
--- MAGIC Our datasets are now properly ingested, secured, with a high quality and easily discoverable within our organization.
+-- MAGIC Our datasets are now properly ingested, secured, with high quality and easily discoverable within our organization.
 -- MAGIC
 -- MAGIC Data Analysts are now ready to run BI interactive queries, with low latencies & high throughput, including Serverless Data Warehouses providing instant stop & start.
 -- MAGIC
--- MAGIC Let's see how Data Warehousing can be done using Databricks, including with external BI solutions like PowerBI, Tableau and other!
+-- MAGIC Let's see how Data Warehousing can be done using Databricks, including external BI solutions like PowerBI, Tableau and others!
 
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the [Data Warehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing) to start running your BI queries or access or directly open the <a dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Churn Analysis Dashboard</a>
+-- MAGIC Open the [Data Warehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing) to start running your BI queries or directly open the <a dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Churn Analysis Dashboard</a>
 
 -- COMMAND ----------
 
@@ -191,7 +191,7 @@
 -- MAGIC
 -- MAGIC We now have an end-to-end data pipeline analyzing and predicting churn. We can now easily trigger actions to reduce the churn based on our business:
 -- MAGIC
--- MAGIC - Send targeting email campaigns to the customers that are most likely to churn
+-- MAGIC - Send targeted email campaigns to the customers that are most likely to churn
 -- MAGIC - Phone campaign to discuss with our customers and understand what's going on
 -- MAGIC - Understand what's wrong with our line of product and fix it
 -- MAGIC

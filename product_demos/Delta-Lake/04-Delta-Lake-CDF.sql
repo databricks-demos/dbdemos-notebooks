@@ -6,7 +6,7 @@
 -- MAGIC
 -- MAGIC Delta Lake is an open format and can be read using multiple engine or with standalone libraries (java, python, rust)...
 -- MAGIC
--- MAGIC It's then easy to subscribe to modifications stream on one of your table to propagage the changes downstream in a medaillon architecture.
+-- MAGIC It's then easy to subscribe to modifications stream on one of your table to propagate the changes downstream in a medallion architecture.
 -- MAGIC
 -- MAGIC See the [documentation](https://docs.databricks.com/delta/delta-change-data-feed.html) for more details.
 -- MAGIC
@@ -30,7 +30,7 @@
 -- MAGIC
 -- MAGIC When sharing data within a Datamesh and/or to external organization with Delta Sharing, you not only need to share existing data, but also all modifications, so that your consumer can capture apply the same changes.
 -- MAGIC
--- MAGIC CDF makes **Data Mesh** implementation easier. Once enabled by an organisation, data can be shared with other. It's then easy to subscribe to the modification stream and propagage GDPR DELETE downstream.
+-- MAGIC CDF makes **Data Mesh** implementation easier. Once enabled by an organization, data can be shared with others. It's then easy to subscribe to the modification stream and propagate GDPR DELETE downstream.
 -- MAGIC
 -- MAGIC To do so, we need to make sure the CDF are enabled at the table level. Once enabled, it'll capture all the table modifications using the `table_changes` function.
 -- MAGIC

@@ -20,7 +20,7 @@
 -- MAGIC
 -- MAGIC Let's see how the Lakehouse can solve this challenge leveraging Unity Catalog.
 -- MAGIC
--- MAGIC Our Data has been saved as Delta Table by our Data Engineering team.  The next step is to secure this data while allowing cross team to access it. <br>
+-- MAGIC Our data has been saved as Delta Table by our Data Engineering team. The next step is to secure this data while allowing cross-team to access it. <br>
 -- MAGIC A typical setup would be the following:
 -- MAGIC
 -- MAGIC * Data Engineers / Jobs can read and update the main data/schemas (ETL part)

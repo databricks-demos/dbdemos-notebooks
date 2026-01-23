@@ -65,7 +65,7 @@
 -- MAGIC %md
 -- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze consumer credit
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medaillon architecture but we could build star schema, data vault, or any other modeling.
+-- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming the aforementioned information. We'll use the medallion architecture but we could build star schema, data vault, or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our credit decisioning prediction.
 -- MAGIC

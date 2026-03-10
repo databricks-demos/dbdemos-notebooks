@@ -96,8 +96,21 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
+# MAGIC ## Step 3: Define a governed semantic layer with Unity Catalog Metric Views
 # MAGIC
-# MAGIC ## Step 3: Utilize Databricks Dashboards to clearly show data trends
+# MAGIC With your source tables now governed in **Unity Catalog**, the next step is to define a reusable **semantic layer** for your key marketing KPIs using [Unity Catalog Metric Views](https://docs.databricks.com/aws/en/metric-views/). 
+# MAGIC
+# MAGIC **Metric Views** centralize complex business logic (such as “CTR”, or "Delivery Rate") into YAML‑defined metrics and dimensions that can be reused consistently across AI/BI Dashboards, Genie spaces, and other tools.
+# MAGIC
+# MAGIC By modeling measures and dimensions once and registering them in Unity Catalog, you separate **business semantics** from raw tables while still inheriting all UC governance: permissions, lineage, and auditability apply to the metric view instead of every individual dashboard or query. You can enrich these Metric Views with semantic metadata such as user‑friendly display names, formatting (currency, percentage, dates), comments, and synonyms, making the fields much easier to discover and interpret in both visualizations and natural‑language experiences, while ensuring consistency across your organization.
+# MAGIC
+# MAGIC > _In short: Metric Views become the shared semantic “contract” that powers both your AI/BI Dashboards and Genie spaces, ensuring everyone sees the same numbers and speaks the same business language_
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC
+# MAGIC ## Step 4: Utilize Databricks Dashboards to clearly show data trends
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
@@ -116,7 +129,7 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Step 4: Create Genie to allow end-users to converse with your data
+# MAGIC ## Step 5: Create Genie to allow end-users to converse with your data
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_genie_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC

@@ -103,6 +103,7 @@
           "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues ADD CONSTRAINT issue_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY"
       ],
       [
+          "DROP TABLE IF EXISTS `{{CATALOG}}`.`{{SCHEMA}}`.metrics_events",
           """
           CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_events
           WITH METRICS
@@ -429,6 +430,7 @@
                 - rate of opens
             $$
           """,
+          "DROP TABLE IF EXISTS `{{CATALOG}}`.`{{SCHEMA}}`.metrics_feedback",
           """
           CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_feedback
           WITH METRICS
@@ -627,6 +629,7 @@
                 - number of positive feedbacks
             $$
           """,
+          "DROP TABLE IF EXISTS `{{CATALOG}}`.`{{SCHEMA}}`.metrics_issues",
           """
           CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_issues
           WITH METRICS
@@ -806,6 +809,7 @@
                 - affected campaigns
             $$
           """,
+          "DROP TABLE IF EXISTS `{{CATALOG}}`.`{{SCHEMA}}`.metrics_daily_rolling",
           """
           CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_daily_rolling
           WITH METRICS

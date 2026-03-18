@@ -501,7 +501,10 @@ def detect_damaged_pcb(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFram
 # COMMAND ----------
 
 # Reduce the number of images we send at once to avoid memory issue
-spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 1000)
+try:
+  spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 1000)
+except Exception as e:
+  pass # conf not available in serverless
 
 display(df.select('filename', 'content').withColumn("prediction", detect_damaged_pcb("content")).limit(50))
 

@@ -89,13 +89,15 @@ def get_churn_staging_job_id():
     from databricks.sdk.service.jobs import Task, NotebookTask
     
     # Get current cluster id to run job on [for demo/example purpose]
-    for tag in json.loads(spark.conf.get("spark.databricks.clusterUsageTags.clusterAllTags")):
-      if tag['key'] == "ClusterId":
-        this_cluster_id = tag['value']
-        break
-      else:
-        this_cluster_id = None
-        # TO-DO [OPTIONAL]: modify inputs to create job cluster using latest ml_runtime and automatic node_type
+    this_cluster_id = None
+    try:
+      for tag in json.loads(spark.conf.get("spark.databricks.clusterUsageTags.clusterAllTags")):
+        if tag['key'] == "ClusterId":
+          this_cluster_id = tag['value']
+          break
+    except Exception as e:
+      pass # conf not available in serverless
+    # TO-DO [OPTIONAL]: modify inputs to create job cluster using latest ml_runtime and automatic node_type
 
     # Create job and configure to run on current demo/interactive cluster
     job = w.jobs.create(

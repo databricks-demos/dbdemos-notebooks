@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow[databricks]==3.7.0
+# MAGIC %pip install -U -qqqq mlflow[databricks]>=3.10.1
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

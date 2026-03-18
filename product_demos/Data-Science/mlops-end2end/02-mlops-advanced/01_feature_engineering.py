@@ -93,7 +93,10 @@ def compute_service_features(inputDF: SparkDataFrame) -> SparkDataFrame:
 # COMMAND ----------
 
 # DBTITLE 1,Define featurization function
-spark.conf.set("spark.sql.ansi.enabled", "false")
+try:
+  spark.conf.set("spark.sql.ansi.enabled", "false")
+except Exception as e:
+  pass # conf not available in serverless
 
 def clean_churn_features(dataDF: SparkDataFrame) -> SparkDataFrame:
   """

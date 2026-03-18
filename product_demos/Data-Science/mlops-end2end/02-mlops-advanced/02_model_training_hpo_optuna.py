@@ -19,15 +19,15 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a8
-# MAGIC mlflow==3.3.2
-# MAGIC optuna>=4.4.0
-# MAGIC DBR/MLR16.4LTS (Recommended - Non-Autoscaling Cluster) OR Serverless v2
+# MAGIC databricks-feature-engineering==0.14.0
+# MAGIC mlflow
+# MAGIC optuna
+# MAGIC DBR/MLR17.3LTS (Recommended - Non-Autoscaling Cluster) OR Serverless v2
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 mlflow --upgrade lightgbm optuna
+# MAGIC %pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade lightgbm optuna pandas
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

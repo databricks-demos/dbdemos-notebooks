@@ -152,7 +152,6 @@ display(churn_features_n_predsDF)
 
 # MAGIC %md
 # MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
-# MAGIC * In reality, ground-truth label data should be in a separate table
 
 # COMMAND ----------
 

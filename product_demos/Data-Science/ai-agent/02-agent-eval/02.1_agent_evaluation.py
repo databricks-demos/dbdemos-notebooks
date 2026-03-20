@@ -328,9 +328,14 @@ displayHTML(f'<a href="/explore/data/models/{catalog}/{dbName}/{MODEL_NAME}" tar
 # COMMAND ----------
 
 from databricks import agents
+from databricks.sdk import WorkspaceClient
+from datetime import timedelta
 # Deploy the model to the review app and a model serving endpoint
 if len(agents.get_deployments(model_name=UC_MODEL_NAME, model_version=uc_registered_model_info.version)) == 0:
   agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, endpoint_name=ENDPOINT_NAME, tags = {"project": "dbdemos"})
+
+# Wait for endpoint to be ready before moving to the next notebook
+WorkspaceClient().serving_endpoints.wait_get_serving_endpoint_not_updating(name=ENDPOINT_NAME, timeout=timedelta(minutes=30))
 
 # COMMAND ----------
 

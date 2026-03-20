@@ -28,7 +28,6 @@
 # MAGIC ```
 # MAGIC mlflow==3.3.2
 # MAGIC ```
-
 # COMMAND ----------
 
 # MAGIC %md

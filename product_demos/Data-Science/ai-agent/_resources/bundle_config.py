@@ -140,7 +140,7 @@
   ],
   "cluster": {
     "num_workers": 0,
-    "spark_version": "17.1.x-scala2.13",
+    "spark_version": "17.3.x-scala2.13",
     "spark_conf": {
         "spark.master": "local[*, 4]"
     },

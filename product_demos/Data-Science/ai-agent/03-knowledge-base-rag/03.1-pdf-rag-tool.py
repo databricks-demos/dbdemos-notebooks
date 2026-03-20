@@ -22,7 +22,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install -U -qqqq mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.12.1 protobuf<5  cryptography<43 databricks-mcp
+# MAGIC %pip install -U -qqqq mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk==0.102.0 databricks-mcp
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -247,10 +247,6 @@ model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-mcp
-
-# COMMAND ----------
-
 from agent import AGENT 
 
 #Let's try our retriever to make sure we know have access to the wifi router pdf guide
@@ -395,11 +391,16 @@ displayHTML(f'<a href="/explore/data/models/{catalog}/{dbName}/{MODEL_NAME}" tar
 # COMMAND ----------
 
 from databricks import agents
+from databricks.sdk import WorkspaceClient
+from datetime import timedelta
 # Deploy the model to the review app and a model serving endpoint
 endpoint_name = f'{MODEL_NAME}_{catalog}_{db}'[:60]
 
 if len(agents.get_deployments(model_name=UC_MODEL_NAME, model_version=uc_registered_model_info.version)) == 0:
   agents.deploy(UC_MODEL_NAME, uc_registered_model_info.version, endpoint_name=endpoint_name, tags = {"project": "dbdemos"})
+
+# Wait for endpoint to be ready before moving to the next notebook
+WorkspaceClient().serving_endpoints.wait_get_serving_endpoint_not_updating(name=endpoint_name, timeout=timedelta(minutes=30))
 
 # COMMAND ----------
 

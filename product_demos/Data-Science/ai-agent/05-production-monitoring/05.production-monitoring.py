@@ -182,8 +182,8 @@ tool_call_judge = tool_call_judge.register(name="tool_call_correctness")
 # uncomment to start production monitoring on your experiment!
 from mlflow.genai.scorers import list_scorers, ScorerSamplingConfig
 scorers = list_scorers()
-for scorer in scorers:
-  scorer.start(sampling_config=ScorerSamplingConfig(sample_rate=1.0)) # check all traces
+# for scorer in scorers:
+#   scorer.start(sampling_config=ScorerSamplingConfig(sample_rate=1.0)) # check all traces
 
 # COMMAND ----------
 
@@ -195,9 +195,9 @@ import os
 xp_name = os.getcwd().rsplit("/", 1)[0]+"/02-agent-eval/02.1_agent_evaluation"
 mlflow.set_experiment(xp_name)
 scorers = list_scorers()
-for scorer in scorers:
-  scorer.stop()
-  delete_scorer(name=scorer.name)
+# for scorer in scorers:
+#   scorer.stop()
+#   delete_scorer(name=scorer.name)
 
 # COMMAND ----------
 

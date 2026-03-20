@@ -149,7 +149,7 @@ def index_exists(vsc, endpoint_name, index_full_name):
         vsc.get_index(endpoint_name, index_full_name).describe()
         return True
     except Exception as e:
-        if 'RESOURCE_DOES_NOT_EXIST' not in str(e):
+        if 'RESOURCE_DOES_NOT_EXIST' not in str(e) and 'does not exist' not in str(e) and type(e).__name__ != 'NotFound':
             print(f'Unexpected error describing the index. This could be a permission issue.')
             raise e
     return False

@@ -78,12 +78,12 @@
           "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects ALTER COLUMN prospect_id SET NOT NULL"
       ],
       [
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues SET TAGS ('system.Certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns SET TAGS ('system.Certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events SET TAGS ('system.Certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts SET TAGS ('system.Certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks SET TAGS ('system.Certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects SET TAGS ('system.Certified')"
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues SET TAGS ('system.certification_status' = 'certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns SET TAGS ('system.certification_status' = 'certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events SET TAGS ('system.certification_status' = 'certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts SET TAGS ('system.certification_status' = 'certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks SET TAGS ('system.certification_status' = 'certified')",
+        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects SET TAGS ('system.certification_status' = 'certified')"
       ],
       [
           "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns ADD CONSTRAINT campaigns_pk PRIMARY KEY(campaign_id)",

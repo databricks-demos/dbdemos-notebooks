@@ -18,12 +18,13 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC databricks-feature-engineering==0.13.0a8
+# MAGIC databricks-feature-engineering==0.14.0
+# MAGIC DBR/MLR17.3LTS
 # MAGIC ```
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering>=0.13.0a8 --upgrade
+# MAGIC %pip install --quiet databricks-feature-engineering==0.14.0 --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -151,7 +152,6 @@ display(churn_features_n_predsDF)
 
 # MAGIC %md
 # MAGIC ### Extract ground-truth labels in a separate table to avoid label leakage
-# MAGIC * In reality, ground-truth label data should be in a separate table
 
 # COMMAND ----------
 

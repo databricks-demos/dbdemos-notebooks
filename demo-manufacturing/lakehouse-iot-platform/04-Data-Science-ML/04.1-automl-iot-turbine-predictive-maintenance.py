@@ -244,7 +244,7 @@ display(features)
 # COMMAND ----------
 
 xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
-xp_name = f"automl_iot_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+xp_name = f"automl_iot_anomaly_detection_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
 training_dataset = fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features').drop('turbine_id').sample(0.1) #Reduce the dataset size to speedup the demo
 try:
     from databricks import automl

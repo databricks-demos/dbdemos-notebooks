@@ -269,6 +269,9 @@ class DBDemos():
     import mlflow
     import os
     print("AutoML doesn't seem to be available, creating a mockup automl run instead - automl serverless will be added soon...")
+    # Spark Connect's toPandas() populates df.attrs with non-JSON-serializable
+    # PlanMetrics protos, which crashes pandas to_parquet below.
+    df.attrs = {}
     from databricks.sdk import WorkspaceClient
     # Initialize the WorkspaceClient
     w = WorkspaceClient()

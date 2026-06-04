@@ -106,6 +106,63 @@ Each demo follows a consistent structure:
 - Each demo has `_resources/bundle_config.py` with metadata
 - Defines demo name, category, description, notebooks, dependencies
 - Used by dbdemos packaging system to create installable demos
+- See [How Demos Ship via dbdemos](#how-demos-ship-via-dbdemos) for the full source → bundle → install lifecycle
+
+## How Demos Ship via dbdemos
+
+This repository holds **source notebooks only**. It does not install or distribute anything by itself — that is done by the separate [`dbdemos`](https://github.com/databricks-demos/dbdemos) Python library (locally at `../dbdemos`). Understanding this two-repo split is essential before editing demos here.
+
+### Two-repo model
+
+| Repo | Role |
+| --- | --- |
+| `dbdemos-notebooks` (this repo) | Source of truth for all demo notebooks, configs, and bundle definitions. |
+| `dbdemos` (`../dbdemos`) | The pip-installable toolkit that **packages** demos from this repo and **installs** them into end-user workspaces. |
+
+End users never touch this repo. They run `pip install dbdemos`, then `dbdemos.install('demo-name')`, and dbdemos deploys a fully working demo (notebooks, pipelines, workflows, dashboards, Genie spaces, ML models) into their Databricks workspace.
+
+### The `bundle_config.py` contract
+
+Each demo's `_resources/bundle_config.py` is a Python dict literal (inside a Databricks notebook cell) that is **the contract between the two repos** — it declares everything dbdemos needs to bundle and install the demo. Key fields:
+
+- **Identity / metadata**: `name`, `category`, `title`, `description`, `tags`, `products`, `related_links`.
+- **Environment defaults**: `default_catalog`, `default_schema`, `serverless_supported`, `custom_schema_supported`, `env_version`, `bundle` (must be `True` to ship).
+- **`notebooks[]`** — ordered list, one entry per notebook to package. Each entry has:
+  - `path`: path relative to the demo root, **without extension** (e.g. `01-create-tools/01_create_first_billing_agent`).
+  - `pre_run`: if `True`, dbdemos executes this notebook as a job during bundling to capture cell outputs (so users see results before running anything).
+  - `publish_on_website`: if `True`, the notebook is published on [dbdemos.ai](https://www.dbdemos.ai).
+  - `add_cluster_setup_cell`: inject a cluster-setup cell at install time.
+  - `title`, `description`: shown in the installed demo and website.
+- **Resource declarations** (created at install time): `cluster`, `pipelines` (SDP/DLT), `workflows` / `init_job`, `dashboards` (Lakeview `.lvdash.json`), `genie_rooms`.
+
+A reference example: `product_demos/Data-Science/ai-agent/_resources/bundle_config.py`.
+
+### The ship lifecycle (source → bundle → distribute → install)
+
+All of these steps run **from the `../dbdemos` repo**, not from here:
+
+1. **Bundle** (`dbdemos/job_bundler.py`): clones/pulls this repo into a staging workspace, then runs every notebook flagged `pre_run: True` as a job to capture outputs. Tracks commit state to skip redundant re-runs.
+2. **Package** (`dbdemos/packager.py`): downloads the pre-run notebooks (as `.html` with cell outputs), extracts Lakeview dashboards from the workspace, strips build-only tags, rewrites paths, and emits the result into `dbdemos/bundles/{demo-name}/` plus minisite HTML for dbdemos.ai.
+3. **Distribute** (`../dbdemos/build-and-distribute.sh`, **maintainer-only**): bumps version, builds the wheel, uploads to PyPI, and cuts GitHub releases. ⛔ Claude must **never** run this — only the human maintainer does.
+4. **Install** (`dbdemos/installer.py`, end user): downloads the bundle and creates the cluster, pipelines, workflows, dashboards, and Genie spaces, then rewrites template keys and dynamic links with the real resource IDs.
+
+### Template keys & dynamic links
+
+The installer replaces these placeholders at install time, so notebooks and configs can be written generically:
+
+- `{{CURRENT_USER}}`, `{{CURRENT_USER_NAME}}` — the installing user's email / sanitized name
+- `{{DEMO_FOLDER}}` — the install path
+- `{{DEMO_NAME}}` — the demo identifier
+- `{{TODAY}}` — current date
+
+Notebook HTML links that point at created resources use special attributes the installer rewrites with real IDs: `dbdemos-pipeline-id`, `dbdemos-workflow-id`, `dbdemos-dashboard-id`.
+
+### Practical implications when editing this repo
+
+- **A notebook only ships if it is listed in `notebooks[]`** in that demo's `bundle_config.py`. Adding a new notebook to a demo means adding an entry there too.
+- **`pre_run: True` notebooks must execute cleanly end-to-end** — they run as real jobs during bundling, so a failure blocks the demo's release. Test them in a clean environment with `reset_all_data=true`.
+- **Keep `config.py` consistent** with `default_catalog` / `default_schema` in `bundle_config.py`, and with any hardcoded catalog/schema in SDP notebooks.
+- The maintainer-side bundling, inspection, and release tooling lives in `../dbdemos/ai_release/` (`bundle.py`, `inspect_jobs.py`, `run_remote.py`) and the dbdemos `/release` command — all run from the `dbdemos` repo, not here.
 
 ## Common Development Tasks
 

@@ -776,7 +776,7 @@ print(response)
 # MAGIC %md
 # MAGIC ### Option 2. Model Serving Endpoint (for in-Databricks inference)
 # MAGIC
-# MAGIC When you use Mosaic AI Model Serving to serve a model that was built using features from Databricks, the model automatically looks up and transforms features for inference requests. 
+# MAGIC When you use Databricks Model Serving to serve a model that was built using features from Databricks, the model automatically looks up and transforms features for inference requests. 
 # MAGIC
 # MAGIC #### Option 2 - Step 1: Create a model serving endpoint
 # MAGIC The following variables set the values for configuring the model serving endpoint, such as the endpoint name, compute type, and which model to serve with the endpoint. After you call the create endpoint API, the logged model is deployed to the endpoint.
@@ -875,7 +875,7 @@ print(response)
 # MAGIC By registering the model through `fe.log_model()`, we’ve ensured automatic feature lookups during inference — whether the model runs in batch jobs or is served in real time through Databricks Model Serving.
 # MAGIC This guarantees that the same features used in training are consistently retrieved for inference, eliminating data leakage and mismatches.
 # MAGIC
-# MAGIC Next Step: Spark Declarative Pipeline Feature Creation ([open the notebook]($./03_Feature_store_pipeline))
+# MAGIC Next Step: Lakeflow Pipelines Feature Creation ([open the notebook]($./03_Feature_store_pipeline))
 
 # COMMAND ----------
 

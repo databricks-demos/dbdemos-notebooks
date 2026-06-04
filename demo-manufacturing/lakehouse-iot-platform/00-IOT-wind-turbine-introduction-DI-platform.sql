@@ -1,13 +1,13 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # IoT Platform with Databricks Intelligence Data Platform - Ingesting real-time Industrial Sensor Data for Prescriptive Maintenance
+-- MAGIC # IoT Platform with Databricks Platform - Ingesting real-time Industrial Sensor Data for Prescriptive Maintenance
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_0.png" style="float: left; margin-right: 30px" width="600px" />
 -- MAGIC
 -- MAGIC <br/>
 -- MAGIC
--- MAGIC ## What is The Databricks Intelligence Data Platform for IoT & Manufacturing?
--- MAGIC The Databricks Data Intelligence Platform for Manufacturing unlocks the full value of manufacturing data, enabling intelligent networks, enhanced customer experiences, smarter products, and sustainable businesses. It empowers data teams with unmatched scalability, real-time insights, and innovative capabilities across all data types and sources. Manufacturers benefit from reduced costs, increased productivity, improved customer responsiveness, and accelerated innovation. The platform integrates diverse data sources with top-tier AI processing and offers manufacturing-specific Solution Accelerators and partners for powerful real-time decision-making.
+-- MAGIC ## What is The Databricks Platform for IoT & Manufacturing?
+-- MAGIC The Databricks Platform for Manufacturing unlocks the full value of manufacturing data, enabling intelligent networks, enhanced customer experiences, smarter products, and sustainable businesses. It empowers data teams with unmatched scalability, real-time insights, and innovative capabilities across all data types and sources. Manufacturers benefit from reduced costs, increased productivity, improved customer responsiveness, and accelerated innovation. The platform integrates diverse data sources with top-tier AI processing and offers manufacturing-specific Solution Accelerators and partners for powerful real-time decision-making.
 -- MAGIC <img src="https://github.com/Datastohne/demo/blob/main/Intelligence%20Engine.png?raw=true " style="float: left; margin-right: 30px" width="200px" />
 -- MAGIC
 -- MAGIC **Intelligent**
@@ -27,7 +27,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## Wind Turbine Prescriptive Maintenance with the Databricks Intelligence Data Platform: Bringing Generative AI to Predictive Maintenance
+-- MAGIC ## Wind Turbine Prescriptive Maintenance with the Databricks Platform: Bringing Generative AI to Predictive Maintenance
 -- MAGIC
 -- MAGIC Being able to collect and centralize industrial equipment information in real time is critical in the energy space. When a wind turbine is down, it is not generating power which leads to poor customer service and lost revenue. Data is the key to unlock critical capabilities such as energy optimization, anomaly detection, and/or predictive maintenance. The rapid rise of Generative AI provides the opportunity to revolutionize maintenance by not only predicting when equipment is likely to fail, but also generating prescriptive maintenance actions to prevent failures before they arise and optimize equipment performance. This enables a shift from predictive to prescriptive maintenance. <br/> 
 -- MAGIC
@@ -73,7 +73,7 @@
 -- MAGIC
 -- MAGIC *Note that at a technical level, our data could come from any source. Databricks can ingest data from any system (SalesForce, Fivetran, queuing message like kafka, blob storage, SQL & NoSQL databases...).*
 -- MAGIC
--- MAGIC Let's see how this data can be used within the Data Intelligence Platform to analyze sensor data,  trigger predictive maintenance and generate work orders.
+-- MAGIC Let's see how this data can be used within the Databricks Platform to analyze sensor data,  trigger predictive maintenance and generate work orders.
 
 -- COMMAND ----------
 
@@ -96,16 +96,16 @@
 -- MAGIC It provides many functionalities such as *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
 -- MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 -- MAGIC
--- MAGIC ### Simplify ingestion with Spark Declarative Pipelines
+-- MAGIC ### Simplify ingestion with Lakeflow Pipelines
 -- MAGIC
--- MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines by allowing SQL users to create advanced pipelines via batch or streaming. Databricks also simplifies pipeline deployment, testing, and tracking data quality which reduces operational complexity, so that you can focus on the needs of the business.<br/>
+-- MAGIC Databricks simplifies data ingestion and transformation with Lakeflow Pipelines by allowing SQL users to create advanced pipelines via batch or streaming. Databricks also simplifies pipeline deployment, testing, and tracking data quality which reduces operational complexity, so that you can focus on the needs of the business.<br/>
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC Open the Wind Turbine
--- MAGIC   <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL) *(Alternatives:  [Spark Declarative Pipelines Python]($./01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine))*. <br>
--- MAGIC   For more details on Spark Declarative Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
+-- MAGIC   <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL) *(Alternatives:  [Lakeflow Pipelines Python]($./01-Data-ingestion/01.2-SDP-python/01.1-SDP-Wind-Turbine-Python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine))*. <br>
+-- MAGIC   For more details on Lakeflow Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 
@@ -118,7 +118,7 @@
 -- MAGIC <div style="padding-left: 420px">
 -- MAGIC   Now that our first tables have been created, we need to grant our Data Analyst team READ access to be able to start analyzing our turbine failure information.
 -- MAGIC   
--- MAGIC   Let's see how Unity Catalog provides Security & governance across our data assets and includes data lineage and audit logs.
+-- MAGIC   Let's see how Unity Catalog provides Security & governance across everything, including data lineage and audit logs.
 -- MAGIC   
 -- MAGIC   Note that Unity Catalog integrates Delta Sharing, an open protocol to share your data with any external organization, regardless of their software or data stack. For more details:  `dbdemos.install('delta-sharing-airlines')`
 -- MAGIC  </div>
@@ -222,7 +222,7 @@
 -- MAGIC <br><br><br>
 -- MAGIC While our data pipeline is almost completed, we're missing one last step: orchestrating the full workflow in production.
 -- MAGIC
--- MAGIC With Databricks Lakehouse, there is no need to utilize an external orchestrator to run your job. Databricks Workflows simplifies all your jobs, with advanced alerting, monitoring, branching options etc.
+-- MAGIC With Databricks Lakehouse, there is no need to utilize an external orchestrator to run your job. Lakeflow Jobs simplifies all your jobs, with advanced alerting, monitoring, branching options etc.
 
 -- COMMAND ----------
 

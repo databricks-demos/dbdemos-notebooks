@@ -154,10 +154,10 @@ df = dataset_to_explain.mapInPandas(compute_shap_values, schema=", ".join([x+"_s
 # MAGIC In this demo, we've seen an end 2 end flow with the Lakehouse:
 # MAGIC
 # MAGIC
-# MAGIC - Data ingestion made simple with Spark Declarative Pipelines
+# MAGIC - Data ingestion made simple with Lakeflow Pipelines
 # MAGIC - Leveraging Databricks notebooks and SQL warehouse to create, analyze, and share our dashboards 
 # MAGIC - Model Training with AutoML for citizen Data Scientist
 # MAGIC - Ability to tune our model for better results, improving our patient journey quality
 # MAGIC - Ultimately, the ability to deploy and make explainable ML predictions, made possible with the full Lakehouse capabilities.
 # MAGIC
-# MAGIC [Go back to the introduction]($../00-patient-readmission-introduction) or discover how to use Databricks Workflow to orchestrate this tasks: [05-Workflow-Orchestration-patient-readmission]($../05-Workflow-Orchestration/05-Workflow-Orchestration-patient-readmission)
+# MAGIC [Go back to the introduction]($../00-patient-readmission-introduction) or discover how to use Lakeflow Jobs to orchestrate this tasks: [05-Workflow-Orchestration-patient-readmission]($../05-Workflow-Orchestration/05-Workflow-Orchestration-patient-readmission)

@@ -7,7 +7,7 @@ from pyspark.sql.functions import *
 # -------------------------------------------------------------------
 # --- 1. Ingest data with autoloader: loop on all folders -----------
 # -------------------------------------------------------------------
-# Let's loop over all the folders and dynamically generate our SDP pipeline.
+# Let's loop over all the folders and dynamically generate our Lakeflow pipeline.
 
 catalog = spark.conf.get("catalog")
 schema = spark.conf.get("schema")

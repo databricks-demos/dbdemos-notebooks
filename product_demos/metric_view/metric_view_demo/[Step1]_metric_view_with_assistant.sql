@@ -30,7 +30,7 @@
 -- MAGIC 3. Click `tpch` schema
 -- MAGIC 4. Open the `orders` table
 -- MAGIC
--- MAGIC 5. Click on the Databricks assistant (top right corner) to get started -- UC metrics is fully integrated into the data intelligence platform, this means we can use the databricks assistant to bootstrap a UC metrics definition based on existing object (tables and views) in the Unity catalog.
+-- MAGIC 5. Click on the Databricks assistant (top right corner) to get started -- UC metrics is fully integrated into the Databricks Platform, this means we can use the databricks assistant to bootstrap a UC metrics definition based on existing object (tables and views) in the Unity catalog.
 -- MAGIC 6. In the chat window, ask the assistant to provide the definition of a basic / starter UC metrics view. Put the message `"give me the uc metric views definition for this table"`
 -- MAGIC 7. The databricks assistant is able to provide the metric YAML definition. Click on `Open metric view editor` at the end of the message.
 -- MAGIC 8. This will open a metric view editor with the prepopulated assistant-generated YAML.

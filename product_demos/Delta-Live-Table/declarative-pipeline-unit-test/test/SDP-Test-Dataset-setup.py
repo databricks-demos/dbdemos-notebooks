@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC We have 2 files that we'll be using as dataset saved in git within the project (you can open them directly under the `dataset` folder). 
 # MAGIC
-# MAGIC All we have to do is move these local files to our blob storage so that we can read them within our SDP test pipeline.
+# MAGIC All we have to do is move these local files to our blob storage so that we can read them within our Lakeflow Pipelines test pipeline.
 # MAGIC
 # MAGIC *Note: We could also have used Faker to generate them dynamically.*
 # MAGIC
@@ -73,7 +73,7 @@ data = [
  ("user_gold_sdp",    "valid_income",   "annual_income IS NOT NULL"),
  ("user_gold_sdp",    "valid_score",    "spending_core IS NOT NULL")
 ]
-#Typically only run once, this doesn't have to be part of the SDP pipeline.
+#Typically only run once, this doesn't have to be part of the Lakeflow pipeline.
 spark.createDataFrame(data=data, schema=["tag", "name", "constraint"]).write.mode("overwrite").saveAsTable(f"{catalog}.{schema}.expectations")
 
 # COMMAND ----------

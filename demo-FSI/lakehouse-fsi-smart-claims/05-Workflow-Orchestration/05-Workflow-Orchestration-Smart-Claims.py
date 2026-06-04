@@ -13,7 +13,7 @@
 # MAGIC
 # MAGIC In our case, we decided that the best trade-off is to ingest new data every hour.
 # MAGIC
-# MAGIC To do so, we'll need an orchestrator to schedule the data ingestion (trigger the SDP pipeline) every hour, and then call our model to infer the image severity. 
+# MAGIC To do so, we'll need an orchestrator to schedule the data ingestion (trigger the Lakeflow pipeline) every hour, and then call our model to infer the image severity. 
 # MAGIC
 # MAGIC Ultimately, we could even refresh our DBSQL Dashboard!
 # MAGIC
@@ -24,13 +24,13 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Orchestrating our Smart Claims pipeline with Databricks Workflows
+# MAGIC ## Orchestrating our Smart Claims pipeline with Lakeflow Jobs
 # MAGIC
 # MAGIC With Databricks Lakehouse, no need for external orchestrator. We can use [Workflows](/#job/list) (available on the left menu) to orchestrate our Smart Claims within a few clicks.
 # MAGIC
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Lakeflow Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -53,18 +53,18 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-dashboard-full.png?raw=trueg" />
 # MAGIC
-# MAGIC A Databricks Workflow is composed of Tasks.
+# MAGIC A Lakeflow Job is composed of Tasks.
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Spark Declarative Pipelines
+# MAGIC * Lakeflow Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
 # MAGIC * dbt
 # MAGIC * ...
 # MAGIC
-# MAGIC In this example, can see our several tasks, one of which is SDP flow:
+# MAGIC In this example, can see our several tasks, one of which is Lakeflow Pipelines flow:
 # MAGIC
 # MAGIC * Start the workflow to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)
@@ -88,6 +88,6 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC You're now ready to orchestrate your data pipeline using Databricks Workflow!
+# MAGIC You're now ready to orchestrate your data pipeline using Lakeflow Jobs!
 # MAGIC
 # MAGIC Return to [00-Smart-Claims-Introduction]($../00-Smart-Claims-Introduction)

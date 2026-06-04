@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Fine-tuning your LLM with Databricks Mosaic AI
+# MAGIC # Fine-tuning your LLM with Agent Bricks
 # MAGIC
 # MAGIC Fine Tuning LLMs is the action of specializing an existing model to your own requirements.
 # MAGIC Technically speaking, you start from the weights of an existing foundation model (such as DBRX or LLAMA), and add another training round based on your own dataset.
@@ -311,7 +311,7 @@ display(df)
 # MAGIC %md
 # MAGIC ## Next steps
 # MAGIC
-# MAGIC In this notebook, we covered the basics on Fine Tuning using Databricks Mosaic AI FT API.
+# MAGIC In this notebook, we covered the basics on Fine Tuning using the Databricks fine-tuning API.
 # MAGIC
 # MAGIC A few extra steps are usually required to test and evaluate your Fine Tune model before deploying them in production.
 # MAGIC

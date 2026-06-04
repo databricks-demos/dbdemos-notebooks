@@ -8,18 +8,18 @@
 {
     "name": "sdp-loans",
     "category": "data-engineering",
-    "title": "Full Spark Declarative Pipelines Pipeline - Loan",
+    "title": "Full Lakeflow Pipelines - Loan",
     "serverless_supported": True,
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_dlt_loan",
-    "description": "Ingest loan data and implement a SDP pipeline with quarantine.",
-    "fullDescription": "This demo is an introduction to Spark Declarative Pipelines, an ETL frameworks making Data Engineering accessible for all. Simply declare your transformations in SQL or Python, and SDP will handle the Data Engineering complexity for you:<ul><li><strong>Accelerate ETL development</strong>: Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance</li><li><strong>Remove operational complexity</strong>: By automating complex administrative tasks and gaining broader visibility into pipeline operations</li><li><strong>Trust your data</strong>With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML</li><li><strong>Simplify batch and streaming</strong>: With self-optimization and auto-scaling data pipelines for batch or streaming processing</li></ul>In this demo, we will be using as input a raw dataset containing information on our customers' loan and historical transactions. Our goal is to ingest this data in near real time and build tables for our Analyst team while ensuring data quality.",
+    "description": "Ingest loan data and implement a Lakeflow pipeline with quarantine.",
+    "fullDescription": "This demo is an introduction to Lakeflow Pipelines, an ETL frameworks making Data Engineering accessible for all. Simply declare your transformations in SQL or Python, and Lakeflow Pipelines will handle the Data Engineering complexity for you:<ul><li><strong>Accelerate ETL development</strong>: Enable analysts and data engineers to innovate rapidly with simple pipeline development and maintenance</li><li><strong>Remove operational complexity</strong>: By automating complex administrative tasks and gaining broader visibility into pipeline operations</li><li><strong>Trust your data</strong>With built-in quality controls and quality monitoring to ensure accurate and useful BI, Data Science, and ML</li><li><strong>Simplify batch and streaming</strong>: With self-optimization and auto-scaling data pipelines for batch or streaming processing</li></ul>In this demo, we will be using as input a raw dataset containing information on our customers' loan and historical transactions. Our goal is to ingest this data in near real time and build tables for our Analyst team while ensuring data quality.",
     "usecase": "Data Engineering",
     "products": ["Spark Declarative Pipelines", "Delta Lake"],
     "related_links": [
         {"title": "View all Product demos", "url": "<TBD: LINK TO A FILTER WITH ALL DBDEMOS CONTENT>"},
-        {"title": "Databricks Spark Declarative Pipelines: 1B records for under $1", "url": "https://www.databricks.com/blog/2023/04/14/how-we-performed-etl-one-billion-records-under-1-delta-live-tables.html"}],
+        {"title": "Databricks Lakeflow Pipelines: 1B records for under $1", "url": "https://www.databricks.com/blog/2023/04/14/how-we-performed-etl-one-billion-records-under-1-delta-live-tables.html"}],
     "recommended_items": ["sdp-unit-test", "sdp-cdc", "delta-lake"],
     "demo_assets": [
         {"title": "Spark Declarative Pipelines pipeline", "url": "https://www.dbdemos.ai/assets/img/dbdemos/dlt-loans-dlt-0.png"},
@@ -41,16 +41,16 @@
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
-        "title":  "SDP pipeline definition (SQL)", 
-        "description": "Loan ingestion with SDP & quarantine"
+        "title":  "Lakeflow pipeline definition (SQL)", 
+        "description": "Loan ingestion with Lakeflow Pipelines & quarantine"
       },
       {
         "path": "02-SDP-Loan-pipeline-PYTHON", 
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
-        "title":  "SDP pipeline definition (Python)", 
-        "description": "Loan ingestion with SDP & quarantine"
+        "title":  "Lakeflow pipeline definition (Python)", 
+        "description": "Loan ingestion with Lakeflow Pipelines & quarantine"
       },
       {
         "path": "03-Log-Analysis", 

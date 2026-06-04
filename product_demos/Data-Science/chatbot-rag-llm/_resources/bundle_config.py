@@ -13,7 +13,7 @@
   "default_schema": "dbdemos_rag_chatbot",
   "serverless_supported": True,
   "title": "LLM Chatbot With Retrieval Augmented Generation (RAG) and DBRX",
-  "description": "Deploy your Chatbot on Databricks AI with RAG, DBRX, Vector Search & Mosaic AI Agent Evaluation",
+  "description": "Deploy your Chatbot on Databricks AI with RAG, DBRX, Vector Search & Agent Bricks",
   "custom_message": "This demo is getting old! Databricks now makes it even easier to deploy multi-agent systems and run evals with MLflow 3.0.Install the latest dbdemos ai-agent demos to see new capabilities. (This content will be deprecated soon.)",
   "fullDescription": "In this tutorial, you’ll discover how Databricks AI accelerates your LLM use case.<br/>We will cover how Databricks is uniquely positioned to help you build your own chatbot and deploy a real-time chatbot using Databricks serverless capabilities.<br/>Retrieval Augmented Generation (RAG) is a powerful technique where we enrich the LLM prompt with additional context specific to your domain so that the model can provide better answers. <br/>This technique provides excellent results using public models without having to deploy and fine-tune your own LLMs.<br/>You will learn how to:<br/><ul><li>Prepare clean documents to build your internal knowledge base and specialize your chatbot</li><li>Leverage Databricks Vector Search with Foundation Models to create and store document embeddings</li><li>Search similar documents from our knowledge database with Vector Search</li><li>Deploy a real-time model using RAG and providing the context to a hosted LLM through the Foundation Models</li></ul>",
   "usecase": "Data Science & AI",

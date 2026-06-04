@@ -14,7 +14,7 @@
 # MAGIC
 # MAGIC In this notebook, we will be using a training dataset containing images with the corresponding incident severity as label (good condition, minor damages or major damages). 
 # MAGIC
-# MAGIC We'll leverage the Data Intelligence Platform capabilities to fine-tune a state of the art model (`ResNet-50`) to classify our claims images. 
+# MAGIC We'll leverage the Databricks Platform capabilities to fine-tune a state of the art model (`ResNet-50`) to classify our claims images. 
 # MAGIC
 # MAGIC The model is an AI asset that will be saved in a catalog under Unity Catalog for <b> centralized governance and control.</b>
 # MAGIC

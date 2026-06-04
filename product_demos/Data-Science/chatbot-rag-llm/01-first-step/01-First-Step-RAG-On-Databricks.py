@@ -23,7 +23,7 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # 1/ Deploying our first RAG application with Mosaic AI Agent Framework & Agent Evaluation
+# MAGIC # 1/ Deploying our first RAG application with Agent Bricks & Agent Evaluation
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic.png?raw=true" style="width: 800px; margin-left: 10px">
 # MAGIC
@@ -370,7 +370,7 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Let's now deploy the Mosaic AI **Agent Evaluation review application** using the model we just created!
+# MAGIC Let's now deploy the Agent Bricks **Agent Evaluation review application** using the model we just created!
 
 # COMMAND ----------
 
@@ -391,7 +391,7 @@ wait_for_model_serving_endpoint_to_be_ready(deployment_info.endpoint_name)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # 3/ Use the Mosaic AI Agent Evaluation to evaluate your RAG applications
+# MAGIC # 3/ Use the Agent Bricks to evaluate your RAG applications
 # MAGIC
 # MAGIC ## 3.1/ Chat with your bot and build your validation dataset!
 # MAGIC
@@ -417,20 +417,20 @@ print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rev
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## 3.2/ Evaluate your bot's quality with Mosaic AI Agent Evaluation specialized LLM judge models
+# MAGIC ## 3.2/ Evaluate your bot's quality with Agent Bricks specialized LLM judge models
 # MAGIC
 # MAGIC Our bot is now Live. 
 # MAGIC
 # MAGIC Evaluation is a key part of deploying a RAG application. Databricks simplify this tasks with specialized LLM models tuned to evaluate your bot's quality/cost/latency, even if ground truth is not available.
 # MAGIC
-# MAGIC Mosaic AI Agent Evaluation evaluates:
+# MAGIC Agent Bricks evaluates:
 # MAGIC 1. Answer correctness - requires ground truth
 # MAGIC 2. Hallucination / groundedness - no ground truth required
 # MAGIC 3. Answer relevance - no ground truth required
 # MAGIC 4. Retrieval precision - no ground truth required
 # MAGIC 5. (Lack of) Toxicity - no ground truth required
 # MAGIC
-# MAGIC In this example, we'll use an evaluation set that we curated based on our internal experts using the Mosaic AI Agent Evaluation review app interface.  This proper Eval Dataset is saved as a Delta Table.
+# MAGIC In this example, we'll use an evaluation set that we curated based on our internal experts using the Agent Bricks review app interface.  This proper Eval Dataset is saved as a Delta Table.
 # MAGIC
 # MAGIC To see how to collect the dataset from the Eval App, see the [03-advanced-app/03-Offline-Evaluation]($../03-advanced-app/03-Offline-Evaluation) notebook.
 
@@ -444,7 +444,7 @@ display(eval_dataset)
 # MAGIC %md
 # MAGIC ## 3.1/ Run Evaluation of your Chain
 # MAGIC
-# MAGIC Let's leverage the Mosaic AI Agent Evaluation specialized LLM to evaluate our model performance (make sure you use `databricks-rag`):
+# MAGIC Let's leverage the Agent Bricks specialized LLM to evaluate our model performance (make sure you use `databricks-rag`):
 
 # COMMAND ----------
 

@@ -1,4 +1,4 @@
-#Return the rules matching the tag as a format ready for SDP annotation.
+#Return the rules matching the tag as a format ready for Lakeflow Pipelines annotation.
 from pyspark.sql.functions import expr, col
 
 # Catalog and schema configuration

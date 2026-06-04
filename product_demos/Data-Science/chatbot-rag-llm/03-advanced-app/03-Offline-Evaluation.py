@@ -236,9 +236,9 @@ client.set_registered_model_alias(name=MODEL_NAME_FQN, alias="prod", version=mod
 # MAGIC %md
 # MAGIC ## Next step: track production online inferences with Databricks AI Gateway
 # MAGIC
-# MAGIC Mosaic AI Agent Evaluation makes it easy to evaluate your LLM Models, leveraging custom metrics.
+# MAGIC Agent Bricks makes it easy to evaluate your LLM Models, leveraging custom metrics.
 # MAGIC
-# MAGIC Evaluating your chatbot is key to measure your future version impact, and your Data Intelligence Platform makes it easy leveraging automated Workflow for your MLOps pipelines.
+# MAGIC Evaluating your chatbot is key to measure your future version impact, and your Databricks Platform makes it easy leveraging automated Workflow for your MLOps pipelines.
 # MAGIC
 # MAGIC Let's now review how to track our production model endpoint, tracking our users question through Databricks AI Gateway: [open 04-Online-Evaluation]($./04-Online-Evaluation)
 # MAGIC

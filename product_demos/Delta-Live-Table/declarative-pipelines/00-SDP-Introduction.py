@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Intro to Spark Declarative Pipelines
+# MAGIC ## Intro to Lakeflow Pipelines
 # MAGIC
-# MAGIC Declarative Pipelines simplify batch and streaming ETL with automated reliability and built-in data quality. Let's give it a try!
+# MAGIC Lakeflow Pipelines simplify batch and streaming ETL with automated reliability and built-in data quality. Let's give it a try!
 # MAGIC
 # MAGIC ## Optimizing our bike rental business - ETL pipeline
 # MAGIC Our fictional company operates bike rental stations across the city. The primary goal of this data pipeline is to transform raw operational data—such as ride logs, maintenance records, and weather information—into a structured and refined format, enabling comprehensive analytics. <br/>
@@ -37,11 +37,11 @@
 # MAGIC %md
 # MAGIC #### 2/ Get started with Streaming Tables and Materialized view
 # MAGIC
-# MAGIC Creating your pipeline is super simple! If you're new to the Declarative Pipelines, it's best to start with the [UI introduction from the documentation](https://docs.databricks.com/aws/en/dlt/dlt-multi-file-editor)!
+# MAGIC Creating your pipeline is super simple! If you're new to Lakeflow Pipelines, it's best to start with the [UI introduction from the documentation](https://docs.databricks.com/aws/en/dlt/dlt-multi-file-editor)!
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC **Your Spark Declarative Pipelines has been installed and started for you!** Open the <a dbdemos-pipeline-id="pipeline-bike" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Bike Rental Declarative Pipeline</a> to see it in action.<br/>
+# MAGIC **Your Lakeflow pipeline has been installed and started for you!** Open the <a dbdemos-pipeline-id="pipeline-bike" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Bike Rental Lakeflow pipeline</a> to see it in action.<br/>
 # MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 # COMMAND ----------

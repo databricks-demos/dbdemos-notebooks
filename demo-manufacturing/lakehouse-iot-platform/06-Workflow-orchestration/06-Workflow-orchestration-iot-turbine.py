@@ -4,17 +4,17 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_5.png" />
 # MAGIC
-# MAGIC All our assets are ready. We now need to define when we want our SDP pipeline to kick in and refresh the tables.
+# MAGIC All our assets are ready. We now need to define when we want our Lakeflow pipeline to kick in and refresh the tables.
 # MAGIC
-# MAGIC One option is to switch SDP pipeline in continuous mode to have a streaming pipeline, providing near-real-time insight.
+# MAGIC One option is to switch Lakeflow pipeline in continuous mode to have a streaming pipeline, providing near-real-time insight.
 # MAGIC
-# MAGIC An alternative is to wakeup the SDP pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
+# MAGIC An alternative is to wakeup the Lakeflow pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
 # MAGIC
 # MAGIC This is a simple configuration offering a tradeoff between uptime and ingestion latencies.
 # MAGIC
 # MAGIC In our case, we decided that the best trade-off is to ingest new data every hour:
 # MAGIC
-# MAGIC - Start the SDP pipeline to ingest new data and refresh our tables
+# MAGIC - Start the Lakeflow pipeline to ingest new data and refresh our tables
 # MAGIC - Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC - Retrain our model to include the latest data and capture potential behavior change
 # MAGIC
@@ -24,16 +24,16 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Orchestrating our Churn pipeline with Databricks Workflows
+# MAGIC ## Orchestrating our Churn pipeline with Lakeflow Jobs
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-workflow.png?raw=true" />
 # MAGIC
-# MAGIC With Databricks Data Intelligence Platform, no need for external orchestrator. We can use [Workflows](/#job/list) (available on the left menu) to orchestrate our Churn pipeline within a few clicks.
+# MAGIC With Databricks Platform, no need for external orchestrator. We can use [Lakeflow Jobs](/#job/list) (available on the left menu) to orchestrate our pipeline within a few clicks.
 # MAGIC
 # MAGIC
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Lakeflow Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -54,11 +54,11 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-dashboard-full.png?raw=trueg" />
 # MAGIC
-# MAGIC A Databricks Workflow is composed of Tasks.
+# MAGIC A Lakeflow Job is composed of Tasks.
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Spark Declarative Pipelines
+# MAGIC * Lakeflow Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
@@ -67,7 +67,7 @@
 # MAGIC
 # MAGIC In this example, can see our 3 tasks:
 # MAGIC
-# MAGIC * Start the SDP pipeline to ingest new data and refresh our tables
+# MAGIC * Start the Lakeflow pipeline to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC * Retrain our Churn model
 
@@ -90,6 +90,6 @@
 # MAGIC %md
 # MAGIC ## Conclusion
 # MAGIC
-# MAGIC Not only does the Databricks Data Intelligence Platform let you ingest, analyze and infer churn, it also provides a best-in-class orchestrator to offer your business fresh insight making sure everything works as expected!
+# MAGIC Not only does the Databricks Platform let you ingest, analyze and infer churn, it also provides a best-in-class orchestrator to offer your business fresh insight making sure everything works as expected!
 # MAGIC
 # MAGIC [Go back to introduction]($../00-IOT-wind-turbine-introduction-DI-platform)

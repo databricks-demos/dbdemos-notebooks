@@ -31,7 +31,7 @@
 # MAGIC - Deploy and query **Feature Serving Endpoints**.
 # MAGIC - Serve a **UC-registered model** in real time with automatic feature lookup.
 # MAGIC
-# MAGIC ### Spark Declarative Pipeline Feature Creation ([open the notebook]($./03_Feature_store_pipeline))
+# MAGIC ### Lakeflow Pipelines Feature Creation ([open the notebook]($./03_Feature_store_pipeline))
 # MAGIC
 # MAGIC - Demonstrate how to build and manage feature tables declaratively using Lakeflow pipelines.
 # MAGIC

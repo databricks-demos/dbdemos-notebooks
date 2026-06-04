@@ -1,9 +1,9 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Insurance Data Intelligence Platform for Financial Services
-# MAGIC #### Automating claims processing with the Databricks Data Intelligence Platform
+# MAGIC # Insurance Databricks Platform for Financial Services
+# MAGIC #### Automating claims processing with the Databricks Platform
 # MAGIC
-# MAGIC ## What is The Insurance Databricks Data Intelligence Platform for Financial Services?
+# MAGIC ## What is The Insurance Databricks Platform for Financial Services?
 # MAGIC
 # MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to always offer more engaging customer experiences driven by real time data, at the lowest cost. 
 # MAGIC <br/><br/>
@@ -104,7 +104,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## 1: Data Engineering - Ingesting data & building our FS Data Intelligence Platform Database
+# MAGIC ## 1: Data Engineering - Ingesting data & building our FS Databricks Platform Database
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-flow-2.png?raw=true" style="float: right" width="700px">
 # MAGIC
@@ -116,9 +116,9 @@
 
 # MAGIC %md  
 # MAGIC
-# MAGIC Open the [Spark Declarative Pipelines SQL Pipeline notebook]($./01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims). 
+# MAGIC Open the [Lakeflow Pipelines SQL notebook]($./01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims). 
 # MAGIC
-# MAGIC This will create a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">SDP Pipeline</a> running in batch or streaming.
+# MAGIC This will create a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">Lakeflow pipeline</a> running in batch or streaming.
 # MAGIC
 # MAGIC ### Security and Governance with Unity Catalog
 # MAGIC
@@ -174,7 +174,7 @@
 # MAGIC <br>
 # MAGIC While our data pipeline is almost ready, we're missing one last step: orchestrating the full workflow in production.
 # MAGIC
-# MAGIC With Databricks Lakehouse, there is no need to manage an external orchestrator to run your job. Databricks Workflows simplifies all your jobs, with advanced alerting, monitoring, branching options etc. <br>
+# MAGIC With Databricks Lakehouse, there is no need to manage an external orchestrator to run your job. Lakeflow Jobs simplifies all your jobs, with advanced alerting, monitoring, branching options etc. <br>
 
 # COMMAND ----------
 
@@ -190,8 +190,8 @@
 # MAGIC   * All data personas to work collaboratively on a single platform contributing to a single pipeline
 # MAGIC   * All big data architecture paradigms including streaming, ML, BI, DE & Ops are supported on a single platform - no need to stitch services!
 # MAGIC * End to End <b> Workflow Pipelines </b> are easier to create, monitor and maintain
-# MAGIC   * Multi-task Workflows accommodate multiple node types (notebooks, SDP, ML tasks, QL dashboard and support repair&run & compute sharing)
-# MAGIC   * SDP pipelines offer quality constraints and faster path to flip dev workloads to production
+# MAGIC   * Multi-task Workflows accommodate multiple node types (notebooks, Lakeflow Pipelines, ML tasks, QL dashboard and support repair&run & compute sharing)
+# MAGIC   * Lakeflow pipelines offer quality constraints and faster path to flip dev workloads to production
 # MAGIC   * Robust, Scalable, and fully automated via REST APIs thereby improving team agility and productivity
 # MAGIC * Supports all <b> BI & AI </b> workloads
 # MAGIC   * Models are created, managed with MLFlow for easy reproducibility and audibility

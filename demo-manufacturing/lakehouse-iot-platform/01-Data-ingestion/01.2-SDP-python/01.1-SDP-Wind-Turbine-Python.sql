@@ -40,30 +40,30 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with Spark Declarative Pipelines
+-- MAGIC # Simplify Ingestion and Transformation with Lakeflow Pipelines
 -- MAGIC
 -- MAGIC <img style="float: right" width="500px" src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/team_flow_john.png" />
 -- MAGIC
 -- MAGIC In this notebook, we'll work as a Data Engineer to build our IOT platform. <br>
 -- MAGIC We'll ingest and clean our raw data sources to prepare the tables required for our BI & ML workload.
 -- MAGIC
--- MAGIC Databricks simplifies this task with Spark Declarative Pipelines by making Data Engineering accessible to all.
+-- MAGIC Databricks simplifies this task with Lakeflow Pipelines by making Data Engineering accessible to all.
 -- MAGIC
--- MAGIC Spark Declarative Pipelines allows Data Analysts to create advanced pipeline with plain SQL, or python.
+-- MAGIC Lakeflow Pipelines allows Data Analysts to create advanced pipeline with plain SQL, or python.
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your Spark Declarative Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine Spark Declarative Pipeline</a> to see it in action.<br/>
+-- MAGIC Your Lakeflow pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">IOT Wind Turbine Lakeflow pipeline</a> to see it in action.<br/>
 -- MAGIC
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed with dbdemos, this might take a few minutes... Check installation logs for more details)*
 
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC ## Building a Spark Declarative Pipeline to ingest IOT sensor and detect faulty equipments
+-- MAGIC ## Building a Lakeflow pipeline to ingest IOT sensor and detect faulty equipments
 -- MAGIC
--- MAGIC In this example, we'll implement a end 2 end Spark Declarative Pipeline consuming our Wind Turbine sensor data. <br/>
+-- MAGIC In this example, we'll implement a end 2 end Lakeflow pipeline consuming our Wind Turbine sensor data. <br/>
 -- MAGIC We'll use the medallion architecture but we could build star schema, data vault or any other model.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our predictive maintenance analysis.
@@ -161,7 +161,7 @@
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## Conclusion
--- MAGIC Our <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
+-- MAGIC Our <a dbdemos-pipeline-id="sdp-sql" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Lakeflow pipeline</a> is now ready using purely SQL. We have an end 2 end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
 -- MAGIC
 -- MAGIC
 -- MAGIC For more details on model training, open the [model training notebook]($../../04-Data-Science-ML/04.1-automl-iot-turbine-predictive-maintenance)

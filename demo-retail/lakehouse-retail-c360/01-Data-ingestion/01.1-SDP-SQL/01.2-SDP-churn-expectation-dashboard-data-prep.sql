@@ -1,12 +1,12 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC # SDP pipeline log analysis
+-- MAGIC # Lakeflow Pipelines log analysis
 -- MAGIC
 -- MAGIC <img style="float:right" width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-dlt-stat.png?raw=true">
 -- MAGIC
 -- MAGIC
--- MAGIC Each SDP Pipeline saves events and expectations metrics in the Storage Location defined on the pipeline. From this table we can see what is happening and the quality of the data passing through it.
+-- MAGIC Each Lakeflow pipeline saves events and expectations metrics in the Storage Location defined on the pipeline. From this table we can see what is happening and the quality of the data passing through it.
 -- MAGIC
 -- MAGIC You can leverage the expecations directly as a SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
 -- MAGIC
@@ -18,7 +18,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Accessing the Spark Declarative Pipelines pipeline events with Unity Catalog
+-- MAGIC ## Accessing the Lakeflow pipeline events with Unity Catalog
 -- MAGIC
 
 -- COMMAND ----------

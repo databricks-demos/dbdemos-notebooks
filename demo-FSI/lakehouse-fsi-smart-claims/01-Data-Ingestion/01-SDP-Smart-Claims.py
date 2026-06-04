@@ -1,21 +1,21 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # Policy, Claims & Telematics SDP Ingestion pipeline
+# MAGIC # Policy, Claims & Telematics Lakeflow Pipelines Ingestion pipeline
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/fsi/smart-claims/fsi-claims-dlt-0.png?raw=true" style="float: right" width="800px">
 # MAGIC
-# MAGIC Using <b>Spark Declarative Pipelines</b> (SDP) for ETL helps simplify and operationalize the pipeline with its support for autoloader, data quality via constraints, efficient auto-scaling for streaming workloads, resiliency via restart on failure, execution of administrative operations among others.
+# MAGIC Using <b>Lakeflow Pipelines</b> (Lakeflow Pipelines) for ETL helps simplify and operationalize the pipeline with its support for autoloader, data quality via constraints, efficient auto-scaling for streaming workloads, resiliency via restart on failure, execution of administrative operations among others.
 # MAGIC
 # MAGIC We'll show how Databricks makes it easy to incrementally ingest and transform our incoming claims data.
 # MAGIC
-# MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 example.
+# MAGIC For more advanced Lakeflow Pipelines capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 example.
 # MAGIC
 # MAGIC
 # MAGIC
 # MAGIC ## Ingestion made easy with Databricks Assistant
 # MAGIC
-# MAGIC Databricks Data Intelligence Platform simplifies our journey, empowering data analysts to do more and build robust data pipelines.
+# MAGIC Databricks Platform simplifies our journey, empowering data analysts to do more and build robust data pipelines.
 # MAGIC
 # MAGIC Questions can be asked in plain text to our assistant, which will suggest how to build the pipeline, fix bugs and offer potential improvements.
 # MAGIC
@@ -26,14 +26,14 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC This demo started for you a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">SDP Pipeline</a> using this notebook! Explore it to see its execution out of the box.
+# MAGIC This demo started for you a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">Lakeflow pipeline</a> using this notebook! Explore it to see its execution out of the box.
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Building a Spark Declarative Pipeline for Smart Claims Processing
+# MAGIC ## Building a Lakeflow pipeline for Smart Claims Processing
 # MAGIC
-# MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our claims, policy, and telematics data. We'll use the medallion architecture but we could build star schema, data vault or any other modeling approach.
+# MAGIC In this example, we'll implement an end-to-end Lakeflow pipeline consuming our claims, policy, and telematics data. We'll use the medallion architecture but we could build star schema, data vault or any other modeling approach.
 # MAGIC
 # MAGIC We'll incrementally load new data with the autoloader, enrich this information, and prepare it for downstream analysis and ML models.
 # MAGIC

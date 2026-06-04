@@ -8,7 +8,7 @@
 # MAGIC Every business has its own pulse. We need to match our technical architecture to this natural cadence:
 # MAGIC
 # MAGIC **Option 1: Always-On** ⚡  
-# MAGIC Configure SDP pipelines in continuous mode for streaming insights that capture customer signals as they happen.
+# MAGIC Configure Lakeflow Pipelines in continuous mode for streaming insights that capture customer signals as they happen.
 # MAGIC
 # MAGIC **Option 2: Efficient Cycles** ⏱️  
 # MAGIC Wake your compute on a scheduled basis, process new data incrementally, and then release resources.
@@ -17,7 +17,7 @@
 # MAGIC
 # MAGIC For our retail business, an hourly cadence hits the sweet spot:
 # MAGIC
-# MAGIC 1. **Data Refresh** 📊 - SDP pipeline activates to ingest the latest customer data
+# MAGIC 1. **Data Refresh** 📊 - the Lakeflow pipeline activates to ingest the latest customer data
 # MAGIC 2. **Dashboard Update** 📈 - DBSQL dashboards automatically refresh
 # MAGIC 3. **Model Retraining** 🧠 - ML models adapt to evolving customer behaviors
 # MAGIC 4. **Triggered Interventions** 🎯 - GenAI deploys personalized retention campaigns
@@ -34,7 +34,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Orchestrating our Churn pipeline with Databricks Workflows
+# MAGIC ## Orchestrating our Churn pipeline with Lakeflow Jobs
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/dbdemos-workflow-churn-1.png?raw=true" />
 # MAGIC
@@ -43,7 +43,7 @@
 # MAGIC
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With Lakeflow Jobs, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Lakeflow Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -59,11 +59,11 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/dbdemos-workflow-churn-3.png?raw=true" />
 # MAGIC
-# MAGIC A Databricks Workflow is composed of Tasks.
+# MAGIC A Lakeflow Job is composed of Tasks.
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Spark Declarative Pipelines
+# MAGIC * Lakeflow Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
@@ -72,7 +72,7 @@
 # MAGIC
 # MAGIC In this example, can see our 3 tasks:
 # MAGIC
-# MAGIC * Start the SDP pipeline to ingest new data and refresh our tables
+# MAGIC * Start the Lakeflow pipeline to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC * Retrain our Churn model
 

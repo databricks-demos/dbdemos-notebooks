@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # 1/ Deploying our first RAG application with Mosaic AI Agent Framework & Agent Evaluation
+# MAGIC # 1/ Deploying our first RAG application with Agent Bricks & Agent Evaluation
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/chatbot-rag/rag-basic.png?raw=true" style="width: 800px; margin-left: 10px">
 # MAGIC
@@ -181,7 +181,7 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Let's now deploy the Mosaic AI **Quality Lab review application** using the model we just created!
+# MAGIC Let's now deploy the Agent Bricks **Quality Lab review application** using the model we just created!
 
 # COMMAND ----------
 
@@ -203,7 +203,7 @@ wait_for_model_serving_endpoint_to_be_ready(endpoint_name)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # 3/ Use the Mosaic AI Quality Lab to evaluate your RAG applications
+# MAGIC # 3/ Use the Agent Bricks to evaluate your RAG applications
 # MAGIC
 # MAGIC ## 3.1/ Chat with your bot and build your validation dataset!
 # MAGIC
@@ -228,7 +228,7 @@ print(f"\n\nReview App URL to share with your stakeholders: {deployment_info.rev
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## 3.2/ Evaluate your bot's quality with Mosaic AI Quality Lab specialized LLM judge models
+# MAGIC ## 3.2/ Evaluate your bot's quality with Agent Bricks specialized LLM judge models
 # MAGIC
 # MAGIC Our bot is now Live. 
 # MAGIC

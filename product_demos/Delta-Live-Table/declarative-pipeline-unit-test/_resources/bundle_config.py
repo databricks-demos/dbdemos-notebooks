@@ -14,7 +14,7 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_sdp_unit_test",
   "description": "Deploy robust pipelines with unit tests leveraging expectation.",
-  "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Spark Declarative Pipelines let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your SDP pipeline and make it composable, easily switching input data with your test data.",
+  "fullDescription": "Production-grade pipeline requires Unit Test to garantee their robustness. Lakeflow Pipelines let you track your pipeline data quality with expectation in your table. <br/> These expectations can also be leverage to write integration tests, making robust pipeline. <br/> In this demo, we'll show you how to test your Lakeflow pipeline and make it composable, easily switching input data with your test data.",
   "bundle": True,
   "notebooks": [
     {
@@ -22,7 +22,7 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "SDP to test", 
+      "title":  "Lakeflow Pipelines to test", 
       "description": "Definition of the pipeline we want to test."
     },
     {

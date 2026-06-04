@@ -113,4 +113,4 @@
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC Open [Databricks Agent Bricks](/ml/agents) and set up these agents in a few clicks!
+# MAGIC Open [Agent Bricks](/ml/agents) and set up these agents in a few clicks!

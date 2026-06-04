@@ -44,7 +44,7 @@ SELECT * FROM system.access.table_lineage
 
 -- COMMAND ----------
 
--- DBTITLE 1,Review all entities accessing your table (workflows, notebook, SDP, DBSQL...)
+-- DBTITLE 1,Review all entities accessing your table (workflows, notebook, Lakeflow Pipelines, DBSQL...)
 SELECT DISTINCT(entity_type) FROM system.access.table_lineage
 
 -- COMMAND ----------

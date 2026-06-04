@@ -250,7 +250,7 @@ wait_for_model_serving_endpoint_to_be_ready(deployment_info.endpoint_name)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Grant stakeholders access to the Mosaic AI Agent Evaluation App
+# MAGIC ## Grant stakeholders access to the Agent Bricks App
 # MAGIC
 # MAGIC Now, grant your stakeholders permissions to use the Review App. To simplify access, stakeholders do not require to have Databricks accounts.
 

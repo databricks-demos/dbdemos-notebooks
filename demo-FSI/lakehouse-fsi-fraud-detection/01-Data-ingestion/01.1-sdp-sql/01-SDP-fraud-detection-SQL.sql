@@ -73,9 +73,9 @@
 
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC ## Building a Spark Declarative Pipelines pipeline to analyze and reduce fraud detection in real-time
+-- MAGIC ## Building a Lakeflow pipeline to analyze and reduce fraud detection in real-time
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end SDP pipeline consuming our banking transactions information. We'll use the medallion architecture but we could build a star schema, a data vault or any other modeling.
+-- MAGIC In this example, we'll implement an end-to-end Lakeflow pipeline consuming our banking transactions information. We'll use the medallion architecture but we could build a star schema, a data vault or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the Autoloader and enrich this information.
 -- MAGIC
@@ -94,7 +94,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your SDP Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Spark Declarative Pipelines pipeline</a> to see it in action.<br/>
+-- MAGIC Your Lakeflow pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Lakeflow pipeline</a> to see it in action.<br/>
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 -- COMMAND ----------
@@ -138,7 +138,7 @@
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different fields to enforce and track our Data Quality. This will ensure that our dashboards are relevant and can easily spot potential errors due to data anomalies.
 -- MAGIC
--- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 example.
+-- MAGIC For more advanced Lakeflow Pipelines capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 example.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 
@@ -171,7 +171,7 @@
 -- MAGIC
 -- MAGIC The table is now ready for our Data Scientist to train a model detecting fraud risk.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Spark Declarative Pipelines pipeline</a> and click on Start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Fraud detection Lakeflow pipeline</a> and click on Start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 

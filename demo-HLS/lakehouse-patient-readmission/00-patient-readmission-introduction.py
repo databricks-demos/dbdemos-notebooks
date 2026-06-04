@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Data Intelligence Platform for HLS - Patient Cohorts and re-admission 
+# MAGIC # Databricks Platform for HLS - Patient Cohorts and re-admission 
 # MAGIC <br />
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/hls/patient-readmission/hls-patient-readmision-lakehouse-0.png" style="float: left; margin-right: 30px; margin-top:10px" width="650px" />
 # MAGIC
-# MAGIC ## What is The Data Intelligence Platform for HLS?
+# MAGIC ## What is The Databricks Platform for HLS?
 # MAGIC
 # MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload at the lowest cost.
 # MAGIC
@@ -86,16 +86,16 @@
 # MAGIC It provides many functionalities *(ACID Transaction, DELETE/UPDATE/MERGE, Clone zero copy, Change data Capture...)* <br />
 # MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 # MAGIC
-# MAGIC ### Simplify ingestion with Spark Declarative Pipelines (SDP)
+# MAGIC ### Simplify ingestion with Lakeflow Pipelines
 # MAGIC
-# MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
+# MAGIC Databricks simplifies data ingestion and transformation with Lakeflow Pipelines by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC
-# MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-SDP-patient-readmission-SQL) *(python SDP notebook alternative coming soon).* <br>
-# MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
+# MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-SDP-patient-readmission-SQL) *(python Lakeflow Pipelines notebook alternative coming soon).* <br>
+# MAGIC   For more details on Lakeflow Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 # COMMAND ----------
 
@@ -109,10 +109,10 @@
 # MAGIC
 # MAGIC   Now that our data has been ingested, we can explore the catalogs and schemas created using the [Data Explorer](/explore/data/dbdemos/fsi_credit_decisioning). 
 # MAGIC
-# MAGIC To leverage our data assets across the entire organization, we need:
+# MAGIC To leverage everything across the entire organization, we need:
 # MAGIC
 # MAGIC * Fine-grained ACLs for our analysts and data scientists teams
-# MAGIC * Lineage between all our data assets
+# MAGIC * Lineage between everything
 # MAGIC * Real-time PII data encryption 
 # MAGIC * Audit logs
 # MAGIC * Data Sharing with external organization 
@@ -194,7 +194,7 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC Open the [05-Workflow-Orchestration-patient-readmission notebook]($./05-Workflow-Orchestration/05-Workflow-Orchestration-patient-readmission) to review how we can leverage Databricks Workflows to orchestrate our tasks and link them together.
+# MAGIC Open the [05-Workflow-Orchestration-patient-readmission notebook]($./05-Workflow-Orchestration/05-Workflow-Orchestration-patient-readmission) to review how we can leverage Lakeflow Jobs to orchestrate our tasks and link them together.
 
 # COMMAND ----------
 

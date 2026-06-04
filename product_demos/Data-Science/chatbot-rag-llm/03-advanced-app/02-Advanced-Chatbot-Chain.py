@@ -331,7 +331,7 @@ print(f"Share this URL with your stakeholders: {deployment_info.review_app_url}"
 # MAGIC
 # MAGIC Your new prompt might work well for what you tried to fix, but could also have impact on other questions.
 # MAGIC
-# MAGIC ## Next: Introducing offline model evaluation with Mosaic AI Agent Evaluation
+# MAGIC ## Next: Introducing offline model evaluation with Agent Bricks
 # MAGIC
 # MAGIC To solve these issue, we need a repeatable way of testing our model answer as part of our LLMOps deployment!
 # MAGIC

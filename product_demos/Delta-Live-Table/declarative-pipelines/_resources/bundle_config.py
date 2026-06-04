@@ -13,7 +13,7 @@
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_pipeline_bike",
-    "description": "Ingest bike rental data and implement a Spark Declarative Pipelines, with expectation and monitoring.",
+    "description": "Ingest bike rental data and implement a Lakeflow pipeline, with expectation and monitoring.",
     "bundle": True,
     "notebooks": [
       {
@@ -29,7 +29,7 @@
         "pre_run": False, 
         "publish_on_website": True, 
         "add_cluster_setup_cell": False,
-        "title":  "Spark Declarative Pipelines: Introduction", 
+        "title":  "Lakeflow Pipelines: Introduction", 
         "description": "Start here to learn about your Pipeline"
       },
       {

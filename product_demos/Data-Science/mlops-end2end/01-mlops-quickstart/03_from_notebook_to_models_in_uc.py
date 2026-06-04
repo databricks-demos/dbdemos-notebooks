@@ -189,7 +189,7 @@ client.set_registered_model_alias(
 # MAGIC %md
 # MAGIC ## Next: Validation of the Challenger model
 # MAGIC
-# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook so that the validation process can be automated as part of a Databricks Workflow job.
+# MAGIC At this point, with the __Challenger__ model registered, we would like to validate the model. The validation steps are implemented in a notebook so that the validation process can be automated as part of a Lakeflow Jobs job.
 # MAGIC
 # MAGIC If the model passes all the tests, it'll be promoted to `Champion`.
 # MAGIC

@@ -60,7 +60,7 @@ if not data_exists:
 
 # COMMAND ----------
 
-#As we need a model in the SDP pipeline and the model depends of the SDP pipeline too, let's build an empty one.
+#As we need a model in the Lakeflow pipeline and the model depends of the Lakeflow pipeline too, let's build an empty one.
 #This wouldn't make sense in a real-world system where we'd have 2 jobs / pipeline (1 for ingestion, and 1 to build the model / run inferences)
 import random
 import mlflow

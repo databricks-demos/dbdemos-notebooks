@@ -14,7 +14,7 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_sdp_cdc",
   "description": "Ingest Change Data Capture flow with APPLY INTO and simplify SCDT2 implementation.",
-  "fullDescription": "This demo highlight how Spark Declarative Pipelines simplifies CDC (Change Data Capture).<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/>We'll also implement a SCD2 (Slowly Changing Dimension table of type 2). While this can be really tricky to implement when data arrives out of order, Declarative Pipelines makes this super simple with one simple keyword.<br/><br/>Ultimately, we'll show you how to programmatically scan multiple incoming folder and trigger N stream (1 for each CDC table), leveraging Declarative Pipelines with python.",
+  "fullDescription": "This demo highlight how Lakeflow Pipelines simplifies CDC (Change Data Capture).<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/>We'll also implement a SCD2 (Slowly Changing Dimension table of type 2). While this can be really tricky to implement when data arrives out of order, Declarative Pipelines makes this super simple with one simple keyword.<br/><br/>Ultimately, we'll show you how to programmatically scan multiple incoming folder and trigger N stream (1 for each CDC table), leveraging Declarative Pipelines with python.",
     "usecase": "Data Engineering",
   "bundle": True,
   "notebooks": [
@@ -39,7 +39,7 @@
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Sample exploration",
+      "title":  "Lakeflow Pipelines SQL - Sample exploration",
       "description": "Sample exploration notebook for pipeline."
     },
     {
@@ -55,7 +55,7 @@
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Sample exploration",
+      "title":  "Lakeflow Pipelines Python - Sample exploration",
       "description": "Sample exploration notebook for pipeline."
     },
     {

@@ -1,14 +1,14 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC # Ingesting data from any sources with Databricks Data Intelligence Platform
+# MAGIC # Ingesting data from any sources with Databricks Platform
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/di_platform_0.png" style="float: left; margin-right: 30px" width="600px" />
 # MAGIC
 # MAGIC </br>
 # MAGIC
 # MAGIC
-# MAGIC With the Databricks Data Intelligence Platform, you can effortlessly ingest data from virtually any source, unifying your entire data estate into a single, intelligent foundation. Whether it's batch, streaming, or change data capture (CDC), we provide robust, scalable, and easy-to-use tools to bring all your data into the Lakehouse.
+# MAGIC With the Databricks Platform, you can effortlessly ingest data from virtually any source, unifying your entire data estate into a single, intelligent foundation. Whether it's batch, streaming, or change data capture (CDC), we provide robust, scalable, and easy-to-use tools to bring all your data into the Lakehouse.
 # MAGIC
 # MAGIC Key capabilities include:
 # MAGIC
@@ -20,9 +20,9 @@
 # MAGIC
 # MAGIC - **Unified Governance**: Every ingested dataset is automatically governed by Unity Catalog, providing unified visibility, access control, lineage, and discovery across your entire data and AI assets.
 # MAGIC
-# MAGIC - **Simplified Data Engineering**: Build and manage data ingestion pipelines with ease using declarative frameworks like Spark Declarative Pipelines (formerly known as DLT), reducing complexity and accelerating time to value.
+# MAGIC - **Simplified Data Engineering**: Build and manage data ingestion pipelines with ease using declarative frameworks like Lakeflow Pipelines, reducing complexity and accelerating time to value.
 # MAGIC
-# MAGIC Break down data silos, accelerate your data and AI initiatives, and unlock the full potential of your data with the Databricks Data Intelligence Platform.
+# MAGIC Break down data silos, accelerate your data and AI initiatives, and unlock the full potential of your data with the Databricks Platform.
 
 # COMMAND ----------
 
@@ -49,7 +49,7 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## 2/ Read or ingest data in SQL with `read_file` and Spark Declarative Pipelines
+# MAGIC ## 2/ Read or ingest data in SQL with `read_file` and Lakeflow Pipelines
 # MAGIC
 # MAGIC ### Instantly Access Any File with Databricks SQL's `read_files`
 # MAGIC
@@ -76,7 +76,7 @@
 # MAGIC - **Exactly-once data integrity:** Ensures files are processed just once, even after failures.
 # MAGIC - **Supports schema evolution:** Automatically adapts as your data evolves.
 # MAGIC - **Works with many file formats:** Handles JSON, CSV, Parquet, Avro, and more.
-# MAGIC - **Seamless integration:** Built to work with Spark Declarative Pipelines and streaming pipelines.
+# MAGIC - **Seamless integration:** Built to work with Lakeflow Pipelines and streaming pipelines.
 # MAGIC
 # MAGIC Auto Loader lets you focus on getting insights from data—not on managing file arrivals or pipeline code.
 

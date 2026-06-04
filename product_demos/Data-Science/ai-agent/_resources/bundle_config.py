@@ -13,7 +13,7 @@
   "default_schema": "dbdemos_ai_agent",
   "serverless_supported": True,
   "title": "AI Agent System and Evaluation with Databricks AI",
-  "description": "Deploy your AI Agent system on Databricks AI with foundation LLM, Langchain, PDF extraction and Vector Search & Mosaic AI Agent Evaluation",
+  "description": "Deploy your AI Agent system on Databricks AI with foundation LLM, Langchain, PDF extraction and Vector Search & Agent Bricks",
   "bundle": True,
   "env_version": 2,
   "notebooks": [

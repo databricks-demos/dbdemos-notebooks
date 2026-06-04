@@ -23,7 +23,7 @@ dbutils.library.restartPython()
 # MAGIC
 # MAGIC For simplicity in this example, we'll use an existing NER dataset from Huggingface. In commercial applications, it typically makes more sense to invest in data labeling to get enough samples to improve model performance. 
 # MAGIC
-# MAGIC Preparing your dataset for Instruction Fine Tuning is key. The Databricks Mosaic AI research team has published some [helpful guidelines](https://www.databricks.com/blog/limit-less-more-instruction-tuning) for developing a training data curation strategy. 
+# MAGIC Preparing your dataset for Instruction Fine Tuning is key. The Databricks research team has published some [helpful guidelines](https://www.databricks.com/blog/limit-less-more-instruction-tuning) for developing a training data curation strategy. 
 
 # COMMAND ----------
 

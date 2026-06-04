@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Fine-tuning your RAG Chatbot LLM with Databricks Mosaic AI
+# MAGIC # Fine-tuning your RAG Chatbot LLM with Agent Bricks
 # MAGIC
 # MAGIC ## Fine Tuning or RAG?
 # MAGIC RAG and Instruction fine-tuning work together! If you have a relevant RAG use-case, you can start with RAG leveraging a foundational model, and then specialize your model if your corpus is specific to your business (ex: not part of the foundation model training) or need specific behavior (ex: answer to a specific task such as entity extraction)
@@ -59,7 +59,7 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## A note on Databricks Mosaic AI Evaluation Framework
+# MAGIC ## A note on Agent Bricks
 # MAGIC
 # MAGIC Databricks makes it easy to build, deploy and review RAG application. Using Databricks review application, it's easy to build your Fine Tuning Dataset.
 # MAGIC

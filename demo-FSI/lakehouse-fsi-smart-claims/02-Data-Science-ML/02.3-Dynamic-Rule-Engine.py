@@ -10,7 +10,7 @@
 # MAGIC
 # MAGIC ## Implementing Dynamic rules
 # MAGIC
-# MAGIC Many system exists to build such rules. These can be natively implemented in Spark or using Spark Declarative Pipelines (check `dbdemos.install('declarative-pipeline-unit-test')` for an example of dynamic SDP rules)
+# MAGIC Many system exists to build such rules. These can be natively implemented in Spark or using Lakeflow Pipelines (check `dbdemos.install('declarative-pipeline-unit-test')` for an example of dynamic Lakeflow Pipelines rules)
 # MAGIC
 # MAGIC In this simple example, we'll add our rules as SQL statement in a table table and then apply them over our dataset.
 # MAGIC
@@ -161,4 +161,4 @@ df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("claim_
 # MAGIC %md
 # MAGIC
 # MAGIC Some data points can be checked out easily using <b>simple rules</b>, others may require <b>ML models </b>to score the data to produce the desired insights. In this notebook and the previous one, we have demonstrated how the insights generated from both can be consolidated into <b> structured </b> tabular data for easy consumption from a <b> dashboard </b> by various stakeholders including executives and investigation officers who use the same data but for completely different purposes. <br>
-# MAGIC Moreover, all these insights are well-secured by <b> Unity Catalog </b>. So if the data, model, or insight is sensitive and is meant for select audiences then using a few simple 'GRANT' statements can ensure that it is adequately protected and is never accidentally exposed to the wrong party. Dynamic masking can be used to hide PII data. In the next notebook, we'll see how we can put all of this on auto-drive using Databricks workflows.
+# MAGIC Moreover, all these insights are well-secured by <b> Unity Catalog </b>. So if the data, model, or insight is sensitive and is meant for select audiences then using a few simple 'GRANT' statements can ensure that it is adequately protected and is never accidentally exposed to the wrong party. Dynamic masking can be used to hide PII data. In the next notebook, we'll see how we can put all of this on auto-drive using Lakeflow Jobs.

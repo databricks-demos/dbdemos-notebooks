@@ -201,7 +201,7 @@ fine_tuned_results.metrics
 # MAGIC
 # MAGIC Fine tuning your LLM on Databricks is simple, no need to be an expert Data Scientist.
 # MAGIC
-# MAGIC With Mosaic ML Fine Tuning, you'll be able to unlock new use-cases, fine tuning OSS LLMs to learn your own language and behave the way you want.
+# MAGIC With Databricks fine-tuning, you'll be able to unlock new use-cases, fine tuning OSS LLMs to learn your own language and behave the way you want.
 # MAGIC It makes it easy to build any text-related tasks on top of your data: entity extraction, conversation style and more!
 # MAGIC
 # MAGIC

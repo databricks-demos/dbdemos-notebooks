@@ -12,7 +12,7 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_dbt_retail",
-  "description": "Launch your dbt pipelines in production using a SQL Warehouse. Leverage Databricks Workflow (orchestration) and add a dbt task in your transformation pipeline.",
+  "description": "Launch your dbt pipelines in production using a SQL Warehouse. Leverage Lakeflow Jobs (orchestration) and add a dbt task in your transformation pipeline.",
   "fullDescription": "dbt is a popular data framework to transform and load data into your Lakehouse. Databricks makes it very easy to launch production-grade dbt pipeline using your Databricks SQL warehouse.<br/>In this dbt + Databricks demo, we'll cover: <ul><li>How to build a dbt pipeline to ingest our customer datasets. (We'll be building the same pipeline as the one available in the 'lakehouse-retail-c360' demo.)</li><li>How to start your dbt pipeline from your IDEA</li><li>And ultimately how Databricks Workflow can start dbt tasks to orchestrate your production run.</li></ul><br/>Note: this demo will clone for you the repo <a href='https://github.com/databricks-demos/dbt-databricks-c360'>https://github.com/databricks-demos/dbt-databricks-c360</a> in your repo personal folder.",
   "usecase": "Data Engineering",
   "products": ["dbt", "Workflows"],

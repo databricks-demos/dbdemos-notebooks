@@ -3,7 +3,7 @@
 # MAGIC # 3/ Deploying our frontend App with Lakehouse Applications
 # MAGIC
 # MAGIC
-# MAGIC Mosaic AI Agent Evaluation review app is used for collecting stakeholder feedback during your development process.
+# MAGIC Agent Bricks review app is used for collecting stakeholder feedback during your development process.
 # MAGIC
 # MAGIC You still need to deploy your own front end application!
 # MAGIC
@@ -173,7 +173,7 @@ w.apps.get(name=app_name).url
 # MAGIC
 # MAGIC Open the UI to start requesting your chatbot.
 # MAGIC
-# MAGIC As improvement, we could improve our chatbot UI to provide feedback and send it to Mosaic AI Quality Labs, so that bad answers can be reviewed and improved.
+# MAGIC As improvement, we could improve our chatbot UI to provide feedback and send it to Agent Bricks, so that bad answers can be reviewed and improved.
 # MAGIC
 # MAGIC ## Conclusion
 # MAGIC

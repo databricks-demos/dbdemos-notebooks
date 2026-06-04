@@ -1,12 +1,12 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Data Intelligence Platform for Financial Services - Serving the Underbanked population with the Databricks Lakehouse
+# MAGIC # Databricks Platform for Financial Services - Serving the Underbanked population with the Databricks Lakehouse
 # MAGIC <br />
 # MAGIC <img src="https://raw.githubusercontent.com/borisbanushev/CAPM_Databricks/main/lakehouseDAIWTusecases.jpg" style="float: left; margin-right: 30px" width="650px" />
 # MAGIC
-# MAGIC ## What is The Databricks Data Intelligence Platform for Financial Services?
+# MAGIC ## What is The Databricks Platform for Financial Services?
 # MAGIC
-# MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to always offer more engaging customer experiences driven by real-time data, at the lowest cost. The Data Intelligence Platform is built on the following three pillars:
+# MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to always offer more engaging customer experiences driven by real-time data, at the lowest cost. The Databricks Platform is built on the following three pillars:
 # MAGIC
 # MAGIC ### 1. Simple
 # MAGIC   One single platform and governance/security layer for your data warehousing and AI to **accelerate innovation** and **reduce risks**. No need to stitch together multiple solutions with disparate governance and high complexity.
@@ -91,7 +91,7 @@
 # MAGIC %md 
 # MAGIC ## 1: Ingesting data & building our FS Lakehouse Database
 # MAGIC
-# MAGIC First, we need to ingest and transform customer, credit, and payments data sources with the [Spark Declarative Pipelines SQL Pipeline notebook]($./01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL). This will create a <a href="/" dbdemos-pipeline-id="sdp-fsi-credit-decisioning" target="_blank">SDP Pipeline</a> running in batch or streaming, and saving our data within Unity Catalog as Delta tables.
+# MAGIC First, we need to ingest and transform customer, credit, and payments data sources with the [Lakeflow Pipelines SQL notebook]($./01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL). This will create a <a href="/" dbdemos-pipeline-id="sdp-fsi-credit-decisioning" target="_blank">Lakeflow pipeline</a> running in batch or streaming, and saving our data within Unity Catalog as Delta tables.
 
 # COMMAND ----------
 
@@ -100,10 +100,10 @@
 # MAGIC
 # MAGIC Now that our data has been ingested, we can explore the catalogs and schemas created using the [Data Explorer](/explore/data/dbdemos/fsi_credit_decisioning). 
 # MAGIC
-# MAGIC To leverage our data assets across the entire organization, we need:
+# MAGIC To leverage everything across the entire organization, we need:
 # MAGIC
 # MAGIC * Fine-grained ACLs for our analysts and data scientists teams
-# MAGIC * Lineage between all our data assets
+# MAGIC * Lineage between everything
 # MAGIC * Real-time PII data encryption 
 # MAGIC * Audit logs
 # MAGIC * Data Sharing with external organization 
@@ -208,4 +208,4 @@
 # MAGIC
 # MAGIC ## 5: Workflow orchestration
 # MAGIC
-# MAGIC Now that all our lakehouse pipeline is working, let's review how we can leverage Databricks Workflows to orchestrate our tasks and link them together: [06-Workflow-Orchestration-credit-decisioning]($./06-Workflow-Orchestration/06-Workflow-Orchestration-credit-decisioning).
+# MAGIC Now that all our lakehouse pipeline is working, let's review how we can leverage Lakeflow Jobs to orchestrate our tasks and link them together: [06-Workflow-Orchestration-credit-decisioning]($./06-Workflow-Orchestration/06-Workflow-Orchestration-credit-decisioning).

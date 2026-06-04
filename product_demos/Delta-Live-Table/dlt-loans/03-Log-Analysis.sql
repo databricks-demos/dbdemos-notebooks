@@ -1,11 +1,11 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
 -- MAGIC
--- MAGIC # SDP pipeline log analysis
+-- MAGIC # Lakeflow pipeline log analysis
 -- MAGIC
 -- MAGIC <img style="float:right" width="500" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/dlt/dlt-loans-dashboard.png?raw=true">
 -- MAGIC
--- MAGIC Each SDP Pipeline can be configured to save out the metrics to a table in Unity Catalog. From this table we can see what is happening and the quality of the data passing through it.
+-- MAGIC Each Lakeflow pipeline can be configured to save out the metrics to a table in Unity Catalog. From this table we can see what is happening and the quality of the data passing through it.
 -- MAGIC
 -- MAGIC You can leverage the expecations directly as a SQL table with Databricks SQL to track your expectation metrics and send alerts as required. 
 -- MAGIC
@@ -13,7 +13,7 @@
 -- MAGIC
 -- MAGIC ## Your event log table is now available as a Table within your schema!
 -- MAGIC
--- MAGIC This is simply set as an option in your SDP configuration menu.
+-- MAGIC This is simply set as an option in your Lakeflow Pipelines configuration menu.
 -- MAGIC
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->

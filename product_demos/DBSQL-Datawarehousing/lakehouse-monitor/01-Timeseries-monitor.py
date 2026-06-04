@@ -216,7 +216,7 @@ display(spark.sql(f"SELECT * FROM {drift_table} where column_name = 'TotalPurcha
 # MAGIC %md
 # MAGIC ## Dashboard Investigation
 # MAGIC
-# MAGIC Without any additional tools or complexity, Lakehouse Monitoring allows you to easily profile, diagnose, and enforce quality directly in the Databricks Data Intelligence Platform. 
+# MAGIC Without any additional tools or complexity, Lakehouse Monitoring allows you to easily profile, diagnose, and enforce quality directly in the Databricks Platform. 
 # MAGIC
 # MAGIC Based on the dashboard, we can answer the 3 questions that we originally had: 
 # MAGIC

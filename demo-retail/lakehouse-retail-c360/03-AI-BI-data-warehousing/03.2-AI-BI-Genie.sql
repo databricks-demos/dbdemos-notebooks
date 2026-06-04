@@ -12,7 +12,7 @@
 -- MAGIC
 -- MAGIC Get started now! <a href="/data-rooms">Create a Genie room</a>, share it with your business user and ask any question!
 -- MAGIC
--- MAGIC Under the hood, the Data Intelligence Platform analyzes and understands your data, making it possible to translate your own business language to SQL queries and Visualizations!
+-- MAGIC Under the hood, the Databricks Platform analyzes and understands your data, making it possible to translate your own business language to SQL queries and Visualizations!
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-genie.png?raw=true" style="float: left" width="400px">
 -- MAGIC

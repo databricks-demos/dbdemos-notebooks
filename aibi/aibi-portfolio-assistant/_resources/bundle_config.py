@@ -21,7 +21,7 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title": "AI BI: Portfolio assistant", 
-      "description": "Discover Databricks Intelligence Data Platform capabilities."
+      "description": "Discover Databricks Platform capabilities."
     }
   ],
   "init_job": {},

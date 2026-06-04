@@ -15,7 +15,7 @@
   "bundle": True,
   "default_schema": "dbdemos_fsi_credit_decisioning",
   "description": "Build your banking data platform and identify credit worthy customers",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end credit decisioning system for underbanked customers, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both internal and partner data, and then transform them using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build a Machine Learning model with Databricks AutoML to identify credit worthy customers</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the ingested data and explain the machine learning model outputs</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build an end-to-end credit decisioning system for underbanked customers, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest both internal and partner data, and then transform them using Lakeflow Pipelines, a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build a Machine Learning model with Databricks AutoML to identify credit worthy customers</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboard to analyze the ingested data and explain the machine learning model outputs</li><li>Orchestrate all these steps with Lakeflow Jobs</li></ul>",
   "notebooks": [
     {
       "path": "_resources/00-setup", 
@@ -54,15 +54,15 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Main notebook",
-      "description": "SQL SDP pipeline to ingest internal banking data & build clean tables."
+      "title":  "Lakeflow Pipelines SQL - Main notebook",
+      "description": "SQL Lakeflow pipeline to ingest internal banking data & build clean tables."
     },
     {
       "path": "01-Data-Ingestion/01.1-sdp-sql/explorations/sample_exploration",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Sample exploration",
+      "title":  "Lakeflow Pipelines SQL - Sample exploration",
       "description": "Sample exploration notebook for pipeline."
     },
     {
@@ -70,7 +70,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Bronze transformations",
+      "title":  "Lakeflow Pipelines SQL - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -78,7 +78,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Silver transformations",
+      "title":  "Lakeflow Pipelines SQL - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -86,7 +86,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Gold transformations",
+      "title":  "Lakeflow Pipelines SQL - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -94,7 +94,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP python - Bronze transformations",
+      "title":  "Lakeflow Pipelines python - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -102,7 +102,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP python - Silver transformations",
+      "title":  "Lakeflow Pipelines python - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -110,7 +110,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP python - Gold transformations",
+      "title":  "Lakeflow Pipelines python - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -190,7 +190,7 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Orchestrate the credit scoring with Databricks Workflows", 
+      "title":  "Orchestrate the credit scoring with Lakeflow Jobs", 
       "description": "Orchestrate all tasks in a job and schedule your data/model refresh"
     }
   ],

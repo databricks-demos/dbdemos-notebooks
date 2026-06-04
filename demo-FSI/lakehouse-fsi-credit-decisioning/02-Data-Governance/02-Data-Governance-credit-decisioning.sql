@@ -2,11 +2,11 @@
 -- MAGIC %md
 -- MAGIC # Unify Governance and security for all users and all data
 -- MAGIC
--- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for multiple data assets (dashboards, Models, files etc).
+-- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for everything (dashboards, Models, files etc).
 -- MAGIC
 -- MAGIC To reduce risks and drive innovation, Emily's team needs to:
 -- MAGIC
--- MAGIC - Unify all data assets (Tables, Files, ML models, Features, Dashboards, Queries)
+-- MAGIC - Unify everything (Tables, Files, ML models, Features, Dashboards, Queries)
 -- MAGIC - Onboard data with multiple teams
 -- MAGIC - Share & monetize assets with external Organizations
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-Data-Governance-credit-decisioning&demo_name=lakehouse-fsi-credit-decisioning&event=VIEW">
@@ -136,7 +136,7 @@ SELECT cust_id, first_name FROM customer_gold_secured;
 -- MAGIC 2. Tracing **missing values** in a dashboard or ML model to the origin,
 -- MAGIC 3. **Finding specific data** - organizations have hundreds and even thousands of data tables and sources. Finding the table or column that contains specific information can be daunting without proper discoverability tools.
 -- MAGIC
--- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (SDP, SQL query, Databricks Feature Store, or a python Notebook).
+-- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (Lakeflow Pipelines, SQL query, Databricks Feature Store, or a python Notebook).
 -- MAGIC
 -- MAGIC **Note**: To explore the whole lineage, open navigate to the Data Explorer, and find the ```customer_gold``` table inside your catalog and database.
 
@@ -151,7 +151,7 @@ SELECT cust_id, first_name FROM customer_gold_secured;
 -- MAGIC
 -- MAGIC ### 4. Secure data sharing
 -- MAGIC
--- MAGIC Once our data is ready, we can easily share it leveraging Delta Sharing, an open protocol to share your data assets with any customer or partner.
+-- MAGIC Once our data is ready, we can easily share it leveraging Delta Sharing, an open protocol to share everything with any customer or partner.
 -- MAGIC
 -- MAGIC For more details on Delta Sharing, run `dbdemos.install('delta-sharing-airlines')`
 

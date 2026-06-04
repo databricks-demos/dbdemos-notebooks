@@ -6,7 +6,7 @@
 -- MAGIC
 -- MAGIC Our dataset contains sensitive information on our patients and admission.
 -- MAGIC
--- MAGIC It's critical to be able to add a security and privacy layer on top of our data, but also on all the other data assets that will use this data (notebooks dashboards, Models, files etc).
+-- MAGIC It's critical to be able to add a security and privacy layer on top of our data, but also on everything else that will use this data (notebooks dashboards, Models, files etc).
 -- MAGIC
 -- MAGIC This is made easy with Databricks Unity Catalog.
 -- MAGIC
@@ -120,7 +120,7 @@ SELECT * FROM protected_patients
 -- MAGIC 2. Tracing **missing values** in a dashboard or ML model to the origin,
 -- MAGIC 3. **Finding specific data** - organizations have hundreds and even thousands of data tables and sources. Finding the table or column that contains specific information can be daunting without a proper discoverability tools.
 -- MAGIC
--- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (SDP, SQL query, Databricks Feature Store, or a python Notebook).
+-- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (Lakeflow Pipelines, SQL query, Databricks Feature Store, or a python Notebook).
 -- MAGIC
 -- MAGIC **Note**: To explore the whole lineage, open navigate to the Data Explorer, and find the ```customer_gold``` table inside your catalog and database.
 
@@ -130,7 +130,7 @@ SELECT * FROM protected_patients
 -- MAGIC
 -- MAGIC ### 4. Secure data sharing
 -- MAGIC
--- MAGIC Once our data is ready, we can easily share it leveraging Delta Sharing, an open protocol to share your data assets with any customer or partner.
+-- MAGIC Once our data is ready, we can easily share it leveraging Delta Sharing, an open protocol to share everything with any customer or partner.
 -- MAGIC
 -- MAGIC For more details on Delta Sharing, run `dbdemos.install('delta-sharing-airlines')`
 

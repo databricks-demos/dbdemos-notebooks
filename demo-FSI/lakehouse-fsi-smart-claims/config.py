@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-#Remember to change this in 01-Data-Ingestion/01.1-DLT-Ingest-Policy-Claims too
+#Remember to change this in 01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims too
 catalog = "main__build"
 schema = dbName = db = "dbdemos_fsi_smart_claims"
 

@@ -1,12 +1,12 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # FSI & Banking platform with Databricks Data Intelligence Platform - Fraud detection in real time
+-- MAGIC # FSI & Banking platform with Databricks Platform - Fraud detection in real time
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/lakehouse-fsi-fraud-0.png " style="float: left; margin-right: 30px; margin-bottom: 50px" width="600px" />
 -- MAGIC
 -- MAGIC <br/>
 -- MAGIC
--- MAGIC ## What is The Databricks Data Intelligence Platform for Banking?
+-- MAGIC ## What is The Databricks Platform for Banking?
 -- MAGIC
 -- MAGIC It's the only enterprise data platform that allows you to leverage all your data, from any source, on any workload to optimize your business with real time data, at the lowest cost. 
 -- MAGIC
@@ -83,15 +83,15 @@
 -- MAGIC It provides many functionalities *(ACID Transactions, DELETE/UPDATE/MERGE, zero-copy clone, Change Data Capture...)* <br />
 -- MAGIC For more details on Delta Lake, run `dbdemos.install('delta-lake')`
 -- MAGIC
--- MAGIC ### Simplify ingestion with Spark Declarative Pipelines (SDP)
+-- MAGIC ### Simplify ingestion with Lakeflow Pipelines
 -- MAGIC
--- MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
+-- MAGIC Databricks simplifies data ingestion and transformation with Lakeflow Pipelines by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
 
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the FSI Banking & Fraud  <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Spark Declarative Pipelines pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-sdp-sql/01-SDP-fraud-detection-SQL) *(Alternative: SDP Python version will be available soon)*. <br>
--- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
+-- MAGIC Open the FSI Banking & Fraud  <a dbdemos-pipeline-id="sdp-fsi-fraud" href="#joblist/pipelines/c8083360-9492-446d-9293-e648527c85eb" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-sdp-sql/01-SDP-fraud-detection-SQL) *(Alternative: Lakeflow Pipelines Python version will be available soon)*. <br>
+-- MAGIC   For more details on Lakeflow Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 
@@ -104,7 +104,7 @@
 -- MAGIC <div style="padding-left: 420px">
 -- MAGIC   Now that our first tables have been created, we need to grant our Data Analyst team READ access to be able to start analyzing our banking database information.
 -- MAGIC   
--- MAGIC   Let's see how Unity Catalog provides security & governance across our data assets, including data lineage and audit logs.
+-- MAGIC   Let's see how Unity Catalog provides security & governance across everything, including data lineage and audit logs.
 -- MAGIC   
 -- MAGIC   Note that Unity Catalog integrates Delta Sharing, an open protocol to share your data with any external organization, regardless of their stack. For more details:  `dbdemos.install('delta-sharing-airlines')`
 -- MAGIC  </div>
@@ -176,7 +176,7 @@
 -- MAGIC <br><br><br>
 -- MAGIC While our data pipeline is almost completed, we're missing one last step: orchestrating the full workflow in production.
 -- MAGIC
--- MAGIC With Databricks Lakehouse, there is no need to manage an external orchestrator to run your job. Databricks Workflows simplifies all your jobs, with advanced alerting, monitoring, branching options, etc.
+-- MAGIC With Databricks Lakehouse, there is no need to manage an external orchestrator to run your job. Lakeflow Jobs simplifies all your jobs, with advanced alerting, monitoring, branching options, etc.
 
 -- COMMAND ----------
 

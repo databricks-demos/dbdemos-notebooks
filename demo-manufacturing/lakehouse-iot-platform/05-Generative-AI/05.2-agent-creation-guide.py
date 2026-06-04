@@ -156,14 +156,14 @@
 # MAGIC %md
 # MAGIC ## Congratulations! You have deployed your first Agent System for Prescriptive Maintenance! 
 # MAGIC
-# MAGIC We have seen how Databricks Mosaic AI provides all the capabilities needed to move these components to production quickly and cost-effectively, while maintaining complete control and governance:
+# MAGIC We have seen how Agent Bricks provides all the capabilities needed to move these components to production quickly and cost-effectively, while maintaining complete control and governance:
 # MAGIC - Simplifying model deployment by creating an API endpoint.
 # MAGIC - Scaling similarity search against unstructured data to support billions of embeddings.
 # MAGIC - Leveraging structured data by serving features on an endpoint.
 # MAGIC - Deploying open models, while keeping the flexibility to swap them as needed.
 # MAGIC - Integrating everything using popular orchestration frameworks like Langchain or LlamaIndex.
 # MAGIC - Managing AI tools using Unity Catalog for security and re-use.
-# MAGIC - Composing the AI system with the Mosaic AI Agent Framework.
+# MAGIC - Composing the AI system with Agent Bricks.
 # MAGIC
 # MAGIC
 # MAGIC ### What's next after you finish this notebook?

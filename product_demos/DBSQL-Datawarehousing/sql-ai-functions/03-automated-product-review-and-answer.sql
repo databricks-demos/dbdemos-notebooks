@@ -163,7 +163,7 @@ SELECT * FROM reviews_answer
 -- MAGIC
 -- MAGIC Our pipeline is ready. Keep in mind that this is a fairly basic pipeline for our demo.
 -- MAGIC
--- MAGIC For more advanced pipeline, we recommend using Spark Declarative Pipelines. SDP simplifies data ingestion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('pipeline-bike')`
+-- MAGIC For more advanced pipeline, we recommend using Lakeflow Pipelines. Lakeflow Pipelines simplifies data ingestion and transformation tasks with incremental load, materialized view and more advanced features. For more details, run `dbdemos.install_demo('pipeline-bike')`
 
 -- COMMAND ----------
 
@@ -186,9 +186,9 @@ SELECT review_id,
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### Extra: Create an Production Ready Pipeline using Spark Declarative Pipelines
+-- MAGIC ### Extra: Create an Production Ready Pipeline using Lakeflow Pipelines
 -- MAGIC
--- MAGIC We can turn the steps in this notebook into a production ready Spark Declarative Pipelines pipeline with AI SQL Functions
+-- MAGIC We can turn the steps in this notebook into a production ready Lakeflow Pipelines with AI SQL Functions
 -- MAGIC
 -- MAGIC Open [04-create-end-to-end-DLT-workflow]($./04-create-end-to-end-DLT-workflow) for more details.
 

@@ -99,7 +99,7 @@ def fund_trans_gold():
 
 @dp.materialized_view()
 def telco_gold():
-    # Read upstream DLT tables (batch reads => materialized output)
+    # Read upstream Lakeflow Pipelines tables (batch reads => materialized output)
     telco_df = spark.read.table("telco_bronze")
     customer_df = spark.read.table("customer_bronze")
 

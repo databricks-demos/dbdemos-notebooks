@@ -23,7 +23,7 @@
 # MAGIC
 # MAGIC ## Ingesting data for C360 platform
 # MAGIC
-# MAGIC This demo replicate the Spark Declarative Pipelines ingestion pipeline available in the Lakehouse C360 platform demo `dbdemos.install('lakehouse-retail-c360')`
+# MAGIC This demo replicate the Lakeflow Pipelines ingestion pipeline available in the Lakehouse C360 platform demo `dbdemos.install('lakehouse-retail-c360')`
 # MAGIC
 # MAGIC In this dbt pipeline, we'll work as a Data Engineer to build our c360 database. We'll consume and clean our raw data sources to prepare the tables required for our BI & ML workload.
 # MAGIC
@@ -37,11 +37,11 @@
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## DBT as a Databricks Workflow task
+# MAGIC ## DBT as a Lakeflow Job task
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 15px" height="500px"  src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/partners/dbt/dbt-task.png"/>
 # MAGIC
-# MAGIC Databricks Workflow, the lakehouse orchestration tool, has a native integration with dbt. <br />
+# MAGIC Lakeflow Jobs, the lakehouse orchestration tool, has a native integration with dbt. <br />
 # MAGIC You can easily add a new task launching a DBT pipeline within your ETL workflow.
 # MAGIC
 # MAGIC To do so, simply select the "dbt" type in the task configuration and select which dbt CLI and command you want to run. 
@@ -113,13 +113,13 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### A note on Spark Declarative Pipelines
+# MAGIC ### A note on Lakeflow Pipelines
 # MAGIC
-# MAGIC Spark Declarative Pipelines is a declarative framework build by Databricks. It can also be used to build data pipeline within Databricks and provides among other:
+# MAGIC Lakeflow Pipelines is a declarative framework build by Databricks. It can also be used to build data pipeline within Databricks and provides among other:
 # MAGIC
 # MAGIC  - Ingestion capabilities to ingest data from any sources within your pipeline (no need for external step)
 # MAGIC  - Out of the box streaming capabilities for near-real-time inferences
 # MAGIC  - Incremental support: ingest and transform new data as they come 
 # MAGIC  - Advanced capabilities (simple Change Data Capture, SCDT2 etc)
 # MAGIC
-# MAGIC If you wish to know more about dlt, install the SDP demos: `dbdemos.install('pipeline-bike')`
+# MAGIC If you wish to know more about dlt, install the Lakeflow Pipelines demos: `dbdemos.install('pipeline-bike')`

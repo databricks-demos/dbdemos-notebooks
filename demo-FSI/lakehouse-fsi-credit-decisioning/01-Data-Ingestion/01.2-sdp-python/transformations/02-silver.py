@@ -36,7 +36,7 @@ def fund_trans_silver():
 
 @dp.materialized_view()
 def customer_silver():
-    # Read upstream DLT tables (batch reads => materialized view semantics)
+    # Read upstream Lakeflow Pipelines tables (batch reads => materialized view semantics)
     customer_df = spark.read.table("customer_bronze")
     relationship_df = spark.read.table("relationship_bronze")
 

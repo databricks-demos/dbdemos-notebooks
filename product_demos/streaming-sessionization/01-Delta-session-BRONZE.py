@@ -3,11 +3,11 @@
 # MAGIC
 # MAGIC # Streaming on Databricks with Spark and Delta Lake
 # MAGIC
-# MAGIC Streaming on Databricks is greatly simplified using Spark Declarative Pipelines (SDP). <br/>
-# MAGIC SDP lets you write your entire data pipeline, supporting streaming transformation using SQL or python and removing all the technical challenges.
+# MAGIC Streaming on Databricks is greatly simplified using Lakeflow Pipelines. <br/>
+# MAGIC Lakeflow Pipelines lets you write your entire data pipeline, supporting streaming transformation using SQL or python and removing all the technical challenges.
 # MAGIC
-# MAGIC We strongly recommend implementing your pipelines using SDP as this will allow for much robust pipelines, enforcing data quality and greatly accelerating project delivery.<br/>
-# MAGIC *For a SDP example, please install `dbdemos.install('pipeline-bike')` or the C360 Lakehouse demo: `dbdemos.install('lakehouse-retail-churn')`*
+# MAGIC We strongly recommend implementing your pipelines using Lakeflow Pipelines as this will allow for much robust pipelines, enforcing data quality and greatly accelerating project delivery.<br/>
+# MAGIC *For a Lakeflow pipeline example, please install `dbdemos.install('pipeline-bike')` or the C360 Lakehouse demo: `dbdemos.install('lakehouse-retail-churn')`*
 # MAGIC
 # MAGIC Spark Streaming API offers lower-level primitive offering more advanced control, such as `foreachBatch` and custom streaming operation with `applyInPandasWithState`.
 # MAGIC
@@ -47,7 +47,7 @@
 # MAGIC Let's build our Session job to detect cart abandonment !
 # MAGIC
 # MAGIC
-# MAGIC *Note: again, this is an advanced demo - if you're starting with Databricks and are looking for a simple streaming pipeline we recommend going with SDP instead.*
+# MAGIC *Note: again, this is an advanced demo - if you're starting with Databricks and are looking for a simple streaming pipeline we recommend going with Lakeflow Pipelines instead.*
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->

@@ -10,7 +10,7 @@
   "category": "governance",
   "title": "Audit-log with Databricks",
   "description": "[DEPRECATED - prefer uc-04-system-tables] Track usage with Audit-log.",
-  "fullDescription": "<strong>Databricks Unity Catalog now provides complete system tables including out of the box Audit Log tables. This demo will be deprecated soon. Install uc-04-system-tables instead.</strong>Unity Catalog is a unified governance solution for all data and AI assets including files, tables, machine learning models and dashboards in your lakehouse on any cloud.<br/>In this demo, we'll show how Unity Catalog can be used to track all operation on top of your dataset. You'll be able to analyze who is accessing which table, find pattern and monitor your entire data assets for governance and security purpose.",
+  "fullDescription": "<strong>Databricks Unity Catalog now provides complete system tables including out of the box Audit Log tables. This demo will be deprecated soon. Install uc-04-system-tables instead.</strong>Unity Catalog is a unified governance solution for all data and AI assets including files, tables, machine learning models and dashboards in your lakehouse on any cloud.<br/>In this demo, we'll show how Unity Catalog can be used to track all operation on top of your dataset. You'll be able to analyze who is accessing which table, find pattern and monitor everything for governance and security purpose.",
     "usecase": "Data Governance",
   "products": ["Unity Catalog"],
   "related_links": [

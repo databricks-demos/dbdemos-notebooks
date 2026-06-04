@@ -68,7 +68,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Building Agent Systems with Databricks Mosaic AI agent framework
+# MAGIC ## Building Agent Systems with Agent Bricks
 # MAGIC
 # MAGIC We will build an Agent System designed to generate prescriptive work orders for wind turbine maintenance technicians. This system integrates multiple interacting components to ensure proactive and efficient maintenance, thereby optimizing the overall equipment effectiveness.
 # MAGIC
@@ -81,7 +81,7 @@
 # MAGIC - Use agents to reason about the tools you selected and chain them together to properly answer your question. 
 # MAGIC
 # MAGIC
-# MAGIC This notebook creates the three Mosaic AI tools and associated Mosaic AI endpoints, which will be composed together into a agent in notebook [05.2-agent-creation-guide]($./05.2-agent-creation-guide).
+# MAGIC This notebook creates the three Agent Bricks tools and associated Agent Bricks endpoints, which will be composed together into a agent in notebook [05.2-agent-creation-guide]($./05.2-agent-creation-guide).
 # MAGIC 1. **Turbine predictor** which uses a Model Serving endpoint to predict turbines at risk of failure.
 # MAGIC 2. **Turbine specifications retriever** which retrieve the turbine specifications based on its id.
 # MAGIC 3. **Turbine maintenance guide**  which uses a Vector Search endpoint to retrieve maintenance guide based on the turbines and issues being addressed.
@@ -446,7 +446,7 @@ RETURN (
 
 # COMMAND ----------
 
-# MAGIC %md ## Exploring Mosaic AI Tools in Unity Catalog
+# MAGIC %md ## Exploring Agent Bricks Tools in Unity Catalog
 # MAGIC
 # MAGIC Our tools are ready! 
 # MAGIC
@@ -461,6 +461,6 @@ RETURN (
 # MAGIC %md
 # MAGIC ## What’s next: test your Agents with Databricks Playground
 # MAGIC
-# MAGIC Now that we have our AI Tools ready and registered in Unity Catalog, we can compose them into an agent system that generates maintenance work orders using the Mosaic AI agent framework.
+# MAGIC Now that we have our AI Tools ready and registered in Unity Catalog, we can compose them into an agent system that generates maintenance work orders using Agent Bricks.
 # MAGIC
 # MAGIC Open the [05.2-agent-creation-guide]($./05.2-agent-creation-guide) notebook to create and deploy the system.

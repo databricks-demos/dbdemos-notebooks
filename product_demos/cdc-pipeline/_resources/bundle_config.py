@@ -14,7 +14,7 @@
   "default_schema": "dbdemos_cdc_pipeline",
   "title": "CDC Pipeline with Delta",
   "description": "Process CDC data to build an entire pipeline and materialize your operational tables in your lakehouse.",
-  "fullDescription": "This demo highlight how to implement a CDC flow (Change Data Capture) with Spark API and Delta Lake.<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/><br/>Ultimately, we'll show you how to programmatically scan multiple incoming folder and trigger N stream (1 for each CDC table).<br/>Note that CDC is made easier with Spark Declarative Pipelines (CDC). We recommend you to try the SDP CDC demo!",
+  "fullDescription": "This demo highlight how to implement a CDC flow (Change Data Capture) with Spark API and Delta Lake.<br/> CDC is typically done ingesting changes from external system (ERP, SQL databases) with tools like fivetran, debezium etc. <br/> In this demo, we'll show you how to re-create your table consuming CDC information. <br/><br/>Ultimately, we'll show you how to programmatically scan multiple incoming folder and trigger N stream (1 for each CDC table).<br/>Note that CDC is made easier with Lakeflow Pipelines (CDC). We recommend you to try the Lakeflow Pipelines CDC demo!",
   "usecase": "Data Engineering",
   "products": ["Delta Lake", "Spark", "CDC"],
   "related_links": [

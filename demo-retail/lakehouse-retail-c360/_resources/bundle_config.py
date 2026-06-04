@@ -14,8 +14,8 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_retail_c360",
   "env_version": 3,
-  "description": "Centralize customer data and reduce churn: Ingestion (SDP), BI, Predictive Maintenance (ML), Governance (UC), Orchestration.",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a customer 360 solution on the lakehouse, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end-to-end lakehouse platform: <ul><li>Ingest data from external system (such as EPR/Salesforce) and then transform it using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable and testable data processing pipelines </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks SQL and the warehouse endpoints to build a dashboard to analyze the ingested data and understand the existing churn</li><li>Build a machine learning model with Databricks AutoML to understand and predict future churn</li><li>Orchestrate all these steps with Databricks Workflows</li></ul>",
+  "description": "Centralize customer data and reduce churn: Ingestion (Lakeflow Pipelines), BI, Predictive Maintenance (ML), Governance (UC), Orchestration.",
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a customer 360 solution on the lakehouse, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end-to-end lakehouse platform: <ul><li>Ingest data from external system (such as EPR/Salesforce) and then transform it using Lakeflow Pipelines, a declarative ETL framework for building reliable, maintainable and testable data processing pipelines </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks SQL and the warehouse endpoints to build a dashboard to analyze the ingested data and understand the existing churn</li><li>Build a machine learning model with Databricks AutoML to understand and predict future churn</li><li>Orchestrate all these steps with Lakeflow Jobs</li></ul>",
   "usecase": "Lakehouse Platform",
   "products": ["Spark Declarative Pipelines", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
@@ -75,15 +75,15 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Main notebook",
-      "description": "SQL SDP pipeline to ingest data & build clean tables."
+      "title":  "Lakeflow Pipelines SQL - Main notebook",
+      "description": "SQL Lakeflow pipeline to ingest data & build clean tables."
     },
     {
       "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Sample exploration",
+      "title":  "Lakeflow Pipelines SQL - Sample exploration",
       "description": "Sample exploration notebook for SQL pipeline."
     },
     {
@@ -91,7 +91,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Bronze transformations",
+      "title":  "Lakeflow Pipelines SQL - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -99,7 +99,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Silver transformations",
+      "title":  "Lakeflow Pipelines SQL - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -107,7 +107,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Gold transformations",
+      "title":  "Lakeflow Pipelines SQL - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -115,7 +115,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - UDF",
+      "title":  "Lakeflow Pipelines SQL - UDF",
       "description": "Churn prediction UDF for ML model."
     },
     {
@@ -123,15 +123,15 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Main notebook",
-      "description": "Python SDP pipeline to ingest data & build clean tables."
+      "title":  "Lakeflow Pipelines Python - Main notebook",
+      "description": "Python Lakeflow pipeline to ingest data & build clean tables."
     },
     {
       "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Sample exploration",
+      "title":  "Lakeflow Pipelines Python - Sample exploration",
       "description": "Sample exploration notebook for Python pipeline."
     },
     {
@@ -139,7 +139,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Bronze transformations",
+      "title":  "Lakeflow Pipelines Python - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -147,7 +147,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Silver transformations",
+      "title":  "Lakeflow Pipelines Python - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -155,7 +155,7 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Gold transformations",
+      "title":  "Lakeflow Pipelines Python - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -163,8 +163,8 @@
       "pre_run": False,
       "publish_on_website": False,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Dashboard data prep",
-      "description": "Prepare data for SDP quality dashboard (SQL version)."
+      "title":  "Lakeflow Pipelines SQL - Dashboard data prep",
+      "description": "Prepare data for Lakeflow Pipelines quality dashboard (SQL version)."
     },
     {
       "path": "01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn", 
@@ -172,7 +172,7 @@
       "publish_on_website": True, 
       "add_cluster_setup_cell": True,
       "title":  "Alternative: Ingest data with Spark+Delta", 
-      "description": "Build a complete ingestion pipeline using spark API (alternative to SDP)"
+      "description": "Build a complete ingestion pipeline using spark API (alternative to Lakeflow Pipelines)"
     },
     {
       "path": "02-Data-governance/02.1-UC-data-governance-security-churn",

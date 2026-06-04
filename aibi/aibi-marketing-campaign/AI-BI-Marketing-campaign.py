@@ -11,7 +11,7 @@
 # MAGIC - **Dashboards** provide a low-code experience to help analysts quickly build highly interactive data visualizations for their business teams using any natural language.
 # MAGIC - **Genie** allows business users to converse with their data to ask questions and self-serve their own analytics.
 # MAGIC
-# MAGIC Databricks AI/BI is native to the Databricks Data Intelligence Platform, providing instant insights at massive scale while ensuring unified governance and fine-grained security are maintained across the entire organization.
+# MAGIC Databricks AI/BI is native to the Databricks Platform, providing instant insights at massive scale while ensuring unified governance and fine-grained security are maintained across the entire organization.
 # MAGIC
 # MAGIC
 # MAGIC
@@ -70,7 +70,7 @@
 # MAGIC If you want to know more about LakeFlow Connect and how to incrementally synchronize your external table to Databricks, you can open the [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo).
 # MAGIC
 # MAGIC
-# MAGIC In this demo, we pre-loaded the data for you! For more details on how to simplify data transformation, [open the Spark Declarative Pipelines Product Tour](https://www.databricks.com/resources/demos/tours/data-engineering/delta-live-tables).
+# MAGIC In this demo, we pre-loaded the data for you! For more details on how to simplify data transformation, [open the Lakeflow Pipelines Product Tour](https://www.databricks.com/resources/demos/tours/data-engineering/delta-live-tables).
 # MAGIC
 
 # COMMAND ----------
@@ -86,7 +86,7 @@
 # MAGIC - **Fine Grained Access control on your data**: Control who can access which row or column based on your own organization
 # MAGIC - **Full lineage, from data ingestion to ML models**: Analyze all downstream impact for any legal / privacy requirements
 # MAGIC - **Audit and traceability**: Analyze who did what, when
-# MAGIC - **Support for all data assets**: Including files, tables, dashboards, ML/AI models, jobs, and more! _Simplify governance, support all your teams in one place._
+# MAGIC - **Support for everything**: Including files, tables, dashboards, ML/AI models, jobs, and more! _Simplify governance, support all your teams in one place._
 # MAGIC
 # MAGIC Explore the data and table ingested in [Unity Catalog](/explore/data) and make sure that it looks appropriate for your organization's needs.
 # MAGIC
@@ -145,7 +145,7 @@
 # MAGIC
 # MAGIC ## "I've had enough of AI/BI for now, what next?"
 # MAGIC
-# MAGIC We have seen how Databricks' Data Intelligence Platform comprehensively understands your data, streamlining the journey from data ingestion to insightful dashboards, and supporting natural language queries.
+# MAGIC We have seen how Databricks' Databricks Platform comprehensively understands your data, streamlining the journey from data ingestion to insightful dashboards, and supporting natural language queries.
 # MAGIC
 # MAGIC In addition, Databricks offers advanced capabilities, including:
 # MAGIC

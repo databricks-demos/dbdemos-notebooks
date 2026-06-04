@@ -14,7 +14,7 @@
   "default_catalog": "main",
   "default_schema": "dbdemos_fsi_fraud_detection",
   "description": "Build your Banking platform and detect Fraud in real-time. End 2 End demo, with Model Serving & real-time fraud inference A/B testing.",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a Real-time Fraud detection system for banking transactionn, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest data from external systems (EPR/Salesforce...) and then transform it using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboards to analyze the ingested data and understand the existing Fraud</li><li>Build a Machine Learning model with Databricks AutoML to flag transactions at risk</li><li>Leverage Databricks Model Serving to deploy a REST API serving real-time inferences in milliseconds with model A/B testing.</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we'll show you how to build a Real-time Fraud detection system for banking transactionn, delivering data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest data from external systems (EPR/Salesforce...) and then transform it using Lakeflow Pipelines, a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security on top of PII data</li><li>Leverage Databricks DBSQL and the warehouse endpoints to build dashboards to analyze the ingested data and understand the existing Fraud</li><li>Build a Machine Learning model with Databricks AutoML to flag transactions at risk</li><li>Leverage Databricks Model Serving to deploy a REST API serving real-time inferences in milliseconds with model A/B testing.</li><li>Orchestrate all these steps with Lakeflow Jobs</li></ul>",
   "bundle": True,
   "notebooks": [
     {
@@ -46,15 +46,15 @@
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Main notebook",
-      "description": "SQL SDP pipeline to ingest data & build clean tables."
+      "title":  "Lakeflow Pipelines SQL - Main notebook",
+      "description": "SQL Lakeflow pipeline to ingest data & build clean tables."
     },
     {
       "path": "01-Data-ingestion/01.1-sdp-sql/explorations/sample_exploration",
       "pre_run": True,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Sample exploration",
+      "title":  "Lakeflow Pipelines SQL - Sample exploration",
       "description": "Sample exploration notebook for pipeline."
     },
     {
@@ -62,7 +62,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Bronze transformations",
+      "title":  "Lakeflow Pipelines SQL - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -70,7 +70,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Silver transformations",
+      "title":  "Lakeflow Pipelines SQL - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -78,7 +78,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Gold transformations",
+      "title":  "Lakeflow Pipelines SQL - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -86,7 +86,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP python - Bronze transformations",
+      "title":  "Lakeflow Pipelines python - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -94,7 +94,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP python - Silver transformations",
+      "title":  "Lakeflow Pipelines python - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -102,7 +102,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP python - Gold transformations",
+      "title":  "Lakeflow Pipelines python - Gold transformations",
       "description": "Gold layer transformations."
     },
     {

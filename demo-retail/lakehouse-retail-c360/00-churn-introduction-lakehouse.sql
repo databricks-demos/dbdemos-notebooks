@@ -1,16 +1,16 @@
 -- Databricks notebook source
 -- MAGIC %md-sandbox
--- MAGIC # Data Intelligence Platform Demo for Retail & Consumer Goods 
+-- MAGIC # Reducing Customer Churn through Agentic Personalization — Retail & Consumer Goods
 -- MAGIC ---
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_clean.png?raw=true" style="float: left; margin-right: 30px" width="600px" />
 -- MAGIC <br/>
 -- MAGIC
--- MAGIC ## What is The Databricks Data Intelligence Platform?
+-- MAGIC ## What is The Databricks Platform?
 -- MAGIC
--- MAGIC It's the only enterprise data platform that allows seamless integration of _all_ of your relevant data systems for building models, GenAI agents, applications, dashboards, and more! Basically, Databricks allows you to **create value from your data.**
+-- MAGIC It's the only enterprise data platform that allows seamless integration of _all_ of your relevant data systems for building models, AI agents, applications, dashboards, and more! Basically, Databricks allows you to **create value from your data.**
 -- MAGIC
--- MAGIC Specifically for Retail & Consumer Goods, the Databricks Data Intelligence Platform allows you to execute on high-value use-cases, including but not limited to:
+-- MAGIC Specifically for Retail & Consumer Goods, the Databricks Platform allows you to execute on high-value use-cases, including but not limited to:
 -- MAGIC
 -- MAGIC 1. Personalized consumer engagement. 
 -- MAGIC 2. Monitoring employee productivity. 
@@ -20,41 +20,44 @@
 -- MAGIC <br/><br/>
 -- MAGIC ---
 -- MAGIC <br/><br/>
--- MAGIC ## More specifically, Databricks is...
+-- MAGIC ## One platform, four unified workloads
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_intelligence_engine.png?raw=true" style="float: left; margin: 5px -18px 40px -22px; clip-path: inset(0 33px 0 31px);" width="127px" />
 -- MAGIC
--- MAGIC <strong>1. Intelligent</strong><br/>
--- MAGIC Databricks infuses your Lakehouse with intelligent AI. Because the platform deeply understands your data, it can auto-optimize performance and manage infrastructure for you - meaning, you can focus on optimizing your business instead.
+-- MAGIC Rather than stitching together separate tools, Databricks unifies your data and AI in a single, governed platform built on four workloads:
 -- MAGIC
--- MAGIC <div style="clear: both; float: left; width: 49%">
--- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_simple.png?raw=true" style="float: left; margin: 2px 5px 40px 0;" width="80px" />
--- MAGIC     <strong>2. Simple</strong><br/>
--- MAGIC     Ask questions of your data in plain English - or in any natural language that your organization utilizes. Databricks abstracts complex data tasks so that everyone in your organization - computer whiz or total novice - can gain insights & value from that data.
--- MAGIC </div>
+-- MAGIC <div style="clear: both;"></div>
 -- MAGIC
--- MAGIC <div style="float: right; width: 50%;">
--- MAGIC     <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_logo_governance.png?raw=true" style="float: left; margin: 2px 5px 40px 0;" width="80px" />
--- MAGIC     <strong>3. Secure</strong><br/>
--- MAGIC     Provide a single layer of governance and security for all your data assets, from data pipelines to AI models, letting you build and deploy data products that are secure and trusted. Accelerate innovation while ensuring data privacy and IP protection.
--- MAGIC </div>
--- MAGIC  
+-- MAGIC <strong>1. Data Intelligence (BI & SQL) — Databricks SQL & Genie</strong><br/>
+-- MAGIC Empower every user to find, visualize, and share insights using natural language. Built on a serverless SQL architecture, it provides warehouse-level performance directly on your data lake, governed by a single security model.
+-- MAGIC
+-- MAGIC <strong>2. AI & Machine Learning — Agent Bricks</strong><br/>
+-- MAGIC A complete platform for building, deploying, and monitoring production-grade AI agents. It provides the tools for RAG (Retrieval Augmented Generation), tool-use, and human-in-the-loop workflows, ensuring AI doesn't just "chat" but takes meaningful business action.
+-- MAGIC
+-- MAGIC <strong>3. Data Engineering — Lakeflow</strong><br/>
+-- MAGIC Simplify the entire data lifecycle—from ingestion to orchestration—with a unified, serverless experience. Native connectors automatically ingest data from SaaS and databases (CDC), while intelligent pipelines handle transformation and delivery with zero-ops management.
+-- MAGIC
+-- MAGIC <strong>4. Operational Applications — Lakebase</strong><br/>
+-- MAGIC The newest pillar of the platform. It features a built-in, serverless Postgres-compatible database designed to power high-concurrency, real-time applications and store the state/memory for AI agents. This eliminates the need for external operational silos (like RDS or Aurora).
+-- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
 -- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-churn-introduction-lakehouse&demo_name=lakehouse-retail-c360&event=VIEW">
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # <span style="color: #FF5733; display: block; text-align: center;">How to Reduce Customer Churn with Databricks</span>
+-- MAGIC # <span style="color: #FF5733; display: block; text-align: center;">Reducing Customer Churn through Agentic Personalization</span>
+-- MAGIC
+-- MAGIC Retailers using Databricks replace reactive analytics with an agentic loop that predicts churn, personalizes the response, and acts in real time—turning at-risk customers into retained, higher-lifetime-value ones.
 -- MAGIC
 -- MAGIC ## The Challenge
 -- MAGIC Recurring revenue businesses struggle with customer churn, impacting growth and profitability. With customer acquisition costs 5-25x higher than retention costs, companies face significant revenue loss when customers leave. The challenge is compounded by siloed data across systems - customer profiles in CRM, purchase history in ERP, and engagement metrics in web/mobile analytics platforms. Without a unified view, teams can't identify at-risk customers before they churn or understand the underlying causes driving customer departures.
 -- MAGIC
 -- MAGIC ## Our Solution
--- MAGIC Databricks enables cross-functional teams to build a complete Customer 360 view and deploy proactive churn reduction strategies:
+-- MAGIC Databricks enables cross-functional teams to build a complete, unified customer view and deploy proactive churn reduction strategies:
 -- MAGIC
--- MAGIC Our team leverages the Databricks Data Intelligence Platform to transform fragmented customer data into actionable insights:
+-- MAGIC Our team leverages the Databricks Platform to transform fragmented customer data into actionable insights:
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture.png?raw=true" style="float: right; margin-right: 20px; width: 50%;" alt="Team Workflow"/>
--- MAGIC 1. **Data Unification**: `John`, our Data Engineer, builds Spark Declarative Pipelines to synchronize and transform data from disparate sources (CRM, ERP, web analytics, mobile app) into a unified Customer 360 database. This creates a single source of truth with real-time data ingestion capabilities.
+-- MAGIC 1. **Data Unification**: `John`, our Data Engineer, builds Lakeflow Pipelines to synchronize and transform data from disparate sources (CRM, ERP, web analytics, mobile app) into a unified customer database. This creates a single source of truth with real-time data ingestion capabilities.
 -- MAGIC
 -- MAGIC 2. **Governance & Security**: `Emily` implements Unity Catalog to ensure proper data governance, providing role-based access controls while maintaining data lineage and compliance. This enables secure collaboration across business units while protecting sensitive customer information.
 -- MAGIC
@@ -62,7 +65,7 @@
 -- MAGIC
 -- MAGIC 4. **Predictive Intelligence**: `Marc` applies AutoML to develop custom machine learning models that predict which customers are likely to churn and identify the key factors contributing to churn risk. These models continuously improve as new data becomes available.
 -- MAGIC
--- MAGIC 5. **AI-Powered Intervention**: `Liza` leverages Mosaic AI to transform predictive insights into preventative actions. Using generative AI, she creates personalized retention campaigns, tailored offers, and proactive customer service interventions that address specific churn risk factors.
+-- MAGIC 5. **AI-Powered Intervention**: `Liza` leverages Agent Bricks to transform predictive insights into preventative actions. Using generative AI, she creates personalized retention campaigns, tailored offers, and proactive customer service interventions that address specific churn risk factors.
 -- MAGIC
 -- MAGIC By connecting these capabilities in a seamless workflow, the team not only predicts which customers might leave but also understands why they're at risk and automatically triggers the most effective retention strategies for each customer segment.
 -- MAGIC
@@ -84,20 +87,20 @@
 -- MAGIC
 -- MAGIC ### Simple ingestion with Lakeflow Connect
 -- MAGIC
--- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
+-- MAGIC Lakeflow Connect automatically syncs data from Salesforce, Workday, and any database via CDC, with built-in connectors for popular SaaS applications, databases and file sources to build incremental data pipelines at scale, fully integrated with Databricks.
 -- MAGIC
 -- MAGIC To give it a try, check our [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo)
 -- MAGIC
--- MAGIC ### Simplify ingestion with SDP
+-- MAGIC ### Simplify transformation with Lakeflow Pipelines
 -- MAGIC
--- MAGIC Databricks simplifies data ingestion and transformation with Spark Declarative Pipelines (SDP) by allowing SQL users to create advanced pipelines, in batch or streaming. The engine will simplify pipeline deployment and testing and reduce operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
+-- MAGIC Lakeflow Pipelines then transforms your data declaratively—no Spark expertise needed—in batch or streaming, with built-in data quality, lineage, and serverless scaling. The engine simplifies pipeline deployment and testing and reduces operational complexity, so that you can focus on your business transformation and ensure data quality.<br/>
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC Open the customer churn
--- MAGIC   <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">SDP pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-churn-SQL) *(Alternatives: [SDP Python version]($./01-Data-ingestion/01.3-SDP-churn-python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
--- MAGIC   For more details on SDP: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
+-- MAGIC   <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-churn-SQL) *(Alternatives: [Lakeflow Pipelines Python version]($./01-Data-ingestion/01.3-SDP-churn-python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
+-- MAGIC   For more details on Lakeflow Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
 
@@ -110,7 +113,7 @@
 -- MAGIC <div style="padding-left: 520px">
 -- MAGIC   Now that our first tables have been created, we need to grant our Data Analyst team READ access to be able to start analyzing our customer churn information.
 -- MAGIC   
--- MAGIC   Let's see how Unity Catalog provides Security & governance across our data assets with, including data lineage and audit log.
+-- MAGIC   Let's see how Unity Catalog provides Security & governance across everything—from data pipelines to AI agent tools and models—including data lineage and audit log.
 -- MAGIC   
 -- MAGIC   Note that Unity Catalog integrates Delta Sharing, an open protocol to share your data with any external organization, regardless of their stack. For more details:  `dbdemos.install('delta-sharing-airlines')`
 -- MAGIC  </div>
@@ -156,29 +159,29 @@
 -- MAGIC
 -- MAGIC However, knowing that we have churn isn't enough. We now need to take it to the next level and build a predictive model to determine our customers at risk of churn and increase our revenue.
 -- MAGIC
--- MAGIC This is where the Intelligence Data Platform value comes in. Within the same platform, anyone can start building ML model to run such analysis, including low code solution with AutoML.
+-- MAGIC This is where the Databricks Platform value comes in. Within the same platform, anyone can start building ML model to run such analysis, including low code solution with AutoML.
 
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ## 5/ Transform Predictions into Action with GenAI
+-- MAGIC ## 5/ Retain Customers Automatically with Agentic AI
 -- MAGIC
 -- MAGIC <img style="float: left" width="500px" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/di_platform_4_gen_ai.png?raw=true" />
 -- MAGIC
 -- MAGIC
 -- MAGIC Predicting which customers will churn is powerful, but it's only half the solution. The real business value comes from taking proactive, personalized action to retain those at-risk customers before they leave.
 -- MAGIC
--- MAGIC This is where Liza, our Gen AI Engineer, leverages Databricks Mosaic AI to transform predictive insights into targeted interventions that drive measurable retention improvements.
+-- MAGIC This is where Liza, our Gen AI Engineer, leverages Agent Bricks to transform predictive insights into targeted interventions that drive measurable retention improvements.
 -- MAGIC
--- MAGIC With the Databricks Intelligence Platform, Liza can:
+-- MAGIC With the Databricks Platform, Liza can:
 -- MAGIC
--- MAGIC * **Generate personalized outreach campaigns** tailored to each customer's specific churn risk factors
--- MAGIC * **Automate contextual recommendations** for customer service teams with specific retention offers
--- MAGIC * **Create dynamic content** for email, SMS, and in-app messaging that addresses individual customer concerns
--- MAGIC * **Design intelligent conversation flows** for support teams to guide retention discussions
--- MAGIC * **Continuously optimize messaging** based on which interventions successfully prevent churn
+-- MAGIC * **Negotiate personalized discounts or upgrade offers** directly with customers in real time
+-- MAGIC * **Trigger multi-channel outreach** across email, SMS, and in-app — tailored to each customer's specific churn signal
+-- MAGIC * **Automatically route high-risk accounts** to a human service rep with full context attached
+-- MAGIC * **Continuously improve retention strategies** based on which interventions succeed or fail
+-- MAGIC * **Ground every agent action** in governed, trusted customer data via Unity Catalog
 -- MAGIC
--- MAGIC By connecting ML predictions directly to GenAI-powered interventions, we close the loop between insight and action—turning churn prediction into churn prevention and measurably improving customer lifetime value.
+-- MAGIC By connecting ML predictions directly to agentic interventions, we close the loop between insight and action—the platform doesn't just tell you who will churn — it stops the churn from happening.
 
 -- COMMAND ----------
 
@@ -219,7 +222,7 @@
 -- MAGIC <br><br><br>
 -- MAGIC While our data pipeline is almost completed, we're missing one last step: orchestrating the full workflow in production.
 -- MAGIC
--- MAGIC With Databricks Lakehouse, no need to manage an external orchestrator to run your job. Databricks Workflows simplifies all your jobs, with advanced alerting, monitoring, branching options etc.
+-- MAGIC With the Databricks Platform, no need to manage an external orchestrator to run your job. Lakeflow Jobs simplifies all your jobs, with advanced alerting, monitoring, branching options etc.
 
 -- COMMAND ----------
 
@@ -232,7 +235,7 @@
 -- MAGIC
 -- MAGIC ## Conclusion
 -- MAGIC
--- MAGIC We demonstrated how to implement an end-to-end pipeline with the Intelligence Data Platform, using a single, unified and secured platform:
+-- MAGIC We demonstrated how to implement an end-to-end pipeline with the Databricks Platform, using a single, unified and secured platform:
 -- MAGIC
 -- MAGIC - Data ingestion
 -- MAGIC - Data analysis / DW / BI 
@@ -242,4 +245,4 @@
 -- MAGIC
 -- MAGIC As result, our analyst team was able to simply build a system to not only understand but also forecast future churn and take action accordingly.
 -- MAGIC
--- MAGIC This was only an introduction to the Databricks Intelligence Data Platform. For more details, contact your account team and explore more demos with `dbdemos.list()`
+-- MAGIC This was only an introduction to the Databricks Platform. For more details, contact your account team and explore more demos with `dbdemos.list()`

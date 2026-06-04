@@ -4,9 +4,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Scoring the Accident Images with Spark Declarative Pipelines
+# MAGIC # Scoring the Accident Images with Lakeflow Pipelines
 # MAGIC
-# MAGIC This notebook demonstrates how to do the scoring using Spark Declarative Pipelines
+# MAGIC This notebook demonstrates how to do the scoring using Lakeflow Pipelines
 
 # COMMAND ----------
 

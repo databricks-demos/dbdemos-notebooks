@@ -12,7 +12,7 @@
 # MAGIC
 # MAGIC At a high level, you build & present a set of custom functions to the AI. The LLM can then reason about it, deciding which tool should be called and information gathered to answer the customer need.
 # MAGIC
-# MAGIC ## Building Composable AI Systems with Databricks Mosaic AI agent framework
+# MAGIC ## Building Composable AI Systems with Agent Bricks
 # MAGIC
 # MAGIC
 # MAGIC Databricks simplifies this by providing a built-in service to:
@@ -234,7 +234,7 @@
 # MAGIC Enabling MLflow Tracing is required to:
 # MAGIC - View the chain's trace visualization in this notebook
 # MAGIC - Capture the chain's trace in production via Inference Tables
-# MAGIC - Evaluate the chain via the Mosaic AI Evaluation Suite
+# MAGIC - Evaluate the chain via Agent Bricks
 
 # COMMAND ----------
 

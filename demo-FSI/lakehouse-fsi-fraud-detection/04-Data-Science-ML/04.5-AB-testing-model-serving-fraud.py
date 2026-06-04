@@ -140,10 +140,10 @@ for i in range(10):
 # MAGIC
 # MAGIC In this demo, we've seen an end 2 end flow with the Lakehouse:
 # MAGIC
-# MAGIC - Data ingestion made simple with Spark Declarative Pipelines
+# MAGIC - Data ingestion made simple with Lakeflow Pipelines
 # MAGIC - Leveraging Databricks warehouse to Analyze existing Fraud
 # MAGIC - Model Training with AutoML for citizen Data Scientist
 # MAGIC - Ability to tune our model for better results, improving our revenue
 # MAGIC - Ultimately, the ability to Deploy and track our models in real time, made possible with the full lakehouse capabilities.
 # MAGIC
-# MAGIC [Go back to the introduction]($../00-FSI-fraud-detection-introduction-lakehouse) or discover how to use Databricks Workflow to orchestrate this tasks: [05-Workflow-orchestration-fsi-fraud]($../05-Workflow-orchestration/05-Workflow-orchestration-fsi-fraud)
+# MAGIC [Go back to the introduction]($../00-FSI-fraud-detection-introduction-lakehouse) or discover how to use Lakeflow Jobs to orchestrate this tasks: [05-Workflow-orchestration-fsi-fraud]($../05-Workflow-orchestration/05-Workflow-orchestration-fsi-fraud)

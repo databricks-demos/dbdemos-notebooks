@@ -2,11 +2,11 @@
 -- MAGIC %md-sandbox
 -- MAGIC # Ensuring Governance and security for our Banking platform
 -- MAGIC
--- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for multiple data assets (dashboards, Models, files etc).
+-- MAGIC Data governance and security is hard when it comes to a complete Data Platform. SQL GRANT on tables isn't enough and security must be enforced for everything (dashboards, Models, files etc).
 -- MAGIC
 -- MAGIC To reduce risks and driving innovation, Emily's team needs to:
 -- MAGIC
--- MAGIC - Unify all data assets (Tables, Files, ML models, Features, Dashboards, Queries)
+-- MAGIC - Unify everything (Tables, Files, ML models, Features, Dashboards, Queries)
 -- MAGIC - Onboard data with multiple teams
 -- MAGIC - Share & monetize assets with external Organizations
 -- MAGIC
@@ -57,7 +57,7 @@
 -- MAGIC     <div style="float: left; font-size: 26px; margin-top: 0px; line-height: 17px;"><strong>Emily</strong> <br />Governance and Security</div>
 -- MAGIC     <div style="font-size: 18px; clear: left; padding-top: 10px">
 -- MAGIC       <ul style="line-height: 2px;">
--- MAGIC         <li>Central catalog - all data assets</li>
+-- MAGIC         <li>Central catalog - everything</li>
 -- MAGIC         <li>Data exploration & discovery to unlock new use-cases</li>
 -- MAGIC         <li>Permissions cross-teams</li>
 -- MAGIC         <li>Reduce risk with audit logs</li>
@@ -161,7 +161,7 @@ SELECT CURRENT_CATALOG();
 -- MAGIC In addition, Unity catalog also provides explorability and discoverability. 
 -- MAGIC
 -- MAGIC Anyone having access to the tables will be able to search it and analyze its main usage. <br>
--- MAGIC You can use the Search menu (⌘ + P) to navigate in your data assets (tables, notebooks, queries...)
+-- MAGIC You can use the Search menu (⌘ + P) to navigate in everything (tables, notebooks, queries...)
 
 -- COMMAND ----------
 
@@ -186,7 +186,7 @@ GRANT SELECT, MODIFY ON SCHEMA main__build.dbdemos_fsi_fraud_detection TO `datae
 -- MAGIC
 -- MAGIC ## Going further with Data governance & security
 -- MAGIC
--- MAGIC By bringing all your data assets together, Unity Catalog lets you build a complete and simple governance to help you scale your teams.
+-- MAGIC By bringing everything together, Unity Catalog lets you build a complete and simple governance to help you scale your teams.
 -- MAGIC
 -- MAGIC Unity Catalog can be leveraged from simple GRANT to building a complete datamesh organization.
 -- MAGIC

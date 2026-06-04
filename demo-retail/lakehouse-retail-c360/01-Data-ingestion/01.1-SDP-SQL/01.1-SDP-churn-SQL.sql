@@ -44,7 +44,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & SDP
+-- MAGIC # Simplify Ingestion and Transformation with Lakeflow Connect & Lakeflow Pipelines
 -- MAGIC
 -- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/cross_demo_assets/Lakehouse_Demo_Team_architecture_1.png?raw=true" style="float: right" width="500px">
 -- MAGIC
@@ -66,7 +66,7 @@
 -- MAGIC Lakeflow Connect offers built-in data ingestion connectors for popular SaaS applications, databases and file sources, such as Salesforce, Workday, and SQL Server to build incremental data pipelines at scale, fully integrated with Databricks.
 -- MAGIC
 -- MAGIC
--- MAGIC ## 2/ Prepare and transform your data with SDP
+-- MAGIC ## 2/ Prepare and transform your data with Lakeflow Pipelines
 -- MAGIC
 -- MAGIC <div>
 -- MAGIC   <div style="width: 45%; float: left; margin-bottom: 10px; padding-right: 45px">
@@ -100,9 +100,9 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Building an SDP pipeline to analyze and reduce churn
+-- MAGIC ## Building a Lakeflow pipeline to analyze and reduce churn
 -- MAGIC
--- MAGIC In this example, we'll implement an end-to-end Spark Declarative Pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modeling.
+-- MAGIC In this example, we'll implement an end-to-end Lakeflow pipeline consuming our customers information. We'll use the medallion architecture but we could build star schema, data vault or any other modeling.
 -- MAGIC
 -- MAGIC We'll incrementally load new data with the autoloader, enrich this information and then load a model from MLFlow to perform our customer churn prediction.
 -- MAGIC
@@ -117,7 +117,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Your SDP Pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn SDP pipeline</a> to see it in action.<br/>
+-- MAGIC Your Lakeflow pipeline has been installed and started for you! Open the <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Churn Lakeflow pipeline</a> to see it in action.<br/>
 -- MAGIC *(Note: The pipeline will automatically start once the initialization job is completed, this might take a few minutes... Check installation logs for more details)*
 
 -- COMMAND ----------
@@ -167,7 +167,7 @@
 -- MAGIC
 -- MAGIC We're also adding an [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different fields to enforce and track our Data Quality. This will ensure that our dashboards are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
--- MAGIC For more advanced SDP capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 examples.
+-- MAGIC For more advanced Lakeflow Pipelines capabilities run `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')` for CDC/SCD Type 2 examples.
 -- MAGIC
 -- MAGIC These tables are clean and ready to be used by the BI team!
 
@@ -214,7 +214,7 @@
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## Conclusion
--- MAGIC Our <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Spark Declarative Pipeline</a> is now ready using purely SQL. We have an end-to-end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
+-- MAGIC Our <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Lakeflow pipeline</a> is now ready using purely SQL. We have an end-to-end cycle, and our ML model has been integrated seamlessly by our Data Engineering team.
 -- MAGIC
 -- MAGIC
 -- MAGIC For more details on model training, open the [model training notebook]($../04-Data-Science-ML/04.1-automl-churn-prediction)
@@ -241,8 +241,8 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ## Optional: Checking your data quality metrics with SDP
--- MAGIC SDP tracks all of your data quality metrics. You can leverage the expectations directly as SQL tables with Databricks SQL to track your expectation metrics and send alerts as required. This lets you build the following dashboards:
+-- MAGIC ## Optional: Checking your data quality metrics with Lakeflow Pipelines
+-- MAGIC Lakeflow Pipelines tracks all of your data quality metrics. You can leverage the expectations directly as SQL tables with Databricks SQL to track your expectation metrics and send alerts as required. This lets you build the following dashboards:
 -- MAGIC
 -- MAGIC <img width="1000" src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/retail/lakehouse-churn/lakehouse-retail-c360-dashboard-dlt-stat.png?raw=true">
 -- MAGIC

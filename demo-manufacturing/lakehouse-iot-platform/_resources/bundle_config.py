@@ -12,9 +12,9 @@
   "custom_schema_supported": True,
   "default_schema": "dbdemos_iot_platform",
   "default_catalog": "main",
-  "title": "Data Intelligence Platform for IoT & Prescriptive Maintenance",
-  "description": "Detect faulty wind turbine and generate work orders: Ingestion (SDP), BI, Predictive Maintenance (ML), Prescriptive Maintenance (GenAI), Governance (UC), Orchestration",
-    "fullDescription": "The Databricks Data Intelligence Platform allows your entire organization to use data and AI. It's built on a lakehouse to provide an open, unified foundation for all data and governance, and is powered by a Data Intelligence Engine that understands the uniqueness of your data. In this demo, we'll show you how to build an IOT platform for prescriptive maintenance, ingesting sensor data from our wind turbine farm in real-time. We'll be able to deliver data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end data intelligence platform: <ul><li>Ingest data from external systems in streaming (sensors/ERP and then transform it using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security</li><li>Leverage Databricks SQL and the warehouse endpoints to build dashboards to analyze the ingested data and our wind farm productivity</li><li>Build a Machine Learning model with Databricks AutoML to detect faulty wind turbines and trigger predictive maintenance operations</li><li>Build an AI agent with the Mosaic AI Agent Framework to generate prescriptive work orders for wind turbines detected to be faulty</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "title": "Databricks Platform for IoT & Prescriptive Maintenance",
+  "description": "Detect faulty wind turbine and generate work orders: Ingestion (Lakeflow Pipelines), BI, Predictive Maintenance (ML), Prescriptive Maintenance (GenAI), Governance (UC), Orchestration",
+    "fullDescription": "The Databricks Platform allows your entire organization to use data and AI. It's built on a lakehouse to provide an open, unified foundation for all data and governance, and is powered by a Data Intelligence Engine that understands the uniqueness of your data. In this demo, we'll show you how to build an IOT platform for prescriptive maintenance, ingesting sensor data from our wind turbine farm in real-time. We'll be able to deliver data and insights that would typically take months of effort on legacy platforms. <br/><br/>This demo covers the end to end Databricks Platform: <ul><li>Ingest data from external systems in streaming (sensors/ERP and then transform it using Lakeflow Pipelines, a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure your ingested data to ensure governance and security</li><li>Leverage Databricks SQL and the warehouse endpoints to build dashboards to analyze the ingested data and our wind farm productivity</li><li>Build a Machine Learning model with Databricks AutoML to detect faulty wind turbines and trigger predictive maintenance operations</li><li>Build an AI agent with Agent Bricks to generate prescriptive work orders for wind turbines detected to be faulty</li><li>Orchestrate all these steps with Lakeflow Jobs</li></ul>",
   "usecase": "Data Intelligence Platform",
   "products": ["Spark Declarative Pipelines", "Databricks SQL", "MLFLow", "Auto ML", "Unity Catalog", "Spark"],
   "related_links": [
@@ -57,23 +57,23 @@
       "pre_run": False,
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Data Intelligence Platform - IOT Platform introduction", 
-      "description": "Start here to explore the Data Intelligence Platform."
+      "title":  "Databricks Platform - IOT Platform introduction", 
+      "description": "Start here to explore the Databricks Platform."
     },
     {
       "path": "01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-Wind-Turbine-SQL",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Main notebook",
-      "description": "SQL SDP pipeline to ingest data & build clean tables."
+      "title":  "Lakeflow Pipelines SQL - Main notebook",
+      "description": "SQL Lakeflow pipeline to ingest data & build clean tables."
     },
     {
       "path": "01-Data-ingestion/01.1-SDP-SQL/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Sample exploration",
+      "title":  "Lakeflow Pipelines SQL - Sample exploration",
       "description": "Sample exploration notebook for SQL pipeline."
     },
     {
@@ -81,7 +81,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Bronze transformations",
+      "title":  "Lakeflow Pipelines SQL - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -89,7 +89,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Silver transformations",
+      "title":  "Lakeflow Pipelines SQL - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -97,7 +97,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - Gold transformations",
+      "title":  "Lakeflow Pipelines SQL - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -105,7 +105,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP SQL - UDF",
+      "title":  "Lakeflow Pipelines SQL - UDF",
       "description": "Wind turbine UDF for predictions."
     },
     {
@@ -113,15 +113,15 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Main notebook",
-      "description": "Python SDP pipeline to ingest data & build clean tables."
+      "title":  "Lakeflow Pipelines Python - Main notebook",
+      "description": "Python Lakeflow pipeline to ingest data & build clean tables."
     },
     {
       "path": "01-Data-ingestion/01.2-SDP-python/explorations/sample_exploration",
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Sample exploration",
+      "title":  "Lakeflow Pipelines Python - Sample exploration",
       "description": "Sample exploration notebook for Python pipeline."
     },
     {
@@ -129,7 +129,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Bronze transformations",
+      "title":  "Lakeflow Pipelines Python - Bronze transformations",
       "description": "Bronze layer transformations."
     },
     {
@@ -137,7 +137,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Silver transformations",
+      "title":  "Lakeflow Pipelines Python - Silver transformations",
       "description": "Silver layer transformations."
     },
     {
@@ -145,7 +145,7 @@
       "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "SDP Python - Gold transformations",
+      "title":  "Lakeflow Pipelines Python - Gold transformations",
       "description": "Gold layer transformations."
     },
     {
@@ -154,7 +154,7 @@
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Alternative: Ingest data with Spark+Delta",
-      "description": "Build a complete ingestion pipeline using spark API (alternative to SDP)"
+      "description": "Build a complete ingestion pipeline using spark API (alternative to Lakeflow Pipelines)"
     },
     {
       "path": "02-Data-governance/02-UC-data-governance-security-iot-turbine",

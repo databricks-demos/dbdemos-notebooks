@@ -4,17 +4,17 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="300px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-5.png" />
 # MAGIC
-# MAGIC All our assets are ready. We now need to define when we want our SDP pipeline to kick in and refresh the tables.
+# MAGIC All our assets are ready. We now need to define when we want our Lakeflow pipeline to kick in and refresh the tables.
 # MAGIC
-# MAGIC One option is to switch SDP pipeline in continuous mode to have a streaming pipeline, providing near-real-time insight.
+# MAGIC One option is to switch Lakeflow pipeline in continuous mode to have a streaming pipeline, providing near-real-time insight.
 # MAGIC
-# MAGIC An alternative is to wakeup the SDP pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
+# MAGIC An alternative is to wakeup the Lakeflow pipeline every X hours, ingest the new data (incremental) and shut down all your compute. 
 # MAGIC
 # MAGIC This is a simple configuration offering a tradeoff between uptime and ingestion latencies.
 # MAGIC
 # MAGIC In our case, we decided that the best tradeoff is to ingest new data every hour:
 # MAGIC
-# MAGIC - Start the SDP pipeline to ingest new data and refresh our tables
+# MAGIC - Start the Lakeflow pipeline to ingest new data and refresh our tables
 # MAGIC - Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC - Retrain our model to include the latest data and capture potential behavior change
 # MAGIC
@@ -24,7 +24,7 @@
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC ## Orchestrating our FSI Fraud pipeline with Databricks Workflows
+# MAGIC ## Orchestrating our FSI Fraud pipeline with Lakeflow Jobs
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://www.databricks.com/wp-content/uploads/2022/05/workflows-orchestrate-img.png" />
 # MAGIC
@@ -33,7 +33,7 @@
 # MAGIC
 # MAGIC
 # MAGIC ###  Orchestrate anything anywhere
-# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Spark Declarative Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
+# MAGIC With workflow, you can run diverse workloads for the full data and AI lifecycle on any cloud. Orchestrate Lakeflow Pipelines and Jobs for SQL, Spark, notebooks, dbt, ML models and more.
 # MAGIC
 # MAGIC ### Simple - Fully managed
 # MAGIC Remove operational overhead with a fully managed orchestration service, so you can focus on your workflows not on managing your infrastructure.
@@ -49,11 +49,11 @@
 # MAGIC
 # MAGIC <img style="float: right; margin-left: 10px" width="600px" src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-workflow.png" />
 # MAGIC
-# MAGIC A Databricks Workflow is composed of Tasks.
+# MAGIC A Lakeflow Job is composed of Tasks.
 # MAGIC
 # MAGIC Each task can trigger a specific job:
 # MAGIC
-# MAGIC * Spark Declarative Pipelines
+# MAGIC * Lakeflow Pipelines
 # MAGIC * SQL query / dashboard
 # MAGIC * Model retraining / inference
 # MAGIC * Notebooks
@@ -62,7 +62,7 @@
 # MAGIC
 # MAGIC In this example, can see our 3 tasks:
 # MAGIC
-# MAGIC * Start the SDP pipeline to ingest new data and refresh our tables
+# MAGIC * Start the Lakeflow pipeline to ingest new data and refresh our tables
 # MAGIC * Refresh the DBSQL dashboard (and potentially notify downstream applications)
 # MAGIC * Retrain our Fraud detection model
 

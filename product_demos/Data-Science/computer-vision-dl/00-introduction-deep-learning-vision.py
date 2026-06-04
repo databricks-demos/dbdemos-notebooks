@@ -86,7 +86,7 @@
 # MAGIC
 # MAGIC Typical serving use-cases include:
 # MAGIC
-# MAGIC - Batch and Streaming use-cases (including with Spark Declarative Pipelines)
+# MAGIC - Batch and Streaming use-cases (including with Lakeflow Pipelines)
 # MAGIC - Real-time model serving with Databricks Serverless Endpoints
 # MAGIC
 

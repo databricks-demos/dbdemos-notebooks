@@ -39,7 +39,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generating personalized, impactful AI with the Data Intelligence Platform
+# MAGIC ## Generating personalized, impactful AI with the Databricks Platform
 # MAGIC
 # MAGIC Because Databricks makes it easy to bring all your data together, we can easily leverage your own data and use it to super-charge the AI.
 # MAGIC
@@ -49,7 +49,7 @@
 # MAGIC
 # MAGIC ### 1/ Prepare and review the dataset
 # MAGIC
-# MAGIC Dbdemos loaded the dataset for you in your catalog. In a real world, you'd have a few Spark Declarative Pipelines pipeline together with Lakeflow connect to ingest your ERP/Sales Force/website data.
+# MAGIC Dbdemos loaded the dataset for you in your catalog. In a real world, you'd have a few Lakeflow Pipelines together with Lakeflow connect to ingest your ERP/Sales Force/website data.
 # MAGIC
 # MAGIC Let's start by reviewing the dataset and understanding how it can help to make personalized recommendations.
 # MAGIC *Note: the cookie data now exists in the marketplace, feel free to pull it from here.*

@@ -15,7 +15,7 @@
   "bundle": True,
   "default_schema": "dbdemos_hls_readmission",
   "description": "Build your data platform and personalized health care to reduce readmission risk",
-  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we’ll show you how to build an end-to-end Health Car data platform to ingest patient and encounter informations. <br/>We will focus on predicting and explaining patient readmission risk to improve care quality. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest health care data (from Synthea), and then transform them to the OMOP data model using Spark Declarative Pipelines (SDP), a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build patient Cohorts and Leverage Databricks SQL and the warehouse endpoints to visualize our population.</li><li>Build a Machine Learning model with Databricks AutoML to predict 30 days patient readmission risk</li><li>Orchestrate all these steps with Databricks Workflow</li></ul>",
+  "fullDescription": "The Databricks Lakehouse Platform is an open architecture that combines the best elements of data lakes and data warehouses. In this demo, we’ll show you how to build an end-to-end Health Car data platform to ingest patient and encounter informations. <br/>We will focus on predicting and explaining patient readmission risk to improve care quality. <br/><br/>This demo covers the end to end lakehouse platform: <ul><li>Ingest health care data (from Synthea), and then transform them to the OMOP data model using Lakeflow Pipelines, a declarative ETL framework for building reliable, maintainable, and testable data processing pipelines. </li><li>Secure our ingested data to ensure governance and security on top of PII data</li><li>Build patient Cohorts and Leverage Databricks SQL and the warehouse endpoints to visualize our population.</li><li>Build a Machine Learning model with Databricks AutoML to predict 30 days patient readmission risk</li><li>Orchestrate all these steps with Lakeflow Jobs</li></ul>",
   "notebooks": [
     {
       "path": "_resources/00-generate-synthea-data", 
@@ -62,15 +62,15 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Ingest patient & encounter data with Spark Declarative Pipelines", 
-      "description": "SQL SDP pipeline to ingest patient data & build clean tables."
+      "title":  "Ingest patient & encounter data with Lakeflow Pipelines", 
+      "description": "SQL Lakeflow pipeline to ingest patient data & build clean tables."
     },
     {
       "path": "01-Data-Ingestion/transformations/01-bronze.sql", 
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "SDP - Bronze transformations", 
+      "title":  "Lakeflow Pipelines - Bronze transformations", 
       "description": "Bronze layer transformations"
     },
     {
@@ -78,7 +78,7 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "SDP - Silver transformations", 
+      "title":  "Lakeflow Pipelines - Silver transformations", 
       "description": "Silver layer transformations"
     },
     {
@@ -86,7 +86,7 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "SDP - Gold transformations", 
+      "title":  "Lakeflow Pipelines - Gold transformations", 
       "description": "Gold layer transformations"
     },
     {
@@ -94,7 +94,7 @@
       "pre_run": True, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "SDP - Sample exploration", 
+      "title":  "Lakeflow Pipelines - Sample exploration", 
       "description": "Sample exploration notebook for pipeline"
     },
     {
@@ -166,7 +166,7 @@
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
-      "title":  "Orchestrate the data pipeline with Databricks Workflows", 
+      "title":  "Orchestrate the data pipeline with Lakeflow Jobs", 
       "description": "Orchestrate all tasks in a job and schedule your data/model refresh"
     }
   ],

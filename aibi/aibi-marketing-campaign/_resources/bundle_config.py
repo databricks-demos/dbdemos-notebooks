@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
 
@@ -12,936 +12,244 @@
   "custom_schema_supported": True,
   "default_catalog": "main",
   "default_schema": "dbdemos_aibi_cme_marketing_campaign",
-  "description": "Analyze your marketing campaign performance visually with AI/BI Dashboards. Then, utilize Genie to ask questions about your data in your natural language.",
+  "description": "Track multi-channel marketing performance with AI/BI Dashboards (TikTok, Instagram, Google Ads, Email). Spot a revenue drop, then use Genie to ask why in natural language and trace it to the failing campaign, creative and markets.",
   "bundle": True,
   "notebooks": [
     {
-      "path": "AI-BI-Marketing-campaign", 
-      "pre_run": False, 
-      "publish_on_website": True, 
+      "path": "AI-BI-Marketing-campaign",
+      "pre_run": False,
+      "publish_on_website": True,
       "add_cluster_setup_cell": False,
-      "title":  "AI BI: Campaign effectiveness", 
+      "title":  "AI BI: Campaign effectiveness",
       "description": "Discover Databricks Platform capabilities."
     }
   ],
   "init_job": {},
   "serverless_supported": True,
-  "cluster": {}, 
+  "cluster": {},
   "pipelines": [],
   "dashboards": [{"name": "[dbdemos] AIBI - Marketing Campaign",       "id": "web-marketing",        "genie_room_id": "marketing-campaign"}
                 ],
-  "data_folders":[
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_campaigns",              "source_format": "parquet", "target_volume_folder":"raw_campaigns",              "target_format":"parquet"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_contacts",               "source_format": "parquet", "target_volume_folder":"raw_contacts",               "target_format":"parquet"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_events",                 "source_format": "parquet", "target_volume_folder":"raw_events",                 "target_format":"parquet"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_feedbacks",              "source_format": "parquet", "target_volume_folder":"raw_feedbacks",              "target_format":"parquet"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_issues",                 "source_format": "parquet", "target_volume_folder":"raw_issues",                 "target_format":"parquet"},
-    {"source_folder":"aibi/dbdemos_aibi_cme_marketing_campaign/raw_prospects",              "source_format": "parquet", "target_volume_folder":"raw_prospects",              "target_format":"parquet"}  ],
-  "sql_queries": [
-      [
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_campaigns TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for campaigns created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_campaigns', format => 'parquet', pathGlobFilter => '*.parquet')",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_contacts TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for contacts created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_contacts', format => 'parquet', pathGlobFilter => '*.parquet')",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_events TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for events created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_events', format => 'parquet', pathGlobFilter => '*.parquet')",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_feedbacks TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for feedbacks created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_feedbacks', format => 'parquet', pathGlobFilter => '*.parquet')",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_issues TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for issues created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_issues', format => 'parquet', pathGlobFilter => '*.parquet')",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_prospects TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact = TRUE ) COMMENT 'This is the bronze table for prospects created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_prospects', format => 'parquet', pathGlobFilter => '*.parquet')"
-      ],
-      [
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_campaigns COMMENT 'Cleaned version of the raw campaigns table' AS SELECT CampaignId, CampaignName, CampaignDescription, SubjectLine, Template, Cost, StartDate, EndDate, MailingList FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_campaigns WHERE CampaignId IS NOT NULL AND CampaignName IS NOT NULL AND CampaignDescription IS NOT NULL AND SubjectLine IS NOT NULL AND Template IS NOT NULL AND Cost IS NOT NULL AND StartDate IS NOT NULL AND EndDate IS NOT NULL AND MailingList IS NOT NULL",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_contacts COMMENT 'Cleaned version of the raw contacts table' AS SELECT ContactId, ProspectId, Department, JobTitle, Source, Device, OptedOut FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_contacts WHERE ContactId IS NOT NULL AND ProspectId IS NOT NULL AND Department IS NOT NULL AND JobTitle IS NOT NULL AND Source IS NOT NULL AND Device IS NOT NULL AND OptedOut IS NOT NULL",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_events COMMENT 'Cleaned version of the raw events table' AS SELECT EventId, CampaignId, ContactId, EventType, EventDate, Metadata FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_events WHERE EventId IS NOT NULL AND CampaignId IS NOT NULL AND ContactId IS NOT NULL AND EventType IS NOT NULL AND EventDate IS NOT NULL AND Metadata IS NOT NULL",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_feedbacks COMMENT 'Cleaned version of the raw feedbacks table' AS SELECT CampaignId, ContactId, Feedbacks FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_feedbacks WHERE CampaignId IS NOT NULL AND ContactId IS NOT NULL AND Feedbacks IS NOT NULL",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_issues COMMENT 'Cleaned version of the raw issues table' AS SELECT CampaignId, ComplaintType, ContactId FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_issues WHERE CampaignId IS NOT NULL AND ComplaintType IS NOT NULL AND ContactId IS NOT NULL",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_prospects COMMENT 'Cleaned version of the raw prospects table' AS SELECT ProspectId, ProspectName, AnnualRevenue, Employees, Industry, Country, City, Postcode FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_prospects WHERE ProspectId IS NOT NULL AND ProspectName IS NOT NULL AND AnnualRevenue IS NOT NULL AND Employees > 0 AND Industry IS NOT NULL AND Country IS NOT NULL AND City IS NOT NULL AND Postcode IS NOT NULL"
-      ],
-      [
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns ( campaign_id BIGINT COMMENT 'Unique identifier for each campaign', campaign_name STRING COMMENT 'Name of the marketing campaign', campaign_description STRING COMMENT 'Description of the campaign', subject_line STRING COMMENT 'Subject line used in campaign emails', template STRING COMMENT 'Email template used for the campaign', cost DOUBLE COMMENT 'Total cost of the campaign', start_date DATE COMMENT 'Start date of the campaign', end_date DATE COMMENT 'End date of the campaign', mailing_list ARRAY<BIGINT> COMMENT 'List of contact_id that are targets of the campaign' ) COMMENT 'The table contains data related to marketing campaigns. It includes details such as campaign identifiers, names, descriptions, and the email subject lines used. Additionally, it tracks the cost of each campaign, the duration (start and end dates), and the mailing lists associated with them. This data can be used for analyzing campaign performance, budgeting, and understanding audience engagement.'",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ( contact_id BIGINT COMMENT 'Unique identifier for each contact', prospect_id BIGINT COMMENT 'Identifier for the associated prospect', department STRING COMMENT 'Department of the contact', job_title STRING COMMENT 'Job title of the contact', source STRING COMMENT 'Source from which the contact was obtained', device STRING COMMENT 'Device used by the contact', opted_out BOOLEAN COMMENT 'Flag indicating if the contact has opted out of communications' ) COMMENT 'The table contains information about contacts associated with prospects. It includes details such as the contacts department, job title, and the source of their information. This data can be used for managing relationships with prospects, analyzing communication preferences, and understanding the demographics of contacts. Additionally, the opted-out flag helps in compliance with marketing regulations.'",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ( event_id STRING COMMENT 'Unique identifier for the event', campaign_id BIGINT COMMENT 'Identifier for the associated campaign', contact_id BIGINT COMMENT 'Identifier for the contact involved in the event', event_type STRING COMMENT 'Type of event (e.g., open, click)', event_date TIMESTAMP COMMENT 'Timestamp of when the event occurred', metadata MAP<STRING, STRING> COMMENT 'Additional metadata related to the event' ) COMMENT 'The table captures data related to marketing events associated with campaigns. It includes details such as the unique event identifier, the campaign and contact involved, the type of event (like opens or clicks), and the date of the event. This data can be used for analyzing campaign performance, understanding user engagement, and optimizing marketing strategies.'",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks ( campaign_id BIGINT COMMENT 'Identifier for the associated campaign', feedbacks STRING COMMENT 'Feedback provided by the contact', contact_id BIGINT COMMENT 'Identifier for the contact providing feedback', sentiment STRING COMMENT 'The sentiment of the feedback' ) COMMENT 'The table contains feedback data related to marketing campaigns. It includes information about the campaign ID, the contact who provided the feedback, and the feedback itself. This data can be used to analyze customer sentiments regarding specific campaigns, track the effectiveness of marketing efforts, and identify areas for improvement based on customer input.'",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues ( campaign_id BIGINT COMMENT 'Identifier for the associated campaign', complaint_type ARRAY<STRING> COMMENT 'Types of complaints received (e.g., GDPR, CAN-SPAM Act)', contact_id BIGINT COMMENT 'Identifier for the contact submitting the issue' ) COMMENT 'The table contains data related to customer complaints associated with marketing campaigns. It includes information on the campaign ID, the types of complaints received (such as GDPR or CAN-SPAM Act), and the contact ID of the individual submitting the issue. This data can be used to analyze complaint trends, assess compliance with regulations, and improve campaign strategies.'",
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects ( prospect_id BIGINT COMMENT 'Unique identifier for each prospect', name STRING COMMENT 'Name of the business prospect', annual_revenue DOUBLE COMMENT 'Annual revenue of the prospect', employees INT COMMENT 'Number of employees at the prospect', industry STRING COMMENT 'Industry sector of the prospect', country STRING COMMENT 'Country where the prospect is located', city STRING COMMENT 'City where the prospect is located', postcode STRING COMMENT 'Postal code of the prospect' ) COMMENT 'The table contains information about business prospects, including their unique identifiers, names, annual revenues, employee counts, and industry sectors. It also includes geographical details such as country, city, and postal code. This data can be used for market analysis, lead generation, and understanding the potential customer base.'"
-      ],
-      [
-        "INSERT INTO `{{CATALOG}}`.`{{SCHEMA}}`.campaigns SELECT CampaignId AS campaign_id, CampaignName AS campaign_name, CampaignDescription AS campaign_description, SubjectLine AS subject_line, Template AS template, Cost AS cost, CAST(StartDate AS date) AS start_date, CAST(EndDate AS date) AS end_date, collect_list(DISTINCT MailingList) AS mailing_list FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_campaigns GROUP BY CampaignId, CampaignName, CampaignDescription, SubjectLine, Template, Cost, StartDate, EndDate",
-        "INSERT INTO `{{CATALOG}}`.`{{SCHEMA}}`.contacts SELECT ContactId AS contact_id, ProspectId AS prospect_id, Department AS department, JobTitle AS job_title, Source AS source, Device AS device, OptedOut AS opted_out FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_contacts",
-        "INSERT INTO `{{CATALOG}}`.`{{SCHEMA}}`.events SELECT EventId AS event_id, CampaignId AS campaign_id, ContactId AS contact_id, EventType AS event_type, EventDate AS event_date, Metadata AS metadata FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_events",
-        "INSERT INTO `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks SELECT CampaignId AS campaign_id, Feedbacks AS feedbacks, ContactId AS contact_id, ai_analyze_sentiment(Feedbacks) AS sentiment FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_feedbacks",
-        "INSERT INTO `{{CATALOG}}`.`{{SCHEMA}}`.issues SELECT CampaignId AS campaign_id, ComplaintType AS complaint_type, ContactId AS contact_id FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_issues",
-        "INSERT INTO `{{CATALOG}}`.`{{SCHEMA}}`.prospects SELECT ProspectId AS prospect_id, ProspectName AS name, AnnualRevenue AS annual_revenue, Employees AS employees, Industry AS industry, Country AS country, City AS city, Postcode AS postcode FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_prospects"
-      ]
-      ,
-      [
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns ALTER COLUMN campaign_id SET NOT NULL",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ALTER COLUMN contact_id SET NOT NULL",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ALTER COLUMN event_id SET NOT NULL",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects ALTER COLUMN prospect_id SET NOT NULL"
-      ],
-      [
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues SET TAGS ('system.certification_status' = 'certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns SET TAGS ('system.certification_status' = 'certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events SET TAGS ('system.certification_status' = 'certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts SET TAGS ('system.certification_status' = 'certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks SET TAGS ('system.certification_status' = 'certified')",
-        "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects SET TAGS ('system.certification_status' = 'certified')"
-      ],
-      [
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns ADD CONSTRAINT campaigns_pk PRIMARY KEY(campaign_id)",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ADD CONSTRAINT contact_pk PRIMARY KEY(contact_id)",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ADD CONSTRAINT event_pk PRIMARY KEY(event_id)",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.prospects ADD CONSTRAINT prospect_pk PRIMARY KEY(prospect_id)"
-      ],
-      [
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.contacts ADD CONSTRAINT contact_prospect_fk FOREIGN KEY(prospect_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.prospects NOT ENFORCED RELY",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ADD CONSTRAINT event_campaign_fK FOREIGN KEY(campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns NOT ENFORCED RELY",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks ADD CONSTRAINT feedback_campaign_fk FOREIGN KEY(campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns NOT ENFORCED RELY",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues ADD CONSTRAINT issue_campaign_fk FOREIGN KEY(campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns NOT ENFORCED RELY"
-      ],
-      [
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.events ADD CONSTRAINT event_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.feedbacks ADD CONSTRAINT feedback_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY",
-          "ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.issues ADD CONSTRAINT issue_contact_fk FOREIGN KEY(contact_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.contacts NOT ENFORCED RELY"
-      ],
-      [
-          """
-          CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_events
-          WITH METRICS
-          LANGUAGE YAML
-          AS $$
-          version: 1.1
-
-          source: {{CATALOG}}.{{SCHEMA}}.events
-
-          joins:
-            - name: campaigns
-              source: {{CATALOG}}.{{SCHEMA}}.campaigns
-              using:
-                - campaign_id
-            - name: contacts
-              source: {{CATALOG}}.{{SCHEMA}}.contacts
-              using:
-                - contact_id
-              joins:
-                - name: prospects
-                  source: {{CATALOG}}.{{SCHEMA}}.prospects
-                  "on": contacts.prospect_id = prospects.prospect_id
-
-          filter: campaigns.start_date >= DATE('2024-01-01') AND campaigns.start_date <= CURRENT_DATE
-
-          dimensions:
-            - name: event_date
-              expr: "TO_DATE(source.event_date, 'yyyy-MM-dd HH:mm:ss')"
-              comment: Date and time when the event occurred.
-              display_name: Event Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - date of event
-                - event timestamp
-            - name: event_type
-              expr: source.event_type
-              comment: "Type of event (e.g., html_open, click, sent, delivered, spam, optout_click)."
-              display_name: Event Type
-              synonyms:
-                - type of event
-                - event category
-            - name: campaign_id
-              expr: campaigns.campaign_id
-              comment: Unique Identifier of the campaign associated with the event.
-              display_name: Campaign ID
-            - name: campaign_name
-              expr: campaigns.campaign_name
-              comment: Name of the campaign associated with the event.
-              display_name: Campaign Name
-              synonyms:
-                - name of campaign
-                - marketing campaign name
-            - name: campaign_description
-              expr: campaigns.campaign_description
-              comment: Description of the campaign.
-              display_name: Campaign Description
-              synonyms:
-                - description of campaign
-                - campaign details
-            - name: cost
-              expr: campaigns.cost
-              comment: Total cost of the campaign.
-              display_name: Campaign Cost
-              format:
-                type: currency
-                currency_code: USD
-                decimal_places:
-                  type: exact
-                  places: 2
-                abbreviation: compact
-              synonyms:
-                - cost of campaign
-                - marketing spend
-            - name: campaign_template
-              expr: campaigns.template
-              comment: Email template used for the campaign.
-              display_name: Campaign Template
-              synonyms:
-                - email template
-                - template used
-            - name: contact_id
-              expr: contacts.contact_id
-              comment: Unique identifier for the contact.
-              display_name: Contact ID
-              synonyms:
-                - contact identifier
-                - contact id
-            - name: prospect_nr_of_employees
-              expr: contacts.prospects.employees
-              comment: Number of employees working for the prospect.
-              display_name: Prospect Number of Employees
-              format:
-                type: number
-                abbreviation: compact
-              synonyms:
-                - number of employees
-                - prospect employees
-            - name: prospect_country
-              expr: contacts.prospects.country
-              comment: Country where the prospect is located.
-              display_name: Prospect Country
-              synonyms:
-                - country of prospect
-                - prospect location country
-            - name: prospect_city
-              expr: contacts.prospects.city
-              comment: City where the prospect is located.
-              display_name: Prospect City
-              synonyms:
-                - city of prospect
-                - prospect location city
-            - name: prospect_industry
-              expr: contacts.prospects.industry
-              comment: Industry sector the prospect operates in.
-              display_name: Prospect Industry
-              synonyms:
-                - industry of prospect
-                - prospect sector
-            - name: contact_department
-              expr: contacts.department
-              comment: The department where the contact is employed.
-              display_name: Contact Department
-              synonyms:
-                - department of contact
-                - contact's department
-            - name: contact_source
-              expr: contacts.source
-              comment: The origin source of the contact information.
-              display_name: Contact Source
-              synonyms:
-                - source of contact
-                - contact origin
-            - name: contact_device
-              expr: contacts.device
-              comment: The primary device type used by the contact for communication.
-              display_name: Contact Device
-              synonyms:
-                - device of contact
-                - contact's device type
-            - name: start_date
-              expr: campaigns.start_date
-              comment: Start date of the campaign.
-              display_name: Campaign Start Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - start date
-                - campaign start
-            - name: end_date
-              expr: campaigns.end_date
-              comment: End date of the campaign.
-              display_name: Campaign End Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - end date
-                - campaign end
-
-          measures:
-            - name: cost_metric
-              expr: FIRST(campaigns.cost)
-              comment: First recorded cost value for the campaign.
-              display_name: First Campaign Cost
-              format:
-                type: currency
-                currency_code: USD
-                decimal_places:
-                  type: exact
-                  places: 2
-                abbreviation: compact
-              synonyms:
-                - first cost
-                - initial campaign cost
-            - name: prospect_employees
-              expr: sum(contacts.prospects.employees)
-              comment: Total number of employees across all prospects.
-              display_name: Total Prospect Employees
-              format:
-                type: number
-                abbreviation: compact
-              synonyms:
-                - sum of employees
-                - total employees
-            - name: total_sent
-              expr: SUM(CASE WHEN source.event_type = 'sent' THEN 1 ELSE 0 END)
-              comment: Total number of 'sent' events.
-              display_name: Total Sent
-              synonyms:
-                - sent count
-                - number sent
-            - name: total_delivered
-              expr: SUM(CASE WHEN source.event_type = 'delivered' THEN 1 ELSE 0 END)
-              comment: Total number of 'delivered' events.
-              display_name: Total Delivered
-              synonyms:
-                - delivered count
-                - number delivered
-            - name: total_spam
-              expr: SUM(CASE WHEN source.event_type = 'spam' THEN 1 ELSE 0 END)
-              comment: Total number of 'spam' events.
-              display_name: Total Spam
-              synonyms:
-                - spam count
-                - number spam
-            - name: total_opens
-              expr: SUM(CASE WHEN source.event_type = 'html_open' THEN 1 ELSE 0 END)
-              comment: Total number of 'html_open' events.
-              display_name: Total Opens
-              synonyms:
-                - opens count
-                - number opened
-            - name: total_optouts
-              expr: SUM(CASE WHEN source.event_type = 'optout_click' THEN 1 ELSE 0 END)
-              comment: Total number of 'optout_click' events.
-              display_name: Total Optouts
-              synonyms:
-                - optout count
-                - number optouts
-            - name: total_clicks
-              expr: SUM(CASE WHEN source.event_type = 'click' THEN 1 ELSE 0 END)
-              comment: Total number of 'click' events.
-              display_name: Total Clicks
-              synonyms:
-                - clicks count
-                - number clicked
-            - name: unique_clicks
-              expr: count(distinct case when source.event_type = 'click' then source.contact_id
-                end)
-              comment: Number of unique contacts who clicked.
-              display_name: Unique Clicks
-              synonyms:
-                - distinct clicks
-                - unique contacts clicked
-            - name: nr_events
-              expr: count(distinct source.event_id)
-              comment: Number of distinct events.
-              display_name: Number of Events
-              synonyms:
-                - event count
-                - distinct events
-            - name: ctr
-              expr: unique_clicks / total_delivered
-              comment: "Click-through rate: unique clicks divided by total delivered."
-              display_name: Click-Through Rate
-              format:
-                type: percentage
-                decimal_places:
-                  type: exact
-                  places: 2
-              synonyms:
-                - CTR
-                - click rate
-            - name: ctr_t7d
-              expr: MEASURE(ctr)
-              window:
-                - order: event_date
-                  semiadditive: last
-                  range: trailing 7 day
-              comment: Trailing 7 day click-through rate (CTR) using the event date.
-              display_name: Trailing 7 Day CTR
-              format:
-                type: percentage
-                decimal_places:
-                  type: exact
-                  places: 2
-              synonyms:
-                - trailing 7 day CTR
-                - moving CTR
-                - rolling CTR
-            - name: delivery_rate
-              expr: total_delivered / total_sent
-              comment: "Delivery rate: total delivered divided by total sent."
-              display_name: Delivery Rate
-              format:
-                type: percentage
-                decimal_places:
-                  type: exact
-                  places: 2
-              synonyms:
-                - delivered rate
-                - rate of delivery
-            - name: optouts_rate
-              expr: total_optouts / total_delivered
-              comment: "Optouts rate: total optouts divided by total delivered."
-              display_name: Optouts Rate
-              format:
-                type: percentage
-                decimal_places:
-                  type: exact
-                  places: 2
-              synonyms:
-                - optout rate
-                - rate of optouts
-            - name: spam_rate
-              expr: total_spam / total_delivered
-              comment: "Spam rate: total spam divided by total delivered."
-              display_name: Spam Rate
-              format:
-                type: percentage
-                decimal_places:
-                  type: exact
-                  places: 2
-              synonyms:
-                - spam rate
-                - rate of spam
-            - name: opens_rate
-              expr: total_opens / total_sent
-              comment: "Opens rate: total opens divided by total sent."
-              display_name: Opens Rate
-              format:
-                type: percentage
-                decimal_places:
-                  type: exact
-                  places: 2
-              synonyms:
-                - open rate
-                - rate of opens
-            $$
-          """,
-          """
-          CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_feedback
-          WITH METRICS
-          LANGUAGE YAML
-          AS $$
-          version: 1.1
-
-          source: {{CATALOG}}.{{SCHEMA}}.feedbacks
-
-          joins:
-            - name: campaigns
-              source: {{CATALOG}}.{{SCHEMA}}.campaigns
-              using:
-                - campaign_id
-            - name: contacts
-              source: {{CATALOG}}.{{SCHEMA}}.contacts
-              using:
-                - contact_id
-              joins:
-                - name: prospects
-                  source: {{CATALOG}}.{{SCHEMA}}.prospects
-                  "on": contacts.prospect_id = prospects.prospect_id
-
-          filter: campaigns.start_date >= DATE('2024-01-01') AND campaigns.start_date <= CURRENT_DATE
-
-          dimensions:
-            - name: feedback
-              expr: source.feedbacks
-              comment: Feedback provided by the contact
-              display_name: Feedback
-              synonyms:
-                - feedback
-                - contact feedback
-                - response
-            - name: sentiment
-              expr: source.sentiment
-              comment: The sentiment of the feedback
-              display_name: Sentiment
-              synonyms:
-                - sentiment
-                - feedback sentiment
-                - response sentiment
-            - name: campaign_name
-              expr: campaigns.campaign_name
-              comment: Name of the campaign
-              display_name: Campaign Name
-              synonyms:
-                - campaign name
-                - name of campaign
-            - name: campaign_description
-              expr: campaigns.campaign_description
-              comment: Description of the campaign
-              display_name: Campaign Description
-              synonyms:
-                - campaign description
-                - description of campaign
-            - name: cost
-              expr: campaigns.cost
-              comment: Total cost of the campaign
-              display_name: Campaign Cost
-              format:
-                type: currency
-                currency_code: USD
-                decimal_places:
-                  type: exact
-                  places: 2
-                abbreviation: compact
-              synonyms:
-                - cost
-                - campaign cost
-                - total cost
-            - name: campaign_template
-              expr: campaigns.template
-              comment: Email template used for the campaign
-              display_name: Campaign Template
-              synonyms:
-                - template
-                - email template
-                - campaign template
-            - name: prospect_nr_of_employees
-              expr: contacts.prospects.employees
-              comment: Number of employees working for the prospect
-              display_name: Prospect Number of Employees
-              format:
-                type: number
-                decimal_places:
-                  type: exact
-                  places: 0
-                abbreviation: none
-              synonyms:
-                - number of employees
-                - prospect employees
-                - employee count
-            - name: prospect_country
-              expr: contacts.prospects.country
-              comment: Country where the prospect is located
-              display_name: Prospect Country
-              synonyms:
-                - country
-                - prospect country
-                - location country
-            - name: prospect_city
-              expr: contacts.prospects.city
-              comment: City where the prospect is located
-              display_name: Prospect City
-              synonyms:
-                - city
-                - prospect city
-                - location city
-            - name: prospect_industry
-              expr: contacts.prospects.industry
-              comment: Industry sector the prospect operates in
-              display_name: Prospect Industry
-              synonyms:
-                - industry
-                - prospect industry
-                - sector
-            - name: contact_department
-              expr: contacts.department
-              comment: The department where the contact is employed
-              display_name: Contact Department
-              synonyms:
-                - department
-                - contact department
-                - employee department
-            - name: contact_source
-              expr: contacts.source
-              comment: The origin source of the contact information
-              display_name: Contact Source
-              synonyms:
-                - source
-                - contact source
-                - origin source
-            - name: contact_device
-              expr: contacts.device
-              comment: The primary device type used by the contact for communication
-              display_name: Contact Device
-              synonyms:
-                - device
-                - contact device
-                - communication device
-            - name: start_date
-              expr: campaigns.start_date
-              comment: Start date of the campaign
-              display_name: Campaign Start Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - start date
-                - campaign start
-                - begin date
-            - name: end_date
-              expr: campaigns.end_date
-              comment: End date of the campaign
-              display_name: Campaign End Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - end date
-                - campaign end
-                - finish date
-
-          measures:
-            - name: count_feedbacks
-              expr: count(source.feedbacks)
-              comment: Total number of feedbacks
-              display_name: Count of Feedbacks
-              synonyms:
-                - feedback count
-                - number of feedbacks
-                - total feedbacks
-            - name: count_negative_feedbacks
-              expr: count(source.feedbacks) filter(where source.sentiment = 'negative')
-              comment: Number of feedbacks with negative sentiment
-              display_name: Count of Negative Feedbacks
-              synonyms:
-                - negative feedback count
-                - number of negative feedbacks
-            - name: count_mixed_feedbacks
-              expr: count(source.feedbacks) filter(where source.sentiment = 'mixed')
-              comment: Number of feedbacks with mixed sentiment
-              display_name: Count of Mixed Feedbacks
-              synonyms:
-                - mixed feedback count
-                - number of mixed feedbacks
-            - name: count_positive_feedbacks
-              expr: count(source.feedbacks) filter(where source.sentiment = 'positive')
-              comment: Number of feedbacks with positive sentiment
-              display_name: Count of Positive Feedbacks
-              synonyms:
-                - positive feedback count
-                - number of positive feedbacks
-            $$
-          """,
-          """
-          CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_issues
-          WITH METRICS
-          LANGUAGE YAML
-          AS $$
-          version: 1.1
-
-          source: {{CATALOG}}.{{SCHEMA}}.issues
-
-          joins:
-            - name: campaigns
-              source: {{CATALOG}}.{{SCHEMA}}.campaigns
-              using:
-                - campaign_id
-            - name: contacts
-              source: {{CATALOG}}.{{SCHEMA}}.contacts
-              using:
-                - contact_id
-              joins:
-                - name: prospects
-                  source: {{CATALOG}}.{{SCHEMA}}.prospects
-                  "on": contacts.prospect_id = prospects.prospect_id
-
-          dimensions:
-            - name: complaint_type
-              expr: "source.complaint_type[0]"
-              comment: "Type of complaint (e.g., GDPR, CAN-SPAM Act, etc.)"
-              display_name: Complaint Type
-              synonyms:
-                - complaint
-                - issue type
-                - regulatory complaint
-            - name: campaign_name
-              expr: campaigns.campaign_name
-              comment: Name of the marketing campaign
-              display_name: Campaign Name
-              synonyms:
-                - name of campaign
-                - marketing campaign name
-            - name: campaign_description
-              expr: campaigns.campaign_description
-              comment: Description of the campaign
-              display_name: Campaign Description
-              synonyms:
-                - description
-                - campaign details
-            - name: cost
-              expr: campaigns.cost
-              comment: Total cost of the campaign in USD
-              display_name: Campaign Cost
-              format:
-                type: currency
-                currency_code: USD
-                decimal_places:
-                  type: exact
-                  places: 2
-                abbreviation: compact
-              synonyms:
-                - cost
-                - total cost
-                - campaign expense
-            - name: campaign_template
-              expr: campaigns.template
-              comment: Email template used for the campaign
-              display_name: Campaign Template
-              synonyms:
-                - template
-                - email template
-            - name: prospect_nr_of_employees
-              expr: contacts.prospects.employees
-              comment: Number of employees working for the prospect
-              display_name: Prospect Number of Employees
-              format:
-                type: number
-                decimal_places:
-                  type: exact
-                  places: 0
-                abbreviation: none
-              synonyms:
-                - number of employees
-                - prospect employees
-                - employee count
-            - name: prospect_country
-              expr: contacts.prospects.country
-              comment: Country where the prospect is located
-              display_name: Prospect Country
-              synonyms:
-                - country
-                - prospect location country
-            - name: prospect_city
-              expr: contacts.prospects.city
-              comment: City where the prospect is located
-              display_name: Prospect City
-              synonyms:
-                - city
-                - prospect location city
-            - name: prospect_industry
-              expr: contacts.prospects.industry
-              comment: Industry sector the prospect operates in
-              display_name: Prospect Industry
-              synonyms:
-                - industry
-                - prospect sector
-            - name: contact_department
-              expr: contacts.department
-              comment: Department where the contact is employed
-              display_name: Contact Department
-              synonyms:
-                - department
-                - contact's department
-            - name: contact_source
-              expr: contacts.source
-              comment: Origin source of the contact information
-              display_name: Contact Source
-              synonyms:
-                - source
-                - contact origin
-            - name: contact_device
-              expr: contacts.device
-              comment: Primary device type used by the contact for communication
-              display_name: Contact Device
-              synonyms:
-                - device
-                - contact's device
-                - communication device
-            - name: start_date
-              expr: campaigns.start_date
-              comment: Start date of the campaign
-              display_name: Campaign Start Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - start date
-                - campaign start
-            - name: end_date
-              expr: campaigns.end_date
-              comment: End date of the campaign
-              display_name: Campaign End Date
-              format:
-                type: date
-                date_format: year_month_day
-                leading_zeros: false
-              synonyms:
-                - end date
-                - campaign end
-
-          measures:
-            - name: count_issues
-              expr: count(*)
-              comment: Total number of issues reported
-              display_name: Number of Issues
-              format:
-                type: number
-                decimal_places:
-                  type: exact
-                  places: 0
-                abbreviation: none
-              synonyms:
-                - issue count
-                - total issues
-                - complaint count
-            - name: nr_impacted_campaigns
-              expr: count(distinct source.campaign_id)
-              comment: Number of distinct campaigns impacted by issues
-              display_name: Number of Impacted Campaigns
-              format:
-                type: number
-                decimal_places:
-                  type: exact
-                  places: 0
-                abbreviation: none
-              synonyms:
-                - impacted campaigns
-                - distinct campaigns
-                - affected campaigns
-            $$
-          """,
-          """
-          CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_daily_rolling
-          WITH METRICS
-          LANGUAGE YAML
-          AS $$
-          version: 1.1
-
-          source: |-
-            SELECT
-              CAST(event_date AS DATE) AS date,
-              contact_id,
-              event_type
-              FROM {{CATALOG}}.{{SCHEMA}}.events
-          comment: "Daily and 7-day trailing (t7d_) email engagement metrics, sliced by event_type."
-
-          dimensions:
-            - name: Date
-              expr: date
-            - name: Event Type
-              expr: event_type
-
-          measures:
-            - name: unique_clicks
-              expr: COUNT(DISTINCT CASE WHEN event_type = 'click' THEN contact_id END)
-            - name: total_delivered
-              expr: SUM(CASE WHEN event_type = 'delivered' THEN 1 ELSE 0 END)
-            - name: total_sent
-              expr: SUM(CASE WHEN event_type = 'sent' THEN 1 ELSE 0 END)
-            - name: total_opens
-              expr: SUM(CASE WHEN event_type = 'html_open' THEN 1 ELSE 0 END)
-            - name: total_clicks
-              expr: SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END)
-            - name: total_optouts
-              expr: SUM(CASE WHEN event_type = 'optout_click' THEN 1 ELSE 0 END)
-            - name: total_spam
-              expr: SUM(CASE WHEN event_type = 'spam' THEN 1 ELSE 0 END)
-            - name: t7d_unique_clicks
-              expr: COUNT(DISTINCT CASE WHEN event_type = 'click' THEN contact_id END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-            - name: t7d_total_delivered
-              expr: SUM(CASE WHEN event_type = 'delivered' THEN 1 ELSE 0 END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-            - name: t7d_total_sent
-              expr: SUM(CASE WHEN event_type = 'sent' THEN 1 ELSE 0 END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-            - name: t7d_total_opens
-              expr: SUM(CASE WHEN event_type = 'html_open' THEN 1 ELSE 0 END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-            - name: t7d_total_clicks
-              expr: SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-            - name: t7d_total_optouts
-              expr: SUM(CASE WHEN event_type = 'optout_click' THEN 1 ELSE 0 END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-            - name: t7d_total_spam
-              expr: SUM(CASE WHEN event_type = 'spam' THEN 1 ELSE 0 END)
-              window:
-                - order: Date
-                  semiadditive: last
-                  range: trailing 7 day
-          $$
-          """
-      ],
-      [
-        "CREATE OR REPLACE FUNCTION `{{CATALOG}}`.`{{SCHEMA}}`.get_highest_ctr() RETURNS TABLE(campaign_name STRING, ctr DOUBLE) COMMENT 'Returns the campaign with the highest click-through rate using metric views' RETURN SELECT campaign_name, MEASURE(ctr) AS ctr FROM `{{CATALOG}}`.`{{SCHEMA}}`.metrics_events GROUP BY campaign_name ORDER BY ctr DESC LIMIT 1"
-      ] 
+  "data_folders": [
+    {"source_folder": "aibi/dbdemos_aibi_cme_marketing_campaign_v2/channels",             "source_format": "parquet", "target_volume_folder": "channels",             "target_format": "parquet"},
+    {"source_folder": "aibi/dbdemos_aibi_cme_marketing_campaign_v2/campaigns",            "source_format": "parquet", "target_volume_folder": "campaigns",            "target_format": "parquet"},
+    {"source_folder": "aibi/dbdemos_aibi_cme_marketing_campaign_v2/audiences",            "source_format": "parquet", "target_volume_folder": "audiences",            "target_format": "parquet"},
+    {"source_folder": "aibi/dbdemos_aibi_cme_marketing_campaign_v2/regions",              "source_format": "parquet", "target_volume_folder": "regions",              "target_format": "parquet"},
+    {"source_folder": "aibi/dbdemos_aibi_cme_marketing_campaign_v2/creatives",            "source_format": "parquet", "target_volume_folder": "creatives",            "target_format": "parquet"},
+    {"source_folder": "aibi/dbdemos_aibi_cme_marketing_campaign_v2/campaign_performance", "source_format": "parquet", "target_volume_folder": "campaign_performance", "target_format": "parquet"}
   ],
-  "genie_rooms":[
+  "sql_queries": [
+    [
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.channels_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw marketing channels' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/channels', format => 'parquet', pathGlobFilter => '*.parquet')""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw marketing campaigns' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/campaigns', format => 'parquet', pathGlobFilter => '*.parquet')""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.audiences_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw target audiences' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/audiences', format => 'parquet', pathGlobFilter => '*.parquet')""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.regions_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw geographic markets' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/regions', format => 'parquet', pathGlobFilter => '*.parquet')""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.creatives_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw ad creatives (root-cause table)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/creatives', format => 'parquet', pathGlobFilter => '*.parquet')""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaign_performance_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw daily campaign performance' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/campaign_performance', format => 'parquet', pathGlobFilter => '*.parquet')"""
+    ],
+    [
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.channels (
+          channel_id BIGINT COMMENT 'Unique channel identifier.',
+          channel_name STRING COMMENT 'Marketing channel (TikTok, Instagram, Google Ads, Email).',
+          channel_type STRING COMMENT 'Channel type (Social, Search, Owned).',
+          PRIMARY KEY (channel_id) RELY
+      ) USING delta COMMENT 'Marketing channels campaigns run on.'""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns (
+          campaign_id BIGINT COMMENT 'Unique campaign identifier.',
+          campaign_name STRING COMMENT 'Campaign name.',
+          objective STRING COMMENT 'Campaign objective (Awareness, Conversion, Lead Gen).',
+          start_date DATE COMMENT 'Campaign start date.',
+          end_date DATE COMMENT 'Campaign end date.',
+          PRIMARY KEY (campaign_id) RELY
+      ) USING delta COMMENT 'Marketing campaigns. The Q4 Growth Push campaign (starts 2025-09-01) hosts the underperforming creative.'""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.audiences (
+          audience_id BIGINT COMMENT 'Unique audience identifier.',
+          audience_name STRING COMMENT 'Audience segment name (Gen Z, Young Pros, Families, Established).',
+          age_band STRING COMMENT 'Age band of the segment.',
+          interest STRING COMMENT 'Primary interest of the segment.',
+          PRIMARY KEY (audience_id) RELY
+      ) USING delta COMMENT 'Target audience segments.'""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.regions (
+          region_id BIGINT COMMENT 'Unique market identifier.',
+          country STRING COMMENT 'Country name.',
+          country_code STRING COMMENT 'ISO country code.',
+          latitude DOUBLE COMMENT 'Country latitude (for maps).',
+          longitude DOUBLE COMMENT 'Country longitude (for maps).',
+          PRIMARY KEY (region_id) RELY
+      ) USING delta COMMENT 'Geographic markets campaigns target.'""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.creatives (
+          creative_id BIGINT COMMENT 'Unique creative identifier.',
+          creative_name STRING COMMENT 'Ad creative name.',
+          channel STRING COMMENT 'Channel name the creative runs on.',
+          channel_id BIGINT COMMENT 'Channel the creative runs on.',
+          message_theme STRING COMMENT 'Creative message theme (Brand Story, Aggressive Discount, ...).',
+          format STRING COMMENT 'Creative format (Video, Carousel, Search Text, HTML Email, ...).',
+          launch_date DATE COMMENT 'Date the creative launched.',
+          target_market STRING COMMENT 'Markets the creative targets (Global, or a localized market).',
+          status STRING COMMENT 'Creative status (active / underperforming).',
+          PRIMARY KEY (creative_id) RELY
+      ) USING delta COMMENT 'Ad creatives. This is the root-cause table: the localized Fall Sale - v2 (DE/FR) creative (launched 2025-09-01, status underperforming) is why revenue dropped.'""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaign_performance (
+          perf_id BIGINT COMMENT 'Unique performance row identifier.',
+          date DATE COMMENT 'Activity date.',
+          campaign_id BIGINT COMMENT 'Campaign for this row.',
+          channel_id BIGINT COMMENT 'Channel for this row.',
+          platform STRING COMMENT 'Device platform (Mobile / Web).',
+          audience_id BIGINT COMMENT 'Audience segment targeted.',
+          region_id BIGINT COMMENT 'Market (country) for this row.',
+          creative_id BIGINT COMMENT 'Ad creative served (FK to creatives).',
+          impressions BIGINT COMMENT 'Impressions served.',
+          clicks BIGINT COMMENT 'Clicks.',
+          spend DOUBLE COMMENT 'Ad spend in USD.',
+          conversions BIGINT COMMENT 'Conversions.',
+          revenue DOUBLE COMMENT 'Revenue generated in USD.',
+          PRIMARY KEY (perf_id) RELY,
+          CONSTRAINT cp_campaign_fk FOREIGN KEY (campaign_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.campaigns(campaign_id),
+          CONSTRAINT cp_channel_fk  FOREIGN KEY (channel_id)  REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.channels(channel_id),
+          CONSTRAINT cp_audience_fk FOREIGN KEY (audience_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.audiences(audience_id),
+          CONSTRAINT cp_region_fk   FOREIGN KEY (region_id)   REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.regions(region_id),
+          CONSTRAINT cp_creative_fk FOREIGN KEY (creative_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.creatives(creative_id)
+      ) USING delta COMMENT 'Daily campaign performance fact. Revenue & conversions collapse from 2025-09-01 on TikTok in Germany & France due to the underperforming creative, while spend stays flat.'"""
+    ],
+    [
+      """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.channels SELECT CAST(channel_id AS BIGINT), channel_name, channel_type FROM `{{CATALOG}}`.`{{SCHEMA}}`.channels_bronze""",
+      """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.campaigns SELECT CAST(campaign_id AS BIGINT), campaign_name, objective, CAST(start_date AS DATE), CAST(end_date AS DATE) FROM `{{CATALOG}}`.`{{SCHEMA}}`.campaigns_bronze""",
+      """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.audiences SELECT CAST(audience_id AS BIGINT), audience_name, age_band, interest FROM `{{CATALOG}}`.`{{SCHEMA}}`.audiences_bronze""",
+      """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.regions SELECT CAST(region_id AS BIGINT), country, country_code, latitude, longitude FROM `{{CATALOG}}`.`{{SCHEMA}}`.regions_bronze""",
+      """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.creatives SELECT CAST(creative_id AS BIGINT), creative_name, channel, CAST(channel_id AS BIGINT), message_theme, format, CAST(launch_date AS DATE), target_market, status FROM `{{CATALOG}}`.`{{SCHEMA}}`.creatives_bronze""",
+      """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.campaign_performance SELECT CAST(perf_id AS BIGINT), CAST(date AS DATE), CAST(campaign_id AS BIGINT), CAST(channel_id AS BIGINT), platform, CAST(audience_id AS BIGINT), CAST(region_id AS BIGINT), CAST(creative_id AS BIGINT), CAST(impressions AS BIGINT), CAST(clicks AS BIGINT), spend, CAST(conversions AS BIGINT), revenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.campaign_performance_bronze"""
+    ],
+    [
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.campaign_performance_enriched
+         COMMENT 'Analysis-ready daily campaign performance joined with campaign, channel, audience, market and creative. Powers the AI/BI dashboard and Genie. Revenue & conversions drop from 2025-09-01 on TikTok in Germany & France because of the underperforming Fall Sale - v2 (DE/FR) creative; spend stays flat.'
+         AS SELECT p.perf_id, p.date,
+           c.channel_name, c.channel_type, p.platform,
+           cp.campaign_name, cp.objective,
+           a.audience_name, a.age_band, a.interest,
+           r.country, r.country_code, r.latitude, r.longitude,
+           cr.creative_name, cr.message_theme, cr.format AS creative_format, cr.launch_date AS creative_launch_date, cr.target_market, cr.status AS creative_status,
+           p.impressions, p.clicks, p.spend, p.conversions, p.revenue
+         FROM `{{CATALOG}}`.`{{SCHEMA}}`.campaign_performance p
+         JOIN `{{CATALOG}}`.`{{SCHEMA}}`.channels   c  ON p.channel_id  = c.channel_id
+         JOIN `{{CATALOG}}`.`{{SCHEMA}}`.campaigns  cp ON p.campaign_id = cp.campaign_id
+         JOIN `{{CATALOG}}`.`{{SCHEMA}}`.audiences  a  ON p.audience_id = a.audience_id
+         JOIN `{{CATALOG}}`.`{{SCHEMA}}`.regions    r  ON p.region_id   = r.region_id
+         JOIN `{{CATALOG}}`.`{{SCHEMA}}`.creatives  cr ON p.creative_id = cr.creative_id"""
+    ],
+    [
+      """CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_campaign
+         WITH METRICS LANGUAGE YAML AS $$
+         version: 1.1
+         source: {{CATALOG}}.{{SCHEMA}}.campaign_performance_enriched
+         comment: "Governed multi-channel marketing KPIs. Revenue per Dollar = revenue / spend (a.k.a. ROAS). The root cause of the late-2025 drop lives in the creative_name / creative_status fields (the underperforming Fall Sale - v2 (DE/FR) creative)."
+         dimensions:
+           - name: Date
+             expr: date
+           - name: Channel
+             expr: channel_name
+           - name: Channel Type
+             expr: channel_type
+           - name: Platform
+             expr: platform
+           - name: Campaign
+             expr: campaign_name
+           - name: Objective
+             expr: objective
+           - name: Audience
+             expr: audience_name
+           - name: Age Band
+             expr: age_band
+           - name: Interest
+             expr: interest
+           - name: Country
+             expr: country
+           - name: Country Code
+             expr: country_code
+           - name: Latitude
+             expr: latitude
+           - name: Longitude
+             expr: longitude
+           - name: Creative
+             expr: creative_name
+           - name: Message Theme
+             expr: message_theme
+           - name: Creative Format
+             expr: creative_format
+           - name: Creative Status
+             expr: creative_status
+           - name: Target Market
+             expr: target_market
+         measures:
+           - name: Revenue
+             expr: SUM(revenue)
+           - name: Total Spend
+             expr: SUM(spend)
+           - name: Conversions
+             expr: SUM(conversions)
+           - name: Impressions
+             expr: SUM(impressions)
+           - name: Clicks
+             expr: SUM(clicks)
+           - name: Revenue per Dollar
+             expr: SUM(revenue) / NULLIF(SUM(spend),0)
+           - name: Conversion Rate
+             expr: SUM(conversions) / NULLIF(SUM(clicks),0)
+           - name: CTR
+             expr: SUM(clicks) / NULLIF(SUM(impressions),0)
+           - name: Cost per Conversion
+             expr: SUM(spend) / NULLIF(SUM(conversions),0)
+         $$;"""
+    ]
+  ],
+  "genie_rooms": [
     {
-     "id": "marketing-campaign",
-     "display_name": "DBDemos - AI/BI - Marketing Campaign",     
-     "description": "Analyze your Marketing Campaign effectiveness leveraging AI/BI Dashboard. Deep dive into your data and metrics.",
-     "table_identifiers": ["{{CATALOG}}.{{SCHEMA}}.metrics_events",
-                           "{{CATALOG}}.{{SCHEMA}}.metrics_feedback",
-                           "{{CATALOG}}.{{SCHEMA}}.metrics_issues"],
-     "sql_instructions": [
+      "id": "marketing-campaign",
+      "display_name": "DBDemos - AI/BI - Marketing Campaign effectiveness",
+      "description": "Explore multi-channel marketing performance across TikTok, Instagram, Google Ads and Email. Ask why revenue and conversions dropped in late 2025 and Genie will trace it to the failing campaign (Q4 Growth Push), the underperforming creative (the localized Fall Sale - v2 (DE/FR) launched 2025-09-01) and the affected markets (Germany & France), while spend stayed flat.",
+      "table_identifiers": [
+        "{{CATALOG}}.{{SCHEMA}}.campaign_performance_enriched",
+        "{{CATALOG}}.{{SCHEMA}}.metrics_campaign",
+        "{{CATALOG}}.{{SCHEMA}}.campaigns",
+        "{{CATALOG}}.{{SCHEMA}}.creatives"
+      ],
+      "sql_instructions": [
         {
-            "title": "Compute rolling metrics",
-            "content": "SELECT\n    event_date,\n    MEASURE(unique_clicks) AS daily_unique_clicks,\n    MEASURE(ctr_t7d) AS t7d_unique_clicks\nFROM {{CATALOG}}.{{SCHEMA}}.metrics_events\nGROUP BY event_date\nORDER BY event_date"
+          "title": "Monthly revenue, spend and conversions trend",
+          "content": """SELECT DATE_TRUNC('MONTH', date) AS month,
+       ROUND(SUM(revenue)) AS revenue,
+       ROUND(SUM(spend)) AS spend,
+       SUM(conversions) AS conversions,
+       ROUND(SUM(revenue)/NULLIF(SUM(spend),0), 2) AS revenue_per_dollar
+FROM {{CATALOG}}.{{SCHEMA}}.campaign_performance_enriched
+GROUP BY 1 ORDER BY 1;"""
         },
         {
-            "title": "What are the campaigns with the highest click-through rates?",
-            "content": "SELECT\n    campaign_id,\n    campaign_name,\n    cost,\n    start_date,\n    end_date,\n    MEASURE(total_sent) AS total_sent,\n    MEASURE(total_delivered) AS total_delivered,\n    MEASURE(total_clicks) AS total_clicks,\n    MEASURE(unique_clicks) AS unique_clicks,\n    MEASURE(ctr) AS ctr\nFROM {{CATALOG}}.{{SCHEMA}}.metrics_events\nWHERE start_date >= :start_date AND end_date <= :end_date\nGROUP BY ALL\nORDER BY ctr DESC, cost ASC\nLIMIT 20"
+          "title": "Revenue per dollar by campaign since the drop (Sept 2025)",
+          "content": """SELECT campaign_name,
+       ROUND(SUM(revenue)/NULLIF(SUM(spend),0), 2) AS revenue_per_dollar,
+       ROUND(SUM(spend)) AS spend
+FROM {{CATALOG}}.{{SCHEMA}}.campaign_performance_enriched
+WHERE date >= DATE'2025-09-01'
+GROUP BY 1 ORDER BY revenue_per_dollar ASC;"""
+        },
+        {
+          "title": "Creatives inside the failing campaign (Q4 Growth Push)",
+          "content": """SELECT creative_name, message_theme, target_market, creative_status,
+       ROUND(SUM(conversions)/NULLIF(SUM(clicks),0)*100, 2) AS conv_rate_pct,
+       ROUND(SUM(revenue)/NULLIF(SUM(spend),0), 2) AS revenue_per_dollar
+FROM {{CATALOG}}.{{SCHEMA}}.campaign_performance_enriched
+WHERE campaign_name = 'Q4 Growth Push'
+GROUP BY 1,2,3,4 ORDER BY revenue_per_dollar ASC;"""
         }
-    ],
-     "instructions": "If a customer ask a forecast, leverage the sql fonction ai_forecast.\nThe mailing_list column in the campaigns table contains all the contact_ids of the contacts to whom the campaign was sent.\nUse the metric views as the primary semantic layer. Metrics already encapsulate joins and business logic, so avoid joining raw tables unless explicitly required.",
-      
-      "function_names": [
-        "{{CATALOG}}.{{SCHEMA}}.get_highest_ctr"
       ],
-     "curated_questions": [
-        "How has the total number of emails sent, delivered, and the unique clicks evolved over the last six months?",
-        "Which industries have shown the highest engagement rates with marketing campaigns?",
-        "Which campaigns achieved the highest open rates?",
-        "Which campaigns had the strongest click-through rates (CTR)?"
-       ],
-     "benchmarks": [
-      {
-        "question_text": "Which is the campaign with the highest click through rate?",
-        "answer_text": "SELECT * FROM `{{CATALOG}}`.`{{SCHEMA}}`.`get_highest_ctr`()"
-      },
-      {
-        "question_text": "Which campaign had the highest total number of clicks?",
-        "answer_text": "SELECT campaign_id, campaign_name, MEASURE(total_clicks) AS total_clicks FROM {{CATALOG}}.{{SCHEMA}}.metrics_events GROUP BY campaign_id, campaign_name ORDER BY total_clicks DESC LIMIT 1"
-      },
-      {
-        "question_text": "What is the total number of opens for each campaign?",
-        "answer_text": "SELECT campaign_id,campaign_name, MEASURE(total_opens) AS total_opens FROM {{CATALOG}}.{{SCHEMA}}.metrics_events GROUP BY campaign_id, campaign_name ORDER BY total_opens DESC"
-      },
-      {
-        "question_text": "Which campaign had the max total number of opens? Give me the top 1",
-        "answer_text": "SELECT campaign_id, campaign_name, MEASURE(total_opens) AS total_opens FROM {{CATALOG}}.{{SCHEMA}}.metrics_events GROUP BY campaign_id, campaign_name ORDER BY total_opens DESC LIMIT 1"
-      },
-      {
-        "question_text": "What is the total number of clicks for each campaign? Order by campaign id",
-        "answer_text": "SELECT campaign_id, campaign_name, MEASURE(total_clicks) AS total_clicks FROM {{CATALOG}}.{{SCHEMA}}.metrics_events GROUP BY campaign_id, campaign_name ORDER BY campaign_id"
-      }
-    ]
+      "instructions": "This data tells the story of a multi-channel marketing team whose revenue and conversions dropped from September 2025 even though spend stayed flat. When asked WHY revenue, conversions or revenue-per-dollar dropped (or what changed in late 2025), trace it to: (1) the failing campaign Q4 Growth Push (lowest revenue_per_dollar since 2025-09-01); (2) inside it, the underperforming creative 'Fall Sale - v2 (DE/FR)' (creative_status = 'underperforming', launched 2025-09-01 on TikTok, a localized Germany & France batch) whose conversion rate is ~0.35% vs ~3% for healthy creatives; (3) the affected markets Germany & France (lowest revenue_per_dollar). Revenue per Dollar = revenue / spend (a.k.a. ROAS). If asked for a forecast, use the ai_forecast SQL function. metrics_campaign is a governed METRIC VIEW: query its measures with MEASURE(`Revenue`), MEASURE(`Total Spend`), MEASURE(`Conversions`), MEASURE(`Revenue per Dollar`), MEASURE(`Conversion Rate`) and group by its dimensions (e.g. `Channel`, `Campaign`, `Country`, `Creative`, `Platform`); prefer it for clean aggregated KPIs.",
+      "curated_questions": [
+        "Why did our marketing revenue and conversions drop in late 2025?",
+        "Which campaign is underperforming since September 2025?",
+        "Inside the Q4 Growth Push campaign, which creative is dragging performance down?",
+        "Which markets have the lowest revenue per dollar?",
+        "Show monthly revenue, spend and conversions over the last year"
+      ]
     }
   ]
 }

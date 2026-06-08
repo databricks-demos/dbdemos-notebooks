@@ -21,18 +21,22 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Marketing Campaign Analysis
+# MAGIC ## Multi-Channel Marketing Campaign Analysis
 # MAGIC ---
+# MAGIC
+# MAGIC ### The Story
+# MAGIC
+# MAGIC You run marketing campaigns across several channels — **TikTok, Instagram, Google Ads and Email** — targeting audiences worldwide on **mobile and web**. For most of the year everything is healthy: revenue grows, conversions are steady, every dollar of spend returns ~$5 of revenue.
+# MAGIC
+# MAGIC Then, from **September 2025, revenue and conversions suddenly drop — even though spend stays flat.** Something is quietly burning budget. Where is it, and why?
 # MAGIC
 # MAGIC ### The Challenge
 # MAGIC
-# MAGIC Depending on their industry, organizations often spend anywhere from **7% to 25%** of their overall revenue collectively on marketing campaigns. While crucial to the business, organizations without a strong data intelligence platform struggle to unify siloed data, translate campaign outcomes to leadership, and experience tremendous slowdowns in time-to-analytics after a campaign.
+# MAGIC Organizations often spend **7% to 25%** of their revenue on marketing. When performance drops, the answer is usually buried across siloed channel exports, creative trackers and regional reports — and by the time analysts stitch it together, weeks of budget are already wasted.
 # MAGIC
 # MAGIC ### The Solution
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (_or as we call it, AI/BI_)** to democratize access to your organization's data. By integrating data from various marketing channels into a unified, cohesive environment, Databricks breaks down silos and makes comprehensive insights available to all team members. 
-# MAGIC
-# MAGIC Advanced AI-driven analytics and intuitive BI tools empower both technical and non-technical users to effortlessly analyze campaign performance by asking questions of their data platform in natural language. This accessibility accelerates time-to-insights, enhances collaboration across departments, and enables leadership to make informed, data-driven decisions that optimize marketing strategies and drive business growth.
+# MAGIC The **Databricks Platform** unifies every channel, creative and market in one governed place, then layers **AI/BI** on top so anyone can investigate in plain language. In this demo you'll watch the revenue drop on a dashboard, then ask **Genie** *"why did revenue drop?"* and follow the trail in seconds: the failing **campaign** (Q4 Growth Push) → the underperforming **creative** inside it (a localized *Fall Sale – v2 (DE/FR)* launched Sept 1 that barely converts) → the affected **markets** (Germany & France) → the **dollar impact**.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
@@ -114,13 +118,13 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Your Marketing Campaign data is now available for your Data Analyst to explore and track their main KPIs.
+# MAGIC Your multi-channel marketing data is now available for your analysts to explore and track their main KPIs.
 # MAGIC
-# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
+# MAGIC The dashboard tells the story in two pages:
+# MAGIC - **Marketing Performance** — top-line revenue, conversions, conversion rate and spend, an **AI-forecast** of revenue-per-dollar showing the decline, channel and audience performance, and a **world map** where Germany & France clearly turn red.
+# MAGIC - **Root Cause** — the dollar impact, then a top-to-bottom trail: which **campaign** is failing → which **creative** inside it → so anyone can see *why* in one scroll.
 # MAGIC
-# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
-# MAGIC
-# MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
+# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring, with sleek charts, cross-filtering, scheduled snapshots and embedding — all living side-by-side with your governed data for instant, large-scale interactivity.
 # MAGIC
 # MAGIC
 # MAGIC Open the <a dbdemos-dashboard-id="web-marketing" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Campaign Marketing Dashboard to analyze & track main KPIs</a>
@@ -135,7 +139,14 @@
 # MAGIC
 # MAGIC Our data is now available as a Dashboard that our business users can open.
 # MAGIC
-# MAGIC However, they'll likely have extra questions or followup based on the insight they see in the dashboard, like: "What the heck is wrong with my campaign, anyway?" or "What was the CTR of my campaign last month?"
+# MAGIC However, they'll have follow-up questions based on what they see in the dashboard. This is where Genie shines — ask in plain language and let it trace the root cause for you:
+# MAGIC
+# MAGIC - *"Why did our marketing revenue and conversions drop in late 2025?"*
+# MAGIC - *"Which campaign is underperforming since September 2025?"* → **Q4 Growth Push**
+# MAGIC - *"Inside the Q4 Growth Push campaign, which creative is dragging performance down?"* → the localized **Fall Sale – v2 (DE/FR)**
+# MAGIC - *"Which markets have the lowest revenue per dollar?"* → **Germany & France**
+# MAGIC
+# MAGIC Notice how the answer to *why* lives in a different table (`creatives`) than the symptom (`campaign_performance`) — Genie joins them for you.
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="marketing-campaign" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Campaign Marketing Genie space to deep dive into your data</a>
 

@@ -1,268 +1,137 @@
 {
   "datasets": [
     {
-      "name": "735f9c7b",
-      "displayName": "metrics_events",
-      "asset_name": "`main`.`dbdemos_aibi_cme_marketing_campaign`.metrics_events"
+      "name": "ds_metrics",
+      "displayName": "Campaign metrics",
+      "asset_name": "main.dbdemos_aibi_cme_marketing_campaign.metrics_campaign"
     },
     {
-      "name": "fd53cf6d",
-      "displayName": "metrics_feedback",
-      "asset_name": "`main`.`dbdemos_aibi_cme_marketing_campaign`.metrics_feedback"
-    },
-    {
-      "name": "3dc85a76",
-      "displayName": "metrics_issues",
-      "asset_name": "`main`.`dbdemos_aibi_cme_marketing_campaign`.metrics_issues"
-    },
-    {
-      "name": "5d2ed024",
-      "displayName": "Campaign Success Summary Query",
+      "name": "ds_forecast",
+      "displayName": "Revenue / $ trend + AI forecast",
       "queryLines": [
-        "SELECT \n",
-        "    campaign_id,\n",
-        "    campaign_name,\n",
-        "    campaign_description,\n",
-        "    cost,\n",
-        "    start_date,\n",
-        "    end_date,\n",
-        "    MEASURE(`total_sent`),\n",
-        "    MEASURE(`total_delivered`),\n",
-        "    MEASURE(`total_spam`),\n",
-        "    MEASURE(`total_opens`),\n",
-        "    MEASURE(`total_optouts`),\n",
-        "    MEASURE(`total_clicks`),\n",
-        "    MEASURE(`unique_clicks`),\n",
-        "    MEASURE(`ctr`),\n",
-        "    MEASURE(`delivery_rate`)\n",
-        "FROM `main`.`dbdemos_aibi_cme_marketing_campaign`.metrics_events \n",
-        "GROUP BY ALL\n",
-        "ORDER BY MEASURE(`ctr`) desc, cost ASC;"
+        "WITH monthly AS (\n",
+        "  SELECT date_trunc('month', date) AS month, sum(revenue)/nullif(sum(spend),0) AS rev_per_dollar\n",
+        "  FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched\n",
+        "  WHERE date < date_trunc('month', (SELECT max(date) FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched))\n",
+        "  GROUP BY 1\n",
+        "),\n",
+        "fc AS (\n",
+        "  SELECT month, rev_per_dollar_forecast, rev_per_dollar_lower, rev_per_dollar_upper\n",
+        "  FROM AI_FORECAST(TABLE(SELECT month, rev_per_dollar FROM monthly), horizon => '2026-09-01', time_col => 'month', value_col => 'rev_per_dollar')\n",
+        "),\n",
+        "actuals AS (\n",
+        "  SELECT month, rev_per_dollar, CAST(NULL AS DOUBLE) AS rev_per_dollar_forecast, CAST(NULL AS DOUBLE) AS rev_per_dollar_lower, CAST(NULL AS DOUBLE) AS rev_per_dollar_upper\n",
+        "  FROM monthly WHERE month <> (SELECT max(month) FROM monthly)\n",
+        "),\n",
+        "bridge AS (\n",
+        "  SELECT month, rev_per_dollar, rev_per_dollar, rev_per_dollar, rev_per_dollar FROM monthly WHERE month = (SELECT max(month) FROM monthly)\n",
+        "),\n",
+        "forecast AS (\n",
+        "  SELECT month, CAST(NULL AS DOUBLE) AS rev_per_dollar, rev_per_dollar_forecast, rev_per_dollar_lower, rev_per_dollar_upper FROM fc\n",
+        ")\n",
+        "SELECT * FROM actuals UNION ALL SELECT * FROM bridge UNION ALL SELECT * FROM forecast\n",
+        "ORDER BY month"
+      ]
+    },
+    {
+      "name": "ds_map",
+      "displayName": "Performance by market (last 6 months)",
+      "queryLines": [
+        "SELECT country, latitude, longitude,\n",
+        "  sum(spend) AS spend,\n",
+        "  sum(revenue)/nullif(sum(spend),0) AS rev_per_dollar\n",
+        "FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched\n",
+        "WHERE date >= add_months((SELECT max(date) FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched), -6)\n",
+        "GROUP BY 1,2,3\n",
+        "ORDER BY rev_per_dollar ASC"
+      ]
+    },
+    {
+      "name": "ds_damage",
+      "displayName": "Damage from the underperforming creative",
+      "queryLines": [
+        "WITH bad AS (\n",
+        "  SELECT sum(spend) AS spend_wasted, sum(clicks) AS clicks, sum(conversions) AS conv,\n",
+        "    sum(conversions)/nullif(sum(clicks),0) AS cvr\n",
+        "  FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched\n",
+        "  WHERE creative_status = 'underperforming'\n",
+        "),\n",
+        "bench AS (\n",
+        "  SELECT sum(conversions)/nullif(sum(clicks),0) AS cvr, sum(revenue)/nullif(sum(conversions),0) AS rev_per_conv\n",
+        "  FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched\n",
+        "  WHERE channel_name = 'TikTok' AND creative_status = 'active'\n",
+        ")\n",
+        "SELECT bad.spend_wasted, bad.cvr AS bad_cvr, bench.cvr AS benchmark_cvr,\n",
+        "  (bad.clicks * bench.cvr - bad.conv) * bench.rev_per_conv AS lost_revenue\n",
+        "FROM bad, bench"
+      ]
+    },
+    {
+      "name": "ds_campaign",
+      "displayName": "Campaign performance (since Sept)",
+      "queryLines": [
+        "SELECT campaign_name,\n",
+        "  sum(revenue)/nullif(sum(spend),0) AS rev_per_dollar,\n",
+        "  CASE WHEN campaign_name = 'Q4 Growth Push' THEN 'Failing' ELSE 'Healthy' END AS health\n",
+        "FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched\n",
+        "WHERE date >= DATE'2025-09-01'\n",
+        "GROUP BY 1\n",
+        "ORDER BY rev_per_dollar ASC"
+      ]
+    },
+    {
+      "name": "ds_q4_creatives",
+      "displayName": "Creatives within Q4 Growth Push",
+      "queryLines": [
+        "SELECT creative_name,\n",
+        "  sum(revenue)/nullif(sum(spend),0) AS rev_per_dollar,\n",
+        "  CASE WHEN creative_status = 'underperforming' THEN 'Underperforming' ELSE 'Healthy' END AS health\n",
+        "FROM main.dbdemos_aibi_cme_marketing_campaign.campaign_performance_enriched\n",
+        "WHERE campaign_name = 'Q4 Growth Push'\n",
+        "GROUP BY 1, creative_status\n",
+        "ORDER BY rev_per_dollar ASC"
       ]
     }
   ],
   "pages": [
     {
-      "name": "55b0a8d3",
-      "displayName": "Main Overview",
+      "name": "overview",
+      "displayName": "Marketing Performance",
       "layout": [
         {
           "widget": {
-            "name": "e73b0d05",
+            "name": "title",
             "multilineTextboxSpec": {
               "lines": [
-                "# AIBI DBDemos - Analyse your Email Campaigns!\n",
-                "Databricks makes it easy to build ultra-personalized email campaign leveraging GenAI, and track their effectiveness."
+                "# 📈 Multi-Channel Marketing Performance\n",
+                "\n",
+                "Campaigns across TikTok, Instagram, Google Ads & Email. Revenue and conversions suddenly dropped in late 2025 — even though spend held steady. What happened?"
               ]
             }
           },
           "position": {
             "x": 0,
             "y": 0,
-            "width": 6,
+            "width": 12,
             "height": 2
           }
         },
         {
           "widget": {
-            "name": "bc138166",
+            "name": "kpi_revenue",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "measure(delivery_rate)",
-                      "expression": "MEASURE(`delivery_rate`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(delivery_rate)",
-                  "displayName": "delivery_rate"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Delivery Rate",
-                "showDescription": true,
-                "description": "Delivered / Total"
-              }
-            }
-          },
-          "position": {
-            "x": 1,
-            "y": 17,
-            "width": 1,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "00b39647",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(spam_rate)",
-                      "expression": "MEASURE(`spam_rate`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(spam_rate)",
-                  "displayName": "spam_rate"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Spam Rate",
-                "showDescription": true,
-                "description": "Spam Alerts / Sent"
-              }
-            }
-          },
-          "position": {
-            "x": 5,
-            "y": 17,
-            "width": 1,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "9f2bef8e",
-            "multilineTextboxSpec": {
-              "lines": [
-                "### Overall Key Metrics"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 16,
-            "width": 6,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "2fea4165",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "campaign_name",
-                      "expression": "`campaign_name`"
+                      "name": "measure(Revenue)",
+                      "expression": "MEASURE(`Revenue`)"
                     },
                     {
-                      "name": "sum(cost)",
-                      "expression": "SUM(`cost`)"
-                    },
-                    {
-                      "name": "weekly(start_date)",
-                      "expression": "DATE_TRUNC(\"WEEK\", `start_date`)"
-                    },
-                    {
-                      "name": "measure(ctr)",
-                      "expression": "MEASURE(`ctr`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "scatter",
-              "encodings": {
-                "x": {
-                  "fieldName": "weekly(start_date)",
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "Start Date",
-                  "scale": {
-                    "type": "temporal"
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(ctr)",
-                  "displayName": "Click-Through Rate",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "campaign_name",
-                  "legend": {
-                    "hideTitle": false,
-                    "position": "bottom"
-                  },
-                  "displayName": "campaign ",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "size": {
-                  "fieldName": "sum(cost)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "displayName": "Cost $"
-                },
-                "label": {
-                  "show": false
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Top Performing Campaigns",
-                "showDescription": true,
-                "description": "Lowest cost and highest CTR"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 3,
-            "width": 4,
-            "height": 13
-          }
-        },
-        {
-          "widget": {
-            "name": "f3ebea8e",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(opens_rate)",
-                      "expression": "MEASURE(`opens_rate`)"
+                      "name": "monthly(Date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Date`)"
                     }
                   ],
                   "disaggregated": false
@@ -274,135 +143,104 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "measure(opens_rate)",
-                  "displayName": "opens_rate"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Open Rate",
-                "showDescription": true,
-                "description": "Opened / Sent"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 17,
-            "width": 1,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "d7f0dbe0",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(unique_clicks)",
-                      "expression": "MEASURE(`unique_clicks`)"
+                  "fieldName": "measure(Revenue)",
+                  "displayName": "Revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
                     }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(unique_clicks)",
-                  "displayName": "Sum of unique_clicks"
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(Date)"
                 }
               },
               "frame": {
                 "showTitle": true,
-                "title": "Unique Clicks"
+                "title": "Revenue"
               }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 17,
-            "width": 1,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "bf65b7d2",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(optouts_rate)",
-                      "expression": "MEASURE(`optouts_rate`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(optouts_rate)",
-                  "displayName": "optouts_rate"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Churn Rate",
-                "showDescription": true,
-                "description": "Unsubscribed / Sent"
-              }
-            }
-          },
-          "position": {
-            "x": 4,
-            "y": 17,
-            "width": 1,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "2c238687",
-            "multilineTextboxSpec": {
-              "lines": [
-                "### Campaigns Effectiveness\n"
-              ]
             }
           },
           "position": {
             "x": 0,
             "y": 2,
-            "width": 6,
-            "height": 1
+            "width": 3,
+            "height": 3
           }
         },
         {
           "widget": {
-            "name": "49421742",
+            "name": "kpi_conv",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "measure(ctr)",
-                      "expression": "MEASURE(`ctr`)"
+                      "name": "monthly(Date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Date`)"
+                    },
+                    {
+                      "name": "measure(Conversions)",
+                      "expression": "MEASURE(`Conversions`)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Date`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Conversions"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Conversions)",
+                  "displayName": "Conversions"
+                },
+                "period": {
+                  "fieldName": "monthly(Date)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_convrate",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "measure(Conversion Rate)",
+                      "expression": "MEASURE(`Conversion Rate`)"
+                    },
+                    {
+                      "name": "monthly(Date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Date`)"
                     }
                   ],
                   "disaggregated": false
@@ -414,41 +252,189 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "measure(ctr)",
-                  "displayName": "ctr"
+                  "fieldName": "measure(Conversion Rate)",
+                  "displayName": "Conversion Rate",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(Date)"
                 }
               },
               "frame": {
                 "showTitle": true,
-                "title": "CTR",
-                "showDescription": true,
-                "description": "Click-Through Rate"
+                "title": "Conversion Rate"
               }
             }
           },
           "position": {
-            "x": 2,
-            "y": 17,
-            "width": 1,
-            "height": 2
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 3
           }
         },
         {
           "widget": {
-            "name": "f2933957",
+            "name": "kpi_spend",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "campaign_template",
-                      "expression": "`campaign_template`"
+                      "name": "measure(Total Spend)",
+                      "expression": "MEASURE(`Total Spend`)"
                     },
                     {
-                      "name": "measure(spam_rate)",
-                      "expression": "MEASURE(`spam_rate`)"
+                      "name": "monthly(Date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Date`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Total Spend)",
+                  "displayName": "Spend",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(Date)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Spend (steady)"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_forecast",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "rev_per_dollar",
+                      "expression": "`rev_per_dollar`"
+                    },
+                    {
+                      "name": "rev_per_dollar_forecast",
+                      "expression": "`rev_per_dollar_forecast`"
+                    },
+                    {
+                      "name": "rev_per_dollar_upper",
+                      "expression": "`rev_per_dollar_upper`"
+                    },
+                    {
+                      "name": "rev_per_dollar_lower",
+                      "expression": "`rev_per_dollar_lower`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "forecast-line",
+              "encodings": {
+                "x": {
+                  "fieldName": "month",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Month"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "original": {
+                    "fieldName": "rev_per_dollar",
+                    "displayName": "Revenue per $ spent"
+                  },
+                  "prediction": {
+                    "fieldName": "rev_per_dollar_forecast",
+                    "displayName": "AI Forecast"
+                  },
+                  "predictionUpper": {
+                    "fieldName": "rev_per_dollar_upper",
+                    "displayName": "Upper"
+                  },
+                  "predictionLower": {
+                    "fieldName": "rev_per_dollar_lower",
+                    "displayName": "Lower"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "📉 Revenue per $ spent dropped in Sept and stayed down — AI forecast sees no recovery"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "channel_perf",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Channel",
+                      "expression": "`Channel`"
+                    },
+                    {
+                      "name": "Audience",
+                      "expression": "`Audience`"
+                    },
+                    {
+                      "name": "measure(Revenue per Dollar)",
+                      "expression": "MEASURE(`Revenue per Dollar`)"
                     }
                   ],
                   "disaggregated": false
@@ -460,96 +446,87 @@
               "widgetType": "bar",
               "encodings": {
                 "x": {
-                  "fieldName": "campaign_template",
-                  "displayName": "template",
+                  "fieldName": "Channel",
                   "scale": {
                     "type": "categorical"
-                  }
+                  },
+                  "displayName": "Channel"
                 },
                 "y": {
-                  "fieldName": "measure(spam_rate)",
-                  "axis": {
-                    "title": "Spam Rate"
-                  },
-                  "displayName": "Spam Rate",
+                  "fieldName": "measure(Revenue per Dollar)",
                   "scale": {
                     "type": "quantitative"
-                  }
+                  },
+                  "displayName": "Revenue per $ spent"
+                },
+                "color": {
+                  "fieldName": "Audience",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Audience"
+                },
+                "mark": {
+                  "layout": "group"
                 }
               },
               "frame": {
                 "showTitle": true,
-                "title": "Top Templates Spam Rate"
-              },
-              "mark": {
-                "colors": [
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 4
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 2
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 3
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 4
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 5
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 6
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 7
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 8
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 9
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 10
-                  }
-                ]
+                "title": "Revenue per $ by channel & audience"
               }
             }
           },
           "position": {
-            "x": 4,
-            "y": 10,
-            "width": 2,
+            "x": 8,
+            "y": 5,
+            "width": 4,
             "height": 6
           }
         },
         {
           "widget": {
-            "name": "cbc8f512",
+            "name": "section_geo",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 🌍 The drop is concentrated in specific markets"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "map_perf",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_map",
                   "fields": [
                     {
-                      "name": "measure(ctr)",
-                      "expression": "MEASURE(`ctr`)"
+                      "name": "latitude",
+                      "expression": "`latitude`"
                     },
                     {
-                      "name": "campaign_template",
-                      "expression": "`campaign_template`"
+                      "name": "longitude",
+                      "expression": "`longitude`"
+                    },
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "sum(spend)",
+                      "expression": "SUM(`spend`)"
+                    },
+                    {
+                      "name": "avg(rev_per_dollar)",
+                      "expression": "AVG(`rev_per_dollar`)"
                     }
                   ],
                   "disaggregated": false
@@ -557,109 +534,562 @@
               }
             ],
             "spec": {
-              "version": 3,
-              "widgetType": "funnel",
+              "version": 2,
+              "widgetType": "symbol-map",
               "encodings": {
-                "x": {
-                  "fieldName": "measure(ctr)",
-                  "scale": {
-                    "type": "quantitative"
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "latitude"
+                  },
+                  "longitude": {
+                    "fieldName": "longitude"
                   }
                 },
-                "y": {
-                  "fieldName": "campaign_template",
-                  "axis": {
-                    "title": "Template"
-                  },
-                  "displayName": "Template",
+                "size": {
+                  "fieldName": "sum(spend)",
                   "scale": {
-                    "type": "categorical",
-                    "sort": {
-                      "by": "x-reversed"
+                    "type": "quantitative"
+                  },
+                  "displayName": "Spend"
+                },
+                "color": {
+                  "fieldName": "avg(rev_per_dollar)",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "redyellowgreen"
                     }
-                  }
+                  },
+                  "displayName": "Revenue per $ spent"
                 }
               },
-              "mark": {
-                "colors": [
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue per $ by market (last 6 months) — Germany & France went red"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 8,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "country_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_map",
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "rev_per_dollar",
+                      "expression": "`rev_per_dollar`"
+                    },
+                    {
+                      "name": "spend",
+                      "expression": "`spend`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
                   {
-                    "themeColorType": "visualizationColors",
-                    "position": 3
+                    "fieldName": "country",
+                    "displayName": "Country"
                   },
                   {
-                    "themeColorType": "visualizationColors",
-                    "position": 2
+                    "fieldName": "rev_per_dollar",
+                    "displayName": "Rev per $",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 2
+                      }
+                    }
                   },
                   {
-                    "themeColorType": "visualizationColors",
-                    "position": 3
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 4
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 5
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 6
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 7
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 8
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 9
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 10
+                    "fieldName": "spend",
+                    "displayName": "Spend",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "CTR by Template"
+                "title": "Markets — last 6 months (worst first)"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 12,
+            "width": 4,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "rootcause",
+      "displayName": "Root Cause",
+      "layout": [
+        {
+          "widget": {
+            "name": "rc_title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Why is revenue down?\n",
+                "\n",
+                "Revenue dropped from September while spend held steady. Here's the impact, then the trail: **which campaign, which creative.**"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "impact_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Lost revenue impact"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "dmg_lost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_damage",
+                  "fields": [
+                    {
+                      "name": "lost_revenue",
+                      "expression": "`lost_revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "lost_revenue",
+                  "displayName": "Est. lost revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Estimated lost revenue (vs benchmark)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "dmg_spend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_damage",
+                  "fields": [
+                    {
+                      "name": "spend_wasted",
+                      "expression": "`spend_wasted`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "spend_wasted",
+                  "displayName": "Spend on failing creative",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Spend on the failing creative"
               }
             }
           },
           "position": {
             "x": 4,
             "y": 3,
-            "width": 2,
-            "height": 7
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "dmg_cvr",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_damage",
+                  "fields": [
+                    {
+                      "name": "bad_cvr",
+                      "expression": "`bad_cvr`"
+                    },
+                    {
+                      "name": "benchmark_cvr",
+                      "expression": "`benchmark_cvr`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "bad_cvr",
+                  "displayName": "Conv rate",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  }
+                },
+                "target": {
+                  "fieldName": "benchmark_cvr",
+                  "displayName": "Benchmark"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Conv rate vs TikTok benchmark"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 3,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "step1_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Which campaign is failing?\n",
+                "\n",
+                "All campaigns return ~$4.6 per $ spent since September — except one. **Q4 Growth Push** earns just $3.07."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "step1_campaigns",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_campaign",
+                  "fields": [
+                    {
+                      "name": "campaign_name",
+                      "expression": "`campaign_name`"
+                    },
+                    {
+                      "name": "rev_per_dollar",
+                      "expression": "`rev_per_dollar`"
+                    },
+                    {
+                      "name": "health",
+                      "expression": "`health`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "rev_per_dollar",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue per $ spent"
+                },
+                "y": {
+                  "fieldName": "campaign_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Campaign"
+                },
+                "color": {
+                  "fieldName": "health",
+                  "displayName": "",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Failing",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 2
+                        }
+                      },
+                      {
+                        "value": "Healthy",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue per $ by campaign (since Sept) — Q4 Growth Push is the outlier"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "step2_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Why? Which creative inside that campaign?\n",
+                "\n",
+                "Inside **Q4 Growth Push**, one creative drags it down: **\"Fall Sale - v2 (DE/FR)\"** — a localized EU video launched Sept 1 that barely converts (0.37% vs ~3%)."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "step2_creatives",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_q4_creatives",
+                  "fields": [
+                    {
+                      "name": "creative_name",
+                      "expression": "`creative_name`"
+                    },
+                    {
+                      "name": "rev_per_dollar",
+                      "expression": "`rev_per_dollar`"
+                    },
+                    {
+                      "name": "health",
+                      "expression": "`health`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "rev_per_dollar",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue per $ spent"
+                },
+                "y": {
+                  "fieldName": "creative_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Creative"
+                },
+                "color": {
+                  "fieldName": "health",
+                  "displayName": "",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Underperforming",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 2
+                        }
+                      },
+                      {
+                        "value": "Healthy",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Creatives within Q4 Growth Push — 'Fall Sale - v2 (DE/FR)' is the culprit"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "step2_card",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### The culprit creative\n",
+                "\n",
+                "**Fall Sale - v2 (DE/FR)**\n",
+                "\n",
+                "- **Campaign:** Q4 Growth Push\n",
+                "- **Channel:** TikTok\n",
+                "- **Launched:** 2025-09-01\n",
+                "- **Markets:** Germany & France (localized EU batch)\n",
+                "- **Message:** Aggressive Discount\n",
+                "- **Status:** underperforming\n",
+                "- **Conv. rate:** 0.37% vs ~3% benchmark"
+              ]
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 13,
+            "width": 4,
+            "height": 6
           }
         }
       ],
-      "pageType": "PAGE_TYPE_CANVAS"
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     },
     {
-      "name": "002e4280",
-      "displayName": "Global Filters",
+      "name": "filters",
+      "displayName": "Filters",
       "layout": [
         {
           "widget": {
-            "name": "2cfffd66",
+            "name": "f_date",
             "queries": [
               {
-                "name": "dashboards/01f0d459ec5114caa7eb664f9e07e513/datasets/01f0d45a15781ded9980effe155e6c57_start_date",
+                "name": "f_date_q",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "start_date",
-                      "expression": "`start_date`"
-                    },
-                    {
-                      "name": "start_date_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                      "name": "Date",
+                      "expression": "`Date`"
                     }
                   ],
                   "disaggregated": false
@@ -672,62 +1102,37 @@
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "start_date",
-                    "queryName": "dashboards/01f0d459ec5114caa7eb664f9e07e513/datasets/01f0d45a15781ded9980effe155e6c57_start_date"
+                    "fieldName": "Date",
+                    "displayName": "Date",
+                    "queryName": "f_date_q"
                   }
                 ]
               },
               "frame": {
-                "showTitle": true
+                "showTitle": true,
+                "title": "Date"
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 4,
-            "width": 1,
-            "height": 2
-          }
-        }
-      ],
-      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
-    },
-    {
-      "name": "a5739629",
-      "displayName": "Top Campaigns Deep Dive",
-      "layout": [
-        {
-          "widget": {
-            "name": "263162a9",
-            "multilineTextboxSpec": {
-              "lines": [
-                "# Top 20 Campaigns Metrics"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
             "y": 0,
-            "width": 6,
-            "height": 2
+            "width": 3,
+            "height": 1
           }
         },
         {
           "widget": {
-            "name": "cc82c640",
+            "name": "f_channel",
             "queries": [
               {
-                "name": "dashboards/01f0d459ec5114caa7eb664f9e07e513/datasets/01f0d45a15781ded9980effe155e6c57_campaign_name",
+                "name": "f_channel_q",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "campaign_name",
-                      "expression": "`campaign_name`"
-                    },
-                    {
-                      "name": "campaign_name_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                      "name": "Channel",
+                      "expression": "`Channel`"
                     }
                   ],
                   "disaggregated": false
@@ -736,819 +1141,41 @@
             ],
             "spec": {
               "version": 2,
-              "widgetType": "filter-single-select",
+              "widgetType": "filter-multi-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "campaign_name",
-                    "queryName": "dashboards/01f0d459ec5114caa7eb664f9e07e513/datasets/01f0d45a15781ded9980effe155e6c57_campaign_name"
+                    "fieldName": "Channel",
+                    "displayName": "Channel",
+                    "queryName": "f_channel_q"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Campaign Name"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 3,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "f08075db",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "campaign_name",
-                      "expression": "`campaign_name`"
-                    },
-                    {
-                      "name": "measure(cost_metric)",
-                      "expression": "MEASURE(`cost_metric`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "campaign_name",
-                  "axis": {
-                    "title": "Campaign Name"
-                  },
-                  "displayName": "Campaign Name",
-                  "scale": {
-                    "type": "categorical",
-                    "sort": {
-                      "by": "y-reversed"
-                    }
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(cost_metric)",
-                  "displayName": "Cost",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Campaign Cost"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 3,
-            "width": 3,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "fb6bb21c",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(total_sent)",
-                      "expression": "MEASURE(`total_sent`)"
-                    },
-                    {
-                      "name": "campaign_template",
-                      "expression": "`campaign_template`"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "pie",
-              "encodings": {
-                "angle": {
-                  "fieldName": "measure(total_sent)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "displayName": "Total sent"
-                },
-                "color": {
-                  "fieldName": "campaign_template",
-                  "displayName": "template",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Email Sent by Template"
+                "title": "Channel"
               }
             }
           },
           "position": {
             "x": 3,
-            "y": 2,
-            "width": 3,
-            "height": 7
-          }
-        },
-        {
-          "widget": {
-            "name": "8e5523ea",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "event_type",
-                      "expression": "`event_type`"
-                    },
-                    {
-                      "name": "weekly(event_date)",
-                      "expression": "DATE_TRUNC(\"WEEK\", `event_date`)"
-                    },
-                    {
-                      "name": "measure(nr_events)",
-                      "expression": "MEASURE(`nr_events`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "weekly(event_date)",
-                  "axis": {
-                    "title": "Event Date"
-                  },
-                  "displayName": "Event Date",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(nr_events)",
-                  "displayName": "Count of Events",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "event_type",
-                  "displayName": "event_type",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                }
-              },
-              "mark": {
-                "layout": "group"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 10,
-            "width": 6,
-            "height": 8
-          }
-        },
-        {
-          "widget": {
-            "name": "e7b6ef69",
-            "multilineTextboxSpec": {
-              "lines": [
-                "# Campaign Timeline"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 9,
-            "width": 6,
-            "height": 1
-          }
-        }
-      ],
-      "pageType": "PAGE_TYPE_CANVAS"
-    },
-    {
-      "name": "1982f84c",
-      "displayName": "Audience Analysis",
-      "layout": [
-        {
-          "widget": {
-            "name": "85af2b0a",
-            "multilineTextboxSpec": {
-              "lines": [
-                "# Audience Analysis\n",
-                "Analysis of contact activity and actions recorded, together with feedbacks and comments collected on the campaign"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
             "y": 0,
-            "width": 6,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "457244dc",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(total_clicks)",
-                      "expression": "MEASURE(`total_clicks`)"
-                    },
-                    {
-                      "name": "contact_device",
-                      "expression": "`contact_device`"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "pie",
-              "encodings": {
-                "angle": {
-                  "fieldName": "measure(total_clicks)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "Count of Records"
-                },
-                "color": {
-                  "fieldName": "contact_device",
-                  "displayName": "device",
-                  "scale": {
-                    "type": "categorical",
-                    "sort": {
-                      "by": "angle-reversed"
-                    }
-                  }
-                },
-                "label": {
-                  "show": false
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Engagment",
-                "showDescription": true,
-                "description": "By Device"
-              }
-            }
-          },
-          "position": {
-            "x": 4,
-            "y": 7,
-            "width": 2,
-            "height": 5
-          }
-        },
-        {
-          "widget": {
-            "name": "d86d0796",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "contact_source",
-                      "expression": "`contact_source`"
-                    },
-                    {
-                      "name": "measure(total_clicks)",
-                      "expression": "MEASURE(`total_clicks`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "contact_source",
-                  "displayName": "source",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(total_clicks)",
-                  "displayName": "Clicks",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "contact_source",
-                  "legend": {
-                    "hide": true
-                  },
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "label": {
-                  "show": false
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Engagment",
-                "showDescription": true,
-                "description": "By Source"
-              }
-            }
-          },
-          "position": {
-            "x": 2,
-            "y": 7,
-            "width": 2,
-            "height": 5
-          }
-        },
-        {
-          "widget": {
-            "name": "74913b96",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "fd53cf6d",
-                  "fields": [
-                    {
-                      "name": "feedback",
-                      "expression": "`feedback`"
-                    }
-                  ],
-                  "disaggregated": true
-                }
-              }
-            ],
-            "spec": {
-              "version": 1,
-              "widgetType": "table",
-              "encodings": {
-                "columns": [
-                  {
-                    "fieldName": "feedback",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": true,
-                    "order": 0,
-                    "title": "feedback",
-                    "allowSearch": false,
-                    "alignContent": "left",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  }
-                ]
-              },
-              "invisibleColumns": [
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "campaign_name",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 1,
-                  "title": "campaign_name",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "sentiment",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 2,
-                  "title": "sentiment",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "campaign_description",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 3,
-                  "title": "campaign_description",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0.00",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "cost",
-                  "type": "float",
-                  "displayAs": "number",
-                  "order": 4,
-                  "title": "cost",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "campaign_template",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 5,
-                  "title": "campaign_template",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "prospect_nr_of_employees",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 6,
-                  "title": "prospect_nr_of_employees",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "prospect_country",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 7,
-                  "title": "prospect_country",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "prospect_city",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 8,
-                  "title": "prospect_city",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "prospect_industry",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 9,
-                  "title": "prospect_industry",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "contact_department",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 10,
-                  "title": "contact_department",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "contact_source",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 11,
-                  "title": "contact_source",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "contact_device",
-                  "type": "string",
-                  "displayAs": "string",
-                  "order": 12,
-                  "title": "contact_device",
-                  "allowSearch": false,
-                  "alignContent": "left",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "dateTimeFormat": "DD/MM/YYYY",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "start_date",
-                  "type": "date",
-                  "displayAs": "datetime",
-                  "order": 13,
-                  "title": "start_date",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "dateTimeFormat": "DD/MM/YYYY",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "end_date",
-                  "type": "date",
-                  "displayAs": "datetime",
-                  "order": 14,
-                  "title": "end_date",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                }
-              ],
-              "allowHTMLByDefault": false,
-              "itemsPerPage": 25,
-              "paginationSize": "default",
-              "condensed": true,
-              "withRowNumber": true,
-              "frame": {
-                "showTitle": true,
-                "title": "Feedbacks"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 17,
             "width": 3,
-            "height": 4
+            "height": 1
           }
         },
         {
           "widget": {
-            "name": "06d1614e",
+            "name": "f_platform",
             "queries": [
               {
-                "name": "main_query",
+                "name": "f_platform_q",
                 "query": {
-                  "datasetName": "3dc85a76",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "measure(nr_impacted_campaigns)",
-                      "expression": "MEASURE(`nr_impacted_campaigns`)"
+                      "name": "Platform",
+                      "expression": "`Platform`"
                     }
                   ],
                   "disaggregated": false
@@ -1557,545 +1184,41 @@
             ],
             "spec": {
               "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(nr_impacted_campaigns)",
-                  "displayName": "Count of Unique campaign_id"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "# Impacted campaigns"
-              }
-            }
-          },
-          "position": {
-            "x": 5,
-            "y": 13,
-            "width": 1,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "5c0b3a35",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "fd53cf6d",
-                  "fields": [
-                    {
-                      "name": "sentiment",
-                      "expression": "`sentiment`"
-                    },
-                    {
-                      "name": "measure(count_feedbacks)",
-                      "expression": "MEASURE(`count_feedbacks`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "histogram",
-              "encodings": {
-                "x": {
-                  "fieldName": "sentiment",
-                  "axis": {
-                    "hideTitle": true,
-                    "hideLabels": true
-                  },
-                  "displayName": "sentiment",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(count_feedbacks)",
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "Count of Records",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "sentiment",
-                  "legend": {
-                    "hideTitle": true
-                  },
-                  "displayName": "sentiment",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "label": {
-                  "show": true
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Sentiment"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 14,
-            "width": 3,
-            "height": 3
-          }
-        },
-        {
-          "widget": {
-            "name": "56eaa731",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "3dc85a76",
-                  "fields": [
-                    {
-                      "name": "measure(count_issues)",
-                      "expression": "MEASURE(`count_issues`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(count_issues)",
-                  "displayName": "Count of Records"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "# Issues"
-              }
-            }
-          },
-          "position": {
-            "x": 4,
-            "y": 13,
-            "width": 1,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "4f377413",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "prospect_city",
-                      "expression": "`prospect_city`"
-                    },
-                    {
-                      "name": "prospect_country",
-                      "expression": "`prospect_country`"
-                    },
-                    {
-                      "name": "count(*)",
-                      "expression": "COUNT(`*`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "prospect_country",
-                  "axis": {
-                    "hideTitle": true,
-                    "hideLabels": false
-                  },
-                  "displayName": "country",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "y": {
-                  "fieldName": "count(*)",
-                  "axis": {
-                    "hideTitle": true,
-                    "title": "Compain Events",
-                    "hideLabels": false
-                  },
-                  "displayName": "Clicks",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "prospect_city",
-                  "displayName": "city",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "label": {
-                  "show": false
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Engagement",
-                "showDescription": true,
-                "description": "By Location"
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 2,
-            "width": 3,
-            "height": 5
-          }
-        },
-        {
-          "widget": {
-            "name": "6de6901b",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "fd53cf6d",
-                  "fields": [
-                    {
-                      "name": "measure(count_feedbacks)",
-                      "expression": "MEASURE(`count_feedbacks`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "measure(count_feedbacks)",
-                  "displayName": "Count of Records"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "# Feedbacks"
-              }
-            }
-          },
-          "position": {
-            "x": 1,
-            "y": 13,
-            "width": 2,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "0bed82e8",
-            "multilineTextboxSpec": {
-              "lines": [
-                "### Compliance and Legal"
-              ]
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 12,
-            "width": 3,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "52d66ea3",
-            "multilineTextboxSpec": {
-              "lines": [
-                "### Feedback and Comments"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 12,
-            "width": 3,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "d7cda629",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "measure(total_clicks)",
-                      "expression": "MEASURE(`total_clicks`)"
-                    },
-                    {
-                      "name": "contact_department",
-                      "expression": "`contact_department`"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "pie",
-              "encodings": {
-                "angle": {
-                  "fieldName": "measure(total_clicks)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "Count of Records"
-                },
-                "color": {
-                  "fieldName": "contact_department",
-                  "legend": {
-                    "hideTitle": false
-                  },
-                  "displayName": "department",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "label": {
-                  "show": false
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Engagement",
-                "showDescription": true,
-                "description": "By Departement"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 7,
-            "width": 2,
-            "height": 5
-          }
-        },
-        {
-          "widget": {
-            "name": "9de5fdf3",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "3dc85a76",
-                  "fields": [
-                    {
-                      "name": "complaint_type",
-                      "expression": "`complaint_type`"
-                    },
-                    {
-                      "name": "measure(count_issues)",
-                      "expression": "MEASURE(`count_issues`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "histogram",
-              "encodings": {
-                "x": {
-                  "fieldName": "complaint_type",
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "complaint_type",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(count_issues)",
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "Count of Records",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "complaint_type",
-                  "legend": {
-                    "hideTitle": true
-                  },
-                  "displayName": "complaint_type",
-                  "scale": {
-                    "type": "categorical",
-                    "mappings": [
-                      {
-                        "value": "[\"GDPR\"]",
-                        "color": "#FCA4A1"
-                      },
-                      {
-                        "value": "[\"CAN-SPAM Act\"]",
-                        "color": "#AB4057"
-                      },
-                      {
-                        "value": "[\"Other\"]",
-                        "color": "#eaeaea"
-                      }
-                    ]
-                  }
-                },
-                "label": {
-                  "show": true
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Complaints"
-              },
-              "mark": {
-                "colors": [
-                  "#FFAB00",
-                  "#FFAB00",
-                  "#00A972",
-                  "#FF3621",
-                  "#8BCAE7",
-                  "#AB4057",
-                  "#99DDB4",
-                  "#FCA4A1",
-                  "#919191",
-                  "#BF7080"
-                ]
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 14,
-            "width": 3,
-            "height": 7
-          }
-        },
-        {
-          "widget": {
-            "name": "71434332",
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
-              "encodings": {
-                "fields": []
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Sentiment"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 13,
-            "width": 1,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "318910b0",
-            "queries": [
-              {
-                "name": "dashboards/01f0d459ec5114caa7eb664f9e07e513/datasets/01f0df5804121138bc6e284893bfa7a6_complaint_type",
-                "query": {
-                  "datasetName": "3dc85a76",
-                  "fields": [
-                    {
-                      "name": "complaint_type",
-                      "expression": "`complaint_type`"
-                    },
-                    {
-                      "name": "complaint_type_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
+              "widgetType": "filter-multi-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "complaint_type",
-                    "queryName": "dashboards/01f0d459ec5114caa7eb664f9e07e513/datasets/01f0df5804121138bc6e284893bfa7a6_complaint_type"
+                    "fieldName": "Platform",
+                    "displayName": "Platform",
+                    "queryName": "f_platform_q"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Complaint Type"
+                "title": "Platform"
               }
             }
           },
           "position": {
-            "x": 3,
-            "y": 13,
-            "width": 1,
+            "x": 6,
+            "y": 0,
+            "width": 3,
             "height": 1
           }
         },
         {
           "widget": {
-            "name": "b9565487",
+            "name": "f_country",
             "queries": [
               {
-                "name": "main_query",
+                "name": "f_country_q",
                 "query": {
-                  "datasetName": "735f9c7b",
+                  "datasetName": "ds_metrics",
                   "fields": [
                     {
-                      "name": "sum(prospect_nr_of_employees)",
-                      "expression": "SUM(`prospect_nr_of_employees`)"
-                    },
-                    {
-                      "name": "prospect_industry",
-                      "expression": "`prospect_industry`"
-                    },
-                    {
-                      "name": "measure(total_clicks)",
-                      "expression": "MEASURE(`total_clicks`)"
+                      "name": "Country",
+                      "expression": "`Country`"
                     }
                   ],
                   "disaggregated": false
@@ -2103,834 +1226,53 @@
               }
             ],
             "spec": {
-              "version": 3,
-              "widgetType": "bar",
+              "version": 2,
+              "widgetType": "filter-multi-select",
               "encodings": {
-                "x": {
-                  "fieldName": "prospect_industry",
-                  "axis": {
-                    "hideLabels": false,
-                    "hideTitle": true
-                  },
-                  "displayName": "industry",
-                  "scale": {
-                    "type": "categorical"
+                "fields": [
+                  {
+                    "fieldName": "Country",
+                    "displayName": "Country",
+                    "queryName": "f_country_q"
                   }
-                },
-                "y": {
-                  "fieldName": "measure(total_clicks)",
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "Count of Records",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "sum(prospect_nr_of_employees)",
-                  "legend": {
-                    "position": "bottom"
-                  },
-                  "displayName": "TAM ",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "label": {
-                  "show": false
-                }
+                ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Engagement",
-                "showDescription": true,
-                "description": "By Industry"
+                "title": "Country"
               }
             }
           },
           "position": {
-            "x": 0,
-            "y": 2,
-            "width": 3,
-            "height": 5
-          }
-        }
-      ],
-      "pageType": "PAGE_TYPE_CANVAS"
-    },
-    {
-      "name": "c30c22ab",
-      "displayName": "Metrics & Trends",
-      "layout": [
-        {
-          "widget": {
-            "name": "10577be0",
-            "multilineTextboxSpec": {
-              "lines": [
-                "# Metrics & Trends over time\n",
-                "Databricks makes it easy to build ultra-personalized email campaign leveraging GenAI, and track their effectiveness!"
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
+            "x": 9,
             "y": 0,
-            "width": 6,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
-            "name": "b7ec7276",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "weekly(event_date)",
-                      "expression": "DATE_TRUNC(\"WEEK\", `event_date`)"
-                    },
-                    {
-                      "name": "measure(ctr)",
-                      "expression": "MEASURE(`ctr`)"
-                    },
-                    {
-                      "name": "measure(ctr_t7d)",
-                      "expression": "MEASURE(`ctr_t7d`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "weekly(event_date)",
-                  "displayName": "date",
-                  "scale": {
-                    "type": "temporal"
-                  }
-                },
-                "y": {
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "fields": [
-                    {
-                      "fieldName": "measure(ctr)"
-                    },
-                    {
-                      "fieldName": "measure(ctr_t7d)"
-                    }
-                  ]
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Click Through Rate"
-              },
-              "mark": {
-                "colors": [
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 4
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 3
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 5
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 6
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 7
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 8
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 9
-                  },
-                  {
-                    "themeColorType": "visualizationColors",
-                    "position": 10
-                  }
-                ]
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 6,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "e0bf8a7e",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "weekly(event_date)",
-                      "expression": "DATE_TRUNC(\"WEEK\", `event_date`)"
-                    },
-                    {
-                      "name": "measure(optouts_rate)",
-                      "expression": "MEASURE(`optouts_rate`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "weekly(event_date)",
-                  "displayName": "date",
-                  "scale": {
-                    "type": "temporal"
-                  }
-                },
-                "y": {
-                  "fieldName": "measure(optouts_rate)",
-                  "displayName": "Average optout_rate",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Marketing Opt Out Rate"
-              },
-              "mark": {
-                "size": 0.7
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 14,
-            "width": 6,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "d4243252",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "735f9c7b",
-                  "fields": [
-                    {
-                      "name": "weekly(event_date)",
-                      "expression": "DATE_TRUNC(\"WEEK\", `event_date`)"
-                    },
-                    {
-                      "name": "measure(spam_rate)",
-                      "expression": "MEASURE(`spam_rate`)"
-                    },
-                    {
-                      "name": "measure(delivery_rate)",
-                      "expression": "MEASURE(`delivery_rate`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "weekly(event_date)",
-                  "displayName": "date",
-                  "scale": {
-                    "type": "temporal"
-                  }
-                },
-                "y": {
-                  "primary": {
-                    "fields": [
-                      {
-                        "fieldName": "measure(spam_rate)",
-                        "displayName": "Average Spam Rate"
-                      }
-                    ],
-                    "scale": {
-                      "type": "quantitative"
-                    }
-                  },
-                  "secondary": {
-                    "fields": [
-                      {
-                        "fieldName": "measure(delivery_rate)",
-                        "displayName": "Average Delivery Rate"
-                      }
-                    ],
-                    "scale": {
-                      "type": "quantitative"
-                    }
-                  }
-                },
-                "color": {
-                  "legend": {
-                    "hideTitle": false,
-                    "hide": false
-                  }
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Delivery vs Spam  "
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 8,
-            "width": 6,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "a7bf516b",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "5d2ed024",
-                  "fields": [
-                    {
-                      "name": "campaign_id",
-                      "expression": "`campaign_id`"
-                    },
-                    {
-                      "name": "campaign_name",
-                      "expression": "`campaign_name`"
-                    },
-                    {
-                      "name": "campaign_description",
-                      "expression": "`campaign_description`"
-                    },
-                    {
-                      "name": "cost",
-                      "expression": "`cost`"
-                    },
-                    {
-                      "name": "start_date",
-                      "expression": "`start_date`"
-                    },
-                    {
-                      "name": "end_date",
-                      "expression": "`end_date`"
-                    }
-                  ],
-                  "disaggregated": true
-                }
-              }
-            ],
-            "spec": {
-              "version": 1,
-              "widgetType": "table",
-              "encodings": {
-                "columns": [
-                  {
-                    "fieldName": "campaign_id",
-                    "numberFormat": "0",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "integer",
-                    "displayAs": "number",
-                    "visible": true,
-                    "order": 0,
-                    "title": "ID",
-                    "allowSearch": true,
-                    "alignContent": "left",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  },
-                  {
-                    "fieldName": "campaign_name",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": true,
-                    "order": 1,
-                    "title": "Campaign Name",
-                    "allowSearch": true,
-                    "alignContent": "left",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  },
-                  {
-                    "fieldName": "campaign_description",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": false,
-                    "order": 6,
-                    "title": "Description",
-                    "allowSearch": true,
-                    "alignContent": "left",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  },
-                  {
-                    "fieldName": "cost",
-                    "numberFormat": "0.00 $",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "float",
-                    "displayAs": "number",
-                    "visible": true,
-                    "order": 7,
-                    "title": "Cost",
-                    "allowSearch": false,
-                    "alignContent": "right",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false,
-                    "cellFormat": {
-                      "default": {
-                        "foregroundColor": "#356AFF"
-                      },
-                      "rules": []
-                    }
-                  },
-                  {
-                    "fieldName": "start_date",
-                    "dateTimeFormat": "YYYY-MM-DD",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "date",
-                    "displayAs": "datetime",
-                    "visible": true,
-                    "order": 8,
-                    "title": "Start",
-                    "allowSearch": false,
-                    "alignContent": "right",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  },
-                  {
-                    "fieldName": "end_date",
-                    "dateTimeFormat": "YYYY-MM-DD",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "date",
-                    "displayAs": "datetime",
-                    "visible": true,
-                    "order": 9,
-                    "title": "End",
-                    "allowSearch": false,
-                    "alignContent": "right",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  }
-                ]
-              },
-              "invisibleColumns": [
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(total_sent)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100006,
-                  "title": "measure(total_sent)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(total_delivered)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100007,
-                  "title": "measure(total_delivered)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(total_spam)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100008,
-                  "title": "measure(total_spam)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(total_opens)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100009,
-                  "title": "measure(total_opens)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(total_optouts)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100010,
-                  "title": "measure(total_optouts)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(total_clicks)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100011,
-                  "title": "measure(total_clicks)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(unique_clicks)",
-                  "type": "integer",
-                  "displayAs": "number",
-                  "order": 100012,
-                  "title": "measure(unique_clicks)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0.00",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(ctr)",
-                  "type": "float",
-                  "displayAs": "number",
-                  "order": 100013,
-                  "title": "measure(ctr)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                },
-                {
-                  "numberFormat": "0.00",
-                  "booleanValues": [
-                    "false",
-                    "true"
-                  ],
-                  "imageUrlTemplate": "{{ @ }}",
-                  "imageTitleTemplate": "{{ @ }}",
-                  "imageWidth": "",
-                  "imageHeight": "",
-                  "linkUrlTemplate": "{{ @ }}",
-                  "linkTextTemplate": "{{ @ }}",
-                  "linkTitleTemplate": "{{ @ }}",
-                  "linkOpenInNewTab": true,
-                  "name": "measure(delivery_rate)",
-                  "type": "float",
-                  "displayAs": "number",
-                  "order": 100014,
-                  "title": "measure(delivery_rate)",
-                  "allowSearch": false,
-                  "alignContent": "right",
-                  "allowHTML": false,
-                  "highlightLinks": false,
-                  "useMonospaceFont": false,
-                  "preserveWhitespace": false
-                }
-              ],
-              "allowHTMLByDefault": false,
-              "itemsPerPage": 50,
-              "paginationSize": "default",
-              "condensed": true,
-              "withRowNumber": false,
-              "frame": {
-                "showTitle": false,
-                "showDescription": true,
-                "title": "campaigns",
-                "description": "Sorted by CTR and campaign Cost"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 20,
-            "width": 6,
-            "height": 8
+            "width": 3,
+            "height": 1
           }
         }
       ],
-      "pageType": "PAGE_TYPE_CANVAS"
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
     }
   ],
   "uiSettings": {
     "theme": {
-      "canvasBackgroundColor": {
-        "light": "#F9F7F4",
-        "dark": "#1B3139"
-      },
-      "widgetBackgroundColor": {
-        "light": "#EEEDE9",
-        "dark": "#0B2026"
-      },
-      "fontColor": {
-        "light": "#1B3139",
-        "dark": "#F9F7F4"
-      },
-      "selectionColor": {
-        "light": "#FF3621",
-        "dark": "#FF3621"
-      },
       "visualizationColors": [
-        "#1B5162",
+        "#077A9D",
         "#FF3621",
         "#FFAB00",
         "#00A972",
-        "#98102A",
-        "#A0ACBE",
-        "#FF9E94",
-        "#FFCC66",
-        "#70C4AB",
-        "#BF7080"
+        "#8BCAE7",
+        "#AB4057",
+        "#99DDB4",
+        "#FCA4A1"
       ],
-      "widgetHeaderAlignment": "LEFT"
-    },    
-    "genieSpace": {
-      "isEnabled": true,
-      "overrideId": "",
-      "enablementMode": "ENABLED"
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
     },
     "genieSpace": {
       "isEnabled": true,
       "overrideId": "",
       "enablementMode": "ENABLED"
-    },
-    "applyModeEnabled": false
+    }
   }
 }

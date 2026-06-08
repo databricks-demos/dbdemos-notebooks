@@ -1,48 +1,63 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Databricks AI/BI for Analyzing your Customer Support Team Performance
+# MAGIC # Databricks AI/BI — Making Customer Support More Efficient with AI
 # MAGIC
-# MAGIC [Databricks AI/BI](https://www.youtube.com/watch?v=5ctfW6Ac0Ws), the newest addition to the Databricks Intelligence Platform, is a new type of business intelligence product built to democratize analytics and insights for anyone in your organization - technical or nontechnical. 
+# MAGIC [Databricks AI/BI](https://www.youtube.com/watch?v=5ctfW6Ac0Ws), part of the Databricks Platform, is a new type of business intelligence product built to democratize analytics and insights for anyone in your organization - technical or nontechnical.
 # MAGIC
 # MAGIC Powered by _your own organization's data,_ AI/BI understands your unique business concepts, challenges, and areas of opportunity, continuously learning and improving based on feedback - all behind a slick, nontechnical UI.
 # MAGIC
-# MAGIC AI/BI features two complementary capabilities: _Dashboards and Genie_. 
+# MAGIC AI/BI features two complementary capabilities: _Dashboards and Genie_.
 # MAGIC
 # MAGIC - **Dashboards** provide a low-code experience to help analysts quickly build highly interactive data visualizations for their business teams using any natural language.
 # MAGIC - **Genie** allows business users to converse with their data to ask questions and self-serve their own analytics.
 # MAGIC
 # MAGIC Databricks AI/BI is native to the Databricks Platform, providing instant insights at massive scale while ensuring unified governance and fine-grained security are maintained across the entire organization.
 # MAGIC
-# MAGIC
-# MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Sales-pipeline-review&demo_name=sales-pipeline&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=AI-BI-Customer-support&demo_name=aibi-customer-support&event=VIEW">
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Customer Support Team Performance Review
+# MAGIC # The story: "Travel Co" turns support into a competitive advantage with AI
 # MAGIC ---
 # MAGIC
 # MAGIC ## The Challenge
 # MAGIC
-# MAGIC In today’s competitive environment, ensuring top-notch customer support is essential for retaining clients and fostering loyalty. Inefficient support team management can lead to slower response times, unresolved customer issues, and a negative impact on customer satisfaction and brand reputation. Organizations without a robust data intelligence platform often face challenges in consolidating data from multiple channels, providing actionable insights to support teams, and minimizing the time required to address customer concerns effectively.
+# MAGIC **Travel Co** is a global travel company. Its support team handles thousands of cases every week — booking issues, billing questions, outages — across **4 regions** and dozens of **travel products**. Like most support orgs, costs were climbing, resolution times were too long, and satisfaction was flat. Leadership wanted one question answered: _can AI actually make support better, and can we prove it in dollars?_
 # MAGIC
-# MAGIC ## The Solution
+# MAGIC ## The Solution: an AI Support Copilot, measured end-to-end on Databricks
 # MAGIC
-# MAGIC The Databricks Platform leverages **AI and Business Intelligence (AI/BI)** to transform the way organizations manage and analyze customer support operations. By integrating support cases, customer, product and AI-assistant data into a unified, governed environment, Databricks eliminates data silos and provides complete visibility into support team performance.
+# MAGIC On **June 2nd, 2025**, Travel Co launched an **AI Support Copilot built with [Agent Bricks](https://www.databricks.com/product/artificial-intelligence)**. It **auto-resolves** the most common ticket categories — *How-To, Access and Billing* — end to end, freeing human agents to focus on complex *Outage, Bug and Performance* cases.
 # MAGIC
-# MAGIC In this demo, our travel company rolled out an **AI Support Copilot (built with Agent Bricks)** that auto-resolves common tickets. With AI/BI you can see the impact in one place — resolution time and cost dropping, satisfaction rising — and with natural-language Genie you can ask *why* it happened and trace it straight to the AI launch. This accelerates time-to-insights and proves the business value of AI on your support operation.
+# MAGIC The impact was immediate and measurable. After the launch:
 # MAGIC
-# MAGIC ## This Notebook
+# MAGIC | Metric | Before AI | After AI |
+# MAGIC |---|---|---|
+# MAGIC | ⏱️ Avg resolution time | ~28 h | **~12 h** |
+# MAGIC | 😀 Customer satisfaction | ~3.6 / 5 | **~4.2 / 5** |
+# MAGIC | 💸 Cost per case | ~$2,000 | **~$875** |
+# MAGIC | 🤖 Cases auto-resolved by AI | 0% | **up to ~40%** |
 # MAGIC
-# MAGIC This notebook will guide you, the skilled Databricks enthusiast, through deploying a Databricks AI/BI project designed to review and optimize customer support team performance. By following the outlined steps, you'll gain hands-on experience in managing support data effectively. The accompanying dashboard and Genie Dataroom are already accessible via **these links**.
+# MAGIC ## Why this is a great AI/BI demo
 # MAGIC
-# MAGIC In the following sections, this notebook will guide you at a high level through:
-# MAGIC 1. Data Ingestion with **Lakeflow Connect**
-# MAGIC 2. Data Governance and Security with **Unity Catalog**
-# MAGIC 3. Creating Interactive **Dashboards** with Databricks
-# MAGIC 4. Utilizing **Genie** for natural language queries to analyze and enhance support team performance, even in complex scenarios
+# MAGIC The magic isn't just *seeing* the improvement on a **Dashboard** — it's being able to ask **Genie** _"why did our resolution time drop in 2025?"_ and have it trace the answer to **another table**: the AI Copilot's release log and its daily usage that jumped exactly when support got faster. That's the closed loop: **observe → ask why → act**, all in natural language on governed data.
+# MAGIC
+# MAGIC ## The data (pre-loaded for you)
+# MAGIC
+# MAGIC The demo ships a clean, governed schema with full lineage (`bronze → silver → enriched → metric view`):
+# MAGIC
+# MAGIC - **`support_cases`** — the fact table: every support case with resolution time, cost, satisfaction, channel, priority, and whether the AI handled it.
+# MAGIC - **`ai_assistant_releases`** — the AI Copilot release log _(the "why": what each version does)_.
+# MAGIC - **`ai_assistant_usage`** — daily AI queries & deflections _(rises in lockstep with the improvement)_.
+# MAGIC - **`customers`, `products`, `cities`, `regions`, `calendar`** — dimensions to slice by segment, product, destination and time.
+# MAGIC - **`support_cases_enriched`** — analysis-ready join, and **`support_metrics`** — a governed UC metric view powering the dashboard & Genie.
+# MAGIC
+# MAGIC This notebook walks you through:
+# MAGIC 1. Ingesting data with **Lakeflow Connect**
+# MAGIC 2. Governing everything with **Unity Catalog**
+# MAGIC 3. Seeing the AI impact on an **AI/BI Dashboard**
+# MAGIC 4. Asking **Genie** _why_ — and getting the answer from the data
 
 # COMMAND ----------
 
@@ -60,18 +75,18 @@
 # MAGIC   </a>
 # MAGIC </div>
 # MAGIC
-# MAGIC As in any data project, your first step is to ingest and centralize your data to a central place.
+# MAGIC Travel Co's support data lives across several systems — a ticketing tool, a CRM, the AI assistant's telemetry. The first step is to ingest and centralize it.
 # MAGIC
-# MAGIC Databricks makes this super simple with LakeFlow Connect, a **point-and-click data ingestion solution** supporting:
+# MAGIC Databricks makes this super simple with **LakeFlow Connect**, a **point-and-click data ingestion solution** supporting:
 # MAGIC
 # MAGIC - Databases -- including SQL Servers and more.
-# MAGIC - Enterprise applications such as Salesforce, Workday, Google Analytics, or ServiceNow.
+# MAGIC - Enterprise applications such as Salesforce, Workday, ServiceNow or Zendesk.
 # MAGIC
-# MAGIC If you want to know more about LakeFlow Connect and how to incrementally synchronize your external table to Databricks, you can open the [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo).
+# MAGIC Once landed as raw (bronze) data, **Lakeflow Pipelines** clean and join it into the governed `silver` tables and the `support_cases_enriched` table this demo runs on — giving you full **lineage** from raw files to dashboard.
 # MAGIC
+# MAGIC To learn more, open the [Lakeflow Connect Product Tour](https://www.databricks.com/resources/demos/tours/platform/discover-databricks-lakeflow-connect-demo) or the [Lakeflow Pipelines Product Tour](https://www.databricks.com/resources/demos/tours/data-engineering/delta-live-tables).
 # MAGIC
-# MAGIC In this demo, we pre-loaded the data for you! For more details on how to simplify data transformation, [open the Lakeflow Pipelines Product Tour](https://www.databricks.com/resources/demos/tours/data-engineering/delta-live-tables).
-# MAGIC
+# MAGIC _In this demo, the data is pre-loaded and transformed for you — explore the tables in the Catalog to see the bronze → silver → enriched lineage._
 
 # COMMAND ----------
 
@@ -81,48 +96,53 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_uc.png" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Once your data is ingested and ready to go, **Databricks Unity Catalog** provides all the key features to support your business's data governance requirements, _including but not limited to_:
+# MAGIC Support data is sensitive — customer details, call transcripts, costs. Once ingested, **Databricks Unity Catalog** governs all of it with:
 # MAGIC
-# MAGIC - **Fine Grained Access control on your data**: Control who can access which row or column based on your own organization
-# MAGIC - **Full lineage, from data ingestion to ML models**: Analyze all downstream impact for any legal / privacy requirements
-# MAGIC - **Audit and traceability**: Analyze who did what, when
-# MAGIC - **Support for everything**: Including files, tables, dashboards, ML/AI models, jobs, and more! _Simplify governance, support all your teams in one place._
+# MAGIC - **Fine-grained access control**: control who can access which row or column
+# MAGIC - **Full lineage, from raw files to AI models**: trace any downstream impact for legal / privacy requirements (you'll see the `bronze → silver → support_cases_enriched` lineage right in the Catalog)
+# MAGIC - **Audit and traceability**: analyze who did what, when
+# MAGIC - **Support for everything**: tables, dashboards, ML/AI models, the `support_metrics` metric view, jobs and more — _one place to govern every team_
 # MAGIC
-# MAGIC Explore the data and table ingested in [Unity Catalog](/explore/data) and make sure that it looks appropriate for your organization's needs.
+# MAGIC Explore the data and tables in [Unity Catalog](/explore/data) and check the lineage graph on `support_cases_enriched`.
 # MAGIC
 # MAGIC Click [here](https://www.databricks.com/product/unity-catalog) for more information on Databricks Unity Catalog.
-# MAGIC
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Step 3: Utilize Databricks Dashboards to clearly show data trends
+# MAGIC ## Step 3: See the AI impact on an AI/BI Dashboard
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Your Customer Support data is now available for your Data Analyst to explore and track their main KPIs.
+# MAGIC Travel Co's support data is now ready for the team to explore. The dashboard tells the story at a glance, across two pages:
 # MAGIC
-# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
+# MAGIC - **Customer Support** — volume, resolution time and satisfaction, a **forecast** of human-handled cases (watch it step down at the AI launch), plus a map of support by travel destination.
+# MAGIC - **AI Copilot Impact** — the before/after: resolution time and cost dropping, AI deflection ramping up, and the **estimated annual savings** — with the release log explaining *what* changed.
 # MAGIC
-# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
+# MAGIC Built on a governed **metric view** (`support_metrics`), every KPI stays consistent whether you slice by **region** (try APAC — it's the slowest!), category, channel or product.
 # MAGIC
-# MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
+# MAGIC AI/BI Dashboards make it easy to build and iterate on these visualizations with natural language, and they live side-by-side with your data for instant, interactive analysis at any scale.
 # MAGIC
-# MAGIC
-# MAGIC Open the <a dbdemos-dashboard-id="customer-support" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Customer Support Dashboard to analyze & track main KPIs</a>
+# MAGIC Open the <a dbdemos-dashboard-id="customer-support" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Customer Support Dashboard to see the AI efficiency story</a>
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Step 4: Create Genie to allow end-users to converse with your data
+# MAGIC ## Step 4: Ask Genie *why* — and get the answer from the data
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_genie_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Our data is now available as a Dashboard that our business users can open.
+# MAGIC The dashboard shows resolution time dropping sharply in mid-2025. A support manager's natural next question is simply: **"why?"**
 # MAGIC
-# MAGIC However, they'll likely have extra questions or followup based on the insight they see in the dashboard, like: "Why did our resolution time drop in 2025?" or "Which region is the slowest, and how much did the AI Copilot save us?"
+# MAGIC With **Genie**, they just ask — in plain language — and Genie joins the right tables to answer:
+# MAGIC
+# MAGIC - _"Why did our average support resolution time drop in 2025?"_ → Genie finds the **AI Copilot v1.0 GA release (2025-06-02)** and shows AI deflections jumping from 0 at that exact date.
+# MAGIC - _"How much did support cost per case fall after the AI Copilot launched?"_
+# MAGIC - _"Which region is the slowest, and which categories does the AI auto-resolve?"_
+# MAGIC
+# MAGIC This is the payoff: the answer to *"why"* doesn't live in someone's head — it lives in the **`ai_assistant_releases`** and **`ai_assistant_usage`** tables, and Genie surfaces it instantly on governed data.
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="customer-support" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Customer Support Genie space to deep dive into your data</a>
 
@@ -132,15 +152,14 @@
 # MAGIC
 # MAGIC ## "I've had enough of AI/BI for now, what next?"
 # MAGIC
-# MAGIC We have seen how the Databricks Platform comprehensively understands your data, streamlining the journey from data ingestion to insightful dashboards, and supporting natural language queries.
+# MAGIC We have seen how the Databricks Platform comprehensively understands your data — from ingestion and governed lineage, to a dashboard that proves the **business value of AI on support**, to natural-language Genie that explains *why* it happened.
 # MAGIC
-# MAGIC In addition, Databricks offers advanced capabilities, including:
+# MAGIC And the loop can keep going: the very same AI Support Copilot is built on Databricks with **Agent Bricks**. In addition, Databricks offers:
 # MAGIC
-# MAGIC - **Data Engineering**: Build and orchestrate sophisticated data pipelines using Python and SQL
+# MAGIC - **Data Engineering**: Build and orchestrate sophisticated data pipelines with Lakeflow (Python & SQL)
 # MAGIC - **Data Quality & Monitoring**: Ensure your data remains accurate and reliable
-# MAGIC - **Comprehensive Governance**: Implement fine-grained access controls and tagging
-# MAGIC - **State-of-the-Art Warehouse Engine**: Achieve excellent total cost of ownership (TCO)
-# MAGIC - **Support for ML, AI & GenAI Applications**: Fully hosted by Databricks
-# MAGIC - **GenAI Capabilities**: Create custom agents to further empower your business users
+# MAGIC - **Comprehensive Governance**: Fine-grained access controls and tagging across every asset
+# MAGIC - **State-of-the-Art Warehouse Engine**: Excellent total cost of ownership (TCO)
+# MAGIC - **Agent Bricks & GenAI**: Build the kind of AI Support Copilot featured in this demo, fully hosted and governed on Databricks
 # MAGIC
 # MAGIC Interested in learning more? [Explore our end-to-end platform demos](https://www.databricks.com/resources/demos/tutorials?itm_data=demo_center) to see step-by-step implementations.

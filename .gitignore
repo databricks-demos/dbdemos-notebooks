@@ -3,3 +3,6 @@
 databricks.yml
 .DS_Store
 **/.DS_Store
+.ai-dev-kit/
+.claude/
+.tmp_cs_build/

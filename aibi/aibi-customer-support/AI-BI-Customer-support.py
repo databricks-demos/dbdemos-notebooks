@@ -30,9 +30,9 @@
 # MAGIC
 # MAGIC ## The Solution
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (AI/BI)** to transform the way organizations manage and analyze customer support operations. By integrating data from support ticketing systems, CRM platforms, and customer feedback channels into a unified environment, Databricks eliminates data silos and provides complete visibility into support team performance.
+# MAGIC The Databricks Platform leverages **AI and Business Intelligence (AI/BI)** to transform the way organizations manage and analyze customer support operations. By integrating support cases, customer, product and AI-assistant data into a unified, governed environment, Databricks eliminates data silos and provides complete visibility into support team performance.
 # MAGIC
-# MAGIC Advanced AI-driven analytics and intuitive BI tools enable support managers and agents to monitor key metrics such as response time, resolution rate, and customer satisfaction. With natural language query capabilities, users can easily identify bottlenecks, uncover trends, and optimize workflows. This approach accelerates time-to-insights, improves team efficiency, and ensures a consistently high level of service for customers.
+# MAGIC In this demo, our travel company rolled out an **AI Support Copilot (built with Agent Bricks)** that auto-resolves common tickets. With AI/BI you can see the impact in one place — resolution time and cost dropping, satisfaction rising — and with natural-language Genie you can ask *why* it happened and trace it straight to the AI launch. This accelerates time-to-insights and proves the business value of AI on your support operation.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
@@ -122,7 +122,7 @@
 # MAGIC
 # MAGIC Our data is now available as a Dashboard that our business users can open.
 # MAGIC
-# MAGIC However, they'll likely have extra questions or followup based on the insight they see in the dashboard, like: "What the heck is wrong with my campaign, anyway?" or "What was the CTR of my campaign last month?"
+# MAGIC However, they'll likely have extra questions or followup based on the insight they see in the dashboard, like: "Why did our resolution time drop in 2025?" or "Which region is the slowest, and how much did the AI Copilot save us?"
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="customer-support" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Customer Support Genie space to deep dive into your data</a>
 
@@ -132,7 +132,7 @@
 # MAGIC
 # MAGIC ## "I've had enough of AI/BI for now, what next?"
 # MAGIC
-# MAGIC We have seen how Databricks' Databricks Platform comprehensively understands your data, streamlining the journey from data ingestion to insightful dashboards, and supporting natural language queries.
+# MAGIC We have seen how the Databricks Platform comprehensively understands your data, streamlining the journey from data ingestion to insightful dashboards, and supporting natural language queries.
 # MAGIC
 # MAGIC In addition, Databricks offers advanced capabilities, including:
 # MAGIC

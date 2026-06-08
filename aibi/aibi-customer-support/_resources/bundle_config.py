@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
 
@@ -8,11 +8,11 @@
 {
     "name": "aibi-customer-support",
     "category": "AI-BI",
-    "title": "AI/BI: AI-Assisted Customer Support Performance Review",
+    "title": "AI/BI: Making Customer Support More Efficient with AI",
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_aibi_customer_support",
-    "description": "Enhance your customer support effectiveness and analytics with AI/BI Dashboards. Then, utilize Genie to drill deeper into team performance.",
+    "description": "Show how an AI Support Copilot makes customer support dramatically more efficient. Explore the impact with an AI/BI Dashboard, then ask Genie why resolution time dropped.",
     "bundle": True,
     "notebooks": [
       {
@@ -30,325 +30,246 @@
     "pipelines": [],
     "dashboards": [
       {
-        "name": "[dbdemos] AIBI - AI-Assisted Customer Support Team Review",
-        "id": "customer-support"
+        "name": "[dbdemos] AIBI - Customer Support: AI Efficiency",
+        "id": "customer-support",
+        "genie_room_id": "customer-support"
       }
     ],
     "data_folders": [
-      {
-        "source_folder": "aibi/dbdemos_aibi_customer_support/agents_bronze",
-        "source_format": "parquet",
-        "target_volume_folder": "agents_bronze",
-        "target_format": "parquet"
-      },
-      {
-        "source_folder": "aibi/dbdemos_aibi_customer_support/tickets_bronze",
-        "source_format": "parquet",
-        "target_volume_folder": "tickets_bronze",
-        "target_format": "parquet"
-      },
-      {
-        "source_folder": "aibi/dbdemos_aibi_customer_support/sla_bronze",
-        "source_format": "parquet",
-        "target_volume_folder": "sla_bronze",
-        "target_format": "parquet"
-      }      
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/regions",               "source_format": "parquet", "target_volume_folder": "regions",               "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/cities",                "source_format": "parquet", "target_volume_folder": "cities",                "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/products",              "source_format": "parquet", "target_volume_folder": "products",              "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/customers",             "source_format": "parquet", "target_volume_folder": "customers",             "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/calendar",              "source_format": "parquet", "target_volume_folder": "calendar",              "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/support_cases",         "source_format": "parquet", "target_volume_folder": "support_cases",         "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/ai_assistant_releases", "source_format": "parquet", "target_volume_folder": "ai_assistant_releases", "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_customer_support_v2/ai_assistant_usage",    "source_format": "parquet", "target_volume_folder": "ai_assistant_usage",    "target_format": "parquet"}
     ],
     "sql_queries": [
       [
-        """
-        CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_bronze 
-        TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) 
-        COMMENT 'Bronze table containing customer support agent information' 
-        AS SELECT * EXCEPT (_rescued_data) 
-        FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/agents_bronze', format => 'parquet', pathGlobFilter => '*.parquet')
-        """,
-        """
-        CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze 
-        TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) 
-        COMMENT 'Bronze table containing service level agreement metrics for customer support tickets' 
-        AS SELECT * EXCEPT (_rescued_data) 
-        FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/sla_bronze', format => 'parquet', pathGlobFilter => '*.parquet')
-        """,
-        """
-        CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze 
-        TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) 
-        COMMENT 'Bronze table containing customer support ticket information and history' 
-        AS SELECT * EXCEPT (_rescued_data) 
-        FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/tickets_bronze', format => 'parquet', pathGlobFilter => '*.parquet')
-        """
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.regions_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw geographic regions' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/regions', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cities_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw destination cities' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/cities', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.products_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw travel products' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/products', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.customers_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw customers (travel agencies)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/customers', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.calendar_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw calendar with holidays' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/calendar', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.support_cases_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: raw support cases' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/support_cases', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_releases_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: AI Support Copilot release log' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/ai_assistant_releases', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_usage_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: daily AI Support Copilot usage' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/ai_assistant_usage', format => 'parquet', pathGlobFilter => '*.parquet')"""
       ],
       [
-        """
-        CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean (
-            ticket_id BIGINT COMMENT 'Unique identifier for the customer support ticket, allowing tracking of individual tickets and their support.',
-            agent_group STRING COMMENT 'Represents the group of agents responsible for the ticket, providing a way to analyze performance and workload.',
-            agent_name STRING COMMENT 'Identifies the individual agent responsible for the ticket, allowing tracking of individual agent performance.',
-            agent_interactions DOUBLE COMMENT 'Represents the number of interactions the agent has had with the customer, giving insight into the complexity of the issue and the agents workload.',
-            ai_suggestion_accepted INTEGER COMMENT 'Indicates whether the AI-generated suggestion was accepted by the customer.',
-            PRIMARY KEY (ticket_id) RELY
-        )
-        USING delta COMMENT 'The agents_clean table contains information about the customer support agents and their interactions with customers. It includes details such as the number of interactions per agent and the agent group they belong to. This data can be used to analyze agent performance, identify high-performing and low-performing groups, and optimize agent allocation for better customer support. Additionally, it can help in identifying potential training needs for individual agents or groups.';
-        """,
-        """
-        CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (
-              ticket_id BIGINT COMMENT 'Unique identifier for each ticket, allowing for easy tracking and reference.',
-              status STRING COMMENT 'Represents the current status of the ticket, indicating whether it is open, closed, or in progress.',
-              priority STRING COMMENT 'Describes the urgency of the ticket, allowing for prioritization and efficient allocation of resources.',
-              source STRING COMMENT 'Identifies the source of the ticket, providing information about the customer or system that generated it.',
-              topic STRING COMMENT 'Represents the topic or issue related to the ticket, allowing for categorization and efficient handling.',
-              created_time TIMESTAMP COMMENT 'The timestamp when the ticket was created, indicating when it was first reported.',
-              close_time TIMESTAMP COMMENT 'The timestamp when the ticket was closed, indicating when it was resolved.',
-              product_group STRING COMMENT 'Identifies the product or service group associated with the ticket, allowing for categorization and efficient handling.',
-              support_level STRING COMMENT 'Represents the level of support provided for the ticket, indicating the resources allocated to its resolution.',
-              country STRING COMMENT 'Identifies the country where the ticket was generated, providing information about the geographical location of the customer or system.',
-              country_code STRING COMMENT 'Identifies the country where the ticket was generated, providing information about the geographical location of the customer or system.',
-              continental_region STRING COMMENT 'Represents the continent where the ticket was generated',
-              latitude DOUBLE COMMENT 'Represents the latitude of the customer or system location, providing more precise information about the geographical location.',
-              longitude DOUBLE COMMENT 'Represents the longitude of the customer or system location, providing more precise information about the geographical location.',
-              operational_cost DOUBLE COMMENT 'Represents the operational cost associated with the ticket',
-              call_transcript STRING COMMENT 'Contains the transcript of the customer support conversation, allowing for analysis of the customer support conversation and its impact on the ticket resolution time.',
-              compliance_greeting STRING COMMENT 'Represents the compliance status of the ticket',
-              compliance_data_leak STRING COMMENT 'Represents the data leak status of the ticket',
-              call_sentiment_score DOUBLE COMMENT 'Represents the sentiment score of the customer support conversation',
-              compliance_score DOUBLE COMMENT 'Represents the compliance score of the ticket',    
-              csat_score DOUBLE COMMENT 'The CSAT score of the ticket',
-              first_time_resolution BOOLEAN COMMENT 'Indicates whether the ticket was resolved in the first attempt or not',
-              agent_experience_level INTEGER COMMENT 'Represents the experience level of the agent who handled the ticket',
-              agent_specialization_match BOOLEAN COMMENT 'Indicates whether the agent who handled the ticket had a matching specialization with the ticket topic',
-              ticket_in_business_hours BOOLEAN COMMENT 'Indicates whether the ticket was created during business hours or not',
-              PRIMARY KEY (ticket_id) RELY
-        ) USING delta COMMENT 'The tickets_clean table contains customer support tickets that have been cleaned and preprocessed. It includes details such as ticket status, priority, source, topic, and geographical location. This data can be used for monitoring and managing customer support tickets, tracking ticket resolution times, and analyzing customer support patterns based on factors like ticket source, priority, and geographical location. This information can help improve customer support processes and identify potential areas for improvement.';
-        """,
-        """
-        CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean (
-            ticket_id BIGINT COMMENT 'Unique identifier for the customer support ticket.',
-            expected_sla_to_resolve BIGINT COMMENT 'The expected service level agreement (SLA) for resolving the ticket.',
-            expected_sla_to_first_response BIGINT COMMENT 'The expected SLA for the first response to the ticket.',
-            first_response_time BIGINT COMMENT 'The actual time taken for the first response to the ticket.',
-            sla_for_first_response STRING COMMENT 'The SLA achieved for the first response to the ticket.',
-            resolution_time BIGINT COMMENT 'The actual time taken to resolve the ticket.',
-            sla_for_resolution STRING COMMENT 'The SLA achieved for resolving the ticket.',
-            survey_results DOUBLE COMMENT 'The survey results for the customers experience with the support ticket, measured on a numerical scale.',
-            sla_penalty_cost DOUBLE COMMENT 'The penalty incurred for not meeting the SLA for resolving the ticket.',
-            clv_risk DOUBLE COMMENT 'The customer lifetime value (CLV) risk associated with the ticket.',
-            interaction_notes STRING COMMENT 'Contains any additional notes or comments related to the agents interactions with the customer.',
-            first_time_interaction BOOLEAN COMMENT 'Indicates whether the agent had a first-time interaction with the customer or not.',
-            resolution_attempt_number INTEGER COMMENT 'The number of attempts made to resolve the ticket before it was successfully resolved',
-            PRIMARY KEY (ticket_id) RELY
-        )
-        USING delta COMMENT 'The sla_clean table contains information about the Service Level Agreements (SLAs) for customer support tickets. It includes details about the expected SLAs for first response and resolution, as well as the actual SLAs achieved. This data can be used to assess the performance of customer support teams, identify bottlenecks, and track improvements in SLAs over time. Additionally, survey results are included to provide feedback on the quality of customer support.';
-        """
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.regions (
+            region_id BIGINT COMMENT 'Unique region identifier.',
+            region_name STRING COMMENT 'Region name (NA, EMEA, APAC, LATAM).',
+            primary_timezone STRING COMMENT 'Primary timezone of the region.',
+            PRIMARY KEY (region_id) RELY
+        ) USING delta COMMENT 'Geographic regions served by the travel support organization.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cities (
+            city_id BIGINT COMMENT 'Unique city identifier.',
+            city_name STRING COMMENT 'Destination city name.',
+            country_name STRING COMMENT 'Country of the destination city.',
+            region_id BIGINT COMMENT 'Region this city belongs to.',
+            latitude DOUBLE COMMENT 'Latitude of the destination (for maps).',
+            longitude DOUBLE COMMENT 'Longitude of the destination (for maps).',
+            PRIMARY KEY (city_id) RELY
+        ) USING delta COMMENT 'Destination cities customers travel to. Joined to support_cases via destination_city_id.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.products (
+            product_id BIGINT COMMENT 'Unique product identifier.',
+            product_name STRING COMMENT 'Travel bundle / product name.',
+            package_tier STRING COMMENT 'Package tier (Standard / Plus / Premium).',
+            market_focus STRING COMMENT 'Primary market focus for the product.',
+            PRIMARY KEY (product_id) RELY
+        ) USING delta COMMENT 'Travel bundles / products sold by the company.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.customers (
+            customer_id BIGINT COMMENT 'Unique customer identifier.',
+            customer_name STRING COMMENT 'Customer (travel agency) name.',
+            customer_segment STRING COMMENT 'Segment (SMB / Mid-Market / Enterprise).',
+            industry STRING COMMENT 'Customer industry.',
+            contract_value_band STRING COMMENT 'Contract value band proxying account size.',
+            region_id BIGINT COMMENT 'Customer home region.',
+            PRIMARY KEY (customer_id) RELY
+        ) USING delta COMMENT 'Customers (travel agencies / corporate-travel firms).'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.calendar (
+            date DATE COMMENT 'Calendar date.',
+            year INT COMMENT 'Year.', quarter INT COMMENT 'Quarter.', month INT COMMENT 'Month.', week INT COMMENT 'ISO week.',
+            is_us_holiday BOOLEAN COMMENT 'Whether the date is a US holiday.',
+            holiday_name STRING COMMENT 'Holiday name if applicable.',
+            is_peak_season BOOLEAN COMMENT 'Whether the date falls in a peak travel season.',
+            PRIMARY KEY (date) RELY
+        ) USING delta COMMENT 'Date dimension with US holiday and peak-travel-season flags.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_releases (
+            release_id BIGINT COMMENT 'Unique release identifier.',
+            version STRING COMMENT 'Release version.',
+            release_date DATE COMMENT 'Release date.',
+            capability_summary STRING COMMENT 'Short summary of what the release does.',
+            release_notes STRING COMMENT 'Full release notes describing the AI Support Copilot capabilities.',
+            auto_resolved_categories STRING COMMENT 'Ticket categories the copilot auto-resolves at this release.',
+            status STRING COMMENT 'Release status (Beta / GA).',
+            PRIMARY KEY (release_id) RELY
+        ) USING delta COMMENT 'Release log for the AI Support Copilot, built on Databricks with Agent Bricks. The v1.0 GA release (2025-06-02) auto-resolves How-To/Access/Billing and is the reason support resolution time dropped.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_usage (
+            usage_date DATE COMMENT 'Day of AI assistant activity.',
+            ai_queries BIGINT COMMENT 'Total AI assistant queries that day.',
+            ai_deflections BIGINT COMMENT 'Cases fully auto-resolved by the AI that day.',
+            assist_queries BIGINT COMMENT 'Copilot assist queries on human-handled cases.',
+            ai_compute_cost DOUBLE COMMENT 'AI compute cost in USD for the day.',
+            PRIMARY KEY (usage_date) RELY
+        ) USING delta COMMENT 'Daily AI Support Copilot activity. ai_deflections jump at the GA release and track the resolution-time drop.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.support_cases (
+            case_id BIGINT COMMENT 'Unique support case identifier.',
+            opened_at TIMESTAMP COMMENT 'When the case was opened.',
+            closed_at TIMESTAMP COMMENT 'When the case was closed.',
+            opened_date DATE COMMENT 'Date the case was opened (for joins/trends).',
+            category STRING COMMENT 'Case category (How-To, Access, Billing, Outage, Bug, Performance).',
+            channel STRING COMMENT 'Channel (Email, Chat, In-App, Phone).',
+            priority STRING COMMENT 'Priority (Low, Medium, High, Critical).',
+            support_tier STRING COMMENT 'Support tier (Tier 1/2/3).',
+            region_id BIGINT COMMENT 'Region the case belongs to.',
+            customer_id BIGINT COMMENT 'Customer that opened the case.',
+            product_id BIGINT COMMENT 'Product the case is about.',
+            destination_city_id BIGINT COMMENT 'Travel destination city for the case.',
+            ai_handled BOOLEAN COMMENT 'TRUE when auto-resolved by the AI Support Copilot.',
+            resolution_hours DOUBLE COMMENT 'Hours taken to resolve the case.',
+            satisfaction_score DOUBLE COMMENT 'Customer satisfaction (2-5, null if no survey).',
+            reopened_flag BOOLEAN COMMENT 'Whether the case was reopened.',
+            support_cost DOUBLE COMMENT 'Cost of handling the case in USD.',
+            PRIMARY KEY (case_id) RELY,
+            CONSTRAINT sc_customer_fk FOREIGN KEY (customer_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.customers(customer_id),
+            CONSTRAINT sc_product_fk  FOREIGN KEY (product_id)  REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.products(product_id),
+            CONSTRAINT sc_region_fk   FOREIGN KEY (region_id)   REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.regions(region_id),
+            CONSTRAINT sc_city_fk     FOREIGN KEY (destination_city_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.cities(city_id)
+        ) USING delta COMMENT 'Customer support cases for the travel company. resolution_hours and support_cost drop sharply after the AI Support Copilot GA release on 2025-06-02.'"""
       ],
       [
-        """
-        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean
-        SELECT ticket_id, agent_group, agent_name, try_cast(agent_interactions AS DOUBLE) AS agent_interactions, ai_suggestion_accepted
-        FROM `{{CATALOG}}`.`{{SCHEMA}}`.agents_bronze;
-        """,
-        """
-        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean
-        SELECT ticket_id
-        , status
-        , priority
-        , source
-        , topic
-        , created_time
-        , close_time
-        , product_group
-        , support_level
-        , country
-        , country_code
-        , continental_region
-        , try_cast(latitude AS DOUBLE) AS latitude
-        , try_cast(longitude AS DOUBLE) AS longitude
-        , try_cast(operational_cost AS DOUBLE) AS operational_cost
-        , call_transcript
-        , compliance_greeting
-        , compliance_data_leak
-        , call_sentiment_score
-        , compliance_score
-        , csat_score
-        , first_time_resolution
-        , agent_experience_level
-        , agent_specialization_match
-        , ticket_in_business_hours 
-        FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_bronze;
-        """,
-        """
-        INSERT OVERWRITE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean
-        SELECT ticket_id
-        , expected_sla_to_resolve
-        , expected_sla_to_first_response
-        , first_response_time
-        , sla_for_first_response
-        , resolution_time
-        , sla_for_resolution
-        , try_cast(survey_results AS DOUBLE) AS survey_results
-        , try_cast(sla_penalty_cost AS DOUBLE) AS sla_penalty_cost
-        , try_cast(clv_risk AS DOUBLE) AS clv_risk
-        , interaction_notes
-        , first_time_resolution
-        , resolution_attempt_number 
-        FROM `{{CATALOG}}`.`{{SCHEMA}}`.sla_bronze;
-        """
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.regions SELECT CAST(region_id AS BIGINT), region_name, primary_timezone FROM `{{CATALOG}}`.`{{SCHEMA}}`.regions_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.cities SELECT CAST(city_id AS BIGINT), city_name, country_name, CAST(region_id AS BIGINT), latitude, longitude FROM `{{CATALOG}}`.`{{SCHEMA}}`.cities_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.products SELECT CAST(product_id AS BIGINT), product_name, package_tier, market_focus FROM `{{CATALOG}}`.`{{SCHEMA}}`.products_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.customers SELECT CAST(customer_id AS BIGINT), customer_name, customer_segment, industry, contract_value_band, CAST(region_id AS BIGINT) FROM `{{CATALOG}}`.`{{SCHEMA}}`.customers_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.calendar SELECT CAST(date AS DATE), year, quarter, month, week, is_us_holiday, holiday_name, is_peak_season FROM `{{CATALOG}}`.`{{SCHEMA}}`.calendar_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_releases SELECT CAST(release_id AS BIGINT), version, CAST(release_date AS DATE), capability_summary, release_notes, auto_resolved_categories, status FROM `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_releases_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_usage SELECT CAST(usage_date AS DATE), CAST(ai_queries AS BIGINT), CAST(ai_deflections AS BIGINT), CAST(assist_queries AS BIGINT), ai_compute_cost FROM `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_usage_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.support_cases SELECT CAST(case_id AS BIGINT), opened_at, closed_at, CAST(opened_at AS DATE), category, channel, priority, support_tier, CAST(region_id AS BIGINT), CAST(customer_id AS BIGINT), CAST(product_id AS BIGINT), CAST(destination_city_id AS BIGINT), ai_handled, resolution_hours, satisfaction_score, reopened_flag, support_cost FROM `{{CATALOG}}`.`{{SCHEMA}}`.support_cases_bronze"""
       ],
       [
-        """
-CREATE OR REPLACE FUNCTION `{{CATALOG}}`.`{{SCHEMA}}`.get_top_agents_by_survey_score(
-  catalog_name STRING, 
-  schema_name STRING, 
-  rank_cutoff INT
-) 
-RETURNS TABLE (
-  agent_name STRING, 
-  avg_survey_score DECIMAL(10,2), 
-  performance_rank INT
-) 
-RETURN (
-  WITH ranked_agents AS (
-    SELECT 
-      a.agent_name, 
-      AVG(s.survey_results) AS avg_survey_score, 
-      ROW_NUMBER() OVER (
-        ORDER BY AVG(s.survey_results) DESC
-      ) AS performance_rank 
-    FROM `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean t 
-    JOIN `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean a ON t.ticket_id = a.ticket_id 
-    JOIN `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean s ON t.ticket_id = s.ticket_id 
-    GROUP BY a.agent_name
-  )
-  SELECT agent_name, avg_survey_score, performance_rank 
-  FROM ranked_agents 
-  WHERE performance_rank <= rank_cutoff
-);
-        """,
-        """
-        ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.agents_clean 
-        ADD CONSTRAINT agents_clean_tickets_fk FOREIGN KEY (ticket_id) 
-        REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id);
-        """,
-        """
-        ALTER TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sla_clean 
-        ADD CONSTRAINT sla_clean_tickets_fk FOREIGN KEY (ticket_id) 
-        REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.tickets_clean (ticket_id);
-        """
-      ],[
-          """
-          CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.`cost_metrics`
-          WITH METRICS
-          LANGUAGE YAML
-          AS $$
-          version: 0.1
-
-          source: | 
-            SELECT sla_clean.*,
-                  agents_clean.*,
-                  tickets_clean.*
-            FROM {{CATALOG}}.{{SCHEMA}}.sla_clean  
-            JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean USING (ticket_id)  
-            JOIN {{CATALOG}}.{{SCHEMA}}.tickets_clean USING (ticket_id)
-
-          dimensions:
-            - name: Agent Group
-              expr: agent_group
-            - name: Product Group
-              expr: product_group
-            - name: Country
-              expr: country
-
-          measures:
-            - name: Total Operational Cost
-              expr: SUM(source.operational_cost)
-            - name: Total SLA Penalty Cost
-              expr: SUM(source.sla_penalty_cost)
-            - name: Average CLV Risk
-              expr: AVG(source.clv_risk)
-          $$;
-          """
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.support_cases_enriched
+           COMMENT 'Analysis-ready support cases joined with customer, product, destination, region, calendar and the AI Support Copilot usage context for the case date. Powers the AI/BI dashboard and Genie. resolution_hours & support_cost drop after the AI GA release on 2025-06-02.'
+           AS SELECT c.case_id, c.opened_at, c.closed_at, c.opened_date,
+             c.category, c.channel, c.priority, c.support_tier,
+             c.ai_handled, c.resolution_hours, c.satisfaction_score, c.reopened_flag, c.support_cost,
+             (c.opened_date >= DATE'2025-06-02') AS ai_era,
+             cu.customer_name, cu.customer_segment, cu.industry, cu.contract_value_band,
+             p.product_name, p.package_tier, p.market_focus,
+             r.region_name,
+             ci.city_name AS destination_city, ci.country_name AS destination_country,
+             ci.latitude AS destination_lat, ci.longitude AS destination_lon,
+             cal.is_us_holiday, cal.holiday_name, cal.is_peak_season,
+             u.ai_queries AS ai_queries_that_day, u.ai_deflections AS ai_deflections_that_day
+           FROM `{{CATALOG}}`.`{{SCHEMA}}`.support_cases c
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.customers cu ON c.customer_id = cu.customer_id
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.products  p  ON c.product_id  = p.product_id
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.regions   r  ON c.region_id   = r.region_id
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.cities    ci ON c.destination_city_id = ci.city_id
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.calendar  cal ON c.opened_date = cal.date
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.ai_assistant_usage u ON c.opened_date = u.usage_date"""
+      ],
+      [
+        """CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.support_metrics
+           WITH METRICS LANGUAGE YAML AS $$
+           version: 1.1
+           source: {{CATALOG}}.{{SCHEMA}}.support_cases_enriched
+           comment: "Governed customer-support KPIs. Measures stay correct under any dimension grouping. The AI Support Copilot (Agent Bricks) GA on 2025-06-02 sharply improved resolution time, cost and satisfaction."
+           dimensions:
+             - name: Opened Date
+               expr: opened_date
+             - name: Opened Month
+               expr: DATE_TRUNC('MONTH', opened_at)
+             - name: AI Era
+               expr: CASE WHEN ai_era THEN 'After AI Copilot' ELSE 'Before AI Copilot' END
+             - name: Category
+               expr: category
+             - name: Channel
+               expr: channel
+             - name: Priority Level
+               expr: CASE WHEN priority='Critical' THEN '1-Critical' WHEN priority='High' THEN '2-High' WHEN priority='Medium' THEN '3-Medium' ELSE '4-Low' END
+             - name: Support Tier
+               expr: support_tier
+             - name: Region
+               expr: region_name
+             - name: Destination Country
+               expr: destination_country
+             - name: Destination City
+               expr: destination_city
+             - name: Destination Latitude
+               expr: destination_lat
+             - name: Destination Longitude
+               expr: destination_lon
+             - name: Product
+               expr: product_name
+             - name: Customer Segment
+               expr: customer_segment
+             - name: AI Handled
+               expr: ai_handled
+           measures:
+             - name: Total Cases
+               expr: COUNT(1)
+             - name: Avg Resolution Hours
+               expr: AVG(resolution_hours)
+             - name: Avg Satisfaction
+               expr: AVG(satisfaction_score)
+             - name: Total Support Cost
+               expr: SUM(support_cost)
+             - name: Avg Cost per Case
+               expr: AVG(support_cost)
+             - name: Reopen Rate
+               expr: SUM(CASE WHEN reopened_flag THEN 1 ELSE 0 END) / COUNT(1)
+             - name: AI Resolved Rate
+               expr: SUM(CASE WHEN ai_handled THEN 1 ELSE 0 END) / COUNT(1)
+           $$;"""
       ]
     ],
     "genie_rooms": [
       {
         "id": "customer-support",
-        "display_name": "DBDemos - AI/BI - Customer Support Review",
-        "description": "Leverage Databricks AI and BI to gain actionable insights into your customer support performance! As a customer support manager, understanding team performance and customer engagement is critical to delivering exceptional service. With Databricks, you can analyze your support data seamlessly, exploring key metrics like response efficiency, ticket volume trends, and seasonal patterns. Dive deep into customer interactions to identify bottlenecks, improve workflows, and uncover insights that enhance customer satisfaction. Use the power of Databricks' AI-driven analytics to make data-driven decisions, optimize resource allocation, and forecast support demand, ensuring your team consistently exceeds expectations.",
+        "display_name": "DBDemos - AI/BI - Customer Support: AI Efficiency",
+        "description": "Explore how an AI Support Copilot (built on Databricks with Agent Bricks) made customer support dramatically more efficient. Ask why average resolution time and cost dropped in 2025, and Genie will trace it to the AI Copilot GA release and its rising daily usage. Compare performance before vs after the launch, break it down by region, category, channel and product, and quantify the savings.",
         "table_identifiers": [
-          "{{CATALOG}}.{{SCHEMA}}.agents_clean",
-          "{{CATALOG}}.{{SCHEMA}}.tickets_clean",
-          "{{CATALOG}}.{{SCHEMA}}.sla_clean"
+          "{{CATALOG}}.{{SCHEMA}}.support_cases_enriched",
+          "{{CATALOG}}.{{SCHEMA}}.support_metrics",
+          "{{CATALOG}}.{{SCHEMA}}.ai_assistant_releases",
+          "{{CATALOG}}.{{SCHEMA}}.ai_assistant_usage"
         ],
         "sql_instructions": [
           {
-            "title": "Agent performance by tickets closed per month",
-            "content": """
-WITH monthly_ranked_agents AS (
-    SELECT a.`agent_name`, DATE_TRUNC('month', t.`created_time`) AS month, 
-            SUM(s.`survey_results`) AS total_survey_results, 
-            ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('month', t.`created_time`) 
-            ORDER BY SUM(s.`survey_results`) DESC) AS performance_rank 
-    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-    JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
-    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-    WHERE t.`created_time` IS NOT NULL 
-    GROUP BY a.`agent_name`, DATE_TRUNC('month', t.`created_time`)
-) 
-SELECT `agent_name`, `month`, `total_survey_results` 
-FROM monthly_ranked_agents 
-WHERE performance_rank <= 10 
-ORDER BY `month`, performance_rank;
-            """
+            "title": "Average resolution time and AI deflection by month",
+            "content": """SELECT DATE_TRUNC('MONTH', opened_at) AS month,
+       ROUND(AVG(resolution_hours), 1) AS avg_resolution_hours,
+       ROUND(AVG(CASE WHEN ai_handled THEN 1 ELSE 0 END) * 100, 0) AS pct_ai_resolved
+FROM {{CATALOG}}.{{SCHEMA}}.support_cases_enriched
+GROUP BY 1 ORDER BY 1;"""
           },
           {
-            "title": "Proportion of tickets per month that violate first response SLA",
-            "content": """
-WITH monthly_tickets AS (
-    SELECT DATE_TRUNC('month', t.`created_time`) AS month, COUNT(*) AS total_tickets, 
-            SUM(CASE WHEN s.`first_response_time` > s.`expected_sla_to_first_response` THEN 1 ELSE 0 END) AS sla_violations 
-    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-    WHERE t.`created_time` IS NOT NULL AND s.`first_response_time` IS NOT NULL AND s.`expected_sla_to_first_response` IS NOT NULL 
-    GROUP BY DATE_TRUNC('month', t.`created_time`)
-) 
-SELECT month, ROUND((sla_violations / total_tickets :: decimal) * 100, 2) AS violation_percentage 
-FROM monthly_tickets 
-ORDER BY month;
-            """
+            "title": "Support cost and satisfaction before vs after the AI Copilot",
+            "content": """SELECT CASE WHEN ai_era THEN 'After AI Copilot' ELSE 'Before AI Copilot' END AS era,
+       ROUND(AVG(resolution_hours), 1) AS avg_resolution_hours,
+       ROUND(AVG(satisfaction_score), 2) AS avg_satisfaction,
+       ROUND(AVG(support_cost), 0) AS avg_cost_per_case,
+       COUNT(*) AS cases
+FROM {{CATALOG}}.{{SCHEMA}}.support_cases_enriched
+GROUP BY 1 ORDER BY 1;"""
           },
           {
-            "title": "Which agents violate the resolution SLA most often compared to their number of closed tickets?",
-            "content": """
-SELECT a.`agent_name`, a.`violation_count`, t2.`total_tickets`, 
-        ROUND((a.`violation_count` :: decimal / t2.`total_tickets`) * 100, 2) AS violation_percentage 
-FROM (
-    SELECT a.`agent_name`, COUNT(*) AS violation_count 
-    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-    JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
-    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-    WHERE a.`agent_name` IS NOT NULL AND s.`resolution_time` > s.`expected_sla_to_resolve` 
-    GROUP BY a.`agent_name`
-) a 
-JOIN (
-    SELECT a.`agent_name`, COUNT(*) AS total_tickets 
-    FROM {{CATALOG}}.{{SCHEMA}}.tickets_clean t 
-    JOIN {{CATALOG}}.{{SCHEMA}}.agents_clean a ON t.`ticket_id` = a.`ticket_id` 
-    JOIN {{CATALOG}}.{{SCHEMA}}.sla_clean s ON t.`ticket_id` = s.`ticket_id` 
-    WHERE a.`agent_name` IS NOT NULL AND t.`close_time` IS NOT NULL 
-    GROUP BY a.`agent_name`
-) t2 ON a.`agent_name` = t2.`agent_name` 
-ORDER BY violation_percentage DESC;
-            """
+            "title": "When did the AI Support Copilot launch and what does it do?",
+            "content": """SELECT version, release_date, status, capability_summary, release_notes
+FROM {{CATALOG}}.{{SCHEMA}}.ai_assistant_releases
+ORDER BY release_date;"""
           }
         ],
-        "instructions": "SLA stands for \"Service Level Agreement,\" and violating an SLA (whether for first response time to each customer issue, or for time-to-resolution, is a huge problem for a business.)",
-        "function_names": [
-          "{{CATALOG}}.{{SCHEMA}}.get_top_agents_by_survey_score"
-        ],         
+        "instructions": "This data tells the story of a travel company deploying an AI Support Copilot (built on Databricks with Agent Bricks) that reached GA on 2025-06-02 and auto-resolves How-To, Access and Billing cases. When asked WHY resolution time, cost or reopen rate dropped (or what changed in 2025), explain it using the ai_assistant_releases table (the v1.0 GA release notes) and show that ai_assistant_usage (ai_deflections) jumped from 0 at that date while resolution_hours fell. Use the boolean column ai_era (TRUE when opened_date >= 2025-06-02) to compare before vs after. ai_handled = TRUE means the case was auto-resolved by the AI. support_cost is in USD; satisfaction_score is 2-5 (higher is better, ~26% null = no survey returned). support_metrics is a governed METRIC VIEW: query its measures with MEASURE(`Total Cases`), MEASURE(`Avg Resolution Hours`), MEASURE(`Avg Satisfaction`), MEASURE(`Avg Cost per Case`), MEASURE(`AI Resolved Rate`) and group by its dimensions (e.g. `AI Era`, `Region`, `Category`); prefer it for clean aggregated KPIs.",
         "curated_questions": [
-            "Proportion of tickets per month that violate first response SLA",
-            "Agent performance by tickets closed per month",
-            "Number of tickets in 2023 by country",
-            "How has my team's percentage of resolution SLA violations changed over all time?"
+          "Why did our average support resolution time drop in 2025?",
+          "How much did support cost per case fall after the AI Copilot launched?",
+          "What percentage of cases does the AI assistant auto-resolve, and for which categories?",
+          "Show average resolution time and customer satisfaction by month",
+          "Which region has the slowest resolution time?"
         ]
       }
     ]

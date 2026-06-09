@@ -21,18 +21,22 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Sales Pipeline Review & Management
+# MAGIC # Sales Pipeline Review — are we going to hit the number?
 # MAGIC ---
+# MAGIC
+# MAGIC ## The Story
+# MAGIC
+# MAGIC You're the CRO of a global **beauty brand** selling Skincare, Makeup, Fragrance and Haircare to retailers across AMER, EMEA, APAC and LATAM. Every quarter leadership commits a revenue **target**, and the question that matters is: **given what we've sold so far and our run-rate, are we going to hit it?**
+# MAGIC
+# MAGIC This quarter, revenue is **tracking above plan** — and the AI forecast projects we'll **beat the target**. But *why*? The surge is concentrated in **EMEA**, right after the new **Fragrance** line became available there. This demo lets you see the beat, then trace exactly what's driving it.
 # MAGIC
 # MAGIC ## The Challenge
 # MAGIC
-# MAGIC In today’s competitive market, efficiently managing the sales pipeline is crucial across industries. Ineffective sales pipeline management can lead to missed opportunities, inaccurate revenue forecasting, and poor resource allocation. Organizations without a comprehensive data intelligence platform often struggle to consolidate data from multiple sources, deliver real-time insights to stakeholders, and reduce time-to-insights necessary for strategic adjustments in the sales process.
+# MAGIC The data that answers this is scattered across systems: the **CRM (Salesforce)** holds accounts, pipeline and reps; the **ERP** holds actual orders and revenue; **Finance** owns the targets (often in a spreadsheet); and the **product catalog** knows when each line launched in each region. Stitching these together for a single "are we hitting the number, and why" view is slow and error-prone without a unified platform.
 # MAGIC
 # MAGIC ## The Solution
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (or as we call it, AI/BI)** to provide seamless access to your organization's sales data. By integrating data from various CRM, marketing, and transactional sources into a unified environment, Databricks breaks down data silos and offers end-to-end visibility into the entire sales pipeline.
-# MAGIC
-# MAGIC Advanced AI-driven analytics and intuitive BI tools empower both technical and non-technical users to examine sales trends, forecast revenue, and analyze pipeline health through natural language queries. This accessibility accelerates time-to-insights, enhances cross-functional collaboration, and enables leadership to make informed, data-driven decisions to improve sales strategy, close rates, and overall pipeline efficiency.
+# MAGIC The **Databricks Platform** unifies all of these sources into one governed model, then layers **AI/BI** on top. Dashboards forecast where the quarter lands versus target; **Genie** lets anyone ask *"are we going to hit our target?"* and *"why is EMEA surging?"* in plain language — and the answer (the new Fragrance line launching in EMEA) is found by joining across what used to be separate systems.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
@@ -101,13 +105,13 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Your Sales Pipeline data is now available for your Data Analyst to explore and track their main KPIs.
+# MAGIC Your unified sales data is now available for analysts and leadership to track performance against target.
 # MAGIC
-# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
+# MAGIC The dashboard tells the story in two pages:
+# MAGIC - **Are we hitting the number?** — forecasted quarter-end revenue vs target, quarter-to-date revenue with a monthly trend, projected attainment %, an **AI forecast** of where the quarter lands, plus revenue by product line and a world map of markets.
+# MAGIC - **Why are we beating?** — a top-to-bottom trail: which region is surging (EMEA), and why — a vertical marker on the date the new **Fragrance** line launched in EMEA, with its revenue surging right after.
 # MAGIC
-# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
-# MAGIC
-# MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
+# MAGIC AI/BI Dashboards make it easy to build and iterate on visualizations with natural language through AI-assisted authoring — sleek charts, cross-filtering, scheduled snapshots and embedding — all living side-by-side with your governed data for instant, large-scale interactivity.
 # MAGIC
 # MAGIC
 # MAGIC Open the <a dbdemos-dashboard-id="sales-pipeline" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Sales Pipeline Dashboard to analyze & track main KPIs</a>
@@ -122,7 +126,14 @@
 # MAGIC
 # MAGIC Our data is now available as a Dashboard that our business users can open.
 # MAGIC
-# MAGIC However, they'll likely have extra questions or follow-up based on the insights they see in the dashboard, such as: "Which deals are at risk of slipping this quarter?" or "What is the conversion rate by sales region?"
+# MAGIC However, they'll have follow-up questions based on what they see. This is where Genie shines — ask in plain language and let it trace the answer across the unified systems:
+# MAGIC
+# MAGIC - *"Are we going to hit our revenue target this quarter?"* (ERP revenue + Finance target)
+# MAGIC - *"What is driving the recent revenue spike?"* → **EMEA**
+# MAGIC - *"Why is EMEA surging?"* → the new **Fragrance** line that launched there on 2026-05-04 (product catalog)
+# MAGIC - *"Which product line grew the most in EMEA, and when did it launch there?"*
+# MAGIC
+# MAGIC Notice how the answer to *why* requires joining the ERP sales with the product-launch catalog — Genie does it for you.
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="sales-pipeline" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Sales Pipeline Genie space to deep dive into your data</a>
 

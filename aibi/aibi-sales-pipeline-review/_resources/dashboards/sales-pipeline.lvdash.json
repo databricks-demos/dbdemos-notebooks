@@ -1,1204 +1,1141 @@
 {
-  "datasets" : [ {
-    "name" : "b2b56237",
-    "displayName" : "opportunity",
-    "query" : "select * from main.dbdemos_aibi_sales_pipeline_review.opportunity"
-  }, {
-    "name" : "aed85b51",
-    "displayName" : "opportunity_history",
-    "query" : "SELECT * FROM main.dbdemos_aibi_sales_pipeline_review.opportunity_history "
-  }, {
-    "name" : "268c323c",
-    "displayName" : "user",
-    "query" : "SELECT \n    u.name,\n    u.title,\n    u.role__c as role,\n    o.opportunityid,\n    o.ownerid,\n    o.stagename,\n    o.accountid,\n    o.account_name,\n    o.forecastcategory,\n    o.description,\n    o.createddate,\n    o.closedate,\n    o.amount\nFROM main.dbdemos_aibi_sales_pipeline_review.opportunity o\nLEFT JOIN main.dbdemos_aibi_sales_pipeline_review.user u on o.ownerid = u.id"
-  } ],
-  "pages" : [ {
-    "name" : "525ad93c",
-    "displayName" : "New Page",
-    "layout" : [ {
-      "widget" : {
-        "name" : "94355e53",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "avg(opportunity_amount)",
-              "expression" : "AVG(`opportunity_amount`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "counter",
-          "encodings" : {
-            "value" : {
-              "fieldName" : "avg(opportunity_amount)",
-              "displayName" : "Average opportunity_amount"
+  "datasets": [
+    {
+      "name": "ds_metrics",
+      "displayName": "Sales metrics",
+      "asset_name": "main.dbdemos_aibi_sales_pipeline_review.metrics_sales"
+    },
+    {
+      "name": "ds_target",
+      "displayName": "Quarter attainment vs target (AI forecast)",
+      "queryLines": [
+        "WITH maxd AS (SELECT max(order_date) md FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched),\n",
+        "daily AS (\n",
+        "  SELECT order_date AS d, sum(revenue) AS rev\n",
+        "  FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched\n",
+        "  WHERE order_date >= DATE'2026-04-01' AND order_date <= (SELECT md FROM maxd)\n",
+        "  GROUP BY 1),\n",
+        "fc AS (SELECT d, rev_forecast FROM AI_FORECAST(TABLE(SELECT d, rev FROM daily), horizon => '2026-06-30', time_col => 'd', value_col => 'rev')),\n",
+        "qtd AS (SELECT sum(rev) actual FROM daily),\n",
+        "rest AS (SELECT sum(rev_forecast) fcast FROM fc WHERE d > (SELECT md FROM maxd)),\n",
+        "tgt AS (SELECT target_revenue FROM main.dbdemos_aibi_sales_pipeline_review.sales_targets WHERE quarter_start = DATE'2026-04-01')\n",
+        "SELECT (SELECT actual FROM qtd) AS qtd_actual,\n",
+        "       (SELECT target_revenue FROM tgt) AS target,\n",
+        "       (SELECT actual FROM qtd) + COALESCE((SELECT fcast FROM rest),0) AS projected_quarter,\n",
+        "       ((SELECT actual FROM qtd) + COALESCE((SELECT fcast FROM rest),0)) / (SELECT target_revenue FROM tgt) AS attainment_pct"
+      ]
+    },
+    {
+      "name": "ds_forecast",
+      "displayName": "Weekly revenue + AI forecast",
+      "queryLines": [
+        "WITH maxd AS (SELECT max(order_date) md FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched),\n",
+        "weekly AS (\n",
+        "  SELECT date_trunc('week', order_date) AS w, sum(revenue) AS rev\n",
+        "  FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched\n",
+        "  WHERE order_date >= DATE'2025-09-01' AND order_date < date_trunc('week', (SELECT md FROM maxd))\n",
+        "  GROUP BY 1),\n",
+        "fc AS (SELECT w, rev_forecast, rev_lower, rev_upper FROM AI_FORECAST(TABLE(SELECT w, rev FROM weekly), horizon => '2026-08-31', time_col => 'w', value_col => 'rev')),\n",
+        "actuals AS (SELECT w AS week, rev AS actual_revenue, CAST(NULL AS DOUBLE) AS forecast_revenue, CAST(NULL AS DOUBLE) AS rev_lower, CAST(NULL AS DOUBLE) AS rev_upper FROM weekly WHERE w <> (SELECT max(w) FROM weekly)),\n",
+        "bridge AS (SELECT w AS week, rev, rev, rev, rev FROM weekly WHERE w = (SELECT max(w) FROM weekly)),\n",
+        "forecast AS (SELECT w AS week, CAST(NULL AS DOUBLE), rev_forecast, rev_lower, rev_upper FROM fc)\n",
+        "SELECT * FROM actuals UNION ALL SELECT * FROM bridge UNION ALL SELECT * FROM forecast ORDER BY week"
+      ]
+    },
+    {
+      "name": "ds_region_trend",
+      "displayName": "Daily revenue by region",
+      "queryLines": [
+        "SELECT order_date AS day, region,\n",
+        "  sum(revenue) AS revenue\n",
+        "FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched\n",
+        "WHERE order_date >= DATE'2026-02-01' AND order_date < (SELECT max(order_date) FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched)\n",
+        "GROUP BY 1,2 ORDER BY day"
+      ]
+    },
+    {
+      "name": "ds_emea_line",
+      "displayName": "EMEA weekly revenue by product line",
+      "queryLines": [
+        "SELECT date_trunc('week', order_date) AS week, product_line,\n",
+        "  sum(revenue) AS revenue\n",
+        "FROM main.dbdemos_aibi_sales_pipeline_review.orders_enriched\n",
+        "WHERE region = 'EMEA' AND order_date >= DATE'2026-01-01'\n",
+        "GROUP BY 1,2 ORDER BY week"
+      ]
+    },
+    {
+      "name": "ds_launch",
+      "displayName": "Product launches (PIM)",
+      "queryLines": [
+        "SELECT product_line, region, launch_date, launch_name, description\n",
+        "FROM main.dbdemos_aibi_sales_pipeline_review.product_launches\n",
+        "WHERE region = 'EMEA' OR region = 'Global'\n",
+        "ORDER BY launch_date"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "Are we hitting the number?",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Beauty Sales — are we hitting the number this quarter?\n",
+                "\n",
+                "Actual revenue (ERP orders) tracked against the company quarterly target (Finance), with an AI forecast of where we'll land. Data unified from Salesforce, ERP, Finance and the product catalog."
+              ]
             }
           },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Avg active opp size"
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
           }
-        }
-      },
-      "position" : {
-        "x" : 4,
-        "y" : 1,
-        "width" : 1,
-        "height" : 2
-      }
-    }, {
-      "widget" : {
-        "name" : "98fc5504",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "stagename",
-              "expression" : "`stagename`"
-            }, {
-              "name" : "sum(days_to_close)",
-              "expression" : "SUM(`days_to_close`)"
-            }, {
-              "name" : "daily(createddate)",
-              "expression" : "DATE_TRUNC(\"DAY\", `createddate`)"
-            }, {
-              "name" : "annualrevenue",
-              "expression" : "`annualrevenue`"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "scatter",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "daily(createddate)",
-              "scale" : {
-                "type" : "temporal"
-              },
-              "axis" : {
-                "title" : "Created date"
-              },
-              "displayName" : "Created date"
-            },
-            "y" : {
-              "fieldName" : "annualrevenue",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "axis" : {
-                "title" : "Customer annual revenue ($USD)"
-              },
-              "displayName" : "Customer annual revenue ($USD)"
-            },
-            "color" : {
-              "fieldName" : "stagename",
-              "scale" : {
-                "type" : "categorical",
-                "mappings" : [ {
-                  "value" : "1. Discovery",
-                  "color" : "#22a7f0"
-                }, {
-                  "value" : "2. Demo",
-                  "color" : "#48b5c4"
-                }, {
-                  "value" : "3. Validation",
-                  "color" : "#a6d75b"
-                }, {
-                  "value" : "5. Closed Won",
-                  "color" : "#256894"
-                }, {
-                  "value" : "X. Closed Lost",
-                  "color" : "#1984c5"
-                }, {
-                  "value" : "4. Procure",
-                  "color" : "#ffde7a"
-                } ]
-              },
-              "legend" : {
-                "title" : "Stage"
-              },
-              "displayName" : "Stage"
-            },
-            "size" : {
-              "fieldName" : "sum(days_to_close)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Sum of days_to_close"
-            }
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Opportunity stage by customer annual revenue over time"
-          }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 9,
-        "width" : 4,
-        "height" : 8
-      }
-    }, {
-      "widget" : {
-        "name" : "8d44bde1",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "avg(probability_per)",
-              "expression" : "AVG(`probability_per`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "counter",
-          "encodings" : {
-            "value" : {
-              "fieldName" : "avg(probability_per)",
-              "displayName" : "Average probability_per"
-            }
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Avg probability of close"
-          }
-        }
-      },
-      "position" : {
-        "x" : 3,
-        "y" : 1,
-        "width" : 1,
-        "height" : 2
-      }
-    }, {
-      "widget" : {
-        "name" : "a2abfcc3",
-        "queries" : [ {
-          "name" : "dashboards/01ef59bc74f71e75aa11a68be22ce5a3/datasets/01ef59bc74fb1c079c4f967a5beeb1f6_createddate",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "createddate",
-              "expression" : "`createddate`"
-            }, {
-              "name" : "createddate_associativity",
-              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "filter-date-range-picker",
-          "encodings" : {
-            "fields" : [ {
-              "fieldName" : "createddate",
-              "displayName" : "createddate",
-              "queryName" : "dashboards/01ef59bc74f71e75aa11a68be22ce5a3/datasets/01ef59bc74fb1c079c4f967a5beeb1f6_createddate"
-            } ]
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Deals created between"
-          }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 1,
-        "width" : 2,
-        "height" : 2
-      }
-    }, {
-      "widget" : {
-        "name" : "f6efedb0",
-        "textbox_spec" : "# AIBI DBDemos - Sales Pipeline Opportunities Overview"
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 0,
-        "width" : 6,
-        "height" : 1
-      }
-    }, {
-      "widget" : {
-        "name" : "b2f57333",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "avg(days_to_close)",
-              "expression" : "AVG(`days_to_close`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "counter",
-          "encodings" : {
-            "value" : {
-              "fieldName" : "avg(days_to_close)",
-              "displayName" : "Average days_to_close"
-            }
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Avg days to close"
-          }
-        }
-      },
-      "position" : {
-        "x" : 2,
-        "y" : 1,
-        "width" : 1,
-        "height" : 2
-      }
-    }, {
-      "widget" : {
-        "name" : "11a34937",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "avg(annualrevenue)",
-              "expression" : "AVG(`annualrevenue`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "counter",
-          "encodings" : {
-            "value" : {
-              "fieldName" : "avg(annualrevenue)",
-              "displayName" : "Average annualrevenue"
-            }
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Avg cust annual rev"
-          }
-        }
-      },
-      "position" : {
-        "x" : 5,
-        "y" : 1,
-        "width" : 1,
-        "height" : 2
-      }
-    }, {
-      "widget" : {
-        "name" : "ab1b6f1a",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "count(stagename)",
-              "expression" : "COUNT(`stagename`)"
-            }, {
-              "name" : "stagename",
-              "expression" : "`stagename`"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "pie",
-          "encodings" : {
-            "angle" : {
-              "fieldName" : "count(stagename)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "axis" : {
-                "title" : " "
-              },
-              "displayName" : " "
-            },
-            "color" : {
-              "fieldName" : "stagename",
-              "scale" : {
-                "type" : "categorical"
-              },
-              "displayName" : "stagename"
-            },
-            "label" : {
-              "show" : true
-            }
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Distribution of stages across all opportunities"
-          }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 3,
-        "width" : 2,
-        "height" : 6
-      }
-    }, {
-      "widget" : {
-        "name" : "c3d5eb53",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "name",
-              "expression" : "`name`"
-            }, {
-              "name" : "opportunityid",
-              "expression" : "`opportunityid`"
-            }, {
-              "name" : "ownerid",
-              "expression" : "`ownerid`"
-            }, {
-              "name" : "stagename",
-              "expression" : "`stagename`"
-            }, {
-              "name" : "accountid",
-              "expression" : "`accountid`"
-            }, {
-              "name" : "account_name",
-              "expression" : "`account_name`"
-            }, {
-              "name" : "forecastcategory",
-              "expression" : "`forecastcategory`"
-            }, {
-              "name" : "description",
-              "expression" : "`description`"
-            }, {
-              "name" : "createddate",
-              "expression" : "`createddate`"
-            }, {
-              "name" : "closedate",
-              "expression" : "`closedate`"
-            }, {
-              "name" : "amount",
-              "expression" : "`amount`"
-            } ],
-            "disaggregated" : true
-          }
-        } ],
-        "spec" : {
-          "version" : 1,
-          "widgetType" : "table",
-          "encodings" : {
-            "columns" : [ {
-              "fieldName" : "name",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100000,
-              "title" : "name",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "name"
-            }, {
-              "fieldName" : "opportunityid",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100003,
-              "title" : "opportunityid",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "opportunityid"
-            }, {
-              "fieldName" : "ownerid",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100004,
-              "title" : "ownerid",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "ownerid"
-            }, {
-              "fieldName" : "stagename",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100005,
-              "title" : "stagename",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "stagename"
-            }, {
-              "fieldName" : "accountid",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100006,
-              "title" : "accountid",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "accountid"
-            }, {
-              "fieldName" : "account_name",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100007,
-              "title" : "account_name",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "account_name"
-            }, {
-              "fieldName" : "forecastcategory",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100008,
-              "title" : "forecastcategory",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "forecastcategory"
-            }, {
-              "fieldName" : "description",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 100009,
-              "title" : "description",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "description"
-            }, {
-              "fieldName" : "createddate",
-              "dateTimeFormat" : "YYYY-MM-DD",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "date",
-              "displayAs" : "datetime",
-              "visible" : true,
-              "order" : 100010,
-              "title" : "createddate",
-              "allowSearch" : false,
-              "alignContent" : "right",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "createddate"
-            }, {
-              "fieldName" : "closedate",
-              "dateTimeFormat" : "YYYY-MM-DD",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "date",
-              "displayAs" : "datetime",
-              "visible" : true,
-              "order" : 100011,
-              "title" : "closedate",
-              "allowSearch" : false,
-              "alignContent" : "right",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "closedate"
-            }, {
-              "fieldName" : "amount",
-              "numberFormat" : "0.00",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "float",
-              "displayAs" : "number",
-              "visible" : true,
-              "order" : 100012,
-              "title" : "amount",
-              "allowSearch" : false,
-              "alignContent" : "right",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "amount"
-            } ]
-          },
-          "invisibleColumns" : [ {
-            "numberFormat" : "0",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "days_to_close",
-            "type" : "integer",
-            "displayAs" : "number",
-            "order" : 100000,
-            "title" : "days_to_close",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "probability_per",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100001,
-            "title" : "probability_per",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "type",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100006,
-            "title" : "type",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "leadsource",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100010,
-            "title" : "leadsource",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "probability",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100013,
-            "title" : "probability",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "opportunity_amount",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100015,
-            "title" : "opportunity_amount",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "New_Expansion_Booking_Annual__c",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100016,
-            "title" : "New_Expansion_Booking_Annual__c",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "New_Expansion_Booking_Annual_Wtd__c",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100017,
-            "title" : "New_Expansion_Booking_Annual_Wtd__c",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "New_Recurring_Bookings_Manual__c",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100018,
-            "title" : "New_Recurring_Bookings_Manual__c",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "New_Recurring_Bookings__c",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100019,
-            "title" : "New_Recurring_Bookings__c",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "business_type__c",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100020,
-            "title" : "business_type__c",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "industry",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100021,
-            "title" : "industry",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "a_account_id",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100022,
-            "title" : "a_account_id",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "region_hq__c",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100024,
-            "title" : "region_hq__c",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "region",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100025,
-            "title" : "region",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "company_size_segment__c",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100026,
-            "title" : "company_size_segment__c",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "region_size",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 100027,
-            "title" : "region_size",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "numberFormat" : "0.00",
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "annualrevenue",
-            "type" : "float",
-            "displayAs" : "number",
-            "order" : 100028,
-            "title" : "annualrevenue",
-            "allowSearch" : false,
-            "alignContent" : "right",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          } ],
-          "allowHTMLByDefault" : false,
-          "itemsPerPage" : 25,
-          "paginationSize" : "default",
-          "condensed" : true,
-          "withRowNumber" : false,
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Team"
-          }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 17,
-        "width" : 6,
-        "height" : 7
-      }
-    }, {
-      "widget" : {
-        "name" : "6fecbb04",
-        "textbox_spec" : "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_xindustry_sales_pipeline&demo_name=aibi_xindustry_sales_pipeline&event=DASHBOARD_VIEW)"
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 24,
-        "width" : 6,
-        "height" : 1
-      }
-    }, {
-      "widget" : {
-        "name" : "134a706f",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "stagename",
-              "expression" : "`stagename`"
-            }, {
-              "name" : "region",
-              "expression" : "`region`"
-            }, {
-              "name" : "sum(opportunity_amount)",
-              "expression" : "SUM(`opportunity_amount`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "bar",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "region",
-              "scale" : {
-                "type" : "categorical",
-                "sort" : {
-                  "by" : "y-reversed"
+        },
+        {
+          "widget": {
+            "name": "kpi_projected",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_target",
+                  "fields": [
+                    {
+                      "name": "projected_quarter",
+                      "expression": "`projected_quarter`"
+                    },
+                    {
+                      "name": "target",
+                      "expression": "`target`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "projected_quarter",
+                  "displayName": "Forecasted quarter-end",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "target": {
+                  "fieldName": "target",
+                  "displayName": "Target"
                 }
               },
-              "displayName" : "region"
-            },
-            "y" : {
-              "fieldName" : "sum(opportunity_amount)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Sum of opportunity_amount"
-            },
-            "color" : {
-              "fieldName" : "stagename",
-              "scale" : {
-                "type" : "categorical"
-              },
-              "displayName" : "stagename"
-            },
-            "label" : {
-              "show" : true
+              "frame": {
+                "showTitle": true,
+                "title": "Forecasted quarter-end revenue vs target"
+              }
             }
           },
-          "frame" : {
-            "title" : "Pipeline by Region",
-            "showTitle" : true
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 3
           }
-        }
-      },
-      "position" : {
-        "x" : 2,
-        "y" : 3,
-        "width" : 4,
-        "height" : 6
-      }
-    }, {
-      "widget" : {
-        "name" : "83daddb1",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "b2b56237",
-            "fields" : [ {
-              "name" : "region",
-              "expression" : "`region`"
-            }, {
-              "name" : "monthly(closedate)",
-              "expression" : "DATE_TRUNC(\"MONTH\", `closedate`)"
-            }, {
-              "name" : "countdistinct(opportunityid)",
-              "expression" : "COUNT(DISTINCT `opportunityid`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "line",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "monthly(closedate)",
-              "scale" : {
-                "type" : "temporal"
+        },
+        {
+          "widget": {
+            "name": "kpi_revenue_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "monthly(Order Date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Order Date`)"
+                    },
+                    {
+                      "name": "measure(Revenue)",
+                      "expression": "MEASURE(`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Order Date`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Revenue)",
+                  "displayName": "Revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(Order Date)"
+                }
               },
-              "displayName" : "closedate"
-            },
-            "y" : {
-              "fieldName" : "countdistinct(opportunityid)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Count of Unique opportunityid"
-            },
-            "color" : {
-              "fieldName" : "region",
-              "scale" : {
-                "type" : "categorical"
-              },
-              "displayName" : "region"
+              "frame": {
+                "showTitle": true,
+                "title": "Total revenue (monthly trend)"
+              }
             }
           },
-          "frame" : {
-            "title" : "Monthly opportunities over time by region",
-            "showTitle" : true
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_target",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_target",
+                  "fields": [
+                    {
+                      "name": "target",
+                      "expression": "`target`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "target",
+                  "displayName": "Quarter target",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Quarter target"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_attain",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_target",
+                  "fields": [
+                    {
+                      "name": "attainment_pct",
+                      "expression": "`attainment_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "attainment_pct",
+                  "displayName": "Projected attainment",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Projected attainment of target"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "hero_forecast",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_forecast",
+                  "fields": [
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    },
+                    {
+                      "name": "actual_revenue",
+                      "expression": "`actual_revenue`"
+                    },
+                    {
+                      "name": "forecast_revenue",
+                      "expression": "`forecast_revenue`"
+                    },
+                    {
+                      "name": "rev_upper",
+                      "expression": "`rev_upper`"
+                    },
+                    {
+                      "name": "rev_lower",
+                      "expression": "`rev_lower`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "forecast-line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Week"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "original": {
+                    "fieldName": "actual_revenue",
+                    "displayName": "Weekly revenue"
+                  },
+                  "prediction": {
+                    "fieldName": "forecast_revenue",
+                    "displayName": "AI forecast"
+                  },
+                  "predictionUpper": {
+                    "fieldName": "rev_upper",
+                    "displayName": "Upper"
+                  },
+                  "predictionLower": {
+                    "fieldName": "rev_lower",
+                    "displayName": "Lower"
+                  }
+                }
+              },
+              "annotations": [
+                {
+                  "type": "vertical-line",
+                  "encodings": {
+                    "x": {
+                      "dataValue": "2026-05-04T00:00:00.000",
+                      "dataType": "DATETIME"
+                    },
+                    "label": {
+                      "value": "Fragrance launches in EMEA"
+                    },
+                    "color": {
+                      "value": {
+                        "themeColorType": "visualizationColors",
+                        "position": 3
+                      }
+                    }
+                  }
+                }
+              ],
+              "frame": {
+                "showTitle": true,
+                "title": "Weekly revenue — the AI forecast projects us beating target, led by a late surge"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "rev_by_line",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Product Line",
+                      "expression": "`Product Line`"
+                    },
+                    {
+                      "name": "measure(Revenue)",
+                      "expression": "MEASURE(`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product Line",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Product Line"
+                },
+                "y": {
+                  "fieldName": "measure(Revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                },
+                "color": {
+                  "fieldName": "Product Line",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by product line"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 5,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "section_geo",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 🌍 Revenue by market"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "map_rev",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Latitude",
+                      "expression": "`Latitude`"
+                    },
+                    {
+                      "name": "Longitude",
+                      "expression": "`Longitude`"
+                    },
+                    {
+                      "name": "Country",
+                      "expression": "`Country`"
+                    },
+                    {
+                      "name": "measure(Revenue)",
+                      "expression": "MEASURE(`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "symbol-map",
+              "encodings": {
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "Latitude"
+                  },
+                  "longitude": {
+                    "fieldName": "Longitude"
+                  }
+                },
+                "size": {
+                  "fieldName": "measure(Revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue"
+                },
+                "color": {
+                  "fieldName": "measure(Revenue)",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blues"
+                    }
+                  },
+                  "displayName": "Revenue"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by market (bubble size = revenue)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 8,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "region_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Region",
+                      "expression": "`Region`"
+                    },
+                    {
+                      "name": "measure(Revenue)",
+                      "expression": "MEASURE(`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue"
+                },
+                "color": {
+                  "fieldName": "Region",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Region"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue share by region"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 12,
+            "width": 4,
+            "height": 7
           }
         }
-      },
-      "position" : {
-        "x" : 4,
-        "y" : 9,
-        "width" : 2,
-        "height" : 8
-      }
-    } ]
-  } ]
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "why",
+      "displayName": "Why are we beating?",
+      "layout": [
+        {
+          "widget": {
+            "name": "why_title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# 🔎 Why are we beating the target?\n",
+                "\n",
+                "The surge is concentrated in **EMEA**, right after the new **Fragrance** line became available there on **2026-05-04** (product catalog). Here's the trail."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "step1_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 1. Which region is surging?\n",
+                "\n",
+                "Monthly revenue by region — EMEA pulls away from the pack in recent months."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "region_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_region_trend",
+                  "fields": [
+                    {
+                      "name": "day",
+                      "expression": "`day`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "day",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Day"
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                },
+                "color": {
+                  "fieldName": "region",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Region"
+                }
+              },
+              "annotations": [
+                {
+                  "type": "vertical-line",
+                  "encodings": {
+                    "x": {
+                      "dataValue": "2026-05-04T00:00:00.000",
+                      "dataType": "DATETIME"
+                    },
+                    "label": {
+                      "value": "Fragrance launches in EMEA"
+                    },
+                    "color": {
+                      "value": {
+                        "themeColorType": "visualizationColors",
+                        "position": 3
+                      }
+                    }
+                  }
+                }
+              ],
+              "frame": {
+                "showTitle": true,
+                "title": "Daily revenue by region (stacked) — EMEA grows after the launch"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "step2_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 2. Why EMEA? A new product line went live\n",
+                "\n",
+                "Within EMEA, the **Fragrance** line was near-zero until it launched on **2026-05-04**, then took off — that single launch is driving the beat."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "emea_line",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_emea_line",
+                  "fields": [
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    },
+                    {
+                      "name": "product_line",
+                      "expression": "`product_line`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Week"
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "EMEA revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                },
+                "color": {
+                  "fieldName": "product_line",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Product Line"
+                }
+              },
+              "annotations": [
+                {
+                  "type": "vertical-line",
+                  "encodings": {
+                    "x": {
+                      "dataValue": "2026-05-04T00:00:00.000",
+                      "dataType": "DATETIME"
+                    },
+                    "label": {
+                      "value": "Fragrance launches in EMEA"
+                    },
+                    "color": {
+                      "value": {
+                        "themeColorType": "visualizationColors",
+                        "position": 3
+                      }
+                    }
+                  }
+                }
+              ],
+              "frame": {
+                "showTitle": true,
+                "title": "EMEA weekly revenue by product line — Fragrance surges after the May 4 launch"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "launch_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_launch",
+                  "fields": [
+                    {
+                      "name": "product_line",
+                      "expression": "`product_line`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "launch_date",
+                      "expression": "`launch_date`"
+                    },
+                    {
+                      "name": "launch_name",
+                      "expression": "`launch_name`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "launch_name",
+                    "displayName": "Launch"
+                  },
+                  {
+                    "fieldName": "product_line",
+                    "displayName": "Product Line"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Region"
+                  },
+                  {
+                    "fieldName": "launch_date",
+                    "displayName": "Launch Date"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Product launches (catalog) — the EMEA Fragrance launch is the trigger"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 10,
+            "width": 4,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "filters",
+      "displayName": "Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "f_date",
+            "queries": [
+              {
+                "name": "f_date_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Order Date",
+                      "expression": "`Order Date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "Order Date",
+                    "displayName": "Date",
+                    "queryName": "f_date_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Date"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_region",
+            "queries": [
+              {
+                "name": "f_region_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Region",
+                      "expression": "`Region`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "Region",
+                    "displayName": "Region",
+                    "queryName": "f_region_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Region"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_line",
+            "queries": [
+              {
+                "name": "f_line_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Product Line",
+                      "expression": "`Product Line`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "Product Line",
+                    "displayName": "Product Line",
+                    "queryName": "f_line_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Product Line"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_segment",
+            "queries": [
+              {
+                "name": "f_segment_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Segment",
+                      "expression": "`Segment`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "Segment",
+                    "displayName": "Segment",
+                    "queryName": "f_segment_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Retailer Segment"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "visualizationColors": [
+        "#077A9D",
+        "#FF3621",
+        "#FFAB00",
+        "#00A972",
+        "#8BCAE7",
+        "#AB4057",
+        "#99DDB4",
+        "#FCA4A1"
+      ],
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "genieSpace": {
+      "isEnabled": true,
+      "overrideId": "",
+      "enablementMode": "ENABLED"
+    }
+  }
 }

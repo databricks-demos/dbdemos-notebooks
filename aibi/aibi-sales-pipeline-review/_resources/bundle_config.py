@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC ## Demo bundle configuration
 # MAGIC Please ignore / do not delete, only used to prep and bundle the demo
 
@@ -12,7 +12,7 @@
     "custom_schema_supported": True,
     "default_catalog": "main",
     "default_schema": "dbdemos_aibi_sales_pipeline_review",
-    "description": "Optimize your sales pipeline visibility and insights with AI/BI Dashboards, and leverage Genie to ask questions about your data in natural language.",
+    "description": "Track sales performance against target with AI/BI Dashboards: unify CRM, ERP, Finance and product data, forecast where the quarter lands, and use Genie to ask why in natural language.",
     "bundle": True,
     "notebooks": [
       {
@@ -31,104 +31,203 @@
     "dashboards": [
       {
         "name": "[dbdemos] AIBI - Sales Pipeline Review",
-        "id": "sales-pipeline"
+        "id": "sales-pipeline",
+        "genie_room_id": "sales-pipeline"
       }
     ],
     "data_folders": [
-      {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_accounts",
-        "source_format": "parquet",
-        "target_volume_folder": "raw_accounts",
-        "target_format": "delta"
-      },
-      {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_opportunity",
-        "source_format": "parquet",
-        "target_volume_folder": "raw_opportunity",
-        "target_format": "delta"
-      },
-      {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_user",
-        "source_format": "parquet",
-        "target_volume_folder": "raw_user",
-        "target_format": "delta"
-      },
-      {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_dim_country",
-        "source_format": "parquet",
-        "target_volume_folder": "raw_dim_country",
-        "target_format": "delta"
-      },
-      {
-        "source_folder": "aibi/dbdemos_aibi_sales_pipeline/raw_data/raw_employee_hierarchy",
-        "source_format": "parquet",
-        "target_volume_folder": "raw_employee_hierarchy",
-        "target_format": "delta"
-      }
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/products",          "source_format": "parquet", "target_volume_folder": "products",          "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/product_launches",  "source_format": "parquet", "target_volume_folder": "product_launches",  "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/sales_targets",     "source_format": "parquet", "target_volume_folder": "sales_targets",     "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/crm_reps",          "source_format": "parquet", "target_volume_folder": "crm_reps",          "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/crm_accounts",      "source_format": "parquet", "target_volume_folder": "crm_accounts",      "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/crm_opportunities", "source_format": "parquet", "target_volume_folder": "crm_opportunities", "target_format": "parquet"},
+      {"source_folder": "aibi/dbdemos_aibi_sales_pipeline_v2/erp_orders",        "source_format": "parquet", "target_volume_folder": "erp_orders",        "target_format": "parquet"}
     ],
     "sql_queries": [
-      ["CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_accounts TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the bronze table for accounts created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_accounts', format => 'parquet', pathGlobFilter => '*.parquet')",
-       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_opportunity TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the bronze table for opportunity created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_opportunity', format => 'parquet', pathGlobFilter => '*.parquet')",
-       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.raw_user TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the bronze table for user created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_user', format => 'parquet', pathGlobFilter => '*.parquet')",
-       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.dim_country TBLPROPERTIES ( delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the reference table for countries created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_dim_country', format => 'parquet', pathGlobFilter => '*.parquet')",
-       "CREATE TABLE IF NOT EXISTS `{{CATALOG}}`.`{{SCHEMA}}`.employee_hierarchy TBLPROPERTIES (delta.autooptimize.optimizewrite = TRUE, delta.autooptimize.autocompact   = TRUE ) COMMENT 'This is the employee hierarchy table created from parquet files' AS SELECT * FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/raw_employee_hierarchy', format => 'parquet', pathGlobFilter => '*.parquet')"
-       ]
-      ,
-      ["CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_accounts COMMENT 'Cleaned version of the raw accounts table' AS SELECT AccountId,  AccountName,  AccountIndustry,  AccountType,  AccountHQCountry,  AccountCountry,  NumberOfEmployees,  AnnualRevenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_accounts WHERE AccountId IS NOT NULL AND AccountName IS NOT NULL AND AccountIndustry IS NOT NULL AND NumberOfEmployees > 0",
-      "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_opportunity COMMENT 'Cleaned version of the raw opportunity table' AS SELECT  OpportunityId,  OpportunityType,  OpportunityName,  OpportunityDescription,  AccountId,  AgeInDays,  Amount,  OpportunityAmount,  CloseDate,  CreatedDate,  LeadSource,  OwnerId,  Probability,  StageName,  ForecastCategory,  NewExpansionBookingAnnual,  NewExpansionBookingAnnualWtd,  NewRecurringBookingsManual,  NewRecurringBookings,  BusinessType FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_opportunity WHERE OpportunityId IS NOT NULL AND OpportunityType IS NOT NULL AND AccountId IS NOT NULL AND AgeInDays IS NOT NULL AND AgeInDays > 0 AND CloseDate >= CreatedDate AND OwnerId IS NOT NULL AND Probability IS NOT NULL AND Probability >= 0 AND Probability <= 1 AND StageName IS NOT NULL",
-      "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_user COMMENT 'Cleaned version of the raw user table' AS SELECT UserId,  UserName,  UserTitle,  UserRole,  UserSegment,  UserRegion FROM `{{CATALOG}}`.`{{SCHEMA}}`.raw_user WHERE UserId IS NOT NULL AND UserName IS NOT NULL AND UserTitle IS NOT NULL AND UserRole IS NOT NULL"
-       ],
       [
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.accounts AS SELECT  AccountId AS id,  AccountName AS name,  AccountIndustry AS industry,  AccountType AS type,  hq_c.region AS region_hq__c,  c.region AS region__c,  CASE    WHEN NumberOfEmployees <= 100 THEN 'SMB' WHEN NumberOfEmployees BETWEEN 101 AND 1000 THEN 'MM'    ELSE 'ENT'  END AS company_size_segment__c,  AnnualRevenue AS annualrevenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_accounts acc JOIN `{{CATALOG}}`.`{{SCHEMA}}`.dim_country hq_c ON acc.AccountHQCountry = hq_c.country JOIN `{{CATALOG}}`.`{{SCHEMA}}`.dim_country c ON acc.AccountCountry = c.country"
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.products_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: product lines (PIM)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/products', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.product_launches_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: product regional launch dates (PIM)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/product_launches', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sales_targets_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: quarterly revenue targets (Finance)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/sales_targets', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: sales reps (Salesforce)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/crm_reps', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: customer accounts (Salesforce)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/crm_accounts', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_opportunities_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: open pipeline opportunities (Salesforce)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/crm_opportunities', format => 'parquet', pathGlobFilter => '*.parquet')""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.erp_orders_bronze TBLPROPERTIES (delta.autooptimize.optimizewrite = true, delta.autooptimize.autocompact = true) COMMENT 'Bronze: daily orders / actual revenue (ERP)' AS SELECT * EXCEPT (_rescued_data) FROM read_files('/Volumes/{{CATALOG}}/{{SCHEMA}}/dbdemos_raw_data/erp_orders', format => 'parquet', pathGlobFilter => '*.parquet')"""
       ],
       [
-        "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.opportunity AS SELECT OpportunityId AS opportunityid,  OpportunityType AS type,  OpportunityName AS name,  OpportunityDescription AS description,  AccountId AS accountid,  AgeInDays AS days_to_close,  Amount AS amount,  OpportunityAmount AS opportunity_amount,  CloseDate AS closedate,  CreatedDate AS createddate,  LeadSource AS leadsource,  OwnerId AS ownerid,  Probability AS probability,  Probability * 100 AS probability_per, StageName AS stagename,  ForecastCategory AS forecastcategory,  NewExpansionBookingAnnual AS New_Expansion_Booking_Annual__c,  NewExpansionBookingAnnualWtd AS New_Expansion_Booking_Annual_Wtd__c,  NewRecurringBookingsManual AS New_Recurring_Bookings_Manual__c,  NewRecurringBookings AS New_Recurring_Bookings__c,  BusinessType AS business_type__c,  a.industry AS industry,  a.name AS account_name,  a.region_hq__c AS region_hq__c,  a.region__c AS region,  a.company_size_segment__c,  CONCAT(a.region__c, '-', a.company_size_segment__c) AS region_size,  a.annualrevenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_opportunity o JOIN `{{CATALOG}}`.`{{SCHEMA}}`.accounts a ON o.AccountId = a.id"
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.products (
+            product_line STRING COMMENT 'Product line (Skincare, Makeup, Fragrance, Haircare).',
+            category STRING COMMENT 'Product category description.',
+            PRIMARY KEY (product_line) RELY
+        ) USING delta COMMENT 'Beauty product lines (PIM).'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.product_launches (
+            launch_id BIGINT COMMENT 'Unique launch identifier.',
+            product_line STRING COMMENT 'Product line launched.',
+            region STRING COMMENT 'Region where the line became available (or Global).',
+            launch_date DATE COMMENT 'Date the line became available in the region.',
+            launch_name STRING COMMENT 'Launch name.',
+            description STRING COMMENT 'Launch description.',
+            PRIMARY KEY (launch_id) RELY
+        ) USING delta COMMENT 'Product regional availability/launches (PIM). The root-cause table: the new Fragrance line launched in EMEA on 2026-05-04, driving the EMEA sales spike.'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.sales_targets (
+            quarter_start DATE COMMENT 'First day of the fiscal quarter.',
+            target_revenue DOUBLE COMMENT 'Company-wide revenue target for the quarter (USD).',
+            PRIMARY KEY (quarter_start) RELY
+        ) USING delta COMMENT 'Company-wide quarterly revenue targets (Finance).'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps (
+            owner_id BIGINT COMMENT 'Unique sales rep identifier.',
+            rep_name STRING COMMENT 'Sales rep name.',
+            region STRING COMMENT 'Rep region.',
+            title STRING COMMENT 'Rep title.',
+            PRIMARY KEY (owner_id) RELY
+        ) USING delta COMMENT 'Sales reps (Salesforce).'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts (
+            account_id BIGINT COMMENT 'Unique account identifier.',
+            account_name STRING COMMENT 'Account (retailer) name.',
+            segment STRING COMMENT 'Retailer segment (Department Store, Specialty Retail, Pharmacy, E-commerce).',
+            region STRING COMMENT 'Account region (AMER, EMEA, APAC, LATAM).',
+            country STRING COMMENT 'Account country.',
+            country_code STRING COMMENT 'ISO country code.',
+            latitude DOUBLE COMMENT 'Account latitude (for maps).',
+            longitude DOUBLE COMMENT 'Account longitude (for maps).',
+            owner_id BIGINT COMMENT 'Sales rep that owns the account.',
+            PRIMARY KEY (account_id) RELY,
+            CONSTRAINT acc_owner_fk FOREIGN KEY (owner_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps(owner_id)
+        ) USING delta COMMENT 'Customer accounts / retailers (Salesforce).'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_opportunities (
+            opp_id BIGINT COMMENT 'Unique opportunity identifier.',
+            account_id BIGINT COMMENT 'Account the opportunity belongs to.',
+            product_line STRING COMMENT 'Product line of the opportunity.',
+            stage STRING COMMENT 'Pipeline stage.',
+            expected_revenue DOUBLE COMMENT 'Expected revenue of the opportunity (USD).',
+            created_date DATE COMMENT 'Date the opportunity was created.',
+            close_date DATE COMMENT 'Expected close date.',
+            PRIMARY KEY (opp_id) RELY,
+            CONSTRAINT opp_account_fk FOREIGN KEY (account_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts(account_id)
+        ) USING delta COMMENT 'Open pipeline opportunities / expansion deals (Salesforce).'""",
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.erp_orders (
+            order_id BIGINT COMMENT 'Unique order identifier.',
+            order_date DATE COMMENT 'Order date.',
+            account_id BIGINT COMMENT 'Account that placed the order.',
+            product_line STRING COMMENT 'Product line ordered.',
+            region STRING COMMENT 'Region of the order.',
+            units BIGINT COMMENT 'Units ordered.',
+            revenue DOUBLE COMMENT 'Order revenue (USD).',
+            PRIMARY KEY (order_id) RELY,
+            CONSTRAINT ord_account_fk FOREIGN KEY (account_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts(account_id),
+            CONSTRAINT ord_product_fk FOREIGN KEY (product_line) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.products(product_line)
+        ) USING delta COMMENT 'Daily orders / actual revenue (ERP) - the sales fact. EMEA Fragrance revenue spikes after the 2026-05-04 launch.'"""
       ],
-      ["CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.opportunity_history AS SELECT createddate AS CreatedDate,  stagename AS DealStage,  region AS Region,  SUM(amount) AS SumDealAmount FROM `{{CATALOG}}`.`{{SCHEMA}}`.opportunity GROUP BY createddate, stagename, region",
-       "CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.user AS SELECT UserId AS id, UserName AS name,  UserTitle AS title,  e.managerid AS managerid,  UserRole AS role__c,  UserSegment AS segment__c,  UserRegion AS region__c FROM `{{CATALOG}}`.`{{SCHEMA}}`.cleaned_user u LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.employee_hierarchy e ON u.UserId = e.id"]
-    ]
-    ,
+      [
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.products SELECT product_line, category FROM `{{CATALOG}}`.`{{SCHEMA}}`.products_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.product_launches SELECT CAST(launch_id AS BIGINT), product_line, region, CAST(launch_date AS DATE), launch_name, description FROM `{{CATALOG}}`.`{{SCHEMA}}`.product_launches_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.sales_targets SELECT CAST(quarter_start AS DATE), target_revenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.sales_targets_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps SELECT CAST(owner_id AS BIGINT), rep_name, region, title FROM `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts SELECT CAST(account_id AS BIGINT), account_name, segment, region, country, country_code, latitude, longitude, CAST(owner_id AS BIGINT) FROM `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.crm_opportunities SELECT CAST(opp_id AS BIGINT), CAST(account_id AS BIGINT), product_line, stage, expected_revenue, CAST(created_date AS DATE), CAST(close_date AS DATE) FROM `{{CATALOG}}`.`{{SCHEMA}}`.crm_opportunities_bronze""",
+        """INSERT OVERWRITE `{{CATALOG}}`.`{{SCHEMA}}`.erp_orders SELECT CAST(order_id AS BIGINT), CAST(order_date AS DATE), CAST(account_id AS BIGINT), product_line, region, CAST(units AS BIGINT), revenue FROM `{{CATALOG}}`.`{{SCHEMA}}`.erp_orders_bronze"""
+      ],
+      [
+        """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.orders_enriched
+           COMMENT 'Analysis-ready sales fact: ERP orders unified with the Salesforce account (region, segment, owner, geo), the rep, and the product category. Powers the AI/BI dashboard and Genie. EMEA Fragrance revenue spikes after the new line launched there on 2026-05-04.'
+           AS SELECT o.order_id, o.order_date, o.product_line, p.category,
+             o.region, a.account_id, a.account_name, a.segment, a.country, a.country_code, a.latitude, a.longitude,
+             r.rep_name, r.title AS rep_title,
+             o.units, o.revenue
+           FROM `{{CATALOG}}`.`{{SCHEMA}}`.erp_orders o
+           JOIN `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts a ON o.account_id = a.account_id
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps r ON a.owner_id = r.owner_id
+           LEFT JOIN `{{CATALOG}}`.`{{SCHEMA}}`.products p ON o.product_line = p.product_line"""
+      ],
+      [
+        """CREATE OR REPLACE VIEW `{{CATALOG}}`.`{{SCHEMA}}`.metrics_sales
+           WITH METRICS LANGUAGE YAML AS $$
+           version: 1.1
+           source: {{CATALOG}}.{{SCHEMA}}.orders_enriched
+           comment: "Governed beauty-brand sales KPIs. Revenue is actual ERP order revenue. The new Fragrance line launched in EMEA on 2026-05-04, driving a sales spike there that pushes the quarter forecast above target."
+           dimensions:
+             - name: Order Date
+               expr: order_date
+             - name: Product Line
+               expr: product_line
+             - name: Category
+               expr: category
+             - name: Region
+               expr: region
+             - name: Segment
+               expr: segment
+             - name: Account
+               expr: account_name
+             - name: Country
+               expr: country
+             - name: Country Code
+               expr: country_code
+             - name: Latitude
+               expr: latitude
+             - name: Longitude
+               expr: longitude
+             - name: Sales Rep
+               expr: rep_name
+           measures:
+             - name: Revenue
+               expr: SUM(revenue)
+             - name: Units
+               expr: SUM(units)
+             - name: Orders
+               expr: COUNT(1)
+             - name: Avg Order Value
+               expr: SUM(revenue) / NULLIF(COUNT(1),0)
+             - name: Avg Unit Price
+               expr: SUM(revenue) / NULLIF(SUM(units),0)
+           $$;"""
+      ]
+    ],
     "genie_rooms": [
       {
         "id": "sales-pipeline",
         "display_name": "DBDemos - AI/BI - Sales Pipeline Review",
-        "description": "Analyze your Sales Pipeline performance leveraging this AI/BI Dashboard. Deep dive into your data and metrics.",
+        "description": "Track a beauty brand's sales against its quarterly target across regions and product lines, with data unified from Salesforce (accounts/pipeline), the ERP (actual orders/revenue), Finance (targets) and the product catalog (launches). Ask whether we'll hit the quarter, what's driving the recent spike, and Genie will trace it to the new Fragrance line that launched in EMEA on 2026-05-04.",
         "table_identifiers": [
-          "{{CATALOG}}.{{SCHEMA}}.accounts",
-          "{{CATALOG}}.{{SCHEMA}}.opportunity",
-          "{{CATALOG}}.{{SCHEMA}}.opportunity_history",
-          "{{CATALOG}}.{{SCHEMA}}.user"
+          "{{CATALOG}}.{{SCHEMA}}.orders_enriched",
+          "{{CATALOG}}.{{SCHEMA}}.metrics_sales",
+          "{{CATALOG}}.{{SCHEMA}}.product_launches",
+          "{{CATALOG}}.{{SCHEMA}}.sales_targets"
         ],
         "sql_instructions": [
           {
-            "title": "Average active opportunity size",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT AVG(`opportunity_amount`) AS `avg(opportunity_amount)` FROM q GROUP BY GROUPING SETS (())"
+            "title": "Quarter-to-date revenue vs target (Q2 2026)",
+            "content": """SELECT ROUND(SUM(o.revenue)) AS qtd_revenue,
+       (SELECT target_revenue FROM {{CATALOG}}.{{SCHEMA}}.sales_targets WHERE quarter_start = DATE'2026-04-01') AS quarter_target
+FROM {{CATALOG}}.{{SCHEMA}}.orders_enriched o
+WHERE o.order_date >= DATE'2026-04-01' AND o.order_date <= DATE'2026-06-30';"""
           },
           {
-            "title": "Distribution of stages across all opportunities",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT COUNT(`stagename`) AS `count(stagename)`, `stagename` FROM q GROUP BY `stagename`"
+            "title": "Weekly revenue by region since the spike",
+            "content": """SELECT DATE_TRUNC('WEEK', order_date) AS week, region, ROUND(SUM(revenue)) AS revenue
+FROM {{CATALOG}}.{{SCHEMA}}.orders_enriched
+WHERE order_date >= DATE'2026-03-01'
+GROUP BY 1,2 ORDER BY 1,2;"""
           },
           {
-            "title": "Pipeline Amount by Region",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT `region`, SUM(`pipeline_amount`) AS `sum(pipeline_amount)` FROM q GROUP BY `region`"
-          },
-          {
-            "title": "Average days to close",
-            "content": "WITH q AS (SELECT *, CASE WHEN stagename IN ('2. Demo', '3. Validation', '4. Procure') THEN amount ELSE NULL END AS pipeline_amount FROM opportunity WHERE forecastcategory IS NOT NULL) SELECT AVG(`days_to_close`) AS `avg(days_to_close)` FROM q GROUP BY GROUPING SETS (())"
+            "title": "EMEA revenue by product line, and when each launched there",
+            "content": """SELECT o.product_line,
+       ROUND(SUM(o.revenue)) AS emea_revenue,
+       MAX(l.launch_date) AS emea_launch_date
+FROM {{CATALOG}}.{{SCHEMA}}.orders_enriched o
+LEFT JOIN {{CATALOG}}.{{SCHEMA}}.product_launches l
+  ON l.product_line = o.product_line AND l.region = 'EMEA'
+WHERE o.region = 'EMEA'
+GROUP BY 1 ORDER BY emea_revenue DESC;"""
           }
         ],
-        "instructions": "- Financial years run from February through to the end of January the following year.\n- For example deals created in FY24 are createddate >= '2024-02-01' AND createddate < '2025-02-01'\n- Deals closed in FY24 are closedate >= '2024-02-01'  AND closedate < '2025-02-01'\n\n- There are 4 financial quarters every fiscal year. Each quarter is 3 months long. Q1 starts in February and ends in April. Q2 starts in may and ends in July. This quarter is Q2. We are currently in Q2.\n\n- Always round metrics in results to 2 decimal places. For example use ROUND(foo,2) where foo is the metric getting returned.\n\n- When someone asks about europe that means EMEA, america and north america mean AMER.\n\n- When someone asks about top sales performance for sales reps respond with the person who generated the most pipeline across all stages.\n\n- a won sale is one with the stagename \"5. Closed Won\" a lost sale is one with the stagename \"X. Closed Lost\"\n\n- Remember to filter out nulls for forecastcategory\n\n- Remember to use pipeline_amount when asked about pipeline\n- When asked about pipeline start by breaking down totals by region\n\n- include user name when asked about sales reps\n\n \n\n- include account name when asked about a specific account\n",
+        "instructions": "This data tells the story of a global beauty brand tracking sales against a company-wide quarterly revenue target. Data is unified from several systems: Salesforce (crm_accounts, crm_opportunities, crm_reps), the ERP (erp_orders = actual revenue, the fact behind orders_enriched), Finance (sales_targets) and the product catalog (product_launches). The current fiscal quarter is Q2 2026 (2026-04-01 to 2026-06-30); its target is in sales_targets. When asked whether we'll HIT the target, compare quarter-to-date revenue (and, if asked to forecast, use the ai_forecast SQL function on daily revenue to project quarter-end) against the Q2 target. When asked WHY revenue is spiking / why we're beating, explain that the new Fragrance product line became available in EMEA on 2026-05-04 (product_launches) and EMEA Fragrance revenue surged afterwards - drill region (EMEA) then product_line (Fragrance) then join product_launches for the date. metrics_sales is a governed METRIC VIEW: query its measures with MEASURE(`Revenue`), MEASURE(`Units`), MEASURE(`Orders`), MEASURE(`Avg Order Value`) and group by its dimensions (e.g. `Region`, `Product Line`, `Segment`, `Sales Rep`); prefer it for clean aggregated KPIs.",
         "curated_questions": [
-          "How's my pipeline just in the americas and by segment?",
-          "What customers churned in America and how much revenue were they paying us?",
-          "How's my pipeline?",
-          "Who are my biggest customers globally?",
-          "What is my average active opportunity size?"
+          "Are we going to hit our revenue target this quarter?",
+          "What is driving the recent revenue spike?",
+          "Why is EMEA revenue surging?",
+          "Show weekly revenue by region since March 2026",
+          "Which product line grew the most in EMEA, and when did it launch there?"
         ]
       }
     ]
-  }
-
-# COMMAND ----------
-
-
+}

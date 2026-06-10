@@ -103,7 +103,7 @@
             "name": "title",
             "multilineTextboxSpec": {
               "lines": [
-                "# 📈 Multi-Channel Marketing Performance\n",
+                "# Multi-Channel Marketing Performance\n",
                 "\n",
                 "Campaigns across TikTok, Instagram, Google Ads & Email. Revenue and conversions suddenly dropped in late 2025 — even though spend held steady. What happened?"
               ]
@@ -488,7 +488,7 @@
             "name": "section_geo",
             "multilineTextboxSpec": {
               "lines": [
-                "## 🌍 The drop is concentrated in specific markets"
+                "## The drop is concentrated in specific markets"
               ]
             }
           },

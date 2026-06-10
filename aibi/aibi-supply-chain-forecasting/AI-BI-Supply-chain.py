@@ -21,18 +21,20 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Demand Forecasting for Supply Chain Optimization
+# MAGIC # Supply Chain Forecasting — are we about to run out of a part?
 # MAGIC ---
+# MAGIC
+# MAGIC ## The Story
+# MAGIC
+# MAGIC You run the supply chain for an **e-bike manufacturer**. Every model is built from shared components via a bill of materials — and the **Battery Cell** goes into all of them. A **new EMEA market just opened**, so City E-Bike demand is surging in Europe. That surge is quietly burning through Battery Cells: at the **Rotterdam** plant there are only **~2 weeks of cover** left — but the supplier needs **8 weeks** to deliver more. If nothing changes, the line stops.
 # MAGIC
 # MAGIC ## The Challenge
 # MAGIC
-# MAGIC In the manufacturing industry, ensuring accurate demand forecasting is vital for efficient supply chain management. Poor demand forecasts can lead to overproduction, excess inventory costs, or stockouts that disrupt operations and customer satisfaction. Organizations lacking a robust data intelligence platform face challenges in unifying siloed data from various sources, translating forecast insights for stakeholders, and minimizing the time-to-insights needed for strategic adjustments.
+# MAGIC Catching this in time means connecting data that usually lives apart: demand forecasts, the bill of materials, on-hand inventory by plant, supplier lead times, and the market event that started it all. Without a unified platform, by the time the pieces are stitched together the stockout has already happened.
 # MAGIC
 # MAGIC ## The Solution
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (_or as we call it, AI/BI_)** to democratize access to your organization's supply chain data. By integrating data from various operational, sales, and market sources into a unified, cohesive environment, Databricks breaks down silos and makes comprehensive demand forecasting insights available to all team members.
-# MAGIC
-# MAGIC Advanced AI-driven analytics and intuitive BI tools empower both technical and non-technical users to analyze demand trends and forecasts by asking questions of their data platform in natural language. This accessibility accelerates time-to-insights, enhances cross-functional collaboration, and allows leadership to make informed, data-driven decisions to optimize production planning, inventory management, and overall supply chain efficiency.
+# MAGIC The **Databricks Platform** unifies all of it, then layers **AI/BI** on top. The dashboard forecasts each component's on-hand inventory and flags which one runs out first (vs its supplier lead time); **Genie** lets anyone ask *"which component is about to run out, when, and why?"* in plain language — and trace it from the demand surge, through the BOM, to the new EMEA market launch that caused it.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
@@ -101,13 +103,13 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Your Supply Chain data is now available for your Data Analyst to explore and track their main KPIs.
+# MAGIC Your unified supply chain data is now available for planners and leadership to track component risk.
 # MAGIC
-# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
+# MAGIC The dashboard tells the story in two pages:
+# MAGIC - **Component supply risk** — weeks of cover and projected stockout per component, an **AI forecast** of on-hand inventory depleting to zero, a weeks-of-cover comparison by plant, and where demand sits on a map.
+# MAGIC - **Why** — the **AI demand forecast** and the new EMEA market launch that caused the surge, the bill of materials showing every product draws on the Battery Cell, and demand by region where EMEA breaks away.
 # MAGIC
-# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
-# MAGIC
-# MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
+# MAGIC AI/BI Dashboards make it easy to build and iterate on visualizations with natural language, with sleek charts, cross-filtering, scheduled snapshots and embedding — all side-by-side with your governed data.
 # MAGIC
 # MAGIC
 # MAGIC Open the <a dbdemos-dashboard-id="supply-chain" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Supply Chain Forecasting Dashboard to analyze & track main KPIs</a>
@@ -122,7 +124,14 @@
 # MAGIC
 # MAGIC Our data is now available as a Dashboard that our business users can open.
 # MAGIC
-# MAGIC However, they'll likely have extra questions or follow-up based on the insights they see in the dashboard, such as: "What is the forecasted demand for next quarter?" or "Which products are at risk of stockouts?"
+# MAGIC However, they'll have follow-up questions based on what they see. This is where Genie shines — ask in plain language and let it trace the answer across demand, the BOM, inventory, suppliers and the market-launch event:
+# MAGIC
+# MAGIC - *"Which component is about to run out?"* → **Battery Cell**
+# MAGIC - *"Why is Battery Cell demand surging?"* → the new **EMEA market launch** (City E-Bike)
+# MAGIC - *"Why can't we just reorder more in time?"* → the supplier's **8-week lead time**
+# MAGIC - *"Which products use the Battery Cell, and how many per unit?"*
+# MAGIC
+# MAGIC Notice the answer spans tables that usually live apart — demand, BOM, inventory, suppliers, and the market event — and Genie joins them for you.
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="supply-chain" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Supply Chain Forecasting Genie space to deep dive into your data</a>
 

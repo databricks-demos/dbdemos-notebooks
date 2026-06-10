@@ -666,7 +666,7 @@
             "x": 0,
             "y": 2,
             "width": 12,
-            "height": 1
+            "height": 2
           }
         },
         {
@@ -754,7 +754,7 @@
           },
           "position": {
             "x": 0,
-            "y": 3,
+            "y": 4,
             "width": 12,
             "height": 6
           }
@@ -772,9 +772,9 @@
           },
           "position": {
             "x": 0,
-            "y": 9,
+            "y": 10,
             "width": 12,
-            "height": 1
+            "height": 2
           }
         },
         {
@@ -862,7 +862,7 @@
           },
           "position": {
             "x": 0,
-            "y": 10,
+            "y": 12,
             "width": 8,
             "height": 6
           }
@@ -928,7 +928,7 @@
           },
           "position": {
             "x": 8,
-            "y": 10,
+            "y": 12,
             "width": 4,
             "height": 6
           }

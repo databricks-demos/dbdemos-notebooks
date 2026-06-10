@@ -84,7 +84,7 @@
             "name": "s_title",
             "multilineTextboxSpec": {
               "lines": [
-                "# Customer Support Overview\n\nResolution time, satisfaction and cost across the travel-support operation. A clear improvement appears in mid-2025 \u2014 see the **AI Copilot Impact** tab for why."
+                "# Customer Support Overview\n\nResolution time, satisfaction and cost across the travel-support operation. A clear improvement appears in mid-2025 — see the **AI Copilot Impact** tab for why."
               ]
             }
           },
@@ -715,7 +715,7 @@
             "x": 0,
             "y": 0,
             "width": 12,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -769,7 +769,7 @@
           },
           "position": {
             "x": 0,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 3
           }
@@ -827,7 +827,7 @@
           },
           "position": {
             "x": 3,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 3
           }
@@ -875,7 +875,7 @@
           },
           "position": {
             "x": 6,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 3
           }
@@ -923,7 +923,7 @@
           },
           "position": {
             "x": 9,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 3
           }
@@ -939,7 +939,7 @@
           },
           "position": {
             "x": 0,
-            "y": 5,
+            "y": 6,
             "width": 12,
             "height": 1
           }
@@ -1014,7 +1014,7 @@
           },
           "position": {
             "x": 0,
-            "y": 6,
+            "y": 7,
             "width": 6,
             "height": 6
           }
@@ -1089,7 +1089,7 @@
           },
           "position": {
             "x": 6,
-            "y": 6,
+            "y": 7,
             "width": 6,
             "height": 6
           }
@@ -1105,7 +1105,7 @@
           },
           "position": {
             "x": 0,
-            "y": 12,
+            "y": 13,
             "width": 12,
             "height": 1
           }
@@ -1174,7 +1174,7 @@
           },
           "position": {
             "x": 0,
-            "y": 13,
+            "y": 14,
             "width": 6,
             "height": 6
           }
@@ -1249,7 +1249,7 @@
           },
           "position": {
             "x": 6,
-            "y": 13,
+            "y": 14,
             "width": 6,
             "height": 6
           }

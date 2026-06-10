@@ -504,20 +504,16 @@
                   "datasetName": "ds_metrics",
                   "fields": [
                     {
+                      "name": "measure(Revenue)",
+                      "expression": "MEASURE(`Revenue`)"
+                    },
+                    {
                       "name": "Latitude",
                       "expression": "`Latitude`"
                     },
                     {
                       "name": "Longitude",
                       "expression": "`Longitude`"
-                    },
-                    {
-                      "name": "Country",
-                      "expression": "`Country`"
-                    },
-                    {
-                      "name": "measure(Revenue)",
-                      "expression": "MEASURE(`Revenue`)"
                     }
                   ],
                   "disaggregated": false
@@ -526,6 +522,10 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by market (bubble size = revenue)"
+              },
               "widgetType": "symbol-map",
               "encodings": {
                 "coordinates": {
@@ -536,28 +536,27 @@
                     "fieldName": "Longitude"
                   }
                 },
+                "color": {
+                  "fieldName": "measure(Revenue)",
+                  "displayName": "Revenue",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "custom-sequential",
+                      "colors": {
+                        "start": "#EFF3FF",
+                        "end": "#077A9D"
+                      }
+                    }
+                  }
+                },
                 "size": {
                   "fieldName": "measure(Revenue)",
                   "scale": {
                     "type": "quantitative"
                   },
                   "displayName": "Revenue"
-                },
-                "color": {
-                  "fieldName": "measure(Revenue)",
-                  "scale": {
-                    "type": "quantitative",
-                    "colorRamp": {
-                      "mode": "scheme",
-                      "scheme": "blues"
-                    }
-                  },
-                  "displayName": "Revenue"
                 }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Revenue by market (bubble size = revenue)"
               }
             }
           },
@@ -787,12 +786,12 @@
                   "datasetName": "ds_emea_line",
                   "fields": [
                     {
-                      "name": "week",
-                      "expression": "`week`"
-                    },
-                    {
                       "name": "product_line",
                       "expression": "`product_line`"
+                    },
+                    {
+                      "name": "week",
+                      "expression": "`week`"
                     },
                     {
                       "name": "sum(revenue)",
@@ -805,34 +804,9 @@
             ],
             "spec": {
               "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "week",
-                  "scale": {
-                    "type": "temporal"
-                  },
-                  "displayName": "Week"
-                },
-                "y": {
-                  "fieldName": "sum(revenue)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "displayName": "EMEA revenue",
-                  "format": {
-                    "type": "number-currency",
-                    "currencyCode": "USD",
-                    "abbreviation": "compact"
-                  }
-                },
-                "color": {
-                  "fieldName": "product_line",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "Product Line"
-                }
+              "frame": {
+                "showTitle": true,
+                "title": "EMEA weekly revenue by product line — Fragrance surges after the May 4 launch"
               },
               "annotations": [
                 {
@@ -854,9 +828,34 @@
                   }
                 }
               ],
-              "frame": {
-                "showTitle": true,
-                "title": "EMEA weekly revenue by product line — Fragrance surges after the May 4 launch"
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "week",
+                  "displayName": "Week",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "EMEA revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "product_line",
+                  "displayName": "Product Line",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
               }
             }
           },

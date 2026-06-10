@@ -622,7 +622,7 @@
           "position": {
             "x": 0,
             "y": 12,
-            "width": 12,
+            "width": 8,
             "height": 5
           }
         },
@@ -815,6 +815,81 @@
             "y": 24,
             "width": 12,
             "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "cover_heatmap",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_component_status",
+                  "fields": [
+                    {
+                      "name": "component_name",
+                      "expression": "`component_name`"
+                    },
+                    {
+                      "name": "plant_name",
+                      "expression": "`plant_name`"
+                    },
+                    {
+                      "name": "sum(weeks_of_cover)",
+                      "expression": "SUM(`weeks_of_cover`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "heatmap",
+              "encodings": {
+                "x": {
+                  "fieldName": "plant_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Plant"
+                },
+                "y": {
+                  "fieldName": "component_name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Component"
+                },
+                "color": {
+                  "fieldName": "sum(weeks_of_cover)",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "redyellowgreen"
+                    }
+                  },
+                  "displayName": "Weeks of cover"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Weeks of cover heatmap — red = at risk"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 12,
+            "width": 4,
+            "height": 5
           }
         }
       ],

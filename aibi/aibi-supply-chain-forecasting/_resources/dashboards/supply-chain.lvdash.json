@@ -192,23 +192,26 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Battery Cell — weeks of cover",
+                "showDescription": false
+              },
               "widgetType": "counter",
               "encodings": {
                 "value": {
                   "fieldName": "weeks_of_cover",
-                  "displayName": "Weeks of cover",
                   "format": {
-                    "type": "number",
+                    "type": "number-plain",
+                    "abbreviation": "compact",
                     "decimalPlaces": {
-                      "type": "exact",
-                      "places": 1
+                      "type": "max",
+                      "places": 2
                     }
-                  }
+                  },
+                  "formatTemplate": "{{ @formatted }} weeks",
+                  "displayName": "Weeks of cover"
                 }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Battery Cell — weeks of cover"
               }
             }
           },
@@ -279,16 +282,25 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Supplier lead time (weeks)"
+              },
               "widgetType": "counter",
               "encodings": {
                 "value": {
                   "fieldName": "lead_time_weeks",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "formatTemplate": "{{ @formatted }} weeks",
                   "displayName": "Supplier lead time (weeks)"
                 }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Supplier lead time (weeks)"
               }
             }
           },
@@ -333,7 +345,10 @@
               "encodings": {
                 "value": {
                   "fieldName": "measure(Demand Units)",
-                  "displayName": "Weekly demand"
+                  "displayName": "Weekly demand",
+                  "color": {
+                    "value": "#5FA6DE"
+                  }
                 },
                 "period": {
                   "fieldName": "Week"
@@ -412,6 +427,25 @@
                       "displayName": "Safety stock"
                     }
                   ]
+                },
+                "color": {
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "On-hand (actual)",
+                        "color": "#3E8FD0"
+                      },
+                      {
+                        "value": "On-hand (forecast)",
+                        "color": "#FF5A47"
+                      },
+                      {
+                        "value": "Safety stock",
+                        "color": "#FFB454"
+                      }
+                    ]
+                  }
                 }
               },
               "annotations": [
@@ -426,17 +460,14 @@
                       "value": "Projected stockout"
                     },
                     "color": {
-                      "value": {
-                        "themeColorType": "visualizationColors",
-                        "position": 2
-                      }
+                      "value": "#FFB454"
                     }
                   }
                 }
               ],
               "frame": {
                 "showTitle": true,
-                "title": "Battery Cell on-hand at Rotterdam — projected to run out in ~2 weeks at current run-rate (select a component)"
+                "title": "Battery Cell on-hand at Rotterdam — projected to run out in ~2 weeks"
               }
             }
           },
@@ -529,28 +560,28 @@
                       "expression": "`component_name`"
                     },
                     {
-                      "name": "supplier_name",
-                      "expression": "`supplier_name`"
-                    },
-                    {
-                      "name": "lead_time_weeks",
-                      "expression": "`lead_time_weeks`"
-                    },
-                    {
-                      "name": "on_hand_units",
-                      "expression": "`on_hand_units`"
-                    },
-                    {
-                      "name": "safety_stock_units",
-                      "expression": "`safety_stock_units`"
+                      "name": "status",
+                      "expression": "`status`"
                     },
                     {
                       "name": "weeks_of_cover",
                       "expression": "`weeks_of_cover`"
                     },
                     {
-                      "name": "status",
-                      "expression": "`status`"
+                      "name": "on_hand_units",
+                      "expression": "`on_hand_units`"
+                    },
+                    {
+                      "name": "lead_time_weeks",
+                      "expression": "`lead_time_weeks`"
+                    },
+                    {
+                      "name": "supplier_name",
+                      "expression": "`supplier_name`"
+                    },
+                    {
+                      "name": "safety_stock_units",
+                      "expression": "`safety_stock_units`"
                     }
                   ],
                   "disaggregated": true
@@ -559,6 +590,10 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Component supply status (inventory, supplier & lead time)"
+              },
               "widgetType": "table",
               "encodings": {
                 "columns": [
@@ -567,62 +602,37 @@
                     "displayName": "Component"
                   },
                   {
-                    "fieldName": "supplier_name",
-                    "displayName": "Supplier"
+                    "fieldName": "status",
+                    "displayName": "Status"
+                  },
+                  {
+                    "fieldName": "weeks_of_cover",
+                    "displayName": "Weeks of cover"
+                  },
+                  {
+                    "fieldName": "on_hand_units",
+                    "displayName": "On hand"
                   },
                   {
                     "fieldName": "lead_time_weeks",
                     "displayName": "Lead time (wk)"
                   },
                   {
-                    "fieldName": "on_hand_units",
-                    "displayName": "On hand",
-                    "format": {
-                      "type": "number",
-                      "decimalPlaces": {
-                        "type": "exact",
-                        "places": 0
-                      }
-                    }
+                    "fieldName": "supplier_name",
+                    "displayName": "Supplier"
                   },
                   {
                     "fieldName": "safety_stock_units",
-                    "displayName": "Safety stock",
-                    "format": {
-                      "type": "number",
-                      "decimalPlaces": {
-                        "type": "exact",
-                        "places": 0
-                      }
-                    }
-                  },
-                  {
-                    "fieldName": "weeks_of_cover",
-                    "displayName": "Weeks of cover",
-                    "format": {
-                      "type": "number",
-                      "decimalPlaces": {
-                        "type": "max",
-                        "places": 1
-                      }
-                    }
-                  },
-                  {
-                    "fieldName": "status",
-                    "displayName": "Status"
+                    "displayName": "Safety stock"
                   }
                 ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Component supply status (inventory, supplier & lead time)"
               }
             }
           },
           "position": {
             "x": 0,
             "y": 12,
-            "width": 8,
+            "width": 7,
             "height": 5
           }
         },
@@ -706,10 +716,7 @@
                       "value": "EMEA market opens"
                     },
                     "color": {
-                      "value": {
-                        "themeColorType": "visualizationColors",
-                        "position": 2
-                      }
+                      "value": "#FFB454"
                     }
                   }
                 }
@@ -753,20 +760,16 @@
                   "datasetName": "ds_metrics",
                   "fields": [
                     {
+                      "name": "measure(Demand Units)",
+                      "expression": "MEASURE(`Demand Units`)"
+                    },
+                    {
                       "name": "Latitude",
                       "expression": "`Latitude`"
                     },
                     {
                       "name": "Longitude",
                       "expression": "`Longitude`"
-                    },
-                    {
-                      "name": "Distribution Center",
-                      "expression": "`Distribution Center`"
-                    },
-                    {
-                      "name": "measure(Demand Units)",
-                      "expression": "MEASURE(`Demand Units`)"
                     }
                   ],
                   "disaggregated": false
@@ -775,6 +778,10 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Demand by distribution center"
+              },
               "widgetType": "symbol-map",
               "encodings": {
                 "coordinates": {
@@ -785,28 +792,27 @@
                     "fieldName": "Longitude"
                   }
                 },
+                "color": {
+                  "fieldName": "measure(Demand Units)",
+                  "displayName": "Demand",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "custom-sequential",
+                      "colors": {
+                        "start": "#3E8FD0",
+                        "end": "#5FBE8A"
+                      }
+                    }
+                  }
+                },
                 "size": {
                   "fieldName": "measure(Demand Units)",
                   "scale": {
                     "type": "quantitative"
                   },
                   "displayName": "Demand"
-                },
-                "color": {
-                  "fieldName": "measure(Demand Units)",
-                  "scale": {
-                    "type": "quantitative",
-                    "colorRamp": {
-                      "mode": "scheme",
-                      "scheme": "blues"
-                    }
-                  },
-                  "displayName": "Demand"
                 }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Demand by distribution center"
               }
             }
           },
@@ -827,16 +833,16 @@
                   "datasetName": "ds_component_status",
                   "fields": [
                     {
-                      "name": "component_name",
-                      "expression": "`component_name`"
+                      "name": "sum(weeks_of_cover)",
+                      "expression": "SUM(`weeks_of_cover`)"
                     },
                     {
                       "name": "plant_name",
                       "expression": "`plant_name`"
                     },
                     {
-                      "name": "sum(weeks_of_cover)",
-                      "expression": "SUM(`weeks_of_cover`)"
+                      "name": "component_name",
+                      "expression": "`component_name`"
                     }
                   ],
                   "disaggregated": false
@@ -845,50 +851,53 @@
             ],
             "spec": {
               "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Weeks of cover heatmap — red = at risk"
+              },
               "widgetType": "heatmap",
               "encodings": {
                 "x": {
                   "fieldName": "plant_name",
-                  "scale": {
-                    "type": "categorical"
-                  },
                   "axis": {
                     "hideTitle": true
                   },
-                  "displayName": "Plant"
+                  "displayName": "Plant",
+                  "scale": {
+                    "type": "categorical"
+                  }
                 },
                 "y": {
                   "fieldName": "component_name",
-                  "scale": {
-                    "type": "categorical"
-                  },
                   "axis": {
                     "hideTitle": true
                   },
-                  "displayName": "Component"
+                  "displayName": "Component",
+                  "scale": {
+                    "type": "categorical"
+                  }
                 },
                 "color": {
                   "fieldName": "sum(weeks_of_cover)",
+                  "displayName": "Weeks of cover",
                   "scale": {
                     "type": "quantitative",
                     "colorRamp": {
-                      "mode": "scheme",
-                      "scheme": "redyellowgreen"
+                      "mode": "custom-sequential",
+                      "colors": {
+                        "start": "#FF5A47",
+                        "end": "#5FBE8A"
+                      }
                     }
-                  },
-                  "displayName": "Weeks of cover"
+                  }
                 }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Weeks of cover heatmap — red = at risk"
               }
             }
           },
           "position": {
-            "x": 8,
+            "x": 7,
             "y": 12,
-            "width": 4,
+            "width": 5,
             "height": 5
           }
         }
@@ -1016,10 +1025,7 @@
                       "value": "EMEA market opens"
                     },
                     "color": {
-                      "value": {
-                        "themeColorType": "visualizationColors",
-                        "position": 2
-                      }
+                      "value": "#FFB454"
                     }
                   }
                 }
@@ -1155,12 +1161,12 @@
                   "datasetName": "ds_region_demand",
                   "fields": [
                     {
-                      "name": "week",
-                      "expression": "`week`"
-                    },
-                    {
                       "name": "region",
                       "expression": "`region`"
+                    },
+                    {
+                      "name": "week",
+                      "expression": "`week`"
                     },
                     {
                       "name": "sum(demand)",
@@ -1173,30 +1179,9 @@
             ],
             "spec": {
               "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "week",
-                  "scale": {
-                    "type": "temporal"
-                  },
-                  "displayName": "Week"
-                },
-                "y": {
-                  "fieldName": "sum(demand)",
-                  "scale": {
-                    "type": "quantitative",
-                    "domainMin": 0
-                  },
-                  "displayName": "Weekly demand (units)"
-                },
-                "color": {
-                  "fieldName": "region",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "Region"
-                }
+              "frame": {
+                "showTitle": true,
+                "title": "Weekly demand by region — EMEA surges after the market opens"
               },
               "annotations": [
                 {
@@ -1210,17 +1195,34 @@
                       "value": "EMEA market opens"
                     },
                     "color": {
-                      "value": {
-                        "themeColorType": "visualizationColors",
-                        "position": 2
-                      }
+                      "value": "#FFB454"
                     }
                   }
                 }
               ],
-              "frame": {
-                "showTitle": true,
-                "title": "Weekly demand by region — EMEA surges after the market opens"
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "week",
+                  "displayName": "Week",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(demand)",
+                  "displayName": "Weekly demand (units)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "region",
+                  "displayName": "Region",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
               }
             }
           },
@@ -1530,17 +1532,33 @@
   ],
   "uiSettings": {
     "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
       "visualizationColors": [
-        "#077A9D",
-        "#FF3621",
-        "#FFAB00",
-        "#00A972",
-        "#8BCAE7",
-        "#AB4057",
-        "#99DDB4",
-        "#FCA4A1"
+        "#3E8FD0",
+        "#2FB6C0",
+        "#5FBE8A",
+        "#E8B54E",
+        "#E0795A",
+        "#9B6A9E",
+        "#6E8FD8",
+        "#9CC6A6"
       ],
-      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+      "widgetHeaderAlignment": "LEFT"
     },
     "genieSpace": {
       "isEnabled": true,

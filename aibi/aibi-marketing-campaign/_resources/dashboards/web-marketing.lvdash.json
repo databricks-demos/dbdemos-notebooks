@@ -153,6 +153,9 @@
                       "type": "max",
                       "places": 1
                     }
+                  },
+                  "color": {
+                    "value": "#4FB8D6"
                   }
                 },
                 "period": {
@@ -210,7 +213,10 @@
               "encodings": {
                 "value": {
                   "fieldName": "measure(Conversions)",
-                  "displayName": "Conversions"
+                  "displayName": "Conversions",
+                  "color": {
+                    "value": "#4FB8D6"
+                  }
                 },
                 "period": {
                   "fieldName": "monthly(Date)"
@@ -260,6 +266,9 @@
                       "type": "exact",
                       "places": 2
                     }
+                  },
+                  "color": {
+                    "value": "#4FB8D6"
                   }
                 },
                 "period": {
@@ -316,6 +325,9 @@
                       "type": "max",
                       "places": 1
                     }
+                  },
+                  "color": {
+                    "value": "#4FB8D6"
                   }
                 },
                 "period": {
@@ -557,8 +569,11 @@
                   "scale": {
                     "type": "quantitative",
                     "colorRamp": {
-                      "mode": "scheme",
-                      "scheme": "redyellowgreen"
+                      "mode": "custom-sequential",
+                      "colors": {
+                        "start": "#FF7E5C",
+                        "end": "#5FCFC6"
+                      }
                     }
                   },
                   "displayName": "Revenue per $ spent"
@@ -916,17 +931,15 @@
                     "mappings": [
                       {
                         "value": "Failing",
-                        "color": {
-                          "themeColorType": "visualizationColors",
-                          "position": 2
-                        }
+                        "color": "#FF7E5C"
+                      },
+                      {
+                        "value": "Underperforming",
+                        "color": "#FF7E5C"
                       },
                       {
                         "value": "Healthy",
-                        "color": {
-                          "themeColorType": "visualizationColors",
-                          "position": 4
-                        }
+                        "color": "#5FCFC6"
                       }
                     ]
                   }
@@ -1014,18 +1027,16 @@
                     "type": "categorical",
                     "mappings": [
                       {
+                        "value": "Failing",
+                        "color": "#FF7E5C"
+                      },
+                      {
                         "value": "Underperforming",
-                        "color": {
-                          "themeColorType": "visualizationColors",
-                          "position": 2
-                        }
+                        "color": "#FF7E5C"
                       },
                       {
                         "value": "Healthy",
-                        "color": {
-                          "themeColorType": "visualizationColors",
-                          "position": 4
-                        }
+                        "color": "#5FCFC6"
                       }
                     ]
                   }
@@ -1257,17 +1268,33 @@
   ],
   "uiSettings": {
     "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
       "visualizationColors": [
-        "#077A9D",
-        "#FF3621",
-        "#FFAB00",
-        "#00A972",
-        "#8BCAE7",
-        "#AB4057",
-        "#99DDB4",
-        "#FCA4A1"
+        "#5C8AAA",
+        "#5FA6DE",
+        "#4FB8D6",
+        "#5FCFC6",
+        "#88D4AC",
+        "#BBE4F4",
+        "#C8EFD6",
+        "#E4F5E9"
       ],
-      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+      "widgetHeaderAlignment": "LEFT"
     },
     "genieSpace": {
       "isEnabled": true,

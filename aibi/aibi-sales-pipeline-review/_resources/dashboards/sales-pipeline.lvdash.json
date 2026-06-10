@@ -85,9 +85,9 @@
             "name": "title",
             "multilineTextboxSpec": {
               "lines": [
-                "# Beauty Sales — are we hitting the number this quarter?\n",
+                "# Beauty Sales — are we hitting the number?\n",
                 "\n",
-                "Actual revenue (ERP orders) tracked against the company quarterly target (Finance), with an AI forecast of where we'll land. Data unified from Salesforce, ERP, Finance and the product catalog."
+                "One question every CRO asks. We track actual revenue against the quarter's target and let AI forecast where we'll land — by unifying Salesforce, ERP, Finance and the product catalog in one place."
               ]
             }
           },
@@ -638,7 +638,7 @@
             "name": "why_title",
             "multilineTextboxSpec": {
               "lines": [
-                "# 🔎 Why are we beating the target?\n",
+                "# Why are we beating the target?\n",
                 "\n",
                 "The surge is concentrated in **EMEA**, right after the new **Fragrance** line became available there on **2026-05-04** (product catalog). Here's the trail."
               ]

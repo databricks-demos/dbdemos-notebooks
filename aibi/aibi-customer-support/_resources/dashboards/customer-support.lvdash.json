@@ -84,7 +84,9 @@
             "name": "s_title",
             "multilineTextboxSpec": {
               "lines": [
-                "# Customer Support Overview\n\nResolution time, satisfaction and cost across the travel-support operation. A clear improvement appears in mid-2025 — see the **AI Copilot Impact** tab for why."
+                "# Customer Support Overview\n",
+                "\n",
+                "Every week, thousands of support cases across 4 regions. In mid-2025 something changed — resolution got faster, cheaper, and customers happier. See the **AI Copilot Impact** tab for the why."
               ]
             }
           },

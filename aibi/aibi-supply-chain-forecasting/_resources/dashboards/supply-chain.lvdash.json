@@ -161,7 +161,7 @@
               "lines": [
                 "# Supply Chain — are we about to run out of a part?\n",
                 "\n",
-                "We build e-bikes from shared components. A surge in City E-Bike demand is burning through **Battery Cells** — at the **Rotterdam** plant there are only ~2 weeks of stock left, but the supplier needs **8 weeks** to deliver more. This page shows weeks of cover per component & plant, and forecasts when on-hand inventory hits zero — so you can reorder before the line stops."
+                "A demand surge is quietly burning through our **Battery Cells**. At the **Rotterdam** plant only ~2 weeks of stock remain — but the supplier needs **8 weeks** to restock. Catch it now, or the line stops."
               ]
             }
           },

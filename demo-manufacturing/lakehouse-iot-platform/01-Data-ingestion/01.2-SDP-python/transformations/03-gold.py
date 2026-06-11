@@ -36,7 +36,7 @@ import mlflow
 
 # Load ML model from Unity Catalog registry and register as UDF
 mlflow.set_registry_uri('databricks-uc')
-predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
+predict_maintenance_udf = mlflow.pyfunc.spark_udf(spark, "models:/main_build.dbdemos_iot_platform.dbdemos_turbine_maintenance@prod", "string", env_manager='local')
 spark.udf.register("predict_maintenance", predict_maintenance_udf)
 
 

@@ -21,22 +21,24 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## AI-driven Portfolio Analytics in Capital Markets
+# MAGIC # Portfolio Assistant — concentrated in the AI trade
 # MAGIC ---
 # MAGIC
-# MAGIC ### The Challenge
+# MAGIC ## The Story
 # MAGIC
-# MAGIC In capital markets, making timely and informed investment decisions is crucial to maximizing portfolio performance. However, portfolio managers and analysts often face challenges with **data silos**, **data accuracy**, and **time-consuming analytics workflows**. Without a unified data platform, analyzing large volumes of market data, risk factors, and portfolio performance can be slow and disconnected, limiting the ability to respond swiftly to market changes.
+# MAGIC You manage a wealth manager's flagship **AI Growth Fund**. It's **beating its benchmark** (the Nasdaq‑100) by a wide margin — it rode the real AI rally. But that performance didn't come from nowhere: over two years the fund went through a series of **portfolio reorganizations**, capped by one **major AI pivot on Aug 4, 2025** that *sold every defensive holding* (JNJ, PG, KO, XOM, JPM…) and *piled into AI names*. Core‑AI exposure jumped from **~30% to ~80%**. The returns are real — and so is the concentration risk now baked into the book.
 # MAGIC
-# MAGIC ### The Solution
+# MAGIC ## The Challenge
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (_or AI/BI_)** to unify and enhance portfolio analytics. By consolidating data from various financial sources into a single, cohesive environment, Databricks eliminates silos and makes in-depth market insights accessible to all team members.
+# MAGIC Telling the *whole* story means connecting things that usually live apart: daily prices, time‑versioned holdings, the rebalancing events, the benchmark, and risk analytics (Value at Risk, volatility, Sharpe). A great quarter can hide a dangerous, undiversified bet — and without a unified platform, by the time the pieces are stitched together the risk is already on the book.
 # MAGIC
-# MAGIC Advanced AI-driven analytics and intuitive BI tools empower both technical and non-technical users to analyze portfolio performance and market trends effortlessly by asking questions of the data platform in natural language. This accessibility accelerates time-to-insights, promotes informed decision-making, and empowers leadership to optimize portfolio strategies in response to dynamic market conditions.
+# MAGIC ## The Solution
+# MAGIC
+# MAGIC The **Databricks Platform** unifies all of it, then layers **AI/BI** on top. The dashboard shows the outperformance, traces it to the reorgs, watches core‑AI concentration step up over time, and quantifies the downside with **Value at Risk** and a **risk‑vs‑return** view. **Genie** lets anyone ask *"why are we beating the benchmark, and how much risk are we carrying?"* in plain language — and trace it from performance, through the reorgs, to the concentration and risk it created.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
-# MAGIC This notebook will guide you, the Databricks enthusiast, through deploying a **Databricks AI/BI portfolio analytics project**. Follow along step-by-step to gain hands-on experience with the project. By installing this project, you’ll have instant access to its interactive dashboard and **Genie Insights Room**.
+# MAGIC This notebook will guide you, the Databricks enthusiast, through deploying a **Databricks AI/BI portfolio analytics project**. By installing this project, you’ll have instant access to its interactive dashboard and **Genie space**.
 # MAGIC
 # MAGIC In the following sections, this notebook will guide you through, at a high level:
 # MAGIC 1. Data Ingestion with **Lakeflow Connect**
@@ -101,13 +103,13 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Your Portfolio data is now available for your Data Analyst to explore and track their main KPIs.
+# MAGIC Your unified portfolio data is now available for portfolio managers and leadership to explore.
 # MAGIC
-# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
+# MAGIC The dashboard tells the story across two pages:
+# MAGIC - **Performance & risk** — the fund's total return vs benchmark (with the *Major AI pivot* marked), the allocation by sector, and the risk band: **95% / 99% Value at Risk** on a \$100M book and a **risk‑vs‑return** view of every holding (hover any bubble for its company, return, volatility and Sharpe).
+# MAGIC - **Concentration risk** — *why* the returns come with risk: the **reorganizations** that sold defensives and bought AI, **core‑AI concentration stepping up ~30%→~80%**, the Sharpe before vs after the pivot, the daily‑return distribution, and the fund's heavy **Technology overweight** vs the benchmark.
 # MAGIC
-# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
-# MAGIC
-# MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
+# MAGIC AI/BI Dashboards make it easy to build and iterate on visualizations with natural language — sleek charts, cross‑filtering, scheduled snapshots and embedding — all side‑by‑side with your governed data.
 # MAGIC
 # MAGIC
 # MAGIC Open the <a dbdemos-dashboard-id="portfolio-assistant" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Portfolio Assistant Dashboard to analyze & track main KPIs</a>
@@ -122,7 +124,13 @@
 # MAGIC
 # MAGIC Our data is now available as a Dashboard that our business users can open.
 # MAGIC
-# MAGIC However, they'll likely have extra questions or follow-up based on the insights they see in the dashboard, such as: "What is the risk exposure of my technology holdings?" or "How has my portfolio performed compared to the S&P 500 this quarter?"
+# MAGIC However, they'll have follow-up questions based on what they see. This is where Genie shines — ask in plain language and let it trace the answer across performance, the reorgs, concentration and risk:
+# MAGIC
+# MAGIC - *"Why is the fund beating the benchmark?"* → the **reorgs** that bought AI and sold defensives
+# MAGIC - *"What did we sell and buy at the major AI pivot on Aug 4 2025?"*
+# MAGIC - *"How concentrated are we in AI, and how did that change over time?"* → **~30% → ~80% core AI**
+# MAGIC - *"What is our 95% and 99% Value at Risk, and did the pivot increase it?"*
+# MAGIC - *"Which holdings carry the most risk for the least return?"*
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="portfolio-assistant" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Portfolio Assistant Genie space to deep dive into your data</a>
 

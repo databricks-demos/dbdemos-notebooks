@@ -1,562 +1,1820 @@
 {
-  "datasets" : [ {
-    "name" : "65406851",
-    "displayName" : "top portfolio",
-    "query" : "SELECT\n  p.ticker,\n  p.company_name,\n  f.market_capitalization\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.portfolio p\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.fundamentals f ON p.ticker = f.ticker\nORDER BY\n  f.market_capitalization DESC\nLIMIT\n  5"
-  }, {
-    "name" : "40364842",
-    "displayName" : "ticker over time",
-    "query" : "with splits as (\n    select\n      ticker,\n      date as split_date,\n      1/split_factor as adjustment\n      from main.dbdemos_aibi_fsi_portfolio_assistant.prices where split_factor > 1 \n)\n\nselect p.date,\n       p.ticker, \n       p.close,\n       coalesce(\n         exp(\n           sum(ln(s.adjustment)) \n             over (partition by p.ticker\n                       order by p.date desc\n                rows between unbounded preceding\n                         and 1 preceding)\n         ), 1\n       ) * p.close as adjusted_close\n  from main.dbdemos_aibi_fsi_portfolio_assistant.prices p\n       left join splits s \n              on s.ticker = p.ticker \n             and s.split_date = p.date;"
-  }, {
-    "name" : "3c85b0a3",
-    "displayName" : "volatility on crisis",
-    "query" : "SELECT\n  date_sub (date, DAYOFWEEK (date) - 1) AS week_start,\n  STDDEV (`return`) AS volatility\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.prices p\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.portfolio po ON p.ticker = po.ticker\nWHERE\n  po.industry = 'Technology'\n  AND date BETWEEN '2007-12-01' AND '2009-06-30'\nGROUP BY\n  week_start\nORDER BY\n  week_start"
-  }, {
-    "name" : "d23afca8",
-    "displayName" : "distinct tickers",
-    "query" : "-- SELECT DISTINCT(ticker) FROM main.dbdemos_aibi_fsi_portfolio_assistant.prices\nSELECT date, close, ticker FROM main.dbdemos_aibi_fsi_portfolio_assistant.prices"
-  }, {
-    "name" : "edb591bb",
-    "displayName" : "Top sentiment",
-    "query" : "SELECT\n  p.industry,\n  nt.ticker,\n  DATE_FORMAT(n.published_time, 'yyyy-MM-dd') as date,\n  n.market_sentiment,\n  COUNT(*) as sentiment_count\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.news_ticker nt\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.news n ON nt.article_id = n.article_id\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.portfolio p ON nt.ticker = p.ticker\nGROUP BY\n  nt.ticker,\n  date,\n  n.market_sentiment,\n  p.industry"
-  }, {
-    "name" : "432ab0f7",
-    "displayName" : "Market negative event",
-    "query" : "SELECT\n  n.article_id,\n  n.title,\n  DATE_FORMAT(n.published_time, 'yyyy-MM-dd') AS published_date,\n  n.source,\n  n.source_url\nFROM\n  main.dbdemos_aibi_fsi_portfolio_assistant.news n\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.news_ticker nt ON n.article_id = nt.article_id\n  JOIN main.dbdemos_aibi_fsi_portfolio_assistant.portfolio p ON nt.ticker = p.ticker\nWHERE\n   n.sentiment < 0\nORDER BY\n  n.published_time DESC\nLIMIT\n  10"
-  } ],
-  "pages" : [ {
-    "name" : "portfolio-assistant",
-    "displayName" : "Portfolio Assistant",
-    "layout" : [ {
-      "widget" : {
-        "name" : "b04e61f5",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "65406851",
-            "fields" : [ {
-              "name" : "company_name",
-              "expression" : "`company_name`"
-            }, {
-              "name" : "sum(market_capitalization)",
-              "expression" : "SUM(`market_capitalization`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "pie",
-          "encodings" : {
-            "angle" : {
-              "fieldName" : "sum(market_capitalization)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Total capitalization"
-            },
-            "color" : {
-              "fieldName" : "company_name",
-              "scale" : {
-                "type" : "categorical"
-              },
-              "displayName" : "Company"
+  "datasets": [
+    {
+      "name": "ds_metrics",
+      "displayName": "Portfolio holdings metrics",
+      "asset_name": "main.dbdemos_aibi_fsi_portfolio_assistant.portfolio_metrics"
+    },
+    {
+      "name": "ds_kpi_return",
+      "displayName": "Return trend",
+      "queryLines": [
+        "SELECT CAST(date_trunc('week', date) AS DATE) AS week,\n",
+        "  max_by(cum_port_ret * 100, date) AS return_pct\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.portfolio_performance WHERE portfolio_id = 1\n",
+        "GROUP BY 1 ORDER BY 1"
+      ]
+    },
+    {
+      "name": "ds_kpi_outperf",
+      "displayName": "Outperformance trend",
+      "queryLines": [
+        "SELECT CAST(date_trunc('week', date) AS DATE) AS week,\n",
+        "  max_by((cum_port_ret - cum_bench_ret) * 100, date) AS outperf_pts\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.portfolio_performance WHERE portfolio_id = 1\n",
+        "GROUP BY 1 ORDER BY 1"
+      ]
+    },
+    {
+      "name": "ds_kpi_conc",
+      "displayName": "Concentration trend",
+      "queryLines": [
+        "SELECT CAST(date_trunc('week', date) AS DATE) AS week,\n",
+        "  max_by(core_ai_pct / 100.0, date) AS core_ai\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.concentration_timeseries WHERE portfolio_id = 1\n",
+        "GROUP BY 1 ORDER BY 1"
+      ]
+    },
+    {
+      "name": "ds_kpi_holdings",
+      "displayName": "Holdings count",
+      "queryLines": [
+        "SELECT count(*) AS holdings FROM main.dbdemos_aibi_fsi_portfolio_assistant.holdings_enriched WHERE portfolio_id = 1"
+      ]
+    },
+    {
+      "name": "ds_var95",
+      "displayName": "VaR 95% post-pivot",
+      "queryLines": [
+        "SELECT var_dollar, var_pct FROM main.dbdemos_aibi_fsi_portfolio_assistant.var_metrics WHERE regime='Post-pivot (current risk)' AND confidence=0.95"
+      ]
+    },
+    {
+      "name": "ds_var99",
+      "displayName": "VaR 99% post-pivot",
+      "queryLines": [
+        "SELECT var_dollar, var_pct FROM main.dbdemos_aibi_fsi_portfolio_assistant.var_metrics WHERE regime='Post-pivot (current risk)' AND confidence=0.99"
+      ]
+    },
+    {
+      "name": "ds_perf",
+      "displayName": "AI Growth Fund vs benchmark (indexed)",
+      "queryLines": [
+        "SELECT date,\n",
+        "  (1 + cum_port_ret) * 100 AS portfolio,\n",
+        "  (1 + cum_bench_ret) * 100 AS benchmark\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.portfolio_performance WHERE portfolio_id = 1 ORDER BY date"
+      ]
+    },
+    {
+      "name": "ds_sharpe_scatter",
+      "displayName": "Risk vs return by holding",
+      "queryLines": [
+        "SELECT ticker, company, sector, ai_exposure,\n",
+        "  annualized_return, annualized_risk, sharpe_ratio,\n",
+        "  coalesce(fund_weight, 0) AS fund_weight\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.sharpe_analysis WHERE fund_weight IS NOT NULL ORDER BY sharpe_ratio DESC"
+      ]
+    },
+    {
+      "name": "ds_conc",
+      "displayName": "Core-AI concentration over time (step)",
+      "queryLines": [
+        "SELECT CAST(date_trunc('week', date) AS DATE) AS week,\n",
+        "  round(avg(core_ai_pct), 1) AS core_ai_pct,\n",
+        "  round(avg(core_ai_pct + ai_adjacent_pct), 1) AS ai_exposed_pct\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.concentration_timeseries WHERE portfolio_id = 1 GROUP BY 1 ORDER BY week"
+      ]
+    },
+    {
+      "name": "ds_rebal",
+      "displayName": "Portfolio reorganizations",
+      "queryLines": [
+        "SELECT r.rebalance_date, r.ticker, s.company, r.action,\n",
+        "  r.old_weight, r.new_weight, r.weight_change, r.rationale\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.rebalances r JOIN main.dbdemos_aibi_fsi_portfolio_assistant.securities s ON s.ticker = r.ticker\n",
+        "ORDER BY r.rebalance_date DESC, abs(r.weight_change) DESC"
+      ]
+    },
+    {
+      "name": "ds_risk",
+      "displayName": "Risk-adjusted return \u2014 fund vs benchmark",
+      "queryLines": [
+        "SELECT period, sort_order, fund_sharpe, fund_volatility, fund_return,\n",
+        "  bench_sharpe, bench_volatility, bench_return\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.risk_metrics ORDER BY sort_order"
+      ]
+    },
+    {
+      "name": "ds_alloc",
+      "displayName": "Allocation: fund vs benchmark by sector",
+      "queryLines": [
+        "SELECT sector, fund_weight * 100 AS portfolio_weight, benchmark_weight * 100 AS benchmark_weight\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.sector_exposure ORDER BY portfolio_weight DESC"
+      ]
+    },
+    {
+      "name": "ds_dist",
+      "displayName": "Daily return distribution",
+      "queryLines": [
+        "SELECT return_bucket_pct, days,\n",
+        "  CASE WHEN return_bucket_pct < 0 THEN 'Down day' ELSE 'Up day' END AS direction\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.returns_distribution ORDER BY return_bucket_pct"
+      ]
+    },
+    {
+      "name": "ds_news",
+      "displayName": "News sentiment on AI holdings",
+      "queryLines": [
+        "SELECT n.published_date, n.source, n.title, n.sentiment_label, n.sentiment, ne.ticker\n",
+        "FROM main.dbdemos_aibi_fsi_portfolio_assistant.news_enriched ne JOIN main.dbdemos_aibi_fsi_portfolio_assistant.news n ON n.article_id = ne.article_id\n",
+        "WHERE ne.ai_exposure = 'Core AI' ORDER BY n.published_date DESC LIMIT 50"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "performance",
+      "displayName": "Performance & risk",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# AI Growth Fund \u2014 winning, but how exposed?\n\nOur flagship fund is beating its benchmark by riding the AI rally. The catch: a series of reorgs piled it into AI names \u2014 and one major pivot took core-AI exposure from ~30% to ~80%. Great returns, but how much risk are we carrying if the AI trade turns?"
+              ]
             }
           },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Portfolio Top market capitalization"
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
           }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 12,
-        "width" : 3,
-        "height" : 7
-      }
-    }, {
-      "widget" : {
-        "name" : "edf7e8ac",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "40364842",
-            "fields" : [ {
-              "name" : "date",
-              "expression" : "`date`"
-            }, {
-              "name" : "sum(adjusted_close)",
-              "expression" : "SUM(`adjusted_close`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "area",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "date",
-              "scale" : {
-                "type" : "temporal"
+        },
+        {
+          "widget": {
+            "name": "kpi_return",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_return",
+                  "fields": [
+                    {
+                      "name": "return_pct",
+                      "expression": "`return_pct`"
+                    },
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "return_pct",
+                  "displayName": "Total return",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  },
+                  "formatTemplate": "+{{ @formatted }}%",
+                  "color": {
+                    "default": "#2E6CB5"
+                  }
+                },
+                "period": {
+                  "fieldName": "week"
+                }
               },
-              "displayName" : "date"
-            },
-            "y" : {
-              "fieldName" : "sum(adjusted_close)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Adjusted Close Price"
+              "frame": {
+                "showTitle": true,
+                "title": "Fund total return"
+              }
             }
           },
-          "frame" : {
-            "showTitle" : true,
-            "showDescription" : false,
-            "title" : "Ticker evolution"
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 3
           }
-        }
-      },
-      "position" : {
-        "x" : 3,
-        "y" : 1,
-        "width" : 3,
-        "height" : 5
-      }
-    }, {
-      "widget" : {
-        "name" : "385232f6",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "3c85b0a3",
-            "fields" : [ {
-              "name" : "sum(volatility)",
-              "expression" : "SUM(`volatility`)"
-            }, {
-              "name" : "weekly(week_start)",
-              "expression" : "DATE_TRUNC(\"WEEK\", `week_start`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "line",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "weekly(week_start)",
-              "scale" : {
-                "type" : "temporal"
+        },
+        {
+          "widget": {
+            "name": "kpi_outperf",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_outperf",
+                  "fields": [
+                    {
+                      "name": "outperf_pts",
+                      "expression": "`outperf_pts`"
+                    },
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "outperf_pts",
+                  "displayName": "vs benchmark",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  },
+                  "formatTemplate": "+{{ @formatted }} pts",
+                  "color": {
+                    "default": "#5CBE8A"
+                  }
+                },
+                "period": {
+                  "fieldName": "week"
+                }
               },
-              "displayName" : "week_start"
-            },
-            "y" : {
-              "fieldName" : "sum(volatility)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Sum of volatility"
+              "frame": {
+                "showTitle": true,
+                "title": "Outperformance vs benchmark"
+              }
             }
           },
-          "frame" : {
-            "showDescription" : false,
-            "showTitle" : true,
-            "title" : "Market volatility over week"
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 3
           }
-        }
-      },
-      "position" : {
-        "x" : 3,
-        "y" : 6,
-        "width" : 3,
-        "height" : 5
-      }
-    }, {
-      "widget" : {
-        "name" : "a7d8941c",
-        "queries" : [ {
-          "name" : "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0347398319cfb63454b7ce6e067d_ticker",
-          "query" : {
-            "datasetName" : "40364842",
-            "fields" : [ {
-              "name" : "ticker",
-              "expression" : "`ticker`"
-            }, {
-              "name" : "ticker_associativity",
-              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "filter-single-select",
-          "encodings" : {
-            "fields" : [ {
-              "fieldName" : "ticker",
-              "displayName" : "ticker",
-              "queryName" : "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0347398319cfb63454b7ce6e067d_ticker"
-            } ]
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "ticker"
-          }
-        }
-      },
-      "position" : {
-        "x" : 3,
-        "y" : 0,
-        "width" : 3,
-        "height" : 1
-      }
-    }, {
-      "widget" : {
-        "name" : "01340472",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "edb591bb",
-            "fields" : [ {
-              "name" : "date",
-              "expression" : "`date`"
-            }, {
-              "name" : "market_sentiment",
-              "expression" : "`market_sentiment`"
-            }, {
-              "name" : "sum(sentiment_count)",
-              "expression" : "SUM(`sentiment_count`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "bar",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "date",
-              "scale" : {
-                "type" : "categorical"
+        },
+        {
+          "widget": {
+            "name": "kpi_conc",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_conc",
+                  "fields": [
+                    {
+                      "name": "core_ai",
+                      "expression": "`core_ai`"
+                    },
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "core_ai",
+                  "displayName": "Core AI weight",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  },
+                  "color": {
+                    "default": "#E0795A"
+                  }
+                },
+                "period": {
+                  "fieldName": "week"
+                }
               },
-              "displayName" : "date"
-            },
-            "y" : {
-              "fieldName" : "sum(sentiment_count)",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "Sentiment"
-            },
-            "color" : {
-              "fieldName" : "market_sentiment",
-              "scale" : {
-                "type" : "categorical",
-                "mappings" : [ {
-                  "value" : "Bearish",
-                  "color" : "#da0000"
-                }, {
-                  "value" : "Bullish",
-                  "color" : "#00bf2e"
-                }, {
-                  "value" : "Neutral",
-                  "color" : "#4b8add"
-                }, {
-                  "value" : "Somewhat-Bearish",
-                  "color" : "#88edb0"
-                }, {
-                  "value" : "Somewhat-Bullish",
-                  "color" : "#e7c38b"
-                } ]
-              },
-              "displayName" : "market_sentiment"
-            }
-          }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 3,
-        "width" : 3,
-        "height" : 8
-      }
-    }, {
-      "widget" : {
-        "name" : "dc5170c1",
-        "queries" : [ {
-          "name" : "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0349e5a015d1b32e39f5bad4bed6_industry",
-          "query" : {
-            "datasetName" : "edb591bb",
-            "fields" : [ {
-              "name" : "industry",
-              "expression" : "`industry`"
-            }, {
-              "name" : "industry_associativity",
-              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
-            } ],
-            "disaggregated" : false
-          }
-        } ],
-        "spec" : {
-          "version" : 2,
-          "widgetType" : "filter-single-select",
-          "encodings" : {
-            "fields" : [ {
-              "fieldName" : "industry",
-              "displayName" : "industry",
-              "queryName" : "dashboards/01ef0345ad1b1027aa6a51bed521c97d/datasets/01ef0349e5a015d1b32e39f5bad4bed6_industry"
-            } ]
-          },
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Industry"
-          }
-        }
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 2,
-        "width" : 3,
-        "height" : 1
-      }
-    }, {
-      "widget" : {
-        "name" : "5622e9cf",
-        "textbox_spec" : "# FSI - Portfolio Manager Demo\n## Market overview"
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 0,
-        "width" : 3,
-        "height" : 2
-      }
-    }, {
-      "widget" : {
-        "name" : "68a51e56",
-        "textbox_spec" : "## Portfolio Analysis"
-      },
-      "position" : {
-        "x" : 0,
-        "y" : 11,
-        "width" : 6,
-        "height" : 1
-      }
-    }, {
-      "widget" : {
-        "name" : "6e1d7602",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "432ab0f7",
-            "fields" : [ {
-              "name" : "published_date",
-              "expression" : "`published_date`"
-            }, {
-              "name" : "source",
-              "expression" : "`source`"
-            }, {
-              "name" : "title",
-              "expression" : "`title`"
-            } ],
-            "disaggregated" : true
-          }
-        } ],
-        "spec" : {
-          "version" : 1,
-          "widgetType" : "table",
-          "encodings" : {
-            "columns" : [ {
-              "fieldName" : "published_date",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 1,
-              "title" : "published_date",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "published_date"
-            }, {
-              "fieldName" : "title",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 2,
-              "title" : "title",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "title"
-            }, {
-              "fieldName" : "source",
-              "booleanValues" : [ "false", "true" ],
-              "imageUrlTemplate" : "{{ @ }}",
-              "imageTitleTemplate" : "{{ @ }}",
-              "imageWidth" : "",
-              "imageHeight" : "",
-              "linkUrlTemplate" : "{{ @ }}",
-              "linkTextTemplate" : "{{ @ }}",
-              "linkTitleTemplate" : "{{ @ }}",
-              "linkOpenInNewTab" : true,
-              "type" : "string",
-              "displayAs" : "string",
-              "visible" : true,
-              "order" : 3,
-              "title" : "source",
-              "allowSearch" : false,
-              "alignContent" : "left",
-              "allowHTML" : false,
-              "highlightLinks" : false,
-              "useMonospaceFont" : false,
-              "preserveWhitespace" : false,
-              "displayName" : "source"
-            } ]
-          },
-          "invisibleColumns" : [ {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "article_id",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 0,
-            "title" : "article_id",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          }, {
-            "booleanValues" : [ "false", "true" ],
-            "imageUrlTemplate" : "{{ @ }}",
-            "imageTitleTemplate" : "{{ @ }}",
-            "imageWidth" : "",
-            "imageHeight" : "",
-            "linkUrlTemplate" : "{{ @ }}",
-            "linkTextTemplate" : "{{ @ }}",
-            "linkTitleTemplate" : "{{ @ }}",
-            "linkOpenInNewTab" : true,
-            "name" : "source_url",
-            "type" : "string",
-            "displayAs" : "string",
-            "order" : 4,
-            "title" : "source_url",
-            "allowSearch" : false,
-            "alignContent" : "left",
-            "allowHTML" : false,
-            "highlightLinks" : false,
-            "useMonospaceFont" : false,
-            "preserveWhitespace" : false
-          } ],
-          "allowHTMLByDefault" : false,
-          "itemsPerPage" : 25,
-          "paginationSize" : "default",
-          "condensed" : true,
-          "withRowNumber" : false,
-          "frame" : {
-            "showTitle" : true,
-            "title" : "Latest negative event impacting our portfolio - Analyzed with DBRX"
-          }
-        }
-      },
-      "position" : {
-        "x" : 3,
-        "y" : 12,
-        "width" : 3,
-        "height" : 7
-      }
-    }, {
-      "widget" : {
-        "name" : "c970acf5",
-        "queries" : [ {
-          "name" : "main_query",
-          "query" : {
-            "datasetName" : "40364842",
-            "fields" : [ {
-              "name" : "date",
-              "expression" : "`date`"
-            }, {
-              "name" : "adjusted_close",
-              "expression" : "`adjusted_close`"
-            } ],
-            "disaggregated" : true
-          }
-        } ],
-        "spec" : {
-          "version" : 3,
-          "widgetType" : "area",
-          "encodings" : {
-            "x" : {
-              "fieldName" : "date",
-              "scale" : {
-                "type" : "temporal"
-              },
-              "displayName" : "date"
-            },
-            "y" : {
-              "fieldName" : "adjusted_close",
-              "scale" : {
-                "type" : "quantitative"
-              },
-              "displayName" : "adjusted_close"
+              "frame": {
+                "showTitle": true,
+                "title": "Core AI concentration"
+              }
             }
           },
-          "frame" : {
-            "title" : "Adjusted Close Price Over Time",
-            "showTitle" : true
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_holdings",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_holdings",
+                  "fields": [
+                    {
+                      "name": "holdings",
+                      "expression": "`holdings`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "holdings",
+                  "displayName": "Holdings",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Number of holdings"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "hero_perf",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_perf",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "portfolio",
+                      "expression": "`portfolio`"
+                    },
+                    {
+                      "name": "benchmark",
+                      "expression": "`benchmark`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "portfolio",
+                      "displayName": "AI Growth Fund"
+                    },
+                    {
+                      "fieldName": "benchmark",
+                      "displayName": "Benchmark (QQQ)"
+                    }
+                  ]
+                },
+                "color": {
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "AI Growth Fund",
+                        "color": "#2E6CB5"
+                      },
+                      {
+                        "value": "Benchmark (QQQ)",
+                        "color": "#9AA7B4"
+                      }
+                    ]
+                  }
+                }
+              },
+              "annotations": [
+                {
+                  "type": "vertical-line",
+                  "encodings": {
+                    "x": {
+                      "dataValue": "2025-08-04T00:00:00.000",
+                      "dataType": "DATETIME"
+                    },
+                    "label": {
+                      "value": "Major AI pivot"
+                    },
+                    "color": {
+                      "value": "#E8B54E"
+                    }
+                  }
+                }
+              ],
+              "frame": {
+                "showTitle": true,
+                "title": "Cumulative return \u2014 AI Growth Fund vs benchmark (indexed to 100)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "sector_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Sector",
+                      "expression": "`Sector`"
+                    },
+                    {
+                      "name": "measure(Total Weight)",
+                      "expression": "MEASURE(`Total Weight`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Total Weight)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Weight"
+                },
+                "color": {
+                  "fieldName": "Sector",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Sector"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Fund allocation by sector"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 5,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "risk_hdr",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## How much could a bad day cost?\n\n**Value at Risk** puts a dollar figure on the downside (on a **$100M** book): on 95% of days the fund won't lose more than the figure below \u2014 but concentrating into AI pushed that number up. The chart shows which holdings actually reward their risk: **up** = more return, **right** = more risk, **size** = position weight. Best is top-left; the fund's AI names (coral) sit to the right."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "var95",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_var95",
+                  "fields": [
+                    {
+                      "name": "var_dollar",
+                      "expression": "`var_dollar`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "var_dollar",
+                  "displayName": "Max daily loss (95%)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "formatTemplate": "-{{ @formatted }}",
+                  "color": {
+                    "default": "#E0795A"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "95% 1-day Value at Risk"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "var99",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_var99",
+                  "fields": [
+                    {
+                      "name": "var_dollar",
+                      "expression": "`var_dollar`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "var_dollar",
+                  "displayName": "Max daily loss (99%)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "formatTemplate": "-{{ @formatted }}",
+                  "color": {
+                    "default": "#C9483A"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "99% 1-day Value at Risk"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "sharpe_scatter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_sharpe_scatter",
+                  "fields": [
+                    {
+                      "name": "annualized_risk",
+                      "expression": "`annualized_risk`"
+                    },
+                    {
+                      "name": "annualized_return",
+                      "expression": "`annualized_return`"
+                    },
+                    {
+                      "name": "ai_exposure",
+                      "expression": "`ai_exposure`"
+                    },
+                    {
+                      "name": "ticker",
+                      "expression": "`ticker`"
+                    },
+                    {
+                      "name": "company",
+                      "expression": "`company`"
+                    },
+                    {
+                      "name": "fund_weight",
+                      "expression": "`fund_weight`"
+                    },
+                    {
+                      "name": "sharpe_ratio",
+                      "expression": "`sharpe_ratio`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "annualized_risk",
+                  "scale": {
+                    "type": "quantitative",
+                    "domainMin": 0
+                  },
+                  "displayName": "\u2190 safer        Risk / volatility (%)        riskier \u2192"
+                },
+                "y": {
+                  "fieldName": "annualized_return",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "\u2191 better        Return (%/yr)"
+                },
+                "color": {
+                  "fieldName": "ai_exposure",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Core AI",
+                        "color": "#E0795A"
+                      },
+                      {
+                        "value": "AI-adjacent",
+                        "color": "#E8B54E"
+                      },
+                      {
+                        "value": "Non-AI",
+                        "color": "#5CBE8A"
+                      }
+                    ]
+                  },
+                  "displayName": "AI exposure"
+                },
+                "size": {
+                  "fieldName": "fund_weight",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Fund weight %"
+                },
+                "label": {
+                  "show": true,
+                  "fieldName": "ticker"
+                },
+                "extra": [
+                  {
+                    "fieldName": "company",
+                    "displayName": "Company"
+                  },
+                  {
+                    "fieldName": "ticker",
+                    "displayName": "Ticker"
+                  },
+                  {
+                    "fieldName": "ai_exposure",
+                    "displayName": "AI exposure"
+                  },
+                  {
+                    "fieldName": "annualized_return",
+                    "displayName": "Return (%/yr)"
+                  },
+                  {
+                    "fieldName": "annualized_risk",
+                    "displayName": "Risk / volatility (%)"
+                  },
+                  {
+                    "fieldName": "sharpe_ratio",
+                    "displayName": "Sharpe ratio"
+                  },
+                  {
+                    "fieldName": "fund_weight",
+                    "displayName": "Fund weight (%)"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Risk vs return by holding \u2014 each bubble is a stock (hover for details)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 13,
+            "width": 9,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "holdings_hdr",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Holdings"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "holdings_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Company",
+                      "expression": "`Company`"
+                    },
+                    {
+                      "name": "Ticker",
+                      "expression": "`Ticker`"
+                    },
+                    {
+                      "name": "Sector",
+                      "expression": "`Sector`"
+                    },
+                    {
+                      "name": "AI Exposure",
+                      "expression": "`AI Exposure`"
+                    },
+                    {
+                      "name": "measure(Total Weight)",
+                      "expression": "MEASURE(`Total Weight`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Company",
+                    "displayName": "Company"
+                  },
+                  {
+                    "fieldName": "Ticker",
+                    "displayName": "Ticker"
+                  },
+                  {
+                    "fieldName": "Sector",
+                    "displayName": "Sector"
+                  },
+                  {
+                    "fieldName": "AI Exposure",
+                    "displayName": "AI Exposure"
+                  },
+                  {
+                    "fieldName": "measure(Total Weight)",
+                    "displayName": "Weight %",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Holdings"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 20,
+            "width": 12,
+            "height": 6
           }
         }
+      ]
+    },
+    {
+      "name": "concentration",
+      "displayName": "Concentration risk",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "c_title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Why the strong returns come with risk\n\nThe outperformance is concentrated in AI. A series of reorgs \u2014 capped by one major pivot \u2014 sold the fund's defensives and bought AI, taking core-AI exposure from ~30% to ~80%. That single decision drove the returns and the risk at the same time."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "c_step1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 1. The reorgs that piled into AI\n\nThree portfolio reorganizations, ending with a major pivot on **Aug 4, 2025** that sold every defensive (JNJ, PG, KO, XOM, JPM) and concentrated the book in core-AI names."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "rebal_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_rebal",
+                  "fields": [
+                    {
+                      "name": "rebalance_date",
+                      "expression": "`rebalance_date`"
+                    },
+                    {
+                      "name": "company",
+                      "expression": "`company`"
+                    },
+                    {
+                      "name": "ticker",
+                      "expression": "`ticker`"
+                    },
+                    {
+                      "name": "action",
+                      "expression": "`action`"
+                    },
+                    {
+                      "name": "old_weight",
+                      "expression": "`old_weight`"
+                    },
+                    {
+                      "name": "new_weight",
+                      "expression": "`new_weight`"
+                    },
+                    {
+                      "name": "weight_change",
+                      "expression": "`weight_change`"
+                    },
+                    {
+                      "name": "rationale",
+                      "expression": "`rationale`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "rebalance_date",
+                    "displayName": "Date"
+                  },
+                  {
+                    "fieldName": "company",
+                    "displayName": "Company"
+                  },
+                  {
+                    "fieldName": "ticker",
+                    "displayName": "Ticker"
+                  },
+                  {
+                    "fieldName": "action",
+                    "displayName": "Action"
+                  },
+                  {
+                    "fieldName": "old_weight",
+                    "displayName": "Old %",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "new_weight",
+                    "displayName": "New %",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "weight_change",
+                    "displayName": "Change",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "rationale",
+                    "displayName": "Reorg"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Portfolio reorganizations \u2014 what was sold and bought"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c_step2",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 2. Concentration stepped up at the reorg\n\nCore-AI exposure was steady near 30%, drifted up with two tilts, then **jumped to ~80% at the August pivot** \u2014 and has stayed there. The risk is now structural, not incidental."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "conc_step",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_conc",
+                  "fields": [
+                    {
+                      "name": "week",
+                      "expression": "`week`"
+                    },
+                    {
+                      "name": "core_ai_pct",
+                      "expression": "`core_ai_pct`"
+                    },
+                    {
+                      "name": "ai_exposed_pct",
+                      "expression": "`ai_exposed_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Week"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative",
+                    "domainMin": 0
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "ai_exposed_pct",
+                      "displayName": "AI-exposed %"
+                    },
+                    {
+                      "fieldName": "core_ai_pct",
+                      "displayName": "Core AI %"
+                    }
+                  ]
+                },
+                "color": {
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "AI-exposed %",
+                        "color": "#3FA7B8"
+                      },
+                      {
+                        "value": "Core AI %",
+                        "color": "#E0795A"
+                      }
+                    ]
+                  }
+                }
+              },
+              "annotations": [
+                {
+                  "type": "vertical-line",
+                  "encodings": {
+                    "x": {
+                      "dataValue": "2025-08-04T00:00:00.000",
+                      "dataType": "DATETIME"
+                    },
+                    "label": {
+                      "value": "Major AI pivot"
+                    },
+                    "color": {
+                      "value": "#E8B54E"
+                    }
+                  }
+                }
+              ],
+              "frame": {
+                "showTitle": true,
+                "title": "Core-AI concentration over time \u2014 jumps from ~30% to ~80% at the August pivot"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c_step3",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 3. Is the risk paying off \u2014 so far? (Sharpe)\n\nThe bet has worked *to date*: after the major pivot the fund's volatility **rose** (from ~23% to ~29%), but returns rose even faster, so its Sharpe is strong (~2.1, above the benchmark's ~1.76). The caution: that reward rides on a single, undiversified ~77% core-AI position \u2014 the higher volatility and Value-at-Risk are the price of it, and they bite hard if the AI trade turns."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "risk_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_risk",
+                  "fields": [
+                    {
+                      "name": "period",
+                      "expression": "`period`"
+                    },
+                    {
+                      "name": "fund_return",
+                      "expression": "`fund_return`"
+                    },
+                    {
+                      "name": "fund_volatility",
+                      "expression": "`fund_volatility`"
+                    },
+                    {
+                      "name": "fund_sharpe",
+                      "expression": "`fund_sharpe`"
+                    },
+                    {
+                      "name": "bench_volatility",
+                      "expression": "`bench_volatility`"
+                    },
+                    {
+                      "name": "bench_sharpe",
+                      "expression": "`bench_sharpe`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "period",
+                    "displayName": "Period"
+                  },
+                  {
+                    "fieldName": "fund_return",
+                    "displayName": "Fund return (ann.) %",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "fund_volatility",
+                    "displayName": "Fund vol %",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "fund_sharpe",
+                    "displayName": "Fund Sharpe",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "bench_volatility",
+                    "displayName": "Benchmark vol %",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "bench_sharpe",
+                    "displayName": "Benchmark Sharpe",
+                    "format": {
+                      "type": "number",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Risk-adjusted return \u2014 before vs after the major pivot"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 20,
+            "width": 7,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "returns_hist",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_dist",
+                  "fields": [
+                    {
+                      "name": "return_bucket_pct",
+                      "expression": "`return_bucket_pct`"
+                    },
+                    {
+                      "name": "days",
+                      "expression": "`days`"
+                    },
+                    {
+                      "name": "direction",
+                      "expression": "`direction`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "return_bucket_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Daily return %"
+                },
+                "y": {
+                  "fieldName": "days",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "# days"
+                },
+                "color": {
+                  "fieldName": "direction",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Down day",
+                        "color": "#E0795A"
+                      },
+                      {
+                        "value": "Up day",
+                        "color": "#5CBE8A"
+                      }
+                    ]
+                  },
+                  "displayName": ""
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Daily return distribution (post-pivot) \u2014 the downside tail"
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 20,
+            "width": 5,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "c_step4",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 4. The fund is far more exposed to Technology than the benchmark\n\n~87% Technology vs ~34% in the benchmark, and over half the book in core-AI names \u2014 a turn in the AI trade would hit it disproportionately."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 25,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "alloc_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_alloc",
+                  "fields": [
+                    {
+                      "name": "sector",
+                      "expression": "`sector`"
+                    },
+                    {
+                      "name": "portfolio_weight",
+                      "expression": "`portfolio_weight`"
+                    },
+                    {
+                      "name": "benchmark_weight",
+                      "expression": "`benchmark_weight`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "y": {
+                  "fieldName": "sector",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Sector"
+                },
+                "x": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "portfolio_weight",
+                      "displayName": "Fund weight %"
+                    },
+                    {
+                      "fieldName": "benchmark_weight",
+                      "displayName": "Benchmark weight %"
+                    }
+                  ]
+                },
+                "color": {
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Fund weight %",
+                        "color": "#E0795A"
+                      },
+                      {
+                        "value": "Benchmark weight %",
+                        "color": "#9AA7B4"
+                      }
+                    ]
+                  }
+                },
+                "mark": {
+                  "layout": "group"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Sector allocation \u2014 fund vs benchmark (Technology is the overweight)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 27,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ai_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "AI Exposure",
+                      "expression": "`AI Exposure`"
+                    },
+                    {
+                      "name": "measure(Total Weight)",
+                      "expression": "MEASURE(`Total Weight`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Total Weight)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Weight"
+                },
+                "color": {
+                  "fieldName": "AI Exposure",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Core AI",
+                        "color": "#E0795A"
+                      },
+                      {
+                        "value": "AI-adjacent",
+                        "color": "#E8B54E"
+                      },
+                      {
+                        "value": "Non-AI",
+                        "color": "#5CBE8A"
+                      }
+                    ]
+                  },
+                  "displayName": "AI Exposure"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Weight by AI exposure \u2014 80% core AI"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 27,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c_step5",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 5. The news flow on those AI names\n\nRecent sentiment on the fund's core-AI holdings \u2014 the qualitative signal a manager watches for an early turn."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 33,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "news_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_news",
+                  "fields": [
+                    {
+                      "name": "published_date",
+                      "expression": "`published_date`"
+                    },
+                    {
+                      "name": "ticker",
+                      "expression": "`ticker`"
+                    },
+                    {
+                      "name": "source",
+                      "expression": "`source`"
+                    },
+                    {
+                      "name": "title",
+                      "expression": "`title`"
+                    },
+                    {
+                      "name": "sentiment_label",
+                      "expression": "`sentiment_label`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "published_date",
+                    "displayName": "Date"
+                  },
+                  {
+                    "fieldName": "ticker",
+                    "displayName": "Ticker"
+                  },
+                  {
+                    "fieldName": "source",
+                    "displayName": "Source"
+                  },
+                  {
+                    "fieldName": "title",
+                    "displayName": "Headline"
+                  },
+                  {
+                    "fieldName": "sentiment_label",
+                    "displayName": "Sentiment"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Latest news on core-AI holdings"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 35,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "filters",
+      "displayName": "Filters",
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "f_portfolio",
+            "queries": [
+              {
+                "name": "f_p_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Portfolio",
+                      "expression": "`Portfolio`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "Portfolio",
+                    "displayName": "Portfolio",
+                    "queryName": "f_p_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Portfolio"
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "STRING",
+                    "values": [
+                      {
+                        "value": "AI Growth Fund"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_sector",
+            "queries": [
+              {
+                "name": "f_s_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "Sector",
+                      "expression": "`Sector`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "Sector",
+                    "displayName": "Sector",
+                    "queryName": "f_s_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Sector"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_ai",
+            "queries": [
+              {
+                "name": "f_ai_q",
+                "query": {
+                  "datasetName": "ds_metrics",
+                  "fields": [
+                    {
+                      "name": "AI Exposure",
+                      "expression": "`AI Exposure`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "AI Exposure",
+                    "displayName": "AI Exposure",
+                    "queryName": "f_ai_q"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "AI Exposure"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
       },
-      "position" : {
-        "x" : 0,
-        "y" : 20,
-        "width" : 6,
-        "height" : 6
-      }
-    }, {
-      "widget" : {
-        "name" : "695bc00b",
-        "textbox_spec" : "![Tracking Image](https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=aibi&notebook=aibi_fsi_portfolio_manager&demo_name=aibi_fsi_portfolio_manager&event=DASHBOARD_VIEW)"
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
       },
-      "position" : {
-        "x" : 0,
-        "y" : 26,
-        "width" : 6,
-        "height" : 1
-      }
-    } ]
-  } ]
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "visualizationColors": [
+        "#2E6CB5",
+        "#3FA7B8",
+        "#5CBE8A",
+        "#E8B54E",
+        "#E0795A",
+        "#9B6A9E",
+        "#6E8FD8",
+        "#9CC6A6"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    },
+    "genieSpace": {
+      "isEnabled": true,
+      "overrideId": "",
+      "enablementMode": "ENABLED"
+    }
+  }
 }

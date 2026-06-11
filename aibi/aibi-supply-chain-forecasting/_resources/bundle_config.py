@@ -94,6 +94,14 @@
           reliability_pct DOUBLE COMMENT 'On-time delivery reliability (%).',
           PRIMARY KEY (supplier_id) RELY
       ) USING delta COMMENT 'Component suppliers and their lead times.'""",
+      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.plants (
+          plant_id BIGINT COMMENT 'Unique plant identifier.',
+          plant_name STRING COMMENT 'Assembly plant name.',
+          region STRING COMMENT 'Plant region.',
+          PRIMARY KEY (plant_id) RELY
+      ) USING delta COMMENT 'Assembly plants that hold component inventory. Rotterdam serves EMEA/APAC, Detroit serves AMER.'"""
+    ],
+    [
       """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.components (
           component_id BIGINT COMMENT 'Unique component identifier.',
           component_name STRING COMMENT 'Component name (Battery Cell, Electric Motor, ...).',
@@ -102,13 +110,9 @@
           unit_cost DOUBLE COMMENT 'Unit cost (USD).',
           PRIMARY KEY (component_id) RELY,
           CONSTRAINT comp_supplier_fk FOREIGN KEY (supplier_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.suppliers(supplier_id)
-      ) USING delta COMMENT 'Components used to build the products.'""",
-      """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.plants (
-          plant_id BIGINT COMMENT 'Unique plant identifier.',
-          plant_name STRING COMMENT 'Assembly plant name.',
-          region STRING COMMENT 'Plant region.',
-          PRIMARY KEY (plant_id) RELY
-      ) USING delta COMMENT 'Assembly plants that hold component inventory. Rotterdam serves EMEA/APAC, Detroit serves AMER.'""",
+      ) USING delta COMMENT 'Components used to build the products.'"""
+    ],
+    [
       """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.inventory (
           component_id BIGINT COMMENT 'Component.',
           plant_id BIGINT COMMENT 'Plant holding the inventory.',

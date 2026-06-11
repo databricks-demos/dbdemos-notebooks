@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {"id": "10000000000000000000000000000001", "question": ["Does OncoTarget-1 improve survival overall versus standard of care?"]},
+      {"id": "10000000000000000000000000000002", "question": ["Which cancers does OncoTarget-1 help — and which does it not?"]},
+      {"id": "10000000000000000000000000000003", "question": ["Which patient subgroup benefits most from OncoTarget-1?"]},
+      {"id": "10000000000000000000000000000004", "question": ["Within breast cancer, how does the responder molecular subtype compare to other breast patients?"]},
+      {"id": "10000000000000000000000000000005", "question": ["For which cancers is OncoTarget-1 not indicated (no benefit or worse outcomes)?"]},
+      {"id": "10000000000000000000000000000006", "question": ["What is the 24-month survival rate by treatment arm for ovarian and prostate cancer?"]}
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {"identifier": "main.dbdemos_aibi_hls_genomics_v2.arm_summary"},
+      {"identifier": "main.dbdemos_aibi_hls_genomics_v2.breast_deepdive"},
+      {"identifier": "main.dbdemos_aibi_hls_genomics_v2.lift_by_site"},
+      {"identifier": "main.dbdemos_aibi_hls_genomics_v2.patient_cohort"},
+      {"identifier": "main.dbdemos_aibi_hls_genomics_v2.survival_by_arm"},
+      {"identifier": "main.dbdemos_aibi_hls_genomics_v2.survival_curve"}
+    ]
+  },
+  "instructions": {
+    "example_question_sqls": [
+      {"id": "20000000000000000000000000000001",
+       "question": ["Does OncoTarget-1 improve survival overall?"],
+       "sql": ["SELECT treatment_arm, patients, survival_pct FROM main.dbdemos_aibi_hls_genomics_v2.arm_summary ORDER BY treatment_arm"]},
+      {"id": "20000000000000000000000000000002",
+       "question": ["Which cancers does OncoTarget-1 help, and which not?"],
+       "sql": ["SELECT tissue, survival_lift, patients,\n", "  CASE WHEN survival_lift>=3 THEN 'Benefits' WHEN survival_lift<=-3 THEN 'Not indicated' ELSE 'No effect' END AS verdict\n", "FROM main.dbdemos_aibi_hls_genomics_v2.lift_by_site ORDER BY survival_lift DESC"]},
+      {"id": "20000000000000000000000000000003",
+       "question": ["Which subgroup benefits most?"],
+       "sql": ["SELECT subgroup, treatment_arm, patients, survival_pct\n", "FROM main.dbdemos_aibi_hls_genomics_v2.breast_deepdive ORDER BY subgroup, treatment_arm"]},
+      {"id": "20000000000000000000000000000004",
+       "question": ["Survival by arm for ovarian and prostate cancer"],
+       "sql": ["SELECT tissue, treatment_arm, patients, survival_pct\n", "FROM main.dbdemos_aibi_hls_genomics_v2.survival_by_arm\n", "WHERE tissue IN ('Ovary','Prostate gland') ORDER BY tissue, treatment_arm"]},
+      {"id": "20000000000000000000000000000005",
+       "question": ["Survival curve over time by arm"],
+       "sql": ["SELECT month, treatment_arm, pct_surviving FROM main.dbdemos_aibi_hls_genomics_v2.survival_curve ORDER BY month, treatment_arm"]}
+    ],
+    "text_instructions": [
+      {"id": "30000000000000000000000000000001",
+       "content": [
+        "THE STORY. This is real-world evidence (RWE) for a new targeted cancer therapy called OncoTarget-1, evaluated against standard of care across a real ~10,000-patient oncology cohort (TCGA-style genomics: cancer site, gene-expression UMAP coordinates, demographics). Each patient is in one of two treatment arms: 'OncoTarget-1' or 'Standard of care'. survived_24mo = survived 24 months; months_survived = months survived (survivors censored at 24).\n",
+        "THE KEY INSIGHT the dashboard surfaces: the drug works, but UNEVENLY. Overall survival is higher for treated patients (~80% vs ~75%), BUT the benefit varies wildly by cancer: a large lift in melanoma (Skin), Cerebrum, Bladder and Breast; little/no effect in lung, brain, thyroid; and it is NOT INDICATED for Ovary and Prostate, where treated patients do WORSE (negative lift — toxicity outweighs benefit). lift_by_site.survival_lift is the treated-minus-standard survival gap per cancer (positive=helps, negative=harms).\n",
+        "THE 'WHY' / DEEP-DIVE: the responders are defined by a MOLECULAR signature, not an organ. Within breast cancer there is a responder molecular subtype (a distinct gene-expression UMAP cluster, patient_cohort.responder_subtype = TRUE). In that subtype OncoTarget-1 lifts 24-month survival to ~99% vs ~89% for standard of care — far more than in other breast patients. breast_deepdive splits breast into 'Responder subtype' vs 'Other breast' by arm.\n",
+        "WHICH TABLE TO USE: arm_summary = overall survival by treatment arm. lift_by_site = survival lift per cancer site (the 'where does it help/harm' question). survival_by_arm = survival % per cancer site x arm. breast_deepdive = the responder-subtype deep-dive. survival_curve = % surviving by month (0-24) per arm, for Kaplan-Meier-style curves. patient_cohort = patient-level table (case_id, primary_diagnosis, tissue, gender, race, age, c1/c2 UMAP coords, treatment_arm, responder_subtype, survived_24mo, months_survived) for any custom slice.\n",
+        "When asked 'which subgroup benefits most' answer: the breast-cancer responder molecular subtype (use breast_deepdive). When asked 'where should we use / not use the drug' use lift_by_site. Compute survival rate as AVG(CASE WHEN survived_24mo THEN 1 ELSE 0 END) when working from patient_cohort. Don't answer questions unrelated to this oncology RWE analysis."
+       ]}
+    ]
+  }
+}

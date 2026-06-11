@@ -21,22 +21,24 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Genomic Data Review & Management for Precision Oncology
+# MAGIC # Precision Oncology — does our new drug work, and for whom?
 # MAGIC ---
+# MAGIC
+# MAGIC ## The Story
+# MAGIC
+# MAGIC A health system rolled out a new targeted cancer therapy, **OncoTarget‑1**, and is reviewing the **real-world evidence** across a real ~10,000-patient oncology cohort. Overall, treated patients survive better than standard of care — but the benefit is **wildly uneven**: a near-miracle in some cancers (melanoma, breast, brain), nothing in others, and in **ovarian and prostate cancer it may actually do harm**. The obvious follow-up: *what separates the responders from the rest?* The answer turns out to be **molecular, not anatomical** — the responders share a gene-expression signature. Within breast cancer, a responder molecular subtype reaches **~99% survival vs ~89%** on standard of care.
 # MAGIC
 # MAGIC ## The Challenge
 # MAGIC
-# MAGIC In modern oncology, effectively managing and analyzing genomic data is essential to advancing personalized medicine. The complexity of cancer genomics, combined with diverse patient information from various sources, often leads to data silos and fragmented insights. Without a robust data intelligence platform, healthcare organizations struggle to consolidate and interpret this information efficiently, delaying critical insights needed for decision-making. This lack of integration hampers efforts to uncover patterns in patient outcomes, understand treatment efficacy, and refine patient stratification strategies, ultimately impacting the quality of care.
+# MAGIC Seeing this means connecting things that usually live apart: patient demographics and survival, cancer site and diagnosis, treatment arm and outcome, and **gene-expression embeddings (UMAP)** that reveal molecular subtypes. A simple "the drug works" average hides the truth — the benefit only shows up when you slice by cancer and by molecular subtype.
 # MAGIC
 # MAGIC ## The Solution
 # MAGIC
-# MAGIC Databricks' Intelligence Platform leverages **AI and Business Intelligence (AIBI)** to streamline the process of integrating and analyzing genomic and patient data, providing a unified environment for precision oncology. By consolidating data into a centralized platform, Databricks breaks down silos and enables a comprehensive view of patient information, supporting enhanced understanding of cancer genomics and patient demographics at scale.
-# MAGIC
-# MAGIC With advanced AI-driven analytics and intuitive BI tools, users can explore genomic patterns, track treatment response trends, and conduct population-level analyses through natural language queries. This seamless access to insights accelerates time-to-insight, fosters collaboration between clinical and research teams, and empowers healthcare leaders to make data-driven decisions that improve patient outcomes, optimize treatment strategies, and advance precision oncology.
+# MAGIC The **Databricks Platform** unifies genomic, clinical and outcome data, then layers **AI/BI** on top. The dashboard ranks every cancer by survival lift (where the drug helps, does nothing, or harms), shows the survival curves diverging over time, and maps patients by molecular subtype to reveal *who* responds. **Genie** lets clinicians and researchers ask *"which subgroup benefits most, and where should we not use this drug?"* in plain language.
 # MAGIC
 # MAGIC ## This Notebook
 # MAGIC
-# MAGIC This notebook will guide you, the knowledgeable Databricks user, through deploying a Databricks AIBI project focused on genomic data review and management. Follow the step-by-step process to familiarize yourself with the project. By installing this project, its dashboard and Genie Dataroom are already accessible at **these links**.
+# MAGIC This notebook will guide you, the knowledgeable Databricks user, through deploying a Databricks AIBI project for precision-oncology real-world evidence. By installing this project, its dashboard and Genie space are already accessible at **these links**.
 # MAGIC
 # MAGIC In the following sections, this notebook will guide you through at a high level:
 # MAGIC 1. Data Ingestion with **Lakeflow Connect**
@@ -101,13 +103,13 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_dashboard_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Your Patient Genomics data is now available for your Data Analyst to explore and track their main KPIs.
+# MAGIC Your unified genomic, clinical and outcome data is now available for clinical and research teams to explore.
 # MAGIC
-# MAGIC AI/BI Dashboards make it easy to create and iterate on visualizations with natural language through AI-assisted authoring. 
+# MAGIC The dashboard tells the story across two pages:
+# MAGIC - **Real-world evidence** — does OncoTarget‑1 work? The headline is a **survival lift by cancer site** chart that ranks every cancer from biggest benefit (green) to *not indicated* (red) — the drug helps melanoma, breast and brain but may harm ovary and prostate. Beside it, the **gene-expression (UMAP) map** hints that responders share a molecular signature, and survival curves show treated vs standard of care diverging over time.
+# MAGIC - **Who benefits most** — the deep-dive: within breast cancer, a **responder molecular subtype** (a distinct UMAP cluster) where survival climbs to ~99% vs ~89% on standard of care, plus who those responders are.
 # MAGIC
-# MAGIC Dashboards offer advanced data visualization capabilities including sleek charts, interactions such as cross-filtering, periodic snapshots via email, embedding and _much more_. 
-# MAGIC
-# MAGIC And they live side-by-side with your data, delivering instant load and rapid interactive analysis — no matter the data or user scale.
+# MAGIC AI/BI Dashboards make it easy to build and iterate on visualizations with natural language — sleek charts, cross‑filtering, scheduled snapshots and embedding — all side‑by‑side with your governed data.
 # MAGIC
 # MAGIC
 # MAGIC Open the <a dbdemos-dashboard-id="patient-genomics" href='/sql/dashboardsv3/02ef00cc36721f9e1f2028ee75723cc1' target="_blank">Patient Genomics Dashboard to analyze & track main KPIs</a>
@@ -120,9 +122,14 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/aibi/dbx_aibi_genie_product.gif" style="float: right; margin: 10px" width="500px">
 # MAGIC
-# MAGIC Our data is now available as a Dashboard that our business users can open.
+# MAGIC Our data is now available as a Dashboard that clinical and research teams can open.
 # MAGIC
-# MAGIC However, they'll likely have extra questions or follow-up based on the insights they see in the dashboard, such as: "What are the most common mutations in this patient cohort?" or "How do treatment outcomes vary by cancer stage?"
+# MAGIC However, they'll have follow-up questions based on what they see. This is where Genie shines — ask in plain language and let it trace the answer across cancer site, treatment arm, outcome and molecular subtype:
+# MAGIC
+# MAGIC - *"Which cancers does OncoTarget‑1 help — and which is it not indicated for?"*
+# MAGIC - *"Which patient subgroup benefits most?"* → the breast-cancer **responder molecular subtype**
+# MAGIC - *"How does the responder subtype compare to other breast patients?"* → ~99% vs ~89% survival
+# MAGIC - *"What is the survival rate by arm for ovarian and prostate cancer?"* → where the drug should *not* be used
 # MAGIC
 # MAGIC Open the <a dbdemos-genie-id="patient-genomics" href='/genie/rooms/01ef775474091f7ba11a8a9d2075eb58' target="_blank">Patient Genomics Genie space to deep dive into your data</a>
 

@@ -80,7 +80,9 @@
             region STRING COMMENT 'Rep region.',
             title STRING COMMENT 'Rep title.',
             PRIMARY KEY (owner_id) RELY
-        ) USING delta COMMENT 'Sales reps (Salesforce).'""",
+        ) USING delta COMMENT 'Sales reps (Salesforce).'"""
+      ],
+      [
         """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_accounts (
             account_id BIGINT COMMENT 'Unique account identifier.',
             account_name STRING COMMENT 'Account (retailer) name.',
@@ -93,7 +95,9 @@
             owner_id BIGINT COMMENT 'Sales rep that owns the account.',
             PRIMARY KEY (account_id) RELY,
             CONSTRAINT acc_owner_fk FOREIGN KEY (owner_id) REFERENCES `{{CATALOG}}`.`{{SCHEMA}}`.crm_reps(owner_id)
-        ) USING delta COMMENT 'Customer accounts / retailers (Salesforce).'""",
+        ) USING delta COMMENT 'Customer accounts / retailers (Salesforce).'"""
+      ],
+      [
         """CREATE OR REPLACE TABLE `{{CATALOG}}`.`{{SCHEMA}}`.crm_opportunities (
             opp_id BIGINT COMMENT 'Unique opportunity identifier.',
             account_id BIGINT COMMENT 'Account the opportunity belongs to.',

@@ -797,7 +797,7 @@
           },
           "position": {
             "x": 3,
-            "y": 13,
+            "y": 14,
             "width": 3,
             "height": 7
           }
@@ -839,7 +839,7 @@
             "x": 0,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -887,7 +887,7 @@
             "x": 1,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -936,7 +936,7 @@
             "x": 2,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -1009,7 +1009,7 @@
           },
           "position": {
             "x": 2,
-            "y": 7,
+            "y": 8,
             "width": 2,
             "height": 6
           }
@@ -1081,7 +1081,7 @@
           },
           "position": {
             "x": 5,
-            "y": 7,
+            "y": 8,
             "width": 1,
             "height": 6
           }
@@ -1126,7 +1126,7 @@
             "x": 4,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -1169,7 +1169,7 @@
             "x": 3,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -1209,7 +1209,7 @@
             "x": 5,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         },
         {
@@ -1282,7 +1282,7 @@
           },
           "position": {
             "x": 0,
-            "y": 7,
+            "y": 8,
             "width": 2,
             "height": 6
           }
@@ -1369,7 +1369,7 @@
           },
           "position": {
             "x": 0,
-            "y": 13,
+            "y": 14,
             "width": 3,
             "height": 7
           }
@@ -1455,7 +1455,7 @@
           },
           "position": {
             "x": 4,
-            "y": 7,
+            "y": 8,
             "width": 1,
             "height": 6
           }
@@ -1542,7 +1542,7 @@
           },
           "position": {
             "x": 0,
-            "y": 20,
+            "y": 21,
             "width": 6,
             "height": 8
           }
@@ -1667,7 +1667,7 @@
           },
           "position": {
             "x": 0,
-            "y": 28,
+            "y": 29,
             "width": 6,
             "height": 8
           }
@@ -1869,9 +1869,28 @@
           },
           "position": {
             "x": 0,
-            "y": 36,
+            "y": 37,
             "width": 6,
             "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "disclaimer_footer",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. -->\n",
+                "<img width=\"1px\" src=\"https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&dashboard=worklow-analysis&demo_name=04-system-tables&event=VIEW\">\n",
+                "\n",
+                "---\n_**Disclaimer** \u2014 This dashboard is delivered **as-is** as **community content** and is **not officially supported by Databricks**. Figures are estimates computed from `system.*` tables at list price; always validate against your actual billing/source data before relying on them._\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 46,
+            "width": 6,
+            "height": 2
           }
         }
       ],
@@ -2111,7 +2130,7 @@
           },
           "position": {
             "x": 2,
-            "y": 16,
+            "y": 17,
             "width": 4,
             "height": 9
           }
@@ -2303,7 +2322,7 @@
           },
           "position": {
             "x": 3,
-            "y": 9,
+            "y": 10,
             "width": 3,
             "height": 6
           }
@@ -2346,7 +2365,7 @@
           },
           "position": {
             "x": 3,
-            "y": 7,
+            "y": 8,
             "width": 1,
             "height": 2
           }
@@ -2389,7 +2408,7 @@
           },
           "position": {
             "x": 4,
-            "y": 7,
+            "y": 8,
             "width": 1,
             "height": 2
           }
@@ -2429,7 +2448,7 @@
           },
           "position": {
             "x": 5,
-            "y": 7,
+            "y": 8,
             "width": 1,
             "height": 2
           }
@@ -2497,7 +2516,7 @@
           },
           "position": {
             "x": 0,
-            "y": 9,
+            "y": 10,
             "width": 3,
             "height": 6
           }
@@ -2560,7 +2579,7 @@
           },
           "position": {
             "x": 0,
-            "y": 16,
+            "y": 17,
             "width": 2,
             "height": 9
           }
@@ -2600,7 +2619,7 @@
           },
           "position": {
             "x": 2,
-            "y": 7,
+            "y": 8,
             "width": 1,
             "height": 2
           }
@@ -2640,7 +2659,7 @@
           },
           "position": {
             "x": 0,
-            "y": 7,
+            "y": 8,
             "width": 2,
             "height": 2
           }
@@ -2656,7 +2675,7 @@
           },
           "position": {
             "x": 0,
-            "y": 15,
+            "y": 16,
             "width": 6,
             "height": 1
           }
@@ -2766,11 +2785,46 @@
             "x": 5,
             "y": 5,
             "width": 1,
-            "height": 2
+            "height": 3
           }
         }
       ],
       "pageType": "PAGE_TYPE_CANVAS"
     }
-  ]
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "widgetBorderColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#FF6B35",
+        "dark": "#FF9E6D"
+      },
+      "visualizationColors": [
+        "#FF6B35",
+        "#1B6E8C",
+        "#3CA6A6",
+        "#E8B54E",
+        "#7A5C9E",
+        "#5CBE8A",
+        "#6E8FD8",
+        "#C9483A"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    }
+  }
 }

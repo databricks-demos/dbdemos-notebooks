@@ -2836,6 +2836,37 @@
           }
         }
       ]
+    },
+    {
+      "name": "kpi_total",
+      "displayName": "KPI total + MoM",
+      "queryLines": [
+        "SELECT\n",
+        "  round(sum(CASE WHEN u.usage_date >= date_sub(current_date(),30) THEN u.usage_quantity*p.pricing.default END),0) AS cost_30d,\n",
+        "  round(sum(CASE WHEN u.usage_date <  date_sub(current_date(),30) THEN u.usage_quantity*p.pricing.default END),0) AS cost_prev_30d\n",
+        "FROM system.billing.usage u JOIN system.billing.list_prices p ON u.sku_name=p.sku_name AND u.usage_unit=p.usage_unit AND u.usage_end_time>=p.price_start_time AND (p.price_end_time IS NULL OR u.usage_end_time<p.price_end_time)\n",
+        "WHERE u.usage_date >= date_sub(current_date(),60)"
+      ]
+    },
+    {
+      "name": "kpi_trend",
+      "displayName": "Daily spend trend (90d)",
+      "queryLines": [
+        "SELECT u.usage_date AS day, round(sum(u.usage_quantity*p.pricing.default),0) AS daily_cost\n",
+        "FROM system.billing.usage u JOIN system.billing.list_prices p ON u.sku_name=p.sku_name AND u.usage_unit=p.usage_unit AND u.usage_end_time>=p.price_start_time AND (p.price_end_time IS NULL OR u.usage_end_time<p.price_end_time)\n",
+        "WHERE u.usage_date >= date_sub(current_date(),90)\n",
+        "GROUP BY 1 ORDER BY 1"
+      ]
+    },
+    {
+      "name": "kpi_by_product",
+      "displayName": "Spend by product (30d)",
+      "queryLines": [
+        "SELECT u.billing_origin_product AS product, round(sum(u.usage_quantity*p.pricing.default),0) AS cost\n",
+        "FROM system.billing.usage u JOIN system.billing.list_prices p ON u.sku_name=p.sku_name AND u.usage_unit=p.usage_unit AND u.usage_end_time>=p.price_start_time AND (p.price_end_time IS NULL OR u.usage_end_time<p.price_end_time)\n",
+        "WHERE u.usage_date >= date_sub(current_date(),30)\n",
+        "GROUP BY 1 ORDER BY cost DESC LIMIT 8"
+      ]
     }
   ],
   "pages": [
@@ -2843,6 +2874,229 @@
       "name": "373cd3ff",
       "displayName": "Usage Overview",
       "layout": [
+        {
+          "widget": {
+            "name": "hero_title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Account usage & cost overview\n",
+                "\n",
+                "Where your Databricks spend goes \u2014 across all workspaces, products and SKUs (priced from `system.billing`). Slice by date, workspace, tag or top spenders below, and track usage against your commit."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "hero_total",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpi_total",
+                  "fields": [
+                    {
+                      "name": "cost_30d",
+                      "expression": "`cost_30d`"
+                    },
+                    {
+                      "name": "cost_prev_30d",
+                      "expression": "`cost_prev_30d`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "cost_30d",
+                  "displayName": "Last 30 days",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "formatTemplate": "${{ @formatted }}",
+                  "color": {
+                    "default": "#FF6B35"
+                  }
+                },
+                "target": {
+                  "fieldName": "cost_prev_30d",
+                  "displayName": "vs prior 30 days",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total spend (last 30 days)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "hero_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpi_trend",
+                  "fields": [
+                    {
+                      "name": "daily_cost",
+                      "expression": "`daily_cost`"
+                    },
+                    {
+                      "name": "day",
+                      "expression": "`day`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "daily_cost",
+                  "displayName": "Daily spend",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "formatTemplate": "${{ @formatted }}",
+                  "color": {
+                    "default": "#1B6E8C"
+                  }
+                },
+                "period": {
+                  "fieldName": "day"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Daily spend trend (last 90 days)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 1,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "hero_by_product",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpi_by_product",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    },
+                    {
+                      "name": "cost",
+                      "expression": "`cost`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Top 8 products by spend \u2014 last 30 days"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cost",
+                  "displayName": "Spend (USD, last 30 days)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "product",
+                  "displayName": "Product",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "product",
+                  "legend": {
+                    "hide": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 4
+          }
+        },
         {
           "widget": {
             "name": "8a50f0fc",
@@ -3051,8 +3305,8 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 2,
+            "y": 5,
+            "width": 4,
             "height": 1
           }
         },
@@ -3263,9 +3517,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 0,
-            "width": 2,
+            "x": 4,
+            "y": 5,
+            "width": 4,
             "height": 1
           }
         },
@@ -3481,9 +3735,9 @@
             }
           },
           "position": {
-            "x": 4,
-            "y": 0,
-            "width": 2,
+            "x": 8,
+            "y": 5,
+            "width": 4,
             "height": 1
           }
         },
@@ -3518,8 +3772,8 @@
           },
           "position": {
             "x": 0,
-            "y": 1,
-            "width": 6,
+            "y": 6,
+            "width": 12,
             "height": 1
           }
         },
@@ -3600,8 +3854,8 @@
           },
           "position": {
             "x": 0,
-            "y": 2,
-            "width": 3,
+            "y": 7,
+            "width": 6,
             "height": 1
           }
         },
@@ -3681,9 +3935,9 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 2,
-            "width": 3,
+            "x": 6,
+            "y": 7,
+            "width": 6,
             "height": 1
           }
         },
@@ -3763,8 +4017,8 @@
           },
           "position": {
             "x": 0,
-            "y": 3,
-            "width": 6,
+            "y": 8,
+            "width": 12,
             "height": 8
           }
         },
@@ -4113,8 +4367,8 @@
           },
           "position": {
             "x": 0,
-            "y": 11,
-            "width": 6,
+            "y": 16,
+            "width": 12,
             "height": 10
           }
         },
@@ -4149,8 +4403,8 @@
           },
           "position": {
             "x": 0,
-            "y": 21,
-            "width": 6,
+            "y": 26,
+            "width": 12,
             "height": 1
           }
         },
@@ -4190,8 +4444,8 @@
           },
           "position": {
             "x": 0,
-            "y": 22,
-            "width": 2,
+            "y": 27,
+            "width": 4,
             "height": 2
           }
         },
@@ -4288,9 +4542,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 22,
-            "width": 2,
+            "x": 4,
+            "y": 27,
+            "width": 4,
             "height": 1
           }
         },
@@ -4304,9 +4558,9 @@
             }
           },
           "position": {
-            "x": 4,
-            "y": 22,
-            "width": 2,
+            "x": 8,
+            "y": 27,
+            "width": 4,
             "height": 1
           }
         },
@@ -4381,9 +4635,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 23,
-            "width": 2,
+            "x": 4,
+            "y": 28,
+            "width": 4,
             "height": 1
           }
         },
@@ -4398,9 +4652,9 @@
             }
           },
           "position": {
-            "x": 4,
-            "y": 23,
-            "width": 2,
+            "x": 8,
+            "y": 28,
+            "width": 4,
             "height": 1
           }
         },
@@ -4481,8 +4735,8 @@
           },
           "position": {
             "x": 0,
-            "y": 24,
-            "width": 2,
+            "y": 29,
+            "width": 4,
             "height": 1
           }
         },
@@ -4562,9 +4816,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 24,
-            "width": 2,
+            "x": 4,
+            "y": 29,
+            "width": 4,
             "height": 1
           }
         },
@@ -4578,9 +4832,9 @@
             }
           },
           "position": {
-            "x": 4,
-            "y": 24,
-            "width": 2,
+            "x": 8,
+            "y": 29,
+            "width": 4,
             "height": 1
           }
         },
@@ -4656,8 +4910,8 @@
           },
           "position": {
             "x": 0,
-            "y": 25,
-            "width": 6,
+            "y": 30,
+            "width": 12,
             "height": 8
           }
         },
@@ -5006,8 +5260,8 @@
           },
           "position": {
             "x": 0,
-            "y": 33,
-            "width": 6,
+            "y": 38,
+            "width": 12,
             "height": 10
           }
         },
@@ -5042,8 +5296,8 @@
           },
           "position": {
             "x": 0,
-            "y": 43,
-            "width": 6,
+            "y": 48,
+            "width": 12,
             "height": 1
           }
         },
@@ -5102,8 +5356,8 @@
           },
           "position": {
             "x": 0,
-            "y": 44,
-            "width": 2,
+            "y": 49,
+            "width": 4,
             "height": 1
           }
         },
@@ -5183,9 +5437,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 44,
-            "width": 2,
+            "x": 4,
+            "y": 49,
+            "width": 4,
             "height": 1
           }
         },
@@ -5199,9 +5453,9 @@
             }
           },
           "position": {
-            "x": 4,
-            "y": 44,
-            "width": 2,
+            "x": 8,
+            "y": 49,
+            "width": 4,
             "height": 1
           }
         },
@@ -5282,8 +5536,8 @@
           },
           "position": {
             "x": 0,
-            "y": 45,
-            "width": 2,
+            "y": 50,
+            "width": 4,
             "height": 1
           }
         },
@@ -5363,9 +5617,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 45,
-            "width": 2,
+            "x": 4,
+            "y": 50,
+            "width": 4,
             "height": 1
           }
         },
@@ -5379,9 +5633,9 @@
             }
           },
           "position": {
-            "x": 4,
-            "y": 45,
-            "width": 2,
+            "x": 8,
+            "y": 50,
+            "width": 4,
             "height": 1
           }
         },
@@ -5461,8 +5715,8 @@
           },
           "position": {
             "x": 0,
-            "y": 46,
-            "width": 6,
+            "y": 51,
+            "width": 12,
             "height": 8
           }
         },
@@ -5758,8 +6012,8 @@
           },
           "position": {
             "x": 0,
-            "y": 54,
-            "width": 6,
+            "y": 59,
+            "width": 12,
             "height": 10
           }
         },
@@ -5769,7 +6023,7 @@
             "multilineTextboxSpec": {
               "lines": [
                 "### Information\n",
-                "#### DBDemos Account Usage Dashboard _(version: 1, created: 2024-07-05)_. Please use the account admin console to generate a newer version with your workspace name.\n",
+                "#### DBDemos Account Usage Dashboard _(version: 2, created: 2024-07-05, updated: 2026-06)_. Please use the account admin console to generate a newer version with your workspace name.\n",
                 "\n",
                 "- All the usages in this dashboard are calculated based on the list price in USD.\n",
                 "- Please also check the [data retention policy](https://docs.databricks.com/en/admin/system-tables/index.html#which-system-tables-are-available) of system.billing.usage table.\n",
@@ -5781,13 +6035,33 @@
           },
           "position": {
             "x": 0,
-            "y": 64,
-            "width": 6,
+            "y": 69,
+            "width": 12,
             "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "disclaimer_footer",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. -->\n",
+                "<img width=\"1px\" src=\"https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&dashboard=account-usage&demo_name=04-system-tables&event=VIEW\">\n",
+                "\n",
+                "---\n_**Disclaimer** \u2014 This dashboard is delivered **as-is** as **community content** and is **not officially supported by Databricks**. Figures are estimates computed from `system.*` tables at list price; always validate against your actual billing/source data before relying on them._\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 72,
+            "width": 12,
+            "height": 2
           }
         }
       ],
-      "pageType": "PAGE_TYPE_CANVAS"
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     },
     {
       "name": "ef6fa67e",
@@ -6670,7 +6944,37 @@
   ],
   "uiSettings": {
     "theme": {
-      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+      "canvasBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "widgetBorderColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#FF6B35",
+        "dark": "#FF9E6D"
+      },
+      "visualizationColors": [
+        "#FF6B35",
+        "#1B6E8C",
+        "#3CA6A6",
+        "#E8B54E",
+        "#7A5C9E",
+        "#5CBE8A",
+        "#6E8FD8",
+        "#C9483A"
+      ],
+      "widgetHeaderAlignment": "LEFT"
     }
   }
 }

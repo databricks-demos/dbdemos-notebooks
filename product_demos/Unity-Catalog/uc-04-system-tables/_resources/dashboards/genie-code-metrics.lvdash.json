@@ -934,6 +934,25 @@
             "width": 6,
             "height": 6
           }
+        },
+        {
+          "widget": {
+            "name": "disclaimer_footer",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. -->\n",
+                "<img width=\"1px\" src=\"https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=governance&dashboard=genie-code-metrics&demo_name=04-system-tables&event=VIEW\">\n",
+                "\n",
+                "---\n_**Disclaimer** \u2014 This dashboard is delivered **as-is** as **community content** and is **not officially supported by Databricks**. Figures are estimates computed from `system.*` tables at list price; always validate against your actual billing/source data before relying on them._\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 28,
+            "width": 12,
+            "height": 2
+          }
         }
       ],
       "pageType": "PAGE_TYPE_CANVAS",
@@ -1836,7 +1855,37 @@
   ],
   "uiSettings": {
     "theme": {
-      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+      "canvasBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "widgetBorderColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#FF6B35",
+        "dark": "#FF9E6D"
+      },
+      "visualizationColors": [
+        "#FF6B35",
+        "#1B6E8C",
+        "#3CA6A6",
+        "#E8B54E",
+        "#7A5C9E",
+        "#5CBE8A",
+        "#6E8FD8",
+        "#C9483A"
+      ],
+      "widgetHeaderAlignment": "LEFT"
     },
     "applyModeEnabled": false
   }

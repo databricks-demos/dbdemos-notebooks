@@ -147,7 +147,8 @@
                  {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"},
                  {"name": "[dbdemos] System Tables - Databricks Model Serving Endpoint Cost Attribution", "id": "model-serving-cost"},
                  {"name": "[dbdemos] System Tables - Warehouse Monitoring and Cost Attribution", "id": "warehouse-serverless-cost"},
-                 {"name": "[dbdemos] System Tables - Workflow and Job Cost Attribution", "id": "worklow-analysis"}
+                 {"name": "[dbdemos] System Tables - Workflow and Job Cost Attribution", "id": "worklow-analysis"},
+                 {"name": "[dbdemos] System Tables - Databricks Assistant & Genie Code Metrics", "id": "genie-code-metrics"}
                  ],
   "genie_rooms":[
     {

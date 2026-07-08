@@ -216,7 +216,7 @@ spark.sql(f"""
   COMMENT "This function generates a fraud report based on the transaction details and customer information."
   RETURN (
     SELECT ai_query(
-      'databricks-meta-llama-3-1-405b-instruct', 
+      'databricks-meta-llama-3-3-70b-instruct', 
       CONCAT(
         "{prompt}",
         'Transaction and customer details: ', 

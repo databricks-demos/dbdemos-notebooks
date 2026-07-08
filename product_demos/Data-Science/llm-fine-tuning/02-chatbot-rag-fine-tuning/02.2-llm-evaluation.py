@@ -136,7 +136,7 @@ def build_chain(llm):
     return ChatPromptTemplate.from_messages(messages) | llm | StrOutputParser()
 # --------------------------------------------------------------------------------------------------- #
 
-def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_fine_tuning_rag"):
+def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-meta-llama-3-3-70b-instruct", run_name="dbdemos_fine_tuning_rag"):
     #Build the chain. This should be your actual RAG chain, querying your index
     llm = ChatDatabricks(endpoint=llm_endoint_name, temperature=0.1)
     chain = build_chain(llm)
@@ -162,9 +162,9 @@ def eval_llm(llm_endoint_name, eval_dataset, llm_judge = "databricks-meta-llama-
         return results
     
 #Evaluate the base foundation model
-baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_llm_not_fine_tuned")
+baseline_results = eval_llm(serving_endpoint_baseline_name, eval_dataset, llm_judge = "databricks-meta-llama-3-3-70b-instruct", run_name="dbdemos_llm_not_fine_tuned")
 #Evaluate the fine tuned model
-fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge = "databricks-meta-llama-3-1-405b-instruct", run_name="dbdemos_llm_fine_tuned")
+fine_tuned_results = eval_llm(serving_endpoint_ft_name, eval_dataset, llm_judge = "databricks-meta-llama-3-3-70b-instruct", run_name="dbdemos_llm_fine_tuned")
 
 # COMMAND ----------
 

@@ -295,7 +295,7 @@ spark.sql(f"""
   COMMENT "This function generates marketing copy for a given customer User ID. This function expects the user order information which can be found with churn_predictor(), as well as their churn status which is found with customer_order_lookup(). This function returns the marketing copy as a string. "
   RETURN (
     SELECT ai_query(
-      'databricks-meta-llama-3-1-405b-instruct', 
+      'databricks-meta-llama-3-3-70b-instruct', 
       CONCAT(
         "{prompt}"
         'Customer details: ', 

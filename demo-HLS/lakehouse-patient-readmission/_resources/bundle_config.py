@@ -256,6 +256,42 @@
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "depends_on": [{"task_key": "auto_ml"}]
+            },
+            {
+                "task_key": "bundle_sample_exploration",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Data-Ingestion/explorations/sample_exploration",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_model_serving",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.4-Model-Serving-patient-readmission",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "batch_scoring"}]
+            },
+            {
+                "task_key": "bundle_feature_store",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.6-EXTRA-Feature-Store-ML-patient-readmission",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "feature_engineering"}]
             }
         ],
         "job_clusters": [
@@ -266,7 +302,7 @@
                         "min_workers": 2,
                         "max_workers": 10
                     },
-                    "spark_version": "16.4.x-cpu-ml-scala2.12",
+                    "spark_version": "17.3.x-cpu-ml-scala2.13",
                     "custom_tags": {
                         "ResourceClass": "SingleNode"
                     },
@@ -288,7 +324,7 @@
             "min_workers": 2,
             "max_workers": 10
         },
-        "spark_version": "16.4.x-cpu-ml-scala2.12",
+        "spark_version": "17.3.x-cpu-ml-scala2.13",
         "single_user_name": "{{CURRENT_USER}}",
         "data_security_mode": "SINGLE_USER",
         "runtime_engine": "STANDARD"

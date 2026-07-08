@@ -35,7 +35,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 mlflow==3.14.0 databricks-feature-store==0.17.0
+# MAGIC %pip install mlflow==3.14.0 databricks-feature-engineering==0.16.0 databricks-sdk
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -83,10 +83,10 @@ pat_features_df.display()
 
 # DBTITLE 1,Patient Feature Table
 # Instantiate the Feature Store Client
-from databricks import feature_store
+from databricks.feature_engineering import FeatureEngineeringClient
 
 # Instantiate the Feature Store Client
-fs = feature_store.FeatureStoreClient()
+fs = FeatureEngineeringClient()
 
 drop_fs_table(f'{dbName}.pat_features')
 
@@ -216,7 +216,7 @@ display(labels)
 # COMMAND ----------
 
 # DBTITLE 1,Feature lookups
-from databricks.feature_store import FeatureLookup
+from databricks.feature_engineering import FeatureLookup
 patient_feature_lookups = [
    FeatureLookup( 
      table_name = f'{dbName}.pat_features',
@@ -260,7 +260,7 @@ age_at_enc_feature_lookups = [
 
 # COMMAND ----------
 
-fs = feature_store.FeatureStoreClient()
+fs = FeatureEngineeringClient()
 training_set = fs.create_training_set(
   labels,
   feature_lookups = patient_feature_lookups + encounter_feature_lookups + age_at_enc_feature_lookups,

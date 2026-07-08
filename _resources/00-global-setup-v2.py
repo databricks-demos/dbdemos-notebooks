@@ -339,7 +339,10 @@ class DBDemos():
           
           # Log model and metric to MLflow
           mlflow.log_metric('val_f1_score', val_f1)
-          mlflow.sklearn.log_model(model, artifact_path="model", input_example=X_train.iloc[[0]])
+          # Force cloudpickle: newer mlflow / serverless runtimes default sklearn logging to
+          # the skops format, which rejects the notebook-defined SafeRandomForestClassifier as
+          # an "untrusted type". cloudpickle serializes the custom class without that check.
+          mlflow.sklearn.log_model(model, artifact_path="model", input_example=X_train.iloc[[0]], serialization_format="cloudpickle")
 
         class BestTrialMock:
             def __init__(self, mlflow_run_id, model):

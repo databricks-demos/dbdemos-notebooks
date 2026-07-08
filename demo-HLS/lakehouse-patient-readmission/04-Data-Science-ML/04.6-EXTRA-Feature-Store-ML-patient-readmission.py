@@ -88,16 +88,16 @@ from databricks.feature_engineering import FeatureEngineeringClient
 # Instantiate the Feature Store Client
 fs = FeatureEngineeringClient()
 
-drop_fs_table(f'{dbName}.pat_features')
+drop_fs_table(f'{catalog}.{dbName}.pat_features')
 
 pat_feature_table = fs.create_table(
-  name=f'{dbName}.pat_features',
+  name=f'{catalog}.{dbName}.pat_features',
   primary_keys=['Id'],
   df=pat_features_df,
   description='Base Features from the Patient Table'
 )
 
-fs.write_table(df=pat_features_df, name=f'{dbName}.pat_features', mode='overwrite')
+fs.write_table(df=pat_features_df, name=f'{catalog}.{dbName}.pat_features', mode='overwrite')
 
 # COMMAND ----------
 
@@ -138,17 +138,17 @@ def compute_enc_features(data):
 # DBTITLE 1,Save as Feature Table
 enc_features_df = compute_enc_features(spark.table('encounters'))
 
-drop_fs_table(f'{dbName}.enc_features')
+drop_fs_table(f'{catalog}.{dbName}.enc_features')
 
 #Note: You might need to delete the FS table using the UI
 enc_feature_table = fs.create_table(
-  name=f'{dbName}.enc_features',
+  name=f'{catalog}.{dbName}.enc_features',
   primary_keys=['ENCOUNTER_ID'],
   df=enc_features_df,
   description='Base and derived features from the Encounter Table'
 )
 
-fs.write_table(df=enc_features_df, name=f'{dbName}.enc_features', mode='overwrite')
+fs.write_table(df=enc_features_df, name=f'{catalog}.{dbName}.enc_features', mode='overwrite')
 
 # COMMAND ----------
 
@@ -177,17 +177,17 @@ def compute_age_at_enc(encounters, patients):
 # DBTITLE 1,Save as feature table
 aae_features_df = compute_age_at_enc(spark.table('encounters'), spark.table('patients'))
 
-drop_fs_table(f'{dbName}.age_at_enc_features')
+drop_fs_table(f'{catalog}.{dbName}.age_at_enc_features')
 
 #Note: You might need to delete the FS table using the UI
 aae_feature_table = fs.create_table(
-  name=f'{dbName}.age_at_enc_features',
+  name=f'{catalog}.{dbName}.age_at_enc_features',
   primary_keys=['encounter_id'],
   df=aae_features_df,
   description='determine the age of the patient at the time of the encounter'
 )
 
-fs.write_table(df=aae_features_df, name=f'{dbName}.age_at_enc_features', mode='overwrite')
+fs.write_table(df=aae_features_df, name=f'{catalog}.{dbName}.age_at_enc_features', mode='overwrite')
 
 # COMMAND ----------
 
@@ -219,7 +219,7 @@ display(labels)
 from databricks.feature_engineering import FeatureLookup
 patient_feature_lookups = [
    FeatureLookup( 
-     table_name = f'{dbName}.pat_features',
+     table_name = f'{catalog}.{dbName}.pat_features',
      feature_names = [
       'MARITAL_M',
       'MARITAL_S',
@@ -239,7 +239,7 @@ patient_feature_lookups = [
  
 encounter_feature_lookups = [
    FeatureLookup( 
-     table_name = f'{dbName}.enc_features',
+     table_name = f'{catalog}.{dbName}.enc_features',
      feature_names = ['BASE_ENCOUNTER_COST', 'TOTAL_CLAIM_COST', 'PAYER_COVERAGE', 'enc_length', 'ENCOUNTERCLASS_ambulatory', 'ENCOUNTERCLASS_emergency', 'ENCOUNTERCLASS_hospice', 'ENCOUNTERCLASS_inpatient', 'ENCOUNTERCLASS_outpatient', 'ENCOUNTERCLASS_wellness',],
      lookup_key = ["Id"]
    )
@@ -247,7 +247,7 @@ encounter_feature_lookups = [
 
 age_at_enc_feature_lookups = [
    FeatureLookup( 
-     table_name = f'{dbName}.age_at_enc_features',
+     table_name = f'{catalog}.{dbName}.age_at_enc_features',
      feature_names = ['age_at_encounter'],
      lookup_key = ["Id"]
    )

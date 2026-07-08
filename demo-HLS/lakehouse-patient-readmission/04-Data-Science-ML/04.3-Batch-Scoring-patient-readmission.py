@@ -47,7 +47,7 @@ import mlflow
 #Make sure we use Mlflow with UC registry
 mlflow.set_registry_uri('databricks-uc')
 # Load model as a Spark UDF.
-loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod", result_type='double', env_manager='uv')
+loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod", result_type='double')
 
 # COMMAND ----------
 

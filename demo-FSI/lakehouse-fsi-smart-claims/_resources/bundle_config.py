@@ -82,6 +82,14 @@
       "description": "Gold layer transformations."
     },
     {
+      "path": "01-Data-Ingestion/utilities/utils.py",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": False,
+      "title":  "SDP - Gold transformations",
+      "description": "Gold layer transformations."
+    },
+    {
       "path": "02-Data-Science-ML/02.1-Model-Training",
       "pre_run": True,
       "publish_on_website": True,

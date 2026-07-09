@@ -122,4 +122,4 @@
 # MAGIC
 # MAGIC The gold layer also includes geolocation enrichment using the open-source geopy library to add latitude/longitude coordinates to policy addresses, providing better visualization capabilities for Claims Investigators.
 # MAGIC
-# MAGIC Go back to the [00-Smart-Claims-Introduction]($../../00-Smart-Claims-Introduction) to explore AI and Data Visualization.
+# MAGIC Go back to the [00-Smart-Claims-Introduction]($../00-Smart-Claims-Introduction) to explore AI and Data Visualization.

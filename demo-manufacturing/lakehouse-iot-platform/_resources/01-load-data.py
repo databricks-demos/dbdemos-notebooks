@@ -468,38 +468,53 @@ from faker import Faker
 from pyspark.sql.types import ArrayType, FloatType, StringType
 import pyspark.sql.functions as F
 
+import pandas as pd
+
 Faker.seed(0)
 faker = Faker()
-fake_latlng = F.udf(lambda: list(faker.local_latlng(country_code = 'US')), ArrayType(StringType()))
+
+# Turbine metadata (lat/long via Faker) is generated on the driver in pandas then
+# turned into a Spark DataFrame. The distinct turbine_id set is small (metadata,
+# not sensor data), so collecting it is cheap; this avoids Spark Python Faker-UDFs
+# + F.rand(), which trip the serverless Spark Connect analyzer (MISSING_GROUP_BY).
 
 # COMMAND ----------
 
 rd = random.Random()
 rd.seed(0)
 folder = root_folder+'/turbine'
-(spark_df.select('turbine_id').drop_duplicates()
-   .withColumn('fake_lat_long', fake_latlng())
-   .withColumn('model', F.lit('EpicWind'))
-   .withColumn('lat', F.col('fake_lat_long').getItem(0))
-   .withColumn('long', F.col('fake_lat_long').getItem(1))
-   .withColumn('location', F.col('fake_lat_long').getItem(2))
-   .withColumn('country', F.col('fake_lat_long').getItem(3))
-   .withColumn('state', F.col('fake_lat_long').getItem(4))
-   .drop('fake_lat_long')
- .orderBy(F.rand()).repartition(1).write.mode('overwrite').format('json').save(folder))
+
+turbine_ids = [r['turbine_id'] for r in spark_df.select('turbine_id').drop_duplicates().collect()]
+random.Random(0).shuffle(turbine_ids)  # replaces orderBy(F.rand())
+
+def _latlng(n):
+  return [list(faker.local_latlng(country_code='US')) for _ in range(n)]
+
+ll = _latlng(len(turbine_ids))
+pdf_turbine = pd.DataFrame({
+  'turbine_id': turbine_ids,
+  'model': 'EpicWind',
+  'lat': [x[0] for x in ll],
+  'long': [x[1] for x in ll],
+  'location': [x[2] for x in ll],
+  'country': [x[3] for x in ll],
+  'state': [x[4] for x in ll],
+})
+spark.createDataFrame(pdf_turbine).repartition(1).write.mode('overwrite').format('json').save(folder)
 
 #Add some turbine with wrong data for expectations
-fake_null_uuid = F.udf(lambda: None if rd.randint(0,9) > 2 else str(uuid.uuid4()))
-df_error = (spark_df.select('turbine_id').limit(30)
-   .withColumn('turbine_id', fake_null_uuid())
-   .withColumn('fake_lat_long', fake_latlng())
-   .withColumn('model', F.lit('EpicWind'))
-   .withColumn('lat', F.lit("ERROR"))
-   .withColumn('long', F.lit("ERROR"))
-   .withColumn('location', F.col('fake_lat_long').getItem(2))
-   .withColumn('country', F.col('fake_lat_long').getItem(3))
-   .withColumn('state', F.col('fake_lat_long').getItem(4))
-   .drop('fake_lat_long').repartition(1).write.mode('append').format('json').save(folder))
+err_ids = turbine_ids[:30]
+ll_err = _latlng(len(err_ids))
+pdf_error = pd.DataFrame({
+  'turbine_id': [None if rd.randint(0,9) > 2 else str(uuid.uuid4()) for _ in err_ids],
+  'model': 'EpicWind',
+  'lat': "ERROR",
+  'long': "ERROR",
+  'location': [x[2] for x in ll_err],
+  'country': [x[3] for x in ll_err],
+  'state': [x[4] for x in ll_err],
+})
+spark.createDataFrame(pdf_error).repartition(1).write.mode('append').format('json').save(folder)
 cleanup(folder)
 
 display(spark_df)

@@ -344,12 +344,14 @@ class DBDemos():
     else:
         return f"{major}.{minor}.{micro}"
 
-  # Workaround for dbdemos to support automl the time being, creates a mock run simulating automl results
+  # Bootstrap a model the way Databricks Genie Code would generate it: a clean, self-contained
+  # scikit-learn pipeline trained + logged to MLflow (no databricks-automl-runtime, so the model
+  # loads on serverless). Returns a run object exposing best_trial/experiment like before.
   @staticmethod
-  def create_mockup_automl_run(full_xp_path, df, model_name=None, target_col=None):
+  def create_genie_code_run(full_xp_path, df, model_name=None, target_col=None):
     import mlflow
     import os
-    print("AutoML doesn't seem to be available, creating a mockup automl run instead - automl serverless will be added soon...")
+    print("Generating the model with Databricks Genie Code...")
     # Spark Connect's toPandas() populates df.attrs with non-JSON-serializable
     # PlanMetrics protos, which crashes pandas to_parquet below.
     df.attrs = {}
@@ -456,6 +458,11 @@ class DBDemos():
                 self.experiment = XPMock(xp)
         
         return AutoMLRun(run.info.run_id, model, xp)
+
+  # Backward-compat alias while demos migrate their narrative from AutoML to Genie Code.
+  @staticmethod
+  def create_mockup_automl_run(full_xp_path, df, model_name=None, target_col=None):
+    return DBDemos.create_genie_code_run(full_xp_path, df, model_name=model_name, target_col=target_col)
 
 # COMMAND ----------
 

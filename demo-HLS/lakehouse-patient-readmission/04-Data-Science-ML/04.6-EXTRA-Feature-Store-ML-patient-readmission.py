@@ -262,7 +262,7 @@ age_at_enc_feature_lookups = [
 
 fs = FeatureEngineeringClient()
 training_set = fs.create_training_set(
-  labels,
+  df = labels,
   feature_lookups = patient_feature_lookups + encounter_feature_lookups + age_at_enc_feature_lookups,
   label = "30_DAY_READMISSION",
   exclude_columns = ['START', 'STOP']

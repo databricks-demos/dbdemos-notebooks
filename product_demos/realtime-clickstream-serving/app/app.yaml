@@ -1,0 +1,4 @@
+command:
+  - sh
+  - -c
+  - python preflight.py; streamlit run app.py

@@ -4,9 +4,9 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/clickstream-direct-to-lakehouse/zerobus-delta-architecture.png" width="100%" alt="Clickstream events flow through Zerobus into a Delta events table, and Structured Streaming sessionizes them into a sessions table"/>
 # MAGIC
-# MAGIC Your application talks to Zerobus and records land directly in a Unity Catalog Delta table. No message bus, no separate Spark ingestion job.
+# MAGIC Zerobus enables direct ingestion of application events into a Unity Catalog Delta table, eliminating the need for an intermediate message bus or separate Spark ingestion job.
 # MAGIC
-# MAGIC This notebook stands in for your application: it generates synthetic clickstream events and streams them through the Zerobus REST API into the `events` table from the previous notebook. In production the same client lives in your service or a thin sidecar - see the production note at the end.
+# MAGIC This notebook simulates an application client by generating synthetic clickstream events and streaming them to the target events table via the Zerobus REST API. For production deployment patterns, refer to the architectural notes at the end of this notebook.
 
 # COMMAND ----------
 
@@ -17,12 +17,11 @@ dbutils.widgets.text("duration_seconds",  "150",                         "Second
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 1/ When to Use This Pattern
-# MAGIC
-# MAGIC - Production application events, clickstream, and IoT or device telemetry that need to land in the lakehouse continuously and stay queryable within seconds
-# MAGIC - High-volume, variable-throughput streams where the lakehouse is the destination and you'd rather not run a broker plus a separate ingestion job
-# MAGIC - Replacing custom S3-batch or file-drop pipelines (write JSON to S3, then COPY INTO) with direct ingestion
-# MAGIC - Greenfield ingestion where reaching the lakehouse would otherwise mean standing up a message bus and a Spark consumer
+# MAGIC ## 1/ Target Use Cases
+# MAGIC * **Real-Time Telemetry:** Continuous ingestion of application events, clickstream data, and IoT/device telemetry requiring sub-minute query availability.
+# MAGIC * **Brokerless Ingestion:** High-volume, variable-throughput streaming directly to the lakehouse without managing a dedicated message broker or decoupled ingestion jobs.
+# MAGIC * **Pipeline Consolidation:** Replacing multi-stage batch pipelines (e.g., staging JSON in S3 followed by `COPY INTO`) with low-latency direct writes.
+# MAGIC * **Greenfield Architecture:** Streamlining new ingestion paths by bypassing traditional message bus and Spark consumer configurations.
 
 # COMMAND ----------
 
@@ -31,18 +30,17 @@ dbutils.widgets.text("duration_seconds",  "150",                         "Second
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2/ Authentication and One-Time Setup
+# MAGIC ## 2/ Authentication and Configuration
+# MAGIC Zerobus authenticates via OAuth 2.0 Machine-to-Machine (M2M) using a Databricks service principal. The service principal requires `USE CATALOG`, `USE SCHEMA`, and `SELECT, MODIFY` privileges on the target table. To prevent credential exposure, the `client_secret` is retrieved via Databricks secret scopes.
 # MAGIC
-# MAGIC Zerobus authenticates with OAuth M2M using a service principal that holds `USE CATALOG`, `USE SCHEMA`, and `SELECT` and `MODIFY` on the target table. The `client_id` is the service principal's application_id, and the `client_secret` is read from a secret scope, so it never appears in the notebook. See [Secret management](https://docs.databricks.com/aws/en/security/secrets/).
-# MAGIC
-# MAGIC Setup steps:
-# MAGIC 1. Create a service principal in your workspace and generate an OAuth secret for it (admin-only). Copy its application_id and the secret value.
-# MAGIC 2. From your terminal, store the secret with the Databricks CLI ([install](https://docs.databricks.com/aws/en/dev-tools/cli/install), [authenticate](https://docs.databricks.com/aws/en/dev-tools/cli/authentication)). `put-secret` prompts for the value:
-# MAGIC    ```
+# MAGIC ### Setup Instructions
+# MAGIC 1. **Create Service Principal:** Provision a service principal and generate an OAuth secret within your Databricks workspace (administrative privileges required). Retain the `application_id` and secret value.
+# MAGIC 2. **Configure Secret Scope:** Use the Databricks CLI to store the secret securely:
+# MAGIC    ```bash
 # MAGIC    databricks secrets create-scope zerobus-demo
 # MAGIC    databricks secrets put-secret zerobus-demo client-secret
 # MAGIC    ```
-# MAGIC 3. Put the application_id in the `zerobus_client_id` widget and Run All. The prerequisite cell grants the service principal the privileges Zerobus needs.
+# MAGIC 3. Initialize Notebook: Input the service principal's `application_id` into the `zerobus_client_id widget`. Running the notebook automatically applies the required Unity Catalog grants.
 
 # COMMAND ----------
 
@@ -78,9 +76,9 @@ print(f"Granted USE CATALOG/SCHEMA + SELECT, MODIFY on {catalog}.{db}.events to 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 3/ Wire Up the Zerobus Client
+# MAGIC ## 3/ Client Initialization
 # MAGIC
-# MAGIC Two things to assemble before we can write a record: the region-specific endpoint hostname, and an OAuth token Zerobus will accept. The next cell builds both.
+# MAGIC Construct the region-specific Zerobus endpoint URL and request an OAuth token containing the required Unity Catalog privilege scopes.
 
 # COMMAND ----------
 
@@ -149,9 +147,9 @@ print(f"OAuth token fetched (len={len(oauth_token)})")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 4/ Generate a Live Event Stream
+# MAGIC ## 4/ Live Event Generation
+# MAGIC Generates a synthetic, real-time event stream for a specified duration (`duration_seconds`). This simulates dynamic user sessions opening and closing. Run the downstream `02-sessionize` notebook concurrently to monitor real-time processing.
 # MAGIC
-# MAGIC We emit **current-time** events for `duration_seconds`, with users joining and going idle so sessions open and close in real time. Start `02-sessionize` first, then run this, so the two stream side by side.
 
 # COMMAND ----------
 
@@ -171,9 +169,11 @@ def make_event(user_id, ts):
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 5/ Stream Records In via the Zerobus REST API
+# MAGIC ## 5/ Ingestion via Zerobus REST API
+# MAGIC Periodically transmits JSON record arrays via HTTP `POST` to the Zerobus insertion endpoint:
+# MAGIC `{endpoint}/zerobus/v1/tables/{catalog}.{schema}.{table}/insert`
 # MAGIC
-# MAGIC Each tick POSTs a small batch of JSON to `{endpoint}/zerobus/v1/tables/{catalog}.{schema}.{table}/insert`, and the records are queryable in the Delta table within seconds.
+# MAGIC Ingested records are written directly to the Delta table and become queryable within seconds.
 
 # COMMAND ----------
 
@@ -236,7 +236,7 @@ print(f"\nDone. Streamed {sent} live events over {duration_seconds}s to {target_
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 6/ Verify the Data Landed
+# MAGIC ## 6/ Data Verification
 
 # COMMAND ----------
 
@@ -251,20 +251,20 @@ print(f"\nDone. Streamed {sent} live events over {duration_seconds}s to {target_
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 7/ Production Note
+# MAGIC ## 7/ Production Deployment Patterns
+# MAGIC For production environments, select one of the following deployment topologies:
 # MAGIC
-# MAGIC This notebook runs the producer for demo convenience. In production the Zerobus client can run in **one of three places**:
+# MAGIC 1. **Embedded SDK:** Integrate the Zerobus SDK directly into the application layer for direct writes.
+# MAGIC 2. **Sidecar Architecture:** Deploy a lightweight sidecar forwarder to accept local HTTP/JSON payloads and manage Zerobus authentication and retry logic independently.
+# MAGIC 3. **Transport Bridge:** Deploy a consumer on existing message brokers (e.g., Apache Kafka, AWS Kinesis) to forward events via Zerobus during cloud migrations.
 # MAGIC
-# MAGIC 1. **Inside your application code.** Link the SDK directly. Most direct, but your application now owns SDK upgrades, credentials, and retry logic.
-# MAGIC 2. **As a thin sidecar service.** Your application POSTs HTTP/JSON to a small forwarder (a few hundred lines) that is the Zerobus client, so your application code stays clean.
-# MAGIC 3. **As a consumer of an existing transport.** If you already have events on Kafka or Kinesis and want to migrate off, run a consumer that forwards via Zerobus. Useful as a bridge.
+# MAGIC ### Security Best Practices
+# MAGIC Always authenticate production streams using a service principal via OAuth M2M rather than interactive user identities. Apply the following minimum required privileges:
 # MAGIC
-# MAGIC Whichever you pick, authenticate with a **service principal** via OAuth M2M, not a notebook user. It needs `USE CATALOG`, `USE SCHEMA`, and `SELECT` and `MODIFY` on the events table:
-# MAGIC
-# MAGIC ```sql
-# MAGIC GRANT USE CATALOG ON CATALOG catalog TO `<sp-application-id>`;
-# MAGIC GRANT USE SCHEMA ON SCHEMA catalog.schema TO `<sp-application-id>`;
-# MAGIC GRANT SELECT, MODIFY ON TABLE catalog.schema.events TO `<sp-application-id>`;
+# MAGIC ```
+# MAGIC GRANT USE CATALOG ON CATALOG `catalog` TO `<sp-application-id>`;
+# MAGIC GRANT USE SCHEMA ON SCHEMA `catalog`.`schema` TO `<sp-application-id>`;
+# MAGIC GRANT SELECT, MODIFY ON TABLE `catalog`.`schema`.`events` TO `<sp-application-id>`;
 # MAGIC ```
 
 # COMMAND ----------

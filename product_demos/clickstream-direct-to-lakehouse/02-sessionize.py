@@ -4,11 +4,12 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/clickstream-direct-to-lakehouse/zerobus-delta-architecture.png" width="100%" alt="Clickstream events flow through Zerobus into a Delta events table, and Structured Streaming sessionizes them into a sessions table"/>
 # MAGIC
-# MAGIC The events table is fed by Zerobus, so we already have structured rows - no JSON parsing, no bronze landing layer. We deduplicate (Zerobus is at-least-once), then run a `transformWithState` (TWS) sessionization that closes a session after a configurable idle gap (default 60 seconds) per user.
+# MAGIC This pipeline implements real-time clickstream sessionization using Structured Streaming's [`transformWithState`](https://docs.databricks.com/aws/en/stateful-applications/) (TWS) API.
 # MAGIC
-# MAGIC Per-user sessions are upserted into a `sessions` table. A downstream service or dashboard can read it as plain Delta.
-# MAGIC
-# MAGIC > **Note:** [`transformWithState`](https://docs.databricks.com/aws/en/stateful-applications/) is available from DBR 16.2+.
+# MAGIC - Ingestion: Consumes pre-structured rows directly from a Delta events table.
+# MAGIC - Deduplication: Filters at-least-once delivery duplicates using bounded event-time watermarks.
+# MAGIC - Stateful Processing: Aggregates events per user and terminates sessions after a configurable inactivity gap (default: 60 seconds).
+# MAGIC - Sink: Performs incremental MERGE upserts into a downstream Delta table.
 
 # COMMAND ----------
 
@@ -31,7 +32,7 @@ dbutils.widgets.text("session_gap_seconds", "60",                          "Clos
 # MAGIC %md
 # MAGIC ## 1/ State Store Provider
 # MAGIC
-# MAGIC TWS runs only on the RocksDB state store. It's already the default on DBR 17.3+ (what this demo pins), and the next cell sets it explicitly on older runtimes. Why RocksDB? It spills to disk and handles many keys per executor without the GC pressure the in-memory store hits once you have more sessions than fit in memory.
+# MAGIC `transformWithState` requires the RocksDB state store provider (`RocksDBStateStoreProvider`). While natively enabled by default on DBR 17.3+, older runtimes require explicit configuration. RocksDB eliminates JVM garbage collection (GC) overhead by caching state on disk, allowing scale-out behavior beyond available executor memory.
 
 # COMMAND ----------
 
@@ -48,11 +49,18 @@ except Exception as e:
 # MAGIC %md
 # MAGIC ## 2/ The StatefulProcessor
 # MAGIC
-# MAGIC `transformWithState` is Spark's general-purpose stateful operator, the one you reach for when windows and the built-in aggregations fall short of your requirements. You write a `StatefulProcessor`, and Spark handles keyed state, timers, and fault-tolerant checkpointing.
+# MAGIC `transformWithState` is Spark's general-purpose stateful operator for complex logic where native windowed aggregations are insufficient. The `StatefulProcessor` manages keyed state, timers, and fault-tolerant checkpointing.
 # MAGIC
-# MAGIC Ours keeps one in-flight session per user (click count, start time, latest event time) and arms an event-time timer to close that session after `session_gap_seconds` of quiet. Two conventions to keep in mind:
-# MAGIC - Spark calls the lifecycle methods **by name**, so keep the camelCase spellings (`handleInputRows`, `handleExpiredTimer`).
-# MAGIC - The **state schema** (what you store per key) is a separate declaration from the **output schema** (what you emit).
+# MAGIC This implementation tracks one active `ValueState` struct per `user_id` containing:
+# MAGIC *   `click_count` (Long)
+# MAGIC *   `start_time_ms` (Long)
+# MAGIC *   `end_time_ms` (Long)
+# MAGIC
+# MAGIC An event-time timer triggers session emission and clears state once the watermark passes the inactivity threshold (`session_gap_seconds`).
+# MAGIC
+# MAGIC ### Key Conventions
+# MAGIC *   **Lifecycle Methods:** `init`, `handleInputRows`, and `handleExpiredTimer` are invoked by name via the Spark engine and must strictly use camelCase syntax.
+# MAGIC *   **Schema Separation:** The internal state storage schema is declared independently of the output emission schema.
 
 # COMMAND ----------
 
@@ -174,9 +182,11 @@ output_schema = (
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 3/ Stream Wiring: Deduplicate Then Sessionize
+# MAGIC ## 3/ Stream Wiring: Deduplication & Sessionization
 # MAGIC
-# MAGIC Before we sessionize, we cast `event_date` (epoch seconds) into a real timestamp, put a watermark on it, and drop duplicate `event_id`s inside that watermark.
+# MAGIC Prior to stateful tracking, the stream converts epoch integer fields to explicit timestamps to establish an event-time column. A 30-second `withWatermark` bound is applied, enabling `dropDuplicatesWithinWatermark` to execute bounded-state deduplication on `event_id`.
+# MAGIC
+# MAGIC The deduplicated stream is then partitioned by `user_id` and processed via `transformWithStateInPandas` using `Update` output mode.
 
 # COMMAND ----------
 
@@ -213,9 +223,10 @@ sessions = (
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 4/ Delta Sink: MERGE Sessions into a Table
+# MAGIC ## 4/ Delta Sink: MERGE Upserts
 # MAGIC
-# MAGIC The TWS output is MERGE-upserted into a `sessions` table, one row per user, rewritten as the session evolves and readable downstream with plain SQL. We start it as a background stream so the live view below has something to plot.
+# MAGIC The streaming output utilizes a `foreachBatch` sink to execute a SQL `MERGE` operation against the target sessions table. As user interactions evolve, session records alternate between `online` and `offline` statuses, modifying the target table idempotently rather than appending raw historical logs.
+# MAGIC
 
 # COMMAND ----------
 
@@ -248,18 +259,13 @@ q = (sessions.writeStream
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 5/ Watch Sessions Update Live
+# MAGIC ## 5/ Live Metrics Monitoring
 # MAGIC
-# MAGIC **Run `01-zerobus-producer` now, in another tab.** The cell below streams the live output and refreshes on its own. Turn it into a graph once (it then sticks in this notebook):
+# MAGIC To validate execution:
+# MAGIC 1. Execute the companion producer notebook (`01-zerobus-producer`) in a parallel tab.
+# MAGIC 2. Render the `display(sessions)` streaming DataFrame.
+# MAGIC 3. Add a **Bar Chart** visualization using `status` as the X-axis and `COUNT(user_id)` as the Y-axis to monitor session state lifecycles in real time.
 # MAGIC
-# MAGIC 1. Run the cell - the streaming result shows as a **Table**.
-# MAGIC 2. Below the result, click **+** next to the *Table* tab and choose **Visualization**.
-# MAGIC 3. **Visualization type:** `Bar`.  **X column:** `status`.  **Y column:** `user_id` with aggregation **`COUNT`**.
-# MAGIC 4. **Save.** The two bars (online vs offline) move live as sessions open and close.
-# MAGIC
-# MAGIC *(Per-user view instead: X = `user_id`, Y = `click_count`, Group/Series = `status`.)*
-# MAGIC
-# MAGIC This is the **last code cell** - it streams until you stop it. **Run All leaves it running on purpose** - click the cell's **Interrupt** (or detach the cluster) when you're done. To query the persisted table afterward: `SELECT * FROM <catalog>.<schema>.sessions`.
 
 # COMMAND ----------
 
@@ -269,13 +275,10 @@ display(sessions)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 6/ Adapt This for Your Data
+# MAGIC ## 6/ Alternative Schema Implementations
 # MAGIC
-# MAGIC The event schema in this demo (`user_id`, `event_id`, `event_date`, `platform`, `action`, `uri`) is web-clickstream-shaped, but the architecture doesn't care. The same producer + sessionization works for this, and others not limited to:
-# MAGIC
-# MAGIC - **Mobile application analytics** - substitute `device_id`, `screen`, `tap_target`
-# MAGIC - **IoT telemetry** - sessions become "device active windows," fields are `device_id`, `reading_type`, `value`
-# MAGIC - **Gaming events** - sessions become "play sessions," fields are `player_id`, `action`, `level`
-# MAGIC - **Server logs** - sessions become "request bursts," fields are `service`, `endpoint`, `latency_ms`
-# MAGIC
-# MAGIC To adapt: change the table schema in [00-setup-table]($./00-setup-table), update field names in the producer and processor. Architecture stays identical.
+# MAGIC This architecture is schema-agnostic and generalizes to any partitioned time-series workload:
+# MAGIC *   **Mobile Application Analytics:** Tracks user navigation using `device_id`, `screen`, and `tap_target`.
+# MAGIC *   **IoT Telemetry:** Monitors operational active windows using `device_id`, `reading_type`, and sensor thresholds.
+# MAGIC *   **Gaming Events:** Measures continuous play sessions partitioned by `player_id` and game state changes.
+# MAGIC *   **Server Logs:** Groups network latency or request bursts by service endpoints.

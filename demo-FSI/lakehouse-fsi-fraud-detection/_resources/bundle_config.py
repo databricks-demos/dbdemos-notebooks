@@ -282,13 +282,49 @@
                           "task_key": "create_model_serving_endpoint"
                       }
                   ]
-            }            
+            },
+            {
+                "task_key": "bundle_sample_exploration",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Data-ingestion/01.1-sdp-sql/explorations/sample_exploration",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_governance",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-Data-governance/02-UC-data-governance-ACL-fsi-fraud",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_upgrade_model",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/04-Data-Science-ML/04.4-Upgrade-to-imbalance-and-xgboost-model-fraud",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "register_model"}]
+            }
         ],
         "job_clusters": [
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "16.4.x-cpu-ml-scala2.12",
+                    "spark_version": "17.3.x-cpu-ml-scala2.13",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -317,7 +353,7 @@
     "custom_tags": {
         "ResourceClass": "SingleNode"
     },
-    "spark_version": "16.4.x-cpu-ml-scala2.12",
+    "spark_version": "17.3.x-cpu-ml-scala2.13",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
     "num_workers": 0

@@ -234,7 +234,19 @@
                           "task_key": "rule_engine"
                       }
                   ]
-            }            
+            },
+            {
+                "task_key": "bundle_sample_exploration",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Data-Ingestion/explorations/sample_exploration",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "claim_policy_sdp_pipeline"}]
+            }
         ],
         "job_clusters": [
             {
@@ -244,7 +256,7 @@
                         "min_workers": 2,
                         "max_workers": 10
                     },
-                    "spark_version": "16.4.x-cpu-ml-scala2.12",
+                    "spark_version": "17.3.x-cpu-ml-scala2.13",
                     "custom_tags": {
                         "ResourceClass": "SingleNode"
                     },
@@ -266,7 +278,7 @@
             "min_workers": 2,
             "max_workers": 10
         },
-        "spark_version": "16.4.x-cpu-ml-scala2.12",
+        "spark_version": "17.3.x-cpu-ml-scala2.13",
         "single_user_name": "{{CURRENT_USER}}",
         "data_security_mode": "SINGLE_USER",
         "runtime_engine": "STANDARD"

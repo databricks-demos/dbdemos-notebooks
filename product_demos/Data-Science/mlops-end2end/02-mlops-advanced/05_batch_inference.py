@@ -83,7 +83,7 @@
 
 # COMMAND ----------
 
-env_manager = "virtualenv" # For fe.score_batch() function - set to "local" if NOT running on Serverless AND/OR pip installing all model artifacts
+env_manager = "local" # For fe.score_batch(): "local" reuses the current environment. On Serverless, "virtualenv"/"conda" can't rebuild the model env (NoSuchFileException on the ephemeral env archive), so use "local".
 
 # COMMAND ----------
 

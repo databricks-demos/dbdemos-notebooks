@@ -245,7 +245,9 @@ def train_fn(params):
 
     model.fit(X_train, Y_train)
     signature = infer_signature(X_train, Y_train)
-    mlflow.sklearn.log_model(model, "sklearn_model", input_example=X_train.iloc[0].to_dict(), signature=signature)
+    # serialization_format="cloudpickle": mlflow 3.x defaults sklearn serialization to
+    # skops, which refuses custom/pipeline/numpy types (UntrustedTypesFoundException).
+    mlflow.sklearn.log_model(model, "sklearn_model", input_example=X_train.iloc[0].to_dict(), signature=signature, serialization_format="cloudpickle")
 
     # Log training dataset object to capture upstream data lineage
     mlflow.log_input(src_dataset, context="training-input")

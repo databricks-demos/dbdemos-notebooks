@@ -73,7 +73,7 @@ df.repartition(10).write.mode("overwrite")\
 # Partitioned Parquet (great for read_files partition inference)
 print("Creating partitioned data...")
 df.withColumn("year", F.lit("2024"))\
-  .withColumn("month", F.expr("lpad(cast(rand() * 12 + 1 as int), 2, '0')"))\
+  .withColumn("month", F.expr("lpad(cast(id % 12 + 1 as int), 2, '0')"))\
   .write.mode("overwrite")\
   .format("parquet")\
   .partitionBy("year", "month")\

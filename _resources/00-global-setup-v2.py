@@ -423,7 +423,18 @@ class DBDemos():
           # Force cloudpickle: newer mlflow / serverless runtimes default sklearn logging to
           # the skops format, which rejects the notebook-defined SafeRandomForestClassifier as
           # an "untrusted type". cloudpickle serializes the custom class without that check.
-          mlflow.sklearn.log_model(model, artifact_path="model", input_example=X_train.iloc[[0]], serialization_format="cloudpickle")
+          # Pin explicit pip_requirements so mlflow doesn't auto-infer databricks-automl-runtime
+          # (present in the build env but absent on serverless workers -> ModuleNotFoundError at
+          # load_model). The mockup only needs the core sklearn stack.
+          import sklearn, cloudpickle
+          mlflow.sklearn.log_model(
+              model, artifact_path="model", input_example=X_train.iloc[[0]],
+              serialization_format="cloudpickle",
+              pip_requirements=[
+                  f"mlflow=={mlflow.__version__}",
+                  f"scikit-learn=={sklearn.__version__}",
+                  f"cloudpickle=={cloudpickle.__version__}",
+              ])
 
         class BestTrialMock:
             def __init__(self, mlflow_run_id, model):

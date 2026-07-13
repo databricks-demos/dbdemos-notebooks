@@ -24,7 +24,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.49.0 tf-keras==2.17.0 accelerate==1.4.0 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4
+# MAGIC %pip install --upgrade databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate torchvision evaluate
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -189,7 +189,7 @@ args = TrainingArguments(
     f"/tmp/huggingface/pcb/{model_name}-finetuned",
     no_cuda=True, #Run on CPU for resnet to make it easier
     remove_unused_columns=False,
-    evaluation_strategy = "epoch",
+    eval_strategy = "epoch",
     save_strategy = "epoch",
     num_train_epochs=20,
     load_best_model_at_end=True
@@ -247,7 +247,7 @@ with mlflow.start_run(run_name="hugging_face") as run:
     
   reqs = mlflow.transformers.get_default_pip_requirements(model)
   #log the model to MLFlow
-  mlflow.pyfunc.log_model(artifact_path="model", python_model=wrapped_model, pip_requirements=reqs, signature=signature)
+  mlflow.pyfunc.log_model(name="model", python_model=wrapped_model, pip_requirements=reqs, signature=signature)
   mlflow.log_metrics(train_results.metrics)
 
 # COMMAND ----------

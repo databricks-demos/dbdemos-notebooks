@@ -13,6 +13,7 @@ dbutils.widgets.text("raw_data_location", "/demos/retail/delta_cdf", "Raw data l
 
 # COMMAND ----------
 
+from pyspark.sql import functions as F
 from faker import Faker
 import pandas as pd
 import numpy as np

@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -159,13 +159,13 @@ display(feature_df)
 
 # COMMAND ----------
 
-from databricks import feature_store
-fs = feature_store.FeatureStoreClient()
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
 
 # Drop the fs table if it was already existing to cleanup the demo state
 drop_fs_table(f"{catalog}.{db}.credit_decisioning_features")
-  
-fs.create_table(
+
+fe.create_table(
     name=f"{catalog}.{db}.credit_decisioning_features",
     primary_keys=["cust_id"],
     df=feature_df,

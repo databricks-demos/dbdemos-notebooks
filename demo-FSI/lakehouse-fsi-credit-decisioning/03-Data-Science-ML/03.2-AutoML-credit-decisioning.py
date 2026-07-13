@@ -70,7 +70,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0 scikit-learn==1.3.0
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering scikit-learn
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -98,9 +98,9 @@
 # COMMAND ----------
 
 # DBTITLE 1,Loading the training dataset from the Databricks Feature Store
-from databricks import feature_store
-fs = feature_store.FeatureStoreClient()
-features_set = fs.read_table(name=f"{catalog}.{db}.credit_decisioning_features")
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
+features_set = fe.read_table(name=f"{catalog}.{db}.credit_decisioning_features")
 display(features_set)
 
 # COMMAND ----------

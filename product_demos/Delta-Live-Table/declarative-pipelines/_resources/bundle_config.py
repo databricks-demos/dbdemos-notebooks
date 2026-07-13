@@ -161,13 +161,49 @@
                           "task_key": "init_data"
                       }
                   ]
+              },
+              {
+                  "task_key": "bundle_exploration_sql",
+                  "bundle_only": True,
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/1-sdp-sql/explorations/01-Exploring-the-Data",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "depends_on": [{"task_key": "start_sdp_pipeline"}]
+              },
+              {
+                  "task_key": "bundle_pipeline_monitoring",
+                  "bundle_only": True,
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/1-sdp-sql/explorations/02-Pipeline-event-monitoring",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "depends_on": [{"task_key": "start_sdp_pipeline"}]
+              },
+              {
+                  "task_key": "bundle_exploration_python",
+                  "bundle_only": True,
+                  "notebook_task": {
+                      "notebook_path": "{{DEMO_FOLDER}}/2-sdp-python/explorations/01-Exploring-the-Data",
+                      "source": "WORKSPACE"
+                  },
+                  "job_cluster_key": "Shared_job_cluster",
+                  "timeout_seconds": 0,
+                  "email_notifications": {},
+                  "depends_on": [{"task_key": "start_sdp_pipeline"}]
               }
           ],
           "job_clusters": [
               {
                   "job_cluster_key": "Shared_job_cluster",
                   "new_cluster": {
-                      "spark_version": "16.4.x-scala2.12",
+                      "spark_version": "17.3.x-scala2.13",
                       "spark_conf": {
                           "spark.master": "local[*, 4]",
                           "spark.databricks.cluster.profile": "singleNode"
@@ -190,7 +226,7 @@
     },
     "cluster": {
       "num_workers": 1,
-      "spark_version": "16.4.x-scala2.12",
+      "spark_version": "17.3.x-scala2.13",
       "spark_conf": {},
       "data_security_mode": "USER_ISOLATION",
       "runtime_engine": "STANDARD"

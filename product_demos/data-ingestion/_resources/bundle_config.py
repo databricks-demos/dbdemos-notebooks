@@ -67,7 +67,7 @@
     }
   ],
   "cluster": {
-      "spark_version": "16.4.x-scala2.12",
+      "spark_version": "17.3.x-scala2.13",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"

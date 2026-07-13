@@ -116,8 +116,8 @@ stream = (spark
     .writeStream
        # === Write to the delta table ===
       .format("delta")
-      .trigger(processingTime="20 seconds")
-      #.trigger(availableNow=True) --use this for serverless
+      #.trigger(processingTime="20 seconds") #real-time streaming; use availableNow on serverless
+      .trigger(availableNow=True)
       .option("checkpointLocation", volume_folder+"/checkpoints/bronze")
       .option("mergeSchema", "true")
       .outputMode("append")

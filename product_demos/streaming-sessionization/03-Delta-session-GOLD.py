@@ -116,6 +116,7 @@ def upsert_sessions(df, epoch_id):
 (sessions.writeStream
   .option("checkpointLocation", volume_folder+"/checkpoints/sessions")
   .foreachBatch(upsert_sessions)
+  .trigger(availableNow=True) #batch-complete on serverless (continuous trigger not supported)
   .start())
 
 DBDemos.wait_for_table("sessions")

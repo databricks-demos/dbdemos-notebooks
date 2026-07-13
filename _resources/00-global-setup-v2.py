@@ -17,6 +17,87 @@ import requests
 import collections
 import os
 
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### TEMPORARY MLflow serverless shim (ES-2047313)
+# MAGIC `mlflow.pyfunc.spark_udf` / `score_batch` currently crash on Serverless with
+# MAGIC `InvalidVersion: '18.x-...-photon-scala2'` because MLflow parses the sandbox
+# MAGIC runtime version assuming a `<major>.<minor>` format. This shim normalizes the
+# MAGIC runtime version at runtime so `spark_udf` works today.
+# MAGIC
+# MAGIC **This is a stopgap. Remove it once the fixed MLflow build lands (next MLflow version).**
+
+# COMMAND ----------
+
+import re, sys
+_UNCUT_MINOR = 999
+
+def _normalize_runtime_version(raw):
+    if raw is None:
+        return raw
+    parts = str(raw).split(".")
+    if not parts or not parts[0].isdigit():
+        return raw
+    major = int(parts[0]); minor = _UNCUT_MINOR
+    if len(parts) > 1:
+        m = re.match(r"(\d+)", parts[1]); minor = int(m.group(1)) if m else _UNCUT_MINOR
+    return f"{major}.{minor}"
+
+def _apply_mlflow_serverless_shim():
+    # Stopgap for ES-2047313 - safe no-op if MLflow internals aren't present.
+    # Remove once the fixed MLflow build is available on serverless.
+    try:
+        import mlflow.utils.databricks_utils as du
+    except Exception as e:
+        print(f"mlflow serverless shim skipped (mlflow not available): {e}")
+        return
+    orig = getattr(du, "_es2047313_orig", None) or du.get_dbconnect_udf_sandbox_info
+    du._es2047313_orig = orig
+    def patched(spark):
+        info = orig(spark)
+        try:
+            fixed = _normalize_runtime_version(info.runtime_version)
+            if fixed != info.runtime_version:
+                info = info.__class__(**{**info.__dict__, "runtime_version": fixed})
+        except Exception:
+            pass
+        return info
+    du.get_dbconnect_udf_sandbox_info = patched
+    for mod in list(sys.modules.values()):
+        if getattr(mod, "get_dbconnect_udf_sandbox_info", None) is orig:
+            mod.get_dbconnect_udf_sandbox_info = patched
+    try:
+        DRV = du.DatabricksRuntimeVersion
+    except Exception:
+        return
+    orig_parse = getattr(DRV, "_es2047313_orig_parse", None) or DRV.parse.__func__
+    DRV._es2047313_orig_parse = orig_parse
+    def patched_parse(cls, databricks_runtime=None):
+        try:
+            return orig_parse(cls, databricks_runtime)
+        except Exception:
+            dbr = databricks_runtime or du.get_databricks_runtime_version()
+            is_gpu = dbr.endswith("-gpu")
+            if is_gpu: dbr = dbr[:-4]
+            sp = dbr.split(".", maxsplit=2)
+            if sp[0] == "client":
+                major = int(re.match(r"(\d+)", sp[1]).group(1))
+                minor = int(re.match(r"(\d+)", sp[2]).group(1)) if len(sp) > 2 and re.match(r"(\d+)", sp[2]) else 0
+            else:
+                major = int(re.match(r"(\d+)", sp[0]).group(1))
+                minor = int(re.match(r"(\d+)", sp[1]).group(1)) if len(sp) > 1 and re.match(r"(\d+)", sp[1]) else _UNCUT_MINOR
+            return cls(sp[0] == "client", major, minor, is_gpu)
+    DRV.parse = classmethod(patched_parse)
+
+try:
+    _apply_mlflow_serverless_shim()
+    print("mlflow serverless shim applied (ES-2047313 - remove once mlflow is fixed)")
+except Exception as e:
+    print(f"mlflow serverless shim not applied: {e}")
+
+# COMMAND ----------
+
 
 class DBDemos():
   @staticmethod

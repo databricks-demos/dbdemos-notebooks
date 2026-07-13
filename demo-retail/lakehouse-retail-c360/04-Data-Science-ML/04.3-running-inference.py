@@ -43,7 +43,7 @@ mlflow.set_registry_uri("databricks-uc")
 #                                                                                                Alias
 #                                                                                  Model name       |
 #                                                                                        |          |
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='virtualenv', result_type='long')
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='local', result_type='long')
 # Note: virtualenv will recreate an env from scratch which can take some time, but prevent any version issue. If you're using the same compute as for training, you can remove it to use the local env instead (just install the lib from the requirements.txt file as below)
 #We can use the function in SQL
 spark.udf.register("predict_churn", predict_churn_udf)

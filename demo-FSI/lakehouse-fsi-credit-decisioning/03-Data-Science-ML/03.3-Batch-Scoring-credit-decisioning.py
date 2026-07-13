@@ -57,7 +57,7 @@ loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}
 features = loaded_model.metadata.get_input_schema().input_names()
 
 underbanked_df = spark.table("credit_decisioning_features").fillna(0) \
-                   .withColumn("prediction", loaded_model(F.struct(*features))).cache()
+                   .withColumn("prediction", loaded_model(F.struct(*features)))
 
 display(underbanked_df)
 

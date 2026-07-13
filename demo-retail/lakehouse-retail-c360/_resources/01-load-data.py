@@ -168,7 +168,7 @@ df_customers = get_df(133, 12*30).withColumn("creation_date", fake_date_old())
 for i in range(1, 24):
   df_customers = df_customers.union(get_df(2000+i*200, 24-i))
 
-df_customers = df_customers.cache()
+df_customers = df_customers
 
 ids = df_customers.select("id").collect()
 ids = [r["id"] for r in ids]
@@ -208,7 +208,7 @@ orders = orders.withColumn("id", fake_id())
 orders = orders.withColumn("transaction_date", fake_date())
 orders = orders.withColumn("item_count", F.round(F.rand()*2)+1)
 orders = orders.withColumn("amount", F.col("item_count")*F.round(F.rand()*30+10))
-orders = orders.cache()
+orders = orders
 orders.repartition(10).write.format("json").mode("overwrite").save(folder+"/orders")
 cleanup_folder(folder+"/orders")  
 
@@ -233,7 +233,7 @@ actions = actions.withColumn("date", fake_date())
 actions = actions.withColumn("action", fake_action())
 actions = actions.withColumn("session_id", fake_id())
 actions = actions.withColumn("url", fake_uri())
-actions = actions.cache()
+actions = actions
 actions.write.format("csv").option("header", True).mode("overwrite").save(folder+"/events")
 cleanup_folder(folder+"/events")  
 

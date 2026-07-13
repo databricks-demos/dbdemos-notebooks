@@ -39,44 +39,53 @@ except:
   print(f"folder doesn't exists, generating the data under {volume_folder}...")
   from pyspark.sql import functions as F
   from faker import Faker
-  from collections import OrderedDict 
+  import pandas as pd
+  import numpy as np
   import uuid
   fake = Faker()
-  import random
 
+  # Generate all fake data with Faker in pandas (driver-side), then create Spark
+  # DataFrames. Spark Python Faker-UDFs + non-deterministic columns trip the
+  # serverless Spark Connect analyzer with a spurious [MISSING_GROUP_BY] on write.
+  # A shared integer "cust_key" keeps the transaction->customer join deterministic.
+  op_vals = ["APPEND", "DELETE", "UPDATE", None]
+  op_p = np.array([0.5, 0.1, 0.3, 0.01]); op_p = op_p / op_p.sum()
 
-  fake_firstname = F.udf(fake.first_name)
-  fake_lastname = F.udf(fake.last_name)
-  fake_email = F.udf(fake.ascii_company_email)
-  fake_date = F.udf(lambda:fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S"))
-  fake_address = F.udf(fake.address)
-  operations = OrderedDict([("APPEND", 0.5),("DELETE", 0.1),("UPDATE", 0.3),(None, 0.01)])
-  fake_operation = F.udf(lambda:fake.random_elements(elements=operations, length=1)[0])
-  fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
+  def fake_ids(n):
+    # ~2% None, mirroring the original uuid generator
+    return [str(uuid.uuid4()) if np.random.rand() < 0.98 else None for _ in range(n)]
 
-  # Keep the deterministic spark.range key ("cust_key") so transactions can join to
-  # real customer ids without monotonically_increasing_id() (non-deterministic and
-  # unsupported by the serverless Spark Connect analyzer when joined across DataFrames).
-  df = spark.range(0, 100000).repartition(100).withColumnRenamed("id", "cust_key")
-  df = df.withColumn("id", fake_id())
-  df = df.withColumn("firstname", fake_firstname())
-  df = df.withColumn("lastname", fake_lastname())
-  df = df.withColumn("email", fake_email())
-  df = df.withColumn("address", fake_address())
-  df = df.withColumn("operation", fake_operation())
-  df_customers = df.withColumn("operation_date", fake_date())
+  def dates(n):
+    return [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(n)]
+
+  N_CUST = 100000
+  pdf_customers = pd.DataFrame({
+    "cust_key": range(N_CUST),
+    "id": fake_ids(N_CUST),
+    "firstname": [fake.first_name() for _ in range(N_CUST)],
+    "lastname": [fake.last_name() for _ in range(N_CUST)],
+    "email": [fake.ascii_company_email() for _ in range(N_CUST)],
+    "address": [fake.address().replace('\n', ' ') for _ in range(N_CUST)],
+    "operation": np.random.choice(op_vals, N_CUST, p=op_p),
+    "operation_date": dates(N_CUST),
+  })
+  df_customers = spark.createDataFrame(pdf_customers)
   df_customers.drop("cust_key").repartition(100).write.format("json").mode("overwrite").save(volume_folder+"/customers")
 
   # customer_id lookup keyed on the deterministic range key
   customers_ids = df_customers.select(F.col("cust_key"), F.col("id").alias("customer_id"))
 
-  df = spark.range(0, 10000).repartition(20).withColumnRenamed("id", "cust_key")
-  df = df.withColumn("id", fake_id())
-  df = df.withColumn("transaction_date", fake_date())
-  df = df.withColumn("amount", F.round(F.rand()*1000))
-  df = df.withColumn("item_count", F.round(F.rand()*10))
-  df = df.withColumn("operation", fake_operation())
-  df = df.withColumn("operation_date", fake_date())
+  N_TX = 10000
+  pdf_tx = pd.DataFrame({
+    "cust_key": range(N_TX),
+    "id": fake_ids(N_TX),
+    "transaction_date": dates(N_TX),
+    "amount": np.round(np.random.rand(N_TX) * 1000),
+    "item_count": np.round(np.random.rand(N_TX) * 10),
+    "operation": np.random.choice(op_vals, N_TX, p=op_p),
+    "operation_date": dates(N_TX),
+  })
+  df = spark.createDataFrame(pdf_tx)
   # deterministic join: transaction range key 0..9999 -> same customer range key
   df = df.join(customers_ids, "cust_key").drop("cust_key")
   df.repartition(10).write.format("json").mode("overwrite").save(volume_folder+"/transactions")

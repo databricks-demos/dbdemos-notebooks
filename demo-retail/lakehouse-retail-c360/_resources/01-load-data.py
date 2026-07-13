@@ -133,45 +133,55 @@ fake = Faker()
 import random
 from datetime import datetime, timedelta
 
-fake_firstname = F.udf(fake.first_name)
-fake_lastname = F.udf(fake.last_name)
-fake_email = F.udf(fake.ascii_company_email)
+import pandas as pd
+import numpy as np
 
-def fake_date_between(months=0):
-  start = datetime.now() - timedelta(days=30*months)
-  return F.udf(lambda: fake.date_between_dates(date_start=start, date_end=start + timedelta(days=30)).strftime("%m-%d-%Y %H:%M:%S"))
-
-fake_date = F.udf(lambda:fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S"))
-fake_date_old = F.udf(lambda:fake.date_between_dates(date_start=datetime(2012,1,1), date_end=datetime(2015,12,31)).strftime("%m-%d-%Y %H:%M:%S"))
-fake_address = F.udf(fake.address)
-canal = OrderedDict([("WEBAPP", 0.5),("MOBILE", 0.1),("PHONE", 0.3),(None, 0.01)])
-fake_canal = F.udf(lambda:fake.random_elements(elements=canal, length=1)[0])
-fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
+# Generate all fake data with Faker in pandas (driver-side), then create Spark
+# DataFrames. Spark Python Faker-UDFs + non-deterministic columns (rand,
+# monotonically_increasing_id) trip the serverless Spark Connect analyzer with a
+# spurious MISSING_GROUP_BY on write; pandas + createDataFrame is deterministic
+# and serverless-safe.
+canal_vals = ["WEBAPP", "MOBILE", "PHONE", None]
+canal_p = np.array([0.5, 0.1, 0.3, 0.01]); canal_p = canal_p / canal_p.sum()
 countries = ['FR', 'USA', 'SPAIN']
-fake_country = F.udf(lambda: countries[random.randint(0,2)])
 
-def get_df(size, month):
-  df = spark.range(0, size).repartition(10)
-  df = df.withColumn("id", fake_id())
-  df = df.withColumn("firstname", fake_firstname())
-  df = df.withColumn("lastname", fake_lastname())
-  df = df.withColumn("email", fake_email())
-  df = df.withColumn("address", fake_address())
-  df = df.withColumn("canal", fake_canal())
-  df = df.withColumn("country", fake_country())  
-  df = df.withColumn("creation_date", fake_date_between(month)())
-  df = df.withColumn("last_activity_date", fake_date())
-  df = df.withColumn("gender", F.round(F.rand()+0.2))
-  return df.withColumn("age_group", F.round(F.rand()*10))
+def _fake_id(n):
+  # ~2% None to mimic the original uuid generator
+  return [str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None for _ in range(n)]
 
-df_customers = get_df(133, 12*30).withColumn("creation_date", fake_date_old())
+def _date_between(n, months):
+  start = datetime.now() - timedelta(days=30*months)
+  return [fake.date_between_dates(date_start=start, date_end=start + timedelta(days=30)).strftime("%m-%d-%Y %H:%M:%S") for _ in range(n)]
+
+def _date_this_month(n):
+  return [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(n)]
+
+def get_pdf(size, month):
+  return pd.DataFrame({
+    "id": _fake_id(size),
+    "firstname": [fake.first_name() for _ in range(size)],
+    "lastname": [fake.last_name() for _ in range(size)],
+    "email": [fake.ascii_company_email() for _ in range(size)],
+    "address": [fake.address().replace('\n', ' ') for _ in range(size)],
+    "canal": np.random.choice(canal_vals, size, p=canal_p),
+    "country": np.random.choice(countries, size),
+    "creation_date": _date_between(size, month),
+    "last_activity_date": _date_this_month(size),
+    "gender": np.random.randint(0, 2, size),
+    "age_group": np.random.randint(0, 11, size),
+  })
+
+# First cohort: oldest customers (creation_date 2012-2015)
+pdf_first = get_pdf(133, 12*30)
+pdf_first["creation_date"] = [fake.date_between_dates(date_start=datetime(2012,1,1), date_end=datetime(2015,12,31)).strftime("%m-%d-%Y %H:%M:%S") for _ in range(len(pdf_first))]
+pdfs = [pdf_first]
 for i in range(1, 24):
-  df_customers = df_customers.union(get_df(2000+i*200, 24-i))
+  pdfs.append(get_pdf(2000+i*200, 24-i))
+pdf_customers = pd.concat(pdfs, ignore_index=True)
 
-df_customers = df_customers
+df_customers = spark.createDataFrame(pdf_customers)
 
-ids = df_customers.select("id").collect()
-ids = [r["id"] for r in ids]
+ids = pdf_customers["id"].tolist()
 
 
 # COMMAND ----------
@@ -203,14 +213,19 @@ print(f"Generated {len(order_user_ids)} orders and  {len(action_user_ids)} actio
 # COMMAND ----------
 
 # DBTITLE 1,order data
-orders = spark.createDataFrame([(i,) for i in order_user_ids], ['user_id'])
-orders = orders.withColumn("id", fake_id())
-orders = orders.withColumn("transaction_date", fake_date())
-orders = orders.withColumn("item_count", F.round(F.rand()*2)+1)
-orders = orders.withColumn("amount", F.col("item_count")*F.round(F.rand()*30+10))
-orders = orders
+# Build all fake columns in pandas (serverless-safe, avoids Spark Faker-UDFs).
+n_orders = len(order_user_ids)
+item_count = np.round(np.random.rand(n_orders)*2) + 1
+pdf_orders = pd.DataFrame({
+  "user_id": order_user_ids,
+  "id": _fake_id(n_orders),
+  "transaction_date": _date_this_month(n_orders),
+  "item_count": item_count,
+  "amount": item_count * (np.round(np.random.rand(n_orders)*30 + 10)),
+})
+orders = spark.createDataFrame(pdf_orders)
 orders.repartition(10).write.format("json").mode("overwrite").save(folder+"/orders")
-cleanup_folder(folder+"/orders")  
+cleanup_folder(folder+"/orders")
 
 # COMMAND ----------
 
@@ -218,24 +233,24 @@ cleanup_folder(folder+"/orders")
 #Website interaction
 import re
 
-platform = OrderedDict([("ios", 0.5),("android", 0.1),("other", 0.3),(None, 0.01)])
-fake_platform = F.udf(lambda:fake.random_elements(elements=platform, length=1)[0])
+platform_vals = ["ios", "android", "other", None]
+platform_p = np.array([0.5, 0.1, 0.3, 0.01]); platform_p = platform_p / platform_p.sum()
+action_vals = ["view", "log", "click", None]
+action_p = np.array([0.5, 0.1, 0.3, 0.01]); action_p = action_p / action_p.sum()
 
-action_type = OrderedDict([("view", 0.5),("log", 0.1),("click", 0.3),(None, 0.01)])
-fake_action = F.udf(lambda:fake.random_elements(elements=action_type, length=1)[0])
-fake_uri = F.udf(lambda:re.sub(r'https?:\/\/.*?\/', "https://databricks.com/", fake.uri()))
-
-
-actions = spark.createDataFrame([(i,) for i in order_user_ids], ['user_id']).repartition(20)
-actions = actions.withColumn("event_id", fake_id())
-actions = actions.withColumn("platform", fake_platform())
-actions = actions.withColumn("date", fake_date())
-actions = actions.withColumn("action", fake_action())
-actions = actions.withColumn("session_id", fake_id())
-actions = actions.withColumn("url", fake_uri())
-actions = actions
+n_actions = len(order_user_ids)
+pdf_actions = pd.DataFrame({
+  "user_id": order_user_ids,
+  "event_id": _fake_id(n_actions),
+  "platform": np.random.choice(platform_vals, n_actions, p=platform_p),
+  "date": _date_this_month(n_actions),
+  "action": np.random.choice(action_vals, n_actions, p=action_p),
+  "session_id": _fake_id(n_actions),
+  "url": [re.sub(r'https?:\/\/.*?\/', "https://databricks.com/", fake.uri()) for _ in range(n_actions)],
+})
+actions = spark.createDataFrame(pdf_actions).repartition(20)
 actions.write.format("csv").option("header", True).mode("overwrite").save(folder+"/events")
-cleanup_folder(folder+"/events")  
+cleanup_folder(folder+"/events")
 
 # COMMAND ----------
 

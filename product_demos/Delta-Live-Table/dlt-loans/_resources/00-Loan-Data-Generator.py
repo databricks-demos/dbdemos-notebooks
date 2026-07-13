@@ -76,74 +76,74 @@ cleanup_folder(output_path+'/ref_accounting_treatment')
 # COMMAND ----------
 
 from faker import Faker
-from collections import OrderedDict 
-import pyspark.sql.functions as F
-import uuid
-import random
+import pandas as pd
+import numpy as np
 
 fake = Faker()
-base_rates = OrderedDict([("ZERO", 0.5),("UKBRBASE", 0.1),("FDTR", 0.3),(None, 0.01)])
-base_rate = F.udf(lambda:fake.random_elements(elements=base_rates, length=1)[0])
-fake_country_code = F.udf(fake.country_code)
 
-fake_date = F.udf(lambda:fake.date_time_between(start_date="-2y", end_date="+0y").strftime("%m-%d-%Y %H:%M:%S"))
-fake_date_future = F.udf(lambda:fake.date_time_between(start_date="+0y", end_date="+2y").strftime("%m-%d-%Y %H:%M:%S"))
-fake_date_current = F.udf(lambda:fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S"))
-def random_choice(enum_list):
-  return F.udf(lambda:random.choice(enum_list))
+# Generate the fake data with Faker in pandas (driver-side), then create a Spark
+# DataFrame. Spark Python UDFs + non-deterministic columns (F.rand) trip the
+# serverless Spark Connect analyzer (spurious MISSING_GROUP_BY on write); a
+# materialized createDataFrame is deterministic and serverless-safe.
+_type_values = ["bonds","call","cd","credit_card","current","depreciation","internet_only","ira",
+        "isa","money_market","non_product","deferred","expense","income","intangible","prepaid_card",
+        "provision","reserve","suspense","tangible","non_deferred","retail_bonds","savings",
+        "time_deposit","vostro","other","amortisation"]
+_status_values = ["active", "cancelled", "cancelled_payout_agreed", "transactional", "other"]
+_guarantee_values = ["repo", "covered_bond", "derivative", "none", "other"]
+_encumbrance_values = ["be_pf", "bg_dif", "hr_di", "cy_dps", "cz_dif", "dk_gdfi", "ee_dgs", "fi_dgf", "fr_fdg",  "gb_fscs",
+                       "de_edb", "de_edo", "de_edw", "gr_dgs", "hu_ndif", "ie_dgs", "it_fitd", "lv_dgf", "lt_vi",
+                       "lu_fgdl", "mt_dcs", "nl_dgs", "pl_bfg", "pt_fgd", "ro_fgdb", "sk_dpf", "si_dgs", "es_fgd",
+                       "se_ndo", "us_fdic"]
+_purpose_values = ['admin','annual_bonus_accruals','benefit_in_kind','capital_gain_tax','cash_management','cf_hedge','ci_service',
+                  'clearing','collateral','commitments','computer_and_it_cost','corporation_tax','credit_card_fee','critical_service','current_account_fee',
+                  'custody','employee_stock_option','dealing_revenue','dealing_rev_deriv','dealing_rev_deriv_nse','dealing_rev_fx','dealing_rev_fx_nse',
+                  'dealing_rev_sec','dealing_rev_sec_nse','deposit','derivative_fee','dividend','div_from_cis','div_from_money_mkt','donation','employee',
+                  'escrow','fees','fine','firm_operating_expenses','firm_operations','fx','goodwill','insurance_fee','intra_group_fee','investment_banking_fee',
+                  'inv_in_subsidiary','investment_property','interest','int_on_bond_and_frn','int_on_bridging_loan','int_on_credit_card','int_on_ecgd_lending',
+                  'int_on_deposit','int_on_derivative','int_on_deriv_hedge','int_on_loan_and_adv','int_on_money_mkt','int_on_mortgage','int_on_sft','ips',
+                  'loan_and_advance_fee','ni_contribution','manufactured_dividend','mortgage_fee','non_life_ins_premium','occupancy_cost','operational',
+                  'operational_excess','operational_escrow','other','other_expenditure','other_fs_fee','other_non_fs_fee','other_social_contrib',
+                  'other_staff_rem','other_staff_cost','overdraft_fee','own_property','pension','ppe','prime_brokerage','property','recovery',
+                  'redundancy_pymt','reference','reg_loss','regular_wages','release','rent','restructuring','retained_earnings','revaluation',
+                  'revenue_reserve','share_plan','staff','system','tax','unsecured_loan_fee','write_off']
+# base_rate: OrderedDict-weighted pick, keeps the small None probability
+_base_rate_values = ["ZERO", "UKBRBASE", "FDTR", None]
+_base_rate_probs = np.array([0.5, 0.1, 0.3, 0.01]); _base_rate_probs = _base_rate_probs / _base_rate_probs.sum()
 
-fake.date_time_between(start_date="-10y", end_date="+30y")
+def _fake_dates(n, start, end):
+  return [fake.date_time_between(start_date=start, end_date=end).strftime("%m-%d-%Y %H:%M:%S") for _ in range(n)]
 
 def generate_transactions(num, folder, file_count, mode):
-  (spark.range(0,num)
-  .withColumn("acc_fv_change_before_taxes", (F.rand()*1000+100).cast('int'))
-  .withColumn("purpose", (F.rand()*1000+100).cast('int'))
-
-  .withColumn("accounting_treatment_id", (F.rand()*6).cast('int'))
-  .withColumn("accrued_interest", (F.rand()*100+100).cast('int'))
-  .withColumn("arrears_balance", (F.rand()*100+100).cast('int'))
-  .withColumn("base_rate", base_rate())
-  .withColumn("behavioral_curve_id", (F.rand()*6).cast('int'))
-  .withColumn("cost_center_code", fake_country_code())
-  .withColumn("country_code", fake_country_code())
-  .withColumn("date", fake_date())
-  .withColumn("end_date", fake_date_future())
-  .withColumn("next_payment_date", fake_date_current())
-  .withColumn("first_payment_date", fake_date_current())
-  .withColumn("last_payment_date", fake_date_current())
-  .withColumn("behavioral_curve_id", (F.rand()*6).cast('int'))
-  .withColumn("count", (F.rand()*500).cast('int'))
-  .withColumn("arrears_balance", (F.rand()*500).cast('int'))
-  .withColumn("balance", (F.rand()*500-30).cast('int'))
-  .withColumn("imit_amount", (F.rand()*500).cast('int'))
-  .withColumn("minimum_balance_eur", (F.rand()*500).cast('int'))
-  .withColumn("type", random_choice([
-          "bonds","call","cd","credit_card","current","depreciation","internet_only","ira",
-          "isa","money_market","non_product","deferred","expense","income","intangible","prepaid_card",
-          "provision","reserve","suspense","tangible","non_deferred","retail_bonds","savings",
-          "time_deposit","vostro","other","amortisation"
-        ])())
-  .withColumn("status", random_choice(["active", "cancelled", "cancelled_payout_agreed", "transactional", "other"])())
-  .withColumn("guarantee_scheme", random_choice(["repo", "covered_bond", "derivative", "none", "other"])())
-  .withColumn("encumbrance_type", random_choice(["be_pf", "bg_dif", "hr_di", "cy_dps", "cz_dif", "dk_gdfi", "ee_dgs", "fi_dgf", "fr_fdg",  "gb_fscs",
-                                                 "de_edb", "de_edo", "de_edw", "gr_dgs", "hu_ndif", "ie_dgs", "it_fitd", "lv_dgf", "lt_vi",
-                                                 "lu_fgdl", "mt_dcs", "nl_dgs", "pl_bfg", "pt_fgd", "ro_fgdb", "sk_dpf", "si_dgs", "es_fgd",
-                                                 "se_ndo", "us_fdic"])())
-  .withColumn("purpose", random_choice(['admin','annual_bonus_accruals','benefit_in_kind','capital_gain_tax','cash_management','cf_hedge','ci_service',
-                    'clearing','collateral','commitments','computer_and_it_cost','corporation_tax','credit_card_fee','critical_service','current_account_fee',
-                    'custody','employee_stock_option','dealing_revenue','dealing_rev_deriv','dealing_rev_deriv_nse','dealing_rev_fx','dealing_rev_fx_nse',
-                    'dealing_rev_sec','dealing_rev_sec_nse','deposit','derivative_fee','dividend','div_from_cis','div_from_money_mkt','donation','employee',
-                    'escrow','fees','fine','firm_operating_expenses','firm_operations','fx','goodwill','insurance_fee','intra_group_fee','investment_banking_fee',
-                    'inv_in_subsidiary','investment_property','interest','int_on_bond_and_frn','int_on_bridging_loan','int_on_credit_card','int_on_ecgd_lending',
-                    'int_on_deposit','int_on_derivative','int_on_deriv_hedge','int_on_loan_and_adv','int_on_money_mkt','int_on_mortgage','int_on_sft','ips',
-                    'loan_and_advance_fee','ni_contribution','manufactured_dividend','mortgage_fee','non_life_ins_premium','occupancy_cost','operational',
-                    'operational_excess','operational_escrow','other','other_expenditure','other_fs_fee','other_non_fs_fee','other_social_contrib',
-                    'other_staff_rem','other_staff_cost','overdraft_fee','own_property','pension','ppe','prime_brokerage','property','recovery',
-                    'redundancy_pymt','reference','reg_loss','regular_wages','release','rent','restructuring','retained_earnings','revaluation',
-                    'revenue_reserve','share_plan','staff','system','tax','unsecured_loan_fee','write_off'])())
-  ).repartition(file_count).write.format('json').mode(mode).save(folder)
+  pdf = pd.DataFrame({
+    "id": range(num),
+    "acc_fv_change_before_taxes": (np.random.rand(num)*1000+100).astype('int'),
+    "accounting_treatment_id": (np.random.rand(num)*6).astype('int'),
+    "accrued_interest": (np.random.rand(num)*100+100).astype('int'),
+    "base_rate": np.random.choice(_base_rate_values, num, p=_base_rate_probs),
+    "behavioral_curve_id": (np.random.rand(num)*6).astype('int'),
+    "cost_center_code": [fake.country_code() for _ in range(num)],
+    "country_code": [fake.country_code() for _ in range(num)],
+    "date": _fake_dates(num, "-2y", "+0y"),
+    "end_date": _fake_dates(num, "+0y", "+2y"),
+    "next_payment_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(num)],
+    "first_payment_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(num)],
+    "last_payment_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(num)],
+    "count": (np.random.rand(num)*500).astype('int'),
+    "arrears_balance": (np.random.rand(num)*500).astype('int'),
+    "balance": (np.random.rand(num)*500-30).astype('int'),
+    "imit_amount": (np.random.rand(num)*500).astype('int'),
+    "minimum_balance_eur": (np.random.rand(num)*500).astype('int'),
+    "type": np.random.choice(_type_values, num),
+    "status": np.random.choice(_status_values, num),
+    "guarantee_scheme": np.random.choice(_guarantee_values, num),
+    "encumbrance_type": np.random.choice(_encumbrance_values, num),
+    "purpose": np.random.choice(_purpose_values, num),
+  })
+  (spark.createDataFrame(pdf)
+    .repartition(file_count).write.format('json').mode(mode).save(folder))
   cleanup_folder(output_path+'/raw_transactions')
-  
+
 generate_transactions(10000, output_path+'/raw_transactions', 10, "overwrite")
 
 # COMMAND ----------

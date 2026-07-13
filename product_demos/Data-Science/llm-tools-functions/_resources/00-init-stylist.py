@@ -30,41 +30,37 @@ except Exception as e:
 if not data_exists:
     from pyspark.sql import functions as F
     from faker import Faker
-    from collections import OrderedDict 
+    import pandas as pd
+    import numpy as np
     import uuid
     fake = Faker()
-    import random
     from datetime import datetime, timedelta
 
-    fake_firstname = F.udf(fake.first_name)
-    fake_lastname = F.udf(fake.last_name)
-    fake_email = F.udf(fake.ascii_company_email)
-
-    def fake_date_between(months=0):
-        start = datetime.now() - timedelta(days=30*months)
-        return F.udf(lambda: fake.date_between_dates(date_start=start, date_end=start + timedelta(days=30)).strftime("%m-%d-%Y %H:%M:%S"))
-
-    fake_date = F.udf(lambda:fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S"))
-    fake_date_old = F.udf(lambda:fake.date_between_dates(date_start=datetime(2012,1,1), date_end=datetime(2015,12,31)).strftime("%m-%d-%Y %H:%M:%S"))
-    fake_address = F.udf(fake.address)
-    canal = OrderedDict([("WEBAPP", 0.5),("MOBILE", 0.1),("PHONE", 0.3),(None, 0.01)])
-    fake_canal = F.udf(lambda:fake.random_elements(elements=canal, length=1)[0])
-    fake_id = F.udf(lambda: str(uuid.uuid4()))
+    # Generate the fake data with Faker in pandas (driver-side), then create a Spark
+    # DataFrame. Spark Python UDFs + non-deterministic columns trip the serverless
+    # Spark Connect analyzer (spurious MISSING_GROUP_BY on write); a materialized
+    # createDataFrame is deterministic and serverless-safe.
+    canal_values = ["WEBAPP", "MOBILE", "PHONE", None]
+    canal_probs = np.array([0.5, 0.1, 0.3, 0.01]); canal_probs = canal_probs / canal_probs.sum()
     countries = ['FR', 'USA', 'SPAIN']
-    fake_country = F.udf(lambda: countries[random.randint(0,2)])
     current_email = spark.sql('select current_user() as email').collect()[0]['email']
+
     def get_df(size, month, id=None):
-        df = spark.range(0, size).repartition(10)
-        df = df.withColumn("id", F.lit(id) if id else fake_id())
-        df = df.withColumn("firstname", fake_firstname())
-        df = df.withColumn("lastname", fake_lastname())
-        df = df.withColumn("email", F.lit(current_email) if id else fake_email())
-        df = df.withColumn("address", fake_address())
-        df = df.withColumn("canal", fake_canal())
-        df = df.withColumn("country", fake_country())  
-        df = df.withColumn("creation_date", fake_date_between(month)())
-        df = df.withColumn("last_activity_date", fake_date())
-        return df.withColumn("age_group", F.round(F.rand()*10))
+        # date_between window mirrors the original fake_date_between(month)
+        start = datetime.now() - timedelta(days=30*month)
+        pdf = pd.DataFrame({
+            "id": [id] * size if id else [str(uuid.uuid4()) for _ in range(size)],
+            "firstname": [fake.first_name() for _ in range(size)],
+            "lastname": [fake.last_name() for _ in range(size)],
+            "email": [current_email] * size if id else [fake.ascii_company_email() for _ in range(size)],
+            "address": [fake.address().replace('\n', ' ') for _ in range(size)],
+            "canal": np.random.choice(canal_values, size, p=canal_probs),
+            "country": [countries[np.random.randint(0, 3)] for _ in range(size)],
+            "creation_date": [fake.date_between_dates(date_start=start, date_end=start + timedelta(days=30)).strftime("%m-%d-%Y %H:%M:%S") for _ in range(size)],
+            "last_activity_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(size)],
+            "age_group": np.round(np.random.rand(size) * 10),
+        })
+        return spark.createDataFrame(pdf)
 
     df_customers = get_df(1000, 12*30)
     df_customers = df_customers.union(get_df(1, 12*30, id='d8ca793f-7f06-42d3-be1b-929e32fc8bc9'))
@@ -107,16 +103,21 @@ if not data_exists:
 
 
 if not data_exists:
-    # Define the weighted probabilities for the order status
-    order_status_prob = OrderedDict([("Pending", 0.3), ("Shipped", 0.4), ("Delivered", 0.25), ("Cancelled", 0.05)])
+    # Build the order columns in pandas (Faker + numpy) then createDataFrame, to
+    # avoid Spark Python UDFs + non-deterministic columns on serverless
+    # (spurious MISSING_GROUP_BY on write via the Spark Connect analyzer).
+    n_orders = len(order_user_ids)
+    order_status_values = ["Pending", "Shipped", "Delivered", "Cancelled"]
+    order_status_probs = np.array([0.3, 0.4, 0.25, 0.05]); order_status_probs = order_status_probs / order_status_probs.sum()
 
-    # UDF to generate random order status based on the defined probabilities
-    fake_order_status = F.udf(lambda: fake.random_elements(elements=order_status_prob, length=1)[0])
-
-    orders = spark.createDataFrame([(i,) for i in order_user_ids], ['user_id'])
-    orders = orders.withColumn("id", fake_id())
-    orders = orders.withColumn("transaction_date", fake_date())
-    orders = orders.withColumn("item_count", F.round(F.rand()*2)+1)
-    orders = orders.withColumn("amount", F.col("item_count")*F.round(F.rand()*30+10))
-    orders = orders.withColumn("order_status", fake_order_status())  # Add the order status column
+    item_count = np.round(np.random.rand(n_orders) * 2) + 1
+    orders_pdf = pd.DataFrame({
+        "user_id": order_user_ids,
+        "id": [str(uuid.uuid4()) for _ in range(n_orders)],
+        "transaction_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(n_orders)],
+        "item_count": item_count,
+        "amount": item_count * (np.round(np.random.rand(n_orders) * 30 + 10)),
+        "order_status": np.random.choice(order_status_values, n_orders, p=order_status_probs),
+    })
+    orders = spark.createDataFrame(orders_pdf)
     orders.write.mode('overwrite').saveAsTable('tools_orders')

@@ -26,43 +26,41 @@ spark.sql(f'drop table if exists {db}.transactions')
 #fix a bug from legacy version
 
 print("generating the data...")
-from pyspark.sql import functions as F
+# Generate the fake data with Faker in pandas (driver-side), then create a Spark
+# DataFrame. Spark Python UDFs + non-deterministic columns trip the serverless
+# Spark Connect analyzer (spurious MISSING_GROUP_BY on write); a materialized
+# createDataFrame is deterministic and serverless-safe.
 from faker import Faker
-from collections import OrderedDict 
-import uuid
-import random
+import pandas as pd
+import numpy as np
 fake = Faker()
 
-fake_firstname = F.udf(fake.first_name)
-fake_lastname = F.udf(fake.last_name)
-fake_email = F.udf(fake.ascii_company_email)
-fake_date = F.udf(lambda:fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S"))
-fake_address = F.udf(fake.address)
-fake_credit_card_expire = F.udf(fake.credit_card_expire)
-
-fake_id = F.udf(lambda: str(uuid.uuid4()))
+N = 10000
 countries = ['FR', 'USA', 'SPAIN']
-fake_country = F.udf(lambda: countries[random.randint(0,2)])
-
-df = spark.range(0, 10000)
-df = df.withColumn("id", F.monotonically_increasing_id())
-df = df.withColumn("creation_date", fake_date())
-df = df.withColumn("customer_firstname", fake_firstname())
-df = df.withColumn("customer_lastname", fake_lastname())
-df = df.withColumn("country", fake_country())
-df = df.withColumn("customer_email", fake_email())
-df = df.withColumn("address", fake_address())
-df = df.withColumn("gender", F.round(F.rand()+0.2))
-df = df.withColumn("age_group", F.round(F.rand()*10))
+pdf = pd.DataFrame({
+  "id": range(N),
+  "creation_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(N)],
+  "customer_firstname": [fake.first_name() for _ in range(N)],
+  "customer_lastname": [fake.last_name() for _ in range(N)],
+  "country": [countries[np.random.randint(0, 3)] for _ in range(N)],
+  "customer_email": [fake.ascii_company_email() for _ in range(N)],
+  "address": [fake.address().replace('\n', ' ') for _ in range(N)],
+  "gender": np.round(np.random.rand(N) + 0.2),
+  "age_group": np.round(np.random.rand(N) * 10),
+})
+df = spark.createDataFrame(pdf)
 df.repartition(3).write.mode('overwrite').format("delta").save(folder+"/users")
 
 
-df = spark.range(0, 10000)
-df = df.withColumn("id", F.monotonically_increasing_id())
-df = df.withColumn("customer_id",  F.monotonically_increasing_id())
-df = df.withColumn("transaction_date", fake_date())
-df = df.withColumn("credit_card_expire", fake_credit_card_expire())
-df = df.withColumn("amount", F.round(F.rand()*1000+200))
+N = 10000
+tx_pdf = pd.DataFrame({
+  "id": range(N),
+  "customer_id": range(N),
+  "transaction_date": [fake.date_time_this_month().strftime("%m-%d-%Y %H:%M:%S") for _ in range(N)],
+  "credit_card_expire": [fake.credit_card_expire() for _ in range(N)],
+  "amount": np.round(np.random.rand(N) * 1000 + 200),
+})
+df = spark.createDataFrame(tx_pdf)
 
 spark.sql('create database if not exists hive_metastore.dbdemos_uc_database_to_upgrade')
 df.repartition(3).write.mode('overwrite').format("delta").saveAsTable("hive_metastore.dbdemos_uc_database_to_upgrade.users")

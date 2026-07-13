@@ -4,33 +4,35 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC # Use the best Auto-ML generated notebook to bootstrap our ML Project
+# MAGIC # Reviewing the code Databricks Genie Code generated to bootstrap our ML Project
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-ml-experiment.png" style="float: right" width="600px">
 # MAGIC
-# MAGIC Databricks Autt-ML tries many models and generate notebooks containing the code used to build the model.
+# MAGIC Databricks Genie Code generates the full, editable training code for our model.
 # MAGIC
-# MAGIC Here, we selected the notebook from best run from the Auto ML experiment.
+# MAGIC The model was already trained and registered as production-ready in the previous notebook ([04.1-AutoML-FSI-fraud]($./04.1-AutoML-FSI-fraud)). This notebook is kept for reference to show the kind of code Genie Code generates — as a Data Scientist, you can tune it based on your business knowledge.
 # MAGIC
-# MAGIC All the code below has been automatically generated. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
-# MAGIC
-# MAGIC This saves Datascientists hours of developement and allow team to quickly bootstrap and validate new project.
-# MAGIC
-# MAGIC **All the cells below have been automatically generated.**
+# MAGIC This saves Data Scientists hours of development and lets teams quickly bootstrap and validate new projects.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
 # MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=04.2-automl-generated-notebook-fraud&demo_name=lakehouse-fsi-fraud-detection&event=VIEW">
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0
-# MAGIC # Hardcode dbrml 15.4 version here to avoid version conflict
-# MAGIC %pip install cloudpickle==2.2.1 databricks-automl-runtime==0.2.21 category-encoders==2.6.3 holidays==0.54 lightgbm==4.5.0 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl networkx==3.2.1 scikit-learn==1.4.2
+# MAGIC %pip install databricks-sdk mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# The production model is trained and registered by 04.1 (Databricks Genie Code). The cells
+# below are the legacy AutoML-generated code kept for reference only. They rely on
+# databricks-automl-runtime, which is deprecated and does not load on serverless, so we stop
+# here during automated runs. Detach this cell to explore the generated code interactively.
+dbutils.notebook.exit("Model already trained & registered by 04.1 (Databricks Genie Code).")
 
 # COMMAND ----------
 

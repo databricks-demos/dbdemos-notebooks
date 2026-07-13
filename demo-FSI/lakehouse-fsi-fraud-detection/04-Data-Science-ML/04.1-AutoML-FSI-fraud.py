@@ -68,13 +68,13 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC # Fraud Detection - Single click deployment with AutoML
+# MAGIC # Fraud Detection - Single click deployment with Databricks Genie Code
 # MAGIC
 # MAGIC Let's see how we can now leverage the Banking data to build a model rating our Fraud risk on each transaction.
 # MAGIC
 # MAGIC Our first step as Data Scientist is to analyze and build the features we'll use to train our model.
 # MAGIC
-# MAGIC The transaction table enriched with customer data has been saved within our Lakeflow Pipelines. All we have to do is read this information, analyze it and start an Auto-ML run.
+# MAGIC The transaction table enriched with customer data has been saved within our Lakeflow Pipelines. All we have to do is read this information, analyze it and let Genie Code generate our model.
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/fsi/fraud-detection/fsi-fraud-ds.png" width="1000px">
 # MAGIC
@@ -85,7 +85,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0 databricks-feature-store==0.17.0
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering scikit-learn optuna
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -169,98 +169,148 @@ dataset.describe()
 # COMMAND ----------
 
 # DBTITLE 1,Save them to our feature store
-from databricks.feature_store import FeatureStoreClient
+from databricks.feature_engineering import FeatureEngineeringClient
 
-fs = FeatureStoreClient()
+fe = FeatureEngineeringClient()
 
 try:
   #drop table if exists
-  fs.drop_table(f'{catalog}.{db}.transactions_features')
+  fe.drop_table(name=f'{catalog}.{db}.transactions_features')
 except:
   pass
 
-fs.create_table(
+fe.create_table(
   name=f'{catalog}.{db}.transactions_features',
   primary_keys='id',
-  schema=dataset.spark.schema(),
+  df=dataset.to_spark(),
   description='These features are derived from the gold_transactions table in the lakehouse.  We created dummy variables for the categorical columns, cleaned up their names, and added a boolean flag for whether the transaction is a fraud or not.  No aggregations were performed.')
 
-fs.write_table(df=dataset.to_spark(), name=f'{catalog}.{db}.transactions_features', mode='overwrite')
-features = fs.read_table(f'{catalog}.{db}.transactions_features')
+features = fe.read_table(name=f'{catalog}.{db}.transactions_features')
 display(features)
 
 # COMMAND ----------
 
 # MAGIC %md-sandbox
 # MAGIC
-# MAGIC ## Accelerating Fraud detection model creation using MLFlow and Databricks Auto-ML
+# MAGIC ## Accelerating Fraud detection model creation with Databricks Genie Code
+# MAGIC The Data Science Agent (Genie Code) elevates the Databricks Assistant from a helpful copilot into a true autonomous partner for data science and analytics. Fully integrated with Databricks Notebooks and the SQL Editor, the [Data Science Agent](https://www.databricks.com/blog/introducing-databricks-assistant-data-science-agent) let's you analyze your data and build ML models in a few clicks/prompt.
+# MAGIC <img src="https://www.databricks.com/sites/default/files/2025-09/AgentModeOG1Border.png?v=1756901406" width="500px" style="float: right"/>
 # MAGIC
-# MAGIC MLflow is an open source project allowing model tracking, packaging, and deployment. Every time your data scientist team works on a model, Databricks will track all the parameters and data used and will save it. This ensures ML traceability and reproducibility, making it easy to know which model was built using which parameters/data.
+# MAGIC - It transforms Databricks Assistant into an autonomous partner for data science and analytics tasks in Notebooks and the SQL Editor.
 # MAGIC
-# MAGIC ### AutoML: A glass-box solution that empowers data teams without taking away control
+# MAGIC - It can explore data, generate and run code, and fix errors, all from a single prompt. This can cut hours of work to minutes.
 # MAGIC
-# MAGIC While Databricks simplifies model deployment and governance (MLOps) with MLflow, bootstrapping new ML projects can still be long and inefficient. 
-# MAGIC
-# MAGIC Instead of creating the same boilerplate for each new project, Databricks Auto-ML can automatically generate state of the art models for Classifications, regression, and forecast.
-# MAGIC
-# MAGIC
-# MAGIC <img width="1000" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/auto-ml-full.png"/>
-# MAGIC
-# MAGIC
-# MAGIC Models can be directly deployed, or instead leverage generated notebooks to bootstrap projects with best practices, saving you weeks of effort.
+# MAGIC - Purpose-built for common data science tasks and grounded in Unity Catalog for seamless, governed access to your data.
 # MAGIC
 # MAGIC <br style="clear: both">
 # MAGIC
-# MAGIC <img style="float: right" width="600" src="https://github.com/QuentinAmbard/databricks-demo/raw/main/retail/resources/images/churn-auto-ml.png"/>
+# MAGIC ### Using Databricks Genie Code with our Transaction dataset
 # MAGIC
-# MAGIC ### Using Databricks Auto ML with our Transaction dataset
+# MAGIC All we have to do is describe our problem to Genie Code and point it at the feature table we just created (`transactions_features`), with `is_fraud` as our prediction target.
 # MAGIC
-# MAGIC Auto ML is available in the "Machine Learning" space. All we have to do is start a new Auto-ML experimentation and select the feature table we just created (`gold_transactions`)
-# MAGIC
-# MAGIC Our prediction target is the `is_fraud` column.
-# MAGIC
-# MAGIC Click on Start, and Databricks will do the rest.
-# MAGIC
-# MAGIC While this is done using the UI, you can also leverage the [python API](https://docs.databricks.com/applications/machine-learning/automl.html#automl-python-api-1)
+# MAGIC Below is the training code Genie Code generated for us — a standard scikit-learn pipeline, fully tracked in MLflow (parameters, metrics and **dataset lineage**) for reproducibility and governance.
 
 # COMMAND ----------
 
-# DBTITLE 1,Starting AutoML run using Databricks API
+# DBTITLE 1,Training code generated by Databricks Genie Code
+import mlflow, optuna
+from mlflow.models.signature import infer_signature
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.metrics import f1_score
+
+model_name = "dbdemos_fsi_fraud"
+target_col = "is_fraud"
+# Shared experiment path (must be a workspace /Shared path, not a local one, so it works in
+# jobs running from the GitHub repo). set_experiment creates it if missing, or reuses it.
 xp_path = "/Shared/dbdemos/experiments/lakehouse-fsi-fraud-detection"
-xp_name = f"automl_fraud_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
-try:
-    from databricks import automl
-    automl_run = automl.classify(
-        experiment_name = xp_name,
-        experiment_dir = xp_path,
-        dataset = features.sample(0.02), #drastically reduce the training size to speedup the demo
-        target_col = "is_fraud",
-        timeout_minutes = 20
-    )
-    #Make sure all users can access dbdemos shared experiment
-    DBDemos.set_experiment_permission(f"{xp_path}/{xp_name}")
-except Exception as e:
-    if "cannot import name 'automl'" in str(e) or 'method_whitelist' in str(e):
-        # Note: cannot import name 'automl' from 'databricks' likely means you're using serverless. Dbdemos doesn't support autoML serverless API - this will be improved soon.
-        # Adding a temporary workaround to make sure it works well for now - ignore this for classic run
-        DBDemos.create_mockup_automl_run(f"{xp_path}/{xp_name}", features.sample(0.02).toPandas())
-    else:
-        raise e
+mlflow.set_experiment(xp_path)
+DBDemos.set_experiment_permission(xp_path)
+
+# drastically reduce the training size to speedup the demo
+pdf = features.sample(0.02).toPandas().drop(columns=["id"], errors="ignore")
+X = pdf.drop(columns=[target_col])
+y = pdf[target_col]
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standard sklearn preprocessing: impute numerics, ordinal-encode categoricals.
+num_cols = X.select_dtypes(include="number").columns.tolist()
+cat_cols = [c for c in X.columns if c not in num_cols]
+preprocessor = ColumnTransformer([
+    ("num", SimpleImputer(strategy="median"), num_cols),
+    ("cat", Pipeline([("imp", SimpleImputer(strategy="most_frequent")),
+                      ("enc", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1))]), cat_cols),
+])
+
+def build_pipeline(params):
+    return Pipeline([("preprocessor", preprocessor),
+                     ("classifier", RandomForestClassifier(random_state=42, n_jobs=-1, **params))])
+
+mlflow.sklearn.autolog(disable=True)
+with mlflow.start_run(run_name="genie_code_fraud_detection") as genie_run:
+    # Track dataset lineage: link the training data to this run for full governance.
+    training_dataset = mlflow.data.from_pandas(pdf, name="transactions_features", targets=target_col)
+    mlflow.log_input(training_dataset, context="training")
+
+    # Hyperparameter search with Optuna, each trial logged to MLflow as a nested run.
+    def objective(trial):
+        params = {
+            "n_estimators": trial.suggest_int("n_estimators", 50, 300),
+            "max_depth": trial.suggest_int("max_depth", 3, 12),
+            "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 20),
+        }
+        with mlflow.start_run(nested=True, run_name=f"trial_{trial.number}"):
+            mlflow.log_params(params)
+            score = cross_val_score(build_pipeline(params), X_train, y_train, cv=3, scoring="f1_weighted").mean()
+            mlflow.log_metric("cv_f1_weighted", score)
+        return score
+
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=20)
+    mlflow.log_params(study.best_params)
+
+    # Refit the best model on the full training split and evaluate on the hold-out set.
+    best_model = build_pipeline(study.best_params)
+    best_model.fit(X_train, y_train)
+    val_f1 = f1_score(y_val, best_model.predict(X_val), average="weighted")
+    mlflow.log_metric("val_f1_score", val_f1)
+
+    signature = infer_signature(X_train, best_model.predict(X_train))
+    # cloudpickle keeps the model self-contained (no databricks-automl-runtime) so it loads on serverless.
+    mlflow.sklearn.log_model(best_model, name="model", input_example=X_train.iloc[[0]],
+                             signature=signature, serialization_format="cloudpickle")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC AutoML saved our best model in the MLFlow registry. [Open the dbdemos_fsi fraud model](#mlflow/models/dbdemos_fsi_fraud) to explore its artifact and analyze the parameters used, including traceability to the notebook used for its creation.
+# MAGIC ## Deploying our model in production
 # MAGIC
-# MAGIC If we're ready, we can move this model into Production stage in a click, or using the API.
+# MAGIC Our Genie Code-generated model is ready. Let's register it in Unity Catalog and flag it as production-ready:
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Next: deploying our model for Real Time fraud detection serving 
+from mlflow import MlflowClient
+mlflow.set_registry_uri('databricks-uc')
+client = MlflowClient()
+latest_model = mlflow.register_model(f'runs:/{genie_run.info.run_id}/model', f"{catalog}.{db}.{model_name}")
+client.set_registered_model_alias(name=f"{catalog}.{db}.{model_name}", alias="prod", version=latest_model.version)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Our model is now registered as production-ready. [Open the dbdemos_fsi_fraud model](#mlflow/models/dbdemos_fsi_fraud) to explore its artifacts and lineage.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Next: deploying our model for Real Time fraud detection serving
 # MAGIC
-# MAGIC Now that our model has been created with Databricks AutoML, we can start a Model Endpoint to serve low-latencies fraud detection.
+# MAGIC Now that our model has been created with Databricks Genie Code, we can start a Model Endpoint to serve low-latencies fraud detection.
 # MAGIC
 # MAGIC We'll be able to rate the Fraud likelihood in ms to reduce fraud in real-time.
 # MAGIC
-# MAGIC Open the [04.3-Model-serving-realtime-inference-fraud]($./04.3-Model-serving-realtime-inference-fraud) to deploy our model or review the notebook generated by AutoML [04.2-automl-generated-notebook-fraud]($./04.2-automl-generated-notebook-fraud).
+# MAGIC Open the [04.3-Model-serving-realtime-inference-fraud]($./04.3-Model-serving-realtime-inference-fraud) to deploy our model or review the code generated by Genie Code [04.2-automl-generated-notebook-fraud]($./04.2-automl-generated-notebook-fraud).

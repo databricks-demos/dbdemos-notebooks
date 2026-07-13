@@ -1,18 +1,16 @@
 # Databricks notebook source
 # MAGIC %md-sandbox
-# MAGIC # Use the best Auto-ML generated notebook to bootstrap our ML Project
+# MAGIC # Reviewing the code Genie Code generated to bootstrap our ML Project
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-ml-experiment.png" style="float: right" width="600px">
+# MAGIC <img src="https://www.databricks.com/sites/default/files/2025-09/AgentModeOG1Border.png?v=1756901406" style="float: right" width="500px">
 # MAGIC
-# MAGIC Databricks Auto-ML tries many models and generate notebooks containing the code used to build the model.
+# MAGIC Databricks Genie Code generates the full, editable code used to build the model.
 # MAGIC
-# MAGIC Here, we selected the notebook from best run from the Auto ML experiment.
-# MAGIC
-# MAGIC All the code below has been automatically generated. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
+# MAGIC All the code below is representative of what Genie Code produces. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
 # MAGIC
 # MAGIC This saves Data scientists hours of development and allows teams to quickly bootstrap and validate new project.
 # MAGIC
-# MAGIC *Make sure you run the previous notebook to be able to access the data.*
+# MAGIC **Note:** the production model is already trained and registered by the previous notebook (`04.1`). This notebook is provided for reference — it showcases the kind of code Genie Code generates.
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
@@ -20,14 +18,20 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.1.1 cloudpickle==2.2.1 databricks-sdk==0.59.0
-# MAGIC # hardcode the ml 16.4 LTS libraries versions here for demo stability
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==2.2.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl networkx==3.2.1
+# MAGIC %pip install mlflow==3.14.0 cloudpickle databricks-sdk lightgbm scikit-learn shap
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# The production model is trained and registered by 04.1 (Genie Code). This notebook is kept
+# for reference to showcase the generated training code and is not executed end-to-end during
+# the demo bundling (the original AutoML-generated code relied on databricks-automl-runtime,
+# which isn't available on serverless).
+dbutils.notebook.exit("Model already registered by 04.1 (Genie Code) - reference notebook, skipping execution.")
 
 # COMMAND ----------
 

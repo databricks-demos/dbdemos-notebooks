@@ -4,17 +4,15 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC # Use the best Auto-ML generated notebook to bootstrap our ML Project
+# MAGIC # Reviewing the code Databricks Genie Code generated for us
 # MAGIC
-# MAGIC <img src="https://raw.githubusercontent.com/QuentinAmbard/databricks-demo/main/retail/resources/images/lakehouse-retail/lakehouse-retail-churn-ml-experiment.png" style="float: right" width="600px">
+# MAGIC <img src="https://www.databricks.com/sites/default/files/2025-09/AgentModeOG1Border.png?v=1756901406" style="float: right" width="500px">
 # MAGIC
-# MAGIC Databricks Autt-ML tries many models and generate notebooks containing the code used to build the model.
+# MAGIC Databricks Genie Code (the Data Science Agent) explores your data and generates the full training code for you — a standard, transparent scikit-learn / LightGBM pipeline you can read, tune with your business knowledge, or use as-is.
 # MAGIC
-# MAGIC Here, we selected the notebook from best run from the Auto ML experiment.
+# MAGIC The model is already trained and registered as `@prod` by the previous notebook ([04.1]($./04.1-automl-churn-prediction)). The cells below show the kind of glass-box code Genie Code produces, so a Data Scientist can inspect and extend it.
 # MAGIC
-# MAGIC All the code below has been automatically generated. As Data Scientist, we can tune it based on our business knowledge, or use the model generated as it is.
-# MAGIC
-# MAGIC This saves Datascientists hours of developement and allow team to quickly bootstrap and validate new project.
+# MAGIC This saves Data Scientists hours of development and lets teams quickly bootstrap and validate new projects.
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
@@ -22,14 +20,20 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==3.1.0
-# MAGIC # Hardcode dbrml 16.4 version here to avoid version conflict
-# MAGIC %pip install category-encoders==2.6.3 cffi==1.16.0 databricks-automl-runtime==0.2.21 defusedxml==0.7.1 holidays==0.54 lightgbm==4.5.0 lz4==4.3.2 matplotlib==3.8.4 numpy==1.26.4 pandas==2.2.3 psutil==5.9.0 pyarrow==15.0.2 scikit-learn==1.4.2 scipy==1.13.1 shap==0.46.0 https://github.com/databricks-demos/dbdemos-resources/raw/refs/heads/main/hyperopt-0.2.8-py3-none-any.whl
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 lightgbm scikit-learn category-encoders shap
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# DBTITLE 1,This reference notebook is not executed during install
+# The @prod churn model is trained and registered by 04.1 (Databricks Genie Code).
+# The cells below are the glass-box training code Genie Code generated, kept for review.
+# They rely on a classic ML runtime; we skip execution here so the demo runs on Serverless.
+dbutils.notebook.exit("Model already trained & registered as @prod by 04.1 (Databricks Genie Code). This notebook is kept for reference only.")
 
 # COMMAND ----------
 

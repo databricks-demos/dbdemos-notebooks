@@ -54,7 +54,10 @@ except:
   fake_operation = F.udf(lambda:fake.random_elements(elements=operations, length=1)[0])
   fake_id = F.udf(lambda: str(uuid.uuid4()) if random.uniform(0, 1) < 0.98 else None)
 
-  df = spark.range(0, 100000).repartition(100)
+  # Keep the deterministic spark.range key ("cust_key") so transactions can join to
+  # real customer ids without monotonically_increasing_id() (non-deterministic and
+  # unsupported by the serverless Spark Connect analyzer when joined across DataFrames).
+  df = spark.range(0, 100000).repartition(100).withColumnRenamed("id", "cust_key")
   df = df.withColumn("id", fake_id())
   df = df.withColumn("firstname", fake_firstname())
   df = df.withColumn("lastname", fake_lastname())
@@ -62,15 +65,18 @@ except:
   df = df.withColumn("address", fake_address())
   df = df.withColumn("operation", fake_operation())
   df_customers = df.withColumn("operation_date", fake_date())
-  df_customers.repartition(100).write.format("json").mode("overwrite").save(volume_folder+"/customers")
+  df_customers.drop("cust_key").repartition(100).write.format("json").mode("overwrite").save(volume_folder+"/customers")
 
-  df = spark.range(0, 10000).repartition(20)
+  # customer_id lookup keyed on the deterministic range key
+  customers_ids = df_customers.select(F.col("cust_key"), F.col("id").alias("customer_id"))
+
+  df = spark.range(0, 10000).repartition(20).withColumnRenamed("id", "cust_key")
   df = df.withColumn("id", fake_id())
   df = df.withColumn("transaction_date", fake_date())
   df = df.withColumn("amount", F.round(F.rand()*1000))
   df = df.withColumn("item_count", F.round(F.rand()*10))
   df = df.withColumn("operation", fake_operation())
   df = df.withColumn("operation_date", fake_date())
-  #Join with the customer to get the same IDs generated.
-  df = df.withColumn("t_id", F.monotonically_increasing_id()).join(spark.read.json(volume_folder+"/customers").select("id").withColumnRenamed("id", "customer_id").withColumn("t_id", F.monotonically_increasing_id()), "t_id").drop("t_id")
+  # deterministic join: transaction range key 0..9999 -> same customer range key
+  df = df.join(customers_ids, "cust_key").drop("cust_key")
   df.repartition(10).write.format("json").mode("overwrite").save(volume_folder+"/transactions")

@@ -97,7 +97,7 @@ pat_feature_table = fs.create_table(
   description='Base Features from the Patient Table'
 )
 
-fs.write_table(df=pat_features_df, name=f'{catalog}.{dbName}.pat_features', mode='overwrite')
+fs.write_table(df=pat_features_df, name=f'{catalog}.{dbName}.pat_features', mode='merge')
 
 # COMMAND ----------
 
@@ -148,7 +148,7 @@ enc_feature_table = fs.create_table(
   description='Base and derived features from the Encounter Table'
 )
 
-fs.write_table(df=enc_features_df, name=f'{catalog}.{dbName}.enc_features', mode='overwrite')
+fs.write_table(df=enc_features_df, name=f'{catalog}.{dbName}.enc_features', mode='merge')
 
 # COMMAND ----------
 
@@ -187,7 +187,7 @@ aae_feature_table = fs.create_table(
   description='determine the age of the patient at the time of the encounter'
 )
 
-fs.write_table(df=aae_features_df, name=f'{catalog}.{dbName}.age_at_enc_features', mode='overwrite')
+fs.write_table(df=aae_features_df, name=f'{catalog}.{dbName}.age_at_enc_features', mode='merge')
 
 # COMMAND ----------
 

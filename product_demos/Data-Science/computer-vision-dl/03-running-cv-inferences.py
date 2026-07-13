@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.20.2
+# MAGIC %pip install databricks-sdk mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -208,8 +208,8 @@ with mlflow.start_run(run_name="hugging_face_rt") as run:
   signature = infer_signature(df_input, predictions)
   #log the model to MLFlow
   reqs = mlflow.pyfunc.log_model(
-    artifact_path="model", 
-    python_model=rt_model, 
+    name="model",
+    python_model=rt_model,
     pip_requirements=requirements_path, 
     input_example=df_input, 
     signature = signature)

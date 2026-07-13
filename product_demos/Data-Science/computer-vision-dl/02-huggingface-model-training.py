@@ -29,7 +29,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.49.0 tf-keras==2.17.0 accelerate==1.4.0 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4 evaluate==0.4.3
+# MAGIC %pip install --upgrade databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate torchvision evaluate
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -176,7 +176,7 @@ batch_size = 32  # batch size for training and evaluation
 args = TrainingArguments(
     f"/tmp/huggingface/pcb/{model_name}-finetuned-leaf",
     remove_unused_columns=False,
-    evaluation_strategy="epoch",
+    eval_strategy="epoch",
     save_strategy="epoch",
     learning_rate=5e-5,
     per_device_train_batch_size=batch_size,
@@ -262,8 +262,8 @@ with mlflow.start_run(run_name="hugging_face") as run:
   
    #    log the model, set tags, and log metrics
   mlflow.transformers.log_model(
-    artifact_path="model", 
-    transformers_model=classifier, 
+    name="model",
+    transformers_model=classifier,
     pip_requirements=reqs,
     signature=signature)
   

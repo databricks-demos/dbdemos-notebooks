@@ -252,21 +252,33 @@ xp_path = "/Shared/dbdemos/experiments/lakehouse-iot-platform"
 mlflow.set_experiment(f"{xp_path}/genie_code_run")
 DBDemos.set_experiment_permission(xp_path)
 
-# Reduce the dataset size to speed up the demo. Drop the keys (turbine_id/timestamp) - they
-# are identifiers, not predictive features.
+# Drop only turbine_id (the primary key). We KEEP hourly_timestamp because the Lakeflow
+# pipeline scores the model with predict_maintenance(hourly_timestamp, avg_energy, std_sensor_*,
+# location, model, state) - the model's input columns must match that call exactly (order +
+# count), otherwise inference misaligns columns (e.g. feeds the timestamp into avg_energy).
 pdf = (fe.read_table(name=f'{catalog}.{db}.turbine_hourly_features')
-         .drop('turbine_id', 'hourly_timestamp').sample(0.1).toPandas())
+         .drop('turbine_id').sample(0.1).toPandas())
 X = pdf.drop(columns=[target_col])
 y = pdf[target_col]
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Standard sklearn preprocessing: impute numerics, ordinal-encode categoricals.
+# Standard sklearn preprocessing. hourly_timestamp is a datetime: we extract the hour of day
+# as a numeric feature (a real signal, like the original TimestampTransformer) so the model
+# still accepts the timestamp column the pipeline passes, without choking on a raw datetime.
+from sklearn.preprocessing import FunctionTransformer
+datetime_cols = X.select_dtypes(include=["datetime", "datetimetz"]).columns.tolist()
 num_cols = X.select_dtypes(include="number").columns.tolist()
-cat_cols = [c for c in X.columns if c not in num_cols]
+cat_cols = [c for c in X.columns if c not in num_cols and c not in datetime_cols]
+
+def hour_of_day(df):
+    import pandas as pd
+    return pd.DataFrame({c: pd.to_datetime(df[c]).dt.hour for c in df.columns})
+
 preprocessor = ColumnTransformer([
     ("num", SimpleImputer(strategy="median"), num_cols),
     ("cat", Pipeline([("imp", SimpleImputer(strategy="most_frequent")),
                       ("enc", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1))]), cat_cols),
+    ("dt", FunctionTransformer(hour_of_day), datetime_cols),
 ])
 
 def build_pipeline(params):

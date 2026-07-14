@@ -127,31 +127,33 @@ display(df)
 
 # COMMAND ----------
 
-from mlflow.deployments import get_deploy_client
+# Use the WorkspaceClient serving API (not the mlflow deploy client, which routes through a
+# budget-policy-gated path the build user can't call). Matches the working HLS pattern.
+# force_update=True refreshes an existing endpoint to the latest model version.
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
 
-client = get_deploy_client("databricks")
-served_entities = [
-    {
-        "name": "iot-maintenance-serving-endpoint",
-        "entity_name": f"{catalog}.{db}.{model_name}",
-        "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
-        "workload_size": "Small",
-        "scale_to_zero_enabled": True
-    }
-]
+w = WorkspaceClient()
+endpoint_config = EndpointCoreConfigInput(
+    name=MODEL_SERVING_ENDPOINT_NAME,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=f"{catalog}.{db}.{model_name}",
+            entity_version=get_last_model_version(f"{catalog}.{db}.{model_name}"),
+            scale_to_zero_enabled=True,
+            workload_size="Small",
+        )
+    ],
+)
+force_update = True
 try:
-    endpoint = client.create_endpoint(name=MODEL_SERVING_ENDPOINT_NAME, config={"served_entities": served_entities})
-except Exception as e:
-    if "already exists" in str(e):
-        # Update the existing endpoint to the latest model version; skipping would leave it
-        # serving a stale model whose input schema no longer matches the query.
-        print(f"Endpoint {MODEL_SERVING_ENDPOINT_NAME} exists, updating to latest model version...")
-        client.update_endpoint(endpoint=MODEL_SERVING_ENDPOINT_NAME, config={"served_entities": served_entities})
-    else:
-        raise e
-
-while client.get_endpoint(MODEL_SERVING_ENDPOINT_NAME)['state']['config_update'] == 'IN_PROGRESS':
-    time.sleep(10)
+    w.serving_endpoints.get(MODEL_SERVING_ENDPOINT_NAME)
+    print(f"endpoint {MODEL_SERVING_ENDPOINT_NAME} already exists - force update = {force_update}...")
+    if force_update:
+        w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=MODEL_SERVING_ENDPOINT_NAME)
+except Exception:
+    print(f"Creating the endpoint {MODEL_SERVING_ENDPOINT_NAME}, this will take a few minutes...")
+    w.serving_endpoints.create_and_wait(name=MODEL_SERVING_ENDPOINT_NAME, config=endpoint_config)
 
 # COMMAND ----------
 

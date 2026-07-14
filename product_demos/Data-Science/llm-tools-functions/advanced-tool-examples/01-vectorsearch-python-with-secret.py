@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %uv pip install --quiet -U databricks-sdk==0.41.0 mlflow==2.20.2 faker
+# MAGIC %uv pip install --quiet -U databricks-sdk mlflow==3.14.0 faker
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

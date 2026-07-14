@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install --quiet -U databricks-sdk==0.49.0 databricks-agents
+# MAGIC %uv pip install --quiet -U databricks-sdk databricks-agents
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

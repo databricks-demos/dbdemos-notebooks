@@ -82,12 +82,14 @@ endpoint_config = EndpointCoreConfigInput(
 )
 
 force_update = True #Update the endpoint to the current @prod model version, so an existing endpoint doesn't keep serving a stale model whose input schema no longer matches.
-try:
-  existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
-  print(f"endpoint {serving_endpoint_name} already exist...")
-  if force_update:
-    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
-except:
+# Check existence via list (robust: a transient error on get() must not make us try to
+# create an endpoint that already exists -> ResourceAlreadyExists).
+existing = any(e.name == serving_endpoint_name for e in w.serving_endpoints.list())
+if existing:
+    print(f"endpoint {serving_endpoint_name} already exist...")
+    if force_update:
+        w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+else:
     print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
     spark.sql('drop table if exists fraud_ep_inference_table_payload')
     w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)

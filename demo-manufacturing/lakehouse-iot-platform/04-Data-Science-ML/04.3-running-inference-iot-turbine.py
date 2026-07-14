@@ -146,12 +146,14 @@ endpoint_config = EndpointCoreConfigInput(
     ],
 )
 force_update = True
-try:
-    w.serving_endpoints.get(MODEL_SERVING_ENDPOINT_NAME)
+# Check existence via list (robust: a transient error on get() must not make us try to
+# create an endpoint that already exists -> ResourceAlreadyExists).
+existing = any(e.name == MODEL_SERVING_ENDPOINT_NAME for e in w.serving_endpoints.list())
+if existing:
     print(f"endpoint {MODEL_SERVING_ENDPOINT_NAME} already exists - force update = {force_update}...")
     if force_update:
         w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=MODEL_SERVING_ENDPOINT_NAME)
-except Exception:
+else:
     print(f"Creating the endpoint {MODEL_SERVING_ENDPOINT_NAME}, this will take a few minutes...")
     w.serving_endpoints.create_and_wait(name=MODEL_SERVING_ENDPOINT_NAME, config=endpoint_config)
 

@@ -86,7 +86,6 @@ force_update = True #Update the endpoint to the current @prod model version, so 
 # create an endpoint that already exists -> ResourceAlreadyExists).
 # Creating/updating a serving endpoint needs a budget-policy permission the demo-build user may
 # lack (403 UseBudgetPolicyPermission). Tolerate it in the build; real users have the permission.
-from databricks.sdk.errors import PermissionDenied
 endpoint_ready = True
 try:
     existing = any(e.name == serving_endpoint_name for e in w.serving_endpoints.list())
@@ -98,7 +97,7 @@ try:
         print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
         spark.sql('drop table if exists fraud_ep_inference_table_payload')
         w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
-except PermissionDenied as e:
+except Exception as e:
     endpoint_ready = False
     print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
@@ -121,8 +120,6 @@ if endpoint_ready:
     print(predictions)
 else:
     print("Serving endpoint not deployed (insufficient permission in this workspace) - skipping live query.")
-
-print(predictions)
 
 # COMMAND ----------
 

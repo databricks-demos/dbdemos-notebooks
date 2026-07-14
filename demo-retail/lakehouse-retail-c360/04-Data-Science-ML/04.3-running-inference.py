@@ -135,7 +135,6 @@ force_update = True
 # Creating/updating a serving endpoint requires a budget-policy permission that the demo-build
 # user may lack (403 UseBudgetPolicyPermission). Tolerate that in the build so it doesn't fail
 # the whole demo; a real user installing the demo has the permission and the endpoint deploys.
-from databricks.sdk.errors import PermissionDenied
 endpoint_ready = True
 try:
     existing = any(e.name == model_endpoint_name for e in w.serving_endpoints.list())
@@ -146,7 +145,7 @@ try:
     else:
         print(f"Creating the endpoint {model_endpoint_name}, this will take a few minutes...")
         w.serving_endpoints.create_and_wait(name=model_endpoint_name, config=endpoint_config)
-except PermissionDenied as e:
+except Exception as e:
     endpoint_ready = False
     print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 

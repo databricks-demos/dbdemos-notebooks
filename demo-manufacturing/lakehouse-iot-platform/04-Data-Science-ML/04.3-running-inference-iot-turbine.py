@@ -151,7 +151,6 @@ force_update = True
 # Creating/updating a serving endpoint needs a budget-policy permission the demo-build user may
 # lack (403 UseBudgetPolicyPermission). Tolerate that in the build; real users installing the
 # demo have the permission and the endpoint deploys normally.
-from databricks.sdk.errors import PermissionDenied
 endpoint_ready = True
 try:
     existing = any(e.name == MODEL_SERVING_ENDPOINT_NAME for e in w.serving_endpoints.list())
@@ -162,7 +161,7 @@ try:
     else:
         print(f"Creating the endpoint {MODEL_SERVING_ENDPOINT_NAME}, this will take a few minutes...")
         w.serving_endpoints.create_and_wait(name=MODEL_SERVING_ENDPOINT_NAME, config=endpoint_config)
-except PermissionDenied as e:
+except Exception as e:
     endpoint_ready = False
     print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
@@ -212,9 +211,11 @@ dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPa
 
 # COMMAND ----------
 
-# MAGIC %sql
+# MAGIC %md
+# MAGIC Once the serving endpoint is deployed, you can score directly from SQL with `ai_query`:
+# MAGIC ```sql
 # MAGIC SELECT *, ai_query(
-# MAGIC         'dbdemos_iot_turbine_prediction_endpoint', 
+# MAGIC         'dbdemos_iot_turbine_prediction_endpoint',
 # MAGIC         named_struct(
 # MAGIC             'hourly_timestamp', hourly_timestamp,
 # MAGIC             'avg_energy', avg_energy,
@@ -230,6 +231,7 @@ dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPa
 # MAGIC         'STRING'
 # MAGIC     ) as prediction
 # MAGIC FROM turbine_hourly_features
+# MAGIC ```
 
 # COMMAND ----------
 

@@ -98,7 +98,9 @@ target_col = "30_DAY_READMISSION"
 # Shared experiment path (must be a workspace /Shared path, not a local one, so it works in
 # jobs running from the GitHub repo). set_experiment creates it if missing, or reuses it.
 xp_path = "/Shared/dbdemos/experiments/lakehouse-patient-admission"
-mlflow.set_experiment(xp_path)
+# xp_path is a directory (experiments are created under it); set_experiment needs a
+# leaf experiment path, so append a run name to avoid a DIRECTORY-vs-EXPERIMENT conflict.
+mlflow.set_experiment(f"{xp_path}/genie_code_run")
 DBDemos.set_experiment_permission(xp_path)
 
 pdf = training_dataset.select(feature_names).toPandas()

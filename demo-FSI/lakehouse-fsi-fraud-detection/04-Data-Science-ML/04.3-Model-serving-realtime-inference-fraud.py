@@ -81,7 +81,7 @@ endpoint_config = EndpointCoreConfigInput(
     auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fraud_ep_inference_table" )
 )
 
-force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+force_update = True #Update the endpoint to the current @prod model version, so an existing endpoint doesn't keep serving a stale model whose input schema no longer matches.
 try:
   existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
   print(f"endpoint {serving_endpoint_name} already exist...")

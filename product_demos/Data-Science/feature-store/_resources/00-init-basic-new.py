@@ -42,8 +42,7 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 import pyspark.sql.window as w
 import timeit
-from databricks import feature_store
-from databricks.feature_store import feature_table, FeatureLookup
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 
 import mlflow
 import mlflow.sklearn
@@ -106,8 +105,8 @@ def wait_for_online_tables(catalog, schema, tables, waiting_time = 300):
 def delete_fs(fs_table_name):
   print("Deleting Feature Table", fs_table_name)
   try:
-    fs = feature_store.FeatureStoreClient()
-    fs.drop_table(name=fs_table_name)
+    fe = FeatureEngineeringClient()
+    fe.drop_table(name=fs_table_name)
     spark.sql(f"DROP TABLE IF EXISTS {fs_table_name}")
   except Exception as e:
     print("Can't delete table, likely not existing: "+str(e))  

@@ -90,11 +90,36 @@ def _apply_mlflow_serverless_shim():
             return cls(sp[0] == "client", major, minor, is_gpu)
     DRV.parse = classmethod(patched_parse)
 
+
+def _apply_mlflow_log_model_sdk_shim():
+    # On serverless, importlib.metadata.version("databricks-sdk") returns None (the SDK is baked
+    # into the runtime and its dist-info metadata isn't resolvable). mlflow 3.x's
+    # _sdk_supports_large_file_uploads() does Version(importlib.metadata.version("databricks-sdk"))
+    # -> Version(None) -> TypeError, which breaks mlflow.*.log_model on the artifact-upload path.
+    # Patch it to tolerate the missing version. Remove once mlflow/databricks-sdk resolve this.
+    import mlflow.store.artifact.databricks_sdk_artifact_repo as dsar
+    import importlib.metadata as _im
+    from packaging.version import Version
+    def _supports():
+        try:
+            v = _im.version("databricks-sdk")
+            return v is not None and Version(v) >= Version("0.45.0")
+        except Exception:
+            return False
+    dsar._sdk_supports_large_file_uploads = _supports
+
+
 try:
     _apply_mlflow_serverless_shim()
     print("mlflow serverless shim applied (ES-2047313 - remove once mlflow is fixed)")
 except Exception as e:
     print(f"mlflow serverless shim not applied: {e}")
+
+try:
+    _apply_mlflow_log_model_sdk_shim()
+    print("mlflow log_model sdk-version shim applied (databricks-sdk metadata None on serverless)")
+except Exception as e:
+    print(f"mlflow log_model sdk-version shim not applied: {e}")
 
 # COMMAND ----------
 

@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.14.0 databricks-sdk shap==0.46.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-sdk shap==0.52.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

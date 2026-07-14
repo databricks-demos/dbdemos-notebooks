@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.1.1 databricks-sdk==0.59.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-sdk
 
 # COMMAND ----------
 
@@ -84,7 +84,7 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
-# MAGIC %pip install -r $requirements_path
+# MAGIC %uv pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

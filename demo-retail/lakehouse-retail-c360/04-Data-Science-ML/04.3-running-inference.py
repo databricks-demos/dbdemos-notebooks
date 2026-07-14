@@ -14,7 +14,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.1.0
+# MAGIC %uv pip install mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -71,7 +71,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 
 # COMMAND ----------
 
-# MAGIC %pip install -r $requirements_path
+# MAGIC %uv pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

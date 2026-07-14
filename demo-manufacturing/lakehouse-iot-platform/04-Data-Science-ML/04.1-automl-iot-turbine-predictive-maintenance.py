@@ -84,7 +84,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk mlflow==3.14.0 databricks-feature-engineering scikit-learn optuna
+# MAGIC %uv pip install --quiet databricks-sdk mlflow==3.14.0 databricks-feature-engineering==0.16.0 scikit-learn==1.9.0 optuna==4.9.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

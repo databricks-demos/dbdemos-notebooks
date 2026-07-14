@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.14.0 cloudpickle databricks-sdk lightgbm scikit-learn shap
+# MAGIC %uv pip install mlflow==3.14.0 cloudpickle==3.1.2 databricks-sdk lightgbm scikit-learn==1.9.0 shap==0.52.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

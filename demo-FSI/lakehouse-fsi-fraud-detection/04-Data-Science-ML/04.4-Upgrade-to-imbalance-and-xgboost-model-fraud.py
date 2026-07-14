@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering scikit-learn xgboost
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering==0.16.0 scikit-learn==1.9.0 xgboost==3.3.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

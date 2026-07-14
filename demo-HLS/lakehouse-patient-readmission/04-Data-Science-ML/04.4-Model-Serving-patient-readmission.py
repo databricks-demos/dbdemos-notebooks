@@ -31,7 +31,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Make sure we have the latest SDK (used in the helper)
-# MAGIC %pip install mlflow==3.14.0 databricks-sdk
+# MAGIC %uv pip install mlflow==3.14.0 databricks-sdk
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

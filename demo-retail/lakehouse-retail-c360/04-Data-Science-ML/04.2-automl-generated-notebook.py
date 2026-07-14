@@ -20,7 +20,7 @@ dbutils.widgets.dropdown("shap_enabled", "true", ["true", "false"], "Compute sha
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk mlflow==3.14.0 lightgbm scikit-learn category-encoders shap
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 lightgbm scikit-learn==1.9.0 category-encoders shap==0.52.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

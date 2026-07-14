@@ -148,14 +148,23 @@ endpoint_config = EndpointCoreConfigInput(
 force_update = True
 # Check existence via list (robust: a transient error on get() must not make us try to
 # create an endpoint that already exists -> ResourceAlreadyExists).
-existing = any(e.name == MODEL_SERVING_ENDPOINT_NAME for e in w.serving_endpoints.list())
-if existing:
-    print(f"endpoint {MODEL_SERVING_ENDPOINT_NAME} already exists - force update = {force_update}...")
-    if force_update:
-        w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=MODEL_SERVING_ENDPOINT_NAME)
-else:
-    print(f"Creating the endpoint {MODEL_SERVING_ENDPOINT_NAME}, this will take a few minutes...")
-    w.serving_endpoints.create_and_wait(name=MODEL_SERVING_ENDPOINT_NAME, config=endpoint_config)
+# Creating/updating a serving endpoint needs a budget-policy permission the demo-build user may
+# lack (403 UseBudgetPolicyPermission). Tolerate that in the build; real users installing the
+# demo have the permission and the endpoint deploys normally.
+from databricks.sdk.errors import PermissionDenied
+endpoint_ready = True
+try:
+    existing = any(e.name == MODEL_SERVING_ENDPOINT_NAME for e in w.serving_endpoints.list())
+    if existing:
+        print(f"endpoint {MODEL_SERVING_ENDPOINT_NAME} already exists - force update = {force_update}...")
+        if force_update:
+            w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=MODEL_SERVING_ENDPOINT_NAME)
+    else:
+        print(f"Creating the endpoint {MODEL_SERVING_ENDPOINT_NAME}, this will take a few minutes...")
+        w.serving_endpoints.create_and_wait(name=MODEL_SERVING_ENDPOINT_NAME, config=endpoint_config)
+except PermissionDenied as e:
+    endpoint_ready = False
+    print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
 # COMMAND ----------
 

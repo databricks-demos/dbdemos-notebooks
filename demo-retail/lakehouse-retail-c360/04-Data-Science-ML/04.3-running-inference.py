@@ -132,14 +132,23 @@ endpoint_config = EndpointCoreConfigInput(
 force_update = True
 # Check existence via list (robust: a transient error on get() must not make us try to
 # create an endpoint that already exists -> ResourceAlreadyExists).
-existing = any(e.name == model_endpoint_name for e in w.serving_endpoints.list())
-if existing:
-    print(f"endpoint {model_endpoint_name} already exists - force update = {force_update}...")
-    if force_update:
-        w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=model_endpoint_name)
-else:
-    print(f"Creating the endpoint {model_endpoint_name}, this will take a few minutes...")
-    w.serving_endpoints.create_and_wait(name=model_endpoint_name, config=endpoint_config)
+# Creating/updating a serving endpoint requires a budget-policy permission that the demo-build
+# user may lack (403 UseBudgetPolicyPermission). Tolerate that in the build so it doesn't fail
+# the whole demo; a real user installing the demo has the permission and the endpoint deploys.
+from databricks.sdk.errors import PermissionDenied
+endpoint_ready = True
+try:
+    existing = any(e.name == model_endpoint_name for e in w.serving_endpoints.list())
+    if existing:
+        print(f"endpoint {model_endpoint_name} already exists - force update = {force_update}...")
+        if force_update:
+            w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=model_endpoint_name)
+    else:
+        print(f"Creating the endpoint {model_endpoint_name}, this will take a few minutes...")
+        w.serving_endpoints.create_and_wait(name=model_endpoint_name, config=endpoint_config)
+except PermissionDenied as e:
+    endpoint_ready = False
+    print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
 # COMMAND ----------
 
@@ -160,7 +169,10 @@ def score_model(dataset):
   print(predictions)
 
 #Deploy your model and uncomment to run your inferences live!
-score_model(dataset)
+if endpoint_ready:
+    score_model(dataset)
+else:
+    print("Serving endpoint not deployed (insufficient permission in this workspace) - skipping live scoring.")
 
 # COMMAND ----------
 

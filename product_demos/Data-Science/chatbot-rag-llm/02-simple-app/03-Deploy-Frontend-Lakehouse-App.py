@@ -21,7 +21,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U mlflow[databricks] databricks-sdk==0.59.0
+# MAGIC %uv pip install --quiet -U mlflow[databricks] databricks-sdk==0.59.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

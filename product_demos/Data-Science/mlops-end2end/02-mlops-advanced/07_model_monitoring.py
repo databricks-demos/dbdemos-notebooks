@@ -22,7 +22,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-sdk mlflow-skinny --upgrade
+# MAGIC %uv pip install --quiet databricks-sdk mlflow-skinny --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

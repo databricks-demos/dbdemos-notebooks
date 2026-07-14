@@ -45,7 +45,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC %uv pip install --quiet mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -63,7 +63,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.mlops_chur
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -r $requirements_path
+# MAGIC %uv pip install --quiet -r $requirements_path
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

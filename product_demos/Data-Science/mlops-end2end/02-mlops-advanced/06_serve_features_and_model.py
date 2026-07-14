@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade
+# MAGIC %uv pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade
 # MAGIC %restart_python
 
 # COMMAND ----------

@@ -27,7 +27,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade lightgbm optuna pandas
+# MAGIC %uv pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade lightgbm optuna pandas
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

@@ -68,7 +68,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.14.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

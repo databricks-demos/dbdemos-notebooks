@@ -15,7 +15,7 @@ dbutils.widgets.text("produce_time_sec", "300", "How long we'll produce data (se
 
 # COMMAND ----------
 
-# MAGIC %pip install faker confluent-kafka
+# MAGIC %uv pip install faker confluent-kafka
 
 # COMMAND ----------
 

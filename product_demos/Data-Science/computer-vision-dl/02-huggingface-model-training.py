@@ -29,7 +29,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --upgrade databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate torchvision evaluate
+# MAGIC %uv pip install --upgrade databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate torchvision evaluate
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

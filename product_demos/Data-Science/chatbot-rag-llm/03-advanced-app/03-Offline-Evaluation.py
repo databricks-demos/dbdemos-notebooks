@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -U databricks-sdk==0.49.0 databricks-agents
+# MAGIC %uv pip install --quiet -U databricks-sdk==0.49.0 databricks-agents
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -179,7 +179,7 @@ pip_requirements = mlflow.pyfunc.get_model_dependencies(f"runs:/{model.run_id}/c
 # COMMAND ----------
 
 # DBTITLE 1,install the model requirements to avoid version conflict
-# MAGIC %pip install -r $pip_requirements
+# MAGIC %uv pip install -r $pip_requirements
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

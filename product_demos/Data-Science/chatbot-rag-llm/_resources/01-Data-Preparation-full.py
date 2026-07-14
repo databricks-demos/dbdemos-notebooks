@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install beautifulsoup4 tiktoken
+# MAGIC %uv pip install beautifulsoup4 tiktoken
 
 # COMMAND ----------
 

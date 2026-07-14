@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install textstat==0.7.3 databricks-genai==1.1.7 openai==1.64.0 langchain==0.3.19 langchain-community==0.3.18 langchain_text_splitters==0.3.6 markdown==3.6 databricks-sdk==0.40.0 transformers==4.49.0 mlflow==2.19
+# MAGIC %uv pip install textstat==0.7.3 databricks-genai==1.1.7 openai==1.64.0 langchain==0.3.19 langchain-community==0.3.18 langchain_text_splitters==0.3.6 markdown==3.6 databricks-sdk==0.40.0 transformers==4.49.0 mlflow==2.19
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install faker
+# MAGIC %uv pip install faker
 
 # COMMAND ----------
 

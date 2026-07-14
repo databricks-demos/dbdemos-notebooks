@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install iso3166 Faker
+# MAGIC %uv pip install iso3166 Faker
 
 # COMMAND ----------
 

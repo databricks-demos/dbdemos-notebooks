@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet lightgbm mlflow --upgrade
+# MAGIC %uv pip install --quiet lightgbm mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

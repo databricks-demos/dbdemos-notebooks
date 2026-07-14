@@ -89,7 +89,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install mlflow==3.1.1 databricks-vectorsearch==0.57 databricks-feature-engineering==0.12.1 databricks-sdk==0.59.0
+# MAGIC %uv pip install mlflow==3.1.1 databricks-vectorsearch==0.57 databricks-feature-engineering==0.12.1 databricks-sdk==0.59.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

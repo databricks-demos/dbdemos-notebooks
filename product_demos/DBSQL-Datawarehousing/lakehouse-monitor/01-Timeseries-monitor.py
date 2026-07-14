@@ -27,7 +27,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.40.0
+# MAGIC %uv pip install databricks-sdk==0.40.0
 # MAGIC %restart_python
 
 # COMMAND ----------

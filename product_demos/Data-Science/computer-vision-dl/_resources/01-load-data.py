@@ -4,7 +4,7 @@ volume_folder = dbutils.widgets.get("volume_folder")
 
 # COMMAND ----------
 
-# MAGIC %pip install boto3
+# MAGIC %uv pip install boto3
 
 # COMMAND ----------
 

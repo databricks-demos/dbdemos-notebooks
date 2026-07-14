@@ -1,7 +1,7 @@
 -- Databricks notebook source
--- MAGIC %pip install mlflow==3.1.0
+-- MAGIC %uv pip install mlflow==3.1.0
 -- MAGIC #If you have issues, make sure this matches your automl dependency version. For prod usage, use env_manager='conda'
--- MAGIC %pip install azure-core azure-storage-file-datalake #for the display() in Azure only
+-- MAGIC %uv pip install azure-core azure-storage-file-datalake #for the display() in Azure only
 -- MAGIC dbutils.library.restartPython()
 
 -- COMMAND ----------

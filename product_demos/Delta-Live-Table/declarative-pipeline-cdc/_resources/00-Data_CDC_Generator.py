@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install Faker
+# MAGIC %uv pip install Faker
 
 # COMMAND ----------
 

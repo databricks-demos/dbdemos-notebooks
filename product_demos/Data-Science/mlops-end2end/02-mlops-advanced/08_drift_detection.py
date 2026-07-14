@@ -32,7 +32,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install needed package
-# MAGIC %pip install --quiet databricks-sdk mlflow-skinny --upgrade dbldatagen
+# MAGIC %uv pip install --quiet databricks-sdk mlflow-skinny --upgrade dbldatagen
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

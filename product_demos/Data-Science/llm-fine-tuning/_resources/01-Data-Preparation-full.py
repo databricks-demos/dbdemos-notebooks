@@ -26,7 +26,7 @@ folder = volume_folder
 
 # COMMAND ----------
 
-# MAGIC %pip install beautifulsoup4 tiktoken==0.7.0 lxml==4.9.3 transformers==4.49.0 langchain==0.3.19
+# MAGIC %uv pip install beautifulsoup4 tiktoken==0.7.0 lxml==4.9.3 transformers==4.49.0 langchain==0.3.19
 
 # COMMAND ----------
 

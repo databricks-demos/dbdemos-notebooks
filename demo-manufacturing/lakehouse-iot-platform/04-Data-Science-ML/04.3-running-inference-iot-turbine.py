@@ -130,24 +130,23 @@ display(df)
 from mlflow.deployments import get_deploy_client
 
 client = get_deploy_client("databricks")
+served_entities = [
+    {
+        "name": "iot-maintenance-serving-endpoint",
+        "entity_name": f"{catalog}.{db}.{model_name}",
+        "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
+        "workload_size": "Small",
+        "scale_to_zero_enabled": True
+    }
+]
 try:
-    endpoint = client.create_endpoint(
-        name=MODEL_SERVING_ENDPOINT_NAME,
-        config={
-            "served_entities": [
-                {
-                    "name": "iot-maintenance-serving-endpoint",
-                    "entity_name": f"{catalog}.{db}.{model_name}",
-                    "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
-                    "workload_size": "Small",
-                    "scale_to_zero_enabled": True
-                }
-            ]
-        }
-    )
+    endpoint = client.create_endpoint(name=MODEL_SERVING_ENDPOINT_NAME, config={"served_entities": served_entities})
 except Exception as e:
     if "already exists" in str(e):
-        print(f"Endpoint {catalog}.{db}.{MODEL_SERVING_ENDPOINT_NAME} already exists. Skipping creation.")
+        # Update the existing endpoint to the latest model version; skipping would leave it
+        # serving a stale model whose input schema no longer matches the query.
+        print(f"Endpoint {MODEL_SERVING_ENDPOINT_NAME} exists, updating to latest model version...")
+        client.update_endpoint(endpoint=MODEL_SERVING_ENDPOINT_NAME, config={"served_entities": served_entities})
     else:
         raise e
 

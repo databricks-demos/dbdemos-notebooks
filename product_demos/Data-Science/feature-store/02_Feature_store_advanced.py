@@ -376,7 +376,7 @@ candidates = {
 # COMMAND ----------
 
 # DBTITLE 1,Train & Eval
-mlflow.set_experiment(xp_path)
+mlflow.set_experiment(f"{xp_path}/feature_store_run")  # leaf path: xp_path is a directory (DIRECTORY-vs-EXPERIMENT conflict)
 x_sample = X_train.sample(1, random_state=42)
 y_sample = y_train.sample(1, random_state=42)
 signature = infer_signature(X_train, y_sample)

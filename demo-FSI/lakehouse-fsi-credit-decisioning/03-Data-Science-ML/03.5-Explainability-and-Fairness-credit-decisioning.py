@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install --quiet shap==0.46.0 mlflow==3.14.0
+# MAGIC %uv pip install --quiet shap==0.52.0 mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

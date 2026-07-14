@@ -94,7 +94,7 @@
 
 # MAGIC %md 
 # MAGIC
-# MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-SDP-patient-readmission-SQL) *(python Lakeflow Pipelines notebook alternative coming soon).* <br>
+# MAGIC Open the HLS patient readmission  <a dbdemos-pipeline-id="sdp-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-Ingestion/01.1-SDP-patient-readmission) *(python Lakeflow Pipelines notebook alternative coming soon).* <br>
 # MAGIC   For more details on Lakeflow Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 # COMMAND ----------

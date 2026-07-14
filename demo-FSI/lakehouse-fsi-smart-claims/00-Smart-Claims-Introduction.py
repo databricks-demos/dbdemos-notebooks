@@ -116,7 +116,7 @@
 
 # MAGIC %md  
 # MAGIC
-# MAGIC Open the [Lakeflow Pipelines SQL notebook]($./01-Data-Ingestion/01.1-SDP-Ingest-Policy-Claims). 
+# MAGIC Open the [Lakeflow Pipelines SQL notebook]($./01-Data-Ingestion/01-SDP-Smart-Claims). 
 # MAGIC
 # MAGIC This will create a <a dbdemos-pipeline-id="sdp-fsi-smart-claims" href="#joblist/pipelines/bf6b21bb-ff10-480c-bdae-c8c91c76d065" target="_blank">Lakeflow pipeline</a> running in batch or streaming.
 # MAGIC

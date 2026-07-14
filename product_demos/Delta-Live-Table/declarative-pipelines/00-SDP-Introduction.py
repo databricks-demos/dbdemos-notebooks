@@ -87,14 +87,14 @@
 # MAGIC     </td>
 # MAGIC   </tr>
 # MAGIC   <tr>
-# MAGIC     <td><a href="$./transformations/01-bronze.sql"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-1.png?raw=true" width="300px" style="width:300px;" /></a></td>
-# MAGIC     <td><a href="$./transformations/01-silver.sql"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-2.png?raw=true" width="300px" style="width:300px;" /></a></td>
-# MAGIC     <td><a href="$./transformations/01-gold.sql"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-3.png?raw=true" width="300px" style="width:300px;" /></a></td>
+# MAGIC     <td><a href="$./1-sdp-sql/transformations/01-bronze"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-1.png?raw=true" width="300px" style="width:300px;" /></a></td>
+# MAGIC     <td><a href="$./1-sdp-sql/transformations/02-silver"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-2.png?raw=true" width="300px" style="width:300px;" /></a></td>
+# MAGIC     <td><a href="$./1-sdp-sql/transformations/03-gold"><img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/declarative-pipelines/declarative-pipelines-3.png?raw=true" width="300px" style="width:300px;" /></a></td>
 # MAGIC   </tr>
 # MAGIC   <tr>
-# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-bronze.sql">transformations/01-bronze.sql</a></td>
-# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-silver.sql">transformations/01-silver.sql</a></td>
-# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-gold.sql">transformations/01-gold.sql</a></td>
+# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/01-bronze">transformations/01-bronze.sql</a></td>
+# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/02-silver">transformations/02-silver.sql</a></td>
+# MAGIC     <td align="center">Open <a href="$./1-sdp-sql/transformations/03-gold">transformations/03-gold.sql</a></td>
 # MAGIC   </tr>
 # MAGIC </table>
 # MAGIC

@@ -92,7 +92,7 @@
 # MAGIC Thankfully, Databricks lets you manage your entire data stack. You can, for example, synchronize your CRM or Ticket support data and track how the CSAT score increases over time, benchmarking a team with and without an agent!
 # MAGIC
 # MAGIC
-# MAGIC Open [06-improving-business-kpis/06-improving-business-kpis]($./06-improving-business-kpis/06-improving-business-kpis) to track your Busines KPI with a ready to use dashboard!
+# MAGIC Open [06-improving-business-kpis/06-improving-business-kpis]($./06-improving-business-kpis/06-business-dashboard) to track your Busines KPI with a ready to use dashboard!
 
 # COMMAND ----------
 

@@ -5,7 +5,7 @@
 # MAGIC
 # MAGIC Let's leverage the model we trained to deploy real-time inferences behind a REST API.
 # MAGIC
-# MAGIC This will provide instant recommendations for any new patient, on demand, potentially also explaining the recommendation (see [next notebook]($./03.5-Explainability-patient-readmission) for Explainability) 
+# MAGIC This will provide instant recommendations for any new patient, on demand, potentially also explaining the recommendation (see [next notebook]($./04.5-Explainability-patient-readmission) for Explainability) 
 # MAGIC
 # MAGIC Now that our model has been created with Databricks AutoML, we can easily flag it as Production Ready and turn on Databricks Model Serving.
 # MAGIC

@@ -70,7 +70,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Optional: If you cannot access a foundation model, follow the instructions in the notebook [04-Extra-setup-external-model-OpenAI]($./04-Extra-setup-external-model-OpenAI) to use an OpenAI model instead. 
+# MAGIC ### Optional: If you cannot access a foundation model, follow the instructions in the notebook [04-Extra-setup-external-model-OpenAI]($./05-Extra-setup-external-model-OpenAI) to use an OpenAI model instead. 
 
 # COMMAND ----------
 

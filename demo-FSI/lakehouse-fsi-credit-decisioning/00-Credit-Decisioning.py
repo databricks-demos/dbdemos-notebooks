@@ -91,7 +91,7 @@
 # MAGIC %md 
 # MAGIC ## 1: Ingesting data & building our FS Lakehouse Database
 # MAGIC
-# MAGIC First, we need to ingest and transform customer, credit, and payments data sources with the [Lakeflow Pipelines SQL notebook]($./01-Data-Ingestion/01-SDP-Internal-Banking-Data-SQL). This will create a <a href="/" dbdemos-pipeline-id="sdp-fsi-credit-decisioning" target="_blank">Lakeflow pipeline</a> running in batch or streaming, and saving our data within Unity Catalog as Delta tables.
+# MAGIC First, we need to ingest and transform customer, credit, and payments data sources with the [Lakeflow Pipelines SQL notebook]($./01-Data-Ingestion/01.1-sdp-sql/01-SDP-Internal-Banking-Data-SQL). This will create a <a href="/" dbdemos-pipeline-id="sdp-fsi-credit-decisioning" target="_blank">Lakeflow pipeline</a> running in batch or streaming, and saving our data within Unity Catalog as Delta tables.
 
 # COMMAND ----------
 

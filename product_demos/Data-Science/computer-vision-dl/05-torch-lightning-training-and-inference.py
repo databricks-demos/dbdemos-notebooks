@@ -203,7 +203,7 @@ class CVModel(pl.LightningModule):
 # MAGIC
 # MAGIC The following cells implement an ML model leveraging pytorch. 
 # MAGIC
-# MAGIC The model is a standard Computer Vision one, implemented using PyTorch Lightning. For more details, it is defined in the [utils]($./_resources/01-utils) notebook.
+# MAGIC The model is a standard Computer Vision one, implemented using PyTorch Lightning. For more details, it is defined in the [utils]($./_resources/00-init) notebook.
 # MAGIC
 # MAGIC Note that we'll be using MLflow to automatically log our experiment metrics and register our final model.
 # MAGIC

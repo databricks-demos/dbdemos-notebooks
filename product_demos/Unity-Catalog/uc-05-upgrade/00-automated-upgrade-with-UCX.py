@@ -225,5 +225,5 @@
 # MAGIC %md
 # MAGIC ## Interested by an example to migrate your tables manually?
 # MAGIC
-# MAGIC Check the [01-manual-upgrade-to-UC]($./01-manual-upgrade-to-UC) for a custom example upgrading your table to UC!
+# MAGIC Check the [01-manual-upgrade-to-UC]($./02-manual-upgrade-to-UC) for a custom example upgrading your table to UC!
 # MAGIC

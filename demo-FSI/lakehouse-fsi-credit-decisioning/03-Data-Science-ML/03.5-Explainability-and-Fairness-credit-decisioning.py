@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet shap==0.46.0 mlflow==3.14.0
+# MAGIC %uv pip install --quiet shap==0.46.0 mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -44,7 +44,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_fs
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet -r $requirements_path
+# MAGIC %uv pip install --quiet -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

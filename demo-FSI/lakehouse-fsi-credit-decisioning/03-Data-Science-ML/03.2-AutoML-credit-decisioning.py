@@ -70,7 +70,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering scikit-learn optuna
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering scikit-learn optuna
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

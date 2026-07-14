@@ -37,7 +37,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 databricks-feature-engineering
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

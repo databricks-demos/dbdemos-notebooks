@@ -105,5 +105,64 @@
     "spark_version": "17.3.x-scala2.13",
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER"
-  }  
+  },
+  "init_job": {
+    "settings": {
+        "name": "dbdemos_computer_vision_pcb_{{CURRENT_USER_NAME}}",
+        "email_notifications": {"no_alert_for_skipped_runs": False},
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "ingestion_etl",
+                "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/01-ingestion-and-ETL", "source": "WORKSPACE"},
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "train_model",
+                "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/02-huggingface-model-training", "source": "WORKSPACE"},
+                "gpu": "GPU_1xA10",
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "ingestion_etl"}]
+            },
+            {
+                "task_key": "running_inference",
+                "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/03-running-cv-inferences", "source": "WORKSPACE"},
+                "gpu": "GPU_1xA10",
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "train_model"}]
+            },
+            {
+                "task_key": "explaining_inference",
+                "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/04-explaining-inference", "source": "WORKSPACE"},
+                "gpu": "GPU_1xA10",
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "running_inference"}]
+            }
+        ],
+        "job_clusters": [
+            {
+                "job_cluster_key": "Shared_job_cluster",
+                "new_cluster": {
+                    "spark_version": "17.3.x-cpu-ml-scala2.13",
+                    "custom_tags": {"ResourceClass": "SingleNode"},
+                    "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
+                    "enable_elastic_disk": True,
+                    "data_security_mode": "SINGLE_USER",
+                    "runtime_engine": "STANDARD",
+                    "num_workers": 0
+                }
+            }
+        ],
+        "format": "MULTI_TASK"
+    }
+  }
 }

@@ -112,6 +112,87 @@
       "parameters": {"reset_all_data": "false", "produce_time_sec": "300"}
     }
   ],
+  "init_job": {
+    "settings": {
+        "name": "dbdemos_streaming_sessionization_init_{{CURRENT_USER_NAME}}",
+        "email_notifications": {
+            "no_alert_for_skipped_runs": False
+        },
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "produce_events",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/_00-Delta-session-PRODUCER",
+                    "source": "WORKSPACE",
+                    "base_parameters": {"reset_all_data": "false", "produce_time_sec": "300"}
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "bronze",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Delta-session-BRONZE",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "produce_events"}]
+            },
+            {
+                "task_key": "silver",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-Delta-session-SILVER",
+                    "source": "WORKSPACE",
+                    "base_parameters": {"reset_all_data": "false"}
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "bronze"}]
+            },
+            {
+                "task_key": "gold",
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/03-Delta-session-GOLD",
+                    "source": "WORKSPACE",
+                    "base_parameters": {"reset_all_data": "false"}
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "silver"}]
+            }
+        ],
+        "job_clusters": [
+            {
+                "job_cluster_key": "Shared_job_cluster",
+                "new_cluster": {
+                    "spark_version": "17.3.x-scala2.13",
+                    "spark_conf": {
+                        "spark.master": "local[*, 4]",
+                        "spark.databricks.cluster.profile": "singleNode"
+                    },
+                    "custom_tags": {
+                        "ResourceClass": "SingleNode"
+                    },
+                    "spark_env_vars": {
+                        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                    },
+                    "enable_elastic_disk": True,
+                    "data_security_mode": "SINGLE_USER",
+                    "runtime_engine": "STANDARD",
+                    "num_workers": 0
+                }
+            }
+        ],
+        "format": "MULTI_TASK"
+    }
+  },
   "cluster": {
       "spark_version": "17.3.x-scala2.13",
       "spark_conf": {
@@ -123,6 +204,6 @@
     },
     "num_workers": 0,
     "single_user_name": "{{CURRENT_USER}}",
-    "data_security_mode": "SINGLE_USER"   
+    "data_security_mode": "SINGLE_USER"
   }
 }

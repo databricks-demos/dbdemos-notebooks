@@ -83,7 +83,6 @@ print(create_event(str(uuid.uuid4()), int(time.time())))
 
 # COMMAND ----------
 
-users = {}
 #How long it'll produce messages
 produce_time_sec = int(dbutils.widgets.get("produce_time_sec"))
 #How many new users join the website per second
@@ -91,32 +90,47 @@ user_creation_rate = 2
 #Max duration a user stays in the website (after this time user will stop producing events)
 user_max_duration_time = 120
 
-for _ in range(produce_time_sec):
-  #print(len(users))
-  for id in list(users.keys()):
-    user = users[id]
-    now = int(time.time())
-    if (user['end_date'] < now):
-      del users[id]
-      #print(f"User {id} removed")
-    else:
-      #10% chance to click on something
-      if (randrange(100) > 80):
-        event = create_event(id, now)
-        send_message(event)
-        #print(f"User {id} sent event {event}")
-        
-  #Re-create new users
-  for i in range(user_creation_rate):
-    #Add new user
-    user_id = str(uuid.uuid4())
-    now = int(time.time())
-    #end_date is when the user will leave and the session stops (so max user_max_duration_time sec and then leaves the website)
-    user = {"id": user_id, "creation_date": now, "end_date": now + randrange(user_max_duration_time) }
-    users[user_id] = user
-    #print(f"User {user_id} created")
-  time.sleep(1)
-
+# NOTE: dbdemos runs this producer as the first step of the bundle test, before the
+# streaming consumers. To keep the bundle deterministic and fast, we generate a bounded
+# batch of events as quickly as possible and exit (instead of the slow real-time loop).
+# The original real-time simulation is kept below (commented) for the interactive demo.
+number_of_users = 300
+events_per_user_min, events_per_user_max = 3, 15
+now = int(time.time())
+for _ in range(number_of_users):
+  user_id = str(uuid.uuid4())
+  # each user generates a burst of clicks within a short session window
+  session_start = now - randrange(user_max_duration_time)
+  for _click in range(randrange(events_per_user_min, events_per_user_max)):
+    event = create_event(user_id, session_start + randrange(user_max_duration_time))
+    send_message(event)
 
 # Ensure all messages are delivered before exiting
 producer.flush()
+print("Done producing the bounded batch of events.")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Real-time simulation (optional)
+# MAGIC The cell above produces a bounded batch so the demo pipeline can be tested end to end.
+# MAGIC To instead simulate a *live* stream of users on your website, run the loop below (it
+# MAGIC produces events continuously for `produce_time_sec` seconds):
+# MAGIC ```python
+# MAGIC users = {}
+# MAGIC for _ in range(produce_time_sec):
+# MAGIC   for id in list(users.keys()):
+# MAGIC     user = users[id]
+# MAGIC     now = int(time.time())
+# MAGIC     if (user['end_date'] < now):
+# MAGIC       del users[id]
+# MAGIC     else:
+# MAGIC       if (randrange(100) > 80):  # 10% chance to click on something
+# MAGIC         send_message(create_event(id, now))
+# MAGIC   for i in range(user_creation_rate):  # Re-create new users
+# MAGIC     user_id = str(uuid.uuid4())
+# MAGIC     now = int(time.time())
+# MAGIC     users[user_id] = {"id": user_id, "creation_date": now, "end_date": now + randrange(user_max_duration_time)}
+# MAGIC   time.sleep(1)
+# MAGIC producer.flush()
+# MAGIC ```

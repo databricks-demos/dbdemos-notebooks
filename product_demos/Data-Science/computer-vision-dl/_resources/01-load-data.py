@@ -9,39 +9,54 @@ volume_folder = dbutils.widgets.get("volume_folder")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Download & extract the VisA dataset in pure Python
-# MAGIC `%sh` and the aws-cli are not available on serverless compute, so we download the
-# MAGIC public (unsigned) S3 object with boto3 and extract it with Python's `tarfile`.
+# MAGIC # Download & extract the VisA dataset (serverless-safe, streaming)
+# MAGIC `%sh` and the aws-cli aren't available on serverless, and staging the full 1.9GB tar on
+# MAGIC the driver's local disk (`/local_disk0`) then `dbutils.fs.cp` to the Volume is unreliable
+# MAGIC there. Instead we stream the public (unsigned) S3 object through Python's `tarfile` in
+# MAGIC streaming mode (`r|*`) and write only the `pcb1` members we need **straight into the UC
+# MAGIC Volume** (`/Volumes/...`, a real POSIX mount) with plain file IO — no large local copy,
+# MAGIC no `dbutils.fs.cp`.
 
 # COMMAND ----------
 
-import os, tarfile, boto3
+import os, tarfile, shutil, boto3
 from botocore import UNSIGNED
 from botocore.config import Config
 
-local_root = "/local_disk0/tmp/visa"
-os.makedirs(local_root, exist_ok=True)
-tar_path = os.path.join(local_root, "VisA_20220922.tar")
+images_dir = f"{volume_folder}/images"
+labels_dir = f"{volume_folder}/labels"
 
-if not os.path.exists(tar_path):
-    s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
-    s3.download_file("amazon-visual-anomaly", "VisA_20220922.tar", tar_path)
+# Clean any previous run and (re)create the target dirs directly on the Volume.
+for d in (images_dir, labels_dir):
+    shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(d, exist_ok=True)
 
-extract_dir = os.path.join(local_root, "data")
-os.makedirs(extract_dir, exist_ok=True)
-with tarfile.open(tar_path) as t:
-    t.extractall(extract_dir, filter="data")  # only need pcb1 below
+# The demo only needs the pcb1 subset:
+#   tar: pcb1/Data/Images/<Normal|Anomaly>/*.JPG  ->  {volume_folder}/images/<Normal|Anomaly>/*.JPG
+#   tar: pcb1/image_anno.csv                      ->  {volume_folder}/labels/image_anno.csv
+IMAGES_PREFIX = "pcb1/Data/Images/"
+LABELS_MEMBER = "pcb1/image_anno.csv"
 
-# COMMAND ----------
+s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+body = s3.get_object(Bucket="amazon-visual-anomaly", Key="VisA_20220922.tar")["Body"]
 
-# MAGIC %md
-# MAGIC # Copy data to the volume
+n_images, got_labels = 0, False
+# Streaming tar: sequential single pass, never materializes the full 1.9GB locally.
+with tarfile.open(fileobj=body, mode="r|*") as tar:
+    for member in tar:
+        if not member.isfile():
+            continue
+        if member.name.startswith(IMAGES_PREFIX):
+            rel = member.name[len(IMAGES_PREFIX):]          # e.g. "Normal/0000.JPG"
+            dest = os.path.join(images_dir, rel)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            with open(dest, "wb") as f:
+                shutil.copyfileobj(tar.extractfile(member), f)
+            n_images += 1
+        elif member.name == LABELS_MEMBER:
+            with open(os.path.join(labels_dir, "image_anno.csv"), "wb") as f:
+                shutil.copyfileobj(tar.extractfile(member), f)
+            got_labels = True
 
-# COMMAND ----------
-
-dbutils.fs.rm(volume_folder + "/images", recurse=True)
-dbutils.fs.rm(volume_folder + "/labels", recurse=True)
-dbutils.fs.mkdirs(volume_folder + "/images")
-dbutils.fs.cp(f"file:{extract_dir}/pcb1/Data/Images/", volume_folder + "/images", recurse=True)
-dbutils.fs.mkdirs(volume_folder + "/labels")
-dbutils.fs.cp(f"file:{extract_dir}/pcb1/image_anno.csv", volume_folder + "/labels")
+print(f"Extracted {n_images} images to {images_dir}; labels written: {got_labels}")
+assert n_images > 0 and got_labels, "Expected pcb1 images and image_anno.csv in the VisA tar"

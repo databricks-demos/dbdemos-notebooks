@@ -14,7 +14,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install mlflow==3.14.0
+# MAGIC %uv pip install mlflow==3.14.0 "huggingface-hub==0.36.2"
 
 # COMMAND ----------
 

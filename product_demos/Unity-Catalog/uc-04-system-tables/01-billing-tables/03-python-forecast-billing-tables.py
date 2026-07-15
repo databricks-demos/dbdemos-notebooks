@@ -185,7 +185,7 @@ results.write.mode('append').saveAsTable("billing_forecast_manual")
 # MAGIC     GREATEST(0, f.yhat_lower) as yhat_lower,
 # MAGIC     GREATEST(0, f.yhat_upper) as yhat_upper,
 # MAGIC     f.training_date
-# MAGIC   from main.dbdemos_billing_forecast.billing_forecast_manual f
+# MAGIC   from dbdemos_billing_forecast.billing_forecast_manual f
 # MAGIC )
 # MAGIC select
 # MAGIC   `date`,

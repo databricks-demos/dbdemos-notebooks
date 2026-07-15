@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 shap==0.42.1 opencv-python==4.11.0.86
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 shap==0.42.1 opencv-python==4.11.0.86 torch torchvision
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

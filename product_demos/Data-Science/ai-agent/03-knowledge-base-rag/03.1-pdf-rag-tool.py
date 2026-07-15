@@ -22,7 +22,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %uv pip install -U -qqqq mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk databricks-mcp
+# MAGIC %uv pip install -U mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk databricks-mcp
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

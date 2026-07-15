@@ -245,7 +245,7 @@
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
-                "depends_on": [{"task_key": "claim_policy_sdp_pipeline"}]
+                "depends_on": [{"task_key": "init_data"}]
             }
         ],
         "job_clusters": [

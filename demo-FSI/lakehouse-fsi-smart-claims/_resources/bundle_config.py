@@ -178,7 +178,6 @@
                     "notebook_path": "{{DEMO_FOLDER}}/02-Data-Science-ML/02.1-Model-Training",
                     "source": "WORKSPACE"
                 },
-                "gpu": "GPU_1xA10",
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
@@ -194,7 +193,6 @@
                     "notebook_path": "{{DEMO_FOLDER}}/02-Data-Science-ML/02.2-Batch-Scoring",
                     "source": "WORKSPACE"
                 },
-                "gpu": "GPU_1xA10",
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},

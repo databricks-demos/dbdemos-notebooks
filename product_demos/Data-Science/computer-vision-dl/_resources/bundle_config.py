@@ -123,7 +123,6 @@
             {
                 "task_key": "train_model",
                 "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/02-huggingface-model-training", "source": "WORKSPACE"},
-                "gpu": "GPU_1xA10",
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
@@ -132,7 +131,6 @@
             {
                 "task_key": "running_inference",
                 "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/03-running-cv-inferences", "source": "WORKSPACE"},
-                "gpu": "GPU_1xA10",
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},
@@ -141,7 +139,6 @@
             {
                 "task_key": "explaining_inference",
                 "notebook_task": {"notebook_path": "{{DEMO_FOLDER}}/04-explaining-inference", "source": "WORKSPACE"},
-                "gpu": "GPU_1xA10",
                 "job_cluster_key": "Shared_job_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {},

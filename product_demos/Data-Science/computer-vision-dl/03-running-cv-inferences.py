@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 torch torchvision "huggingface-hub<1.0"
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 torch torchvision "huggingface-hub==0.36.2"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

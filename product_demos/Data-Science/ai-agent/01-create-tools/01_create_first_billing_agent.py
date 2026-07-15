@@ -24,7 +24,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %uv pip install -U mlflow>=3.10.1 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk
+# MAGIC %uv pip install mlflow>=3.10.1 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk "typing_extensions>=4.13"
 # MAGIC # Restart to load the packages into the Python environment
 # MAGIC dbutils.library.restartPython()
 

@@ -89,7 +89,7 @@ spark.createDataFrame(data=data, schema=["tag", "name", "constraint"]).write.mod
 
 # COMMAND ----------
 
-# MAGIC %fs head /Volumes/main__build/dbdemos_sdp_unit_test/raw_data/test/users_json/users.json
+print(dbutils.fs.head("/Volumes/main__build/dbdemos_sdp_unit_test/raw_data/test/users_json/users.json"))
 
 # COMMAND ----------
 
@@ -105,7 +105,7 @@ spark.createDataFrame(data=data, schema=["tag", "name", "constraint"]).write.mod
 
 # COMMAND ----------
 
-# MAGIC %fs head /Volumes/main__build/dbdemos_sdp_unit_test/raw_data/test/spend_csv/spend.csv
+print(dbutils.fs.head("/Volumes/main__build/dbdemos_sdp_unit_test/raw_data/test/spend_csv/spend.csv"))
 
 # COMMAND ----------
 

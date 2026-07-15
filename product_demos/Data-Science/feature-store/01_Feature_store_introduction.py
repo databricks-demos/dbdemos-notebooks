@@ -419,7 +419,10 @@ with mlflow.start_run(run_name="lightGBM") as run:
         artifact_path="model",
         flavor=mlflow.sklearn,
         training_set=training_set,
-        registered_model_name=model_full_name
+        registered_model_name=model_full_name,
+        # mlflow 3.x defaults sklearn serialization to skops which rejects lightgbm/OrderedDict
+        # /lambda types (UntrustedTypesFoundException); cloudpickle keeps it self-contained.
+        serialization_format="cloudpickle"
     )
 
 print(f"Model logged in MLflow and registered in UC: {model_full_name}")

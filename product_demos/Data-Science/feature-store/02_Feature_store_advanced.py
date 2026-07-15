@@ -398,8 +398,8 @@ for name, clf in candidates.items():
         mlflow.log_param("model_name", name)
         mlflow.log_metrics({"auc": auc, "accuracy": acc})
 
-        #  Log model for each candidate
-        mlflow.sklearn.log_model(model, artifact_path="model", signature=signature)
+        #  Log model for each candidate (cloudpickle: mlflow 3.x skops rejects lightgbm/lambda types)
+        mlflow.sklearn.log_model(model, name="model", signature=signature, serialization_format="cloudpickle")
 
         if auc > best_auc:
             best_auc, best_model, best_name = auc, model, name
@@ -444,11 +444,13 @@ with mlflow.start_run(run_name=f"{xp_name}_{best_name}") as run:
         model=best_model,
         artifact_path="model",
         flavor=mlflow.sklearn,
-        training_set=training_set,     # FS lineage preserved here       
+        training_set=training_set,     # FS lineage preserved here
         input_example=x_sample,
         signature=signature,
         registered_model_name=model_full_name,
-        conda_env=env
+        conda_env=env,
+        # cloudpickle: mlflow 3.x skops serialization rejects lightgbm/OrderedDict/lambda types
+        serialization_format="cloudpickle"
     )
 
 print(f"\n Model logged and registered with FS metadata: {model_full_name}")

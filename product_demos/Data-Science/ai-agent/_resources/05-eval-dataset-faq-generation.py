@@ -43,7 +43,7 @@ guides_with_prompts = guides_df.withColumn(
 # Step 3: Call AI_QUERY directly (in Python, no view)
 questions_raw = guides_with_prompts.select(
     "id", "product_name", "title",
-    expr('AI_QUERY("databricks-claude-3-7-sonnet", question_prompt)').alias("questions_json")
+    expr('AI_QUERY("databricks-meta-llama-3-3-70b-instruct", question_prompt)').alias("questions_json")
 )
 
 # Step 4: Parse JSON → array<string>
@@ -73,7 +73,7 @@ questions_with_facts_prompt = questions_with_guides.withColumn(
 # Step 8: Call AI_QUERY again for expected_facts
 facts_raw = questions_with_facts_prompt.select(
     "question",
-    expr('AI_QUERY("databricks-claude-3-7-sonnet", fact_prompt)').alias("expected_facts_json")
+    expr('AI_QUERY("databricks-meta-llama-3-3-70b-instruct", fact_prompt)').alias("expected_facts_json")
 )
 
 

@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-mcp "typing_extensions>=4.13"
+# MAGIC %pip install mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-mcp "typing_extensions>=4.13"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

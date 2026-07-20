@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install dbdemos -U
+# MAGIC %pip install dbdemos -U
 # MAGIC %restart_python
 
 # COMMAND ----------

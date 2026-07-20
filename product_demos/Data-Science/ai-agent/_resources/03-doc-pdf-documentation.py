@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %uv pip install faker weasyprint mlflow>=3.10.1 openai
+# MAGIC %pip install faker weasyprint mlflow>=3.10.1 openai
 # MAGIC %restart_python
 
 # COMMAND ----------

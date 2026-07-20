@@ -29,7 +29,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate evaluate torch torchvision "huggingface-hub==0.36.2"
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate evaluate torch torchvision "huggingface-hub==0.36.2"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

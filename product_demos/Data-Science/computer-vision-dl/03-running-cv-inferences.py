@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %uv pip install databricks-sdk mlflow==3.14.0 torch torchvision "huggingface-hub==0.36.2"
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 torch torchvision "huggingface-hub==0.36.2"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -60,7 +60,7 @@ if not os.path.exists(requirements_path):
 # COMMAND ----------
 
 # DBTITLE 1,Install the requirements
-# MAGIC %uv pip install -r $requirements_path
+# MAGIC %pip install -r $requirements_path
 
 # COMMAND ----------
 

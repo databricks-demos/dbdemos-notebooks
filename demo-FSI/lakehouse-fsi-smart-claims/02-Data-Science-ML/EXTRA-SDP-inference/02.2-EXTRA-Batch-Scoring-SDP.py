@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %uv pip install mlflow==3.14.0 transformers accelerate torchvision Pillow
+# MAGIC %pip install mlflow==3.14.0 transformers accelerate torchvision Pillow
 
 # COMMAND ----------
 

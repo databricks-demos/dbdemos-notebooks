@@ -17,7 +17,7 @@
         "  SELECT DATE_TRUNC('WEEK', opened_at) AS opened_at, COUNT(*) AS count\n",
         "  FROM main.dbdemos_aibi_customer_support.support_cases_enriched, cutoff\n",
         "  WHERE ai_handled = false\n",
-        "    AND (size(:region_filter) = 0 OR array_contains(:region_filter, region_name))\n",
+        "    AND (:region_filter IS NULL OR size(:region_filter) = 0 OR array_contains(:region_filter, region_name))\n",
         "    AND DATE_TRUNC('WEEK', opened_at) < cutoff.last_week_start\n",
         "  GROUP BY 1\n",
         "),\n",
@@ -1306,6 +1306,10 @@
                     }
                   }
                 }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Opened date"
               }
             }
           },
@@ -1362,6 +1366,10 @@
                     "queryName": "f_region_fc"
                   }
                 ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Region"
               }
             }
           },
@@ -1401,6 +1409,10 @@
                     "queryName": "f_seg_m"
                   }
                 ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Segment"
               }
             }
           },
@@ -1440,6 +1452,10 @@
                     "queryName": "f_era_m"
                   }
                 ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "AI Era"
               }
             }
           },

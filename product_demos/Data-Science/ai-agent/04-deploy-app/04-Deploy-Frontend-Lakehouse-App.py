@@ -137,7 +137,18 @@ try:
   print(app_details)
 except Exception as e:
   if "already exists" in str(e):
-    print("App already exists, you can deploy it")
+    print("App already exists, making sure it is running before we (re)deploy it")
+    # An existing app may be STOPPED (e.g. from a previous run). deploy_and_wait requires
+    # the app to be RUNNING, so start it and wait if needed.
+    from databricks.sdk.service.apps import ComputeState
+    app = w.apps.get(name=app_name)
+    state = app.compute_status.state if app.compute_status else None
+    if state != ComputeState.ACTIVE:
+      try:
+        w.apps.start_and_wait(name=app_name)
+        print("App started.")
+      except Exception as start_err:
+        print(f"Couldn't start the app (continuing, deploy may start it): {start_err}")
   else:
     raise e
 

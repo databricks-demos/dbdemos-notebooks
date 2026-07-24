@@ -73,7 +73,27 @@
       "parameters": {"reset_all_data": "false"}
     },
     {
-      "path": "scala/01-Delta-session-BRONZE-scala", 
+      "path": "04-Delta-session-transformWithState",
+      "pre_run": True,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": True,
+      "title":  "Modern Streaming State with transformWithState",
+      "description": "Sessionize the events with the modern transformWithState API (replaces applyInPandasWithState). Reads the events Delta table so it runs on serverless.",
+      "depends_on_previous": False,
+      "parameters": {"reset_all_data": "false"}
+    },
+    {
+      "path": "05-Real-Time-Mode-sessionization",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": True,
+      "title":  "[Advanced] Sub-second sessions with Real-Time Mode",
+      "description": "Optional advanced notebook: run the same transformWithState sessionization in Spark Real-Time Mode for sub-second latency (classic compute only).",
+      "depends_on_previous": False,
+      "parameters": {"reset_all_data": "false"}
+    },
+    {
+      "path": "scala/01-Delta-session-BRONZE-scala",
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 

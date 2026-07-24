@@ -216,7 +216,7 @@ from delta.tables import DeltaTable
 
 def upsert_sessions(df, epoch_id):
   # Create the table on the first batch so the MERGE has a target.
-  if not spark._jsparkSession.catalog().tableExists('sessions_tws'):
+  if not spark.catalog.tableExists('sessions_tws'):   # spark.catalog works on serverless/Spark Connect (_jsparkSession is JVM-only, unsupported there)
     df.limit(0).write.option('mergeSchema', 'true').mode('append').saveAsTable('sessions_tws')
 
   (DeltaTable.forName(spark, "sessions_tws").alias("s")

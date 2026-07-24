@@ -15,7 +15,7 @@ dbutils.widgets.text("produce_time_sec", "300", "How long we'll produce data (se
 
 # COMMAND ----------
 
-# MAGIC %uv pip install faker confluent-kafka
+# MAGIC %pip install faker confluent-kafka
 
 # COMMAND ----------
 
@@ -105,8 +105,17 @@ for _ in range(number_of_users):
     event = create_event(user_id, session_start + randrange(user_max_duration_time))
     send_message(event)
 
-# Ensure all messages are delivered before exiting
-producer.flush()
+# Ensure all messages are delivered before exiting. flush() returns the number of messages
+# STILL in the queue (0 == all delivered). We bound the wait so the notebook fails fast with a
+# clear error instead of hanging forever when the Kafka broker isn't reachable — this producer
+# requires a CLASSIC cluster with the instance profile / VPC networking that can reach the
+# (one-env AWS MSK) broker; it is NOT reachable from serverless.
+remaining = producer.flush(timeout=60)
+if remaining > 0:
+  raise RuntimeError(
+    f"{remaining} messages could not be delivered to Kafka within 60s. The broker is unreachable. "
+    "Run this producer on a CLASSIC cluster with the Kafka instance profile / networking "
+    "(the one-env AWS MSK broker is not reachable from serverless compute).")
 print("Done producing the bounded batch of events.")
 
 # COMMAND ----------

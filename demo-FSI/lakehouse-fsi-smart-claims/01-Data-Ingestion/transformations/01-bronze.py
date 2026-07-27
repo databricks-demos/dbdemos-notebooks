@@ -1,9 +1,6 @@
 from pyspark import pipelines as dp
 from pyspark.sql import functions as F
-
-catalog = "main__build"
-schema = dbName = db = "dbdemos_fsi_smart_claims"
-volume_name = "volume_claims"
+from utilities.utils import catalog, db, volume_name
 
 # ----------------------------------
 # Ingest raw claims data from JSON files

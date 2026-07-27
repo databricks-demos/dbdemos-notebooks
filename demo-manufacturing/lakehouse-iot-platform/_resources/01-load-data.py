@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk==0.40.0 mlflow==2.22.0 numpy==1.26.4 pandas==2.2.3
+# MAGIC %pip install git+https://github.com/QuentinAmbard/mandrova faker databricks-sdk mlflow
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -66,9 +66,6 @@ import random
 import mlflow
 from  mlflow.models.signature import ModelSignature
 import pandas as pd
-import numpy as np
-import cloudpickle
-from unittest import mock
 
 # define a custom model randomly flagging 10% of sensor for the demo init (it'll be replace with proper model on the training part.)
 class MaintenanceEmptyModel(mlflow.pyfunc.PythonModel):
@@ -95,9 +92,8 @@ except Exception as e:
 
         signature = ModelSignature.from_dict({'inputs': '[{"name": "hourly_timestamp", "type": "datetime"}, {"name": "avg_energy", "type": "double"}, {"name": "std_sensor_A", "type": "double"}, {"name": "std_sensor_B", "type": "double"}, {"name": "std_sensor_C", "type": "double"}, {"name": "std_sensor_D", "type": "double"}, {"name": "std_sensor_E", "type": "double"}, {"name": "std_sensor_F", "type": "double"}, {"name": "location", "type": "string"}, {"name": "model", "type": "string"}, {"name": "state", "type": "string"}]',
 'outputs': '[{"type": "tensor", "tensor-spec": {"dtype": "object", "shape": [-1]}}]'})
-        #Temporary pin python to 3.11.10
-        with mlflow.start_run(run_name="mockup_model") as run, mock.patch("mlflow.utils.environment.PYTHON_VERSION", DBDemos.get_python_version_mlflow()):
-            model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature, pip_requirements=['mlflow=='+mlflow.__version__, 'pandas=='+pd.__version__, 'numpy=='+np.__version__, 'cloudpickle=='+cloudpickle.__version__])
+        with mlflow.start_run(run_name="mockup_model") as run:
+            model_info = mlflow.pyfunc.log_model(artifact_path="model", python_model=churn_model, signature=signature)
 
         #Register & move the model in production
         model_registered = mlflow.register_model(f'runs:/{run.info.run_id}/model', f"{catalog}.{db}.{model_name}")

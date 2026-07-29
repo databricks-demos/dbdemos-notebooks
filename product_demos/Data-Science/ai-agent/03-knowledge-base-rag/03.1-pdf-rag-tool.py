@@ -274,7 +274,7 @@ with mlflow.start_run(run_name=model_config.get('config_version_name')):
     input_example={"input": [{"role": "user", "content": request_example}]},
      # Determine resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough for deployment
     resources=AGENT.get_resources(),
-    extra_pip_requirements=["databricks-connect"]
+    extra_pip_requirements=["databricks-connect", "mcp<2"]
     )
 
 # COMMAND ----------

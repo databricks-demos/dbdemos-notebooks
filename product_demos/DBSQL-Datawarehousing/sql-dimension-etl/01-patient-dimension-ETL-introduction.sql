@@ -1,0 +1,138 @@
+-- Databricks notebook source
+-- MAGIC %md-sandbox
+-- MAGIC # Running SQL-based ETL on Databricks - Data Warehousing Migration
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC <div style="float: right; width: 100%;">
+-- MAGIC
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/Databricks%20SQL%20Marketecture.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>
+-- MAGIC
+-- MAGIC ## Building a Star Schema using Databricks SQL
+-- MAGIC
+-- MAGIC <div>
+-- MAGIC The demo illustrate how to create a SQL-first data architecture and data workflow to a classic Star Schema.
+-- MAGIC
+-- MAGIC You'll discover how to run classic SQL / DBA workflow, making it ideal to migrate your existing Datawarehouse scripts to Databricks, with minimum effort: 
+-- MAGIC
+-- MAGIC * Parameterize your job to support different environments.
+-- MAGIC * Load the raw staging data
+-- MAGIC * Apply transformations
+-- MAGIC * Create star schema with FK/PK
+-- MAGIC * Leverage Databricks Workflow to chain your operation
+-- MAGIC * Incremental data loading
+-- MAGIC * Data validation
+-- MAGIC * SCD2 dimention
+-- MAGIC
+-- MAGIC
+-- MAGIC Note: The ETL assumes that the source data is extracted to cloud storage as incremental CSV files.
+-- MAGIC
+-- MAGIC ## A note on DLT
+-- MAGIC With Lakeflow DLT Databricks, provides a higher level of abstraction that we recommend for new pipelines, as it simplify the operations.  We're looking to add a DLT version of this demo to outline the difference in the future.
+-- MAGIC
+-- MAGIC For more details on DLT, you can install `dbdemos.install('dbt-loans)`.
+-- MAGIC
+-- MAGIC </div>
+-- MAGIC
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC # Analytics Architecture
+-- MAGIC
+-- MAGIC #### <span style="color:darkblue">Integrating patient data to cater to analytics applications such as Patient 360
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC <div style="float: center; width: 70%;">
+-- MAGIC
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/healthcare_dw.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>
+-- MAGIC
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## Patient Dimension Demo
+-- MAGIC
+-- MAGIC ### This end-to-end demo builds a Workflows Job that will perform the following tasks:
+-- MAGIC
+-- MAGIC ####<span style="color:darkblue">1. Create Tables
+-- MAGIC <br>
+-- MAGIC   a) Global Configuration<br>
+-- MAGIC   
+-- MAGIC -  **ETL Log table**: This table captures the runtime metadata for a table that includes the table name, load start time and load end time.<br>
+-- MAGIC  
+-- MAGIC   _See [Create Log Table notebook]($./02-Create/02.2-create-ETL-log-table) to review._
+-- MAGIC
+-- MAGIC   b) Standardization<br>
+-- MAGIC -  **Codes table**: Master table initialized with standardized codes used for coded attributes in the schema.<br>
+-- MAGIC
+-- MAGIC   _See [Create Code Table notebook]($./02-Create/02.1-create-code-table) to review._
+-- MAGIC
+-- MAGIC   c) Patient tables<br>
+-- MAGIC - **Patient Staging table**
+-- MAGIC - **Patient Integration table**
+-- MAGIC - **Patient Dimension table**
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC _See [Create Patient Tables notebook]($./02-Create/02.3-create-patient-tables) to review._
+-- MAGIC
+-- MAGIC #### <span style="color:darkblue">2. Stage Initial Data<br>
+-- MAGIC   This task will copy / upload an initial CSV file with patient data onto a staging Volume.
+-- MAGIC
+-- MAGIC ####<span style="color:darkblue">3. Patient load<br>
+-- MAGIC This will initiate the ETL which will read new files from the staging Volume and populate the staging, integration, and patient dimension tables.
+-- MAGIC
+-- MAGIC ####<span style="color:darkblue">4. Stage Incremental Data<br>
+-- MAGIC   This task will copy / upload two incremental CSV files with patient data onto the staging Volume.
+-- MAGIC
+-- MAGIC ####<span style="color:darkblue">5. Patient load<br>
+-- MAGIC This will initiate the ETL which will read new files from the staging Volume and populate the staging, integration, and patient dimension tables.
+-- MAGIC
+-- MAGIC _See [Patient Dimension ETL notebook]($./03-Populate/03.1-patient-dimension-ETL) to review._
+-- MAGIC
+-- MAGIC <br>
+-- MAGIC You can also browse the results of each ETL run. This will show the data that is present in the log table and patient tables, as it appears at the end of the initial load and each incremental load. Click on each of <b>demo_BrowseResultInit</b> and <b>demo_BrowseResultIncr</b> tasks after navigating to the job run page.
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC # Table Definitions
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC <div style="float: right; width: 100%;">
+-- MAGIC
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/dbsql/sql-etl-hls-patient/patient_tables_dw.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>
+-- MAGIC
+-- MAGIC You can view the tables within the catalog.schema that is specified in notebook 00-Setup/Initialize.
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC # Data Flow
+-- MAGIC
+-- MAGIC #### <span style="color:darkblue">Flow of data from the Staging Area for the source data files to the Patient Dimension table
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC <div style="float: right; width: 100%;">
+-- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/cba7ffa9fe38534e4922649313eacd52785f87eb/images/dbsql/sql-etl-hls-patient/data_flow_no_excpt.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC # Sample Source Data
+-- MAGIC
+-- MAGIC #### <span style="color:darkblue">Patient data as contained in the source files
+-- MAGIC <br>
+-- MAGIC <div style="float: right; width: 100%;">
+-- MAGIC
+-- MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/dbsql/sql-etl-hls-patient/patient_data.png?raw=true" style="float: right" width="100%">
+-- MAGIC
+-- MAGIC </div>

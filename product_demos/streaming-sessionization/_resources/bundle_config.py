@@ -45,7 +45,7 @@
     },
     {
       "path": "01-Delta-session-BRONZE", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Consume data from Kafka - Bronze", 
@@ -54,7 +54,7 @@
     },
     {
       "path": "02-Delta-session-SILVER", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Delta streaming, drop duplicate", 
@@ -64,7 +64,7 @@
     },
     {
       "path": "03-Delta-session-GOLD", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Streaming State / Aggregation", 
@@ -73,7 +73,27 @@
       "parameters": {"reset_all_data": "false"}
     },
     {
-      "path": "scala/01-Delta-session-BRONZE-scala", 
+      "path": "04-Delta-session-transformWithState",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": True,
+      "title":  "Modern Streaming State with transformWithState",
+      "description": "Sessionize the events with the modern transformWithState API (replaces applyInPandasWithState). Reads the events Delta table so it runs on serverless.",
+      "depends_on_previous": False,
+      "parameters": {"reset_all_data": "false"}
+    },
+    {
+      "path": "05-Real-Time-Mode-sessionization",
+      "pre_run": False,
+      "publish_on_website": True,
+      "add_cluster_setup_cell": True,
+      "title":  "[Advanced] Sub-second sessions with Real-Time Mode",
+      "description": "Optional advanced notebook: run the same transformWithState sessionization in Spark Real-Time Mode for sub-second latency (classic compute only).",
+      "depends_on_previous": False,
+      "parameters": {"reset_all_data": "false"}
+    },
+    {
+      "path": "scala/01-Delta-session-BRONZE-scala",
       "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
@@ -103,7 +123,7 @@
     },
     {
       "path": "_00-Delta-session-PRODUCER", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": True, 
       "title":  "Data Injector", 
@@ -113,7 +133,7 @@
     }
   ],
   "cluster": {
-      "spark_version": "16.4.x-scala2.12",
+      "spark_version": "17.3.x-scala2.13",
       "spark_conf": {
         "spark.master": "local[*]",
         "spark.databricks.cluster.profile": "singleNode"
@@ -123,6 +143,6 @@
     },
     "num_workers": 0,
     "single_user_name": "{{CURRENT_USER}}",
-    "data_security_mode": "SINGLE_USER"   
+    "data_security_mode": "SINGLE_USER"
   }
 }

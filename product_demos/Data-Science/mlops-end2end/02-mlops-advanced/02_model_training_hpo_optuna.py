@@ -27,7 +27,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade lightgbm optuna pandas
+# MAGIC %uv pip install --quiet databricks-feature-engineering==0.14.0 mlflow --upgrade lightgbm optuna pandas
 # MAGIC
 # MAGIC
 # MAGIC %restart_python
@@ -571,11 +571,15 @@ def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_te
         )
 
         # Create/Log model artifacts with embedded feature lookups
+        # serialization_format="cloudpickle": mlflow 3.x defaults sklearn serialization
+        # to skops, which refuses custom/pipeline/numpy types
+        # (UntrustedTypesFoundException). kwargs forward to mlflow.sklearn.save_model.
         fe.log_model(
             model=model_pipeline,
             artifact_path="model",
             flavor=mlflow.sklearn,
             training_set=training_set_specs_in,
+            serialization_format="cloudpickle",
             # env_manager="uv"
         )
         mlflow.end_run()

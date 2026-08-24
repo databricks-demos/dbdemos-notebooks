@@ -22,7 +22,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install -U -qqqq mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk==0.102.0 databricks-mcp
+# MAGIC %pip install mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-mcp "mcp<2" "typing_extensions>=4.13"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -274,7 +274,7 @@ with mlflow.start_run(run_name=model_config.get('config_version_name')):
     input_example={"input": [{"role": "user", "content": request_example}]},
      # Determine resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough for deployment
     resources=AGENT.get_resources(),
-    extra_pip_requirements=["databricks-connect"]
+    extra_pip_requirements=["databricks-connect", "mcp==1.29.0"]
     )
 
 # COMMAND ----------

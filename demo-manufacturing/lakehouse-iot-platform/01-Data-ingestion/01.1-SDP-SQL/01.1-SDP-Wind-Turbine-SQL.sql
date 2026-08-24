@@ -133,7 +133,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/01-silver.sql]($./transformations/01-silver.sql) notebook to review the SQL queries creating our features and our training dataset
+-- MAGIC Open the [transformations/01-silver.sql]($./transformations/02-silver) notebook to review the SQL queries creating our features and our training dataset
 
 -- COMMAND ----------
 
@@ -154,7 +154,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's create an intermediate feature table
--- MAGIC %md Open the [transformations/01-gold.sql]($./transformations/01-gold.sql) notebook to review the SQL queries creating our features and our training dataset
+-- MAGIC %md Open the [transformations/01-gold.sql]($./transformations/03-gold) notebook to review the SQL queries creating our features and our training dataset
 
 -- COMMAND ----------
 

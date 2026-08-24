@@ -2,7 +2,9 @@
 dbutils.widgets.text('reset_all_data', 'false')
 
 # Change your schema here:
-catalog = "main"
+# Use the isolated build catalog during bundling (the packager rewrites main__build -> main
+# for end users). Plain "main" made the build user hit PERMISSION_DENIED (no CREATE on main).
+catalog = "main__build"
 schema = "dbdemos_billing_forecast"
 
 # COMMAND ----------

@@ -75,7 +75,7 @@ def log_customer_support_agent_model(resources, request_example):
             model_config="../02_agent_eval/agent_config.yaml",
             input_example=ResponsesAgentRequest(input=[{"role": "user", "content": request_example}]),
             resources=resources, # Determine Databricks resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough at deployment time
-            extra_pip_requirements=["databricks-connect"]
+            extra_pip_requirements=["databricks-connect", "mcp==1.29.0"]
         )
 
 def predict_wrapper(question):
@@ -207,7 +207,13 @@ def patched_set_experiment(experiment_name_or_path):
     try:
         _original_set_experiment(experiment_name_or_path)
     except RestException as e:
-        if "experiment creation is not permitted in a repo" in str(e):
+        # Fall back for repo-path restrictions AND the directory/experiment name collision
+        # ("A node with name '<demo>' of type DIRECTORY already exists ... cannot create
+        # node of type MLFLOW_EXPERIMENT") that happens when the experiment path points at
+        # the demo folder itself (e.g. running from a Git repo checkout in a job).
+        if ("experiment creation is not permitted in a repo" in str(e)
+                or "already exists" in str(e)
+                or "MLFLOW_EXPERIMENT" in str(e)):
             from databricks.sdk import WorkspaceClient
             fallback_path = "/Shared/dbdemos/ai-agent"
             fallback_path_xp = fallback_path+"/ai_agent_experiment"
@@ -223,8 +229,9 @@ def patched_set_experiment(experiment_name_or_path):
                 print(f"❌ Failed to create fallback experiment: {create_err}")
                 raise create_err
 
-            # Call original on fallback
-            _original_set_experiment(fallback_path)
+            # Call original on the fallback EXPERIMENT (leaf), not the directory,
+            # otherwise we hit the same DIRECTORY-vs-EXPERIMENT collision again.
+            _original_set_experiment(fallback_path_xp)
         else:
             raise
 

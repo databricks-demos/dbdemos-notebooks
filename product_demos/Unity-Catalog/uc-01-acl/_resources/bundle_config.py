@@ -71,7 +71,7 @@
         "min_workers": 1,
         "max_workers": 1
     },
-    "spark_version": "16.4.x-scala2.12",
+    "spark_version": "17.3.x-scala2.13",
     "data_security_mode": "USER_ISOLATION"
   }
 }

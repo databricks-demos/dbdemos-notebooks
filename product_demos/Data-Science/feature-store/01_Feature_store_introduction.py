@@ -68,7 +68,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -419,7 +419,10 @@ with mlflow.start_run(run_name="lightGBM") as run:
         artifact_path="model",
         flavor=mlflow.sklearn,
         training_set=training_set,
-        registered_model_name=model_full_name
+        registered_model_name=model_full_name,
+        # mlflow 3.x defaults sklearn serialization to skops which rejects lightgbm/OrderedDict
+        # /lambda types (UntrustedTypesFoundException); cloudpickle keeps it self-contained.
+        serialization_format="cloudpickle"
     )
 
 print(f"Model logged in MLflow and registered in UC: {model_full_name}")

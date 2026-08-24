@@ -80,8 +80,8 @@ bronzeDF = (spark.readStream
 
 (bronzeDF.withColumn("file_name", col("_metadata.file_path")).writeStream
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_cdc_raw")
-        .trigger(processingTime='10 seconds')
-        #.trigger(availableNow=True) --use this trigger on serverless
+        #.trigger(processingTime='10 seconds') #real-time streaming; use availableNow on serverless
+        .trigger(availableNow=True)
         .table("clients_cdc"))
 
 time.sleep(20)
@@ -137,8 +137,8 @@ def merge_stream(df, i):
      .writeStream
        .foreachBatch(merge_stream)
        .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_cdc")
-       .trigger(processingTime='10 seconds')
-       #.trigger(availableNow=True) --use this trigger on serverless
+       #.trigger(processingTime='10 seconds') #real-time streaming; use availableNow on serverless
+       .trigger(availableNow=True)
      .start())
 
 time.sleep(20)
@@ -284,8 +284,8 @@ def upsertToDelta(data, batchId):
       .writeStream
         .foreachBatch(upsertToDelta)
         .option("checkpointLocation", raw_data_location+"/stream/checkpoint_clients_gold")
-        .trigger(processingTime='10 seconds')
-        #.trigger(availableNow=True) --use this trigger on serverless
+        #.trigger(processingTime='10 seconds') #real-time streaming; use availableNow on serverless
+        .trigger(availableNow=True)
       .start())
 
 time.sleep(20)

@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.39.0 mlflow==2.20.2 shap==0.42.1 opencv-python==4.11.0.86 
+# MAGIC %pip install databricks-sdk mlflow==3.14.0 "shap>=0.46" scikit-image opencv-python==4.11.0.86 torch torchvision "huggingface-hub==0.36.2"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

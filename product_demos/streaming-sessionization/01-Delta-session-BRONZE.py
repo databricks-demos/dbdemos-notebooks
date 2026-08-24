@@ -107,7 +107,7 @@ stream = (spark
       .option("kafka.bootstrap.servers", kafka_bootstrap_servers_tls) 
       .option("kafka.security.protocol", "PLAINTEXT") #SSL
       .option("subscribe", "dbdemos-sessions") #kafka topic
-      .option("startingOffsets", "latest") #Consume messages from the end
+      .option("startingOffsets", "earliest") #Consume from the beginning so an availableNow batch picks up the producer's events regardless of timing (use "latest" for a live/continuous stream)
       .option("maxOffsetsPerTrigger", "10000") # Control ingestion rate - backpressure
       #.option("ignoreChanges", "true")
     .load()
@@ -116,8 +116,8 @@ stream = (spark
     .writeStream
        # === Write to the delta table ===
       .format("delta")
-      .trigger(processingTime="20 seconds")
-      #.trigger(availableNow=True) --use this for serverless
+      #.trigger(processingTime="20 seconds") #real-time streaming; use availableNow on serverless
+      .trigger(availableNow=True)
       .option("checkpointLocation", volume_folder+"/checkpoints/bronze")
       .option("mergeSchema", "true")
       .outputMode("append")

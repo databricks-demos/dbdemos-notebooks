@@ -24,7 +24,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Library Installs
-# MAGIC %pip install -U -qqqq mlflow>=3.10.1 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk==0.102.0
+# MAGIC %pip install mlflow>=3.10.1 databricks-langchain databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 "typing_extensions>=4.13"
 # MAGIC # Restart to load the packages into the Python environment
 # MAGIC dbutils.library.restartPython()
 
@@ -173,11 +173,17 @@ def calculate_math_expression(expression: str) -> float:
     allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
     allowed_names.update({"abs": abs, "round": round})
 
+    # A tool must never raise: the agent sometimes calls it with a null/blank/invalid expression,
+    # and a raised error becomes a UDF_USER_CODE_ERROR that aborts the whole run/eval (this made
+    # mlflow.genai.evaluate hang for hours retrying the failing tool call). Return NaN on bad input
+    # so the agent can recover gracefully.
+    if expression is None or str(expression).strip() == "":
+        return float("nan")
     try:
-        result = eval(expression, {"__builtins__": None}, allowed_names)
+        result = eval(str(expression), {"__builtins__": None}, allowed_names)
         return float(result)
-    except Exception as e:
-        raise ValueError(f"Invalid expression: {expression}. Error: {str(e)}")
+    except Exception:
+        return float("nan")
 
 print(calculate_math_expression("6 + 3 * (13 - 1)"))
 

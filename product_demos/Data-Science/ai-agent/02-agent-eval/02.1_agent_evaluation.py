@@ -32,7 +32,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -U -qqqq mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain pydantic databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-sdk==0.102.0 databricks-mcp
+# MAGIC %pip install mlflow>=3.10.1 langchain==0.3.27 langgraph==0.6.11 databricks-langchain databricks-agents unitycatalog-langchain[databricks] databricks-feature-engineering==0.14.0 databricks-mcp "mcp<2" "typing_extensions>=4.13"
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -121,7 +121,7 @@ def log_customer_support_agent_model(resources, request_example):
             model_config="agent_config.yaml",
             input_example={"input": [{"role": "user", "content": request_example}]},
             resources=resources, # Determine Databricks resources (endpoints, fonctions, vs...) to specify for automatic auth passthrough at deployment time
-            extra_pip_requirements=["databricks-connect"]
+            extra_pip_requirements=["databricks-connect", "mcp==1.29.0"]
         )
 logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
 

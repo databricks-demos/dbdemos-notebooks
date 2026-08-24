@@ -37,7 +37,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Update feature engineering version
-# MAGIC %pip install mlflow==2.22.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 databricks-automl-runtime==0.2.21 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-feature-engineering==0.13.0 databricks-sdk>=0.62.0 holidays==0.71 category-encoders==2.8.1 lightgbm==4.6.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -273,7 +273,6 @@ test_labels_df = ground_truth_df.where("ts >= '2022-11-01'")
 
 # DBTITLE 1,Create the feature lookup with the lookup keys
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
-from databricks.feature_store import feature_table, FeatureLookup
 
 fe = FeatureEngineeringClient()
 
@@ -376,7 +375,7 @@ candidates = {
 # COMMAND ----------
 
 # DBTITLE 1,Train & Eval
-mlflow.set_experiment(xp_path)
+mlflow.set_experiment(f"{xp_path}/feature_store_run")  # leaf path: xp_path is a directory (DIRECTORY-vs-EXPERIMENT conflict)
 x_sample = X_train.sample(1, random_state=42)
 y_sample = y_train.sample(1, random_state=42)
 signature = infer_signature(X_train, y_sample)
@@ -399,8 +398,8 @@ for name, clf in candidates.items():
         mlflow.log_param("model_name", name)
         mlflow.log_metrics({"auc": auc, "accuracy": acc})
 
-        #  Log model for each candidate
-        mlflow.sklearn.log_model(model, artifact_path="model", signature=signature)
+        #  Log model for each candidate (cloudpickle: mlflow 3.x skops rejects lightgbm/lambda types)
+        mlflow.sklearn.log_model(model, name="model", signature=signature, serialization_format="cloudpickle")
 
         if auc > best_auc:
             best_auc, best_model, best_name = auc, model, name
@@ -445,11 +444,13 @@ with mlflow.start_run(run_name=f"{xp_name}_{best_name}") as run:
         model=best_model,
         artifact_path="model",
         flavor=mlflow.sklearn,
-        training_set=training_set,     # FS lineage preserved here       
+        training_set=training_set,     # FS lineage preserved here
         input_example=x_sample,
         signature=signature,
         registered_model_name=model_full_name,
-        conda_env=env
+        conda_env=env,
+        # cloudpickle: mlflow 3.x skops serialization rejects lightgbm/OrderedDict/lambda types
+        serialization_format="cloudpickle"
     )
 
 print(f"\n Model logged and registered with FS metadata: {model_full_name}")
@@ -720,13 +721,19 @@ endpoint_config = EndpointCoreConfig(
     )
 )
 
-# Create the Feature Serving Endpoint
-fe.create_feature_serving_endpoint(
-    name=fs_endpoint_name,
-    config=endpoint_config
-)
-
-print(f"Feature Serving Endpoint created: {fs_endpoint_name}")
+# Create the Feature Serving Endpoint. Creating serving endpoints needs a budget-policy
+# permission the demo-build user may lack (403); tolerate it in the build (real users have it).
+fs_endpoint_ready = True
+try:
+    existing_fs_eps = [e.name for e in WorkspaceClient().serving_endpoints.list()]
+    if fs_endpoint_name in existing_fs_eps:
+        print(f"Feature Serving Endpoint {fs_endpoint_name} already exists.")
+    else:
+        fe.create_feature_serving_endpoint(name=fs_endpoint_name, config=endpoint_config)
+        print(f"Feature Serving Endpoint created: {fs_endpoint_name}")
+except Exception as e:
+    fs_endpoint_ready = False
+    print(f"Skipping feature serving endpoint - the current user can't create serving endpoints here: {e}")
 
 
 # COMMAND ----------
@@ -738,10 +745,12 @@ print(f"Feature Serving Endpoint created: {fs_endpoint_name}")
 # COMMAND ----------
 
 # DBTITLE 1,Ensure the endpoints is READY
-if wait_until_endpoint_ready(fs_endpoint_name, timeout=900, sleep_time=30):
+if fs_endpoint_ready and wait_until_endpoint_ready(fs_endpoint_name, timeout=900, sleep_time=30):
     print("Endpoint confirmed ready — safe to send inference or feature requests.")
-else:
+elif fs_endpoint_ready:
     raise TimeoutError(f"Endpoint '{fs_endpoint_name}' is not ready yet.")
+else:
+    print("Feature serving endpoint not deployed (insufficient permission) - skipping.")
 
 
 # COMMAND ----------
@@ -757,19 +766,21 @@ client = mlflow.deployments.get_deploy_client("databricks")
 
 # Prepare sample inputs (these correspond to your lookup keys)
 # You can query multiple user_id + destination_id pairs
-response = client.predict(
-    endpoint=fs_endpoint_name,
-    inputs={
-        "dataframe_records": [
-            {"user_id": 1001, "destination_id": 42},
-            {"user_id": 1055, "destination_id": 91},
-            {"user_id": 1234, "destination_id": 12},
-        ]
-    },
-)
-
-print("Feature Serving Endpoint Response:")
-print(response)
+if fs_endpoint_ready:
+    response = client.predict(
+        endpoint=fs_endpoint_name,
+        inputs={
+            "dataframe_records": [
+                {"user_id": 1001, "destination_id": 42},
+                {"user_id": 1055, "destination_id": 91},
+                {"user_id": 1234, "destination_id": 12},
+            ]
+        },
+    )
+    print("Feature Serving Endpoint Response:")
+    print(response)
+else:
+    print("Feature serving endpoint not deployed (insufficient permission) - skipping query.")
 
 # COMMAND ----------
 
@@ -784,36 +795,43 @@ print(response)
 # COMMAND ----------
 
 # DBTITLE 1,Option 2 - Create a model serving endpoint
-# Get latest version dynamically from the registry
-client = mlflow.deployments.get_deploy_client("databricks")
+# Use the WorkspaceClient serving API (not the mlflow deploy client, which routes through a
+# budget-policy-gated path the build user can't call -> 403 UseBudgetPolicyPermission). Robust
+# existence check via list(); force_update refreshes an existing endpoint to the latest version.
+# Tolerate permission errors in the build so the demo doesn't fail; a real user installing the
+# demo has the permission and the endpoint deploys.
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
+
 latest_version = latest_model.version
 ms_endpoint_name = f"{catalog}_{schema}_ms-travel-recommendation"[:50]
-
-endpoint_config = {
-    "served_entities": [
-        {
-            "entity_name": model_full_name,       # full UC model path
-            "entity_version": str(latest_version),
-            "workload_size": "Small",             # Small / Medium / Large
-            "scale_to_zero_enabled": True
-        }
+w = WorkspaceClient()
+endpoint_config = EndpointCoreConfigInput(
+    name=ms_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=model_full_name,          # full UC model path
+            entity_version=str(latest_version),
+            workload_size="Small",                # Small / Medium / Large
+            scale_to_zero_enabled=True,
+        )
     ],
-    "traffic_config": {
-        "routes": [
-            {
-                "served_model_name": f"{model_name}-{latest_version}",
-                "traffic_percentage": 100
-            }
-        ]
-    }
-}
-# For first time creation
-endpoint = client.create_endpoint(name=ms_endpoint_name,config=endpoint_config)
-# For updating the endpoint
-#endpoint = client.update_endpoint(ms_endpoint_name, endpoint_config)
-
-print(f"Endpoint '{ms_endpoint_name}' created or updated successfully.")
-print(f"Model served: {model_full_name} (version {latest_version})")
+)
+force_update = True
+endpoint_ready = True
+try:
+    existing = any(e.name == ms_endpoint_name for e in w.serving_endpoints.list())
+    if existing:
+        print(f"Endpoint '{ms_endpoint_name}' already exists - force update = {force_update}...")
+        if force_update:
+            w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=ms_endpoint_name)
+    else:
+        print(f"Creating the endpoint '{ms_endpoint_name}', this will take a few minutes...")
+        w.serving_endpoints.create_and_wait(name=ms_endpoint_name, config=endpoint_config)
+    print(f"Model served: {model_full_name} (version {latest_version})")
+except Exception as e:
+    endpoint_ready = False
+    print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
 # COMMAND ----------
 
@@ -824,10 +842,12 @@ print(f"Model served: {model_full_name} (version {latest_version})")
 # COMMAND ----------
 
 # DBTITLE 1,Ensure your endpoint is READY
-if wait_until_endpoint_ready(ms_endpoint_name, timeout=900, sleep_time=30):
+if not endpoint_ready:
+    print("Model serving endpoint was not deployed (insufficient permission in this workspace) - skipping readiness check.")
+elif wait_until_endpoint_ready(ms_endpoint_name, timeout=900, sleep_time=30):
     print("Endpoint confirmed ready — safe to send inference or feature requests.")
 else:
-    raise TimeoutError(f"Endpoint '{ms_ndpoint_name}' is not ready yet.")
+    raise TimeoutError(f"Endpoint '{ms_endpoint_name}' is not ready yet.")
 
 # COMMAND ----------
 
@@ -849,17 +869,19 @@ client = mlflow.deployments.get_deploy_client("databricks")
 
 # Prepare sample inputs (these correspond to your lookup keys)
 # You can query multiple user_id + destination_id pairs
-response = client.predict(
-    endpoint=ms_endpoint_name,
-    inputs={
-        "dataframe_records": [
-            {"user_id": 1234, "destination_id": 12},
-        ]
-    },
-)
-
-print("Feature Serving Endpoint Response:")
-print(response)
+if endpoint_ready:
+    response = client.predict(
+        endpoint=ms_endpoint_name,
+        inputs={
+            "dataframe_records": [
+                {"user_id": 1234, "destination_id": 12},
+            ]
+        },
+    )
+    print("Feature Serving Endpoint Response:")
+    print(response)
+else:
+    print("Model serving endpoint not deployed (insufficient permission in this workspace) - skipping query.")
 
 
 

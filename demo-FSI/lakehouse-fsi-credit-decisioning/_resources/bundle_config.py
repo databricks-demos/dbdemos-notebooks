@@ -312,7 +312,43 @@
                           "task_key": "explainability_and_fairness"
                       }
                   ]
-            }  
+            },
+            {
+                "task_key": "bundle_sample_exploration",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Data-Ingestion/01.1-sdp-sql/explorations/sample_exploration",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_governance",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-Data-Governance/02-Data-Governance-credit-decisioning",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_model_serving",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/03-Data-Science-ML/03.4-model-serving-BNPL-credit-decisioning",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "automl_model"}]
+            }
         ],
         "job_clusters": [
             {
@@ -322,7 +358,7 @@
                         "min_workers": 2,
                         "max_workers": 10
                     },
-                    "spark_version": "16.4.x-cpu-ml-scala2.12",
+                    "spark_version": "17.3.x-cpu-ml-scala2.13",
                     "custom_tags": {
                         "ResourceClass": "SingleNode"
                     },
@@ -344,7 +380,7 @@
             "min_workers": 2,
             "max_workers": 10
         },
-        "spark_version": "16.4.x-cpu-ml-scala2.12",
+        "spark_version": "17.3.x-cpu-ml-scala2.13",
         "single_user_name": "{{CURRENT_USER}}",
         "data_security_mode": "SINGLE_USER",
         "runtime_engine": "STANDARD"
@@ -519,7 +555,7 @@
                             "min_workers": 2,
                             "max_workers": 10
                         },
-                        "spark_version": "16.4.x-cpu-ml-scala2.12",
+                        "spark_version": "17.3.x-cpu-ml-scala2.13",
                         "custom_tags": {
                             "ResourceClass": "SingleNode"
                         },

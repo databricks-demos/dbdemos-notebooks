@@ -26,7 +26,7 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.3.2
+# MAGIC mlflow==3.14.0
 # MAGIC ```
 # COMMAND ----------
 
@@ -40,7 +40,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC %uv pip install --quiet mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

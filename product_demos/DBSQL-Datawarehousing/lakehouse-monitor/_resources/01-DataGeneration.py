@@ -36,7 +36,7 @@ if data_exists:
 # COMMAND ----------
 
 # DBTITLE 1,Install the required library
-# MAGIC %pip install faker
+# MAGIC %uv pip install faker
 
 # COMMAND ----------
 

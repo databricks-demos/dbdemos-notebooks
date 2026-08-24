@@ -36,13 +36,13 @@
 # MAGIC %md
 # MAGIC Last environment tested:
 # MAGIC ```
-# MAGIC mlflow==3.3.0
+# MAGIC mlflow==3.14.0
 # MAGIC ```
 
 # COMMAND ----------
 
 # DBTITLE 1,Install MLflow version for model lineage in UC [for MLR < 15.2]
-# MAGIC %pip install --quiet mlflow --upgrade
+# MAGIC %uv pip install --quiet mlflow --upgrade
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

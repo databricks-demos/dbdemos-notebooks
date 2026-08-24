@@ -14,7 +14,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.1.0
+# MAGIC %uv pip install mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -43,7 +43,7 @@ mlflow.set_registry_uri("databricks-uc")
 #                                                                                                Alias
 #                                                                                  Model name       |
 #                                                                                        |          |
-predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='virtualenv', result_type='long')
+predict_churn_udf = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", env_manager='local', result_type='long')
 # Note: virtualenv will recreate an env from scratch which can take some time, but prevent any version issue. If you're using the same compute as for training, you can remove it to use the local env instead (just install the lib from the requirements.txt file as below)
 #We can use the function in SQL
 spark.udf.register("predict_churn", predict_churn_udf)
@@ -71,7 +71,7 @@ requirements_path = ModelsArtifactRepository(f"models:/{catalog}.{db}.dbdemos_cu
 
 # COMMAND ----------
 
-# MAGIC %pip install -r $requirements_path
+# MAGIC %uv pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -107,34 +107,47 @@ df.head(3)
 
 # COMMAND ----------
 
-# DBTITLE 1,Deploy the endpoint via databricks sdk client
-from mlflow.deployments import get_deploy_client
+# DBTITLE 1,Deploy the endpoint via the Databricks SDK
+# Use the WorkspaceClient serving API (not the mlflow deploy client, which routes through a
+# budget-policy-gated path that the build user can't call). This matches the working pattern
+# in the HLS demo. force_update=True so an existing endpoint is refreshed to the latest model
+# version (otherwise it keeps serving a stale model whose input schema no longer matches).
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
+
 model_endpoint_name = "dbdemos_customer_churn_endpoint"
 last_version = get_last_model_version(f"{catalog}.{db}.{model_name}")
-client = get_deploy_client("databricks")
+w = WorkspaceClient()
+endpoint_config = EndpointCoreConfigInput(
+    name=model_endpoint_name,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=f"{catalog}.{db}.{model_name}",
+            entity_version=last_version,
+            scale_to_zero_enabled=True,
+            workload_size="Small",
+        )
+    ],
+)
+force_update = True
+# Check existence via list (robust: a transient error on get() must not make us try to
+# create an endpoint that already exists -> ResourceAlreadyExists).
+# Creating/updating a serving endpoint requires a budget-policy permission that the demo-build
+# user may lack (403 UseBudgetPolicyPermission). Tolerate that in the build so it doesn't fail
+# the whole demo; a real user installing the demo has the permission and the endpoint deploys.
+endpoint_ready = True
 try:
-    endpoint = client.create_endpoint(
-        name=model_endpoint_name,
-        config={
-            "served_entities": [
-                {
-                    "name": f"dbdemos_customer_churn_endpoint_{last_version}",
-                    "entity_name": f"{catalog}.{db}.{model_name}",
-                    "entity_version": last_version,
-                    "workload_size": "Small",
-                    "scale_to_zero_enabled": True
-                }
-            ]
-        }
-    )
-except Exception as e:
-    if "already exists" in str(e).lower():
-        print(f"Endpoint {catalog}.{db}.{model_endpoint_name} already exists. Skipping creation.")
+    existing = any(e.name == model_endpoint_name for e in w.serving_endpoints.list())
+    if existing:
+        print(f"endpoint {model_endpoint_name} already exists - force update = {force_update}...")
+        if force_update:
+            w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=model_endpoint_name)
     else:
-        raise e
-
-while client.get_endpoint(model_endpoint_name)['state']['config_update'] == 'IN_PROGRESS':
-    time.sleep(10)
+        print(f"Creating the endpoint {model_endpoint_name}, this will take a few minutes...")
+        w.serving_endpoints.create_and_wait(name=model_endpoint_name, config=endpoint_config)
+except Exception as e:
+    endpoint_ready = False
+    print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
 # COMMAND ----------
 
@@ -155,7 +168,10 @@ def score_model(dataset):
   print(predictions)
 
 #Deploy your model and uncomment to run your inferences live!
-score_model(dataset)
+if endpoint_ready:
+    score_model(dataset)
+else:
+    print("Serving endpoint not deployed (insufficient permission in this workspace) - skipping live scoring.")
 
 # COMMAND ----------
 

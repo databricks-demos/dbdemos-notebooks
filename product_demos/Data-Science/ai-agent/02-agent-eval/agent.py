@@ -112,7 +112,7 @@ class LangGraphResponsesAgent(ResponsesAgent):
     def __init__(
         self,
         uc_tool_names: Sequence[str] = ("main_build.dbdemos_ai_agent.*",),
-        llm_endpoint_name: str = "databricks-meta-llama-3-70b-instruct",
+        llm_endpoint_name: str = "databricks-meta-llama-3-3-70b-instruct",
         system_prompt: Optional[str] = None,
         retriever_config: Optional[dict] = None,
         mcp_server_urls: Optional[Sequence[str]] = None,

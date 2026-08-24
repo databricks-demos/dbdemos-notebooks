@@ -27,7 +27,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --upgrade prophet==1.1.5 cmdstanpy==1.2.4 'holidays>=0.25' 'convertdate>=2.4.0' 'numpy<2' 'matplotlib<3.8'
+# MAGIC %uv pip install --upgrade prophet 'holidays>=0.25' 'convertdate>=2.4.0'
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -185,7 +185,7 @@ results.write.mode('append').saveAsTable("billing_forecast_manual")
 # MAGIC     GREATEST(0, f.yhat_lower) as yhat_lower,
 # MAGIC     GREATEST(0, f.yhat_upper) as yhat_upper,
 # MAGIC     f.training_date
-# MAGIC   from main.dbdemos_billing_forecast.billing_forecast_manual f
+# MAGIC   from dbdemos_billing_forecast.billing_forecast_manual f
 # MAGIC )
 # MAGIC select
 # MAGIC   `date`,

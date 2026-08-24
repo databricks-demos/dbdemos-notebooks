@@ -99,7 +99,7 @@
 
 -- MAGIC %md
 -- MAGIC Open the customer churn
--- MAGIC   <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-churn-SQL) *(Alternatives: [Lakeflow Pipelines Python version]($./01-Data-ingestion/01.3-SDP-churn-python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
+-- MAGIC   <a dbdemos-pipeline-id="sdp-churn" href="#joblist/pipelines/a6ba1d12-74d7-4e2d-b9b7-ca53b655f39d" target="_blank">Lakeflow pipeline</a> or the [SQL notebook]($./01-Data-ingestion/01.1-SDP-SQL/01.1-SDP-churn-SQL) *(Alternatives: [Lakeflow Pipelines Python version]($./01-Data-ingestion/01.2-SDP-python/01.1-SDP-churn-Python) - [plain Delta+Spark version]($./01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn))*. <br>
 -- MAGIC   For more details on Lakeflow Pipelines: `dbdemos.install('pipeline-bike')` or `dbdemos.install('declarative-pipeline-cdc')`
 
 -- COMMAND ----------
@@ -121,7 +121,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC    Open [Unity Catalog notebook]($./02-Data-governance/02-UC-data-governance-security-churn) to see how to setup ACL and explore lineage with the Data Explorer.
+-- MAGIC    Open [Unity Catalog notebook]($./02-Data-governance/02.1-UC-data-governance-security-churn) to see how to setup ACL and explore lineage with the Data Explorer.
 -- MAGIC   
 
 -- COMMAND ----------
@@ -145,7 +145,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC Open the [Data Warehousing notebook]($./03-BI-data-warehousing/03-BI-Datawarehousing) to start running your BI queries or directly open the <a dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Churn Analysis Dashboard</a>
+-- MAGIC Open the [Data Warehousing notebook]($./03-AI-BI-data-warehousing/03.1-AI-BI-Datawarehousing) to start running your BI queries or directly open the <a dbdemos-dashboard-id="churn-universal" href='/sql/dashboardsv3/01ef00cc36721f9e9f2028ee75723cc1' target="_blank">Churn Analysis Dashboard</a>
 
 -- COMMAND ----------
 

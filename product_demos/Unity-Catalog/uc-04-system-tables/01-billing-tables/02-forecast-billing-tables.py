@@ -166,8 +166,8 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DROP TABLE IF EXISTS main.dbdemos_billing_forecast.billing_forecast;
-# MAGIC CREATE TABLE main.dbdemos_billing_forecast.billing_forecast AS 
+# MAGIC DROP TABLE IF EXISTS main__build.dbdemos_billing_forecast.billing_forecast;
+# MAGIC CREATE TABLE main__build.dbdemos_billing_forecast.billing_forecast AS 
 # MAGIC WITH data_to_predict_with_params AS (
 # MAGIC   SELECT 
 # MAGIC     '{"global_floor": 0, "min_changepoint_samples": 30, "global_cap": ' || (max_cost_at_list_price * 5) || '}' AS parameters,
@@ -195,14 +195,14 @@
 
 # DBTITLE 1,Our forecast are ready!
 # MAGIC %sql 
-# MAGIC select * from main.dbdemos_billing_forecast.billing_forecast
+# MAGIC select * from main__build.dbdemos_billing_forecast.billing_forecast
 
 # COMMAND ----------
 
 # DBTITLE 1,Merge forecast data and history in a single table
 # MAGIC %sql
-# MAGIC DROP TABLE IF EXISTS main.dbdemos_billing_forecast.detailed_billing_forecast;
-# MAGIC CREATE OR REPLACE TABLE main.dbdemos_billing_forecast.detailed_billing_forecast AS 
+# MAGIC DROP TABLE IF EXISTS main__build.dbdemos_billing_forecast.detailed_billing_forecast;
+# MAGIC CREATE OR REPLACE TABLE main__build.dbdemos_billing_forecast.detailed_billing_forecast AS 
 # MAGIC   WITH forecast_data as (
 # MAGIC     SELECT 
 # MAGIC       NULL as training_date, 
@@ -224,7 +224,7 @@
 # MAGIC       GREATEST(0, cost_at_list_price_forecast), 
 # MAGIC       GREATEST(0, cost_at_list_price_upper), 
 # MAGIC       GREATEST(0, cost_at_list_price_lower) 
-# MAGIC       FROM  main.dbdemos_billing_forecast.billing_forecast)
+# MAGIC       FROM  main__build.dbdemos_billing_forecast.billing_forecast)
 # MAGIC
 # MAGIC     SELECT * EXCEPT(ds), 
 # MAGIC       ds as date,
@@ -237,12 +237,12 @@
 # MAGIC     from forecast_data
 # MAGIC     ORDER BY sku, workspace_id, ds;
 # MAGIC
-# MAGIC SELECT * FROM main.dbdemos_billing_forecast.detailed_billing_forecast order by date desc limit 1000;
+# MAGIC SELECT * FROM main__build.dbdemos_billing_forecast.detailed_billing_forecast order by date desc limit 1000;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from main.dbdemos_billing_forecast.billing_forecast order by ds desc limit 100
+# MAGIC select * from main__build.dbdemos_billing_forecast.billing_forecast order by ds desc limit 100
 
 # COMMAND ----------
 

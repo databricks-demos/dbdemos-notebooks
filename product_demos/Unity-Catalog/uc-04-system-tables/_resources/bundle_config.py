@@ -116,7 +116,7 @@
             {
                 "job_cluster_key": "Shared_job_cluster",
                 "new_cluster": {
-                    "spark_version": "16.4.x-scala2.12",
+                    "spark_version": "17.3.x-scala2.13",
                     "spark_conf": {
                         "spark.master": "local[*, 4]",
                         "spark.databricks.cluster.profile": "singleNode"
@@ -141,7 +141,7 @@
     "num_workers": 4,
     "single_user_name": "{{CURRENT_USER}}",
     "data_security_mode": "SINGLE_USER",
-    "spark_version": "16.4.x-scala2.12"
+    "spark_version": "17.3.x-scala2.13"
   },
   "dashboards": [{"name": "[dbdemos] System Tables - account usage overview",       "id": "account-usage"},
                  {"name": "[dbdemos] System Tables - Cost forecast from ML models", "id": "cost-forecasting"},

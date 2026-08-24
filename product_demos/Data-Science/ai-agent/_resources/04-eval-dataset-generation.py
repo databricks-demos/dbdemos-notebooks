@@ -86,7 +86,7 @@ df_clean.createOrReplaceTempView("customer_test_questions")
 final_df_raw = spark.sql("""
 SELECT 
   question,
-  AI_QUERY("databricks-claude-3-7-sonnet", prompt) AS expected_facts_json
+  AI_QUERY("databricks-meta-llama-3-3-70b-instruct", prompt) AS expected_facts_json
 FROM customer_test_questions
 """)
 

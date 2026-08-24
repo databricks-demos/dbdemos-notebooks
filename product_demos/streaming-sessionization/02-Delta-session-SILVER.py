@@ -46,8 +46,8 @@ display(stream, checkpointLocation = get_chkp_folder())
   .withWatermark('event_datetime', '1 hours')
   .dropDuplicates(['event_id'])
   .writeStream
-    .trigger(processingTime="20 seconds")
-    #.trigger(availableNow=True) --use this for serverless
+    #.trigger(processingTime="20 seconds") #real-time streaming; use availableNow on serverless
+    .trigger(availableNow=True)
     .option("checkpointLocation", volume_folder+"/checkpoints/silver")
     .option("mergeSchema", "true")
     .table('events'))

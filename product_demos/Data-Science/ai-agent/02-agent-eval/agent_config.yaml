@@ -2,7 +2,7 @@ config_version_name: better_prompt
 input_example:
 - content: Give me the orders for john21@example.net
   role: user
-llm_endpoint_name: databricks-claude-3-7-sonnet
+llm_endpoint_name: databricks-meta-llama-3-3-70b-instruct
 max_history_messages: 20
 mcp_server_urls: []
 retriever_config: null

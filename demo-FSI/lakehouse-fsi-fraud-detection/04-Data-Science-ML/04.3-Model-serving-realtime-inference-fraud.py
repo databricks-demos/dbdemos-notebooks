@@ -25,7 +25,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-sdk==0.36.0 mlflow==2.19.0
+# MAGIC %uv pip install databricks-sdk mlflow==3.14.0
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -81,16 +81,25 @@ endpoint_config = EndpointCoreConfigInput(
     auto_capture_config = AutoCaptureConfigInput(catalog_name=catalog, schema_name=db, enabled=True, table_name_prefix="fraud_ep_inference_table" )
 )
 
-force_update = False #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+force_update = True #Update the endpoint to the current @prod model version, so an existing endpoint doesn't keep serving a stale model whose input schema no longer matches.
+# Check existence via list (robust: a transient error on get() must not make us try to
+# create an endpoint that already exists -> ResourceAlreadyExists).
+# Creating/updating a serving endpoint needs a budget-policy permission the demo-build user may
+# lack (403 UseBudgetPolicyPermission). Tolerate it in the build; real users have the permission.
+endpoint_ready = True
 try:
-  existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
-  print(f"endpoint {serving_endpoint_name} already exist...")
-  if force_update:
-    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
-except:
-    print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
-    spark.sql('drop table if exists fraud_ep_inference_table_payload')
-    w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
+    existing = any(e.name == serving_endpoint_name for e in w.serving_endpoints.list())
+    if existing:
+        print(f"endpoint {serving_endpoint_name} already exist...")
+        if force_update:
+            w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+    else:
+        print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
+        spark.sql('drop table if exists fraud_ep_inference_table_payload')
+        w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
+except Exception as e:
+    endpoint_ready = False
+    print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
 # COMMAND ----------
 
@@ -105,10 +114,12 @@ dataset =  {"dataframe_split": Model.load(p).load_input_example(p).to_dict(orien
 
 import mlflow
 from mlflow import deployments
-client = mlflow.deployments.get_deploy_client("databricks")
-predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
-
-print(predictions)
+if endpoint_ready:
+    client = mlflow.deployments.get_deploy_client("databricks")
+    predictions = client.predict(endpoint=serving_endpoint_name, inputs=dataset)
+    print(predictions)
+else:
+    print("Serving endpoint not deployed (insufficient permission in this workspace) - skipping live query.")
 
 # COMMAND ----------
 

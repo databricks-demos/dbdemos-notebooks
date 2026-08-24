@@ -20,7 +20,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Setup - Install deltatorch  & lightning
-# MAGIC %pip install pytorch-lightning==2.5.0 git+https://github.com/delta-incubator/deltatorch.git databricks-sdk==0.39.0 datasets==2.20.0 transformers==4.49.0 tf-keras==2.17.0 accelerate==1.4.0 mlflow==2.20.2 torchvision==0.20.1 deepspeed==0.14.4 evaluate==0.4.3
+# MAGIC %pip install pytorch-lightning==2.5.0 git+https://github.com/delta-incubator/deltatorch.git databricks-sdk mlflow==3.14.0 "transformers>=4.46,<5" datasets accelerate evaluate
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -203,7 +203,7 @@ class CVModel(pl.LightningModule):
 # MAGIC
 # MAGIC The following cells implement an ML model leveraging pytorch. 
 # MAGIC
-# MAGIC The model is a standard Computer Vision one, implemented using PyTorch Lightning. For more details, it is defined in the [utils]($./_resources/01-utils) notebook.
+# MAGIC The model is a standard Computer Vision one, implemented using PyTorch Lightning. For more details, it is defined in the [utils]($./_resources/00-init) notebook.
 # MAGIC
 # MAGIC Note that we'll be using MLflow to automatically log our experiment metrics and register our final model.
 # MAGIC
@@ -314,7 +314,7 @@ def train_model(dm, num_gpus=1, single_node=True):
       if trainer.global_rank == 0:
         print("Logging our model")
         reqs = mlflow.pytorch.get_default_pip_requirements() + ["pytorch-lightning==" + pl.__version__]
-        mlflow.pytorch.log_model(artifact_path="model", pytorch_model=model.model, pip_requirements=reqs)
+        mlflow.pytorch.log_model(name="model", pytorch_model=model.model, pip_requirements=reqs)
         #Save the test/validate transform as we'll have to apply the same transformation in our pipeline.
         #We could alternatively build a model wrapper to encapsulate these transformations as part as of our model (that's what we did with the huggingface implementation).
         with TempDir(remove_on_exit=True) as local_artifacts_dir:

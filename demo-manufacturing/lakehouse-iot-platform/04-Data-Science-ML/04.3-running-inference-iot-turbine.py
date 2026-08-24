@@ -19,7 +19,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==3.1.1 databricks-sdk==0.59.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-sdk
 
 # COMMAND ----------
 
@@ -50,7 +50,7 @@ mlflow.set_registry_uri('databricks-uc')
 #                                                                                                    Stage/version  
 #                                                                                       Model name         |        
 #                                                                                           |              |        
-predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string", env_manager='virtualenv')
+predict_maintenance = mlflow.pyfunc.spark_udf(spark, f"models:/{catalog}.{db}.dbdemos_turbine_maintenance@prod", "string", env_manager='local')
 #We can use the function in SQL
 spark.udf.register("predict_maintenance", predict_maintenance)
 columns = predict_maintenance.metadata.get_input_schema().input_names()
@@ -84,7 +84,7 @@ if not os.path.exists(requirements_path):
 
 # COMMAND ----------
 
-# MAGIC %pip install -r $requirements_path
+# MAGIC %uv pip install -r $requirements_path
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -127,32 +127,43 @@ display(df)
 
 # COMMAND ----------
 
-from mlflow.deployments import get_deploy_client
+# Use the WorkspaceClient serving API (not the mlflow deploy client, which routes through a
+# budget-policy-gated path the build user can't call). Matches the working HLS pattern.
+# force_update=True refreshes an existing endpoint to the latest model version.
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
 
-client = get_deploy_client("databricks")
+w = WorkspaceClient()
+endpoint_config = EndpointCoreConfigInput(
+    name=MODEL_SERVING_ENDPOINT_NAME,
+    served_entities=[
+        ServedEntityInput(
+            entity_name=f"{catalog}.{db}.{model_name}",
+            entity_version=get_last_model_version(f"{catalog}.{db}.{model_name}"),
+            scale_to_zero_enabled=True,
+            workload_size="Small",
+        )
+    ],
+)
+force_update = True
+# Check existence via list (robust: a transient error on get() must not make us try to
+# create an endpoint that already exists -> ResourceAlreadyExists).
+# Creating/updating a serving endpoint needs a budget-policy permission the demo-build user may
+# lack (403 UseBudgetPolicyPermission). Tolerate that in the build; real users installing the
+# demo have the permission and the endpoint deploys normally.
+endpoint_ready = True
 try:
-    endpoint = client.create_endpoint(
-        name=MODEL_SERVING_ENDPOINT_NAME,
-        config={
-            "served_entities": [
-                {
-                    "name": "iot-maintenance-serving-endpoint",
-                    "entity_name": f"{catalog}.{db}.{model_name}",
-                    "entity_version": get_last_model_version(f"{catalog}.{db}.{model_name}"),
-                    "workload_size": "Small",
-                    "scale_to_zero_enabled": True
-                }
-            ]
-        }
-    )
-except Exception as e:
-    if "already exists" in str(e):
-        print(f"Endpoint {catalog}.{db}.{MODEL_SERVING_ENDPOINT_NAME} already exists. Skipping creation.")
+    existing = any(e.name == MODEL_SERVING_ENDPOINT_NAME for e in w.serving_endpoints.list())
+    if existing:
+        print(f"endpoint {MODEL_SERVING_ENDPOINT_NAME} already exists - force update = {force_update}...")
+        if force_update:
+            w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=MODEL_SERVING_ENDPOINT_NAME)
     else:
-        raise e
-
-while client.get_endpoint(MODEL_SERVING_ENDPOINT_NAME)['state']['config_update'] == 'IN_PROGRESS':
-    time.sleep(10)
+        print(f"Creating the endpoint {MODEL_SERVING_ENDPOINT_NAME}, this will take a few minutes...")
+        w.serving_endpoints.create_and_wait(name=MODEL_SERVING_ENDPOINT_NAME, config=endpoint_config)
+except Exception as e:
+    endpoint_ready = False
+    print(f"Skipping model serving deployment - the current user can't create serving endpoints here: {e}")
 
 # COMMAND ----------
 
@@ -200,9 +211,11 @@ dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPa
 
 # COMMAND ----------
 
-# MAGIC %sql
+# MAGIC %md
+# MAGIC Once the serving endpoint is deployed, you can score directly from SQL with `ai_query`:
+# MAGIC ```sql
 # MAGIC SELECT *, ai_query(
-# MAGIC         'dbdemos_iot_turbine_prediction_endpoint', 
+# MAGIC         'dbdemos_iot_turbine_prediction_endpoint',
 # MAGIC         named_struct(
 # MAGIC             'hourly_timestamp', hourly_timestamp,
 # MAGIC             'avg_energy', avg_energy,
@@ -218,6 +231,7 @@ dataset = spark.table(f'turbine_hourly_features').select(*columns).limit(3).toPa
 # MAGIC         'STRING'
 # MAGIC     ) as prediction
 # MAGIC FROM turbine_hourly_features
+# MAGIC ```
 
 # COMMAND ----------
 

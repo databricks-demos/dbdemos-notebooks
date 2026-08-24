@@ -89,7 +89,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install required external libraries
-# MAGIC %pip install mlflow==3.1.1 databricks-vectorsearch==0.57 databricks-feature-engineering==0.12.1 databricks-sdk==0.59.0
+# MAGIC %uv pip install mlflow==3.14.0 databricks-vectorsearch==0.57 databricks-feature-engineering==0.12.1 databricks-sdk
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -104,7 +104,7 @@
 # MAGIC
 # MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/refs/heads/main/images/manufacturing/lakehouse-iot-turbine/iot_agent_graph_v2_1.png" style="float: right; width: 600px; margin-left: 10px">
 # MAGIC
-# MAGIC To enable our Agent System to predict turbine failures based on industrial IoT sensor readings, we will rely on the model we deployed previously in the  [./04.3-running-inference-iot-turbine]($./04.3-running-inference-iot-turbine) notebook. 
+# MAGIC To enable our Agent System to predict turbine failures based on industrial IoT sensor readings, we will rely on the model we deployed previously in the  [./04.3-running-inference-iot-turbine]($./../04-Data-Science-ML/04.3-running-inference-iot-turbine) notebook. 
 # MAGIC
 # MAGIC **Make sure you run this ML notebook to create the model serving endpoint!**
 # MAGIC

@@ -15,7 +15,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet mlflow-skinny --upgrade --pre
+# MAGIC %uv pip install --quiet mlflow-skinny --upgrade --pre
 # MAGIC
 # MAGIC
 # MAGIC %restart_python

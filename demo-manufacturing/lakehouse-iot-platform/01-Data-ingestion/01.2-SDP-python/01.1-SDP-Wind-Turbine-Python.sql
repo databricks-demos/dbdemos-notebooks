@@ -116,7 +116,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/01-bronze.sql]($./transformations/01-bronze.sql) notebook to review the SQL queries ingesting the raw data and creating our bronze layer.
+-- MAGIC Open the [transformations/01-bronze.sql]($./transformations/01-bronze) notebook to review the SQL queries ingesting the raw data and creating our bronze layer.
 
 -- COMMAND ----------
 
@@ -133,7 +133,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC Open the [transformations/02-silver.sql]($./transformations/02-silver.sql) notebook to review the SQL queries creating our features and our training dataset
+-- MAGIC Open the [transformations/02-silver.sql]($./transformations/02-silver) notebook to review the SQL queries creating our features and our training dataset
 
 -- COMMAND ----------
 
@@ -154,7 +154,7 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Let's create an intermediate feature table
--- MAGIC %md Open the [transformations/03-gold.sql]($./transformations/03-gold.sql) notebook to review the SQL queries creating our features and our training dataset
+-- MAGIC %md Open the [transformations/03-gold.sql]($./transformations/03-gold) notebook to review the SQL queries creating our features and our training dataset
 
 -- COMMAND ----------
 

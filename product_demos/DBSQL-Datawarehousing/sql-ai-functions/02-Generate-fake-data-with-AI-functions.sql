@@ -17,7 +17,7 @@
 -- MAGIC
 -- MAGIC `AI_QUERY` will send the prompt to the remote model configured and retrieve the result as SQL. 
 -- MAGIC
--- MAGIC In addition, we use the optional `responseFormat` argument with `AI_QUERY` to specify the response format you want the model to follow.
+-- MAGIC `AI_QUERY` also accepts an optional `responseFormat` argument (a literal JSON string) to constrain the model output, for example to a JSON schema.
 -- MAGIC
 -- MAGIC The [Query Profile UI](https://docs.databricks.com/aws/en/sql/user/queries/query-profile) provides real-time execution status, processing times, and error visibility for `AI_QUERY`
 -- MAGIC
@@ -59,7 +59,7 @@ SELECT
 -- MAGIC
 -- MAGIC While it's easy to call this function, having to our model endpoint name as parameter can be harder to use, especially for Data Analyst who should focus on crafting proper prompt. 
 -- MAGIC
--- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` with string input parameters prompt (the question to ask), response_format as string output format and wrap all the model configuration.
+-- MAGIC To simplify our demo next steps, we'll create a wrapper SQL function `ASK_LLM_MODEL` taking the prompt (the question to ask) as string input parameter and hiding all the model configuration.
 -- MAGIC
 -- MAGIC
 -- MAGIC <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/product/sql-ai-functions/sql-ai-query-function-review-wrapper.png" width="1200px">
@@ -67,12 +67,10 @@ SELECT
 -- COMMAND ----------
 
 -- DBTITLE 1,SQL admin setup wrapper function
-CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING, response_format STRING DEFAULT '{"type": "string"}') 
+CREATE OR REPLACE FUNCTION ASK_LLM_MODEL(prompt STRING)
   RETURNS STRING
-  RETURN 
-    AI_QUERY("databricks-meta-llama-3-3-70b-instruct", 
-              prompt,
-              response_format);
+  RETURN
+    AI_QUERY("databricks-meta-llama-3-3-70b-instruct", prompt);
 
 -- ALTER FUNCTION ASK_LLM_MODEL OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
 
@@ -88,7 +86,7 @@ SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The custo
 -- MAGIC
 -- MAGIC Now that we know how to send a basic query to Open AI using SQL functions, let's ask the model a more detailed question.
 -- MAGIC
--- MAGIC We'll directly ask to model to generate multiple rows and directly return as a json. Notice we set the response format as json object to guide LLM to generate a JSON.
+-- MAGIC We'll directly ask to model to generate multiple rows and directly return as a json. Notice how the prompt guides the LLM to only generate a JSON.
 -- MAGIC
 -- MAGIC Here's a prompt example to generate JSON:
 -- MAGIC ```
@@ -107,7 +105,7 @@ SELECT ASK_LLM_MODEL("Generate a short product review for a red dress. The custo
 -- COMMAND ----------
 
 SELECT ASK_LLM_MODEL(
-      'Generate a sample dataset of 2 rows that contains the following columns: "review_date" (random dates in 2022), 
+      'Generate a sample dataset of 2 rows that contains the following columns: "review_date" (random dates in 2022),
       "review_id" (random id), "customer_id" (random long from 1 to 100)  and "review". 
       Reviews should mimic useful product reviews from popular grocery brands product left on an e-commerce marketplace website. The review must include the product name.
 
@@ -116,7 +114,7 @@ SELECT ASK_LLM_MODEL(
       and neutral reviews.
 
       Give me JSON only. No text outside JSON. No explanations or notes
-      [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]', "{'type': 'json_object'}") as fake_reviews;
+      [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]') as fake_reviews;
 
 -- COMMAND ----------
 
@@ -143,7 +141,7 @@ CREATE OR REPLACE FUNCTION GENERATE_FAKE_REVIEWS(num_reviews INT DEFAULT 5)
         and neutral reviews.
 
         Give me JSON only. No text outside JSON. No explanations or notes
-        [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]'), "{'type': 'json_object'}"), 
+        [{"review_date":<date>, "review_id":<long>, "customer_id":<long>, "review":<string>}]')),
         "array<struct<review_date:date, review_id:long, customer_id:long, review:string>>")
 
 -- ALTER FUNCTION GENERATE_FAKE_REVIEWS OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
@@ -197,11 +195,11 @@ CREATE OR REPLACE FUNCTION GENERATE_FAKE_CUSTOMERS(num_reviews INT DEFAULT 10)
   RETURN 
   SELECT FROM_JSON(
       ASK_LLM_MODEL(
-        CONCAT('Generate a sample dataset of ', num_reviews, ' customers containing the following columns: 
+        CONCAT('Generate a sample dataset of ', num_reviews, ' customers containing the following columns:
         "customer_id" (long from 1 to ', num_reviews, '), "firstname", "lastname" and order_count (random positive number, smaller than 200)
 
         Give me JSON only. No text outside JSON. No explanations or notes
-        [{"customer_id":<long>, "firstname":<string>, "lastname":<string>, "order_count":<int>}]'), "{'type': 'json_object'}"), 
+        [{"customer_id":<long>, "firstname":<string>, "lastname":<string>, "order_count":<int>}]')),
         "array<struct<customer_id:long, firstname:string, lastname:string, order_count:int>>")
         
 -- ALTER FUNCTION GENERATE_FAKE_CUSTOMERS OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function

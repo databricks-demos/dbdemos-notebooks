@@ -99,7 +99,7 @@ CREATE OR REPLACE FUNCTION ANNOTATE_REVIEW(review STRING)
             "followup_reason": <reason for followup>
         }
         
-        Review:', review), "{'type': 'json_object'}"),
+        Review:', review)),
       "STRUCT<product_name: STRING, entity_sentiment: STRING, followup: STRING, followup_reason: STRING>")
 
 -- ALTER FUNCTION ANNOTATE_REVIEW OWNER TO `your_principal`; -- for the demo only, make sure other users can access your function
@@ -124,8 +124,7 @@ CREATE OR REPLACE FUNCTION GENERATE_RESPONSE(firstname STRING, lastname STRING, 
   RETURN ASK_LLM_MODEL(
     CONCAT("Our customer named ", firstname, " ", lastname, " who ordered ", order_count, " ", product_name, " was unhappy about ", product_name, "specifically due to ", reason, ". Provide an empathetic message I can send to my customer 
     including the offer to have a call with the relevant product manager to leave feedback. I want to win back their 
-    favour and I do not want the customer to churn"), 
-    "{'type': 'text'}"
+    favour and I do not want the customer to churn")
   );
 -- ALTER FUNCTION GENERATE_RESPONSE OWNER TO `account users`; -- for the demo only, make sure other users can access your function
 

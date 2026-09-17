@@ -380,9 +380,11 @@ class ObjectiveOptuna(object):
 # COMMAND ----------
 
 # DBTITLE 1,Define the Sampler
-optuna_sampler = optuna.samplers.TPESampler(
-  seed=2025 # Random Number Generator seed
-)
+def get_optuna_sampler():
+  """Each study needs its own sampler instance: TPESampler caches the search space of the first study it is used with."""
+  return optuna.samplers.TPESampler(
+    seed=2025 # Random Number Generator seed
+  )
 
 # COMMAND ----------
 
@@ -413,7 +415,7 @@ objective_fn = ObjectiveOptuna(X_train, Y_train, preprocessor, pos_label_in=pos_
 # COMMAND ----------
 
 # DBTITLE 1,without mlflow
-study_debug = optuna.create_study(direction="maximize", study_name="test_debug", sampler=optuna_sampler, pruner= NoneValuePruner())
+study_debug = optuna.create_study(direction="maximize", study_name="test_debug", sampler=get_optuna_sampler(), pruner= NoneValuePruner())
 study_debug.optimize(objective_fn, n_trials=4, n_jobs=-1)
 
 # COMMAND ----------
@@ -469,7 +471,7 @@ mlflow_storage = MlflowStorage(experiment_id=experiment_id)
 
 mlflow_optuna_study_debug = MlflowSparkStudy(
   pruner= NoneValuePruner(),
-  sampler=optuna_sampler,
+  sampler=get_optuna_sampler(),
   study_name="mlflow-smoke-test",
   storage=mlflow_storage,
 )
@@ -498,7 +500,7 @@ from mlflow.pyfunc import PyFuncModel
 from mlflow import pyfunc
 
 
-def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_test: pd.DataFrame, Y_test: pd.Series, training_set_specs_in, preprocessor_in: ColumnTransformer, experiment_id: str, pos_label_in: str = pos_label, rng_seed_in: int = 2025, run_name:str = "spark-mlflow-tuning", optuna_sampler_in: optuna.samplers.TPESampler = optuna_sampler, optuna_pruner_in: optuna.pruners.BasePruner = None, n_jobs: int = 2) -> optuna.study.study.Study:
+def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_test: pd.DataFrame, Y_test: pd.Series, training_set_specs_in, preprocessor_in: ColumnTransformer, experiment_id: str, pos_label_in: str = pos_label, rng_seed_in: int = 2025, run_name:str = "spark-mlflow-tuning", optuna_sampler_in: optuna.samplers.BaseSampler = None, optuna_pruner_in: optuna.pruners.BasePruner = None, n_jobs: int = 2) -> optuna.study.study.Study:
     """
     Increasing `n_jobs` may cause experiment to fail due to failed trials which return None and can't be pruned/caught in parallel mode
     """
@@ -507,7 +509,7 @@ def optuna_hpo_fn(n_trials: int, X_train: pd.DataFrame, Y_train: pd.Series, X_te
     objective_fn = ObjectiveOptuna(X_train, Y_train, preprocessor_in, rng_seed_in, pos_label_in)
     mlflow_optuna_study = MlflowSparkStudy(
         pruner=optuna_pruner_in,
-        sampler=optuna_sampler_in,
+        sampler=optuna_sampler_in or get_optuna_sampler(),
         study_name=run_name,
         storage=mlflow_storage,
     )
@@ -606,7 +608,7 @@ distributed_study = optuna_hpo_fn(
   pos_label_in=pos_label,
   rng_seed_in=2025,
   run_name="mlops-hpo-best-run", # "smoke-test"
-  optuna_sampler_in=optuna_sampler,
+  optuna_sampler_in=get_optuna_sampler(),
   optuna_pruner_in=NoneValuePruner(),
   # n_jobs = 2, # Increase this to number for more parallel trials
 )

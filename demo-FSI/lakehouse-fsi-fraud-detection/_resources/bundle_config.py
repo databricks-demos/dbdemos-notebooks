@@ -43,7 +43,7 @@
     },
     {
       "path": "01-Data-ingestion/01.1-sdp-sql/01-SDP-fraud-detection-SQL",
-      "pre_run": True,
+      "pre_run": False,
       "publish_on_website": True,
       "add_cluster_setup_cell": False,
       "title":  "Lakeflow Pipelines SQL - Main notebook",

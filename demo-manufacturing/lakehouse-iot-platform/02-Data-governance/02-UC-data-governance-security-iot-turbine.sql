@@ -209,6 +209,12 @@ SHOW GRANT ON turbine
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC # Our parts inventory lands as raw json in the volume: load it as a table for this example
+-- MAGIC spark.read.json(f"{volume_folder}/parts").write.mode("overwrite").saveAsTable("parts")
+
+-- COMMAND ----------
+
 -- create the table matchying the users and the country/location
 CREATE OR REPLACE TABLE parts_users_country_permission (email STRING, country STRING);
 

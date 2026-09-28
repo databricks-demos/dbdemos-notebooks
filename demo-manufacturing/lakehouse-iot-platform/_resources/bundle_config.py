@@ -208,7 +208,7 @@
     },
     {
       "path": "05-Generative-AI/05.2-agent-creation-guide", 
-      "pre_run": True, 
+      "pre_run": False, 
       "publish_on_website": True, 
       "add_cluster_setup_cell": False,
       "title":  "Deploy your agents.", 
@@ -300,6 +300,30 @@
                           "task_key": "deploy_best_model"
                       }
                   ]
+            },
+            {
+                "task_key": "bundle_delta_pipeline_spark",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-iot-turbine",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_governance",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-Data-governance/02-UC-data-governance-security-iot-turbine",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "bundle_delta_pipeline_spark"}]
             }
         ],
         "job_clusters": [

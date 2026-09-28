@@ -374,6 +374,42 @@
                           "task_key": "running_inference"
                       }
                   ]
+            },
+            {
+                "task_key": "bundle_delta_pipeline_spark",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/01-Data-ingestion/plain-spark-delta-pipeline/01.5-Delta-pipeline-spark-churn",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "start_sdp_pipeline"}]
+            },
+            {
+                "task_key": "bundle_governance",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-Data-governance/02.1-UC-data-governance-security-churn",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "bundle_delta_pipeline_spark"}]
+            },
+            {
+                "task_key": "bundle_metric_views",
+                "bundle_only": True,
+                "notebook_task": {
+                    "notebook_path": "{{DEMO_FOLDER}}/02-Data-governance/02.2-UC-metric-views",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "depends_on": [{"task_key": "bundle_governance"}]
             }            
         ],
         "job_clusters": [

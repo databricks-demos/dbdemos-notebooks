@@ -154,10 +154,10 @@ def ingest_folder(folder, data_format, table):
                     .option("checkpointLocation", f"{volume_folder}/checkpoint/{table}") #exactly once delivery on Delta tables over restart/kill
                     .option("mergeSchema", "true") #merge any new column dynamically
                     .trigger(availableNow= True) #Remove for real time streaming
-                    .table("spark_"+table)) #Table will be created if we haven't specified the schema first
+                    .table(table)) #Table will be created if we haven't specified the schema first
   
-ingest_folder(f'{volume_folder}/historical_turbine_status', 'json', 'spark_historical_turbine_status')
-ingest_folder(f'{volume_folder}/turbine', 'json', 'spark_turbine')
+ingest_folder(f'{volume_folder}/historical_turbine_status', 'json', 'spark_historical_turbine_status').awaitTermination()
+ingest_folder(f'{volume_folder}/turbine', 'json', 'spark_turbine').awaitTermination()
 ingest_folder(f'{volume_folder}/incoming_data', 'parquet', 'spark_sensor_bronze').awaitTermination()
 
 # COMMAND ----------

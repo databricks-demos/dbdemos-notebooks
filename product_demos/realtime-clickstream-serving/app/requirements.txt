@@ -1,0 +1,6 @@
+streamlit>=1.40,<2
+streamlit-aggrid
+psycopg[binary]
+databricks-sdk>=0.40
+protobuf==5.29.5
+pandas

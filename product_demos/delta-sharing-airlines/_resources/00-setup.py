@@ -41,8 +41,18 @@ def download_recipient_credential(recipient, location):
   else:
     link = df.collect()[0]['activation_link']
   if link is not None:
-    link = link.replace('delta_sharing/retrieve_config.html?','api/2.0/unity-catalog/public/data_sharing_activation/')
-    urllib.request.urlretrieve(link, f"/tmp/{recipient}.share")
+    # The activation page lives under delta_sharing/ or (newer workspaces) opensharing/.
+    # Rewrite either to the API path that returns the JSON credential profile.
+    link = (link.replace('delta_sharing/retrieve_config.html?', 'api/2.0/unity-catalog/public/data_sharing_activation/')
+                .replace('opensharing/retrieve_config.html?', 'api/2.0/unity-catalog/public/data_sharing_activation/'))
+    import json
+    with urllib.request.urlopen(link) as r:
+        credential = r.read().decode('utf-8')
+    # Fail loudly instead of writing an HTML error page as the .share file (which later
+    # breaks delta_sharing.SharingClient with a JSONDecodeError).
+    json.loads(credential)
+    with open(f"/tmp/{recipient}.share", "w") as f:
+        f.write(credential)
     import shutil
     try:
         dbutils.fs.mv(f"file:/tmp/{recipient}.share", location)

@@ -104,59 +104,17 @@
 # MAGIC %md
 # MAGIC ## Architecture Overview
 # MAGIC
-# MAGIC ```
-# MAGIC SOURCES (e.g., samples.tpch)
-# MAGIC    |
-# MAGIC    v
-# MAGIC BRONZE LAYER
-# MAGIC    |
-# MAGIC    | (streaming read)
-# MAGIC    v
-# MAGIC RAW VAULT
-# MAGIC    |
-# MAGIC    +---> hub_customer
-# MAGIC    +---> hub_order
-# MAGIC    +---> hub_part
-# MAGIC    +---> hub_supplier
-# MAGIC    +---> hub_nation
-# MAGIC    +---> hub_region
-# MAGIC    |
-# MAGIC    +---> lnk_order_customer
-# MAGIC    +---> lnk_lineitem (order, part, supplier, linenumber)
-# MAGIC    +---> lnk_customer_nation
-# MAGIC    +---> lnk_supplier_nation
-# MAGIC    +---> lnk_nation_region
-# MAGIC    +---> lnk_part_supplier
-# MAGIC    |
-# MAGIC    +---> sat_customer (SCD2)
-# MAGIC    +---> sat_order (SCD2)
-# MAGIC    +---> sat_part (SCD2)
-# MAGIC    +---> sat_supplier (SCD2)
-# MAGIC    +---> sat_nation (SCD2)
-# MAGIC    +---> sat_region (SCD2)
-# MAGIC    +---> sat_part_supplier (SCD2)
-# MAGIC    +---> sat_lineitem (SCD2, multi-active on linenumber)
-# MAGIC    |
-# MAGIC    v
-# MAGIC BUSINESS VAULT
-# MAGIC    |
-# MAGIC    +---> sat_order_metrics (computed satellite)
-# MAGIC    +---> pit_order (point-in-time reassembly)
-# MAGIC    |
-# MAGIC    v
-# MAGIC INFORMATION MART
-# MAGIC    |
-# MAGIC    +---> dim_customer
-# MAGIC    +---> dim_part
-# MAGIC    +---> dim_supplier
-# MAGIC    +---> dim_nation
-# MAGIC    +---> dim_region
-# MAGIC    +---> dim_date
-# MAGIC    +---> fact_lineitem
-# MAGIC    |
-# MAGIC    v
-# MAGIC DASHBOARDS & BI TOOLS
-# MAGIC ```
+# MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/data-vault-sdp/data-vault-sdp-architecture.png?raw=true" width="1000px">
+# MAGIC
+# MAGIC | Layer | Notebook | Tables |
+# MAGIC |---|---|---|
+# MAGIC | Bronze | `_resources/00-setup` | 8 `bronze_*` tables seeded from `samples.tpch`, append-only |
+# MAGIC | Raw vault | `01-raw-vault-hubs-links-sats` | 6 hubs: `hub_customer`, `hub_order`, `hub_part`, `hub_supplier`, `hub_nation`, `hub_region` |
+# MAGIC | | | 6 links: `lnk_order_customer`, `lnk_lineitem` (order, part, supplier), `lnk_customer_nation`, `lnk_supplier_nation`, `lnk_nation_region`, `lnk_part_supplier` |
+# MAGIC | | | 8 SCD2 satellites, one per hub plus `sat_part_supplier` and `sat_lineitem` (multi-active on line number) |
+# MAGIC | Business vault | `02-business-vault-and-pit` | `sat_order_metrics` (computed satellite), `pit_order` (point-in-time) |
+# MAGIC | Information mart | `03-information-mart-star-schema` | 6 dimensions: `dim_customer`, `dim_part`, `dim_supplier`, `dim_nation`, `dim_region`, `dim_date`; facts: `fact_lineitem`, `fact_order_summary` |
+# MAGIC | History | `04-schema-evolution-and-history` | Appends changed rows to bronze and re-runs the pipeline |
 
 # COMMAND ----------
 

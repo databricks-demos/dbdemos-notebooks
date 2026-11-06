@@ -1,0 +1,584 @@
+{
+  "datasets": [
+    {
+      "name": "revenue_by_nation",
+      "displayName": "Revenue by Nation",
+      "queryLines": [
+        "SELECT\n",
+        "  dn.nation_name,\n",
+        "  SUM(fl.net_revenue) as total_revenue,\n",
+        "  COUNT(DISTINCT fl.order_id) as order_count\n",
+        "FROM main.dbdemos_data_vault_sdp.fact_lineitem fl\n",
+        "JOIN main.dbdemos_data_vault_sdp.dim_nation dn ON fl.nation_key = dn.nation_key\n",
+        "GROUP BY dn.nation_name\n",
+        "ORDER BY total_revenue DESC\n"
+      ]
+    },
+    {
+      "name": "revenue_by_segment",
+      "displayName": "Revenue by Market Segment",
+      "queryLines": [
+        "SELECT\n",
+        "  dc.market_segment,\n",
+        "  SUM(fl.net_revenue) as total_revenue,\n",
+        "  AVG(fl.net_revenue) as avg_revenue\n",
+        "FROM main.dbdemos_data_vault_sdp.fact_lineitem fl\n",
+        "JOIN main.dbdemos_data_vault_sdp.dim_customer dc ON fl.customer_key = dc.customer_key\n",
+        "GROUP BY dc.market_segment\n",
+        "ORDER BY total_revenue DESC\n"
+      ]
+    },
+    {
+      "name": "order_status_summary",
+      "displayName": "Order Status Distribution",
+      "queryLines": [
+        "SELECT\n",
+        "  order_status,\n",
+        "  COUNT(DISTINCT order_id) as order_count,\n",
+        "  SUM(net_revenue) as revenue\n",
+        "FROM main.dbdemos_data_vault_sdp.fact_order_summary\n",
+        "GROUP BY order_status\n"
+      ]
+    },
+    {
+      "name": "satellite_history_sample",
+      "displayName": "Satellite History (SCD2 Example)",
+      "queryLines": [
+        "SELECT\n",
+        "  h.c_custkey,\n",
+        "  s.c_acctbal,\n",
+        "  s.__START_AT as valid_from,\n",
+        "  s.__END_AT as valid_to,\n",
+        "  CASE WHEN s.__END_AT IS NULL THEN 'Current' ELSE 'Historical' END as version_status\n",
+        "FROM main.dbdemos_data_vault_sdp.sat_customer s\n",
+        "JOIN main.dbdemos_data_vault_sdp.hub_customer h USING (customer_hk)\n",
+        "WHERE h.c_custkey IN (1, 2, 3, 4, 5)\n",
+        "ORDER BY h.c_custkey, s.__START_AT DESC\n"
+      ]
+    },
+    {
+      "name": "order_metrics_summary",
+      "displayName": "Order Metrics",
+      "queryLines": [
+        "SELECT\n",
+        "  line_count,\n",
+        "  AVG(net_revenue) as avg_revenue,\n",
+        "  SUM(total_quantity) as total_quantity,\n",
+        "  COUNT(*) as order_count\n",
+        "FROM main.dbdemos_data_vault_sdp.fact_order_summary\n",
+        "GROUP BY line_count\n",
+        "ORDER BY line_count\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "Overview",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_orders",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "order_status_summary",
+                  "fields": [
+                    {
+                      "name": "sum(order_count)",
+                      "expression": "SUM(`order_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(order_count)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "displayName": "Total Orders"
+                }
+              },
+              "frame": {
+                "title": "Total Orders",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "total_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "revenue_by_nation",
+                  "fields": [
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Total Revenue"
+                }
+              },
+              "frame": {
+                "title": "Total Revenue",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "total_items",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "order_metrics_summary",
+                  "fields": [
+                    {
+                      "name": "sum(total_quantity)",
+                      "expression": "SUM(`total_quantity`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_quantity)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "displayName": "Total Items"
+                }
+              },
+              "frame": {
+                "title": "Total Items",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_by_nation_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "revenue_by_nation",
+                  "fields": [
+                    {
+                      "name": "nation_name",
+                      "expression": "`nation_name`"
+                    },
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "nation_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  },
+                  "displayName": "nation_name"
+                },
+                "y": {
+                  "fieldName": "sum(total_revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "axis": {
+                    "title": "Revenue"
+                  },
+                  "displayName": "Revenue"
+                }
+              },
+              "frame": {
+                "title": "Revenue by Nation",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_by_segment_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "revenue_by_segment",
+                  "fields": [
+                    {
+                      "name": "market_segment",
+                      "expression": "`market_segment`"
+                    },
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(total_revenue)",
+                  "displayName": "total_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "market_segment",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "market_segment"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "title": "Revenue by Market Segment",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "order_status",
+      "displayName": "Order Status",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "orders_by_status",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "order_status_summary",
+                  "fields": [
+                    {
+                      "name": "order_status",
+                      "expression": "`order_status`"
+                    },
+                    {
+                      "name": "sum(order_count)",
+                      "expression": "SUM(`order_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "order_status",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  },
+                  "displayName": "order_status"
+                },
+                "y": {
+                  "fieldName": "sum(order_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "axis": {
+                    "title": "Orders"
+                  },
+                  "displayName": "Orders"
+                }
+              },
+              "frame": {
+                "title": "Orders by Status",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_by_status",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "order_status_summary",
+                  "fields": [
+                    {
+                      "name": "order_status",
+                      "expression": "`order_status`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "order_status",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  },
+                  "displayName": "order_status"
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "axis": {
+                    "title": "Revenue"
+                  },
+                  "displayName": "Revenue"
+                }
+              },
+              "frame": {
+                "title": "Revenue by Status",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "history",
+      "displayName": "History",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "scd2_history",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "satellite_history_sample",
+                  "fields": [
+                    {
+                      "name": "c_custkey",
+                      "expression": "`c_custkey`"
+                    },
+                    {
+                      "name": "c_acctbal",
+                      "expression": "`c_acctbal`"
+                    },
+                    {
+                      "name": "valid_from",
+                      "expression": "`valid_from`"
+                    },
+                    {
+                      "name": "valid_to",
+                      "expression": "`valid_to`"
+                    },
+                    {
+                      "name": "version_status",
+                      "expression": "`version_status`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "c_custkey",
+                    "displayName": "Customer"
+                  },
+                  {
+                    "fieldName": "c_acctbal",
+                    "displayName": "Account balance"
+                  },
+                  {
+                    "fieldName": "valid_from",
+                    "displayName": "Valid from"
+                  },
+                  {
+                    "fieldName": "valid_to",
+                    "displayName": "Valid to"
+                  },
+                  {
+                    "fieldName": "version_status",
+                    "displayName": "Version"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "SCD2 Satellite History (Customer Sample)",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 8
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}
